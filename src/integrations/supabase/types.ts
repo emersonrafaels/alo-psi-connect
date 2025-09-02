@@ -14,6 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      pacientes: {
+        Row: {
+          created_at: string | null
+          eh_estudante: boolean
+          id: string
+          instituicao_ensino: string | null
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          eh_estudante?: boolean
+          id?: string
+          instituicao_ensino?: string | null
+          profile_id: string
+        }
+        Update: {
+          created_at?: string | null
+          eh_estudante?: boolean
+          id?: string
+          instituicao_ensino?: string | null
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pacientes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          como_conheceu: string | null
+          cpf: string | null
+          created_at: string | null
+          data_nascimento: string | null
+          email: string
+          genero: string | null
+          id: string
+          nome: string
+          tipo_usuario: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          como_conheceu?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          data_nascimento?: string | null
+          email: string
+          genero?: string | null
+          id?: string
+          nome: string
+          tipo_usuario: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          como_conheceu?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          data_nascimento?: string | null
+          email?: string
+          genero?: string | null
+          id?: string
+          nome?: string
+          tipo_usuario?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profissionais: {
         Row: {
           ativo: boolean
@@ -24,13 +98,17 @@ export type Database = {
           first_name: string | null
           formacao_raw: string | null
           foto_id: number | null
+          foto_perfil_url: string | null
           id: number
           idiomas_raw: string | null
           last_name: string | null
           linkedin: string | null
+          possui_e_psi: boolean | null
           preco_consulta: number | null
+          profile_id: string | null
           profissao: string | null
           resumo: string | null
+          resumo_profissional: string | null
           servicos_raw: string | null
           telefone: string | null
           tempo_consulta: number | null
@@ -47,13 +125,17 @@ export type Database = {
           first_name?: string | null
           formacao_raw?: string | null
           foto_id?: number | null
+          foto_perfil_url?: string | null
           id?: number
           idiomas_raw?: string | null
           last_name?: string | null
           linkedin?: string | null
+          possui_e_psi?: boolean | null
           preco_consulta?: number | null
+          profile_id?: string | null
           profissao?: string | null
           resumo?: string | null
+          resumo_profissional?: string | null
           servicos_raw?: string | null
           telefone?: string | null
           tempo_consulta?: number | null
@@ -70,13 +152,17 @@ export type Database = {
           first_name?: string | null
           formacao_raw?: string | null
           foto_id?: number | null
+          foto_perfil_url?: string | null
           id?: number
           idiomas_raw?: string | null
           last_name?: string | null
           linkedin?: string | null
+          possui_e_psi?: boolean | null
           preco_consulta?: number | null
+          profile_id?: string | null
           profissao?: string | null
           resumo?: string | null
+          resumo_profissional?: string | null
           servicos_raw?: string | null
           telefone?: string | null
           tempo_consulta?: number | null
@@ -84,7 +170,15 @@ export type Database = {
           user_id?: number
           user_login?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profissionais_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profissionais_sessoes: {
         Row: {
