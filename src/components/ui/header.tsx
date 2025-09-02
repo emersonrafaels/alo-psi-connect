@@ -1,13 +1,17 @@
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { Menu, X } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Menu, X, User, LogOut } from "lucide-react"
 import { useState } from "react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/hooks/useAuth"
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, signOut } = useAuth()
 
   const navigation = [
     { name: "Home", href: "/" },
@@ -51,12 +55,41 @@ const Header = () => {
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
-            <Button variant="outline" size="sm" className="border-accent text-accent hover:bg-accent hover:text-accent-foreground">
-              Cadastrar
-            </Button>
-            <Button variant="default" size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-              Entrar
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="border-accent text-accent hover:bg-accent hover:text-accent-foreground">
+                    <User className="h-4 w-4 mr-2" />
+                    Minha Conta
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => signOut()}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+                  onClick={() => navigate('/auth')}
+                >
+                  Cadastrar
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                  onClick={() => navigate('/auth')}
+                >
+                  Entrar
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -89,12 +122,45 @@ const Header = () => {
                 <div className="flex justify-center pb-2">
                   <ThemeToggle />
                 </div>
-                <Button variant="outline" size="sm" className="border-accent text-accent hover:bg-accent hover:text-accent-foreground">
-                  Cadastrar
-                </Button>
-                <Button variant="default" size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                  Entrar
-                </Button>
+                {user ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+                    onClick={() => {
+                      signOut();
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sair
+                  </Button>
+                ) : (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+                      onClick={() => {
+                        navigate('/auth');
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      Cadastrar
+                    </Button>
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      className="bg-accent text-accent-foreground hover:bg-accent/90"
+                      onClick={() => {
+                        navigate('/auth');
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      Entrar
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>
