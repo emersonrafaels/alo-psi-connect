@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { Menu, X } from "lucide-react"
 import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
@@ -49,6 +50,7 @@ const Header = () => {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center space-x-4">
+            <ThemeToggle />
             <Button variant="outline" size="sm" className="border-accent text-accent hover:bg-accent hover:text-accent-foreground">
               Cadastrar
             </Button>
@@ -84,6 +86,9 @@ const Header = () => {
                 </Link>
               ))}
               <div className="flex flex-col space-y-2 pt-4 border-t border-primary-foreground/20">
+                <div className="flex justify-center pb-2">
+                  <ThemeToggle />
+                </div>
                 <Button variant="outline" size="sm" className="border-accent text-accent hover:bg-accent hover:text-accent-foreground">
                   Cadastrar
                 </Button>
