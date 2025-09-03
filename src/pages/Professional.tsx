@@ -10,6 +10,7 @@ import { Calendar, Clock, MapPin, ArrowLeft, Star, DollarSign } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CalendarWidget } from "@/components/CalendarWidget";
+import { stripHtmlTags } from "@/lib/utils";
 interface Professional {
   id: number;
   display_name: string;
@@ -198,8 +199,8 @@ const Professional = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
-                  {professional.resumo && <p>{professional.resumo}</p>}
-                  {professional.resumo_profissional && <p>{professional.resumo_profissional}</p>}
+                  {professional.resumo && <p>{stripHtmlTags(professional.resumo)}</p>}
+                  {professional.resumo_profissional && <p>{stripHtmlTags(professional.resumo_profissional)}</p>}
                 </div>
               </CardContent>
             </Card>
