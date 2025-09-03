@@ -1,22 +1,57 @@
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
 import SearchSection from "@/components/search-section"
 import ProfessionalCard from "@/components/professional-card"
+import { supabase } from "@/integrations/supabase/client"
+
+interface FeaturedProfessional {
+  id: number
+  display_name: string
+  profissao: string | null
+  crp_crm: string | null
+  servicos_raw: string | null
+  preco_consulta: number | null
+}
 
 const Index = () => {
-  const professionals = [
-    {
-      name: "Gabriela Kumai Mattedi",
-      title: "Psicólogo - CRP/CRM 06/203067",
-      specialties: ["Ansiedade", "Depressão", "Terapia de Casal"]
-    },
-    {
-      name: "Dr. João Silva",
-      title: "Psiquiatra - CRM 12345",
-      specialties: ["Transtornos de Humor", "TDAH", "Bipolaridade"]
+  const [featuredProfessionals, setFeaturedProfessionals] = useState<FeaturedProfessional[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchFeaturedProfessionals()
+  }, [])
+
+  const fetchFeaturedProfessionals = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profissionais')
+        .select('id, display_name, profissao, crp_crm, servicos_raw, preco_consulta')
+        .eq('ativo', true)
+        .not('servicos_raw', 'is', null)
+        .not('preco_consulta', 'is', null)
+        .order('display_name')
+        .limit(2)
+
+      if (error) throw error
+
+      setFeaturedProfessionals(data || [])
+    } catch (error) {
+      console.error('Erro ao buscar profissionais em destaque:', error)
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
+
+  const formatSpecialties = (servicos: string | null) => {
+    if (!servicos) return []
+    return servicos
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
+      .slice(0, 3) // Mostrar apenas as 3 primeiras especialidades
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -146,17 +181,44 @@ const Index = () => {
       {/* Featured Professionals */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-12 text-foreground">Profissionais em Destaque</h2>
+          <h2 className="text-3xl font-bold mb-12 text-foreground text-center">
+            Profissionais em Destaque
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {professionals.map((professional, index) => (
-              <ProfessionalCard
-                key={index}
-                name={professional.name}
-                title={professional.title}
-                specialties={professional.specialties}
-                isCompactView
-              />
-            ))}
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 2 }).map((_, index) => (
+                <div key={index} className="bg-card p-6 rounded-lg border animate-pulse">
+                  <div className="h-6 bg-muted rounded mb-3 w-3/4"></div>
+                  <div className="h-4 bg-muted rounded mb-2 w-1/2"></div>
+                  <div className="space-y-2">
+                    <div className="h-3 bg-muted rounded w-full"></div>
+                    <div className="h-3 bg-muted rounded w-5/6"></div>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <div className="h-6 bg-muted rounded w-16"></div>
+                    <div className="h-6 bg-muted rounded w-20"></div>
+                    <div className="h-6 bg-muted rounded w-18"></div>
+                  </div>
+                </div>
+              ))
+            ) : featuredProfessionals.length > 0 ? (
+              featuredProfessionals.map((professional) => (
+                <ProfessionalCard
+                  key={professional.id}
+                  name={professional.display_name}
+                  title={`${professional.profissao || 'Profissional'} - ${professional.crp_crm || 'CRP/CRM'}`}
+                  specialties={formatSpecialties(professional.servicos_raw)}
+                  isCompactView
+                />
+              ))
+            ) : (
+              <div className="col-span-2 text-center py-8">
+                <p className="text-muted-foreground">
+                  Nenhum profissional disponível no momento
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
