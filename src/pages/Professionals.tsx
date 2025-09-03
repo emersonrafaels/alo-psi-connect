@@ -10,7 +10,22 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { MapPin, Star, Clock, DollarSign, Search, ChevronLeft, ChevronRight, Filter, X, Calendar, ChevronDown, Settings, Bot, Sparkles } from "lucide-react"
+import { 
+  MapPin, 
+  Star, 
+  Clock, 
+  DollarSign, 
+  Search, 
+  ChevronLeft, 
+  ChevronRight, 
+  Filter, 
+  X, 
+  Calendar, 
+  ChevronDown, 
+  Settings, 
+  Bot, 
+  Sparkles 
+} from "lucide-react"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import SpecialtiesUpdater from "@/components/SpecialtiesUpdater"
