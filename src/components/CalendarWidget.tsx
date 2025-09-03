@@ -38,16 +38,23 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
       
       // Check if this day has sessions
       const hasSessions = sessions.some(session => {
-        const sessionDay = session.day.toLowerCase()
+        const sessionDay = session.day.toLowerCase().trim()
+        
+        // More comprehensive day matching
+        const dayMappings = {
+          'segunda-feira': ['segunda', 'seg', 'monday'],
+          'terça-feira': ['terça', 'terca', 'ter', 'tuesday'], 
+          'quarta-feira': ['quarta', 'qua', 'wednesday'],
+          'quinta-feira': ['quinta', 'qui', 'thursday'],
+          'sexta-feira': ['sexta', 'sex', 'friday'],
+          'sábado': ['sabado', 'sab', 'saturday'],
+          'domingo': ['dom', 'sunday']
+        }
+        
+        const mappedDays = dayMappings[dayName] || []
         return sessionDay === dayName || 
-               sessionDay === dayName.substring(0, 3) || // seg, ter, qua, etc.
-               (sessionDay === 'segunda' && dayName === 'segunda-feira') ||
-               (sessionDay === 'terça' && dayName === 'terça-feira') ||
-               (sessionDay === 'quarta' && dayName === 'quarta-feira') ||
-               (sessionDay === 'quinta' && dayName === 'quinta-feira') ||
-               (sessionDay === 'sexta' && dayName === 'sexta-feira') ||
-               (sessionDay === 'sábado' && dayName === 'sábado') ||
-               (sessionDay === 'domingo' && dayName === 'domingo')
+               mappedDays.includes(sessionDay) ||
+               sessionDay === dayName.substring(0, 3)
       })
       
       if (hasSessions) {
@@ -65,16 +72,23 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
     const dayName = format(date, 'EEEE', { locale: ptBR }).toLowerCase()
     
     return sessions.filter(session => {
-      const sessionDay = session.day.toLowerCase()
+      const sessionDay = session.day.toLowerCase().trim()
+      
+      // Use same comprehensive day matching as above
+      const dayMappings = {
+        'segunda-feira': ['segunda', 'seg', 'monday'],
+        'terça-feira': ['terça', 'terca', 'ter', 'tuesday'], 
+        'quarta-feira': ['quarta', 'qua', 'wednesday'],
+        'quinta-feira': ['quinta', 'qui', 'thursday'],
+        'sexta-feira': ['sexta', 'sex', 'friday'],
+        'sábado': ['sabado', 'sab', 'saturday'],
+        'domingo': ['dom', 'sunday']
+      }
+      
+      const mappedDays = dayMappings[dayName] || []
       return sessionDay === dayName || 
-             sessionDay === dayName.substring(0, 3) ||
-             (sessionDay === 'segunda' && dayName === 'segunda-feira') ||
-             (sessionDay === 'terça' && dayName === 'terça-feira') ||
-             (sessionDay === 'quarta' && dayName === 'quarta-feira') ||
-             (sessionDay === 'quinta' && dayName === 'quinta-feira') ||
-             (sessionDay === 'sexta' && dayName === 'sexta-feira') ||
-             (sessionDay === 'sábado' && dayName === 'sábado') ||
-             (sessionDay === 'domingo' && dayName === 'domingo')
+             mappedDays.includes(sessionDay) ||
+             sessionDay === dayName.substring(0, 3)
     })
   }
 
