@@ -7,9 +7,16 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { MapPin, Star, Clock, DollarSign, Search, ChevronLeft, ChevronRight } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MapPin, Star, Clock, DollarSign, Search, ChevronLeft, ChevronRight, Filter, X, Calendar } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
+
+interface ProfessionalSession {
+  day: string
+  start_time: string
+  end_time: string
+}
 
 interface Professional {
   id: number
@@ -22,6 +29,8 @@ interface Professional {
   tempo_consulta: number | null
   user_email: string
   linkedin: string | null
+  servicos_raw: string | null
+  sessions: ProfessionalSession[]
 }
 
 const Professionals = () => {
@@ -31,6 +40,14 @@ const Professionals = () => {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
+  const [showFilters, setShowFilters] = useState(false)
+  const [filters, setFilters] = useState({
+    profissao: "",
+    dia: "",
+    valorMin: "",
+    valorMax: "",
+    servico: ""
+  })
   const professionalsPerPage = 9
 
   useEffect(() => {
@@ -39,25 +56,66 @@ const Professionals = () => {
 
   useEffect(() => {
     filterProfessionals()
-  }, [professionals, searchTerm])
+  }, [professionals, searchTerm, filters])
 
   const filterProfessionals = () => {
-    if (!searchTerm) {
-      setFilteredProfessionals(professionals)
-    } else {
-      const filtered = professionals.filter(prof => 
+    let filtered = professionals
+
+    // Search term filter
+    if (searchTerm) {
+      filtered = filtered.filter(prof => 
         prof.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         prof.profissao?.toLowerCase().includes(searchTerm.toLowerCase())
       )
-      setFilteredProfessionals(filtered)
     }
+
+    // Profession filter
+    if (filters.profissao) {
+      filtered = filtered.filter(prof => 
+        prof.profissao?.toLowerCase() === filters.profissao.toLowerCase()
+      )
+    }
+
+    // Day filter
+    if (filters.dia) {
+      filtered = filtered.filter(prof => 
+        prof.sessions.some(session => 
+          session.day.toLowerCase() === filters.dia.toLowerCase()
+        )
+      )
+    }
+
+    // Price range filter
+    if (filters.valorMin) {
+      const minPrice = parseFloat(filters.valorMin)
+      filtered = filtered.filter(prof => 
+        prof.preco_consulta && prof.preco_consulta >= minPrice
+      )
+    }
+    if (filters.valorMax) {
+      const maxPrice = parseFloat(filters.valorMax)
+      filtered = filtered.filter(prof => 
+        prof.preco_consulta && prof.preco_consulta <= maxPrice
+      )
+    }
+
+    // Service filter
+    if (filters.servico) {
+      filtered = filtered.filter(prof => 
+        prof.servicos_raw?.toLowerCase().includes(filters.servico.toLowerCase())
+      )
+    }
+
+    setFilteredProfessionals(filtered)
     setCurrentPage(1) // Reset to first page when filtering
   }
 
   const fetchProfessionals = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      
+      // Fetch professionals
+      const { data: professionalsData, error: profError } = await supabase
         .from('profissionais')
         .select(`
           id,
@@ -69,14 +127,35 @@ const Professionals = () => {
           preco_consulta,
           tempo_consulta,
           user_email,
-          linkedin
+          linkedin,
+          servicos_raw,
+          user_id
         `)
         .eq('ativo', true)
         .order('display_name')
 
-      if (error) throw error
+      if (profError) throw profError
 
-      setProfessionals(data || [])
+      // Fetch sessions for all professionals
+      const { data: sessionsData, error: sessError } = await supabase
+        .from('profissionais_sessoes')
+        .select('user_id, day, start_time, end_time')
+
+      if (sessError) throw sessError
+
+      // Combine data
+      const professionalsWithSessions = (professionalsData || []).map(prof => ({
+        ...prof,
+        sessions: (sessionsData || [])
+          .filter(session => session.user_id === prof.user_id)
+          .map(session => ({
+            day: session.day,
+            start_time: session.start_time,
+            end_time: session.end_time
+          }))
+      }))
+
+      setProfessionals(professionalsWithSessions)
     } catch (err) {
       console.error('Error fetching professionals:', err)
       setError('Erro ao carregar profissionais')
@@ -107,6 +186,49 @@ const Professionals = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(price)
+  }
+
+  const formatSchedule = (sessions: ProfessionalSession[]) => {
+    if (!sessions.length) return 'Horários não informados'
+    
+    const dayMap: { [key: string]: string } = {
+      'monday': 'Seg',
+      'tuesday': 'Ter', 
+      'wednesday': 'Qua',
+      'thursday': 'Qui',
+      'friday': 'Sex',
+      'saturday': 'Sáb',
+      'sunday': 'Dom'
+    }
+    
+    const formatted = sessions.map(session => {
+      const day = dayMap[session.day] || session.day
+      const start = session.start_time.slice(0, 5)
+      const end = session.end_time.slice(0, 5)
+      return `${day} ${start}-${end}`
+    }).join(', ')
+    
+    return formatted
+  }
+
+  const getUniqueValues = (field: 'profissao' | 'crp_crm' | 'servicos_raw') => {
+    return [...new Set(professionals
+      .map(prof => prof[field])
+      .filter(Boolean)
+      .filter((val): val is string => typeof val === 'string')
+      .map(val => val.toLowerCase())
+    )]
+  }
+
+  const clearFilters = () => {
+    setFilters({
+      profissao: "",
+      dia: "",
+      valorMin: "",
+      valorMax: "",
+      servico: ""
+    })
+    setSearchTerm("")
   }
 
   // Pagination logic
@@ -153,16 +275,99 @@ const Professionals = () => {
             prontos para oferecer o melhor atendimento para você.
           </p>
           
-          {/* Search Bar */}
-          <div className="max-w-md mx-auto relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              type="text"
-              placeholder="Buscar por nome ou profissão..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          {/* Search and Filters */}
+          <div className="max-w-4xl mx-auto space-y-4">
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="Buscar por nome ou profissão..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Filtros
+              </Button>
+            </div>
+
+            {/* Advanced Filters */}
+            {showFilters && (
+              <div className="bg-muted/50 rounded-lg p-6 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold">Filtros Avançados</h3>
+                  <Button variant="ghost" size="sm" onClick={clearFilters}>
+                    <X className="h-4 w-4 mr-2" />
+                    Limpar
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Profissão</label>
+                    <Select value={filters.profissao} onValueChange={(value) => setFilters(prev => ({ ...prev, profissao: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Todas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Todas</SelectItem>
+                        {getUniqueValues('profissao').map(prof => (
+                          <SelectItem key={prof} value={prof as string}>
+                            {capitalizeText(prof as string)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Dia da Semana</label>
+                    <Select value={filters.dia} onValueChange={(value) => setFilters(prev => ({ ...prev, dia: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Todos" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Todos</SelectItem>
+                        <SelectItem value="monday">Segunda-feira</SelectItem>
+                        <SelectItem value="tuesday">Terça-feira</SelectItem>
+                        <SelectItem value="wednesday">Quarta-feira</SelectItem>
+                        <SelectItem value="thursday">Quinta-feira</SelectItem>
+                        <SelectItem value="friday">Sexta-feira</SelectItem>
+                        <SelectItem value="saturday">Sábado</SelectItem>
+                        <SelectItem value="sunday">Domingo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="md:col-span-2 lg:col-span-1">
+                    <label className="text-sm font-medium mb-2 block">Faixa de Preço</label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        placeholder="Min"
+                        value={filters.valorMin}
+                        onChange={(e) => setFilters(prev => ({ ...prev, valorMin: e.target.value }))}
+                        className="flex-1"
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Max"
+                        value={filters.valorMax}
+                        onChange={(e) => setFilters(prev => ({ ...prev, valorMax: e.target.value }))}
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -252,6 +457,20 @@ const Professionals = () => {
 
                   <CardContent className="pt-0">
                     <div className="space-y-3">
+                      {/* Schedule */}
+                      <div className="bg-muted/50 rounded-lg p-3">
+                        <div className="flex items-start gap-2 mb-2">
+                          <Calendar className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-primary mb-1">Horários de Atendimento</p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              {formatSchedule(professional.sessions)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Price and Duration */}
                       <div className="flex items-center justify-between text-sm bg-muted/50 rounded-lg p-3">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-primary">
