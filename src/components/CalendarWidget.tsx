@@ -125,6 +125,7 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
           mode="single"
           selected={selectedDate}
           onSelect={setSelectedDate}
+          locale={ptBR}
           disabled={(date) => {
             return date < new Date() || !availableDates.some(availableDate => 
               isSameDay(date, availableDate)
