@@ -172,16 +172,37 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
                     <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-ul:text-foreground prose-li:text-foreground">
                       <ReactMarkdown
                         components={{
-                          a: ({ href, children }) => (
-                            <a 
-                              href={href} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline font-medium decoration-2 underline-offset-2"
-                            >
-                              {children}
-                            </a>
-                          ),
+                          a: ({ href, children }) => {
+                            // Check if it's an internal link (starts with /)
+                            const isInternalLink = href?.startsWith('/');
+                            
+                            if (isInternalLink) {
+                              return (
+                                <a 
+                                  href={href}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg font-medium transition-all duration-200 no-underline hover:scale-105 border border-primary/20"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    window.location.href = href || '';
+                                  }}
+                                >
+                                  {children}
+                                  <span className="text-xs">→</span>
+                                </a>
+                              );
+                            }
+                            
+                            return (
+                              <a 
+                                href={href} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline font-medium decoration-2 underline-offset-2"
+                              >
+                                {children}
+                              </a>
+                            );
+                          },
                           h3: ({ children }) => (
                             <h3 className="text-lg font-bold text-foreground mt-4 mb-2 flex items-center gap-2">
                               {children}

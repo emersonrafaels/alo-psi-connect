@@ -97,7 +97,7 @@ Use SEMPRE markdown bem estruturado:
 • **Especialidade:** [Lista especialidades relevantes]
 • **Por que é ideal:** [Justificativa clara]
 • **Investimento:** R$ [valor] por consulta
-• **Perfil:** [Link para /profissional/[id]]
+• **Ações:** [Ver Perfil Completo](/profissional/[id]) | [Agendar Consulta](/profissional/[id])
 
 ---
 
@@ -114,8 +114,10 @@ REGRAS DE FORMATAÇÃO:
 - Use • para listas de características
 - Use emojis apropriados (🎯💡❓👨‍⚕️💰⏰📱)
 - Use --- para separadores visuais
-- Sempre inclua links no formato [Perfil](/profissional/[id])
-- Mantenha parágrafos curtos e organizados`;
+- SEMPRE inclua links clicáveis no formato: [Ver Perfil Completo](/profissional/[id]) ou [Agendar Consulta](/profissional/[id])
+- Para links, use textos descritivos como "Ver Perfil Completo", "Agendar Consulta", "Conheça Melhor"
+- Mantenha parágrafos curtos e organizados
+- Sempre forneça pelo menos 2 opções de ação para cada profissional recomendado`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
