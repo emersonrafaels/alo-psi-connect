@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useNavigate } from "react-router-dom"
 
 interface ProfessionalCardProps {
+  id: number | string
   name: string
   title: string
   image?: string
@@ -11,12 +13,18 @@ interface ProfessionalCardProps {
 }
 
 const ProfessionalCard = ({ 
+  id,
   name, 
   title, 
   image, 
   specialties = [],
   isCompactView = false 
 }: ProfessionalCardProps) => {
+  const navigate = useNavigate()
+
+  const handleViewProfile = () => {
+    navigate(`/professional/${id}`)
+  }
   if (isCompactView) {
     return (
       <Card className="w-full">
@@ -34,7 +42,7 @@ const ProfessionalCard = ({
               <p className="text-sm text-muted-foreground">{title}</p>
             </div>
           </div>
-          <Button variant="accent" size="sm" className="w-full mt-4">
+          <Button variant="accent" size="sm" className="w-full mt-4" onClick={handleViewProfile}>
             Ver Perfil Completo
           </Button>
         </CardContent>
@@ -67,7 +75,7 @@ const ProfessionalCard = ({
             </div>
           </div>
         )}
-        <Button variant="accent" className="w-full">
+        <Button variant="accent" className="w-full" onClick={handleViewProfile}>
           Ver Perfil Completo
         </Button>
       </CardContent>

@@ -206,6 +206,7 @@ const Index = () => {
               featuredProfessionals.map((professional) => (
                 <ProfessionalCard
                   key={professional.id}
+                  id={professional.id}
                   name={professional.display_name}
                   title={`${professional.profissao || 'Profissional'} - ${professional.crp_crm || 'CRP/CRM'}`}
                   specialties={formatSpecialties(professional.servicos_raw)}
