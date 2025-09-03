@@ -13,7 +13,8 @@ import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Upload, Eye, EyeOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { PhotoUpload } from '@/components/ui/photo-upload';
 
 const ProfessionalForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -260,25 +261,11 @@ const ProfessionalForm = () => {
 
   const renderStep3 = () => (
     <div className="space-y-6">
-      <div>
-        <Label htmlFor="fotoPerfil">Foto de Perfil</Label>
-        <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-border rounded-md">
-          <div className="space-y-1 text-center">
-            <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-            <div className="flex text-sm text-muted-foreground">
-              <Input
-                id="fotoPerfilUrl"
-                type="url"
-                value={formData.fotoPerfilUrl}
-                onChange={(e) => updateFormData('fotoPerfilUrl', e.target.value)}
-                placeholder="URL da foto ou clique para fazer upload"
-                className="border-0 bg-transparent"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">PNG, JPG, GIF até 10MB</p>
-          </div>
-        </div>
-      </div>
+      <PhotoUpload
+        onPhotoUploaded={(url) => updateFormData('fotoPerfilUrl', url)}
+        currentPhotoUrl={formData.fotoPerfilUrl}
+        label="Foto de Perfil"
+      />
 
       <div>
         <Label htmlFor="linkedin">LinkedIn</Label>
