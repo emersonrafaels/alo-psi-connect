@@ -1,3 +1,4 @@
+import { useState } from "react"
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
 import { Button } from "@/components/ui/button"
@@ -5,8 +6,12 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Search } from "lucide-react"
+import { CommentForm } from "@/components/CommentForm"
+import { CommentsList } from "@/components/CommentsList"
 
 const Blog = () => {
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
   const posts = [
     {
       title: "Como Identificar e Superar a Síndrome do Impostor na Universidade",
@@ -51,6 +56,12 @@ const Blog = () => {
   ]
 
   const tags = ["Ansiedade", "Estresse", "Autoestima", "Mindfulness", "Síndrome do Impostor", "Terapia", "Bem-estar", "Universitários", "Depressão", "Autocuidado"]
+
+  const postId = "ansiedade-academica-guia-completo";
+
+  const handleCommentAdded = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -156,21 +167,10 @@ const Blog = () => {
                 <Badge variant="secondary">Saúde Mental</Badge>
               </div>
 
-              {/* Comments Form */}
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="text-xl font-semibold mb-6">Deixe Um Comentário</h3>
-                <form className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input placeholder="Seu nome" />
-                    <Input placeholder="E-mail" />
-                  </div>
-                  <textarea 
-                    placeholder="Mensagem"
-                    rows={4}
-                    className="w-full p-3 border border-input rounded-md resize-none"
-                  />
-                  <Button variant="default">Enviar</Button>
-                </form>
+              {/* Comments Section */}
+              <div className="space-y-8">
+                <CommentForm postId={postId} onCommentAdded={handleCommentAdded} />
+                <CommentsList postId={postId} refreshTrigger={refreshTrigger} />
               </div>
             </article>
           </div>
