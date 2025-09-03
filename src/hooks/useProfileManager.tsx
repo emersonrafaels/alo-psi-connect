@@ -25,13 +25,19 @@ export const useProfileManager = () => {
 
     setLoading(true);
     try {
+      // Usa upsert para inserir ou atualizar
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          user_id: user.id,
+          email: user.email || '',
+          nome: data.nome || user.user_metadata?.full_name || '',
+          tipo_usuario: 'paciente',
           ...data,
           updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
+        }, {
+          onConflict: 'user_id'
+        });
 
       if (error) throw error;
 
@@ -42,11 +48,7 @@ export const useProfileManager = () => {
 
       return { error: null };
     } catch (error: any) {
-      toast({
-        title: "Erro ao atualizar perfil",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error('Erro ao salvar perfil:', error);
       return { error: error.message };
     } finally {
       setLoading(false);
