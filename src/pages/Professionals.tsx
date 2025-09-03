@@ -254,7 +254,6 @@ const Professionals = () => {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between text-sm bg-muted/50 rounded-lg p-3">
                         <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-primary" />
                           <span className="font-semibold text-primary">
                             {formatPrice(professional.preco_consulta)}
                           </span>
