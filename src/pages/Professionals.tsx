@@ -823,7 +823,7 @@ const Professionals = () => {
 
                           {/* Specialties */}
                           {professional.servicos_raw && (
-                            <div className="min-w-0 max-w-xs">
+                            <div className="min-w-0 flex-1">
                               <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2 flex items-center gap-1">
                                 <span className="inline-block w-2 h-2 bg-primary rounded-full"></span>
                                 Especialidades
