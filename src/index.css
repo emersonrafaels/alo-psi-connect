@@ -189,7 +189,41 @@ All colors MUST be HSL.
     background: var(--gradient-hover);
   }
   
-  .search-modern:focus-within::before {
-    @apply opacity-100;
+  
+  /* Scrollbar styling */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  
+  .scrollbar-thumb-primary\/20::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .scrollbar-thumb-primary\/20::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.2);
+    border-radius: 2px;
+  }
+  
+  .scrollbar-thumb-primary\/20::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thumb-teal\/30::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .scrollbar-thumb-teal\/30::-webkit-scrollbar-thumb {
+    background: hsl(var(--teal) / 0.3);
+    border-radius: 2px;
+  }
+  
+  .scrollbar-thumb-teal\/30::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-track-transparent {
+    scrollbar-color: hsl(var(--primary) / 0.2) transparent;
   }
 }

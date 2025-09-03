@@ -215,7 +215,7 @@ const Professionals = () => {
   }
 
   const formatSchedule = (sessions: ProfessionalSession[]) => {
-    if (!sessions.length) return 'Horários não informados'
+    if (!sessions.length) return []
     
     const dayMap: { [key: string]: string } = {
       'monday': 'Seg',
@@ -237,10 +237,10 @@ const Professionals = () => {
       if (!acc[day]) {
         acc[day] = []
       }
-      acc[day].push(timeRange)
+      acc[day].push({ time: timeRange, originalDay: session.day })
       
       return acc
-    }, {} as { [key: string]: string[] })
+    }, {} as { [key: string]: { time: string, originalDay: string }[] })
     
     // Sort days in logical order
     const dayOrder = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
@@ -248,10 +248,11 @@ const Professionals = () => {
       return dayOrder.indexOf(a) - dayOrder.indexOf(b)
     })
     
-    return sortedDays.map(day => {
-      const times = [...new Set(groupedSessions[day])].join(', ')
-      return `${day}: ${times}`
-    }).join(' • ')
+    return sortedDays.map(day => ({
+      day,
+      times: [...new Set(groupedSessions[day].map(t => t.time))],
+      originalDay: groupedSessions[day][0].originalDay
+    }))
   }
 
   const formatSpecialties = (servicos: string | null) => {
@@ -265,6 +266,18 @@ const Professionals = () => {
         // Capitalize first letter of each word
         return servico.replace(/\b\w/g, l => l.toUpperCase())
       })
+  }
+
+  const handleTimeSlotClick = (professional: Professional, day: string, time: string) => {
+    // Redirect to booking confirmation page with professional and time slot info
+    const searchParams = new URLSearchParams({
+      professionalId: professional.id.toString(),
+      professionalName: professional.display_name,
+      day,
+      time,
+      price: professional.preco_consulta?.toString() || '0'
+    })
+    window.location.href = `/agendamento?${searchParams.toString()}`
   }
 
   const getAvatarColor = (name: string) => {
@@ -728,126 +741,134 @@ const Professionals = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="space-y-6">
                 {currentProfessionals.map((professional) => (
-                  <Card key={professional.id} className="overflow-hidden professional-card border-2 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
-                    <CardHeader className="p-0 relative">
-                      <div className="relative h-56 bg-gradient-to-br from-primary/5 via-teal/5 to-accent/5 overflow-hidden">
-                        {professional.foto_perfil_url ? (
-                          <img 
-                            src={professional.foto_perfil_url} 
-                            alt={professional.display_name}
-                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center relative">
-                            <div 
-                              className="h-32 w-32 rounded-full avatar-dynamic text-3xl font-bold border-4 border-white/50 shadow-lg"
-                              style={{ backgroundColor: getAvatarColor(professional.display_name) }}
-                            >
-                              {getInitials(professional.display_name)}
-                            </div>
-                            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-black/10"></div>
-                          </div>
-                        )}
-                        <div className="absolute top-4 right-4">
-                          {professional.preco_consulta ? (
-                            <Badge className="bg-white/95 text-primary border border-primary/20 shadow-lg font-bold px-3 py-1">
-                              {formatPrice(professional.preco_consulta)}
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="bg-white/95 text-muted-foreground shadow-lg">
-                              Consultar
-                            </Badge>
-                          )}
-                        </div>
-                        {professional.sessions.length > 0 && (
-                          <div className="absolute bottom-4 left-4">
-                            <Badge className="bg-teal/90 text-white border border-teal/30 shadow-lg">
-                              <Clock className="h-3 w-3 mr-1" />
-                              Disponível
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-                    </CardHeader>
-                    
+                  <Card key={professional.id} className="professional-card border-2 bg-gradient-to-r from-card via-card/95 to-card/90 backdrop-blur-sm overflow-hidden">
                     <CardContent className="p-6">
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <CardTitle className="text-xl font-bold text-foreground leading-tight">
-                            {professional.display_name}
-                          </CardTitle>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-primary border-primary/30 bg-primary/5">
-                              {capitalizeText(professional.profissao)}
-                            </Badge>
-                            {professional.crp_crm && (
-                              <span className="text-xs text-muted-foreground font-mono">
-                                {professional.crp_crm}
-                              </span>
-                            )}
+                      <div className="flex flex-col lg:flex-row gap-6">
+                        {/* Professional Info Section */}
+                        <div className="flex flex-col sm:flex-row gap-4 lg:flex-1">
+                          {/* Avatar and Basic Info */}
+                          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 min-w-0">
+                            <div className="relative flex-shrink-0">
+                              {professional.foto_perfil_url ? (
+                                <img 
+                                  src={professional.foto_perfil_url} 
+                                  alt={professional.display_name}
+                                  className="w-20 h-20 rounded-full object-cover border-4 border-white/50 shadow-lg"
+                                />
+                              ) : (
+                                <div 
+                                  className="w-20 h-20 rounded-full avatar-dynamic text-xl font-bold border-4 border-white/50 shadow-lg"
+                                  style={{ backgroundColor: getAvatarColor(professional.display_name) }}
+                                >
+                                  {getInitials(professional.display_name)}
+                                </div>
+                              )}
+                              {professional.preco_consulta && (
+                                <Badge className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground shadow-lg font-bold px-2 py-1">
+                                  {formatPrice(professional.preco_consulta)}
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Name and Profession */}
+                            <div className="text-center sm:text-left min-w-0 flex-1">
+                              <h3 className="text-xl font-bold text-foreground mb-1 truncate">
+                                {professional.display_name}
+                              </h3>
+                              <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2 mb-2">
+                                <Badge variant="outline" className="text-primary border-primary/30 bg-primary/5 font-medium">
+                                  {capitalizeText(professional.profissao)}
+                                </Badge>
+                                {professional.crp_crm && (
+                                  <span className="text-xs text-muted-foreground font-mono">
+                                    {professional.crp_crm}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              {professional.resumo_profissional && (
+                                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed max-w-md">
+                                  {professional.resumo_profissional}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        {professional.resumo_profissional && (
-                          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                            {professional.resumo_profissional}
-                          </p>
-                        )}
-
-                        <div className="space-y-3">
-                          {professional.sessions.length > 0 && (
-                            <div className="flex items-start gap-2 p-4 bg-gradient-to-r from-teal/5 to-accent/5 rounded-lg border border-teal/10">
-                              <Clock className="h-4 w-4 text-teal mt-1 flex-shrink-0" />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-semibold text-teal mb-2 uppercase tracking-wide">Horários Disponíveis</p>
-                                <div className="text-sm text-foreground font-medium leading-relaxed">
-                                  {formatSchedule(professional.sessions).split(' • ').map((schedule, index) => (
-                                    <div key={index} className="flex items-center gap-2 mb-1 last:mb-0">
-                                      <span className="inline-block w-2 h-2 bg-teal rounded-full"></span>
-                                      <span>{schedule}</span>
-                                    </div>
+                          {/* Specialties */}
+                          {professional.servicos_raw && (
+                            <div className="min-w-0 max-w-xs">
+                              <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2 flex items-center gap-1">
+                                <span className="inline-block w-2 h-2 bg-primary rounded-full"></span>
+                                Especialidades
+                              </p>
+                              <div className="max-h-20 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+                                <div className="flex flex-wrap gap-1.5 pr-2">
+                                  {formatSpecialties(professional.servicos_raw).map((servico, index) => (
+                                    <Badge 
+                                      key={index} 
+                                      variant="secondary" 
+                                      className="text-xs bg-gradient-to-r from-accent/10 to-accent/20 text-accent-foreground border border-accent/30 hover:from-accent/20 hover:to-accent/30 transition-all duration-200 px-2 py-1 font-medium"
+                                    >
+                                      {servico}
+                                    </Badge>
                                   ))}
                                 </div>
                               </div>
                             </div>
                           )}
+                        </div>
 
-                          {professional.servicos_raw && (
-                            <div className="space-y-3">
-                              <p className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-2">
-                                <span className="inline-block w-2 h-2 bg-primary rounded-full"></span>
-                                Especialidades
+                        {/* Schedule Section */}
+                        <div className="lg:min-w-0 lg:flex-shrink-0 lg:w-80">
+                          {professional.sessions.length > 0 ? (
+                            <div className="bg-gradient-to-br from-teal/5 to-accent/5 rounded-lg border border-teal/10 p-4">
+                              <p className="text-xs font-semibold text-teal mb-3 uppercase tracking-wide flex items-center gap-2">
+                                <Clock className="h-4 w-4" />
+                                Horários Disponíveis - Clique para Agendar
                               </p>
-                              <div className="flex flex-wrap gap-2">
-                                {formatSpecialties(professional.servicos_raw).slice(0, 4).map((servico, index) => (
-                                  <Badge 
-                                    key={index} 
-                                    variant="secondary" 
-                                    className="text-xs bg-gradient-to-r from-accent/10 to-accent/20 text-accent-foreground border border-accent/30 hover:from-accent/20 hover:to-accent/30 transition-all duration-200 px-3 py-1.5 font-medium"
-                                  >
-                                    {servico}
-                                  </Badge>
-                                ))}
-                                {formatSpecialties(professional.servicos_raw).length > 4 && (
-                                  <Badge variant="outline" className="text-xs text-muted-foreground border-dashed hover:bg-muted/50 transition-colors px-2 py-1">
-                                    +{formatSpecialties(professional.servicos_raw).length - 4} mais
-                                  </Badge>
-                                )}
+                              <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-teal/30 scrollbar-track-transparent">
+                                <div className="space-y-2 pr-2">
+                                  {formatSchedule(professional.sessions).map((schedule, index) => (
+                                    <div key={index} className="space-y-1">
+                                      <div className="text-xs font-medium text-teal/80 flex items-center gap-1">
+                                        <span className="inline-block w-1.5 h-1.5 bg-teal rounded-full"></span>
+                                        {schedule.day}
+                                      </div>
+                                      <div className="flex flex-wrap gap-1 ml-3">
+                                        {schedule.times.map((time, timeIndex) => (
+                                          <button
+                                            key={timeIndex}
+                                            onClick={() => handleTimeSlotClick(professional, schedule.originalDay, time)}
+                                            className="px-2 py-1 text-xs bg-white/80 hover:bg-teal/20 text-teal border border-teal/30 rounded-md transition-all duration-200 hover:shadow-md hover:scale-105 cursor-pointer font-medium"
+                                          >
+                                            {time}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
+                            </div>
+                          ) : (
+                            <div className="bg-muted/30 rounded-lg p-4 text-center">
+                              <Clock className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                              <p className="text-sm text-muted-foreground">Horários não informados</p>
                             </div>
                           )}
                         </div>
 
-                        <div className="flex gap-3 pt-4 border-t border-border/50">
-                          <Button variant="outline" size="sm" className="flex-1 border-2 hover:border-primary/50 hover:bg-primary/5" asChild>
+                        {/* Actions */}
+                        <div className="flex lg:flex-col gap-3 lg:w-32 lg:flex-shrink-0">
+                          <Button variant="outline" size="sm" className="flex-1 lg:flex-none border-2 hover:border-primary/50 hover:bg-primary/5" asChild>
                             <Link to={`/professional/${professional.id}`}>
                               <Star className="h-4 w-4 mr-2" />
                               Ver Perfil
                             </Link>
                           </Button>
-                          <Button size="sm" className="flex-1 btn-gradient shadow-lg" asChild>
+                          <Button size="sm" className="flex-1 lg:flex-none btn-gradient shadow-lg" asChild>
                             <Link to={`/schedule?professional=${professional.id}`}>
                               <Calendar className="h-4 w-4 mr-2" />
                               Agendar
