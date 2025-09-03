@@ -36,7 +36,7 @@ const Index = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button variant="default" size="lg" className="bg-primary text-primary-foreground">
-                  Encontrar Psicólogo
+                  Encontrar Profissional
                 </Button>
                 <Button variant="accent" size="lg">
                   Marcar uma Consulta
