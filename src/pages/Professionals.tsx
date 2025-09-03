@@ -828,8 +828,8 @@ const Professionals = () => {
                                 <span className="inline-block w-2 h-2 bg-primary rounded-full"></span>
                                 Especialidades
                               </p>
-                              <div className="max-h-20 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-                                <div className="flex flex-wrap gap-1.5 pr-2">
+                              <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+                                <div className="flex flex-wrap gap-3 pr-2">
                                   {formatSpecialties(professional.servicos_raw).map((servico, index) => (
                                     <Badge 
                                       key={index} 
