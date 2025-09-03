@@ -155,7 +155,7 @@ const Professional = () => {
           <div className="flex flex-col md:flex-row items-start gap-8">
             <Avatar className={`h-24 w-24 ${getAvatarColor(professional.display_name)} shadow-elegant`}>
               <AvatarImage src={professional.foto_perfil_url} alt={professional.display_name} />
-              <AvatarFallback className="text-primary-foreground text-xl font-bold">
+              <AvatarFallback className="text-black dark:text-white text-xl font-bold">
                 {getInitials(professional.display_name)}
               </AvatarFallback>
             </Avatar>
