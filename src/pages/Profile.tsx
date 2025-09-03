@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { PhotoUpload } from '@/components/ui/photo-upload';
@@ -246,13 +247,31 @@ const Profile = () => {
                 </div>
 
                 <div className="flex justify-end pt-6">
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full sm:w-auto"
-                  >
-                    {loading ? 'Salvando...' : 'Salvar Alterações'}
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        type="button"
+                        disabled={loading}
+                        className="w-full sm:w-auto"
+                      >
+                        {loading ? 'Salvando...' : 'Salvar Alterações'}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar alterações</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Você tem certeza que deseja salvar as alterações em seu perfil? Esta ação atualizará suas informações pessoais.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleSubmit} disabled={loading}>
+                          {loading ? 'Salvando...' : 'Salvar'}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </form>
             </CardContent>
