@@ -39,7 +39,7 @@ const Index = () => {
                   variant="default" 
                   size="lg" 
                   className="bg-primary text-primary-foreground"
-                  onClick={() => window.location.href = '/professional'}
+                  onClick={() => window.location.href = '/profissionais'}
                 >
                   Encontrar Profissional
                 </Button>
