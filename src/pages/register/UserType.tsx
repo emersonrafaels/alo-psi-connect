@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Header from '@/components/ui/header';
@@ -9,6 +9,8 @@ import { useEffect } from 'react';
 
 const UserType = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const googleData = location.state?.googleData || null;
   const { user } = useAuth();
   const { hasProfile, loading } = useUserProfile();
 
@@ -28,9 +30,9 @@ const UserType = () => {
 
   const handleUserTypeSelection = (tipo: 'paciente' | 'profissional') => {
     if (tipo === 'paciente') {
-      navigate('/cadastro/paciente');
+      navigate('/cadastro/paciente', { state: { googleData } });
     } else {
-      navigate('/cadastro/profissional');
+      navigate('/cadastro/profissional', { state: { googleData } });
     }
   };
 

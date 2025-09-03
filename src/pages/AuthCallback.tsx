@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -8,6 +8,7 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { hasProfile, loading } = useUserProfile();
+  const [googleData, setGoogleData] = useState<any>(null);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -33,8 +34,27 @@ const AuthCallback = () => {
         if (hasProfile) {
           navigate('/');
         } else {
-          // Se não tem perfil, redirecionar para seleção de tipo de usuário
-          navigate('/cadastro/tipo-usuario');
+          // Extrair dados do Google se disponível
+          const googleUserData = data.session?.user?.user_metadata;
+          if (googleUserData) {
+            const extractedData = {
+              fullName: googleUserData.full_name || googleUserData.name || '',
+              email: googleUserData.email || '',
+              picture: googleUserData.picture || googleUserData.avatar_url || '',
+              emailVerified: googleUserData.email_verified || false
+            };
+            setGoogleData(extractedData);
+          }
+          
+          // Se não tem perfil, redirecionar para seleção de tipo de usuário com dados do Google
+          navigate('/cadastro/tipo-usuario', { 
+            state: { googleData: googleUserData ? {
+              fullName: googleUserData.full_name || googleUserData.name || '',
+              email: googleUserData.email || '',
+              picture: googleUserData.picture || googleUserData.avatar_url || '',
+              emailVerified: googleUserData.email_verified || false
+            } : null }
+          });
         }
       } catch (error) {
         console.error('Error handling auth callback:', error);

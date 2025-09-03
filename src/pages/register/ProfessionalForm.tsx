@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,8 +14,10 @@ import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, EyeOff, Check } from 'lucide-react';
 import { PhotoUpload } from '@/components/ui/photo-upload';
+import { Badge } from '@/components/ui/badge';
+import { useProfileManager } from '@/hooks/useProfileManager';
 
 const ProfessionalForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -23,12 +25,15 @@ const ProfessionalForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { saveGooglePhoto } = useProfileManager();
+  const googleData = location.state?.googleData || null;
 
   const [formData, setFormData] = useState({
-    nome: '',
-    email: user?.email || '',
+    nome: googleData?.fullName || '',
+    email: user?.email || googleData?.email || '',
     dataNascimento: '',
     genero: '',
     cpf: '',
@@ -42,6 +47,20 @@ const ProfessionalForm = () => {
     senha: '',
     confirmarSenha: ''
   });
+
+  // Salvar foto do Google automaticamente se disponível
+  useEffect(() => {
+    const saveGoogleProfilePhoto = async () => {
+      if (googleData?.picture && !formData.fotoPerfilUrl) {
+        const photoUrl = await saveGooglePhoto(googleData.picture);
+        if (photoUrl) {
+          setFormData(prev => ({ ...prev, fotoPerfilUrl: photoUrl }));
+        }
+      }
+    };
+
+    saveGoogleProfilePhoto();
+  }, [googleData, saveGooglePhoto, formData.fotoPerfilUrl]);
 
   const totalSteps = 4;
   const progressPercentage = (currentStep / totalSteps) * 100;
@@ -139,24 +158,40 @@ const ProfessionalForm = () => {
       <div className="grid gap-4">
         <div>
           <Label htmlFor="nome">Nome completo <span className="text-red-500">*</span></Label>
-          <Input
-            id="nome"
-            value={formData.nome}
-            onChange={(e) => updateFormData('nome', e.target.value)}
-            required
-          />
+          <div className="space-y-2">
+            <Input
+              id="nome"
+              value={formData.nome}
+              onChange={(e) => updateFormData('nome', e.target.value)}
+              required
+            />
+            {googleData?.fullName && (
+              <Badge variant="secondary" className="text-xs">
+                <Check className="h-3 w-3 mr-1" />
+                Preenchido pelo Google
+              </Badge>
+            )}
+          </div>
         </div>
 
         <div>
           <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => updateFormData('email', e.target.value)}
-            required
-            disabled
-          />
+          <div className="space-y-2">
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => updateFormData('email', e.target.value)}
+              required
+              disabled
+            />
+            {googleData?.emailVerified && (
+              <Badge variant="secondary" className="text-xs">
+                <Check className="h-3 w-3 mr-1" />
+                Verificado pelo Google
+              </Badge>
+            )}
+          </div>
         </div>
 
         <div>
@@ -262,11 +297,19 @@ const ProfessionalForm = () => {
 
   const renderStep3 = () => (
     <div className="space-y-6">
-      <PhotoUpload
-        onPhotoUploaded={(url) => updateFormData('fotoPerfilUrl', url)}
-        currentPhotoUrl={formData.fotoPerfilUrl}
-        label="Foto de Perfil"
-      />
+      <div className="space-y-2">
+        <PhotoUpload
+          onPhotoUploaded={(url) => updateFormData('fotoPerfilUrl', url)}
+          currentPhotoUrl={formData.fotoPerfilUrl}
+          label="Foto de Perfil"
+        />
+        {googleData?.picture && formData.fotoPerfilUrl && (
+          <Badge variant="secondary" className="text-xs">
+            <Check className="h-3 w-3 mr-1" />
+            Foto importada do Google
+          </Badge>
+        )}
+      </div>
 
       <div>
         <Label htmlFor="linkedin">LinkedIn</Label>

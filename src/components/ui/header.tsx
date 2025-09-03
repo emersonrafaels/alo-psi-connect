@@ -1,17 +1,20 @@
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Menu, X, User, LogOut } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Menu, X, User, LogOut, Settings } from "lucide-react"
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/useAuth"
+import { useUserProfile } from "@/hooks/useUserProfile"
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
+  const { profile } = useUserProfile()
 
   const navigation = [
     { name: "Home", href: "/" },
@@ -24,6 +27,15 @@ const Header = () => {
   ]
 
   const isActive = (path: string) => location.pathname === path
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  }
 
   return (
     <header className="bg-primary text-primary-foreground">
@@ -59,12 +71,29 @@ const Header = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                    <User className="h-4 w-4 mr-2" />
-                    Minha Conta
+                  <Button variant="outline" size="sm" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={profile?.foto_perfil_url} alt={profile?.nome || user.email || ''} />
+                      <AvatarFallback className="text-xs">
+                        {getInitials(profile?.nome || user.email || 'U')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden sm:inline">
+                      {profile?.nome?.split(' ')[0] || user.email}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-1.5 text-sm">
+                    <div className="font-medium">{profile?.nome || user.email}</div>
+                    <div className="text-xs text-muted-foreground">{user.email}</div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/perfil')}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Meu Perfil
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => signOut()}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Sair

@@ -25,6 +25,7 @@ import AuthCallback from "./pages/AuthCallback";
 import UserType from "./pages/register/UserType";
 import PatientForm from "./pages/register/PatientForm";
 import ProfessionalForm from "./pages/register/ProfessionalForm";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import WhatsAppFloat from "@/components/ui/whatsapp-float";
 
@@ -57,6 +58,7 @@ const App: React.FC = () => {
                   <Route path="/confirmacao-agendamento" element={<BookingConfirmation />} />
                   <Route path="/contato" element={<Contact />} />
                   <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
+                  <Route path="/perfil" element={<Profile />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   {/* Redirect old routes to new cadastro routes */}

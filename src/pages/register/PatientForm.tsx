@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,19 +13,22 @@ import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const PatientForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const googleData = location.state?.googleData || null;
 
   const [formData, setFormData] = useState({
     ehEstudante: '',
-    nome: '',
-    email: user?.email || '',
+    nome: googleData?.fullName || '',
+    email: user?.email || googleData?.email || '',
     dataNascimento: '',
     genero: '',
     cpf: '',
@@ -132,24 +135,40 @@ const PatientForm = () => {
       <div className="grid gap-4">
         <div>
           <Label htmlFor="nome">Nome completo <span className="text-red-500">*</span></Label>
-          <Input
-            id="nome"
-            value={formData.nome}
-            onChange={(e) => updateFormData('nome', e.target.value)}
-            required
-          />
+          <div className="space-y-2">
+            <Input
+              id="nome"
+              value={formData.nome}
+              onChange={(e) => updateFormData('nome', e.target.value)}
+              required
+            />
+            {googleData?.fullName && (
+              <Badge variant="secondary" className="text-xs">
+                <Check className="h-3 w-3 mr-1" />
+                Preenchido pelo Google
+              </Badge>
+            )}
+          </div>
         </div>
 
         <div>
           <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => updateFormData('email', e.target.value)}
-            required
-            disabled
-          />
+          <div className="space-y-2">
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => updateFormData('email', e.target.value)}
+              required
+              disabled
+            />
+            {googleData?.emailVerified && (
+              <Badge variant="secondary" className="text-xs">
+                <Check className="h-3 w-3 mr-1" />
+                Verificado pelo Google
+              </Badge>
+            )}
+          </div>
         </div>
 
         <div>
