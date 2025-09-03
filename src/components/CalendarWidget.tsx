@@ -33,14 +33,19 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
     const dates = []
     const today = startOfDay(new Date())
     
+    // Get unique working days from sessions
+    const workingDays = new Set()
+    sessions.forEach(session => {
+      const sessionDay = session.day.toLowerCase().trim()
+      workingDays.add(sessionDay)
+    })
+    
     for (let i = 1; i <= 30; i++) {
       const date = addDays(today, i)
       const dayName = format(date, 'EEEE', { locale: ptBR }).toLowerCase()
       
-      // Check if this day has sessions
-      const hasSessions = sessions.some(session => {
-        const sessionDay = session.day.toLowerCase().trim()
-        
+      // Check if this day matches any working day
+      const isWorkingDay = Array.from(workingDays).some(workingDay => {
         // More comprehensive day matching
         const dayMappings = {
           'segunda-feira': ['segunda', 'seg', 'monday'],
@@ -53,12 +58,12 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
         }
         
         const mappedDays = dayMappings[dayName] || []
-        return sessionDay === dayName || 
-               mappedDays.includes(sessionDay) ||
-               sessionDay === dayName.substring(0, 3)
+        return workingDay === dayName || 
+               mappedDays.includes(workingDay) ||
+               workingDay === dayName.substring(0, 3)
       })
       
-      if (hasSessions) {
+      if (isWorkingDay) {
         dates.push(date)
       }
     }
