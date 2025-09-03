@@ -9,26 +9,48 @@ import { Search } from "lucide-react"
 const Blog = () => {
   const posts = [
     {
-      title: "Nunc tincidunt mollis dui in tempor",
-      excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
-      date: "24 Agosto, 2024",
-      readTime: "5 min read"
+      title: "Como Identificar e Superar a Síndrome do Impostor na Universidade",
+      excerpt: "Você já se sentiu como se não merecesse estar na universidade? A síndrome do impostor afeta muitos estudantes...",
+      date: "15 Janeiro, 2025",
+      readTime: "7 min read",
+      author: "Dra. Marina Silva",
+      tags: ["Síndrome do Impostor", "Autoestima", "Universidade"]
     },
     {
-      title: "Nunc tincidunt mollis dui in tempor",
-      excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
-      date: "24 Agosto, 2024", 
-      readTime: "5 min read"
+      title: "5 Técnicas de Mindfulness para Reduzir a Ansiedade Acadêmica",
+      excerpt: "Descubra práticas simples de mindfulness que podem ser aplicadas no dia a dia universitário para diminuir a ansiedade...",
+      date: "12 Janeiro, 2025", 
+      readTime: "5 min read",
+      author: "Dr. Carlos Mendes",
+      tags: ["Mindfulness", "Ansiedade", "Técnicas"]
     },
     {
-      title: "Nunc tincidunt mollis dui in tempor",
-      excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
-      date: "24 Agosto, 2024",
-      readTime: "5 min read"
+      title: "Sinais de Que Você Precisa Buscar Ajuda Psicológica",
+      excerpt: "Reconhecer quando é hora de procurar apoio profissional é fundamental para sua saúde mental...",
+      date: "10 Janeiro, 2025",
+      readTime: "6 min read",
+      author: "Dra. Ana Paula Costa",
+      tags: ["Saúde Mental", "Terapia", "Autocuidado"]
+    },
+    {
+      title: "Gerenciando o Estresse Durante o Período de Provas",
+      excerpt: "Estratégias práticas para manter o equilíbrio emocional durante os momentos mais intensos do semestre...",
+      date: "8 Janeiro, 2025",
+      readTime: "8 min read",
+      author: "Dr. Roberto Oliveira",
+      tags: ["Estresse", "Provas", "Estratégias"]
+    },
+    {
+      title: "O Impacto das Redes Sociais na Saúde Mental dos Universitários",
+      excerpt: "Como o uso excessivo das redes sociais pode afetar seu bem-estar e dicas para um uso mais consciente...",
+      date: "5 Janeiro, 2025",
+      readTime: "6 min read",
+      author: "Dra. Fernanda Ribeiro",
+      tags: ["Redes Sociais", "Bem-estar", "Digital"]
     }
   ]
 
-  const tags = ["Psicologia", "Ansiedade", "Depressão", "Terapia", "Autoestima", "Bem-estar", "Estresse"]
+  const tags = ["Ansiedade", "Estresse", "Autoestima", "Mindfulness", "Síndrome do Impostor", "Terapia", "Bem-estar", "Universitários", "Depressão", "Autocuidado"]
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,63 +69,81 @@ const Blog = () => {
           <div className="lg:col-span-2">
             {/* Featured Post */}
             <article className="mb-12">
-              <div className="bg-teal aspect-video rounded-lg mb-6"></div>
+              <div className="bg-teal aspect-video rounded-lg mb-6 flex items-center justify-center">
+                <span className="text-white text-lg font-semibold">Ansiedade Acadêmica</span>
+              </div>
               <h2 className="text-3xl font-bold mb-4">
-                Um Santuário para Crescimento e Transformação Abraçando a Empatia, 
-                Inspirando Mudanças Potential Total
+                Como Superar a Ansiedade Acadêmica: Um Guia Completo para Estudantes Universitários
               </h2>
-              <p className="text-muted-foreground mb-6">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
-                incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud 
-                exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
+                <span>Por Dra. Luciana Santos</span>
+                <span>•</span>
+                <span>15 Janeiro, 2025</span>
+                <span>•</span>
+                <span>10 min read</span>
+              </div>
+              <p className="text-muted-foreground mb-6 text-lg leading-relaxed">
+                A ansiedade acadêmica é uma realidade que afeta milhões de estudantes universitários no Brasil. 
+                Caracterizada por sentimentos intensos de preocupação, medo e nervosismo relacionados ao desempenho 
+                acadêmico, essa condição pode impactar significativamente a qualidade de vida e o rendimento dos estudos.
               </p>
               
               <h3 className="text-xl font-semibold mb-4">
-                Apoiando Seu Crescimento e Transformação Pessoal
+                Entendendo os Sinais da Ansiedade Acadêmica
               </h3>
+              <p className="text-muted-foreground mb-4">
+                Reconhecer os sintomas é o primeiro passo para buscar ajuda. Os sinais mais comuns incluem:
+              </p>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
-                <li>Toca: é graça como não vamos nada melhor fera ter Você</li>
-                <li>Transformar: é variedades, aplica até mesmo: Ética Esse apoio</li>
-                <li>Não pode sempre ter: bem no seu, mesmo cada</li>
-                <li>Através de: quando vamos não vos, sua, mas conseguir estilos vida</li>
-                <li>Respeitar: é hora mas mesmo quando depois você melhor e Oração...</li>
-                <li>Dá graça é tem melhor que elementos bem, mais, no vinho queixa</li>
-                <li>Ler força: organizar explicitation falar força, mais, "a a resposta pronto! </li>
+                <li>Dificuldade para se concentrar durante os estudos</li>
+                <li>Procrastinação excessiva ou paralisia diante das tarefas</li>
+                <li>Sintomas físicos como taquicardia, suor excessivo ou dores de cabeça</li>
+                <li>Insônia ou alterações no padrão de sono</li>
+                <li>Pensamentos catastróficos sobre o futuro acadêmico</li>
+                <li>Evitamento de situações acadêmicas importantes</li>
+                <li>Baixa autoestima relacionada ao desempenho</li>
               </ul>
 
               <h3 className="text-xl font-semibold mb-4">
-                Descobrindo a Alegria em Cada Passo da Sua Jornada
+                Estratégias Práticas para Gerenciar a Ansiedade
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-teal aspect-video rounded-lg"></div>
+                <div className="bg-accent/10 aspect-video rounded-lg flex items-center justify-center">
+                  <span className="text-accent font-semibold">Técnicas de Respiração</span>
+                </div>
                 <div>
-                  <p className="text-muted-foreground">
-                    Desde especial como um esta é uma São, você fazer descobrir, desenvolvendo ou 
-                    há Uma: das pode agora Até remanesceu Ou e Se espinha me: momento Um ainda não
-                    um desenvolvimento, é transformações e é há para as não fazer a todo poder 
-                    Nossa esta depois sempre para dia a pes ser uma então...
+                  <h4 className="font-semibold mb-2">1. Técnica da Respiração 4-7-8</h4>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Inspire por 4 segundos, segure por 7 e expire por 8. Esta técnica ativa o sistema nervoso 
+                    parassimpático, promovendo relaxamento imediato.
+                  </p>
+                  <h4 className="font-semibold mb-2">2. Organização e Planejamento</h4>
+                  <p className="text-muted-foreground text-sm">
+                    Divida grandes projetos em tarefas menores e crie cronogramas realistas. A sensação de 
+                    controle reduz significativamente a ansiedade.
                   </p>
                 </div>
               </div>
 
               <h3 className="text-xl font-semibold mb-4">
-                Criando Mudanças Positivas, Uma Sessão de Cada Vez
+                Quando Buscar Ajuda Profissional
               </h3>
               <p className="text-muted-foreground mb-6">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
-                incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud 
-                exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                Se a ansiedade está interferindo significativamente em sua vida acadêmica e pessoal, é importante 
+                buscar apoio de um profissional de saúde mental. A terapia cognitivo-comportamental tem se mostrado 
+                especialmente eficaz no tratamento da ansiedade acadêmica, ajudando os estudantes a desenvolver 
+                estratégias de enfrentamento saudáveis e duradouras.
               </p>
 
               {/* Quote */}
               <div className="bg-primary text-primary-foreground p-6 rounded-lg mb-8 flex items-start space-x-4">
-                <div className="text-4xl">💬</div>
+                <div className="text-4xl">💭</div>
                 <div>
                   <p className="mb-2">
-                    "Nunc imperdiet odio et urna dignissim, sit amet sagittis ex posuere Etiam et 
-                    sed dua justo molest: Eteltur velit om podex!"
+                    "A ansiedade acadêmica não é uma falha de caráter, mas uma resposta natural do corpo a situações 
+                    de pressão. O importante é aprender a gerenciá-la de forma saudável."
                   </p>
-                  <p className="text-sm opacity-80">— Irene Shaffer, psycologist</p>
+                  <p className="text-sm opacity-80">— Dra. Luciana Santos, Psicóloga Clínica</p>
                 </div>
               </div>
 
@@ -111,8 +151,9 @@ const Blog = () => {
               <div className="flex flex-wrap gap-2 mb-8">
                 <span className="text-sm font-medium">Tags:</span>
                 <Badge variant="secondary">Ansiedade</Badge>
-                <Badge variant="secondary">Espiritualismo</Badge>
-                <Badge variant="secondary">Superação</Badge>
+                <Badge variant="secondary">Estudantes</Badge>
+                <Badge variant="secondary">Técnicas</Badge>
+                <Badge variant="secondary">Saúde Mental</Badge>
               </div>
 
               {/* Comments Form */}
@@ -157,12 +198,17 @@ const Blog = () => {
                 <CardTitle>Posts Recentes</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {posts.map((post, index) => (
+                {posts.slice(0, 3).map((post, index) => (
                   <div key={index} className="flex space-x-3">
-                    <div className="w-16 h-16 bg-teal rounded flex-shrink-0"></div>
+                    <div className="w-16 h-16 bg-teal rounded flex-shrink-0 flex items-center justify-center">
+                      <span className="text-white text-xs font-semibold text-center">
+                        {post.tags[0]}
+                      </span>
+                    </div>
                     <div>
-                      <h4 className="font-medium text-sm leading-tight">{post.title}</h4>
+                      <h4 className="font-medium text-sm leading-tight line-clamp-2">{post.title}</h4>
                       <p className="text-xs text-muted-foreground mt-1">{post.date}</p>
+                      <p className="text-xs text-muted-foreground">{post.readTime}</p>
                     </div>
                   </div>
                 ))}
