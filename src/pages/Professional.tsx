@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CalendarWidget } from "@/components/CalendarWidget";
 interface Professional {
   id: number;
+  user_id: number;
   display_name: string;
   profissao: string;
   crp_crm: string;
@@ -45,9 +46,9 @@ const Professional = () => {
   useEffect(() => {
     if (id) {
       fetchProfessional();
-      fetchSessions();
     }
   }, [id]);
+
   const fetchProfessional = async () => {
     try {
       const {
@@ -56,6 +57,8 @@ const Professional = () => {
       } = await supabase.from('profissionais').select('*').eq('id', parseInt(id)).eq('ativo', true).single();
       if (error) throw error;
       setProfessional(data);
+      // Fetch sessions after professional data is loaded, using the correct user_id
+      await fetchSessions(data.user_id);
     } catch (error) {
       console.error('Error fetching professional:', error);
       toast({
@@ -67,12 +70,13 @@ const Professional = () => {
       setLoading(false);
     }
   };
-  const fetchSessions = async () => {
+
+  const fetchSessions = async (userId: number) => {
     try {
       const {
         data,
         error
-      } = await supabase.from('vw_profissionais_sessoes').select('*').eq('user_id', parseInt(id));
+      } = await supabase.from('vw_profissionais_sessoes').select('*').eq('user_id', userId);
       if (error) throw error;
       setSessions(data || []);
     } catch (error) {
