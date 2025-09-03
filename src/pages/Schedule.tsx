@@ -73,7 +73,8 @@ const Schedule = () => {
     try {
       return JSON.parse(raw)
     } catch {
-      return raw.split(',').map(s => s.trim()).filter(Boolean)
+      // Fallback for comma-separated data with proper capitalize
+      return raw.split(',').map(s => s.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase())).filter(Boolean)
     }
   }
 

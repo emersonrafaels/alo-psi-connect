@@ -112,8 +112,8 @@ const Professional = () => {
       // Try to parse as JSON first (updated specialties)
       return JSON.parse(raw)
     } catch {
-      // Fallback for PHP serialized data
-      return raw.split(',').map(s => s.trim()).filter(Boolean)
+      // Fallback for PHP serialized data with proper capitalize
+      return raw.split(',').map(s => s.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase())).filter(Boolean)
     }
   }
 
