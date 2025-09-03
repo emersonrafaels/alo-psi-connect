@@ -1147,7 +1147,7 @@ const Professionals = () => {
                             </Link>
                           </Button>
                           <Button size="sm" className="flex-1 lg:flex-none btn-gradient shadow-lg" asChild>
-                            <Link to={`/schedule?professional=${professional.id}`}>
+                            <Link to={`/agendamento?professionalId=${professional.id}`}>
                               <Calendar className="h-4 w-4 mr-2" />
                               Agendar
                             </Link>

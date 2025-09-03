@@ -16,6 +16,7 @@ import Blog from "./pages/Blog";
 import Professional from "./pages/Professional";
 import Professionals from "./pages/Professionals";
 import Schedule from "./pages/Schedule";
+import Appointment from "./pages/Appointment";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import Contact from "./pages/Contact";
 import WorkWithUs from "./pages/WorkWithUs";
@@ -52,6 +53,7 @@ const App: React.FC = () => {
                   <Route path="/profissional/:id" element={<Professional />} />
                   <Route path="/professional/:id" element={<Professional />} />
                   <Route path="/agendar" element={<Schedule />} />
+                  <Route path="/agendamento" element={<Appointment />} />
                   <Route path="/confirmacao-agendamento" element={<BookingConfirmation />} />
                   <Route path="/contato" element={<Contact />} />
                   <Route path="/trabalhe-conosco" element={<WorkWithUs />} />

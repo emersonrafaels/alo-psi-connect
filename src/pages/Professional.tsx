@@ -177,7 +177,7 @@ const Professional = () => {
                 </div>
               </div>
               <Button size="lg" className="btn-gradient shadow-lg" asChild>
-                <Link to={`/confirmacao-agendamento?professionalId=${professional.id}&professionalName=${professional.display_name}&price=${professional.preco_consulta}`}>
+                <Link to={`/agendamento?professionalId=${professional.id}`}>
                   <Calendar className="h-4 w-4 mr-2" />
                   Agendar Consulta
                 </Link>

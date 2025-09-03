@@ -245,7 +245,7 @@ const Schedule = () => {
                           </Link>
                         </Button>
                         <Button size="sm" className="flex-1 btn-gradient" asChild>
-                          <Link to={`/confirmacao-agendamento?professionalId=${professional.id}&professionalName=${professional.display_name}&price=${professional.preco_consulta}`}>
+                          <Link to={`/agendamento?professionalId=${professional.id}`}>
                             <Calendar className="h-3 w-3 mr-1" />
                             Agendar
                           </Link>

@@ -78,13 +78,13 @@ const Index = () => {
                 >
                   Encontrar Profissional
                 </Button>
-                <Button 
-                  variant="accent" 
-                  size="lg"
-                  onClick={() => window.location.href = '/auth?tab=signup'}
-                >
-                  Cadastrar
-                </Button>
+              <Button 
+                variant="accent" 
+                size="lg"
+                onClick={() => window.location.href = '/profissionais'}
+              >
+                Agendar Consulta
+              </Button>
               </div>
             </div>
             <div className="relative">
@@ -235,7 +235,7 @@ const Index = () => {
             variant="accent" 
             size="lg" 
             className="mt-8"
-            onClick={() => window.location.href = '/auth?tab=signup'}
+            onClick={() => window.location.href = '/profissionais'}
           >
             Agendar Consulta
           </Button>

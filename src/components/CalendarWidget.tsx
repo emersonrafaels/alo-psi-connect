@@ -132,6 +132,11 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
             )
           }}
           className="rounded-md border shadow-sm"
+          classNames={{
+            day_available: "bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-colors cursor-pointer",
+            day_selected: "bg-primary text-primary-foreground hover:bg-primary/90",
+            day_disabled: "text-muted-foreground opacity-50"
+          }}
         />
       </div>
 
