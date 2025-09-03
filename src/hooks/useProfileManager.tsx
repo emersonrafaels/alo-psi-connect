@@ -17,7 +17,7 @@ export interface ProfileData {
 export const useProfileManager = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
-  const { profile } = useUserProfile();
+  const { profile, refetch } = useUserProfile();
   const { toast } = useToast();
 
   const updateProfile = async (data: Partial<ProfileData>) => {
@@ -40,8 +40,8 @@ export const useProfileManager = () => {
         description: "Suas informações foram salvas com sucesso.",
       });
 
-      // Força recarregamento do perfil
-      window.location.reload();
+      // Recarrega os dados do perfil
+      refetch();
 
       return { error: null };
     } catch (error: any) {

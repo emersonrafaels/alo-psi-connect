@@ -6,6 +6,7 @@ export const useUserProfile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -35,7 +36,9 @@ export const useUserProfile = () => {
     };
 
     fetchProfile();
-  }, [user]);
+  }, [user, refetchTrigger]);
 
-  return { profile, loading, hasProfile: !!profile };
+  const refetch = () => setRefetchTrigger(prev => prev + 1);
+
+  return { profile, loading, hasProfile: !!profile, refetch };
 };
