@@ -880,7 +880,7 @@ const Professionals = () => {
                         {/* Actions */}
                         <div className="flex lg:flex-col gap-3 lg:w-32 lg:flex-shrink-0">
                           <Button variant="outline" size="sm" className="flex-1 lg:flex-none border-2 hover:border-primary/50 hover:bg-primary/5" asChild>
-                            <Link to={`/professional/${professional.id}`}>
+                            <Link to={`/profissional/${professional.id}`}>
                               <Star className="h-4 w-4 mr-2" />
                               Ver Perfil
                             </Link>
