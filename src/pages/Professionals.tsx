@@ -623,39 +623,101 @@ const Professionals = () => {
                       </PopoverContent>
                     </Popover>
                   </div>
-                  {/* Time Range Filter */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-accent" />
-                      Faixa de Horário
-                    </label>
-                    <div className="space-y-3">
-                      <div className="relative">
-                        <Input
-                          type="time"
-                          placeholder="Horário de início"
-                          value={filters.horarioInicio}
-                          onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))}
-                          className="h-11 border-2 focus:border-accent/50"
-                        />
-                        <span className="absolute left-3 top-3 text-xs text-muted-foreground pointer-events-none">
-                          Início
-                        </span>
-                      </div>
-                      <div className="relative">
-                        <Input
-                          type="time"
-                          placeholder="Horário de fim"
-                          value={filters.horarioFim}
-                          onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))}
-                          className="h-11 border-2 focus:border-accent/50"
-                        />
-                        <span className="absolute left-3 top-3 text-xs text-muted-foreground pointer-events-none">
-                          Fim
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                   {/* Time Range Filter */}
+                   <div className="space-y-3">
+                     <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-2">
+                       <Clock className="h-4 w-4 text-accent" />
+                       Faixa de Horário
+                     </label>
+                     
+                     {/* Quick time presets */}
+                     <div className="grid grid-cols-2 gap-2 mb-3">
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "08:00", horarioFim: "12:00" }))}
+                         className="text-xs h-8 border-dashed hover:border-accent/50 hover:bg-accent/5"
+                       >
+                         Manhã (8h-12h)
+                       </Button>
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "13:00", horarioFim: "18:00" }))}
+                         className="text-xs h-8 border-dashed hover:border-accent/50 hover:bg-accent/5"
+                       >
+                         Tarde (13h-18h)
+                       </Button>
+                     </div>
+
+                     <div className="grid grid-cols-2 gap-3">
+                       <div className="relative group">
+                         <Input
+                           type="time"
+                           placeholder="00:00"
+                           value={filters.horarioInicio}
+                           onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))}
+                           className="h-11 border-2 focus:border-accent/50 transition-all group-hover:border-accent/30 pt-6 pb-2"
+                         />
+                         <span className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
+                           Horário de Início
+                         </span>
+                         {filters.horarioInicio && (
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "" }))}
+                             className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 opacity-70 hover:opacity-100"
+                           >
+                             <X className="h-3 w-3" />
+                           </Button>
+                         )}
+                       </div>
+                       
+                       <div className="relative group">
+                         <Input
+                           type="time"
+                           placeholder="23:59"
+                           value={filters.horarioFim}
+                           onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))}
+                           className="h-11 border-2 focus:border-accent/50 transition-all group-hover:border-accent/30 pt-6 pb-2"
+                         />
+                         <span className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
+                           Horário de Fim
+                         </span>
+                         {filters.horarioFim && (
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => setFilters(prev => ({ ...prev, horarioFim: "" }))}
+                             className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 opacity-70 hover:opacity-100"
+                           >
+                             <X className="h-3 w-3" />
+                           </Button>
+                         )}
+                       </div>
+                     </div>
+
+                     {/* Range validation feedback */}
+                     {filters.horarioInicio && filters.horarioFim && filters.horarioInicio >= filters.horarioFim && (
+                       <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800">
+                         <Clock className="h-3 w-3" />
+                         <span>O horário de início deve ser anterior ao horário de fim</span>
+                       </div>
+                     )}
+                     
+                     {/* Clear time filters */}
+                     {(filters.horarioInicio || filters.horarioFim) && (
+                       <Button
+                         variant="ghost"
+                         size="sm"
+                         onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "", horarioFim: "" }))}
+                         className="w-full text-xs text-muted-foreground hover:text-foreground"
+                       >
+                         Limpar horários
+                       </Button>
+                     )}
+                   </div>
 
                   {/* Price Range Filter */}
                   <div className="space-y-3">
