@@ -18,6 +18,7 @@ import UserType from "./pages/register/UserType";
 import PatientForm from "./pages/register/PatientForm";
 import ProfessionalForm from "./pages/register/ProfessionalForm";
 import NotFound from "./pages/NotFound";
+import WhatsAppFloat from "@/components/ui/whatsapp-float";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <WhatsAppFloat />
         </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
