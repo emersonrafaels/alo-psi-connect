@@ -5,6 +5,10 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import AdminDashboard from "@/pages/admin/Dashboard";
+import AdminAnalytics from "@/pages/admin/Analytics";
+import AdminUsers from "@/pages/admin/Users";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Blog from "./pages/Blog";
@@ -47,6 +51,12 @@ const App = () => (
             <Route path="/registrar" element={<UserType />} />
             <Route path="/registrar/paciente" element={<PatientForm />} />
             <Route path="/registrar/profissional" element={<ProfessionalForm />} />
+            
+            {/* Rotas Admin */}
+            <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+            <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
+            <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
           <WhatsAppFloat />
