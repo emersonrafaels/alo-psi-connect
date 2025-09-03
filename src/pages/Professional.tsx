@@ -1,147 +1,122 @@
-import { useEffect, useState } from "react"
-import { useParams, Link } from "react-router-dom"
-import Header from "@/components/ui/header"
-import Footer from "@/components/ui/footer"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, Clock, MapPin, ArrowLeft, Star, DollarSign } from "lucide-react"
-import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/hooks/use-toast"
-import { CalendarWidget } from "@/components/CalendarWidget"
-
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import Header from "@/components/ui/header";
+import Footer from "@/components/ui/footer";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Calendar, Clock, MapPin, ArrowLeft, Star, DollarSign } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { CalendarWidget } from "@/components/CalendarWidget";
 interface Professional {
-  id: number
-  display_name: string
-  profissao: string
-  crp_crm: string
-  resumo: string
-  resumo_profissional: string
-  foto_perfil_url: string
-  preco_consulta: number
-  servicos_raw: string
-  formacao_raw: string
-  telefone: string
-  user_email: string
-  profile_id: string
+  id: number;
+  display_name: string;
+  profissao: string;
+  crp_crm: string;
+  resumo: string;
+  resumo_profissional: string;
+  foto_perfil_url: string;
+  preco_consulta: number;
+  servicos_raw: string;
+  formacao_raw: string;
+  telefone: string;
+  user_email: string;
+  profile_id: string;
 }
-
 interface Session {
-  id: number
-  day: string
-  start_time: string
-  end_time: string
-  time_slot: number
+  id: number;
+  day: string;
+  start_time: string;
+  end_time: string;
+  time_slot: number;
 }
-
 const Professional = () => {
-  const { id } = useParams()
-  const { toast } = useToast()
-  const [professional, setProfessional] = useState<Professional | null>(null)
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [loading, setLoading] = useState(true)
-
+  const {
+    id
+  } = useParams();
+  const {
+    toast
+  } = useToast();
+  const [professional, setProfessional] = useState<Professional | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     if (id) {
-      fetchProfessional()
-      fetchSessions()
+      fetchProfessional();
+      fetchSessions();
     }
-  }, [id])
-
+  }, [id]);
   const fetchProfessional = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profissionais')
-        .select('*')
-        .eq('id', parseInt(id))
-        .eq('ativo', true)
-        .single()
-
-      if (error) throw error
-      setProfessional(data)
+      const {
+        data,
+        error
+      } = await supabase.from('profissionais').select('*').eq('id', parseInt(id)).eq('ativo', true).single();
+      if (error) throw error;
+      setProfessional(data);
     } catch (error) {
-      console.error('Error fetching professional:', error)
+      console.error('Error fetching professional:', error);
       toast({
         title: "Erro",
         description: "Profissional não encontrado.",
         variant: "destructive"
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
+  };
   const fetchSessions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('vw_profissionais_sessoes')
-        .select('*')
-        .eq('user_id', parseInt(id))
-
-      if (error) throw error
-      setSessions(data || [])
+      const {
+        data,
+        error
+      } = await supabase.from('vw_profissionais_sessoes').select('*').eq('user_id', parseInt(id));
+      if (error) throw error;
+      setSessions(data || []);
     } catch (error) {
-      console.error('Error fetching sessions:', error)
+      console.error('Error fetching sessions:', error);
     }
-  }
-
+  };
   const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .substring(0, 2)
-      .toUpperCase()
-  }
-
+    return name.split(' ').map(word => word.charAt(0)).join('').substring(0, 2).toUpperCase();
+  };
   const getAvatarColor = (name: string) => {
-    const colors = [
-      'bg-gradient-to-br from-primary to-primary/80',
-      'bg-gradient-to-br from-teal to-teal/80',
-      'bg-gradient-to-br from-accent to-accent/80',
-      'bg-gradient-to-br from-secondary to-secondary/80'
-    ]
-    const index = name.length % colors.length
-    return colors[index]
-  }
-
+    const colors = ['bg-gradient-to-br from-primary to-primary/80', 'bg-gradient-to-br from-teal to-teal/80', 'bg-gradient-to-br from-accent to-accent/80', 'bg-gradient-to-br from-secondary to-secondary/80'];
+    const index = name.length % colors.length;
+    return colors[index];
+  };
   const parseSpecialties = (raw: string): string[] => {
-    if (!raw) return []
+    if (!raw) return [];
     try {
       // Try to parse as JSON first (updated specialties)
-      return JSON.parse(raw)
+      return JSON.parse(raw);
     } catch {
       // Fallback for PHP serialized data with proper capitalize
-      return raw.split(',').map(s => s.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase())).filter(Boolean)
+      return raw.split(',').map(s => s.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase())).filter(Boolean);
     }
-  }
-
+  };
   const formatPrice = (price: number) => {
-    if (!price || price === 0) return 'Consultar'
+    if (!price || price === 0) return 'Consultar';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(price)
-  }
-
+    }).format(price);
+  };
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
+    return <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-12">
           <div className="skeleton-modern h-96 rounded-lg"></div>
         </div>
         <Footer />
-      </div>
-    )
+      </div>;
   }
-
   if (!professional) {
-    return (
-      <div className="min-h-screen bg-background">
+    return <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-12">
           <div className="text-center">
@@ -155,14 +130,10 @@ const Professional = () => {
           </div>
         </div>
         <Footer />
-      </div>
-    )
+      </div>;
   }
-
-  const specialties = parseSpecialties(professional.servicos_raw)
-
-  return (
-    <div className="min-h-screen bg-background">
+  const specialties = parseSpecialties(professional.servicos_raw);
+  return <div className="min-h-screen bg-background">
       <Header />
       
       {/* Hero Section */}
@@ -227,12 +198,8 @@ const Professional = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
-                  {professional.resumo && (
-                    <p>{professional.resumo}</p>
-                  )}
-                  {professional.resumo_profissional && (
-                    <p>{professional.resumo_profissional}</p>
-                  )}
+                  {professional.resumo && <p>{professional.resumo}</p>}
+                  {professional.resumo_profissional && <p>{professional.resumo_profissional}</p>}
                 </div>
               </CardContent>
             </Card>
@@ -269,12 +236,7 @@ const Professional = () => {
                 </p>
               </CardHeader>
               <CardContent className="p-6">
-                <CalendarWidget 
-                  sessions={sessions}
-                  professionalId={professional.id.toString()}
-                  professionalName={professional.display_name}
-                  price={professional.preco_consulta?.toString()}
-                />
+                <CalendarWidget sessions={sessions} professionalId={professional.id.toString()} professionalName={professional.display_name} price={professional.preco_consulta?.toString()} />
               </CardContent>
             </Card>
 
@@ -285,17 +247,11 @@ const Professional = () => {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="flex flex-wrap gap-2">
-                  {specialties.length > 0 ? (
-                    specialties.map((specialty, index) => (
-                      <Badge key={index} variant="secondary" className="filter-badge">
+                  {specialties.length > 0 ? specialties.map((specialty, index) => <Badge key={index} variant="secondary" className="filter-badge">
                         {specialty}
-                      </Badge>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
+                      </Badge>) : <p className="text-sm text-muted-foreground">
                       Especializações não informadas
-                    </p>
-                  )}
+                    </p>}
                 </div>
               </CardContent>
             </Card>
@@ -308,7 +264,7 @@ const Professional = () => {
               <CardContent className="p-6 space-y-3">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Online/Presencial</span>
+                  <span className="text-sm">Online</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
@@ -321,8 +277,6 @@ const Professional = () => {
       </div>
 
       <Footer />
-    </div>
-  )
-}
-
-export default Professional
+    </div>;
+};
+export default Professional;
