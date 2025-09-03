@@ -93,7 +93,7 @@ const Professionals = () => {
         setShowFilters(true)
       }
     }
-  }, [])
+  }, [getFiltersFromURL]) // Adicionar dependência
 
   useEffect(() => {
     fetchProfessionals()
@@ -113,15 +113,34 @@ const Professionals = () => {
         prof.display_name.toLowerCase().includes(nameSearch.toLowerCase()) ||
         prof.profissao?.toLowerCase().includes(nameSearch.toLowerCase())
       )
+      
     }
 
-    // Especialidades filter (from URL)
+    // Especialidades filter (from URL) - procurar tanto na profissão quanto nos serviços
     if (filters.especialidades.length > 0) {
       filtered = filtered.filter(prof => {
-        if (!prof.profissao) return false
-        return filters.especialidades.some(esp => 
-          prof.profissao?.toLowerCase().includes(esp.toLowerCase())
-        )
+        const match = filters.especialidades.some(esp => {
+          const espLower = esp.toLowerCase()
+          // Verificar na profissão
+          const profissaoMatch = prof.profissao?.toLowerCase().includes(espLower) || false
+          // Verificar nos serviços
+          const servicosMatch = prof.servicos_raw?.toLowerCase().includes(espLower) || false
+          // Mapeamento de especialidades
+          const especialidadeMap: { [key: string]: string[] } = {
+            'psicologia': ['psicologo', 'psicologa', 'psicologia'],
+            'psicoterapia': ['psicoterapeuta', 'psicoterapia', 'terapia'],
+            'psiquiatria': ['psiquiatra', 'psiquiatria']
+          }
+          
+          const variations = especialidadeMap[espLower] || [espLower]
+          const variationMatch = variations.some(variation => 
+            prof.profissao?.toLowerCase().includes(variation) || 
+            prof.servicos_raw?.toLowerCase().includes(variation)
+          )
+          
+          return profissaoMatch || servicosMatch || variationMatch
+        })
+        return match
       })
     }
 
@@ -129,9 +148,10 @@ const Professionals = () => {
     if (filters.servicos.length > 0) {
       filtered = filtered.filter(prof => {
         if (!prof.servicos_raw) return false
-        return filters.servicos.some(serv => 
+        const match = filters.servicos.some(serv => 
           prof.servicos_raw?.toLowerCase().includes(serv.toLowerCase())
         )
+        return match
       })
     }
 
