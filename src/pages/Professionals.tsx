@@ -237,6 +237,18 @@ const Professionals = () => {
     return formatted
   }
 
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      'hsl(var(--avatar-bg-1))',
+      'hsl(var(--avatar-bg-2))', 
+      'hsl(var(--avatar-bg-3))',
+      'hsl(var(--avatar-bg-4))',
+      'hsl(var(--avatar-bg-5))'
+    ]
+    const index = name.charCodeAt(0) % colors.length
+    return colors[index]
+  }
+
   const getUniqueValues = (field: 'profissao' | 'crp_crm' | 'servicos_raw') => {
     return [...new Set(professionals
       .map(prof => prof[field])
@@ -290,6 +302,29 @@ const Professionals = () => {
     return dayMap[day] || day
   }
 
+  const getDayAbbrev = (day: string) => {
+    const dayMap: { [key: string]: string } = {
+      'monday': 'Seg',
+      'tuesday': 'Ter', 
+      'wednesday': 'Qua',
+      'thursday': 'Qui',
+      'friday': 'Sex',
+      'saturday': 'Sáb',
+      'sunday': 'Dom'
+    }
+    return dayMap[day] || day
+  }
+
+  const getActiveFiltersCount = () => {
+    let count = 0
+    if (filters.profissoes.length > 0) count++
+    if (filters.dias.length > 0) count++
+    if (filters.horarioInicio || filters.horarioFim) count++
+    if (filters.valorMin || filters.valorMax) count++
+    if (filters.servico) count++
+    return count
+  }
+
   // Pagination logic
   const indexOfLastProfessional = currentPage * professionalsPerPage
   const indexOfFirstProfessional = indexOfLastProfessional - professionalsPerPage
@@ -325,75 +360,125 @@ const Professionals = () => {
       
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
-        <section className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Nossos Profissionais
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Conheça nossa equipe de profissionais especializados em saúde mental, 
-            prontos para oferecer o melhor atendimento para você.
-          </p>
+        <section className="text-center mb-12">
+          <div className="relative">
+            <h1 className="text-5xl font-bold text-foreground mb-6 bg-gradient-to-r from-primary via-teal to-accent bg-clip-text text-transparent">
+              Nossos Profissionais
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed">
+              Conheça nossa equipe de profissionais especializados em saúde mental, 
+              prontos para oferecer o melhor atendimento para você.
+            </p>
+          </div>
           
           {/* Search and Filters */}
-          <div className="max-w-4xl mx-auto space-y-4">
-            <div className="flex gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <div className="max-w-5xl mx-auto space-y-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative search-modern">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 z-10" />
                 <Input
                   type="text"
                   placeholder="Buscar por nome ou profissão..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-12 py-3 text-lg border-2 focus:border-primary/50 bg-background/80 backdrop-blur-sm"
                 />
               </div>
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2"
-              >
-                <Filter className="h-4 w-4" />
-                Filtros
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant={showFilters ? "default" : "outline"}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center gap-2 px-6 py-3 relative"
+                >
+                  <Filter className="h-4 w-4" />
+                  Filtros
+                  {getActiveFiltersCount() > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                      {getActiveFiltersCount()}
+                    </span>
+                  )}
+                </Button>
+                {getActiveFiltersCount() > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
+            
+            {/* Active Filters Summary */}
+            {getActiveFiltersCount() > 0 && (
+              <div className="flex flex-wrap gap-2 justify-center">
+                {filters.profissoes.length > 0 && (
+                  <div className="filter-badge">
+                    <span>{filters.profissoes.length} profissão{filters.profissoes.length > 1 ? 'ões' : ''}</span>
+                  </div>
+                )}
+                {filters.dias.length > 0 && (
+                  <div className="filter-badge">
+                    <Calendar className="h-3 w-3" />
+                    <span>{filters.dias.map(getDayAbbrev).join(', ')}</span>
+                  </div>
+                )}
+                {(filters.horarioInicio || filters.horarioFim) && (
+                  <div className="filter-badge">
+                    <Clock className="h-3 w-3" />
+                    <span>{filters.horarioInicio || '00:00'} - {filters.horarioFim || '23:59'}</span>
+                  </div>
+                )}
+                {(filters.valorMin || filters.valorMax) && (
+                  <div className="filter-badge">
+                    <DollarSign className="h-3 w-3" />
+                    <span>R$ {filters.valorMin || '0'} - {filters.valorMax || '∞'}</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Advanced Filters */}
             {showFilters && (
-              <div className="bg-muted/50 rounded-lg p-6 space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-semibold">Filtros Avançados</h3>
-                  <Button variant="ghost" size="sm" onClick={clearFilters}>
+              <div className="bg-gradient-to-br from-card via-muted/30 to-card rounded-xl p-8 shadow-lg border border-border/50 backdrop-blur-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <Filter className="h-5 w-5 text-primary" />
+                    Filtros Avançados
+                  </h3>
+                  <Button variant="outline" size="sm" onClick={clearFilters} className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50">
                     <X className="h-4 w-4 mr-2" />
-                    Limpar
+                    Limpar Todos
                   </Button>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {/* Profession Multiselect */}
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Profissões</label>
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-2">
+                      <Badge variant="secondary" className="h-4 w-4 rounded-full p-0"></Badge>
+                      Profissões
+                    </label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
+                        <Button variant="outline" className="w-full justify-between h-11 border-2 hover:border-primary/50 transition-all">
                           {filters.profissoes.length > 0 
                             ? `${filters.profissoes.length} selecionada${filters.profissoes.length > 1 ? 's' : ''}`
-                            : "Todas"
+                            : "Todas as profissões"
                           }
-                          <ChevronDown className="h-4 w-4" />
+                          <ChevronDown className="h-4 w-4 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-full p-2">
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                      <PopoverContent className="w-80 p-3 border-2">
+                        <div className="space-y-3 max-h-64 overflow-y-auto">
                           {getUniqueValues('profissao').map(prof => (
-                            <div key={prof} className="flex items-center space-x-2">
+                            <div key={prof} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
                               <Checkbox
                                 id={`prof-${prof}`}
                                 checked={filters.profissoes.includes(prof as string)}
                                 onCheckedChange={() => toggleProfession(prof as string)}
+                                className="border-2"
                               />
                               <label
                                 htmlFor={`prof-${prof}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
                               >
                                 {capitalizeText(prof as string)}
                               </label>
@@ -405,33 +490,40 @@ const Professionals = () => {
                   </div>
 
                   {/* Days Multiselect */}
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Dias da Semana</label>
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-teal" />
+                      Dias da Semana
+                    </label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
+                        <Button variant="outline" className="w-full justify-between h-11 border-2 hover:border-teal/50 transition-all">
                           {filters.dias.length > 0 
                             ? `${filters.dias.length} dia${filters.dias.length > 1 ? 's' : ''}`
-                            : "Todos"
+                            : "Todos os dias"
                           }
-                          <ChevronDown className="h-4 w-4" />
+                          <ChevronDown className="h-4 w-4 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-full p-2">
-                        <div className="space-y-2">
+                      <PopoverContent className="w-80 p-3 border-2">
+                        <div className="space-y-3">
                           {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                            <div key={day} className="flex items-center space-x-2">
+                            <div key={day} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
                               <Checkbox
                                 id={`day-${day}`}
                                 checked={filters.dias.includes(day)}
                                 onCheckedChange={() => toggleDay(day)}
+                                className="border-2"
                               />
                               <label
                                 htmlFor={`day-${day}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
                               >
                                 {getDayLabel(day)}
                               </label>
+                              <span className="text-xs text-muted-foreground font-mono">
+                                {getDayAbbrev(day)}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -439,42 +531,76 @@ const Professionals = () => {
                     </Popover>
                   </div>
                   {/* Time Range Filter */}
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Faixa de Horário</label>
-                    <div className="space-y-2">
-                      <Input
-                        type="time"
-                        placeholder="Início"
-                        value={filters.horarioInicio}
-                        onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))}
-                      />
-                      <Input
-                        type="time"
-                        placeholder="Fim"
-                        value={filters.horarioFim}
-                        onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))}
-                      />
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-accent" />
+                      Faixa de Horário
+                    </label>
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <Input
+                          type="time"
+                          placeholder="Horário de início"
+                          value={filters.horarioInicio}
+                          onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))}
+                          className="h-11 border-2 focus:border-accent/50"
+                        />
+                        <span className="absolute left-3 top-3 text-xs text-muted-foreground pointer-events-none">
+                          Início
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          type="time"
+                          placeholder="Horário de fim"
+                          value={filters.horarioFim}
+                          onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))}
+                          className="h-11 border-2 focus:border-accent/50"
+                        />
+                        <span className="absolute left-3 top-3 text-xs text-muted-foreground pointer-events-none">
+                          Fim
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   {/* Price Range Filter */}
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Faixa de Preço</label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        placeholder="Min"
-                        value={filters.valorMin}
-                        onChange={(e) => setFilters(prev => ({ ...prev, valorMin: e.target.value }))}
-                        className="flex-1"
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Max"
-                        value={filters.valorMax}
-                        onChange={(e) => setFilters(prev => ({ ...prev, valorMax: e.target.value }))}
-                        className="flex-1"
-                      />
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      Faixa de Preço
+                    </label>
+                    <div className="flex gap-3">
+                      <div className="flex-1 relative">
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={filters.valorMin}
+                          onChange={(e) => setFilters(prev => ({ ...prev, valorMin: e.target.value }))}
+                          className="h-11 border-2 focus:border-green-500/50 pl-8"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                          R$
+                        </span>
+                        <span className="absolute left-3 top-0 text-xs text-muted-foreground">
+                          Mín
+                        </span>
+                      </div>
+                      <div className="flex-1 relative">
+                        <Input
+                          type="number"
+                          placeholder="∞"
+                          value={filters.valorMax}
+                          onChange={(e) => setFilters(prev => ({ ...prev, valorMax: e.target.value }))}
+                          className="h-11 border-2 focus:border-green-500/50 pl-8"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                          R$
+                        </span>
+                        <span className="absolute left-3 top-0 text-xs text-muted-foreground">
+                          Máx
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -512,171 +638,253 @@ const Professionals = () => {
         {/* Professionals Grid */}
         <section>
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, index) => (
-                <Card key={index} className="overflow-hidden">
-                  <CardHeader className="text-center">
-                    <Skeleton className="w-20 h-20 rounded-full mx-auto mb-4" />
-                    <Skeleton className="h-6 w-32 mx-auto mb-2" />
-                    <Skeleton className="h-4 w-24 mx-auto" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="overflow-hidden professional-card border-2">
+                  <CardHeader className="p-0 relative">
+                    <div className="skeleton-modern h-56 w-full"></div>
+                    <div className="absolute top-4 right-4">
+                      <div className="skeleton-modern h-8 w-16 rounded-full"></div>
+                    </div>
                   </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-16 w-full mb-4" />
-                    <Skeleton className="h-10 w-full" />
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="skeleton-modern h-16 w-16 rounded-full"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="skeleton-modern h-5 w-3/4"></div>
+                        <div className="skeleton-modern h-4 w-1/2"></div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="skeleton-modern h-4 w-full"></div>
+                      <div className="skeleton-modern h-4 w-4/5"></div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <div className="skeleton-modern h-6 w-16 rounded-full"></div>
+                      <div className="skeleton-modern h-6 w-12 rounded-full"></div>
+                      <div className="skeleton-modern h-6 w-20 rounded-full"></div>
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                      <div className="skeleton-modern h-10 flex-1 rounded-lg"></div>
+                      <div className="skeleton-modern h-10 flex-1 rounded-lg"></div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : filteredProfessionals.length === 0 ? (
-            <div className="text-center py-12">
-              <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h2 className="text-2xl font-semibold text-muted-foreground mb-4">
-                {searchTerm ? 'Nenhum profissional encontrado' : 'Nenhum profissional cadastrado'}
-              </h2>
-              <p className="text-muted-foreground">
-                {searchTerm ? 'Tente ajustar os termos da busca.' : 'No momento não há profissionais cadastrados em nossa plataforma.'}
-              </p>
-              {searchTerm && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => setSearchTerm('')}
-                  className="mt-4"
-                >
-                  Limpar busca
-                </Button>
-              )}
+            <div className="text-center py-16">
+              <div className="max-w-md mx-auto">
+                <div className="mb-8">
+                  <Search className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold text-foreground mb-3">
+                    Nenhum profissional encontrado
+                  </h3>
+                  <p className="text-muted-foreground text-lg">
+                    Não encontramos profissionais que correspondam aos seus critérios. 
+                    Que tal tentar ajustar os filtros?
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <Button onClick={clearFilters} className="btn-gradient px-6 py-3 text-base">
+                    <X className="h-4 w-4 mr-2" />
+                    Limpar todos os filtros
+                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    ou tente buscar por outros termos
+                  </p>
+                </div>
+              </div>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {currentProfessionals.map((professional) => (
-                <Card key={professional.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <CardHeader className="text-center pb-4">
-                    <Avatar className="w-16 h-16 mx-auto mb-3">
-                      <AvatarImage 
-                        src={professional.foto_perfil_url || undefined} 
-                        alt={professional.display_name}
-                      />
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {getInitials(professional.display_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <CardTitle className="text-lg leading-tight">{professional.display_name}</CardTitle>
-                    
-                    {professional.profissao && (
-                      <CardDescription className="font-medium text-primary">
-                        {capitalizeText(professional.profissao)}
-                      </CardDescription>
-                    )}
-                    
-                    <div className="flex justify-center">
-                      {professional.crp_crm && (
-                        <Badge variant="secondary" className="text-xs">
-                          {professional.crp_crm}
-                        </Badge>
-                      )}
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      {/* Schedule */}
-                      <div className="bg-muted/50 rounded-lg p-3">
-                        <div className="flex items-start gap-2 mb-2">
-                          <Calendar className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-xs font-medium text-primary mb-1">Horários de Atendimento</p>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                              {formatSchedule(professional.sessions)}
-                            </p>
+                  <Card key={professional.id} className="overflow-hidden professional-card border-2 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+                    <CardHeader className="p-0 relative">
+                      <div className="relative h-56 bg-gradient-to-br from-primary/5 via-teal/5 to-accent/5 overflow-hidden">
+                        {professional.foto_perfil_url ? (
+                          <img 
+                            src={professional.foto_perfil_url} 
+                            alt={professional.display_name}
+                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center relative">
+                            <div 
+                              className="h-32 w-32 rounded-full avatar-dynamic text-3xl font-bold border-4 border-white/50 shadow-lg"
+                              style={{ backgroundColor: getAvatarColor(professional.display_name) }}
+                            >
+                              {getInitials(professional.display_name)}
+                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-black/10"></div>
                           </div>
+                        )}
+                        <div className="absolute top-4 right-4">
+                          {professional.preco_consulta ? (
+                            <Badge className="bg-white/95 text-primary border border-primary/20 shadow-lg font-bold px-3 py-1">
+                              {formatPrice(professional.preco_consulta)}
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="bg-white/95 text-muted-foreground shadow-lg">
+                              Consultar
+                            </Badge>
+                          )}
                         </div>
-                      </div>
-
-                      {/* Price and Duration */}
-                      <div className="flex items-center justify-between text-sm bg-muted/50 rounded-lg p-3">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-primary">
-                            {formatPrice(professional.preco_consulta)}
-                          </span>
-                        </div>
-                        
-                        {professional.tempo_consulta && (
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Clock className="h-4 w-4" />
-                            <span>{professional.tempo_consulta}min</span>
+                        {professional.sessions.length > 0 && (
+                          <div className="absolute bottom-4 left-4">
+                            <Badge className="bg-teal/90 text-white border border-teal/30 shadow-lg">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Disponível
+                            </Badge>
                           </div>
                         )}
                       </div>
+                    </CardHeader>
+                    
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <CardTitle className="text-xl font-bold text-foreground leading-tight">
+                            {professional.display_name}
+                          </CardTitle>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-primary border-primary/30 bg-primary/5">
+                              {capitalizeText(professional.profissao)}
+                            </Badge>
+                            {professional.crp_crm && (
+                              <span className="text-xs text-muted-foreground font-mono">
+                                {professional.crp_crm}
+                              </span>
+                            )}
+                          </div>
+                        </div>
 
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          asChild 
-                          className="h-9"
-                        >
-                          <Link to={`/profissional/${professional.id}`}>
-                            Ver Perfil
-                          </Link>
-                        </Button>
-                        
-                        <Button 
-                          size="sm"
-                          asChild 
-                          className="h-9"
-                        >
-                          <Link to="/agendar">
-                            Agendar
-                          </Link>
-                        </Button>
+                        {professional.resumo_profissional && (
+                          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                            {professional.resumo_profissional}
+                          </p>
+                        )}
+
+                        <div className="space-y-3">
+                          {professional.sessions.length > 0 && (
+                            <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg">
+                              <Clock className="h-4 w-4 text-teal mt-0.5 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-medium text-muted-foreground mb-1">Horários</p>
+                                <p className="text-sm text-foreground font-medium">
+                                  {formatSchedule(professional.sessions)}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {professional.servicos_raw && (
+                            <div className="space-y-2">
+                              <p className="text-xs font-medium text-muted-foreground">Especialidades</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {professional.servicos_raw.split(',').slice(0, 3).map((servico, index) => (
+                                  <Badge key={index} variant="secondary" className="text-xs bg-accent/10 text-accent-foreground border border-accent/20 hover:bg-accent/20 transition-colors">
+                                    {servico.trim()}
+                                  </Badge>
+                                ))}
+                                {professional.servicos_raw.split(',').length > 3 && (
+                                  <Badge variant="outline" className="text-xs text-muted-foreground">
+                                    +{professional.servicos_raw.split(',').length - 3}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex gap-3 pt-4 border-t border-border/50">
+                          <Button variant="outline" size="sm" className="flex-1 border-2 hover:border-primary/50 hover:bg-primary/5" asChild>
+                            <Link to={`/professional/${professional.id}`}>
+                              <Star className="h-4 w-4 mr-2" />
+                              Ver Perfil
+                            </Link>
+                          </Button>
+                          <Button size="sm" className="flex-1 btn-gradient shadow-lg" asChild>
+                            <Link to={`/schedule?professional=${professional.id}`}>
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Agendar
+                            </Link>
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="h-9 w-9 p-0"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => goToPage(page)}
-                    className="h-9 w-9 p-0"
-                  >
-                    {page}
-                  </Button>
+                    </CardContent>
+                  </Card>
                 ))}
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="h-9 w-9 p-0"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
               </div>
-            )}
-          </>
-        )}
-      </section>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-12 p-6 bg-muted/30 rounded-xl border border-border/50">
+                  <div className="text-sm text-muted-foreground">
+                    Página {currentPage} de {totalPages} • {filteredProfessionals.length} profissionais
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="border-2 hover:border-primary/50"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Anterior
+                    </Button>
+                    
+                    <div className="flex space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNumber: number
+                        
+                        if (totalPages <= 5) {
+                          pageNumber = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNumber = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNumber = totalPages - 4 + i
+                        } else {
+                          pageNumber = currentPage - 2 + i
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNumber}
+                            variant={currentPage === pageNumber ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => goToPage(pageNumber)}
+                            className={`w-10 h-10 border-2 ${
+                              currentPage === pageNumber 
+                                ? "btn-gradient border-primary shadow-lg" 
+                                : "hover:border-primary/50"
+                            }`}
+                          >
+                            {pageNumber}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="border-2 hover:border-primary/50"
+                    >
+                      Próxima
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </section>
       </main>
 
       <Footer />
