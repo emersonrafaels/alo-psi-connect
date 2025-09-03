@@ -109,24 +109,23 @@ const Professionals = () => {
         
         const standardizeProfession = (text: string) => {
           const normalized = normalizeText(text)
-          const professionMap: { [key: string]: string } = {
-            'psicologo': null,
-            'psicologa': null,
-            'psicoterapeuta': 'psicoterapeuta(a)',
-            'psiquiatra': 'psiquiatra(a)',
-            'terapeuta': 'terapeuta',
-            'psicopedagogo': 'psicopedagogo(a)',
-            'psicopedagoga': 'psicopedagogo(a)',
-            'neurologista': 'neurologista',
-            'terapia ocupacional': 'terapeuta ocupacional'
-          }
+        const professionMap: { [key: string]: string } = {
+          'psicologo': 'psicólogo(a)',
+          'psicologa': 'psicólogo(a)',
+          'psicoterapeuta': 'psicoterapeuta(a)',
+          'psiquiatra': 'psiquiatra(a)',
+          'terapeuta': 'terapeuta',
+          'psicopedagogo': 'psicopedagogo(a)',
+          'psicopedagoga': 'psicopedagogo(a)',
+          'neurologista': 'neurologista',
+          'terapia ocupacional': 'terapeuta ocupacional'
+        }
           const result = professionMap[normalized]
           if (result === null) return null
           return result || text.toLowerCase().trim()
         }
         
         const standardizedProfession = standardizeProfession(prof.profissao)
-        if (standardizedProfession === null) return false
         
         return filters.profissoes.includes(standardizedProfession)
       })
@@ -373,8 +372,8 @@ const Professionals = () => {
       
       // Specific mappings for common profession variations
       const professionMap: { [key: string]: string } = {
-        'psicologo': null, // Remove psicólogo entries
-        'psicologa': null, // Remove psicóloga entries
+        'psicologo': 'psicólogo(a)',
+        'psicologa': 'psicólogo(a)',
         'psicoterapeuta': 'psicoterapeuta(a)',
         'psiquiatra': 'psiquiatra(a)',
         'terapeuta': 'terapeuta',
@@ -384,9 +383,7 @@ const Professionals = () => {
         'terapia ocupacional': 'terapeuta ocupacional'
       }
       
-      const result = professionMap[normalized]
-      if (result === null) return null // Skip this profession
-      return result || text.toLowerCase().trim()
+      return professionMap[normalized] || text.toLowerCase().trim()
     }
 
     const values = professionals
@@ -399,8 +396,6 @@ const Professionals = () => {
     
     values.forEach(value => {
       const standardized = standardizeProfession(value)
-      if (standardized === null) return // Skip removed professions
-      
       const normalized = normalizeText(standardized)
       
       if (!professionMap.has(normalized)) {
