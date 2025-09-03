@@ -75,7 +75,7 @@ const Header = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="border-accent text-primary hover:bg-accent hover:text-accent-foreground"
+                  className="border-accent text-primary dark:text-primary-foreground hover:bg-accent hover:text-accent-foreground"
                   onClick={() => navigate('/auth')}
                 >
                   Cadastrar
