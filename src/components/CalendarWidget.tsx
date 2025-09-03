@@ -46,21 +46,21 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
       
       // Check if this day matches any working day
       const isWorkingDay = Array.from(workingDays).some(workingDay => {
-        // More comprehensive day matching
-        const dayMappings = {
-          'segunda-feira': ['segunda', 'seg', 'monday'],
-          'terça-feira': ['terça', 'terca', 'ter', 'tuesday'], 
-          'quarta-feira': ['quarta', 'qua', 'wednesday'],
-          'quinta-feira': ['quinta', 'qui', 'thursday'],
-          'sexta-feira': ['sexta', 'sex', 'friday'],
-          'sábado': ['sabado', 'sab', 'saturday'],
-          'domingo': ['dom', 'sunday']
+        // Map database day codes to JS day numbers (0 = Sunday, 1 = Monday, etc.)
+        const dayCodeToNumber = {
+          'sun': 0, 'sunday': 0, 'domingo': 0, 'dom': 0,
+          'mon': 1, 'monday': 1, 'segunda': 1, 'segunda-feira': 1, 'seg': 1,
+          'tue': 2, 'tuesday': 2, 'terça': 2, 'terça-feira': 2, 'terca': 2, 'ter': 2,
+          'wed': 3, 'wednesday': 3, 'quarta': 3, 'quarta-feira': 3, 'qua': 3,
+          'thu': 4, 'thursday': 4, 'quinta': 4, 'quinta-feira': 4, 'qui': 4,
+          'fri': 5, 'friday': 5, 'sexta': 5, 'sexta-feira': 5, 'sex': 5,
+          'sat': 6, 'saturday': 6, 'sábado': 6, 'sabado': 6, 'sab': 6
         }
         
-        const mappedDays = dayMappings[dayName] || []
-        return workingDay === dayName || 
-               mappedDays.includes(workingDay) ||
-               workingDay === dayName.substring(0, 3)
+        const currentDayNumber = date.getDay()
+        const workingDayNumber = dayCodeToNumber[workingDay as string]
+        
+        return workingDayNumber === currentDayNumber
       })
       
       if (isWorkingDay) {
@@ -80,21 +80,21 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
     return sessions.filter(session => {
       const sessionDay = session.day.toLowerCase().trim()
       
-      // Use same comprehensive day matching as above
-      const dayMappings = {
-        'segunda-feira': ['segunda', 'seg', 'monday'],
-        'terça-feira': ['terça', 'terca', 'ter', 'tuesday'], 
-        'quarta-feira': ['quarta', 'qua', 'wednesday'],
-        'quinta-feira': ['quinta', 'qui', 'thursday'],
-        'sexta-feira': ['sexta', 'sex', 'friday'],
-        'sábado': ['sabado', 'sab', 'saturday'],
-        'domingo': ['dom', 'sunday']
+      // Map database day codes to JS day numbers (0 = Sunday, 1 = Monday, etc.)
+      const dayCodeToNumber = {
+        'sun': 0, 'sunday': 0, 'domingo': 0, 'dom': 0,
+        'mon': 1, 'monday': 1, 'segunda': 1, 'segunda-feira': 1, 'seg': 1,
+        'tue': 2, 'tuesday': 2, 'terça': 2, 'terça-feira': 2, 'terca': 2, 'ter': 2,
+        'wed': 3, 'wednesday': 3, 'quarta': 3, 'quarta-feira': 3, 'qua': 3,
+        'thu': 4, 'thursday': 4, 'quinta': 4, 'quinta-feira': 4, 'qui': 4,
+        'fri': 5, 'friday': 5, 'sexta': 5, 'sexta-feira': 5, 'sex': 5,
+        'sat': 6, 'saturday': 6, 'sábado': 6, 'sabado': 6, 'sab': 6
       }
       
-      const mappedDays = dayMappings[dayName] || []
-      return sessionDay === dayName || 
-             mappedDays.includes(sessionDay) ||
-             sessionDay === dayName.substring(0, 3)
+      const currentDayNumber = date.getDay()
+      const sessionDayNumber = dayCodeToNumber[sessionDay as keyof typeof dayCodeToNumber]
+      
+      return sessionDayNumber === currentDayNumber
     })
   }
 
