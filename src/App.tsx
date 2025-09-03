@@ -13,6 +13,7 @@ import Schedule from "./pages/Schedule";
 import Contact from "./pages/Contact";
 import WorkWithUs from "./pages/WorkWithUs";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import UserType from "./pages/register/UserType";
 import PatientForm from "./pages/register/PatientForm";
 import ProfessionalForm from "./pages/register/ProfessionalForm";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/contato" element={<Contact />} />
             <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/cadastro/tipo-usuario" element={<UserType />} />
             <Route path="/cadastro/paciente" element={<PatientForm />} />
             <Route path="/cadastro/profissional" element={<ProfessionalForm />} />

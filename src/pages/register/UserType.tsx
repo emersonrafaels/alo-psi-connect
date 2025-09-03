@@ -4,19 +4,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useEffect } from 'react';
 
 const UserType = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { hasProfile, loading } = useUserProfile();
 
   useEffect(() => {
     if (!user) {
       navigate('/auth');
+      return;
     }
-  }, [user, navigate]);
 
-  if (!user) return null;
+    // Se já tem perfil, redirecionar para home
+    if (!loading && hasProfile) {
+      navigate('/');
+    }
+  }, [user, hasProfile, loading, navigate]);
+
+  if (!user || loading) return null;
 
   const handleUserTypeSelection = (tipo: 'paciente' | 'profissional') => {
     if (tipo === 'paciente') {

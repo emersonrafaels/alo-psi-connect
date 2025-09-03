@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -16,8 +17,24 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    // Se usuário já está logado, redirecionar para home
+    if (user) {
+      navigate('/');
+      return;
+    }
+
+    const tab = searchParams.get('tab');
+    if (tab === 'signup') {
+      setActiveTab('signup');
+    }
+  }, [searchParams, user, navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +55,9 @@ const Auth = () => {
         title: "Conta criada com sucesso!",
         description: "Verifique seu email para confirmar a conta e complete seu cadastro.",
       });
+      
+      // Aguardar confirmação de email antes de redirecionar
+      navigate('/cadastro/tipo-usuario');
     } catch (error: any) {
       toast({
         title: "Erro ao criar conta",
@@ -83,7 +103,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/cadastro/tipo-usuario`
+          redirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
@@ -117,7 +137,7 @@ const Auth = () => {
               <CardTitle className="text-center">Acesse sua conta</CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="login" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="login">Entrar</TabsTrigger>
                   <TabsTrigger value="signup">Criar conta</TabsTrigger>

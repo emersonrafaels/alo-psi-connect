@@ -76,7 +76,7 @@ const Header = () => {
                   variant="outline" 
                   size="sm" 
                   className="border-accent text-primary dark:text-primary-foreground hover:bg-accent hover:text-accent-foreground"
-                  onClick={() => navigate('/auth')}
+                  onClick={() => navigate('/auth?tab=signup')}
                 >
                   Cadastrar
                 </Button>
@@ -84,7 +84,7 @@ const Header = () => {
                   variant="default" 
                   size="sm" 
                   className="bg-accent text-accent-foreground hover:bg-accent/90"
-                  onClick={() => navigate('/auth')}
+                  onClick={() => navigate('/auth?tab=login')}
                 >
                   Entrar
                 </Button>
@@ -142,7 +142,7 @@ const Header = () => {
                       size="sm" 
                       className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
                       onClick={() => {
-                        navigate('/auth');
+                        navigate('/auth?tab=signup');
                         setIsMenuOpen(false);
                       }}
                     >
@@ -153,7 +153,7 @@ const Header = () => {
                       size="sm" 
                       className="bg-accent text-accent-foreground hover:bg-accent/90"
                       onClick={() => {
-                        navigate('/auth');
+                        navigate('/auth?tab=login');
                         setIsMenuOpen(false);
                       }}
                     >

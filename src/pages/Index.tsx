@@ -35,11 +35,20 @@ const Index = () => {
                 Encontre profissionais especializados em saúde mental com atendimento humanizado e de qualidade.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button variant="default" size="lg" className="bg-primary text-primary-foreground">
+                <Button 
+                  variant="default" 
+                  size="lg" 
+                  className="bg-primary text-primary-foreground"
+                  onClick={() => window.location.href = '/professional'}
+                >
                   Encontrar Profissional
                 </Button>
-                <Button variant="accent" size="lg">
-                  Marcar uma Consulta
+                <Button 
+                  variant="accent" 
+                  size="lg"
+                  onClick={() => window.location.href = '/auth?tab=signup'}
+                >
+                  Cadastrar
                 </Button>
               </div>
             </div>
@@ -159,7 +168,12 @@ const Index = () => {
             Empatia, Compreensão, Transformação: <br />
             O Seu Caminho Para A Cura.
           </h2>
-          <Button variant="accent" size="lg" className="mt-8">
+          <Button 
+            variant="accent" 
+            size="lg" 
+            className="mt-8"
+            onClick={() => window.location.href = '/auth?tab=signup'}
+          >
             Agendar Consulta
           </Button>
         </div>
