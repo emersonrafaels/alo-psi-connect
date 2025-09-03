@@ -614,32 +614,39 @@ const Professionals = () => {
                   </Button>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8 animate-fade-in">
                   {/* Profession Multiselect */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-2">
-                      <Badge variant="secondary" className="h-4 w-4 rounded-full p-0"></Badge>
+                  <div className="space-y-4 group">
+                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <Badge variant="secondary" className="h-3 w-3 rounded-full p-0 bg-primary"></Badge>
+                      </div>
                       Profissões
                     </label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between h-11 border-2 hover:border-primary/50 transition-all">
-                          {filters.profissoes.length > 0 
-                            ? `${filters.profissoes.length} selecionada${filters.profissoes.length > 1 ? 's' : ''}`
-                            : "Todas as profissões"
-                          }
-                          <ChevronDown className="h-4 w-4 opacity-50" />
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-between h-12 border-2 hover:border-primary/50 transition-all duration-200 hover:shadow-sm bg-background/50 backdrop-blur-sm"
+                        >
+                          <span className="font-medium">
+                            {filters.profissoes.length > 0 
+                              ? `${filters.profissoes.length} selecionada${filters.profissoes.length > 1 ? 's' : ''}`
+                              : "Todas as profissões"
+                            }
+                          </span>
+                          <ChevronDown className="h-4 w-4 opacity-50 transition-transform group-hover:rotate-180" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-80 p-3 border-2">
-                        <div className="space-y-3 max-h-64 overflow-y-auto">
+                      <PopoverContent className="w-80 p-4 border-2 shadow-lg bg-background/95 backdrop-blur-sm">
+                        <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
                           {getUniqueValues('profissao').map(prof => (
-                            <div key={prof} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                            <div key={prof} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/70 transition-all duration-200 hover:scale-[1.02] cursor-pointer">
                               <Checkbox
                                 id={`prof-${prof}`}
                                 checked={filters.profissoes.includes(prof as string)}
                                 onCheckedChange={() => toggleProfession(prof as string)}
-                                className="border-2"
+                                className="border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                               />
                               <label
                                 htmlFor={`prof-${prof}`}
@@ -655,30 +662,37 @@ const Professionals = () => {
                   </div>
 
                   {/* Days Multiselect */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-teal" />
+                  <div className="space-y-4 group">
+                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-teal-500/10 group-hover:bg-teal-500/20 transition-colors">
+                        <Calendar className="h-3 w-3 text-teal-600" />
+                      </div>
                       Dias da Semana
                     </label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between h-11 border-2 hover:border-teal/50 transition-all">
-                          {filters.dias.length > 0 
-                            ? `${filters.dias.length} dia${filters.dias.length > 1 ? 's' : ''}`
-                            : "Todos os dias"
-                          }
-                          <ChevronDown className="h-4 w-4 opacity-50" />
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-between h-12 border-2 hover:border-teal-500/50 transition-all duration-200 hover:shadow-sm bg-background/50 backdrop-blur-sm"
+                        >
+                          <span className="font-medium">
+                            {filters.dias.length > 0 
+                              ? `${filters.dias.length} dia${filters.dias.length > 1 ? 's' : ''}`
+                              : "Todos os dias"
+                            }
+                          </span>
+                          <ChevronDown className="h-4 w-4 opacity-50 transition-transform group-hover:rotate-180" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-80 p-3 border-2">
-                        <div className="space-y-3">
+                      <PopoverContent className="w-80 p-4 border-2 shadow-lg bg-background/95 backdrop-blur-sm">
+                        <div className="space-y-2">
                           {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                            <div key={day} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                            <div key={day} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/70 transition-all duration-200 hover:scale-[1.02] cursor-pointer">
                               <Checkbox
                                 id={`day-${day}`}
                                 checked={filters.dias.includes(day)}
                                 onCheckedChange={() => toggleDay(day)}
-                                className="border-2"
+                                className="border-2 data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
                               />
                               <label
                                 htmlFor={`day-${day}`}
@@ -686,7 +700,7 @@ const Professionals = () => {
                               >
                                 {getDayLabel(day)}
                               </label>
-                              <span className="text-xs text-muted-foreground font-mono">
+                              <span className="text-xs text-muted-foreground font-mono bg-muted/50 px-2 py-1 rounded">
                                 {getDayAbbrev(day)}
                               </span>
                             </div>
@@ -695,145 +709,152 @@ const Professionals = () => {
                       </PopoverContent>
                     </Popover>
                   </div>
-                   {/* Time Range Filter */}
-                   <div className="space-y-3">
-                     <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-2">
-                       <Clock className="h-4 w-4 text-accent" />
-                       Faixa de Horário
-                     </label>
-                     
-                      {/* Quick time presets */}
-                      <div className="grid grid-cols-3 gap-2 mb-3">
+
+                  {/* Time Range Filter */}
+                  <div className="space-y-4 group">
+                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-accent/10 group-hover:bg-accent/20 transition-colors">
+                        <Clock className="h-3 w-3 text-accent" />
+                      </div>
+                      Faixa de Horário
+                    </label>
+                    
+                    {/* Quick time presets */}
+                    <div className="grid grid-cols-1 gap-2 mb-4">
+                      <div className="flex gap-1">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "08:00", horarioFim: "12:00" }))}
-                          className="text-xs h-8 border-dashed hover:border-accent/50 hover:bg-accent/5"
+                          className="flex-1 text-xs h-9 border-dashed hover:border-accent/50 hover:bg-accent/5 transition-all duration-200"
                         >
-                          Manhã (8h-12h)
+                          🌅 Manhã
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "13:00", horarioFim: "18:00" }))}
-                          className="text-xs h-8 border-dashed hover:border-accent/50 hover:bg-accent/5"
+                          className="flex-1 text-xs h-9 border-dashed hover:border-accent/50 hover:bg-accent/5 transition-all duration-200"
                         >
-                          Tarde (13h-18h)
+                          ☀️ Tarde
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "18:00", horarioFim: "22:00" }))}
-                          className="text-xs h-8 border-dashed hover:border-accent/50 hover:bg-accent/5"
+                          className="flex-1 text-xs h-9 border-dashed hover:border-accent/50 hover:bg-accent/5 transition-all duration-200"
                         >
-                          Noite (18h-22h)
+                          🌙 Noite
                         </Button>
                       </div>
+                    </div>
 
-                     <div className="grid grid-cols-2 gap-3">
-                       <div className="relative group">
-                         <Input
-                           type="time"
-                           placeholder="00:00"
-                           value={filters.horarioInicio}
-                           onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))}
-                           className="h-11 border-2 focus:border-accent/50 transition-all group-hover:border-accent/30 pt-6 pb-2"
-                         />
-                         <span className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
-                           Horário de Início
-                         </span>
-                         {filters.horarioInicio && (
-                           <Button
-                             variant="ghost"
-                             size="sm"
-                             onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "" }))}
-                             className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 opacity-70 hover:opacity-100"
-                           >
-                             <X className="h-3 w-3" />
-                           </Button>
-                         )}
-                       </div>
-                       
-                       <div className="relative group">
-                         <Input
-                           type="time"
-                           placeholder="23:59"
-                           value={filters.horarioFim}
-                           onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))}
-                           className="h-11 border-2 focus:border-accent/50 transition-all group-hover:border-accent/30 pt-6 pb-2"
-                         />
-                         <span className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
-                           Horário de Fim
-                         </span>
-                         {filters.horarioFim && (
-                           <Button
-                             variant="ghost"
-                             size="sm"
-                             onClick={() => setFilters(prev => ({ ...prev, horarioFim: "" }))}
-                             className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 opacity-70 hover:opacity-100"
-                           >
-                             <X className="h-3 w-3" />
-                           </Button>
-                         )}
-                       </div>
-                     </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="relative group/input">
+                        <Input
+                          type="time"
+                          placeholder="00:00"
+                          value={filters.horarioInicio}
+                          onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))}
+                          className="h-12 border-2 focus:border-accent/50 transition-all group-hover/input:border-accent/30 pt-6 pb-2 bg-background/50"
+                        />
+                        <span className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
+                          Início
+                        </span>
+                        {filters.horarioInicio && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "" }))}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 opacity-70 hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <div className="relative group/input">
+                        <Input
+                          type="time"
+                          placeholder="23:59"
+                          value={filters.horarioFim}
+                          onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))}
+                          className="h-12 border-2 focus:border-accent/50 transition-all group-hover/input:border-accent/30 pt-6 pb-2 bg-background/50"
+                        />
+                        <span className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
+                          Fim
+                        </span>
+                        {filters.horarioFim && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setFilters(prev => ({ ...prev, horarioFim: "" }))}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 opacity-70 hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
 
-                     {/* Range validation feedback */}
-                     {filters.horarioInicio && filters.horarioFim && filters.horarioInicio >= filters.horarioFim && (
-                       <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800">
-                         <Clock className="h-3 w-3" />
-                         <span>O horário de início deve ser anterior ao horário de fim</span>
-                       </div>
-                     )}
-                     
-                     {/* Clear time filters */}
-                     {(filters.horarioInicio || filters.horarioFim) && (
-                       <Button
-                         variant="ghost"
-                         size="sm"
-                         onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "", horarioFim: "" }))}
-                         className="w-full text-xs text-muted-foreground hover:text-foreground"
-                       >
-                         Limpar horários
-                       </Button>
-                     )}
-                   </div>
+                    {/* Range validation feedback */}
+                    {filters.horarioInicio && filters.horarioFim && filters.horarioInicio >= filters.horarioFim && (
+                      <div className="flex items-center gap-3 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 rounded-lg border border-amber-200 dark:border-amber-800 animate-fade-in">
+                        <Clock className="h-4 w-4 flex-shrink-0" />
+                        <span>O horário de início deve ser anterior ao horário de fim</span>
+                      </div>
+                    )}
+                    
+                    {/* Clear time filters */}
+                    {(filters.horarioInicio || filters.horarioFim) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "", horarioFim: "" }))}
+                        className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Limpar horários
+                      </Button>
+                    )}
+                  </div>
 
                   {/* Price Range Filter */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-green-600" />
+                  <div className="space-y-4 group">
+                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
+                        <DollarSign className="h-3 w-3 text-green-600" />
+                      </div>
                       Faixa de Preço
                     </label>
-                    <div className="flex gap-3">
-                      <div className="flex-1 relative">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="relative group/price">
                         <Input
                           type="number"
                           placeholder="0"
                           value={filters.valorMin}
                           onChange={(e) => setFilters(prev => ({ ...prev, valorMin: e.target.value }))}
-                          className="h-11 border-2 focus:border-green-500/50 pl-8"
+                          className="h-12 border-2 focus:border-green-500/50 transition-all group-hover/price:border-green-500/30 pl-8 pt-6 pb-2 bg-background/50"
                         />
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
                           R$
                         </span>
-                        <span className="absolute left-3 top-0 text-xs text-muted-foreground">
-                          Mín
+                        <span className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
+                          Mínimo
                         </span>
                       </div>
-                      <div className="flex-1 relative">
+                      <div className="relative group/price">
                         <Input
                           type="number"
                           placeholder="∞"
                           value={filters.valorMax}
                           onChange={(e) => setFilters(prev => ({ ...prev, valorMax: e.target.value }))}
-                          className="h-11 border-2 focus:border-green-500/50 pl-8"
+                          className="h-12 border-2 focus:border-green-500/50 transition-all group-hover/price:border-green-500/30 pl-8 pt-6 pb-2 bg-background/50"
                         />
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
                           R$
                         </span>
-                        <span className="absolute left-3 top-0 text-xs text-muted-foreground">
-                          Máx
+                        <span className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
+                          Máximo
                         </span>
                       </div>
                     </div>
