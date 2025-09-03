@@ -335,23 +335,40 @@ const Professionals = () => {
         .trim()
     }
 
+    const standardizeProfession = (text: string) => {
+      const normalized = normalizeText(text)
+      
+      // Specific mappings for common profession variations
+      const professionMap: { [key: string]: string } = {
+        'psicologo': 'psicólogo',
+        'psicologa': 'psicóloga',
+        'psiquiatra': 'psiquiatra',
+        'terapeuta': 'terapeuta',
+        'psicopedagogo': 'psicopedagogo',
+        'psicopedagoga': 'psicopedagoga'
+      }
+      
+      return professionMap[normalized] || text.toLowerCase().trim()
+    }
+
     const values = professionals
       .map(prof => prof[field])
       .filter(Boolean)
       .filter((val): val is string => typeof val === 'string')
-      .map(val => val.toLowerCase().trim())
 
-    // Create a map to group similar professions
-    const normalizedMap = new Map<string, string>()
+    // Create a map to group similar professions using both normalization and standardization
+    const professionMap = new Map<string, string>()
     
     values.forEach(value => {
-      const normalized = normalizeText(value)
-      if (!normalizedMap.has(normalized)) {
-        normalizedMap.set(normalized, value)
+      const standardized = standardizeProfession(value)
+      const normalized = normalizeText(standardized)
+      
+      if (!professionMap.has(normalized)) {
+        professionMap.set(normalized, standardized)
       }
     })
 
-    return Array.from(normalizedMap.values()).sort()
+    return Array.from(professionMap.values()).sort()
   }
 
   const clearFilters = () => {
