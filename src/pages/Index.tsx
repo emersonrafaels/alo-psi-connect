@@ -88,9 +88,12 @@ const Index = () => {
               </div>
             </div>
             <div className="relative">
-              <div className="w-full h-80 bg-muted rounded-lg flex items-center justify-center">
-                <span className="text-muted-foreground">Imagem do Hero</span>
-              </div>
+              <img 
+                src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png"
+                alt="Profissional de saúde mental oferecendo cuidado e acolhimento"
+                className="w-full h-80 object-cover rounded-lg"
+                loading="lazy"
+              />
             </div>
           </div>
         </div>
