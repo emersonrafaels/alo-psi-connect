@@ -59,9 +59,15 @@ const App: React.FC = () => {
                   <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  {/* Redirect old routes to new cadastro routes */}
                   <Route path="/registrar" element={<UserType />} />
                   <Route path="/registrar/paciente" element={<PatientForm />} />
                   <Route path="/registrar/profissional" element={<ProfessionalForm />} />
+                  
+                  {/* New standardized cadastro routes */}
+                  <Route path="/cadastro/tipo-usuario" element={<UserType />} />
+                  <Route path="/cadastro/paciente" element={<PatientForm />} />
+                  <Route path="/cadastro/profissional" element={<ProfessionalForm />} />
                   
                   {/* Rotas Admin */}
                   <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />

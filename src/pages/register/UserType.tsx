@@ -41,53 +41,57 @@ const UserType = () => {
       <main className="container mx-auto px-4 py-20">
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-12">
+            <div className="mb-6">
+              <div className="w-16 h-1 bg-primary mx-auto mb-4"></div>
+              <span className="text-sm font-medium text-primary uppercase tracking-wider">Passo 1 de 3</span>
+            </div>
             <h1 className="text-4xl font-bold text-foreground mb-4">
-              Quero ser atendido ou quero atender?
+              Como você deseja se cadastrar?
             </h1>
             <p className="text-muted-foreground text-lg">
-              Cadastre-se no formulário abaixo e faça parte da comunidade Alô, Psi!
+              Escolha o tipo de cadastro que melhor se adequa ao seu perfil
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            <Card className="border-2 hover:border-primary transition-colors cursor-pointer group" 
+            <Card className="border-2 hover:border-primary transition-all duration-300 cursor-pointer group hover:shadow-lg" 
                   onClick={() => handleUserTypeSelection('paciente')}>
-              <CardHeader className="text-center">
-                <div className="mx-auto mb-4 w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
-                  <svg className="w-12 h-12 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <CardHeader className="text-center pb-4">
+                <div className="mx-auto mb-6 w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <CardTitle className="text-2xl mb-2">Quero ser atendido</CardTitle>
-                <div className="w-12 h-1 bg-accent mx-auto mb-4"></div>
-                <CardDescription className="text-base">
-                  Sou um médico ou um estudante de medicina e busco por atendimento psicológico especializado.
+                <CardTitle className="text-2xl mb-3 group-hover:text-primary transition-colors">Quero ser atendido</CardTitle>
+                <div className="w-12 h-1 bg-primary mx-auto mb-4"></div>
+                <CardDescription className="text-base leading-relaxed">
+                  Sou um médico ou estudante de medicina e busco atendimento psicológico especializado.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="default">
-                  Cadastre-se
+              <CardContent className="pt-2">
+                <Button className="w-full group-hover:shadow-md transition-shadow" variant="default">
+                  Continuar como Paciente
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="border-2 hover:border-primary transition-colors cursor-pointer group"
+            <Card className="border-2 hover:border-secondary transition-all duration-300 cursor-pointer group hover:shadow-lg"
                   onClick={() => handleUserTypeSelection('profissional')}>
-              <CardHeader className="text-center">
-                <div className="mx-auto mb-4 w-24 h-24 bg-teal/10 rounded-full flex items-center justify-center">
-                  <svg className="w-12 h-12 text-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              <CardHeader className="text-center pb-4">
+                <div className="mx-auto mb-6 w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
+                  <svg className="w-10 h-10 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                   </svg>
                 </div>
-                <CardTitle className="text-2xl mb-2">Quero atender</CardTitle>
-                <div className="w-12 h-1 bg-teal mx-auto mb-4"></div>
-                <CardDescription className="text-base">
-                  Sou um psicólogo, psiquiatra ou psicoterapeuta e gostaria de deixar meus serviços à disposição.
+                <CardTitle className="text-2xl mb-3 group-hover:text-secondary transition-colors">Quero atender</CardTitle>
+                <div className="w-12 h-1 bg-secondary mx-auto mb-4"></div>
+                <CardDescription className="text-base leading-relaxed">
+                  Sou psicólogo, psiquiatra ou psicoterapeuta e desejo oferecer meus serviços.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="teal">
-                  Cadastre-se
+              <CardContent className="pt-2">
+                <Button className="w-full group-hover:shadow-md transition-shadow" variant="secondary">
+                  Continuar como Profissional
                 </Button>
               </CardContent>
             </Card>

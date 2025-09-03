@@ -47,10 +47,26 @@ const AuthCallback = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-        <h2 className="text-lg font-semibold">Processando autenticação...</h2>
-        <p className="text-muted-foreground">Aguarde enquanto configuramos sua conta.</p>
+      <div className="max-w-md w-full mx-auto px-4">
+        <div className="text-center bg-card rounded-lg p-8 shadow-lg border">
+          <div className="mb-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/20 border-t-primary mx-auto mb-4"></div>
+            <div className="w-full bg-muted rounded-full h-2 mb-4">
+              <div className="bg-primary h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+            </div>
+          </div>
+          
+          <h2 className="text-xl font-semibold mb-2">Processando autenticação...</h2>
+          <p className="text-muted-foreground mb-4">
+            Aguarde enquanto configuramos sua conta e verificamos suas informações.
+          </p>
+          
+          <div className="text-sm text-muted-foreground">
+            <p>• Verificando credenciais</p>
+            <p>• Carregando perfil</p>
+            <p>• Preparando dashboard</p>
+          </div>
+        </div>
       </div>
     </div>
   );

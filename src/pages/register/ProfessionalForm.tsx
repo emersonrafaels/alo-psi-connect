@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { ProgressIndicator } from '@/components/ui/progress-indicator';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
@@ -372,31 +373,32 @@ const ProfessionalForm = () => {
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
+            <div className="mb-6">
+              <div className="w-16 h-1 bg-secondary mx-auto mb-4"></div>
+              <span className="text-sm font-medium text-secondary uppercase tracking-wider">Cadastro de Profissional</span>
+            </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">
               Quero atender
             </h1>
             <p className="text-muted-foreground">
-              Cadastre-se no formulário abaixo e faça parte da comunidade Alô, Psi!
+              Junte-se à nossa rede de profissionais qualificados e ajude quem precisa
             </p>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-center text-xl">Cadastro</CardTitle>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>
-                    Etapa {currentStep} - {
-                      currentStep === 1 ? 'Dados Pessoais' :
-                      currentStep === 2 ? 'Dados Profissionais' :
-                      currentStep === 3 ? 'Perfil e Contatos' :
-                      'Resumo e Senha'
-                    }
-                  </span>
-                  <span>Passo {currentStep} de {totalSteps}</span>
-                </div>
-                <Progress value={progressPercentage} className="w-full" />
-              </div>
+              <ProgressIndicator 
+                currentStep={currentStep} 
+                totalSteps={totalSteps} 
+                stepLabels={['Dados Pessoais', 'Profissão', 'Perfil', 'Finalização']}
+                className="mb-6"
+              />
+              <CardTitle className="text-center text-xl">
+                {currentStep === 1 ? 'Seus dados pessoais' :
+                 currentStep === 2 ? 'Informações profissionais' :
+                 currentStep === 3 ? 'Perfil e contatos' :
+                 'Finalização do cadastro'}
+              </CardTitle>
             </CardHeader>
             
             <CardContent className="space-y-6">

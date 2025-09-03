@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { ProgressIndicator } from '@/components/ui/progress-indicator';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
@@ -235,30 +236,31 @@ const PatientForm = () => {
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
+            <div className="mb-6">
+              <div className="w-16 h-1 bg-primary mx-auto mb-4"></div>
+              <span className="text-sm font-medium text-primary uppercase tracking-wider">Cadastro de Paciente</span>
+            </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">
               Quero ser atendido
             </h1>
             <p className="text-muted-foreground">
-              Cadastre-se no formulário abaixo e faça parte da comunidade Alô, Psi!
+              Complete o cadastro para ter acesso a atendimento psicológico especializado
             </p>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-center text-xl">Cadastro</CardTitle>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>
-                    Etapa {currentStep} - {
-                      currentStep === 1 ? 'Estudante/Formado' :
-                      currentStep === 2 ? 'Dados Pessoais' :
-                      'Informações Adicionais'
-                    }
-                  </span>
-                  <span>Passo {currentStep} de {totalSteps}</span>
-                </div>
-                <Progress value={progressPercentage} className="w-full" />
-              </div>
+              <ProgressIndicator 
+                currentStep={currentStep} 
+                totalSteps={totalSteps} 
+                stepLabels={['Perfil', 'Dados Pessoais', 'Finalização']}
+                className="mb-6"
+              />
+              <CardTitle className="text-center text-xl">
+                {currentStep === 1 ? 'Defina seu perfil' :
+                 currentStep === 2 ? 'Seus dados pessoais' :
+                 'Informações adicionais'}
+              </CardTitle>
             </CardHeader>
             
             <CardContent className="space-y-6">

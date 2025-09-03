@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff } from 'lucide-react';
@@ -17,10 +17,10 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('login');
+  
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  
   const { user } = useAuth();
 
   useEffect(() => {
@@ -30,44 +30,8 @@ const Auth = () => {
       return;
     }
 
-    const tab = searchParams.get('tab');
-    if (tab === 'signup') {
-      setActiveTab('signup');
-    }
-  }, [searchParams, user, navigate]);
+  }, [user, navigate]);
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/cadastro/tipo-usuario`
-        }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar a conta e complete seu cadastro.",
-      });
-      
-      // Aguardar confirmação de email antes de redirecionar
-      navigate('/cadastro/tipo-usuario');
-    } catch (error: any) {
-      toast({
-        title: "Erro ao criar conta",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,101 +98,69 @@ const Auth = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-center">Acesse sua conta</CardTitle>
+              <CardTitle className="text-center">Faça seu login</CardTitle>
+              <CardDescription className="text-center">
+                Entre com suas credenciais para acessar sua conta
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="login">Entrar</TabsTrigger>
-                  <TabsTrigger value="signup">Criar conta</TabsTrigger>
-                </TabsList>
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="seu@email.com"
+                  />
+                </div>
                 
-                <TabsContent value="login">
-                  <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Senha</Label>
-                      <div className="relative">
-                        <Input
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Entrando..." : "Entrar"}
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      placeholder="Sua senha"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
-                  </form>
-                </TabsContent>
+                  </div>
+                </div>
                 
-                <TabsContent value="signup">
-                  <form onSubmit={handleSignUp} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Senha</Label>
-                      <div className="relative">
-                        <Input
-                          id="signup-password"
-                          type={showPassword ? "text" : "password"}
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required
-                          minLength={6}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Mínimo de 6 caracteres
-                      </p>
-                    </div>
-                    
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Criando conta..." : "Criar conta"}
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Entrando..." : "Entrar"}
+                </Button>
+                
+                <div className="text-center">
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    className="text-sm text-muted-foreground hover:text-primary"
+                    onClick={() => {
+                      // TODO: Implement forgot password
+                      toast({
+                        title: "Recurso em desenvolvimento",
+                        description: "A recuperação de senha estará disponível em breve.",
+                      });
+                    }}
+                  >
+                    Esqueci minha senha
+                  </Button>
+                </div>
+              </form>
               
               <div className="mt-6">
                 <div className="relative">
@@ -267,6 +199,19 @@ const Auth = () => {
                   </svg>
                   Continuar com Google
                 </Button>
+                
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Ainda não tem uma conta?
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => navigate('/cadastro/tipo-usuario')}
+                  >
+                    Criar conta gratuitamente
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
