@@ -702,25 +702,33 @@ const Professionals = () => {
                        Faixa de Horário
                      </label>
                      
-                     {/* Quick time presets */}
-                     <div className="grid grid-cols-2 gap-2 mb-3">
-                       <Button
-                         variant="outline"
-                         size="sm"
-                         onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "08:00", horarioFim: "12:00" }))}
-                         className="text-xs h-8 border-dashed hover:border-accent/50 hover:bg-accent/5"
-                       >
-                         Manhã (8h-12h)
-                       </Button>
-                       <Button
-                         variant="outline"
-                         size="sm"
-                         onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "13:00", horarioFim: "18:00" }))}
-                         className="text-xs h-8 border-dashed hover:border-accent/50 hover:bg-accent/5"
-                       >
-                         Tarde (13h-18h)
-                       </Button>
-                     </div>
+                      {/* Quick time presets */}
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "08:00", horarioFim: "12:00" }))}
+                          className="text-xs h-8 border-dashed hover:border-accent/50 hover:bg-accent/5"
+                        >
+                          Manhã (8h-12h)
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "13:00", horarioFim: "18:00" }))}
+                          className="text-xs h-8 border-dashed hover:border-accent/50 hover:bg-accent/5"
+                        >
+                          Tarde (13h-18h)
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "18:00", horarioFim: "22:00" }))}
+                          className="text-xs h-8 border-dashed hover:border-accent/50 hover:bg-accent/5"
+                        >
+                          Noite (18h-22h)
+                        </Button>
+                      </div>
 
                      <div className="grid grid-cols-2 gap-3">
                        <div className="relative group">
