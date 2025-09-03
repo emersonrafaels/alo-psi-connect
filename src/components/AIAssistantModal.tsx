@@ -27,7 +27,7 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
     {
       id: '1',
       role: 'assistant',
-      content: '👋 Olá! Sou seu assistente de saúde mental. Estou aqui para te ajudar a encontrar o profissional ideal para suas necessidades.\n\n**Como posso te ajudar hoje?**\n\n• Conte-me sobre o que você está buscando\n• Quais são suas principais preocupações?\n• Tem alguma preferência de abordagem terapêutica?\n• Orçamento ou localização são fatores importantes?',
+      content: "👋 Olá! Sou seu assistente de saúde mental especializado em **telemedicina**. Estou aqui para te ajudar a encontrar o profissional ideal para suas consultas online.\n\n**Como posso te ajudar hoje?**\n\n🔍 **Sobre o que você gostaria de conversar:**\n• Que tipo de apoio psicológico você está buscando?\n• Alguma especialidade específica (ansiedade, depressão, relacionamentos, etc.)?\n• Prefere Psicólogo(a), Psiquiatra(a) ou Psicoterapeuta(a)?\n\n⏰ **Horários e disponibilidade:**\n• Qual período prefere? (manhã, tarde ou noite)\n• Que dias da semana funcionam melhor para você?\n\n💰 **Investimento:**\n• Qual sua faixa de orçamento para as consultas?\n• Busca valores mais acessíveis ou tem flexibilidade?\n\n📱 **Todas as consultas são realizadas online** - você pode ter sessões de qualquer lugar com total privacidade e comodidade!",
       timestamp: new Date()
     }
   ])
