@@ -58,6 +58,12 @@ const Profile = () => {
         title: "Perfil atualizado",
         description: "Suas informações foram salvas com sucesso.",
       });
+    } else {
+      toast({
+        title: "Erro ao atualizar",
+        description: "Houve um problema ao salvar suas informações. Tente novamente.",
+        variant: "destructive",
+      });
     }
 
     setLoading(false);

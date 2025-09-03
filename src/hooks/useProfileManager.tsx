@@ -35,13 +35,10 @@ export const useProfileManager = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram salvas com sucesso.",
-      });
-
-      // Recarrega os dados do perfil
-      refetch();
+      // Aguarda um pouco antes de fazer refetch para garantir que os dados foram persistidos
+      setTimeout(() => {
+        refetch();
+      }, 500);
 
       return { error: null };
     } catch (error: any) {
