@@ -265,8 +265,8 @@ const Professionals = () => {
       .map(servico => servico.trim())
       .filter(servico => servico.length > 0)
       .map(servico => {
-        // Capitalize first letter of each word
-        return servico.replace(/\b\w/g, l => l.toUpperCase())
+        // Proper capitalize: first letter uppercase, rest lowercase, then capitalize each word
+        return servico.toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
       })
   }
 
