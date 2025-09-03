@@ -169,7 +169,7 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
                   }`}
                 >
                   {message.role === 'assistant' ? (
-                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-ul:text-foreground prose-li:text-foreground">
                       <ReactMarkdown
                         components={{
                           a: ({ href, children }) => (
@@ -177,11 +177,40 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
                               href={href} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-primary hover:underline"
+                              className="text-primary hover:underline font-medium decoration-2 underline-offset-2"
                             >
                               {children}
                             </a>
                           ),
+                          h3: ({ children }) => (
+                            <h3 className="text-lg font-bold text-foreground mt-4 mb-2 flex items-center gap-2">
+                              {children}
+                            </h3>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="space-y-1 my-2">
+                              {children}
+                            </ul>
+                          ),
+                          li: ({ children }) => (
+                            <li className="flex items-start gap-2">
+                              <span className="text-primary mt-1">•</span>
+                              <span>{children}</span>
+                            </li>
+                          ),
+                          hr: () => (
+                            <hr className="my-4 border-border" />
+                          ),
+                          strong: ({ children }) => (
+                            <strong className="font-semibold text-foreground">
+                              {children}
+                            </strong>
+                          ),
+                          p: ({ children }) => (
+                            <p className="mb-2 leading-relaxed">
+                              {children}
+                            </p>
+                          )
                         }}
                       >
                         {message.content}
