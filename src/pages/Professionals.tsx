@@ -102,9 +102,15 @@ const Professionals = () => {
     // Day filter (multiselect)
     if (filters.dias.length > 0) {
       filtered = filtered.filter(prof => 
-        prof.sessions.some(session => 
-          filters.dias.includes(session.day.toLowerCase())
-        )
+        prof.sessions.some(session => {
+          const sessionDay = session.day.toLowerCase()
+          return filters.dias.some(filterDay => 
+            sessionDay === filterDay || 
+            sessionDay === filterDay.toLowerCase() ||
+            sessionDay.includes(filterDay.slice(0, 3)) || // Match first 3 letters (mon, tue, etc.)
+            filterDay.includes(sessionDay.slice(0, 3))
+          )
+        })
       )
     }
 
