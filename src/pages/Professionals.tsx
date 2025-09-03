@@ -326,12 +326,32 @@ const Professionals = () => {
   }
 
   const getUniqueValues = (field: 'profissao' | 'crp_crm' | 'servicos_raw') => {
-    return [...new Set(professionals
+    const normalizeText = (text: string) => {
+      return text
+        .toLowerCase()
+        .normalize('NFD') // Decompose accented characters
+        .replace(/[\u0300-\u036f]/g, '') // Remove accent marks
+        .replace(/[^\w\s]/g, '') // Remove special characters
+        .trim()
+    }
+
+    const values = professionals
       .map(prof => prof[field])
       .filter(Boolean)
       .filter((val): val is string => typeof val === 'string')
-      .map(val => val.toLowerCase())
-    )]
+      .map(val => val.toLowerCase().trim())
+
+    // Create a map to group similar professions
+    const normalizedMap = new Map<string, string>()
+    
+    values.forEach(value => {
+      const normalized = normalizeText(value)
+      if (!normalizedMap.has(normalized)) {
+        normalizedMap.set(normalized, value)
+      }
+    })
+
+    return Array.from(normalizedMap.values()).sort()
   }
 
   const clearFilters = () => {
