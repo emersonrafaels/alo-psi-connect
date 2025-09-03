@@ -23,7 +23,7 @@ const Index = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="bg-gray-50 py-16">
+      <section className="bg-muted py-16">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -44,8 +44,8 @@ const Index = () => {
               </div>
             </div>
             <div className="relative">
-              <div className="w-full h-80 bg-gray-200 rounded-lg flex items-center justify-center">
-                <span className="text-gray-500">Imagem do Hero</span>
+              <div className="w-full h-80 bg-muted rounded-lg flex items-center justify-center">
+                <span className="text-muted-foreground">Imagem do Hero</span>
               </div>
             </div>
           </div>
@@ -56,7 +56,7 @@ const Index = () => {
       <SearchSection />
 
       {/* About Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-muted">
         <div className="container mx-auto px-4 text-center">
           <p className="text-lg max-w-4xl mx-auto">
             Acreditamos na força do acolhimento e na construção de um ambiente seguro, 
@@ -111,14 +111,14 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <div className="bg-white p-6 rounded-lg">
+              <div className="bg-card p-6 rounded-lg border">
                 <h3 className="font-semibold mb-2">250+</h3>
                 <p className="text-sm">Psicólogos</p>
                 <p className="text-xs text-muted-foreground">
                   Nos últimos meses, Â são psicólogos credenciados desde junho de 2022
                 </p>
               </div>
-              <div className="bg-white p-6 rounded-lg">
+              <div className="bg-card p-6 rounded-lg border">
                 <h3 className="font-semibold mb-2">Uma escola tão acolhedora.</h3>
                 <p className="text-sm">
                   Encontre agora de Escutar nós vamos de trabalho nos Encontre
