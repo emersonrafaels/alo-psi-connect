@@ -22,6 +22,7 @@ import {
   X, 
   Calendar, 
   ChevronDown, 
+  ChevronUp,
   Settings, 
   Bot, 
   Sparkles 
@@ -61,6 +62,7 @@ const Professionals = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
+  const [expandedFilters, setExpandedFilters] = useState(true) // Novo estado para controlar expansão
   const { getFiltersFromURL, clearFilters: clearURLFilters } = useSearchFilters()
   
   const [showAIAssistant, setShowAIAssistant] = useState(false)
@@ -666,17 +668,29 @@ const Professionals = () => {
             {showFilters && (
               <div className="bg-gradient-to-br from-card via-muted/30 to-card rounded-xl p-8 shadow-lg border border-border/50 backdrop-blur-sm">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <Filter className="h-5 w-5 text-primary" />
-                    Filtros Avançados
-                  </h3>
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                      <Filter className="h-5 w-5 text-primary" />
+                      Filtros Avançados
+                    </h3>
+                    <Button
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setExpandedFilters(!expandedFilters)}
+                      className="h-8 w-8 p-0 hover:bg-primary/10 transition-colors"
+                    >
+                      {expandedFilters ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                   <Button variant="outline" size="sm" onClick={clearFilters} className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50">
                     <X className="h-4 w-4 mr-2" />
                     Limpar Todos
                   </Button>
                 </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8 animate-fade-in">
                   {/* Profession Multiselect */}
                   <div className="space-y-4 group">
                     <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
@@ -922,7 +936,6 @@ const Professionals = () => {
                     </div>
                   </div>
                 </div>
-              </div>
             )}
 
           </div>
