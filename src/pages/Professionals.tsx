@@ -94,9 +94,42 @@ const Professionals = () => {
 
     // Profession filter (multiselect)
     if (filters.profissoes.length > 0) {
-      filtered = filtered.filter(prof => 
-        prof.profissao && filters.profissoes.includes(prof.profissao.toLowerCase())
-      )
+      filtered = filtered.filter(prof => {
+        if (!prof.profissao) return false
+        
+        // Normalize the profession for comparison using the same logic
+        const normalizeText = (text: string) => {
+          return text
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^\w\s]/g, '')
+            .trim()
+        }
+        
+        const standardizeProfession = (text: string) => {
+          const normalized = normalizeText(text)
+          const professionMap: { [key: string]: string } = {
+            'psicologo': null,
+            'psicologa': null,
+            'psicoterapeuta': 'psicoterapeuta(a)',
+            'psiquiatra': 'psiquiatra(a)',
+            'terapeuta': 'terapeuta',
+            'psicopedagogo': 'psicopedagogo(a)',
+            'psicopedagoga': 'psicopedagogo(a)',
+            'neurologista': 'neurologista',
+            'terapia ocupacional': 'terapeuta ocupacional'
+          }
+          const result = professionMap[normalized]
+          if (result === null) return null
+          return result || text.toLowerCase().trim()
+        }
+        
+        const standardizedProfession = standardizeProfession(prof.profissao)
+        if (standardizedProfession === null) return false
+        
+        return filters.profissoes.includes(standardizedProfession)
+      })
     }
 
     // Day filter (multiselect)
@@ -340,15 +373,20 @@ const Professionals = () => {
       
       // Specific mappings for common profession variations
       const professionMap: { [key: string]: string } = {
-        'psicologo': 'psicólogo',
-        'psicologa': 'psicóloga',
-        'psiquiatra': 'psiquiatra',
+        'psicologo': null, // Remove psicólogo entries
+        'psicologa': null, // Remove psicóloga entries
+        'psicoterapeuta': 'psicoterapeuta(a)',
+        'psiquiatra': 'psiquiatra(a)',
         'terapeuta': 'terapeuta',
-        'psicopedagogo': 'psicopedagogo',
-        'psicopedagoga': 'psicopedagoga'
+        'psicopedagogo': 'psicopedagogo(a)',
+        'psicopedagoga': 'psicopedagogo(a)',
+        'neurologista': 'neurologista',
+        'terapia ocupacional': 'terapeuta ocupacional'
       }
       
-      return professionMap[normalized] || text.toLowerCase().trim()
+      const result = professionMap[normalized]
+      if (result === null) return null // Skip this profession
+      return result || text.toLowerCase().trim()
     }
 
     const values = professionals
@@ -361,6 +399,8 @@ const Professionals = () => {
     
     values.forEach(value => {
       const standardized = standardizeProfession(value)
+      if (standardized === null) return // Skip removed professions
+      
       const normalized = normalizeText(standardized)
       
       if (!professionMap.has(normalized)) {
