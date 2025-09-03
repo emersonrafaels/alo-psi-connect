@@ -226,7 +226,15 @@ const Professionals = () => {
       'thursday': 'Qui',
       'friday': 'Sex',
       'saturday': 'Sáb',
-      'sunday': 'Dom'
+      'sunday': 'Dom',
+      // Abreviações em inglês
+      'mon': 'Seg',
+      'tue': 'Ter',
+      'wed': 'Qua',
+      'thu': 'Qui',
+      'fri': 'Sex',
+      'sat': 'Sáb',
+      'sun': 'Dom'
     }
     
     // Group sessions by day and format times
