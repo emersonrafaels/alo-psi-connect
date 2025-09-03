@@ -48,8 +48,7 @@ const Profile = () => {
     }
   }, [profile]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setLoading(true);
 
     const { error } = await updateProfile(formData);
@@ -166,7 +165,7 @@ const Profile = () => {
             </CardHeader>
             
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-6">
                 <div className="grid gap-4">
                   <div>
                     <Label htmlFor="nome">Nome completo</Label>
@@ -273,7 +272,7 @@ const Profile = () => {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-              </form>
+              </div>
             </CardContent>
           </Card>
         </div>
