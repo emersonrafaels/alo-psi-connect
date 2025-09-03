@@ -42,8 +42,8 @@ const Professionals = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState({
-    profissao: "",
-    dia: "",
+    profissao: "todas",
+    dia: "todos",
     valorMin: "",
     valorMax: "",
     servico: ""
@@ -70,14 +70,14 @@ const Professionals = () => {
     }
 
     // Profession filter
-    if (filters.profissao) {
+    if (filters.profissao && filters.profissao !== "todas") {
       filtered = filtered.filter(prof => 
         prof.profissao?.toLowerCase() === filters.profissao.toLowerCase()
       )
     }
 
     // Day filter
-    if (filters.dia) {
+    if (filters.dia && filters.dia !== "todos") {
       filtered = filtered.filter(prof => 
         prof.sessions.some(session => 
           session.day.toLowerCase() === filters.dia.toLowerCase()
@@ -222,8 +222,8 @@ const Professionals = () => {
 
   const clearFilters = () => {
     setFilters({
-      profissao: "",
-      dia: "",
+      profissao: "todas",
+      dia: "todos",
       valorMin: "",
       valorMax: "",
       servico: ""
@@ -317,7 +317,7 @@ const Professionals = () => {
                         <SelectValue placeholder="Todas" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todas</SelectItem>
+                        <SelectItem value="todas">Todas</SelectItem>
                         {getUniqueValues('profissao').map(prof => (
                           <SelectItem key={prof} value={prof as string}>
                             {capitalizeText(prof as string)}
@@ -334,7 +334,7 @@ const Professionals = () => {
                         <SelectValue placeholder="Todos" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos</SelectItem>
+                        <SelectItem value="todos">Todos</SelectItem>
                         <SelectItem value="monday">Segunda-feira</SelectItem>
                         <SelectItem value="tuesday">Terça-feira</SelectItem>
                         <SelectItem value="wednesday">Quarta-feira</SelectItem>
