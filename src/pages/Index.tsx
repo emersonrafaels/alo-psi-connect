@@ -113,41 +113,101 @@ const Index = () => {
       </section>
 
       {/* University Section */}
-      <section className="py-16">
+      <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12 text-foreground">
+          <h2 className="text-4xl font-bold text-center mb-16 text-gray-900">
             Voltada Exclusivamente Para Estudantes Universitários
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">94%</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Card 1 */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
+              <div className="relative w-24 h-24 mx-auto mb-6">
+                <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 36 36">
+                  <path
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="#e5e7eb"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="2"
+                    strokeDasharray="83, 100"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-gray-900">83%</span>
+                </div>
               </div>
-              <p className="text-sm text-foreground">
-                dos psicólogos consideram <br />
-                que administram com <br />
-                eficácia seus estudos acadêmicos
+              <p className="text-gray-600 leading-relaxed">
+                Dos estudantes universitários apresentam dificuldades emocionais em seus percursos acadêmicos.
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-20 h-20 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">94%</span>
+
+            {/* Card 2 */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
+              <div className="relative w-24 h-24 mx-auto mb-6">
+                <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 36 36">
+                  <path
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="#e5e7eb"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="2"
+                    strokeDasharray="53, 100"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-gray-900">53%</span>
+                </div>
               </div>
-              <p className="text-sm text-foreground">
-                dos médicos consideram <br />
-                que administram sempre <br />
-                com prevenção e cuidado
+              <p className="text-gray-600 leading-relaxed">
+                Dos estudantes universitários já apresentam sintomas de ansiedade e estresse.
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-20 h-20 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">3</span>
+
+            {/* Card 3 */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
+              <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                <div className="relative">
+                  <div className="flex items-center justify-center">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-1">
+                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    </div>
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center mt-1">
+                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-foreground">
-                anos de experiência <br />
-                promovendo de saúde mental <br />
-                com qualidade 12 meses
-              </p>
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  UM A CADA TRÊS ESTUDANTES:
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Tiveram ao menos um problema de saúde mental nos últimos 12 meses.
+                </p>
+              </div>
             </div>
           </div>
         </div>
