@@ -36,44 +36,48 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="light" storageKey="alopsi-theme">
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/sobre" element={<About />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/profissionais" element={<Professionals />} />
-            <Route path="/profissional/:id" element={<Professional />} />
-            <Route path="/professional/:id" element={<Professional />} />
-            <Route path="/agendar" element={<Schedule />} />
-            <Route path="/confirmacao-agendamento" element={<BookingConfirmation />} />
-            <Route path="/contato" element={<Contact />} />
-            <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/registrar" element={<UserType />} />
-            <Route path="/registrar/paciente" element={<PatientForm />} />
-            <Route path="/registrar/profissional" element={<ProfessionalForm />} />
-            
-            {/* Rotas Admin */}
-            <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-            <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
-            <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <WhatsAppFloat />
-        </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+const App: React.FC = () => {
+  return (
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="light" storageKey="alopsi-theme">
+          <AuthProvider>
+            <TooltipProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/sobre" element={<About />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/profissionais" element={<Professionals />} />
+                  <Route path="/profissional/:id" element={<Professional />} />
+                  <Route path="/professional/:id" element={<Professional />} />
+                  <Route path="/agendar" element={<Schedule />} />
+                  <Route path="/confirmacao-agendamento" element={<BookingConfirmation />} />
+                  <Route path="/contato" element={<Contact />} />
+                  <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/registrar" element={<UserType />} />
+                  <Route path="/registrar/paciente" element={<PatientForm />} />
+                  <Route path="/registrar/profissional" element={<ProfessionalForm />} />
+                  
+                  {/* Rotas Admin */}
+                  <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+                  <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
+                  <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+                  
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <WhatsAppFloat />
+              </BrowserRouter>
+              <Toaster />
+              <Sonner />
+            </TooltipProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+};
 
 export default App;
