@@ -25,7 +25,7 @@ const About = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button variant="default" size="lg">
-                  Encontrar Psicólogo
+                  Encontrar Profissional
                 </Button>
                 <Button variant="accent" size="lg">
                   Marcar uma Consulta
