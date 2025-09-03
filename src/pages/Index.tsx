@@ -214,28 +214,97 @@ const Index = () => {
       </section>
 
       {/* Video Section */}
-      <section className="py-16 bg-teal">
-        <div className="container mx-auto px-4">
+      <section className="py-20 bg-gradient-to-br from-teal-500 to-teal-700 text-white relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}></div>
+        </div>
+        
+        <div className="container mx-auto px-4 relative">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">
+              Conheça Mais Sobre Nosso Trabalho
+            </h2>
+            <p className="text-xl text-teal-100 max-w-2xl mx-auto">
+              Descubra como estamos transformando o cuidado da saúde mental para estudantes universitários
+            </p>
+          </div>
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Statistics Cards */}
             <div className="space-y-6">
-              <div className="bg-card p-6 rounded-lg border">
-                <h3 className="font-semibold mb-2 text-card-foreground">250+</h3>
-                <p className="text-sm text-card-foreground">Psicólogos</p>
-                <p className="text-xs text-muted-foreground">
-                  Nos últimos meses, Â são psicólogos credenciados desde junho de 2022
+              <div className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover-scale">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <span className="text-2xl">👨‍⚕️</span>
+                  </div>
+                  <div>
+                    <h3 className="text-3xl font-bold text-white">250+</h3>
+                    <p className="text-teal-100">Psicólogos Credenciados</p>
+                  </div>
+                </div>
+                <p className="text-sm text-teal-100/80">
+                  Profissionais qualificados e especializados no atendimento a estudantes universitários desde 2022
                 </p>
               </div>
-              <div className="bg-card p-6 rounded-lg border">
-                <h3 className="font-semibold mb-2 text-card-foreground">Uma escola tão acolhedora.</h3>
-                <p className="text-sm text-card-foreground">
-                  Encontre agora de Escutar nós vamos de trabalho nos Encontre
+              
+              <div className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover-scale">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <span className="text-2xl">🎓</span>
+                  </div>
+                  <div>
+                    <h3 className="text-3xl font-bold text-white">5000+</h3>
+                    <p className="text-teal-100">Estudantes Atendidos</p>
+                  </div>
+                </div>
+                <p className="text-sm text-teal-100/80">
+                  Universitários que encontraram apoio e transformaram suas vidas através do nosso cuidado especializado
+                </p>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover-scale">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <span className="text-2xl">❤️</span>
+                  </div>
+                  <div>
+                    <h3 className="text-3xl font-bold text-white">96%</h3>
+                    <p className="text-teal-100">Satisfação</p>
+                  </div>
+                </div>
+                <p className="text-sm text-teal-100/80">
+                  Taxa de satisfação dos nossos pacientes com o atendimento recebido
                 </p>
               </div>
             </div>
-            <div className="bg-primary/20 aspect-video rounded-lg flex items-center justify-center">
-              <Button variant="default" size="icon" className="w-16 h-16 rounded-full">
-                ▶
-              </Button>
+            
+            {/* YouTube Video Player */}
+            <div className="relative">
+              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20">
+                <div className="aspect-video rounded-xl overflow-hidden shadow-2xl">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src="https://www.youtube.com/embed/_5JzohY3G58"
+                    title="Vídeo sobre Saúde Mental e Medicina"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full"
+                  ></iframe>
+                </div>
+                <div className="mt-4 text-center">
+                  <p className="text-white font-semibold">
+                    Saúde Mental na Medicina: Uma Perspectiva Profissional
+                  </p>
+                  <p className="text-teal-100 text-sm mt-2">
+                    Entenda a importância do cuidado psicológico na formação e vida dos profissionais de saúde
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
