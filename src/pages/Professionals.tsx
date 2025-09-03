@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { MapPin, Star, Clock, DollarSign, Search, ChevronLeft, ChevronRight, Filter, X, Calendar } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { MapPin, Star, Clock, DollarSign, Search, ChevronLeft, ChevronRight, Filter, X, Calendar, ChevronDown } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -42,10 +44,12 @@ const Professionals = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState({
-    profissao: "todas",
-    dia: "todos",
+    profissoes: [] as string[],
+    dias: [] as string[],
     valorMin: "",
     valorMax: "",
+    horarioInicio: "",
+    horarioFim: "",
     servico: ""
   })
   const professionalsPerPage = 9
@@ -69,20 +73,42 @@ const Professionals = () => {
       )
     }
 
-    // Profession filter
-    if (filters.profissao && filters.profissao !== "todas") {
+    // Profession filter (multiselect)
+    if (filters.profissoes.length > 0) {
       filtered = filtered.filter(prof => 
-        prof.profissao?.toLowerCase() === filters.profissao.toLowerCase()
+        prof.profissao && filters.profissoes.includes(prof.profissao.toLowerCase())
       )
     }
 
-    // Day filter
-    if (filters.dia && filters.dia !== "todos") {
+    // Day filter (multiselect)
+    if (filters.dias.length > 0) {
       filtered = filtered.filter(prof => 
         prof.sessions.some(session => 
-          session.day.toLowerCase() === filters.dia.toLowerCase()
+          filters.dias.includes(session.day.toLowerCase())
         )
       )
+    }
+
+    // Time range filter
+    if (filters.horarioInicio || filters.horarioFim) {
+      filtered = filtered.filter(prof => {
+        return prof.sessions.some(session => {
+          const sessionStart = session.start_time
+          const sessionEnd = session.end_time
+          
+          let matchesTimeRange = true
+          
+          if (filters.horarioInicio) {
+            matchesTimeRange = matchesTimeRange && sessionStart >= filters.horarioInicio
+          }
+          
+          if (filters.horarioFim) {
+            matchesTimeRange = matchesTimeRange && sessionEnd <= filters.horarioFim
+          }
+          
+          return matchesTimeRange
+        })
+      })
     }
 
     // Price range filter
@@ -222,13 +248,46 @@ const Professionals = () => {
 
   const clearFilters = () => {
     setFilters({
-      profissao: "todas",
-      dia: "todos",
+      profissoes: [],
+      dias: [],
       valorMin: "",
       valorMax: "",
+      horarioInicio: "",
+      horarioFim: "",
       servico: ""
     })
     setSearchTerm("")
+  }
+
+  const toggleProfession = (profession: string) => {
+    setFilters(prev => ({
+      ...prev,
+      profissoes: prev.profissoes.includes(profession)
+        ? prev.profissoes.filter(p => p !== profession)
+        : [...prev.profissoes, profession]
+    }))
+  }
+
+  const toggleDay = (day: string) => {
+    setFilters(prev => ({
+      ...prev,
+      dias: prev.dias.includes(day)
+        ? prev.dias.filter(d => d !== day)
+        : [...prev.dias, day]
+    }))
+  }
+
+  const getDayLabel = (day: string) => {
+    const dayMap: { [key: string]: string } = {
+      'monday': 'Segunda-feira',
+      'tuesday': 'Terça-feira', 
+      'wednesday': 'Quarta-feira',
+      'thursday': 'Quinta-feira',
+      'friday': 'Sexta-feira',
+      'saturday': 'Sábado',
+      'sunday': 'Domingo'
+    }
+    return dayMap[day] || day
   }
 
   // Pagination logic
@@ -309,44 +368,97 @@ const Professionals = () => {
                   </Button>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Profession Multiselect */}
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Profissão</label>
-                    <Select value={filters.profissao} onValueChange={(value) => setFilters(prev => ({ ...prev, profissao: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todas" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="todas">Todas</SelectItem>
-                        {getUniqueValues('profissao').map(prof => (
-                          <SelectItem key={prof} value={prof as string}>
-                            {capitalizeText(prof as string)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-medium mb-2 block">Profissões</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                          {filters.profissoes.length > 0 
+                            ? `${filters.profissoes.length} selecionada${filters.profissoes.length > 1 ? 's' : ''}`
+                            : "Todas"
+                          }
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-2">
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {getUniqueValues('profissao').map(prof => (
+                            <div key={prof} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`prof-${prof}`}
+                                checked={filters.profissoes.includes(prof as string)}
+                                onCheckedChange={() => toggleProfession(prof as string)}
+                              />
+                              <label
+                                htmlFor={`prof-${prof}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {capitalizeText(prof as string)}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
+                  {/* Days Multiselect */}
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Dia da Semana</label>
-                    <Select value={filters.dia} onValueChange={(value) => setFilters(prev => ({ ...prev, dia: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todos" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="todos">Todos</SelectItem>
-                        <SelectItem value="monday">Segunda-feira</SelectItem>
-                        <SelectItem value="tuesday">Terça-feira</SelectItem>
-                        <SelectItem value="wednesday">Quarta-feira</SelectItem>
-                        <SelectItem value="thursday">Quinta-feira</SelectItem>
-                        <SelectItem value="friday">Sexta-feira</SelectItem>
-                        <SelectItem value="saturday">Sábado</SelectItem>
-                        <SelectItem value="sunday">Domingo</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-medium mb-2 block">Dias da Semana</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                          {filters.dias.length > 0 
+                            ? `${filters.dias.length} dia${filters.dias.length > 1 ? 's' : ''}`
+                            : "Todos"
+                          }
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-2">
+                        <div className="space-y-2">
+                          {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                            <div key={day} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`day-${day}`}
+                                checked={filters.dias.includes(day)}
+                                onCheckedChange={() => toggleDay(day)}
+                              />
+                              <label
+                                htmlFor={`day-${day}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {getDayLabel(day)}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  {/* Time Range Filter */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Faixa de Horário</label>
+                    <div className="space-y-2">
+                      <Input
+                        type="time"
+                        placeholder="Início"
+                        value={filters.horarioInicio}
+                        onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))}
+                      />
+                      <Input
+                        type="time"
+                        placeholder="Fim"
+                        value={filters.horarioFim}
+                        onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))}
+                      />
+                    </div>
                   </div>
 
-                  <div className="md:col-span-2 lg:col-span-1">
+                  {/* Price Range Filter */}
+                  <div>
                     <label className="text-sm font-medium mb-2 block">Faixa de Preço</label>
                     <div className="flex gap-2">
                       <Input
@@ -374,9 +486,21 @@ const Professionals = () => {
         {/* Results Summary */}
         {!loading && (
           <div className="flex justify-between items-center mb-6">
-            <p className="text-sm text-muted-foreground">
-              {filteredProfessionals.length} profissional{filteredProfessionals.length !== 1 ? 'is' : ''} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
-            </p>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>
+                {filteredProfessionals.length} profissional{filteredProfessionals.length !== 1 ? 'is' : ''} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
+              </p>
+              {(filters.profissoes.length > 0 || filters.dias.length > 0 || filters.horarioInicio || filters.horarioFim || filters.valorMin || filters.valorMax) && (
+                <p className="text-xs">
+                  Filtros ativos: {[
+                    filters.profissoes.length > 0 && `Profissões (${filters.profissoes.length})`,
+                    filters.dias.length > 0 && `Dias (${filters.dias.length})`,
+                    (filters.horarioInicio || filters.horarioFim) && 'Horário',
+                    (filters.valorMin || filters.valorMax) && 'Preço'
+                  ].filter(Boolean).join(', ')}
+                </p>
+              )}
+            </div>
             {totalPages > 1 && (
               <p className="text-sm text-muted-foreground">
                 Página {currentPage} de {totalPages}
