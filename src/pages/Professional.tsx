@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import { CalendarWidget } from "@/components/CalendarWidget";
 interface Professional {
   id: number;
-  user_id: number;
   display_name: string;
   profissao: string;
   crp_crm: string;
@@ -46,9 +45,9 @@ const Professional = () => {
   useEffect(() => {
     if (id) {
       fetchProfessional();
+      fetchSessions();
     }
   }, [id]);
-
   const fetchProfessional = async () => {
     try {
       const {
@@ -57,8 +56,6 @@ const Professional = () => {
       } = await supabase.from('profissionais').select('*').eq('id', parseInt(id)).eq('ativo', true).single();
       if (error) throw error;
       setProfessional(data);
-      // Fetch sessions after professional data is loaded, using the correct user_id
-      await fetchSessions(data.user_id);
     } catch (error) {
       console.error('Error fetching professional:', error);
       toast({
@@ -70,13 +67,12 @@ const Professional = () => {
       setLoading(false);
     }
   };
-
-  const fetchSessions = async (userId: number) => {
+  const fetchSessions = async () => {
     try {
       const {
         data,
         error
-      } = await supabase.from('vw_profissionais_sessoes').select('*').eq('user_id', userId);
+      } = await supabase.from('vw_profissionais_sessoes').select('*').eq('user_id', parseInt(id));
       if (error) throw error;
       setSessions(data || []);
     } catch (error) {
@@ -149,13 +145,13 @@ const Professional = () => {
               Profissionais
             </Link>
             <span>›</span>
-            <span className="text-foreground">Perfil</span>
+            
           </div>
           
           <div className="flex flex-col md:flex-row items-start gap-8">
             <Avatar className={`h-24 w-24 ${getAvatarColor(professional.display_name)} shadow-elegant`}>
               <AvatarImage src={professional.foto_perfil_url} alt={professional.display_name} />
-              <AvatarFallback className="text-black dark:text-white text-xl font-bold">
+              <AvatarFallback className="text-white text-xl font-bold">
                 {getInitials(professional.display_name)}
               </AvatarFallback>
             </Avatar>
@@ -181,7 +177,7 @@ const Professional = () => {
                 </div>
               </div>
               <Button size="lg" className="btn-gradient shadow-lg" asChild>
-                <Link to={`/agendamento?professionalId=${professional.id}`}>
+                <Link to={`/confirmacao-agendamento?professionalId=${professional.id}&professionalName=${professional.display_name}&price=${professional.preco_consulta}`}>
                   <Calendar className="h-4 w-4 mr-2" />
                   Agendar Consulta
                 </Link>
