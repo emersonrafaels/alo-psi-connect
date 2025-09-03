@@ -21,13 +21,16 @@ export const useProfileManager = () => {
   const { toast } = useToast();
 
   const updateProfile = async (data: Partial<ProfileData>) => {
-    if (!user || !profile) return { error: 'Usuário não encontrado' };
+    if (!user) return { error: 'Usuário não encontrado' };
 
     setLoading(true);
     try {
       const { error } = await supabase
         .from('profiles')
-        .update(data)
+        .update({
+          ...data,
+          updated_at: new Date().toISOString()
+        })
         .eq('user_id', user.id);
 
       if (error) throw error;
@@ -36,6 +39,9 @@ export const useProfileManager = () => {
         title: "Perfil atualizado",
         description: "Suas informações foram salvas com sucesso.",
       });
+
+      // Força recarregamento do perfil
+      window.location.reload();
 
       return { error: null };
     } catch (error: any) {
