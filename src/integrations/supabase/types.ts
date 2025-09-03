@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      agendamentos: {
+        Row: {
+          created_at: string
+          data_consulta: string
+          email_paciente: string
+          horario: string
+          id: string
+          nome_paciente: string
+          observacoes: string | null
+          professional_id: string | null
+          status: string
+          stripe_session_id: string | null
+          telefone_paciente: string
+          updated_at: string
+          user_id: string | null
+          valor: number | null
+        }
+        Insert: {
+          created_at?: string
+          data_consulta: string
+          email_paciente: string
+          horario: string
+          id?: string
+          nome_paciente: string
+          observacoes?: string | null
+          professional_id?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          telefone_paciente: string
+          updated_at?: string
+          user_id?: string | null
+          valor?: number | null
+        }
+        Update: {
+          created_at?: string
+          data_consulta?: string
+          email_paciente?: string
+          horario?: string
+          id?: string
+          nome_paciente?: string
+          observacoes?: string | null
+          professional_id?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          telefone_paciente?: string
+          updated_at?: string
+          user_id?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pacientes: {
         Row: {
           created_at: string | null

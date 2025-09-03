@@ -11,6 +11,7 @@ import Blog from "./pages/Blog";
 import Professional from "./pages/Professional";
 import Professionals from "./pages/Professionals";
 import Schedule from "./pages/Schedule";
+import BookingConfirmation from "./pages/BookingConfirmation";
 import Contact from "./pages/Contact";
 import WorkWithUs from "./pages/WorkWithUs";
 import Auth from "./pages/Auth";
@@ -38,14 +39,14 @@ const App = () => (
             <Route path="/profissionais" element={<Professionals />} />
             <Route path="/profissional/:id" element={<Professional />} />
             <Route path="/agendar" element={<Schedule />} />
+            <Route path="/confirmacao-agendamento" element={<BookingConfirmation />} />
             <Route path="/contato" element={<Contact />} />
             <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/cadastro/tipo-usuario" element={<UserType />} />
-            <Route path="/cadastro/paciente" element={<PatientForm />} />
-            <Route path="/cadastro/profissional" element={<ProfessionalForm />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/registrar" element={<UserType />} />
+            <Route path="/registrar/paciente" element={<PatientForm />} />
+            <Route path="/registrar/profissional" element={<ProfessionalForm />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <WhatsAppFloat />
