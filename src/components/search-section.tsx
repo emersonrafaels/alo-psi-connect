@@ -3,15 +3,15 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
 const SearchSection = () => {
-  return <section className="bg-white py-12">
+  return <section className="bg-background py-12">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-2">EncontreAtualize o melhor profissional para cuidar da sua saúde mental</h2>
+          <h2 className="text-3xl font-bold text-center mb-2 text-foreground">EncontreAtualize o melhor profissional para cuidar da sua saúde mental</h2>
           
-          <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
+          <div className="bg-card rounded-lg shadow-lg p-6 mt-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-card-foreground">
                   🔵 Especialidade Desejada
                 </label>
                 <Select>
@@ -28,7 +28,7 @@ const SearchSection = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-card-foreground">
                   🔵 Serviços
                 </label>
                 <Select>
@@ -44,7 +44,7 @@ const SearchSection = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-card-foreground">
                   🔵 Nome do Profissional
                 </label>
                 <div className="relative">
