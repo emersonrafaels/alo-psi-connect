@@ -227,14 +227,44 @@ const Professionals = () => {
       'sunday': 'Dom'
     }
     
-    const formatted = sessions.map(session => {
+    // Group sessions by day and format times
+    const groupedSessions = sessions.reduce((acc, session) => {
       const day = dayMap[session.day] || session.day
       const start = session.start_time.slice(0, 5)
       const end = session.end_time.slice(0, 5)
-      return `${day} ${start}-${end}`
-    }).join(', ')
+      const timeRange = `${start}-${end}`
+      
+      if (!acc[day]) {
+        acc[day] = []
+      }
+      acc[day].push(timeRange)
+      
+      return acc
+    }, {} as { [key: string]: string[] })
     
-    return formatted
+    // Sort days in logical order
+    const dayOrder = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+    const sortedDays = Object.keys(groupedSessions).sort((a, b) => {
+      return dayOrder.indexOf(a) - dayOrder.indexOf(b)
+    })
+    
+    return sortedDays.map(day => {
+      const times = [...new Set(groupedSessions[day])].join(', ')
+      return `${day}: ${times}`
+    }).join(' • ')
+  }
+
+  const formatSpecialties = (servicos: string | null) => {
+    if (!servicos) return []
+    
+    return servicos
+      .split(',')
+      .map(servico => servico.trim())
+      .filter(servico => servico.length > 0)
+      .map(servico => {
+        // Capitalize first letter of each word
+        return servico.replace(/\b\w/g, l => l.toUpperCase())
+      })
   }
 
   const getAvatarColor = (name: string) => {
@@ -768,29 +798,41 @@ const Professionals = () => {
 
                         <div className="space-y-3">
                           {professional.sessions.length > 0 && (
-                            <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg">
-                              <Clock className="h-4 w-4 text-teal mt-0.5 flex-shrink-0" />
+                            <div className="flex items-start gap-2 p-4 bg-gradient-to-r from-teal/5 to-accent/5 rounded-lg border border-teal/10">
+                              <Clock className="h-4 w-4 text-teal mt-1 flex-shrink-0" />
                               <div className="min-w-0 flex-1">
-                                <p className="text-xs font-medium text-muted-foreground mb-1">Horários</p>
-                                <p className="text-sm text-foreground font-medium">
-                                  {formatSchedule(professional.sessions)}
-                                </p>
+                                <p className="text-xs font-semibold text-teal mb-2 uppercase tracking-wide">Horários Disponíveis</p>
+                                <div className="text-sm text-foreground font-medium leading-relaxed">
+                                  {formatSchedule(professional.sessions).split(' • ').map((schedule, index) => (
+                                    <div key={index} className="flex items-center gap-2 mb-1 last:mb-0">
+                                      <span className="inline-block w-2 h-2 bg-teal rounded-full"></span>
+                                      <span>{schedule}</span>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             </div>
                           )}
 
                           {professional.servicos_raw && (
-                            <div className="space-y-2">
-                              <p className="text-xs font-medium text-muted-foreground">Especialidades</p>
-                              <div className="flex flex-wrap gap-1.5">
-                                {professional.servicos_raw.split(',').slice(0, 3).map((servico, index) => (
-                                  <Badge key={index} variant="secondary" className="text-xs bg-accent/10 text-accent-foreground border border-accent/20 hover:bg-accent/20 transition-colors">
-                                    {servico.trim()}
+                            <div className="space-y-3">
+                              <p className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-2">
+                                <span className="inline-block w-2 h-2 bg-primary rounded-full"></span>
+                                Especialidades
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {formatSpecialties(professional.servicos_raw).slice(0, 4).map((servico, index) => (
+                                  <Badge 
+                                    key={index} 
+                                    variant="secondary" 
+                                    className="text-xs bg-gradient-to-r from-accent/10 to-accent/20 text-accent-foreground border border-accent/30 hover:from-accent/20 hover:to-accent/30 transition-all duration-200 px-3 py-1.5 font-medium"
+                                  >
+                                    {servico}
                                   </Badge>
                                 ))}
-                                {professional.servicos_raw.split(',').length > 3 && (
-                                  <Badge variant="outline" className="text-xs text-muted-foreground">
-                                    +{professional.servicos_raw.split(',').length - 3}
+                                {formatSpecialties(professional.servicos_raw).length > 4 && (
+                                  <Badge variant="outline" className="text-xs text-muted-foreground border-dashed hover:bg-muted/50 transition-colors px-2 py-1">
+                                    +{formatSpecialties(professional.servicos_raw).length - 4} mais
                                   </Badge>
                                 )}
                               </div>
