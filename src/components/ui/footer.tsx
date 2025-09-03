@@ -52,7 +52,7 @@ const Footer = () => {
             <div className="space-y-2 text-sm opacity-80">
               <p>📍 R. Joaquim Távora, 1240 - Vila Mariana, São Paulo - SP, 04015-013</p>
               <p>CNPJ: 12.345.678/0001-90, Brasil</p>
-              <p>📞 +55 (11) 98765-4321</p>
+              <p>📞 (11) 94799-4163</p>
               <p>✉️ suporte@alopsi.com.br</p>
             </div>
           </div>
