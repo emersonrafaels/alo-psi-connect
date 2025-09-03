@@ -172,6 +172,7 @@ export type Database = {
           created_at: string | null
           data_nascimento: string | null
           email: string
+          foto_perfil_url: string | null
           genero: string | null
           id: string
           nome: string
@@ -185,6 +186,7 @@ export type Database = {
           created_at?: string | null
           data_nascimento?: string | null
           email: string
+          foto_perfil_url?: string | null
           genero?: string | null
           id?: string
           nome: string
@@ -198,6 +200,7 @@ export type Database = {
           created_at?: string | null
           data_nascimento?: string | null
           email?: string
+          foto_perfil_url?: string | null
           genero?: string | null
           id?: string
           nome?: string
