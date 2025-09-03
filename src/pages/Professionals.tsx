@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { MapPin, Star, Clock, DollarSign, Search, ChevronLeft, ChevronRight, Filter, X, Calendar, ChevronDown, Settings } from "lucide-react"
+import { MapPin, Star, Clock, DollarSign, Search, ChevronLeft, ChevronRight, Filter, X, Calendar, ChevronDown, Settings, Bot, Sparkles } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import SpecialtiesUpdater from "@/components/SpecialtiesUpdater"
+import { AIAssistantModal } from "@/components/AIAssistantModal"
 
 interface ProfessionalSession {
   day: string
@@ -45,6 +46,7 @@ const Professionals = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
   const [showSpecialtiesUpdater, setShowSpecialtiesUpdater] = useState(false)
+  const [showAIAssistant, setShowAIAssistant] = useState(false)
   const [filters, setFilters] = useState({
     profissoes: [] as string[],
     dias: [] as string[],
@@ -452,12 +454,21 @@ const Professionals = () => {
                   )}
                 </Button>
                 <Button
+                  variant="default"
+                  onClick={() => setShowAIAssistant(true)}
+                  className="flex items-center gap-2 btn-gradient shadow-lg"
+                >
+                  <Bot className="h-4 w-4" />
+                  <Sparkles className="h-3 w-3" />
+                  Assistente IA
+                </Button>
+                <Button
                   variant="outline"
                   onClick={() => setShowSpecialtiesUpdater(!showSpecialtiesUpdater)}
                   className="flex items-center gap-2"
                 >
                   <Settings className="h-4 w-4" />
-                  IA
+                  Atualizar IA
                 </Button>
                 {getActiveFiltersCount() > 0 && (
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
@@ -976,6 +987,13 @@ const Professionals = () => {
       </main>
 
       <Footer />
+      
+      {/* AI Assistant Modal */}
+      <AIAssistantModal 
+        open={showAIAssistant}
+        onOpenChange={setShowAIAssistant}
+        professionals={professionals}
+      />
     </div>
   )
 }

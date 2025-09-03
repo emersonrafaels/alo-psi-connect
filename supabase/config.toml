@@ -43,3 +43,6 @@ enabled = true
 
 [functions.update-specialties]
 verify_jwt = false
+
+[functions.ai-assistant]
+verify_jwt = false
