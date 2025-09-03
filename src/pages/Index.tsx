@@ -27,7 +27,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h1 className="text-4xl lg:text-5xl font-bold mb-6">
+              <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-foreground">
                 Cuidando De Quem <br />
                 Cuida De Nós
               </h1>
@@ -58,7 +58,7 @@ const Index = () => {
       {/* About Section */}
       <section className="py-16 bg-muted">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-lg max-w-4xl mx-auto">
+          <p className="text-lg max-w-4xl mx-auto text-foreground">
             Acreditamos na força do acolhimento e na construção de um ambiente seguro, 
             onde sua história é respeitada, suas dores são ouvidas e seus avanços, celebrados.
           </p>
@@ -68,7 +68,7 @@ const Index = () => {
       {/* University Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
+          <h2 className="text-3xl font-bold text-center mb-12 text-foreground">
             Voltada Exclusivamente Para Estudantes Universitários
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
@@ -76,7 +76,7 @@ const Index = () => {
               <div className="w-20 h-20 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center">
                 <span className="text-primary-foreground font-bold">94%</span>
               </div>
-              <p className="text-sm">
+              <p className="text-sm text-foreground">
                 dos psicólogos consideram <br />
                 que administram com <br />
                 eficácia seus estudos acadêmicos
@@ -86,7 +86,7 @@ const Index = () => {
               <div className="w-20 h-20 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center">
                 <span className="text-primary-foreground font-bold">94%</span>
               </div>
-              <p className="text-sm">
+              <p className="text-sm text-foreground">
                 dos médicos consideram <br />
                 que administram sempre <br />
                 com prevenção e cuidado
@@ -96,7 +96,7 @@ const Index = () => {
               <div className="w-20 h-20 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center">
                 <span className="text-primary-foreground font-bold">3</span>
               </div>
-              <p className="text-sm">
+              <p className="text-sm text-foreground">
                 anos de experiência <br />
                 promovendo de saúde mental <br />
                 com qualidade 12 meses
@@ -112,15 +112,15 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <div className="bg-card p-6 rounded-lg border">
-                <h3 className="font-semibold mb-2">250+</h3>
-                <p className="text-sm">Psicólogos</p>
+                <h3 className="font-semibold mb-2 text-card-foreground">250+</h3>
+                <p className="text-sm text-card-foreground">Psicólogos</p>
                 <p className="text-xs text-muted-foreground">
                   Nos últimos meses, Â são psicólogos credenciados desde junho de 2022
                 </p>
               </div>
               <div className="bg-card p-6 rounded-lg border">
-                <h3 className="font-semibold mb-2">Uma escola tão acolhedora.</h3>
-                <p className="text-sm">
+                <h3 className="font-semibold mb-2 text-card-foreground">Uma escola tão acolhedora.</h3>
+                <p className="text-sm text-card-foreground">
                   Encontre agora de Escutar nós vamos de trabalho nos Encontre
                 </p>
               </div>
@@ -137,7 +137,7 @@ const Index = () => {
       {/* Featured Professionals */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-12">Profissionais em Destaque</h2>
+          <h2 className="text-3xl font-bold mb-12 text-foreground">Profissionais em Destaque</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {professionals.map((professional, index) => (
               <ProfessionalCard
