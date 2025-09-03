@@ -28,7 +28,7 @@ import {
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
-import SpecialtiesUpdater from "@/components/SpecialtiesUpdater"
+
 import { AIAssistantModal } from "@/components/AIAssistantModal"
 
 interface ProfessionalSession {
@@ -60,7 +60,7 @@ const Professionals = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
-  const [showSpecialtiesUpdater, setShowSpecialtiesUpdater] = useState(false)
+  
   const [showAIAssistant, setShowAIAssistant] = useState(false)
   const [filters, setFilters] = useState({
     profissoes: [] as string[],
@@ -555,14 +555,6 @@ const Professionals = () => {
                   <Sparkles className="h-3 w-3" />
                   Assistente IA
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowSpecialtiesUpdater(!showSpecialtiesUpdater)}
-                  className="flex items-center gap-2"
-                >
-                  <Settings className="h-4 w-4" />
-                  Atualizar IA
-                </Button>
                 {getActiveFiltersCount() > 0 && (
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
                     <X className="h-4 w-4" />
@@ -863,12 +855,6 @@ const Professionals = () => {
               </div>
             )}
 
-            {/* Specialties Updater */}
-            {showSpecialtiesUpdater && (
-              <div className="mt-6">
-                <SpecialtiesUpdater />
-              </div>
-            )}
           </div>
         </section>
 
