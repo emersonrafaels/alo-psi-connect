@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Check, ChevronsUpDown, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useSearchFilters } from "@/hooks/useSearchFilters";
 const especialidades = [
   { value: "psicologia", label: "Psicologia" },
   { value: "psicoterapia", label: "Psicoterapia" },
@@ -238,6 +239,16 @@ const MultiSelectCombobox = ({
 const SearchSection = () => {
   const [selectedEspecialidades, setSelectedEspecialidades] = useState<string[]>([]);
   const [selectedServicos, setSelectedServicos] = useState<string[]>([]);
+  const [nome, setNome] = useState("");
+  const { searchProfessionals } = useSearchFilters();
+
+  const handleSearch = () => {
+    searchProfessionals({
+      especialidades: selectedEspecialidades,
+      servicos: selectedServicos,
+      nome
+    });
+  };
 
   return (
     <section className="bg-background py-12">
@@ -278,13 +289,19 @@ const SearchSection = () => {
                   🔵 Nome do Profissional
                 </label>
                 <div className="relative">
-                  <Input placeholder="Digite o nome do profissional" className="pr-10" />
+                  <Input 
+                    placeholder="Digite o nome do profissional" 
+                    className="pr-10"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  />
                   <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
                 </div>
               </div>
             </div>
             
-            <Button variant="accent" className="w-full md:w-auto px-8">
+            <Button variant="accent" className="w-full md:w-auto px-8" onClick={handleSearch}>
               Buscar Profissionais
             </Button>
           </div>

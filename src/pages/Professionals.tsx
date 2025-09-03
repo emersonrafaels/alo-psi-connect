@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useSearchFilters } from "@/hooks/useSearchFilters"
 
 import { AIAssistantModal } from "@/components/AIAssistantModal"
 
@@ -60,6 +61,7 @@ const Professionals = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
+  const { getFiltersFromURL, clearFilters: clearURLFilters } = useSearchFilters()
   
   const [showAIAssistant, setShowAIAssistant] = useState(false)
   const [filters, setFilters] = useState({
@@ -69,9 +71,29 @@ const Professionals = () => {
     valorMax: "",
     horarioInicio: "",
     horarioFim: "",
-    servico: ""
+    servico: "",
+    especialidades: [] as string[],
+    servicos: [] as string[],
+    nome: ""
   })
   const professionalsPerPage = 9
+
+  // Aplicar filtros da URL ao carregar a página
+  useEffect(() => {
+    const urlFilters = getFiltersFromURL()
+    if (urlFilters.especialidades.length > 0 || urlFilters.servicos.length > 0 || urlFilters.nome) {
+      setFilters(prev => ({
+        ...prev,
+        especialidades: urlFilters.especialidades,
+        servicos: urlFilters.servicos,
+        nome: urlFilters.nome
+      }))
+      setSearchTerm(urlFilters.nome)
+      if (urlFilters.especialidades.length > 0 || urlFilters.servicos.length > 0 || urlFilters.nome) {
+        setShowFilters(true)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     fetchProfessionals()
@@ -84,12 +106,33 @@ const Professionals = () => {
   const filterProfessionals = () => {
     let filtered = professionals
 
-    // Search term filter
-    if (searchTerm) {
+    // Search term filter (both from search term and nome filter)
+    const nameSearch = searchTerm || filters.nome
+    if (nameSearch) {
       filtered = filtered.filter(prof => 
-        prof.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        prof.profissao?.toLowerCase().includes(searchTerm.toLowerCase())
+        prof.display_name.toLowerCase().includes(nameSearch.toLowerCase()) ||
+        prof.profissao?.toLowerCase().includes(nameSearch.toLowerCase())
       )
+    }
+
+    // Especialidades filter (from URL)
+    if (filters.especialidades.length > 0) {
+      filtered = filtered.filter(prof => {
+        if (!prof.profissao) return false
+        return filters.especialidades.some(esp => 
+          prof.profissao?.toLowerCase().includes(esp.toLowerCase())
+        )
+      })
+    }
+
+    // Serviços filter (from URL)
+    if (filters.servicos.length > 0) {
+      filtered = filtered.filter(prof => {
+        if (!prof.servicos_raw) return false
+        return filters.servicos.some(serv => 
+          prof.servicos_raw?.toLowerCase().includes(serv.toLowerCase())
+        )
+      })
     }
 
     // Profession filter (multiselect)
@@ -414,9 +457,13 @@ const Professionals = () => {
       valorMax: "",
       horarioInicio: "",
       horarioFim: "",
-      servico: ""
+      servico: "",
+      especialidades: [],
+      servicos: [],
+      nome: ""
     })
     setSearchTerm("")
+    clearURLFilters()
   }
 
   const toggleProfession = (profession: string) => {
@@ -470,6 +517,9 @@ const Professionals = () => {
     if (filters.horarioInicio || filters.horarioFim) count++
     if (filters.valorMin || filters.valorMax) count++
     if (filters.servico) count++
+    if (filters.especialidades.length > 0) count++
+    if (filters.servicos.length > 0) count++
+    if (filters.nome) count++
     return count
   }
 
