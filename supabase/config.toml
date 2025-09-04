@@ -49,3 +49,12 @@ verify_jwt = false
 
 [functions.newsletter-signup]
 verify_jwt = false
+
+[functions.create-mercadopago-payment]
+verify_jwt = false
+
+[functions.mercadopago-webhook]
+verify_jwt = false
+
+[functions.send-appointment-notification]
+verify_jwt = false

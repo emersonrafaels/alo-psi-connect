@@ -18,6 +18,8 @@ import Professionals from "./pages/Professionals";
 import Schedule from "./pages/Schedule";
 import Appointment from "./pages/Appointment";
 import BookingConfirmation from "./pages/BookingConfirmation";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancelled from "./pages/PaymentCancelled";
 import Contact from "./pages/Contact";
 import WorkWithUs from "./pages/WorkWithUs";
 import Auth from "./pages/Auth";
@@ -56,6 +58,8 @@ const App: React.FC = () => {
                   <Route path="/agendar" element={<Schedule />} />
                   <Route path="/agendamento" element={<Appointment />} />
                   <Route path="/confirmacao-agendamento" element={<BookingConfirmation />} />
+                  <Route path="/pagamento-sucesso" element={<PaymentSuccess />} />
+                  <Route path="/pagamento-cancelado" element={<PaymentCancelled />} />
                   <Route path="/contato" element={<Contact />} />
                   <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
                   <Route path="/perfil" element={<Profile />} />

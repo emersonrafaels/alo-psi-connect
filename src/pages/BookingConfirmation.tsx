@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useSearchParams, Link } from "react-router-dom"
+import { useSearchParams, Link, useNavigate } from "react-router-dom"
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,17 +11,19 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, Clock, DollarSign, User, ArrowLeft, CreditCard, MapPin, Phone, Mail } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 
 interface BookingData {
   professionalId: string
   professionalName: string
-  day: string
+  date: string
   time: string
   price: string
 }
 
 const BookingConfirmation = () => {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const { toast } = useToast()
   const [bookingData, setBookingData] = useState<BookingData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -35,15 +37,15 @@ const BookingConfirmation = () => {
   useEffect(() => {
     const professionalId = searchParams.get('professionalId')
     const professionalName = searchParams.get('professionalName')
-    const day = searchParams.get('day')
+    const date = searchParams.get('date')
     const time = searchParams.get('time')
     const price = searchParams.get('price')
 
-    if (professionalId && professionalName && day && time && price) {
+    if (professionalId && professionalName && date && time && price) {
       setBookingData({
         professionalId,
         professionalName,
-        day,
+        date,
         time,
         price
       })
@@ -95,21 +97,57 @@ const BookingConfirmation = () => {
       return
     }
 
+    if (!bookingData) return
+
     setLoading(true)
 
     try {
-      // Aqui você implementaria a integração com Stripe/pagamento
-      // Por enquanto, apenas simularemos o processo
-      
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Simular loading
-      
-      toast({
-        title: "Agendamento confirmado!",
-        description: "Você receberá um email com os detalhes da consulta.",
-      })
-      
-      // Redirecionar para página de sucesso ou dashboard
-      // window.location.href = '/agendamento-sucesso'
+      // 1. Create agendamento in database
+      const { data: agendamento, error: agendamentoError } = await supabase
+        .from('agendamentos')
+        .insert({
+          professional_id: bookingData.professionalId,
+          nome_paciente: formData.name,
+          email_paciente: formData.email,
+          telefone_paciente: formData.phone,
+          data_consulta: bookingData.date,
+          horario: bookingData.time,
+          valor: parseFloat(bookingData.price),
+          observacoes: formData.notes || null,
+          status: 'pendente'
+        })
+        .select()
+        .single()
+
+      if (agendamentoError) {
+        console.error('Erro ao criar agendamento:', agendamentoError)
+        throw new Error('Erro ao criar agendamento')
+      }
+
+      // 2. Create MercadoPago payment preference
+      const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
+        'create-mercadopago-payment',
+        {
+          body: {
+            agendamentoId: agendamento.id,
+            valor: parseFloat(bookingData.price),
+            title: `Consulta com ${bookingData.professionalName}`,
+            description: `Consulta agendada para ${new Date(bookingData.date).toLocaleDateString('pt-BR')} às ${bookingData.time}`
+          }
+        }
+      )
+
+      if (paymentError) {
+        console.error('Erro ao criar pagamento:', paymentError)
+        throw new Error('Erro ao processar pagamento')
+      }
+
+      // 3. Redirect to MercadoPago checkout
+      if (paymentData?.initPoint) {
+        window.location.href = paymentData.initPoint
+      } else {
+        throw new Error('URL de pagamento não recebida')
+      }
       
     } catch (error) {
       console.error('Erro no agendamento:', error)
@@ -193,7 +231,7 @@ const BookingConfirmation = () => {
                     <div>
                       <p className="text-sm font-medium">Data</p>
                       <p className="text-sm text-muted-foreground">
-                        {getDayLabel(bookingData.day)}
+                        {new Date(bookingData.date).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
                   </div>
@@ -323,7 +361,7 @@ const BookingConfirmation = () => {
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">
                           <CreditCard className="h-3 w-3 mr-1" />
-                          Stripe
+                          Mercado Pago
                         </Badge>
                         <Badge variant="outline" className="text-xs">
                           Cartão de Crédito
