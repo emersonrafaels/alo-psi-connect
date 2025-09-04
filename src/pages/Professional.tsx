@@ -70,10 +70,21 @@ const Professional = () => {
   };
   const fetchSessions = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('vw_profissionais_sessoes').select('*').eq('user_id', parseInt(id));
+      // First get the professional's user_id
+      const { data: profData, error: profError } = await supabase
+        .from('profissionais')
+        .select('user_id')
+        .eq('id', parseInt(id))
+        .single();
+      
+      if (profError) throw profError;
+      
+      // Then get sessions using the user_id
+      const { data, error } = await supabase
+        .from('vw_profissionais_sessoes')
+        .select('*')
+        .eq('user_id', profData.user_id);
+      
       if (error) throw error;
       setSessions(data || []);
     } catch (error) {
