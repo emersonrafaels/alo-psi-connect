@@ -28,18 +28,20 @@ export const useProfileManager = () => {
       // Prepara os dados removendo campos vazios que causam erro
       const cleanData = { ...data };
       
-      // Remove data_nascimento se for string vazia para evitar erro de tipo date
-      if (cleanData.data_nascimento === '') {
-        delete cleanData.data_nascimento;
-      }
+      // Remove campos que estão vazios para permitir salvamento incremental
+      Object.keys(cleanData).forEach(key => {
+        if (cleanData[key] === '' || cleanData[key] === null || cleanData[key] === undefined) {
+          delete cleanData[key];
+        }
+      });
       
-      // Usa upsert para inserir ou atualizar
+      // Usa upsert para inserir ou atualizar apenas os campos fornecidos
       const { error } = await supabase
         .from('profiles')
         .upsert({
           user_id: user.id,
           email: user.email || '',
-          nome: cleanData.nome || user.user_metadata?.full_name || '',
+          nome: data.nome || user.user_metadata?.full_name || '',
           tipo_usuario: 'paciente',
           ...cleanData,
           updated_at: new Date().toISOString()
