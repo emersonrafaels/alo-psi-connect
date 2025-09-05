@@ -80,7 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
       .from('agendamentos')
       .update({ 
         mercado_pago_preference_id: preference.id,
-        status: 'pendente_pagamento' 
+        status: 'pendente' 
       })
       .eq('id', agendamentoId);
 
