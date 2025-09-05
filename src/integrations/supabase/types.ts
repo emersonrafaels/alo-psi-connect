@@ -21,6 +21,7 @@ export type Database = {
           email_paciente: string
           horario: string
           id: string
+          mercado_pago_preference_id: string | null
           nome_paciente: string
           observacoes: string | null
           professional_id: string | null
@@ -37,6 +38,7 @@ export type Database = {
           email_paciente: string
           horario: string
           id?: string
+          mercado_pago_preference_id?: string | null
           nome_paciente: string
           observacoes?: string | null
           professional_id?: string | null
@@ -53,6 +55,7 @@ export type Database = {
           email_paciente?: string
           horario?: string
           id?: string
+          mercado_pago_preference_id?: string | null
           nome_paciente?: string
           observacoes?: string | null
           professional_id?: string | null

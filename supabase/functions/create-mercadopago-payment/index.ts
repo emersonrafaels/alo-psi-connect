@@ -79,7 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: updateError } = await supabase
       .from('agendamentos')
       .update({ 
-        stripe_session_id: preference.id, // Reusing this field for MercadoPago preference ID
+        mercado_pago_preference_id: preference.id,
         status: 'pendente_pagamento' 
       })
       .eq('id', agendamentoId);

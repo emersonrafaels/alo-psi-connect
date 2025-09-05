@@ -102,11 +102,14 @@ const BookingConfirmation = () => {
     setLoading(true)
 
     try {
+      // Convert professionalId to number for compatibility with bigint
+      const professionalIdNumber = parseInt(bookingData.professionalId);
+      
       // 1. Create agendamento in database
       const { data: agendamento, error: agendamentoError } = await supabase
         .from('agendamentos')
         .insert({
-          professional_id: bookingData.professionalId,
+          professional_id: professionalIdNumber as any,
           nome_paciente: formData.name,
           email_paciente: formData.email,
           telefone_paciente: formData.phone,
@@ -114,7 +117,7 @@ const BookingConfirmation = () => {
           horario: bookingData.time,
           valor: parseFloat(bookingData.price),
           observacoes: formData.notes || null,
-          status: 'pendente'
+          status: 'pendente_pagamento'
         })
         .select()
         .single()
