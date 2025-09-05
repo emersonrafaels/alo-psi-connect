@@ -50,7 +50,14 @@ const Auth = () => {
         description: "Bem-vindo de volta!",
       });
       
-      navigate('/');
+      // Verificar se há agendamento pendente
+      const pendingBooking = sessionStorage.getItem('pendingBooking')
+      if (pendingBooking) {
+        const booking = JSON.parse(pendingBooking)
+        navigate(booking.returnTo || '/confirmacao-agendamento', { replace: true })
+      } else {
+        navigate('/')
+      }
     } catch (error: any) {
       toast({
         title: "Erro no login",

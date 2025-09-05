@@ -11,7 +11,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, Clock, DollarSign, User, ArrowLeft, CreditCard, MapPin, Phone, Mail } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/integrations/supabase/client"
+import AuthChoiceModal from "@/components/AuthChoiceModal"
 
 interface BookingData {
   professionalId: string
@@ -25,8 +27,11 @@ const BookingConfirmation = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { user } = useAuth()
   const [bookingData, setBookingData] = useState<BookingData | null>(null)
   const [loading, setLoading] = useState(false)
+  const [showAuthChoice, setShowAuthChoice] = useState(false)
+  const [authChoiceMade, setAuthChoiceMade] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -49,8 +54,22 @@ const BookingConfirmation = () => {
         time,
         price
       })
+
+      // Verificar se há dados de agendamento pendente (usuário retornou após login)
+      const pendingBooking = sessionStorage.getItem('pendingBooking')
+      if (pendingBooking) {
+        sessionStorage.removeItem('pendingBooking')
+        setAuthChoiceMade(true) // Usuário já fez login, pode prosseguir
+      }
     }
   }, [searchParams])
+
+  // Verificar se precisa mostrar modal de escolha de autenticação
+  useEffect(() => {
+    if (bookingData && !user && !authChoiceMade) {
+      setShowAuthChoice(true)
+    }
+  }, [bookingData, user, authChoiceMade])
 
   const getDayLabel = (day: string) => {
     const dayMap: { [key: string]: string } = {
@@ -118,6 +137,7 @@ const BookingConfirmation = () => {
       const { data: agendamento, error: agendamentoError } = await supabase
         .from('agendamentos')
         .insert({
+          user_id: user?.id || null, // null para visitantes, user.id para usuários logados
           professional_id: professionalData.profile_id,
           nome_paciente: formData.name,
           email_paciente: formData.email,
@@ -417,6 +437,16 @@ const BookingConfirmation = () => {
       </main>
 
       <Footer />
+
+      {/* Modal de Escolha de Autenticação */}
+      {bookingData && (
+        <AuthChoiceModal
+          isOpen={showAuthChoice}
+          onClose={() => setShowAuthChoice(false)}
+          onContinueAsGuest={() => setAuthChoiceMade(true)}
+          bookingData={bookingData}
+        />
+      )}
     </div>
   )
 }
