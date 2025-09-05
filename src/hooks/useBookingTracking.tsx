@@ -22,12 +22,21 @@ export const useBookingTracking = (professionalId?: string) => {
 
   const trackEvent = async (event: TrackingEvent) => {
     try {
+      // Apenas incluir professional_id se for um UUID válido
+      const isValidUUID = (id: string) => {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(id);
+      };
+
+      const finalProfessionalId = event.professional_id || professionalId;
+      const validProfessionalId = finalProfessionalId && isValidUUID(finalProfessionalId) ? finalProfessionalId : null;
+
       const trackingData = {
         user_id: user?.id || null,
         session_id: sessionIdRef.current!,
         event_name: event.event_name,
         event_data: event.event_data || null,
-        professional_id: event.professional_id || professionalId || null,
+        professional_id: validProfessionalId,
         booking_data: event.booking_data || null,
       };
 
