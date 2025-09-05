@@ -356,6 +356,39 @@ export type Database = {
           },
         ]
       }
+      user_booking_tracking: {
+        Row: {
+          booking_data: Json | null
+          event_data: Json | null
+          event_name: string
+          id: string
+          professional_id: string | null
+          session_id: string
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          booking_data?: Json | null
+          event_data?: Json | null
+          event_name: string
+          id?: string
+          professional_id?: string | null
+          session_id: string
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          booking_data?: Json | null
+          event_data?: Json | null
+          event_name?: string
+          id?: string
+          professional_id?: string | null
+          session_id?: string
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

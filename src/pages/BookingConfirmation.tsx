@@ -12,6 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, Clock, DollarSign, User, ArrowLeft, CreditCard, MapPin, Phone, Mail } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
+import { useUserProfile } from "@/hooks/useUserProfile"
+import { useBookingTracking } from "@/hooks/useBookingTracking"
 import { supabase } from "@/integrations/supabase/client"
 import AuthChoiceModal from "@/components/AuthChoiceModal"
 
@@ -28,7 +30,9 @@ const BookingConfirmation = () => {
   const navigate = useNavigate()
   const { toast } = useToast()
   const { user } = useAuth()
+  const { profile } = useUserProfile()
   const [bookingData, setBookingData] = useState<BookingData | null>(null)
+  const { trackEvent } = useBookingTracking(bookingData?.professionalId)
   const [loading, setLoading] = useState(false)
   const [showAuthChoice, setShowAuthChoice] = useState(false)
   const [authChoiceMade, setAuthChoiceMade] = useState(false)
@@ -63,6 +67,27 @@ const BookingConfirmation = () => {
       }
     }
   }, [searchParams])
+
+  // Verificar se precisa mostrar modal de escolha de autenticação
+  // Pré-preencher dados do usuário logado
+  useEffect(() => {
+    if (user && profile) {
+      setFormData(prev => ({
+        ...prev,
+        name: profile.nome || prev.name,
+        email: profile.email || prev.email,
+        phone: prev.phone // telefone não está no perfil atualmente
+      }))
+      
+      trackEvent({
+        event_name: 'user_data_prefilled',
+        event_data: { 
+          user_id: user.id,
+          profile_complete: !!(profile.nome && profile.email)
+        }
+      })
+    }
+  }, [user, profile])
 
   // Verificar se precisa mostrar modal de escolha de autenticação
   useEffect(() => {
@@ -107,7 +132,31 @@ const BookingConfirmation = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Track form submission attempt
+    await trackEvent({
+      event_name: 'booking_form_submitted',
+      event_data: { 
+        has_name: !!formData.name,
+        has_email: !!formData.email,
+        has_phone: !!formData.phone,
+        has_notes: !!formData.notes,
+        user_logged_in: !!user
+      },
+      booking_data: bookingData
+    })
+    
     if (!formData.name || !formData.email || !formData.phone) {
+      await trackEvent({
+        event_name: 'booking_form_validation_failed',
+        event_data: { 
+          missing_fields: {
+            name: !formData.name,
+            email: !formData.email,
+            phone: !formData.phone
+          }
+        }
+      })
+      
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos obrigatórios.",
@@ -244,12 +293,40 @@ const BookingConfirmation = () => {
 
       console.log('Resposta do pagamento:', paymentData)
 
+      // Track successful payment creation
+      await trackEvent({
+        event_name: 'payment_created_successfully',
+        event_data: { 
+          agendamento_id: agendamento.id,
+          payment_amount: parseFloat(bookingData.price)
+        },
+        booking_data: bookingData
+      })
+
       // 3. Redirect to MercadoPago checkout
       if (paymentData?.initPoint) {
         console.log('Redirecionando para MercadoPago:', paymentData.initPoint)
+        
+        await trackEvent({
+          event_name: 'redirecting_to_payment',
+          event_data: { 
+            payment_url: paymentData.initPoint,
+            agendamento_id: agendamento.id
+          }
+        })
+        
         window.location.href = paymentData.initPoint
       } else {
         console.error('URL de pagamento não recebida:', paymentData)
+        
+        await trackEvent({
+          event_name: 'payment_url_error',
+          event_data: { 
+            error: 'Payment URL not received',
+            payment_response: paymentData
+          }
+        })
+        
         toast({
           title: "Erro na URL de pagamento",
           description: "Não foi possível obter a URL de pagamento. Tente novamente.",
@@ -421,7 +498,13 @@ const BookingConfirmation = () => {
                         type="text"
                         placeholder="Seu nome completo"
                         value={formData.name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, name: e.target.value }))
+                          trackEvent({
+                            event_name: 'form_field_filled',
+                            event_data: { field: 'name', has_value: !!e.target.value }
+                          })
+                        }}
                         required
                         className="border-2 focus:border-primary/50"
                       />
@@ -437,7 +520,13 @@ const BookingConfirmation = () => {
                         type="email"
                         placeholder="seu@email.com"
                         value={formData.email}
-                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, email: e.target.value }))
+                          trackEvent({
+                            event_name: 'form_field_filled',
+                            event_data: { field: 'email', has_value: !!e.target.value }
+                          })
+                        }}
                         required
                         className="border-2 focus:border-primary/50"
                       />
@@ -454,7 +543,13 @@ const BookingConfirmation = () => {
                       type="tel"
                       placeholder="(11) 99999-9999"
                       value={formData.phone}
-                      onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, phone: e.target.value }))
+                        trackEvent({
+                          event_name: 'form_field_filled',
+                          event_data: { field: 'phone', has_value: !!e.target.value }
+                        })
+                      }}
                       required
                       className="border-2 focus:border-primary/50"
                     />
