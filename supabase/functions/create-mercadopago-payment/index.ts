@@ -39,7 +39,14 @@ const handler = async (req: Request): Promise<Response> => {
         }
       ],
       payment_methods: {
-        excluded_payment_types: [],
+        excluded_payment_types: [
+          {
+            id: "debit_card"
+          },
+          {
+            id: "ticket"
+          }
+        ],
         installments: 12
       },
       back_urls: {
