@@ -121,7 +121,13 @@ const BookingConfirmation = () => {
     setLoading(true)
 
     try {
+      console.log('=== INÍCIO DO PROCESSO DE AGENDAMENTO ===')
+      console.log('User ID:', user?.id)
+      console.log('Booking Data:', bookingData)
+      console.log('Form Data:', formData)
+      
       // Get professional profile_id (UUID) from the profissionais table
+      console.log('Buscando dados do profissional...')
       const { data: professionalData, error: professionalError } = await supabase
         .from('profissionais')
         .select('profile_id')
@@ -130,33 +136,76 @@ const BookingConfirmation = () => {
 
       if (professionalError || !professionalData?.profile_id) {
         console.error('Erro ao buscar profissional:', professionalError)
-        throw new Error('Profissional não encontrado')
+        toast({
+          title: "Profissional não encontrado",
+          description: "O profissional selecionado não foi encontrado. Tente novamente.",
+          variant: "destructive"
+        })
+        return
+      }
+
+      console.log('Professional Data encontrado:', professionalData)
+      
+      // Preparar dados do agendamento
+      const agendamentoData = {
+        user_id: user?.id || null, // null para visitantes, user.id para usuários logados
+        professional_id: professionalData.profile_id,
+        nome_paciente: formData.name,
+        email_paciente: formData.email,
+        telefone_paciente: formData.phone,
+        data_consulta: bookingData.date,
+        horario: bookingData.time,
+        valor: parseFloat(bookingData.price),
+        observacoes: formData.notes || null,
+        status: 'pendente'
       }
       
+      console.log('Dados para inserir no agendamento:', agendamentoData)
+      
       // 1. Create agendamento in database
+      console.log('Criando agendamento na base de dados...')
       const { data: agendamento, error: agendamentoError } = await supabase
         .from('agendamentos')
-        .insert({
-          user_id: user?.id || null, // null para visitantes, user.id para usuários logados
-          professional_id: professionalData.profile_id,
-          nome_paciente: formData.name,
-          email_paciente: formData.email,
-          telefone_paciente: formData.phone,
-          data_consulta: bookingData.date,
-          horario: bookingData.time,
-          valor: parseFloat(bookingData.price),
-          observacoes: formData.notes || null,
-          status: 'pendente'
-        })
+        .insert(agendamentoData)
         .select()
         .single()
 
       if (agendamentoError) {
-        console.error('Erro ao criar agendamento:', agendamentoError)
-        throw new Error('Erro ao criar agendamento')
+        console.error('Erro detalhado ao criar agendamento:', {
+          error: agendamentoError,
+          code: agendamentoError.code,
+          message: agendamentoError.message,
+          details: agendamentoError.details,
+          hint: agendamentoError.hint
+        })
+        
+        // Tratar diferentes tipos de erro
+        if (agendamentoError.code === '42501') {
+          toast({
+            title: "Erro de permissão",
+            description: "Você não tem permissão para criar este agendamento. Tente fazer login ou contate o suporte.",
+            variant: "destructive"
+          })
+        } else if (agendamentoError.message?.includes('row-level security')) {
+          toast({
+            title: "Erro de segurança",
+            description: "Problema de segurança ao criar agendamento. Verifique se você está logado corretamente.",
+            variant: "destructive"
+          })
+        } else {
+          toast({
+            title: "Erro ao criar agendamento",
+            description: `Erro: ${agendamentoError.message || 'Erro desconhecido'}. Tente novamente.`,
+            variant: "destructive"
+          })
+        }
+        return
       }
 
+      console.log('Agendamento criado com sucesso:', agendamento)
+
       // 2. Create MercadoPago payment preference
+      console.log('Criando preferência de pagamento...')
       const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
         'create-mercadopago-payment',
         {
@@ -170,26 +219,57 @@ const BookingConfirmation = () => {
       )
 
       if (paymentError) {
-        console.error('Erro ao criar pagamento:', paymentError)
-        throw new Error('Erro ao processar pagamento')
+        console.error('Erro detalhado ao criar pagamento:', paymentError)
+        toast({
+          title: "Erro no pagamento",
+          description: "Não foi possível processar o pagamento. Tente novamente ou contate o suporte.",
+          variant: "destructive"
+        })
+        return
       }
+
+      console.log('Resposta do pagamento:', paymentData)
 
       // 3. Redirect to MercadoPago checkout
       if (paymentData?.initPoint) {
+        console.log('Redirecionando para MercadoPago:', paymentData.initPoint)
         window.location.href = paymentData.initPoint
       } else {
-        throw new Error('URL de pagamento não recebida')
+        console.error('URL de pagamento não recebida:', paymentData)
+        toast({
+          title: "Erro na URL de pagamento",
+          description: "Não foi possível obter a URL de pagamento. Tente novamente.",
+          variant: "destructive"
+        })
+        return
       }
       
     } catch (error) {
-      console.error('Erro no agendamento:', error)
+      console.error('=== ERRO GERAL NO AGENDAMENTO ===')
+      console.error('Erro completo:', error)
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A')
+      
+      // Determinar mensagem de erro mais específica
+      let errorMessage = "Ocorreu um erro inesperado ao processar seu agendamento."
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Profissional não encontrado')) {
+          errorMessage = "O profissional selecionado não foi encontrado."
+        } else if (error.message.includes('pagamento')) {
+          errorMessage = "Erro ao processar o pagamento. Tente novamente."
+        } else if (error.message.includes('agendamento')) {
+          errorMessage = "Erro ao criar o agendamento. Verifique os dados e tente novamente."
+        }
+      }
+      
       toast({
         title: "Erro no agendamento",
-        description: "Ocorreu um erro ao processar seu agendamento. Tente novamente.",
+        description: errorMessage + " Se o problema persistir, contate o suporte.",
         variant: "destructive"
       })
     } finally {
       setLoading(false)
+      console.log('=== FIM DO PROCESSO DE AGENDAMENTO ===')
     }
   }
 
