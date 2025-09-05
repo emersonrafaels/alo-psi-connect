@@ -147,8 +147,8 @@ const BookingConfirmation = () => {
       console.log('Professional Data encontrado:', professionalData)
       
       // Preparar dados do agendamento
-      const agendamentoData = {
-        user_id: user?.id || null, // null para visitantes, user.id para usuários logados
+      // Para visitantes/convidados, não incluir user_id
+      const agendamentoData: any = {
         professional_id: professionalData.profile_id,
         nome_paciente: formData.name,
         email_paciente: formData.email,
@@ -160,7 +160,21 @@ const BookingConfirmation = () => {
         status: 'pendente'
       }
       
+      // Só adicionar user_id se o usuário estiver realmente logado
+      if (user?.id) {
+        agendamentoData.user_id = user.id
+        console.log('Usuário logado - incluindo user_id:', user.id)
+      } else {
+        console.log('Usuário visitante - sem user_id')
+      }
+      
       console.log('Dados para inserir no agendamento:', agendamentoData)
+      
+      // Verificar auth.uid() antes do insert
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      console.log('Current user from auth:', currentUser)
+      console.log('auth.uid():', currentUser?.id)
+      console.log('user?.id from hook:', user?.id)
       
       // 1. Create agendamento in database
       console.log('Criando agendamento na base de dados...')
