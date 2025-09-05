@@ -102,14 +102,23 @@ const BookingConfirmation = () => {
     setLoading(true)
 
     try {
-      // Convert professionalId to number for compatibility with bigint
-      const professionalIdNumber = parseInt(bookingData.professionalId);
+      // Get professional profile_id (UUID) from the profissionais table
+      const { data: professionalData, error: professionalError } = await supabase
+        .from('profissionais')
+        .select('profile_id')
+        .eq('id', parseInt(bookingData.professionalId))
+        .single()
+
+      if (professionalError || !professionalData?.profile_id) {
+        console.error('Erro ao buscar profissional:', professionalError)
+        throw new Error('Profissional não encontrado')
+      }
       
       // 1. Create agendamento in database
       const { data: agendamento, error: agendamentoError } = await supabase
         .from('agendamentos')
         .insert({
-          professional_id: professionalIdNumber as any,
+          professional_id: professionalData.profile_id,
           nome_paciente: formData.name,
           email_paciente: formData.email,
           telefone_paciente: formData.phone,
