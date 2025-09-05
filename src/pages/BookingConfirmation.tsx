@@ -146,7 +146,7 @@ const BookingConfirmation = () => {
           horario: bookingData.time,
           valor: parseFloat(bookingData.price),
           observacoes: formData.notes || null,
-          status: 'pendente_pagamento'
+          status: 'pendente'
         })
         .select()
         .single()
