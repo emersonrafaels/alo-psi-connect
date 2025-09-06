@@ -24,12 +24,23 @@ const Auth = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    // Se usuário já está logado, redirecionar para home
+    // Se usuário já está logado, redirecionar para home ou página anterior
     if (user) {
-      navigate('/');
+      // Verificar se há URL anterior salva
+      const returnTo = sessionStorage.getItem('authReturnTo')
+      const pendingBooking = sessionStorage.getItem('pendingBooking')
+      
+      if (returnTo) {
+        sessionStorage.removeItem('authReturnTo')
+        navigate(returnTo, { replace: true })
+      } else if (pendingBooking) {
+        const booking = JSON.parse(pendingBooking)
+        navigate(booking.returnTo || '/confirmacao-agendamento', { replace: true })
+      } else {
+        navigate('/')
+      }
       return;
     }
-
   }, [user, navigate]);
 
 
@@ -50,9 +61,14 @@ const Auth = () => {
         description: "Bem-vindo de volta!",
       });
       
-      // Verificar se há agendamento pendente
+      // Verificar se há URL anterior ou agendamento pendente
+      const returnTo = sessionStorage.getItem('authReturnTo')
       const pendingBooking = sessionStorage.getItem('pendingBooking')
-      if (pendingBooking) {
+      
+      if (returnTo) {
+        sessionStorage.removeItem('authReturnTo')
+        navigate(returnTo, { replace: true })
+      } else if (pendingBooking) {
         const booking = JSON.parse(pendingBooking)
         navigate(booking.returnTo || '/confirmacao-agendamento', { replace: true })
       } else {

@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
 import { useUserProfile } from "@/hooks/useUserProfile"
 import { useBookingTracking } from "@/hooks/useBookingTracking"
+import { useAuthRedirect } from "@/hooks/useAuthRedirect"
 import { supabase } from "@/integrations/supabase/client"
 import AuthChoiceModal from "@/components/AuthChoiceModal"
 
@@ -31,6 +32,7 @@ const BookingConfirmation = () => {
   const { toast } = useToast()
   const { user } = useAuth()
   const { profile } = useUserProfile()
+  const { saveCurrentLocationAndRedirect } = useAuthRedirect()
   const [bookingData, setBookingData] = useState<BookingData | null>(null)
   const { trackEvent } = useBookingTracking(bookingData?.professionalId)
   const [loading, setLoading] = useState(false)
