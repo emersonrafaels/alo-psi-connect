@@ -250,7 +250,8 @@ const BookingConfirmation = () => {
         
         // Notificar erro via n8n
         try {
-          await supabase.functions.invoke('notify-booking-status', {
+          console.log('🔔 Enviando notificação de erro para n8n...');
+          const { data: notifyResult, error: notifyError } = await supabase.functions.invoke('notify-booking-status', {
             body: {
               tipo_evento: 'agendamento_erro',
               cliente: {
@@ -278,6 +279,12 @@ const BookingConfirmation = () => {
               notificacao_para: ['admin', 'dev']
             }
           });
+          
+          if (notifyError) {
+            console.error('❌ Erro ao invocar função n8n:', notifyError);
+          } else {
+            console.log('✅ Notificação de erro enviada com sucesso:', notifyResult);
+          }
         } catch (notifyError) {
           console.error('❌ Erro ao notificar via n8n:', notifyError);
         }
@@ -309,7 +316,8 @@ const BookingConfirmation = () => {
       
       // Notificar sucesso no agendamento via n8n
       try {
-        await supabase.functions.invoke('notify-booking-status', {
+        console.log('🔔 Enviando notificação de sucesso para n8n...');
+        const { data: notifyResult, error: notifyError } = await supabase.functions.invoke('notify-booking-status', {
           body: {
             tipo_evento: 'agendamento_sucesso',
             cliente: {
@@ -333,6 +341,12 @@ const BookingConfirmation = () => {
             notificacao_para: ['cliente', 'profissional', 'admin']
           }
         });
+        
+        if (notifyError) {
+          console.error('❌ Erro ao invocar função n8n:', notifyError);
+        } else {
+          console.log('✅ Notificação de sucesso enviada:', notifyResult);
+        }
       } catch (notifyError) {
         console.error('❌ Erro ao notificar sucesso via n8n:', notifyError);
       }

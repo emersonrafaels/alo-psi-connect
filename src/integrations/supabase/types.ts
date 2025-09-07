@@ -380,13 +380,6 @@ export type Database = {
             referencedRelation: "profissionais"
             referencedColumns: ["user_id"]
           },
-          {
-            foreignKeyName: "profissionais_sessoes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "vw_disponibilidades"
-            referencedColumns: ["user_id"]
-          },
         ]
       }
       user_booking_tracking: {
@@ -464,7 +457,15 @@ export type Database = {
           time_slot: number | null
           user_id: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profissionais_sessoes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       vw_profissionais_sessoes: {
         Row: {
@@ -512,13 +513,6 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profissionais"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "profissionais_sessoes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "vw_disponibilidades"
             referencedColumns: ["user_id"]
           },
         ]

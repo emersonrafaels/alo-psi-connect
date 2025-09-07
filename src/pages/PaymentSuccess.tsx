@@ -77,7 +77,8 @@ const PaymentSuccess = () => {
         
         // Notificar sucesso do pagamento via n8n
         try {
-          await supabase.functions.invoke('notify-booking-status', {
+          console.log('🔔 Enviando notificação de pagamento bem-sucedido para n8n...');
+          const { data: notifyResult, error: notifyError } = await supabase.functions.invoke('notify-booking-status', {
             body: {
               tipo_evento: 'pagamento_sucesso',
               cliente: {
@@ -101,6 +102,12 @@ const PaymentSuccess = () => {
               notificacao_para: ['cliente', 'profissional', 'admin']
             }
           });
+          
+          if (notifyError) {
+            console.error('❌ Erro ao invocar função n8n:', notifyError);
+          } else {
+            console.log('✅ Notificação de pagamento enviada:', notifyResult);
+          }
         } catch (notifyError) {
           console.error('❌ Erro ao notificar sucesso de pagamento via n8n:', notifyError);
         }
