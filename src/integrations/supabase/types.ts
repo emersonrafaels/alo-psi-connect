@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      agendamento_tokens: {
+        Row: {
+          agendamento_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          token: string
+          updated_at: string
+          used: boolean
+        }
+        Insert: {
+          agendamento_id: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          token: string
+          updated_at?: string
+          used?: boolean
+        }
+        Update: {
+          agendamento_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          updated_at?: string
+          used?: boolean
+        }
+        Relationships: []
+      }
       agendamentos: {
         Row: {
           created_at: string

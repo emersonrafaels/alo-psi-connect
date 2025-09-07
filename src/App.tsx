@@ -17,6 +17,7 @@ import Professional from "./pages/Professional";
 import Professionals from "./pages/Professionals";
 import Schedule from "./pages/Schedule";
 import Appointment from "./pages/Appointment";
+import AppointmentAccess from "./pages/AppointmentAccess";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
@@ -57,6 +58,7 @@ const App: React.FC = () => {
                   <Route path="/professional/:id" element={<Professional />} />
                   <Route path="/agendar" element={<Schedule />} />
                   <Route path="/agendamento" element={<Appointment />} />
+                  <Route path="/agendamento/:token" element={<AppointmentAccess />} />
                   <Route path="/confirmacao-agendamento" element={<BookingConfirmation />} />
                   <Route path="/pagamento-sucesso" element={<PaymentSuccess />} />
                   <Route path="/pagamento-cancelado" element={<PaymentCancelled />} />
