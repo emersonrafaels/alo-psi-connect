@@ -6,10 +6,9 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import { AdminLayout } from "@/components/admin/AdminLayout";
-import AdminDashboard from "@/pages/admin/Dashboard";
-import AdminAnalytics from "@/pages/admin/Analytics";
-import AdminUsers from "@/pages/admin/Users";
+import WhatsAppFloat from "@/components/ui/whatsapp-float";
+
+// Pages
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Blog from "./pages/Blog";
@@ -30,7 +29,18 @@ import PatientForm from "./pages/register/PatientForm";
 import ProfessionalForm from "./pages/register/ProfessionalForm";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
-import WhatsAppFloat from "@/components/ui/whatsapp-float";
+
+// Appointment management pages
+import MyAppointments from "./pages/MyAppointments";
+import RescheduleAppointment from "./pages/RescheduleAppointment";
+
+// Admin pages
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import AdminDashboard from "@/pages/admin/Dashboard";
+import AdminAnalytics from "@/pages/admin/Analytics";
+import AdminUsers from "@/pages/admin/Users";
+
+import "./App.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,6 +77,7 @@ const App: React.FC = () => {
                   <Route path="/perfil" element={<Profile />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  
                   {/* Redirect old routes to new cadastro routes */}
                   <Route path="/registrar" element={<UserType />} />
                   <Route path="/registrar/paciente" element={<PatientForm />} />
@@ -76,6 +87,10 @@ const App: React.FC = () => {
                   <Route path="/cadastro/tipo-usuario" element={<UserType />} />
                   <Route path="/cadastro/paciente" element={<PatientForm />} />
                   <Route path="/cadastro/profissional" element={<ProfessionalForm />} />
+                  
+                  {/* Rotas de Agendamentos */}
+                  <Route path="/agendamentos" element={<MyAppointments />} />
+                  <Route path="/reagendar/:appointmentId" element={<RescheduleAppointment />} />
                   
                   {/* Rotas Admin */}
                   <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />

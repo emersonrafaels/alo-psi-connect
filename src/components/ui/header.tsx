@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Menu, X, User, LogOut, Settings } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, Calendar } from "lucide-react"
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
@@ -89,6 +89,10 @@ const Header = () => {
                     <div className="text-xs text-muted-foreground">{user.email}</div>
                   </div>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/agendamentos')}>
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Meus Agendamentos
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/perfil')}>
                     <Settings className="h-4 w-4 mr-2" />
                     Meu Perfil
