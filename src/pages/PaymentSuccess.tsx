@@ -2,9 +2,13 @@ import { useEffect, useState } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, Calendar, Clock, User, ArrowLeft, Home } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { CheckCircle, Calendar, Clock, User, ArrowLeft, Home, Mail, Sparkles } from "lucide-react"
+import { useAuth } from "@/hooks/useAuth"
+import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 
 interface AppointmentData {
@@ -25,6 +29,11 @@ const PaymentSuccess = () => {
   const [searchParams] = useSearchParams()
   const [appointment, setAppointment] = useState<AppointmentData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showAccountCreation, setShowAccountCreation] = useState(false)
+  const [email, setEmail] = useState("")
+  const [loadingMagicLink, setLoadingMagicLink] = useState(false)
+  const { user } = useAuth()
+  const { toast } = useToast()
 
   useEffect(() => {
     const agendamentoId = searchParams.get('agendamento')
@@ -53,7 +62,7 @@ const PaymentSuccess = () => {
       if (error) {
         console.error('Erro ao buscar agendamento:', error)
       } else {
-        setAppointment({
+        const appointmentData = {
           id: data.id,
           nome_paciente: data.nome_paciente,
           email_paciente: data.email_paciente,
@@ -62,12 +71,53 @@ const PaymentSuccess = () => {
           valor: data.valor,
           status: data.status,
           profissionais: Array.isArray(data.profissionais) ? data.profissionais[0] : data.profissionais
-        })
+        }
+        
+        setAppointment(appointmentData)
+        
+        // Se não é usuário logado mas temos email, oferecer criação de conta
+        if (!user && data.email_paciente) {
+          setEmail(data.email_paciente)
+          setShowAccountCreation(true)
+        }
       }
     } catch (error) {
       console.error('Erro:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSendMagicLink = async () => {
+    if (!email || !appointment?.id) return
+    
+    setLoadingMagicLink(true)
+    try {
+      const { error } = await supabase.functions.invoke('send-magic-link', {
+        body: {
+          email,
+          agendamentoId: appointment.id,
+          type: 'account_creation'
+        }
+      })
+
+      if (error) throw error
+
+      toast({
+        title: "Magic link enviado! ✨",
+        description: "Verifique seu e-mail para criar sua conta em 1 clique.",
+      })
+      
+      setShowAccountCreation(false)
+    } catch (error: any) {
+      console.error('Erro ao enviar magic link:', error)
+      toast({
+        title: "Erro ao enviar link",
+        description: "Tente novamente em alguns instantes.",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingMagicLink(false)
     }
   }
 
@@ -100,9 +150,9 @@ const PaymentSuccess = () => {
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto space-y-6">
           {/* Success Message */}
-          <div className="text-center mb-8">
+          <div className="text-center">
             <div className="flex justify-center mb-4">
               <CheckCircle className="h-16 w-16 text-green-500" />
             </div>
@@ -114,9 +164,63 @@ const PaymentSuccess = () => {
             </p>
           </div>
 
+          {/* Account Creation Offer for Guests */}
+          {showAccountCreation && !user && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-900">
+                  <Sparkles className="h-5 w-5" />
+                  Crie sua conta em 1 clique!
+                </CardTitle>
+                <CardDescription className="text-blue-700">
+                  Gerencie seus agendamentos, histórico e muito mais
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-white p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Benefícios da conta:</h4>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>📅 Histórico completo de agendamentos</li>
+                    <li>📝 Reagendamento fácil e rápido</li>
+                    <li>🧾 Acesso a recibos e notas da consulta</li>
+                    <li>⚡ Processo de agendamento simplificado</li>
+                  </ul>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Seu e-mail:</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                  />
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleSendMagicLink}
+                    disabled={!email || loadingMagicLink}
+                    className="flex-1"
+                  >
+                    <Mail className="mr-2 h-4 w-4" />
+                    {loadingMagicLink ? "Enviando..." : "Criar conta"}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowAccountCreation(false)}
+                  >
+                    Agora não
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Appointment Details */}
           {appointment && (
-            <Card className="mb-8">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-primary" />
@@ -182,7 +286,7 @@ const PaymentSuccess = () => {
           )}
 
           {/* Next Steps */}
-          <Card className="mb-8">
+          <Card>
             <CardHeader>
               <CardTitle>Próximos Passos</CardTitle>
             </CardHeader>
@@ -228,17 +332,18 @@ const PaymentSuccess = () => {
           </Card>
 
           {/* Actions */}
-          <div className="flex gap-4 justify-center">
-            <Button variant="outline" size="lg" asChild>
-              <Link to="/profissionais">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Agendar Outra Consulta
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button asChild className="flex-1">
+              <Link to="/professionals">
+                <Calendar className="mr-2 h-4 w-4" />
+                Novo Agendamento
               </Link>
             </Button>
-            <Button size="lg" asChild>
+            
+            <Button asChild variant="outline" className="flex-1">
               <Link to="/">
-                <Home className="h-4 w-4 mr-2" />
-                Voltar ao Início
+                <Home className="mr-2 h-4 w-4" />
+                Página Inicial
               </Link>
             </Button>
           </div>
