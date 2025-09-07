@@ -248,6 +248,40 @@ const BookingConfirmation = () => {
           hint: agendamentoError.hint
         })
         
+        // Notificar erro via n8n
+        try {
+          await supabase.functions.invoke('notify-booking-status', {
+            body: {
+              tipo_evento: 'agendamento_erro',
+              cliente: {
+                nome: formData.name,
+                email: formData.email,
+                telefone: formData.phone,
+                esta_logado: !!user,
+                user_id: user?.id || 'guest'
+              },
+              profissional: {
+                nome: bookingData.professionalName,
+                especialidade: 'N/A'
+              },
+              agendamento: {
+                data: bookingData.date,
+                horario: bookingData.time,
+                valor: parseFloat(bookingData.price),
+                status: 'erro'
+              },
+              erro: {
+                codigo: agendamentoError.code || 'UNKNOWN',
+                mensagem: agendamentoError.message,
+                contexto: 'booking_creation'
+              },
+              notificacao_para: ['admin', 'dev']
+            }
+          });
+        } catch (notifyError) {
+          console.error('❌ Erro ao notificar via n8n:', notifyError);
+        }
+        
         // Tratar diferentes tipos de erro
         if (agendamentoError.code === '42501') {
           toast({
@@ -272,6 +306,36 @@ const BookingConfirmation = () => {
       }
 
       console.log('Agendamento criado com sucesso:', agendamento)
+      
+      // Notificar sucesso no agendamento via n8n
+      try {
+        await supabase.functions.invoke('notify-booking-status', {
+          body: {
+            tipo_evento: 'agendamento_sucesso',
+            cliente: {
+              nome: formData.name,
+              email: formData.email,
+              telefone: formData.phone,
+              esta_logado: !!user,
+              user_id: user?.id || 'guest'
+            },
+            profissional: {
+              nome: bookingData.professionalName,
+              especialidade: 'N/A'
+            },
+            agendamento: {
+              data: bookingData.date,
+              horario: bookingData.time,
+              valor: parseFloat(bookingData.price),
+              status: 'pendente',
+              id: agendamento.id
+            },
+            notificacao_para: ['cliente', 'profissional', 'admin']
+          }
+        });
+      } catch (notifyError) {
+        console.error('❌ Erro ao notificar sucesso via n8n:', notifyError);
+      }
 
       // 2. Create MercadoPago payment preference
       console.log('Criando preferência de pagamento...')
@@ -289,6 +353,42 @@ const BookingConfirmation = () => {
 
       if (paymentError) {
         console.error('Erro detalhado ao criar pagamento:', paymentError)
+        
+        // Notificar erro de pagamento via n8n
+        try {
+          await supabase.functions.invoke('notify-booking-status', {
+            body: {
+              tipo_evento: 'pagamento_erro',
+              cliente: {
+                nome: formData.name,
+                email: formData.email,
+                telefone: formData.phone,
+                esta_logado: !!user,
+                user_id: user?.id || 'guest'
+              },
+              profissional: {
+                nome: bookingData.professionalName,
+                especialidade: 'N/A'
+              },
+              agendamento: {
+                data: bookingData.date,
+                horario: bookingData.time,
+                valor: parseFloat(bookingData.price),
+                status: 'erro_pagamento',
+                id: agendamento.id
+              },
+              erro: {
+                codigo: 'PAYMENT_ERROR',
+                mensagem: paymentError.message || 'Erro ao processar pagamento',
+                contexto: 'payment_creation'
+              },
+              notificacao_para: ['admin', 'dev']
+            }
+          });
+        } catch (notifyError) {
+          console.error('❌ Erro ao notificar erro de pagamento via n8n:', notifyError);
+        }
+        
         toast({
           title: "Erro no pagamento",
           description: "Não foi possível processar o pagamento. Tente novamente ou contate o suporte.",

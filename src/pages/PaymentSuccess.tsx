@@ -75,6 +75,36 @@ const PaymentSuccess = () => {
         
         setAppointment(appointmentData)
         
+        // Notificar sucesso do pagamento via n8n
+        try {
+          await supabase.functions.invoke('notify-booking-status', {
+            body: {
+              tipo_evento: 'pagamento_sucesso',
+              cliente: {
+                nome: data.nome_paciente,
+                email: data.email_paciente,
+                telefone: data.telefone_paciente || 'N/A',
+                esta_logado: !!user,
+                user_id: user?.id || 'guest'
+              },
+              profissional: {
+                nome: appointmentData.profissionais?.display_name || 'N/A',
+                especialidade: appointmentData.profissionais?.profissao || 'N/A'
+              },
+              agendamento: {
+                data: data.data_consulta,
+                horario: data.horario,
+                valor: data.valor,
+                status: 'confirmado',
+                id: data.id
+              },
+              notificacao_para: ['cliente', 'profissional', 'admin']
+            }
+          });
+        } catch (notifyError) {
+          console.error('❌ Erro ao notificar sucesso de pagamento via n8n:', notifyError);
+        }
+        
         // Se não é usuário logado mas temos email, oferecer criação de conta
         if (!user && data.email_paciente) {
           setEmail(data.email_paciente)
