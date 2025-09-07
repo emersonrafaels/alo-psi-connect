@@ -18,6 +18,9 @@ import { useAuthRedirect } from "@/hooks/useAuthRedirect"
 import { supabase } from "@/integrations/supabase/client"
 import AuthChoiceModal from "@/components/AuthChoiceModal"
 
+// UUID fixo para visitantes anônimos
+const GUEST_USER_ID = '11111111-1111-1111-1111-111111111111'
+
 interface BookingData {
   professionalId: string
   professionalName: string
@@ -198,7 +201,7 @@ const BookingConfirmation = () => {
       console.log('Professional Data encontrado:', professionalData)
       
       // Preparar dados do agendamento
-      // Para visitantes/convidados, não incluir user_id
+      // Sempre incluir user_id: real para usuários logados, UUID fixo para visitantes
       const agendamentoData: any = {
         professional_id: professionalData.profile_id,
         nome_paciente: formData.name,
@@ -208,15 +211,14 @@ const BookingConfirmation = () => {
         horario: bookingData.time,
         valor: parseFloat(bookingData.price),
         observacoes: formData.notes || null,
-        status: 'pendente'
+        status: 'pendente',
+        user_id: user?.id || GUEST_USER_ID
       }
       
-      // Só adicionar user_id se o usuário estiver realmente logado
       if (user?.id) {
-        agendamentoData.user_id = user.id
-        console.log('Usuário logado - incluindo user_id:', user.id)
+        console.log('Usuário logado - usando user_id real:', user.id)
       } else {
-        console.log('Usuário visitante - sem user_id')
+        console.log('Usuário visitante - usando UUID fixo:', GUEST_USER_ID)
       }
       
       console.log('Dados para inserir no agendamento:', agendamentoData)
