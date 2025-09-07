@@ -228,6 +228,8 @@ const BookingConfirmation = () => {
       console.log('Current user from auth:', currentUser)
       console.log('auth.uid():', currentUser?.id)
       console.log('user?.id from hook:', user?.id)
+      console.log('Is guest booking (no auth):', !currentUser)
+      console.log('Will use user_id:', user?.id || GUEST_USER_ID)
       
       // 1. Create agendamento in database
       console.log('Criando agendamento na base de dados...')
