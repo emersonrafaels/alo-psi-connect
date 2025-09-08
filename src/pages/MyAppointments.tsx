@@ -144,19 +144,32 @@ const MyAppointments = () => {
     window.open(checkoutUrl, '_blank')
   }
 
-  const handleCancelAppointment = async (appointmentId: string) => {
-    setCancelingId(appointmentId)
+  const handleCancelAppointment = async (appointment: Appointment) => {
+    setCancelingId(appointment.id)
     
     try {
       const { error } = await supabase.functions.invoke('cancel-appointment', {
-        body: { appointmentId }
+        body: { appointmentId: appointment.id }
       })
 
       if (error) throw error
 
+      // Determine appropriate message based on payment status
+      const paymentStatus = getPaymentStatus(appointment)
+      let title = "Agendamento cancelado! ✅"
+      let description = ""
+
+      if (paymentStatus === 'paid') {
+        description = "O reembolso será processado em até 5 dias úteis."
+      } else if (paymentStatus === 'pending_payment') {
+        description = "Nenhum valor foi cobrado."
+      } else {
+        description = "Cancelamento realizado com sucesso!"
+      }
+
       toast({
-        title: "Agendamento cancelado! ✅",
-        description: "O reembolso será processado em até 5 dias úteis.",
+        title,
+        description,
       })
 
       // Atualizar a lista
@@ -518,7 +531,7 @@ const MyAppointments = () => {
                                             </Button>
                                             
                                             <Button
-                                              onClick={() => handleCancelAppointment(appointment.id)}
+                                              onClick={() => handleCancelAppointment(appointment)}
                                               variant="destructive"
                                               className="flex-1"
                                               disabled={cancelingId === appointment.id}
@@ -547,11 +560,11 @@ const MyAppointments = () => {
                                           </Button>
                                           
                                           <Button
-                                            onClick={() => handleCancelAppointment(appointment.id)}
-                                            variant="destructive"
-                                            className="flex-1"
-                                            disabled={cancelingId === appointment.id}
-                                          >
+                                             onClick={() => handleCancelAppointment(appointment)}
+                                             variant="destructive"
+                                             className="flex-1"
+                                             disabled={cancelingId === appointment.id}
+                                           >
                                             <CalendarX className="mr-2 h-4 w-4" />
                                             {cancelingId === appointment.id ? "Cancelando..." : "Cancelar"}
                                           </Button>
