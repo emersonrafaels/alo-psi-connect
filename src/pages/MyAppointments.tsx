@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
-import { Calendar, Clock, User, MapPin, Phone, Mail, DollarSign, CalendarX, RotateCcw, AlertCircle, CheckCircle, XCircle } from "lucide-react"
+import { Calendar, Clock, User, MapPin, Phone, Mail, DollarSign, CalendarX, RotateCcw, AlertCircle, CheckCircle, XCircle, CreditCard, Timer } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
@@ -23,6 +23,7 @@ interface Appointment {
   horario: string
   valor: number
   status: string
+  payment_status?: string
   observacoes: string | null
   created_at: string
   mercado_pago_preference_id: string | null
@@ -99,11 +100,48 @@ const MyAppointments = () => {
     }
   }
 
+  // Utility functions for payment status and time calculations
+  const getPaymentStatus = (appointment: Appointment) => {
+    if (appointment.status === 'confirmado') return 'paid'
+    if (appointment.status === 'cancelado') return 'cancelled'
+    if (appointment.status === 'pendente' && appointment.mercado_pago_preference_id) return 'pending_payment'
+    return 'paid' // pendente without mercado_pago_preference_id means already paid
+  }
+
+  const getTimeRemaining = (createdAt: string, targetHours: number = 24) => {
+    const created = new Date(createdAt)
+    const target = new Date(created.getTime() + targetHours * 60 * 60 * 1000)
+    const now = new Date()
+    const remaining = target.getTime() - now.getTime()
+    
+    if (remaining <= 0) return { expired: true, hours: 0, minutes: 0 }
+    
+    const hours = Math.floor(remaining / (1000 * 60 * 60))
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60))
+    
+    return { expired: false, hours, minutes }
+  }
+
   const canModifyAppointment = (dataConsulta: string, horario: string) => {
     const appointmentDateTime = new Date(`${dataConsulta}T${horario}`)
     const now = new Date()
     const diffHours = (appointmentDateTime.getTime() - now.getTime()) / (1000 * 60 * 60)
     return diffHours >= 24
+  }
+
+  const handlePayNow = async (appointment: Appointment) => {
+    if (!appointment.mercado_pago_preference_id) {
+      toast({
+        title: "Erro",
+        description: "ID de pagamento não encontrado.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Open Mercado Pago checkout
+    const checkoutUrl = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${appointment.mercado_pago_preference_id}`
+    window.open(checkoutUrl, '_blank')
   }
 
   const handleCancelAppointment = async (appointmentId: string) => {
@@ -158,29 +196,52 @@ const MyAppointments = () => {
     })
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'confirmado':
-        return <CheckCircle className="h-4 w-4 text-green-600" />
-      case 'pendente':
-        return <Clock className="h-4 w-4 text-yellow-600" />
-      case 'cancelado':
+  const getStatusIcon = (appointment: Appointment) => {
+    const paymentStatus = getPaymentStatus(appointment)
+    
+    switch (paymentStatus) {
+      case 'paid':
+        return appointment.status === 'confirmado' 
+          ? <CheckCircle className="h-4 w-4 text-green-600" />
+          : <Clock className="h-4 w-4 text-blue-600" />
+      case 'pending_payment':
+        return <CreditCard className="h-4 w-4 text-orange-600" />
+      case 'cancelled':
         return <XCircle className="h-4 w-4 text-red-600" />
       default:
         return <AlertCircle className="h-4 w-4 text-gray-600" />
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmado':
-        return 'bg-green-100 text-green-800 border-green-200'
-      case 'pendente':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'cancelado':
+  const getStatusColor = (appointment: Appointment) => {
+    const paymentStatus = getPaymentStatus(appointment)
+    
+    switch (paymentStatus) {
+      case 'paid':
+        return appointment.status === 'confirmado'
+          ? 'bg-green-100 text-green-800 border-green-200'
+          : 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'pending_payment':
+        return 'bg-orange-100 text-orange-800 border-orange-200'
+      case 'cancelled':
         return 'bg-red-100 text-red-800 border-red-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+  }
+
+  const getStatusText = (appointment: Appointment) => {
+    const paymentStatus = getPaymentStatus(appointment)
+    
+    switch (paymentStatus) {
+      case 'paid':
+        return appointment.status === 'confirmado' ? 'Confirmado' : 'Pendente (Pago)'
+      case 'pending_payment':
+        return 'Pendente de Pagamento'
+      case 'cancelled':
+        return 'Cancelado'
+      default:
+        return 'Status Desconhecido'
     }
   }
 
@@ -315,9 +376,9 @@ const MyAppointments = () => {
                               {appointment.profissionais?.display_name}
                             </CardTitle>
                             <div className="flex items-center gap-2">
-                              {getStatusIcon(appointment.status)}
-                              <Badge className={getStatusColor(appointment.status)}>
-                                {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                              {getStatusIcon(appointment)}
+                              <Badge className={getStatusColor(appointment)}>
+                                {getStatusText(appointment)}
                               </Badge>
                             </div>
                           </div>
@@ -411,36 +472,106 @@ const MyAppointments = () => {
                           {appointment.status !== 'cancelado' && (
                             <div className="border-t pt-4">
                               <div className="flex flex-col sm:flex-row gap-3">
-                                {canModify ? (
-                                  <>
-                                    <Button
-                                      onClick={() => handleReschedule(appointment.id)}
-                                      variant="outline"
-                                      className="flex-1"
-                                    >
-                                      <RotateCcw className="mr-2 h-4 w-4" />
-                                      Reagendar
-                                    </Button>
+                                {(() => {
+                                  const paymentStatus = getPaymentStatus(appointment)
+                                  const canModify = canModifyAppointment(appointment.data_consulta, appointment.horario)
+                                  const timeRemaining = getTimeRemaining(appointment.created_at, 24)
+
+                                  // For pending payment appointments
+                                  if (paymentStatus === 'pending_payment') {
+                                    const urgentPayment = timeRemaining.hours < 2
                                     
-                                    <Button
-                                      onClick={() => handleCancelAppointment(appointment.id)}
-                                      variant="destructive"
-                                      className="flex-1"
-                                      disabled={cancelingId === appointment.id}
-                                    >
-                                      <CalendarX className="mr-2 h-4 w-4" />
-                                      {cancelingId === appointment.id ? "Cancelando..." : "Cancelar"}
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <Alert>
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertDescription>
-                                      Não é mais possível cancelar ou reagendar esta consulta 
-                                      (menos de 24h de antecedência).
-                                    </AlertDescription>
-                                  </Alert>
-                                )}
+                                    return (
+                                      <>
+                                        {/* Payment countdown alert */}
+                                        <Alert className={`mb-3 ${urgentPayment ? 'border-red-500 bg-red-50' : 'border-orange-500 bg-orange-50'}`}>
+                                          <Timer className={`h-4 w-4 ${urgentPayment ? 'text-red-600' : 'text-orange-600'}`} />
+                                          <AlertDescription className={urgentPayment ? 'text-red-800' : 'text-orange-800'}>
+                                            {timeRemaining.expired ? (
+                                              <span className="font-medium">⚠️ Agendamento será cancelado automaticamente</span>
+                                            ) : (
+                                              <span className="font-medium">
+                                                {urgentPayment ? '🚨 ' : '⏰ '}
+                                                Restam: {timeRemaining.hours}h {timeRemaining.minutes}m para pagamento
+                                              </span>
+                                            )}
+                                          </AlertDescription>
+                                        </Alert>
+
+                                        <Button
+                                          onClick={() => handlePayNow(appointment)}
+                                          className="flex-1 bg-orange-600 hover:bg-orange-700"
+                                        >
+                                          <CreditCard className="mr-2 h-4 w-4" />
+                                          💳 Pagar Agora
+                                        </Button>
+                                        
+                                        {canModify && (
+                                          <>
+                                            <Button
+                                              onClick={() => handleReschedule(appointment.id)}
+                                              variant="outline"
+                                              className="flex-1"
+                                            >
+                                              <RotateCcw className="mr-2 h-4 w-4" />
+                                              Reagendar
+                                            </Button>
+                                            
+                                            <Button
+                                              onClick={() => handleCancelAppointment(appointment.id)}
+                                              variant="destructive"
+                                              className="flex-1"
+                                              disabled={cancelingId === appointment.id}
+                                            >
+                                              <CalendarX className="mr-2 h-4 w-4" />
+                                              {cancelingId === appointment.id ? "Cancelando..." : "Cancelar"}
+                                            </Button>
+                                          </>
+                                        )}
+                                      </>
+                                    )
+                                  }
+
+                                  // For paid appointments
+                                  if (paymentStatus === 'paid') {
+                                    if (canModify) {
+                                      return (
+                                        <>
+                                          <Button
+                                            onClick={() => handleReschedule(appointment.id)}
+                                            variant="outline"
+                                            className="flex-1"
+                                          >
+                                            <RotateCcw className="mr-2 h-4 w-4" />
+                                            Reagendar
+                                          </Button>
+                                          
+                                          <Button
+                                            onClick={() => handleCancelAppointment(appointment.id)}
+                                            variant="destructive"
+                                            className="flex-1"
+                                            disabled={cancelingId === appointment.id}
+                                          >
+                                            <CalendarX className="mr-2 h-4 w-4" />
+                                            {cancelingId === appointment.id ? "Cancelando..." : "Cancelar"}
+                                          </Button>
+                                        </>
+                                      )
+                                    } else {
+                                      return (
+                                        <Alert>
+                                          <AlertCircle className="h-4 w-4" />
+                                          <AlertDescription>
+                                            Não é mais possível cancelar ou reagendar esta consulta 
+                                            (menos de 24h de antecedência).
+                                          </AlertDescription>
+                                        </Alert>
+                                      )
+                                    }
+                                  }
+
+                                  return null
+                                })()}
                               </div>
                             </div>
                           )}

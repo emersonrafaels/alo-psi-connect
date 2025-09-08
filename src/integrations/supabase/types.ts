@@ -57,6 +57,7 @@ export type Database = {
           mercado_pago_preference_id: string | null
           nome_paciente: string
           observacoes: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"] | null
           professional_id: string | null
           status: string
           stripe_session_id: string | null
@@ -74,6 +75,7 @@ export type Database = {
           mercado_pago_preference_id?: string | null
           nome_paciente: string
           observacoes?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
           professional_id?: string | null
           status?: string
           stripe_session_id?: string | null
@@ -91,6 +93,7 @@ export type Database = {
           mercado_pago_preference_id?: string | null
           nome_paciente?: string
           observacoes?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
           professional_id?: string | null
           status?: string
           stripe_session_id?: string | null
@@ -533,6 +536,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "super_admin" | "moderator"
+      payment_status: "pending_payment" | "paid" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -661,6 +665,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "super_admin", "moderator"],
+      payment_status: ["pending_payment", "paid", "failed"],
     },
   },
 } as const
