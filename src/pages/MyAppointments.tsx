@@ -100,10 +100,24 @@ const MyAppointments = () => {
     }
   }
 
-  // Utility functions for payment status and time calculations
+  // Utility functions for appointment status and time calculations
+  const isAppointmentExpired = (appointment: Appointment): boolean => {
+    const appointmentDateTime = new Date(`${appointment.data_consulta}T${appointment.horario}`)
+    return appointmentDateTime < new Date()
+  }
+
   const getPaymentStatus = (appointment: Appointment) => {
     if (appointment.status === 'confirmado') return 'paid'
     if (appointment.status === 'cancelado') return 'cancelled'
+    
+    // Se o agendamento já passou da data e não foi pago, considerar como vencido
+    if (isAppointmentExpired(appointment) && 
+        appointment.status === 'pendente' &&
+        appointment.mercado_pago_preference_id &&
+        appointment.payment_status !== 'paid') {
+      return 'expired'
+    }
+    
     if (appointment.status === 'pendente' && appointment.mercado_pago_preference_id) return 'pending_payment'
     return 'paid' // pendente without mercado_pago_preference_id means already paid
   }
@@ -219,6 +233,8 @@ const MyAppointments = () => {
           : <Clock className="h-4 w-4 text-blue-600" />
       case 'pending_payment':
         return <CreditCard className="h-4 w-4 text-orange-600" />
+      case 'expired':
+        return <XCircle className="h-4 w-4 text-red-600" />
       case 'cancelled':
         return <XCircle className="h-4 w-4 text-red-600" />
       default:
@@ -236,6 +252,8 @@ const MyAppointments = () => {
           : 'bg-blue-100 text-blue-800 border-blue-200'
       case 'pending_payment':
         return 'bg-orange-100 text-orange-800 border-orange-200'
+      case 'expired':
+        return 'bg-red-100 text-red-800 border-red-200'
       case 'cancelled':
         return 'bg-red-100 text-red-800 border-red-200'
       default:
@@ -251,6 +269,8 @@ const MyAppointments = () => {
         return appointment.status === 'confirmado' ? 'Confirmado' : 'Pendente (Pago)'
       case 'pending_payment':
         return 'Pendente de Pagamento'
+      case 'expired':
+        return 'Cancelado - Não Pagamento'
       case 'cancelled':
         return 'Cancelado'
       default:
@@ -490,34 +510,48 @@ const MyAppointments = () => {
                                   const canModify = canModifyAppointment(appointment.data_consulta, appointment.horario)
                                   const timeRemaining = getTimeRemaining(appointment.created_at, 24)
 
-                                  // For pending payment appointments
-                                  if (paymentStatus === 'pending_payment') {
-                                    const urgentPayment = timeRemaining.hours < 2
-                                    
-                                    return (
-                                      <>
-                                        {/* Payment countdown alert */}
-                                        <Alert className={`mb-3 ${urgentPayment ? 'border-red-500 bg-red-50' : 'border-orange-500 bg-orange-50'}`}>
-                                          <Timer className={`h-4 w-4 ${urgentPayment ? 'text-red-600' : 'text-orange-600'}`} />
-                                          <AlertDescription className={urgentPayment ? 'text-red-800' : 'text-orange-800'}>
-                                            {timeRemaining.expired ? (
-                                              <span className="font-medium">⚠️ Agendamento será cancelado automaticamente</span>
-                                            ) : (
-                                              <span className="font-medium">
-                                                {urgentPayment ? '🚨 ' : '⏰ '}
-                                                Restam: {timeRemaining.hours}h {timeRemaining.minutes}m para pagamento
-                                              </span>
-                                            )}
-                                          </AlertDescription>
-                                        </Alert>
+                                   // For expired unpaid appointments
+                                   if (paymentStatus === 'expired') {
+                                     return (
+                                       <Alert className="mb-3 border-red-500 bg-red-50">
+                                         <XCircle className="h-4 w-4 text-red-600" />
+                                         <AlertDescription className="text-red-800">
+                                           <span className="font-medium">
+                                             ❌ Agendamento cancelado automaticamente - Data vencida sem pagamento
+                                           </span>
+                                         </AlertDescription>
+                                       </Alert>
+                                     )
+                                   }
 
-                                        <Button
-                                          onClick={() => handlePayNow(appointment)}
-                                          className="flex-1 bg-orange-600 hover:bg-orange-700"
-                                        >
-                                          <CreditCard className="mr-2 h-4 w-4" />
-                                          💳 Pagar Agora
-                                        </Button>
+                                   // For pending payment appointments
+                                   if (paymentStatus === 'pending_payment') {
+                                     const urgentPayment = timeRemaining.hours < 2
+                                     
+                                     return (
+                                       <>
+                                         {/* Payment countdown alert */}
+                                         <Alert className={`mb-3 ${urgentPayment ? 'border-red-500 bg-red-50' : 'border-orange-500 bg-orange-50'}`}>
+                                           <Timer className={`h-4 w-4 ${urgentPayment ? 'text-red-600' : 'text-orange-600'}`} />
+                                           <AlertDescription className={urgentPayment ? 'text-red-800' : 'text-orange-800'}>
+                                             {timeRemaining.expired ? (
+                                               <span className="font-medium">⚠️ Agendamento será cancelado automaticamente</span>
+                                             ) : (
+                                               <span className="font-medium">
+                                                 {urgentPayment ? '🚨 ' : '⏰ '}
+                                                 Restam: {timeRemaining.hours}h {timeRemaining.minutes}m para pagamento
+                                               </span>
+                                             )}
+                                           </AlertDescription>
+                                         </Alert>
+
+                                         <Button
+                                           onClick={() => handlePayNow(appointment)}
+                                           className="flex-1 bg-orange-600 hover:bg-orange-700"
+                                         >
+                                           <CreditCard className="mr-2 h-4 w-4" />
+                                           💳 Pagar Agora
+                                         </Button>
                                         
                                         {canModify && (
                                           <>
