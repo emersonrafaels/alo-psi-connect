@@ -62,7 +62,7 @@ const adminMenuItems = [
   },
   {
     title: 'Configurações',
-    url: '/admin/settings',
+    url: '/admin/configuracoes',
     icon: Settings,
     requiredRole: 'super_admin'
   },

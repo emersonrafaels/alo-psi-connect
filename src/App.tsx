@@ -39,6 +39,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminAnalytics from "@/pages/admin/Analytics";
 import AdminUsers from "@/pages/admin/Users";
+import AdminConfigurations from "@/pages/admin/Configurations";
 
 import "./App.css";
 
@@ -96,6 +97,7 @@ const App: React.FC = () => {
                   <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
                   <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
                   <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+                  <Route path="/admin/configuracoes" element={<AdminLayout><AdminConfigurations /></AdminLayout>} />
                   
                   <Route path="*" element={<NotFound />} />
                 </Routes>
