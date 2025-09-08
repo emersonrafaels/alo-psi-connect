@@ -3,7 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users as UsersIcon, User, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { UserManagementModal } from '@/components/admin/UserManagementModal';
+import { RoleManagementDialog } from '@/components/admin/RoleManagementDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useUserManagement } from '@/hooks/useUserManagement';
+import { Users as UsersIcon, User, Calendar, Settings, Trash2 } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -13,34 +18,85 @@ interface UserProfile {
   created_at: string;
   data_nascimento?: string;
   genero?: string;
+  user_id?: string;
+  roles?: string[];
 }
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedUserName, setSelectedUserName] = useState<string>('');
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const { deleteUser } = useUserManagement();
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Erro ao buscar usuários:', error);
-        } else {
-          setUsers(data || []);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar usuários:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      // Get profiles with their roles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (profilesError) {
+        console.error('Erro ao buscar perfis:', profilesError);
+        return;
+      }
+
+      // Get all user roles
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) {
+        console.error('Erro ao buscar roles:', rolesError);
+      }
+
+      // Combine profiles with roles
+      const usersWithRoles = (profiles || []).map(profile => {
+        const userRoles = roles?.filter(role => role.user_id === profile.user_id).map(role => role.role) || [];
+        return { ...profile, roles: userRoles };
+      });
+
+      setUsers(usersWithRoles);
+    } catch (error) {
+      console.error('Erro ao buscar usuários:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRoleManagement = (userId: string, userName: string) => {
+    setSelectedUserId(userId);
+    setSelectedUserName(userName);
+    setRoleDialogOpen(true);
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    const result = await deleteUser(userId);
+    if (result.success) {
+      fetchUsers();
+    }
+  };
+
+  const getRolesBadges = (roles: string[]) => {
+    if (!roles || roles.length === 0) {
+      return <Badge variant="outline">Sem roles admin</Badge>;
+    }
+
+    return roles.map(role => (
+      <Badge 
+        key={role} 
+        variant={role === 'super_admin' ? 'destructive' : role === 'admin' ? 'default' : 'secondary'}
+      >
+        {role}
+      </Badge>
+    ));
+  };
 
   if (loading) {
     return (
@@ -60,6 +116,7 @@ export default function AdminUsers() {
 
   const pacientes = users.filter(user => user.tipo_usuario === 'paciente');
   const profissionais = users.filter(user => user.tipo_usuario === 'profissional');
+  const admins = users.filter(user => user.roles && user.roles.length > 0);
 
   return (
     <div className="space-y-6">
@@ -70,7 +127,7 @@ export default function AdminUsers() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
@@ -100,11 +157,22 @@ export default function AdminUsers() {
             <div className="text-2xl font-bold">{profissionais.length}</div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Administradores</CardTitle>
+            <Settings className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{admins.length}</div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Lista de Usuários</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Gestão de Usuários</CardTitle>
+          <UserManagementModal onUserCreated={fetchUsers} />
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -113,37 +181,89 @@ export default function AdminUsers() {
                 key={user.id}
                 className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
               >
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                    <User className="h-5 w-5 text-primary" />
+                <div className="flex-1">
+                  <div className="flex items-center space-x-4 mb-2">
+                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{user.nome}</p>
+                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                    </div>
+                    <Badge 
+                      variant={user.tipo_usuario === 'profissional' ? 'default' : 'secondary'}
+                    >
+                      {user.tipo_usuario}
+                    </Badge>
                   </div>
-                  <div>
-                    <p className="font-medium">{user.nome}</p>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  
+                  <div className="flex items-center gap-2 mb-2 ml-14">
+                    <span className="text-sm text-muted-foreground">Roles Admin:</span>
+                    <div className="flex gap-1">
+                      {getRolesBadges(user.roles || [])}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <Badge 
-                    variant={user.tipo_usuario === 'profissional' ? 'default' : 'secondary'}
-                  >
-                    {user.tipo_usuario}
-                  </Badge>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">
-                      Cadastrado em {new Date(user.created_at).toLocaleDateString('pt-BR')}
-                    </p>
+                  
+                  <div className="flex gap-4 text-sm text-muted-foreground ml-14">
+                    <span>Cadastrado em {new Date(user.created_at).toLocaleDateString('pt-BR')}</span>
                     {user.data_nascimento && (
-                      <p className="text-xs text-muted-foreground">
-                        Nascimento: {new Date(user.data_nascimento).toLocaleDateString('pt-BR')}
-                      </p>
+                      <span>Nascimento: {new Date(user.data_nascimento).toLocaleDateString('pt-BR')}</span>
                     )}
                   </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRoleManagement(user.user_id || '', user.nome)}
+                    className="gap-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Gerenciar Roles
+                  </Button>
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2 text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                        Remover
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Remover usuário</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja remover todas as roles admin de {user.nome}? 
+                          Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteUser(user.user_id || '')}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Remover
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
+
+      {/* Role Management Dialog */}
+      <RoleManagementDialog
+        open={roleDialogOpen}
+        onOpenChange={setRoleDialogOpen}
+        userId={selectedUserId}
+        userName={selectedUserName}
+        onRoleUpdated={fetchUsers}
+      />
     </div>
   );
 }

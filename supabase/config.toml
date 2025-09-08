@@ -61,3 +61,9 @@ verify_jwt = false
 
 [functions.notify-booking-status]
 verify_jwt = false
+
+[functions.create-admin-user]
+verify_jwt = false
+
+[functions.manage-user-roles]
+verify_jwt = true
