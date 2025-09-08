@@ -62,7 +62,7 @@ export type Database = {
           stripe_session_id: string | null
           telefone_paciente: string
           updated_at: string
-          user_id: string | null
+          user_id: string
           valor: number | null
         }
         Insert: {
@@ -79,7 +79,7 @@ export type Database = {
           stripe_session_id?: string | null
           telefone_paciente: string
           updated_at?: string
-          user_id?: string | null
+          user_id: string
           valor?: number | null
         }
         Update: {
@@ -96,7 +96,7 @@ export type Database = {
           stripe_session_id?: string | null
           telefone_paciente?: string
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
           valor?: number | null
         }
         Relationships: [
