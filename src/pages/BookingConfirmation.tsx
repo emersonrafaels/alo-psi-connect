@@ -16,6 +16,7 @@ import { useUserProfile } from "@/hooks/useUserProfile"
 import { useBookingTracking } from "@/hooks/useBookingTracking"
 import { useAuthRedirect } from "@/hooks/useAuthRedirect"
 import { supabase } from "@/integrations/supabase/client"
+import { createClient } from '@supabase/supabase-js'
 import AuthChoiceModal from "@/components/AuthChoiceModal"
 
 // UUID fixo para visitantes anônimos
@@ -233,6 +234,8 @@ const BookingConfirmation = () => {
       
       // 1. Create agendamento in database
       console.log('Criando agendamento na base de dados...')
+      console.log('🚀 Dados para inserir:', agendamentoData)
+      
       const { data: agendamento, error: agendamentoError } = await supabase
         .from('agendamentos')
         .insert(agendamentoData)
