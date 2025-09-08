@@ -47,7 +47,7 @@ const WorkWithUs = () => {
   ]
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Header />
       
       {/* Hero Section */}
@@ -279,7 +279,7 @@ const WorkWithUs = () => {
                         <Input type="file" accept=".pdf" className="border-2 focus:border-primary/50" />
                       </div>
                       
-                      <Button size="lg" className="w-full btn-gradient text-lg py-6 h-auto">
+                      <Button size="lg" className="w-full btn-gradient text-lg px-4 sm:px-6 py-4 h-auto flex items-center justify-center whitespace-normal break-words text-center">
                         <Heart className="mr-2 h-5 w-5" />
                         Enviar Candidatura - Quero Atender!
                       </Button>
@@ -388,7 +388,7 @@ const WorkWithUs = () => {
                 <Heart className="mr-2 h-5 w-5" />
                 Quero Fazer Parte da AloPsi
               </Button>
-              <Button variant="outline" size="lg" className="text-lg px-8 py-4 h-auto border-2 border-white text-white hover:bg-white/10">
+              <Button variant="accent" size="lg" className="text-lg px-8 py-4 h-auto bg-white text-primary hover:bg-white/90">
                 <Link to="/professionals" className="flex items-center">
                   Conheça Nossa Equipe
                 </Link>

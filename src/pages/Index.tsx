@@ -62,9 +62,9 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-foreground">
-                Cuidando De Quem <br />
-                Cuida De Nós
+              <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-foreground">
+                Atendimento especializado, 
+                online e acessível
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
                 Encontre profissionais especializados em saúde mental com atendimento humanizado e de qualidade.
