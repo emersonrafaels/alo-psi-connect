@@ -16,11 +16,8 @@ import { useUserProfile } from "@/hooks/useUserProfile"
 import { useBookingTracking } from "@/hooks/useBookingTracking"
 import { useAuthRedirect } from "@/hooks/useAuthRedirect"
 import { supabase } from "@/integrations/supabase/client"
-import { createClient } from '@supabase/supabase-js'
-import AuthChoiceModal from "@/components/AuthChoiceModal"
+import QuickSignupModal from "@/components/QuickSignupModal"
 
-// UUID fixo para visitantes anônimos
-const GUEST_USER_ID = '11111111-1111-1111-1111-111111111111'
 
 interface BookingData {
   professionalId: string
@@ -40,8 +37,7 @@ const BookingConfirmation = () => {
   const [bookingData, setBookingData] = useState<BookingData | null>(null)
   const { trackEvent } = useBookingTracking(bookingData?.professionalId)
   const [loading, setLoading] = useState(false)
-  const [showAuthChoice, setShowAuthChoice] = useState(false)
-  const [authChoiceMade, setAuthChoiceMade] = useState(false)
+  const [showQuickSignup, setShowQuickSignup] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -69,7 +65,6 @@ const BookingConfirmation = () => {
       const pendingBooking = sessionStorage.getItem('pendingBooking')
       if (pendingBooking) {
         sessionStorage.removeItem('pendingBooking')
-        setAuthChoiceMade(true) // Usuário já fez login, pode prosseguir
       }
     }
   }, [searchParams])
@@ -95,12 +90,17 @@ const BookingConfirmation = () => {
     }
   }, [user, profile])
 
-  // Verificar se precisa mostrar modal de escolha de autenticação
+  const handleSignupSuccess = () => {
+    // User is now authenticated, we can proceed with the booking
+    setShowQuickSignup(false);
+  };
+
+  // Verificar se precisa mostrar modal de cadastro rápido
   useEffect(() => {
-    if (bookingData && !user && !authChoiceMade) {
-      setShowAuthChoice(true)
+    if (bookingData && !user) {
+      setShowQuickSignup(true)
     }
-  }, [bookingData, user, authChoiceMade])
+  }, [bookingData, user])
 
   const getDayLabel = (day: string) => {
     const dayMap: { [key: string]: string } = {
@@ -151,6 +151,12 @@ const BookingConfirmation = () => {
       booking_data: bookingData
     })
     
+    // Check if user needs authentication
+    if (!user) {
+      setShowQuickSignup(true);
+      return;
+    }
+
     if (!formData.name || !formData.email || !formData.phone) {
       await trackEvent({
         event_name: 'booking_form_validation_failed',
@@ -202,8 +208,7 @@ const BookingConfirmation = () => {
       console.log('Professional Data encontrado:', professionalData)
       
       // Preparar dados do agendamento
-      // Sempre incluir user_id: real para usuários logados, UUID fixo para visitantes
-      const agendamentoData: any = {
+      const agendamentoData = {
         professional_id: professionalData.profile_id,
         nome_paciente: formData.name,
         email_paciente: formData.email,
@@ -213,14 +218,10 @@ const BookingConfirmation = () => {
         valor: parseFloat(bookingData.price),
         observacoes: formData.notes || null,
         status: 'pendente',
-        user_id: user?.id || GUEST_USER_ID
+        user_id: user?.id
       }
       
-      if (user?.id) {
-        console.log('Usuário logado - usando user_id real:', user.id)
-      } else {
-        console.log('Usuário visitante - usando UUID fixo:', GUEST_USER_ID)
-      }
+      console.log('Usuário logado - usando user_id real:', user.id)
       
       console.log('Dados para inserir no agendamento:', agendamentoData)
       
@@ -229,8 +230,7 @@ const BookingConfirmation = () => {
       console.log('Current user from auth:', currentUser)
       console.log('auth.uid():', currentUser?.id)
       console.log('user?.id from hook:', user?.id)
-      console.log('Is guest booking (no auth):', !currentUser)
-      console.log('Will use user_id:', user?.id || GUEST_USER_ID)
+      console.log('Will use user_id:', user?.id)
       
       // 1. Create agendamento in database
       console.log('Criando agendamento na base de dados...')
@@ -752,10 +752,10 @@ const BookingConfirmation = () => {
 
       {/* Modal de Escolha de Autenticação */}
       {bookingData && (
-        <AuthChoiceModal
-          isOpen={showAuthChoice}
-          onClose={() => setShowAuthChoice(false)}
-          onContinueAsGuest={() => setAuthChoiceMade(true)}
+        <QuickSignupModal
+          isOpen={showQuickSignup}
+          onClose={() => setShowQuickSignup(false)}
+          onSignupSuccess={handleSignupSuccess}
           bookingData={bookingData}
         />
       )}
