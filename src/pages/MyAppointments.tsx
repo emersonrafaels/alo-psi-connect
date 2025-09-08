@@ -52,22 +52,15 @@ const MyAppointments = () => {
     if (!user) return
 
     try {
-      const { data, error } = await supabase
+      // Query agendamentos and then get professional data separately
+      const { data: appointmentsData, error: appointmentsError } = await supabase
         .from('agendamentos')
-        .select(`
-          *,
-          profissionais:professional_id (
-            display_name,
-            profissao,
-            telefone,
-            email_secundario
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('data_consulta', { ascending: true })
 
-      if (error) {
-        console.error('Erro ao buscar agendamentos:', error)
+      if (appointmentsError) {
+        console.error('Erro ao buscar agendamentos:', appointmentsError)
         toast({
           title: "Erro ao carregar agendamentos",
           description: "Tente novamente em alguns instantes.",
@@ -76,12 +69,29 @@ const MyAppointments = () => {
         return
       }
 
-      const formattedData = data?.map(item => ({
-        ...item,
-        profissionais: Array.isArray(item.profissionais) ? item.profissionais[0] : item.profissionais
-      })) || []
+      // Get professional data for appointments that have professional_id
+      const appointmentsWithProfessionals = await Promise.all(
+        (appointmentsData || []).map(async (appointment) => {
+          if (!appointment.professional_id) {
+            return { ...appointment, profissionais: null }
+          }
 
-      setAppointments(formattedData)
+          const { data: professionalData, error: professionalError } = await supabase
+            .from('profissionais')
+            .select('display_name, profissao, telefone, email_secundario')
+            .eq('profile_id', appointment.professional_id)
+            .single()
+
+          if (professionalError) {
+            console.error('Erro ao buscar dados do profissional:', professionalError)
+            return { ...appointment, profissionais: null }
+          }
+
+          return { ...appointment, profissionais: professionalData }
+        })
+      )
+
+      setAppointments(appointmentsWithProfessionals)
     } catch (error) {
       console.error('Erro:', error)
     } finally {
