@@ -3,9 +3,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AIAssistantConfig } from '@/components/admin/config/AIAssistantConfig';
 import { N8NConfig } from '@/components/admin/config/N8NConfig';
 import { SystemConfig } from '@/components/admin/config/SystemConfig';
-import { Settings, Bot, Webhook, Cog } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { Settings, Bot, Webhook, Cog, Shield } from 'lucide-react';
 
 export default function Configurations() {
+  const { hasRole, loading } = useAdminAuth();
+  const isSuperAdmin = hasRole('super_admin');
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <Settings className="h-6 w-6" />
+            <div>
+              <h1 className="text-2xl font-bold">Configurações do Sistema</h1>
+              <p className="text-muted-foreground">
+                Carregando permissões...
+              </p>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -20,7 +43,7 @@ export default function Configurations() {
         </div>
 
         <Tabs defaultValue="ai" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <TabsTrigger value="ai" className="flex items-center gap-2">
               <Bot className="h-4 w-4" />
               Assistente IA
@@ -29,10 +52,12 @@ export default function Configurations() {
               <Webhook className="h-4 w-4" />
               Integrações N8N
             </TabsTrigger>
-            <TabsTrigger value="system" className="flex items-center gap-2">
-              <Cog className="h-4 w-4" />
-              Sistema Geral
-            </TabsTrigger>
+            {isSuperAdmin && (
+              <TabsTrigger value="system" className="flex items-center gap-2">
+                <Cog className="h-4 w-4" />
+                Sistema Geral
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="ai">
@@ -43,9 +68,33 @@ export default function Configurations() {
             <N8NConfig />
           </TabsContent>
 
-          <TabsContent value="system">
-            <SystemConfig />
-          </TabsContent>
+          {isSuperAdmin ? (
+            <TabsContent value="system">
+              <SystemConfig />
+            </TabsContent>
+          ) : (
+            <TabsContent value="system">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <Shield className="h-8 w-8 text-muted-foreground" />
+                    <div>
+                      <CardTitle>Acesso Restrito</CardTitle>
+                      <CardDescription>
+                        Esta seção está disponível apenas para Super Administradores
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    As configurações gerais do sistema requerem privilégios de Super Administrador 
+                    para garantir a segurança e integridade da plataforma.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </AdminLayout>
