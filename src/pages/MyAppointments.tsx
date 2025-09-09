@@ -32,7 +32,10 @@ interface Appointment {
     display_name: string
     profissao: string
     telefone: string
-    email_secundario: string
+    user_email: string
+    crp_crm: string | null
+    resumo_profissional: string | null
+    linkedin: string | null
   } | null
 }
 
@@ -64,7 +67,7 @@ const MyAppointments = () => {
           .from('agendamentos')
           .select('*')
           .eq('professional_id', professionalIdNumber)
-          .order('data_consulta', { ascending: true })
+          .order('created_at', { ascending: false })
         
         appointmentsData = data
         appointmentsError = error
@@ -74,7 +77,7 @@ const MyAppointments = () => {
           .from('agendamentos')
           .select('*')
           .eq('user_id', user.id)
-          .order('data_consulta', { ascending: true })
+          .order('created_at', { ascending: false })
         
         appointmentsData = data
         appointmentsError = error
@@ -105,7 +108,7 @@ const MyAppointments = () => {
 
             const { data: professionalData, error: professionalError } = await supabase
               .from('profissionais')
-              .select('display_name, profissao, telefone, email_secundario')
+              .select('display_name, profissao, telefone, user_email, crp_crm, resumo_profissional, linkedin')
               .eq('id', appointment.professional_id)
               .single()
 
@@ -242,11 +245,21 @@ const MyAppointments = () => {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
+    return new Date(dateString + 'T00:00:00').toLocaleDateString('pt-BR', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric'
+    })
+  }
+
+  const formatDateTime = (dateTimeString: string) => {
+    return new Date(dateTimeString).toLocaleString('pt-BR', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
     })
   }
 
@@ -459,85 +472,164 @@ const MyAppointments = () => {
                         </CardHeader>
                         
                         <CardContent className="space-y-6">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Data de criação do agendamento */}
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Timer className="h-4 w-4 text-blue-600" />
+                              <span className="text-sm font-medium text-blue-900">Agendamento realizado em:</span>
+                            </div>
+                            <p className="text-sm text-blue-700 font-medium">
+                              {formatDateTime(appointment.created_at)}
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Detalhes da Consulta */}
                             <div className="space-y-4">
-                              <h4 className="font-medium text-foreground">Detalhes da Consulta</h4>
+                              <h4 className="font-semibold text-foreground flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-primary" />
+                                Consulta Agendada
+                              </h4>
                               
                               <div className="space-y-3">
-                                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                                  <Calendar className="h-4 w-4 text-primary" />
-                                  <div>
-                                    <p className="text-sm font-medium">Data</p>
-                                    <p className="text-sm text-muted-foreground">
-                                      {formatDate(appointment.data_consulta)}
-                                    </p>
+                                <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg p-4">
+                                  <div className="space-y-2">
+                                    <div>
+                                      <p className="text-xs font-medium text-primary uppercase tracking-wide">Data da Consulta</p>
+                                      <p className="text-lg font-bold text-foreground">
+                                        {formatDate(appointment.data_consulta)}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-medium text-primary uppercase tracking-wide">Horário</p>
+                                      <p className="text-2xl font-bold text-primary">
+                                        {appointment.horario.substring(0, 5)}
+                                      </p>
+                                    </div>
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                                  <Clock className="h-4 w-4 text-primary" />
-                                  <div>
-                                    <p className="text-sm font-medium">Horário</p>
-                                    <p className="text-sm text-muted-foreground">
-                                      {appointment.horario.substring(0, 5)}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                                  <DollarSign className="h-4 w-4 text-green-600" />
-                                  <div>
-                                    <p className="text-sm font-medium">Valor</p>
-                                    <p className="text-lg font-bold text-green-600">
-                                      {formatPrice(appointment.valor)}
-                                    </p>
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+                                  <div className="flex items-center gap-3">
+                                    <DollarSign className="h-5 w-5 text-green-600" />
+                                    <div>
+                                      <p className="text-xs font-medium text-green-700 uppercase tracking-wide">Valor da Consulta</p>
+                                      <p className="text-xl font-bold text-green-600">
+                                        {formatPrice(appointment.valor)}
+                                      </p>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Contato do Profissional */}
+                            {/* Informações do Profissional/Paciente */}
                             <div className="space-y-4">
-                              <h4 className="font-medium text-foreground">Contato</h4>
+                              <h4 className="font-semibold text-foreground flex items-center gap-2">
+                                <User className="h-4 w-4 text-primary" />
+                                {isProfessional ? 'Dados do Paciente' : 'Profissional'}
+                              </h4>
                               
                               <div className="space-y-3">
-                                {appointment.profissionais?.telefone && (
-                                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                                    <Phone className="h-4 w-4 text-primary" />
-                                    <div>
-                                      <p className="text-sm font-medium">Telefone</p>
-                                      <p className="text-sm text-muted-foreground">
-                                        {appointment.profissionais.telefone}
-                                      </p>
+                                {isProfessional ? (
+                                  <>
+                                    <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nome do Paciente</p>
+                                      <p className="font-semibold text-foreground">{appointment.nome_paciente}</p>
                                     </div>
+                                    <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</p>
+                                      <p className="text-sm text-foreground">{appointment.email_paciente}</p>
+                                    </div>
+                                    <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Telefone</p>
+                                      <p className="text-sm text-foreground">{appointment.telefone_paciente}</p>
+                                    </div>
+                                  </>
+                                ) : (
+                                  appointment.profissionais && (
+                                    <>
+                                      <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Profissional</p>
+                                        <p className="font-semibold text-foreground">{appointment.profissionais.display_name}</p>
+                                        <p className="text-sm text-primary font-medium">{appointment.profissionais.profissao}</p>
+                                      </div>
+                                      
+                                      {appointment.profissionais.crp_crm && (
+                                        <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Registro Profissional</p>
+                                          <p className="text-sm font-medium text-foreground">{appointment.profissionais.crp_crm}</p>
+                                        </div>
+                                      )}
+
+                                      {appointment.profissionais.telefone && (
+                                        <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                          <div className="flex items-center gap-2">
+                                            <Phone className="h-4 w-4 text-primary" />
+                                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Telefone</p>
+                                          </div>
+                                          <p className="text-sm text-foreground">{appointment.profissionais.telefone}</p>
+                                        </div>
+                                      )}
+
+                                      {appointment.profissionais.user_email && (
+                                        <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                          <div className="flex items-center gap-2">
+                                            <Mail className="h-4 w-4 text-primary" />
+                                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">E-mail</p>
+                                          </div>
+                                          <p className="text-sm text-foreground">{appointment.profissionais.user_email}</p>
+                                        </div>
+                                      )}
+                                    </>
+                                  )
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Informações Adicionais */}
+                            <div className="space-y-4">
+                              <h4 className="font-semibold text-foreground flex items-center gap-2">
+                                <AlertCircle className="h-4 w-4 text-primary" />
+                                Informações Adicionais
+                              </h4>
+                              
+                              <div className="space-y-3">
+                                {!isProfessional && appointment.profissionais?.resumo_profissional && (
+                                  <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sobre o Profissional</p>
+                                    <p className="text-sm text-foreground leading-relaxed">
+                                      {appointment.profissionais.resumo_profissional}
+                                    </p>
                                   </div>
                                 )}
 
-                                {appointment.profissionais?.email_secundario && (
-                                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                                    <Mail className="h-4 w-4 text-primary" />
-                                    <div>
-                                      <p className="text-sm font-medium">E-mail</p>
-                                      <p className="text-sm text-muted-foreground">
-                                        {appointment.profissionais.email_secundario}
-                                      </p>
-                                    </div>
+                                {appointment.observacoes && (
+                                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-2">
+                                    <p className="text-xs font-medium text-yellow-700 uppercase tracking-wide">Observações</p>
+                                    <p className="text-sm text-yellow-800 leading-relaxed">
+                                      {appointment.observacoes}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {!isProfessional && appointment.profissionais?.linkedin && (
+                                  <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">LinkedIn</p>
+                                    <a 
+                                      href={appointment.profissionais.linkedin}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-sm text-blue-600 hover:text-blue-800 underline"
+                                    >
+                                      Ver perfil profissional
+                                    </a>
                                   </div>
                                 )}
                               </div>
                             </div>
                           </div>
 
-                          {/* Observações */}
-                          {appointment.observacoes && (
-                            <div className="border-t pt-4">
-                              <h4 className="font-medium text-foreground mb-2">Observações</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {appointment.observacoes}
-                              </p>
-                            </div>
-                          )}
 
                           {/* Ações */}
                           {appointment.status !== 'cancelado' && (
