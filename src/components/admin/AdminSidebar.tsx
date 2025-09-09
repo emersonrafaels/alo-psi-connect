@@ -97,8 +97,6 @@ export const AdminSidebar = () => {
       className={state === "collapsed" ? "w-14" : "w-64"}
       collapsible="icon"
     >
-      <SidebarTrigger className="m-2 self-end" />
-      
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Administração</SidebarGroupLabel>
