@@ -935,7 +935,7 @@ const Professionals = () => {
           <div className="flex justify-between items-center mb-6">
             <div className="text-sm text-muted-foreground space-y-1">
               <p>
-                {filteredProfessionals.length} profissional{filteredProfessionals.length !== 1 ? 'is' : ''} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
+                {filteredProfessionals.length} profissionais encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
               </p>
               {(filters.profissoes.length > 0 || filters.dias.length > 0 || filters.horarioInicio || filters.horarioFim || filters.valorMin || filters.valorMax) && (
                 <p className="text-xs">
