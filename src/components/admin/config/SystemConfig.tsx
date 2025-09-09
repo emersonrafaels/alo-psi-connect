@@ -7,20 +7,20 @@ import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { Save, Settings, Mail, CreditCard, Clock } from 'lucide-react';
 
 export const SystemConfig = () => {
-  const { getConfig, updateConfig, loading, hasPermission } = useSystemConfig(['system', 'email', 'payment']);
+  const { getConfig, updateConfig, loading, hasPermission } = useSystemConfig(['system']);
   const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     // System settings
     auto_cancel_hours: getConfig('system', 'auto_cancel_hours', 24),
     max_file_size_mb: getConfig('system', 'max_file_size_mb', 10),
-    // Email settings
-    sender_name: getConfig('email', 'sender_name', 'AloPsi'),
-    support_email: getConfig('email', 'support_email', 'contato@alopsi.com.br'),
-    // Payment settings
-    mercado_pago_access_token: getConfig('payment', 'mercado_pago_access_token', ''),
-    payment_success_redirect: getConfig('payment', 'payment_success_redirect', '/pagamento-sucesso'),
-    payment_cancel_redirect: getConfig('payment', 'payment_cancel_redirect', '/pagamento-cancelado')
+    // Email settings (moved to separate hook)
+    sender_name: getConfig('system', 'sender_name', 'AloPsi'),
+    support_email: getConfig('system', 'support_email', 'contato@alopsi.com.br'),
+    // Payment settings (moved to separate hook)
+    mercado_pago_access_token: getConfig('system', 'mercado_pago_access_token', ''),
+    payment_success_redirect: getConfig('system', 'payment_success_redirect', '/pagamento-sucesso'),
+    payment_cancel_redirect: getConfig('system', 'payment_cancel_redirect', '/pagamento-cancelado')
   });
 
   const handleSave = async () => {
@@ -31,12 +31,12 @@ export const SystemConfig = () => {
         updateConfig('system', 'auto_cancel_hours', formData.auto_cancel_hours),
         updateConfig('system', 'max_file_size_mb', formData.max_file_size_mb),
         // Email settings
-        updateConfig('email', 'sender_name', formData.sender_name),
-        updateConfig('email', 'support_email', formData.support_email),
+        updateConfig('system', 'sender_name', formData.sender_name),
+        updateConfig('system', 'support_email', formData.support_email),
         // Payment settings
-        updateConfig('payment', 'mercado_pago_access_token', formData.mercado_pago_access_token),
-        updateConfig('payment', 'payment_success_redirect', formData.payment_success_redirect),
-        updateConfig('payment', 'payment_cancel_redirect', formData.payment_cancel_redirect)
+        updateConfig('system', 'mercado_pago_access_token', formData.mercado_pago_access_token),
+        updateConfig('system', 'payment_success_redirect', formData.payment_success_redirect),
+        updateConfig('system', 'payment_cancel_redirect', formData.payment_cancel_redirect)
       ]);
     } finally {
       setSaving(false);

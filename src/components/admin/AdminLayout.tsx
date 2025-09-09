@@ -54,7 +54,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               Painel Administrativo - AloPsi
             </h1>
           </header>
-          <div className="p-6">
+          <div className="p-4">
             {children}
           </div>
         </main>

@@ -102,9 +102,9 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
     const isSuperAdmin = hasRole('super_admin');
     
     let permission = false;
-    if (!allowedCategories) {
-      // If no categories specified, require super_admin
-      permission = isSuperAdmin;
+    if (!allowedCategories || allowedCategories.length === 0) {
+      // If no categories specified, require admin
+      permission = isAdmin;
     } else if (allowedCategories.includes('system')) {
       // System configs require super_admin
       permission = isSuperAdmin;
