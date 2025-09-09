@@ -48,13 +48,20 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar />
-        <main className="flex-1">
-          <header className="h-16 border-b bg-background flex items-center px-6">
-            <h1 className="text-xl font-semibold text-foreground">
-              Painel Administrativo - AloPsi
-            </h1>
+        <main className="flex-1 min-w-0">
+          <header className="sticky top-0 z-40 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-semibold text-foreground">
+                Painel Administrativo
+              </h1>
+              <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="px-2 py-1 bg-primary/10 text-primary rounded-md font-medium">
+                  AloPsi
+                </span>
+              </div>
+            </div>
           </header>
-          <div className="p-4">
+          <div className="p-6 space-y-6">
             {children}
           </div>
         </main>
