@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Bot, Send, User, Loader2, X } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { useSystemConfig } from "@/hooks/useSystemConfig"
 import ReactMarkdown from "react-markdown"
 
 interface Message {
@@ -23,6 +24,8 @@ interface AIAssistantModalProps {
 }
 
 export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssistantModalProps) => {
+  const { getConfig } = useSystemConfig(['n8n_chat', 'ai_assistant']);
+  const [sessionId] = useState(() => crypto.randomUUID());
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -60,25 +63,85 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
     setIsLoading(true)
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-assistant', {
-        body: {
-          message: inputMessage,
-          professionals: professionals
-        }
-      })
+      // Verificar se N8N está habilitado
+      const n8nEnabled = getConfig('n8n_chat', 'enabled', false);
+      const n8nWebhookUrl = getConfig('n8n_chat', 'webhook_url', '');
+      const fallbackOpenAI = getConfig('n8n_chat', 'fallback_openai', true);
+      const timeoutSeconds = getConfig('n8n_chat', 'timeout_seconds', 30);
 
-      if (error) {
-        throw error
+      let response;
+      let success = false;
+
+      // Tentar N8N primeiro se habilitado
+      if (n8nEnabled && n8nWebhookUrl) {
+        try {
+          console.log('Enviando para N8N:', n8nWebhookUrl);
+          
+          // Preparar payload para N8N
+          const payload = {
+            event: "ai_chat_message",
+            timestamp: new Date().toISOString(),
+            session_id: sessionId,
+            user: {
+              message: inputMessage,
+              context: "busca de profissionais",
+              page: window.location.pathname + window.location.search,
+              filters: Object.fromEntries(new URLSearchParams(window.location.search))
+            },
+            professionals: professionals || [],
+            platform: "alopsi"
+          };
+
+          const n8nResponse = await fetch(n8nWebhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!n8nResponse.ok) {
+            throw new Error(`N8N HTTP ${n8nResponse.status}: ${n8nResponse.statusText}`);
+          }
+
+          const n8nData = await n8nResponse.json();
+          response = n8nData.response || n8nData.message || 'Resposta recebida do N8N';
+          success = true;
+          console.log('N8N respondeu com sucesso:', response);
+
+        } catch (n8nError) {
+          console.error('N8N Error:', n8nError);
+          if (!fallbackOpenAI) {
+            throw n8nError;
+          }
+          console.log('Usando OpenAI como fallback...');
+        }
       }
 
-      if (!data.success) {
-        throw new Error(data.error || 'Erro desconhecido')
+      // Fallback para OpenAI se N8N falhou ou não está habilitado
+      if (!success) {
+        const { data, error } = await supabase.functions.invoke('ai-assistant', {
+          body: {
+            message: inputMessage,
+            professionals: professionals
+          }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (!data.success) {
+          throw new Error(data.error || 'Erro desconhecido');
+        }
+
+        response = data.response;
       }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response,
+        content: response,
         timestamp: new Date()
       }
 
