@@ -87,7 +87,20 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
 
   const getConfig = (category: string, key: string, defaultValue: any = null) => {
     const config = configs.find(c => c.category === category && c.key === key);
-    return config ? JSON.parse(config.value) : defaultValue;
+    if (!config) return defaultValue;
+    
+    try {
+      // Se o valor já é um objeto/array, retorna diretamente
+      if (typeof config.value === 'object') {
+        return config.value;
+      }
+      // Tenta fazer parse do JSON
+      return JSON.parse(config.value);
+    } catch (error) {
+      console.warn(`Failed to parse config value for ${category}.${key}:`, config.value);
+      // Se falhar o parse, retorna o valor como string
+      return config.value;
+    }
   };
 
   const getConfigsByCategory = (category: string) => {

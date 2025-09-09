@@ -45,6 +45,7 @@ const Financial = () => {
           nome_paciente,
           valor,
           payment_status,
+          status,
           data_consulta,
           created_at,
           profissionais!inner(display_name)
@@ -53,14 +54,14 @@ const Financial = () => {
 
       if (error) throw error;
 
-      // Calcular estatísticas
+      // Calcular estatísticas - incluir agendamentos confirmados como receita válida
       const totalRevenue = appointments
-        ?.filter(apt => apt.payment_status === 'paid')
+        ?.filter(apt => apt.payment_status === 'paid' || apt.status === 'confirmado')
         ?.reduce((sum, apt) => sum + (apt.valor || 0), 0) || 0;
 
       const thisMonthRevenue = appointments
         ?.filter(apt => 
-          apt.payment_status === 'paid' &&
+          (apt.payment_status === 'paid' || apt.status === 'confirmado') &&
           new Date(apt.data_consulta) >= thisMonthStart &&
           new Date(apt.data_consulta) <= thisMonthEnd
         )
@@ -68,13 +69,13 @@ const Financial = () => {
 
       const lastMonthRevenue = appointments
         ?.filter(apt => 
-          apt.payment_status === 'paid' &&
+          (apt.payment_status === 'paid' || apt.status === 'confirmado') &&
           new Date(apt.data_consulta) >= lastMonthStart &&
           new Date(apt.data_consulta) <= lastMonthEnd
         )
         ?.reduce((sum, apt) => sum + (apt.valor || 0), 0) || 0;
 
-      const paidAppointments = appointments?.filter(apt => apt.payment_status === 'paid').length || 0;
+      const paidAppointments = appointments?.filter(apt => apt.payment_status === 'paid' || apt.status === 'confirmado').length || 0;
       const pendingPayments = appointments?.filter(apt => apt.payment_status === 'pending_payment').length || 0;
       const failedPayments = appointments?.filter(apt => apt.payment_status === 'failed').length || 0;
       // Note: refunded não existe no enum atual, mas mantemos para futuro
