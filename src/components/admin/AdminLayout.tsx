@@ -61,8 +61,10 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               </div>
             </div>
           </header>
-          <main className="flex-1 p-6 space-y-6 overflow-auto">
-            {children}
+          <main className="flex-1 overflow-auto">
+            <div className="p-4 space-y-4">
+              {children}
+            </div>
           </main>
         </div>
       </div>
