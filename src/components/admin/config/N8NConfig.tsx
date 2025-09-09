@@ -10,7 +10,7 @@ import { Save, TestTube2, Webhook } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export const N8NConfig = () => {
-  const { getConfig, updateConfig, loading } = useSystemConfig();
+  const { getConfig, updateConfig, loading, hasPermission } = useSystemConfig(['n8n']);
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState<string | null>(null);
@@ -104,6 +104,24 @@ export const N8NConfig = () => {
 
   if (loading) {
     return <div className="p-6">Carregando configurações...</div>;
+  }
+
+  if (!hasPermission) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Acesso Restrito</CardTitle>
+          <CardDescription>
+            Você não tem permissão para acessar as configurações do N8N
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Esta seção está disponível apenas para Administradores
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

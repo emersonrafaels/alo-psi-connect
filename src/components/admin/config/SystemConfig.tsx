@@ -7,7 +7,7 @@ import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { Save, Settings, Mail, CreditCard, Clock } from 'lucide-react';
 
 export const SystemConfig = () => {
-  const { getConfig, updateConfig, loading } = useSystemConfig();
+  const { getConfig, updateConfig, loading, hasPermission } = useSystemConfig(['system', 'email', 'payment']);
   const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -45,6 +45,24 @@ export const SystemConfig = () => {
 
   if (loading) {
     return <div className="p-6">Carregando configurações...</div>;
+  }
+
+  if (!hasPermission) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Acesso Restrito</CardTitle>
+          <CardDescription>
+            Você não tem permissão para acessar as configurações do sistema
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Esta seção está disponível apenas para Super Administradores
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

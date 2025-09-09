@@ -23,7 +23,7 @@ const GPT_MODELS = [
 ];
 
 export const AIAssistantConfig = () => {
-  const { getConfig, updateConfig, loading } = useSystemConfig();
+  const { getConfig, updateConfig, loading, hasPermission } = useSystemConfig(['ai_assistant']);
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -77,6 +77,24 @@ export const AIAssistantConfig = () => {
 
   if (loading) {
     return <div className="p-6">Carregando configurações...</div>;
+  }
+
+  if (!hasPermission) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Acesso Restrito</CardTitle>
+          <CardDescription>
+            Você não tem permissão para acessar as configurações do assistente de IA
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Esta seção está disponível apenas para Administradores
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
