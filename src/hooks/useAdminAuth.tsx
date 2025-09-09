@@ -53,7 +53,19 @@ export const useAdminAuth = (): AdminAuthData => {
     checkAdminRoles();
   }, [user]);
 
-  const hasRole = (role: UserRole) => roles.includes(role);
+  const hasRole = (role: UserRole) => {
+    // Implement role hierarchy: super_admin > admin > moderator
+    if (role === 'moderator') {
+      return roles.includes('moderator') || roles.includes('admin') || roles.includes('super_admin');
+    }
+    if (role === 'admin') {
+      return roles.includes('admin') || roles.includes('super_admin');
+    }
+    if (role === 'super_admin') {
+      return roles.includes('super_admin');
+    }
+    return false;
+  };
 
   return {
     isAdmin,
