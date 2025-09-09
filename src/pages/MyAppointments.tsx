@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import { Calendar, Clock, User, MapPin, Phone, Mail, DollarSign, CalendarX, RotateCcw, AlertCircle, CheckCircle, XCircle, CreditCard, Timer } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
+import { useUserType } from "@/hooks/useUserType"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useNavigate } from "react-router-dom"
@@ -40,6 +41,7 @@ const MyAppointments = () => {
   const [loading, setLoading] = useState(true)
   const [cancelingId, setCancelingId] = useState<string | null>(null)
   const { user } = useAuth()
+  const { isProfessional, professionalId } = useUserType()
   const { toast } = useToast()
   const navigate = useNavigate()
 
@@ -53,12 +55,29 @@ const MyAppointments = () => {
     if (!user) return
 
     try {
-      // Query agendamentos and then get professional data separately
-      const { data: appointmentsData, error: appointmentsError } = await supabase
-        .from('agendamentos')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('data_consulta', { ascending: true })
+      let appointmentsData, appointmentsError
+
+      if (isProfessional && professionalId) {
+        // If user is a professional, get appointments for their professional profile
+        const { data, error } = await supabase
+          .from('agendamentos')
+          .select('*')
+          .eq('professional_id', professionalId)
+          .order('data_consulta', { ascending: true })
+        
+        appointmentsData = data
+        appointmentsError = error
+      } else {
+        // If user is a patient, get their appointments
+        const { data, error } = await supabase
+          .from('agendamentos')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('data_consulta', { ascending: true })
+        
+        appointmentsData = data
+        appointmentsError = error
+      }
 
       if (appointmentsError) {
         console.error('Erro ao buscar agendamentos:', appointmentsError)
@@ -73,22 +92,29 @@ const MyAppointments = () => {
       // Get professional data for appointments that have professional_id
       const appointmentsWithProfessionals = await Promise.all(
         (appointmentsData || []).map(async (appointment) => {
-          if (!appointment.professional_id) {
+          if (isProfessional) {
+            // For professionals viewing their appointments, we don't need professional data
+            // but we might want patient data in the future
             return { ...appointment, profissionais: null }
+          } else {
+            // For patients, get professional data
+            if (!appointment.professional_id) {
+              return { ...appointment, profissionais: null }
+            }
+
+            const { data: professionalData, error: professionalError } = await supabase
+              .from('profissionais')
+              .select('display_name, profissao, telefone, email_secundario')
+              .eq('profile_id', appointment.professional_id)
+              .single()
+
+            if (professionalError) {
+              console.error('Erro ao buscar dados do profissional:', professionalError)
+              return { ...appointment, profissionais: null }
+            }
+
+            return { ...appointment, profissionais: professionalData }
           }
-
-          const { data: professionalData, error: professionalError } = await supabase
-            .from('profissionais')
-            .select('display_name, profissao, telefone, email_secundario')
-            .eq('profile_id', appointment.professional_id)
-            .single()
-
-          if (professionalError) {
-            console.error('Erro ao buscar dados do profissional:', professionalError)
-            return { ...appointment, profissionais: null }
-          }
-
-          return { ...appointment, profissionais: professionalData }
         })
       )
 
@@ -342,10 +368,13 @@ const MyAppointments = () => {
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Meus Agendamentos 📅
+              {isProfessional ? 'Minha Agenda Profissional 📅' : 'Meus Agendamentos 📅'}
             </h1>
             <p className="text-muted-foreground">
-              Gerencie suas consultas, cancele ou reagende quando necessário
+              {isProfessional 
+                ? 'Visualize e gerencie as consultas agendadas com você' 
+                : 'Gerencie suas consultas, cancele ou reagende quando necessário'
+              }
             </p>
           </div>
 
@@ -408,7 +437,10 @@ const MyAppointments = () => {
                           <div className="flex items-center justify-between">
                             <CardTitle className="flex items-center gap-2">
                               <User className="h-5 w-5 text-primary" />
-                              {appointment.profissionais?.display_name}
+                              {isProfessional 
+                                ? appointment.nome_paciente 
+                                : appointment.profissionais?.display_name
+                              }
                             </CardTitle>
                             <div className="flex items-center gap-2">
                               {getStatusIcon(appointment)}
@@ -418,7 +450,10 @@ const MyAppointments = () => {
                             </div>
                           </div>
                           <CardDescription>
-                            {appointment.profissionais?.profissao}
+                            {isProfessional 
+                              ? `Paciente: ${appointment.email_paciente}` 
+                              : appointment.profissionais?.profissao
+                            }
                           </CardDescription>
                         </CardHeader>
                         

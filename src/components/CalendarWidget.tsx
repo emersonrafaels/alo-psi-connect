@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { supabase } from "@/integrations/supabase/client"
 import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -26,6 +27,8 @@ interface CalendarWidgetProps {
 export const CalendarWidget = ({ sessions, professionalId, professionalName, price }: CalendarWidgetProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [selectedTime, setSelectedTime] = useState<string>()
+  const [availableTimes, setAvailableTimes] = useState<any[]>([])
+  const [loadingTimes, setLoadingTimes] = useState(false)
   const navigate = useNavigate()
 
   // Generate available dates for the next 30 days
@@ -73,15 +76,18 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
 
   const availableDates = generateAvailableDates()
 
-  // Generate 30-minute time slots from session ranges
-  const generateTimeSlots = (startTime: string, endTime: string) => {
+  // Generate time slots based on consultation duration (50 minutes)
+  const generateTimeSlots = (startTime: string, endTime: string, consultationDuration: number = 50) => {
     const slots = []
     const start = new Date(`2000-01-01T${startTime}`)
     const end = new Date(`2000-01-01T${endTime}`)
     
-    // Generate slots every 30 minutes
+    // Calculate the last possible start time (end time minus consultation duration)
+    const lastPossibleStart = new Date(end.getTime() - consultationDuration * 60 * 1000)
+    
+    // Generate slots every 30 minutes until we reach the last possible start time
     const current = new Date(start)
-    while (current < end) {
+    while (current <= lastPossibleStart) {
       const timeString = current.toTimeString().substring(0, 5) // HH:MM format
       slots.push(timeString)
       current.setMinutes(current.getMinutes() + 30) // 30-minute intervals
@@ -90,8 +96,8 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
     return slots
   }
 
-  // Get available times for selected date
-  const getAvailableTimesForDate = (date: Date) => {
+  // Get available times for selected date, filtering out occupied slots
+  const getAvailableTimesForDate = async (date: Date) => {
     const dayName = format(date, 'EEEE', { locale: ptBR }).toLowerCase()
     
     const dayCodeToNumber = {
@@ -113,18 +119,34 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
       return sessionDayNumber === currentDayNumber
     })
     
+    // Check for existing appointments on this date
+    const dateString = format(date, 'yyyy-MM-dd')
+    const { data: existingAppointments } = await supabase
+      .from('agendamentos')
+      .select('horario, status, payment_status')
+      .eq('professional_id', professionalId)
+      .eq('data_consulta', dateString)
+      .in('status', ['pendente', 'confirmado'])
+    
+    const occupiedTimes = new Set(
+      (existingAppointments || []).map(apt => apt.horario.substring(0, 5))
+    )
+    
     // Generate time slots for each session range
     const allTimeSlots = []
     daysSessions.forEach(session => {
-      const slots = generateTimeSlots(session.start_time, session.end_time)
+      const slots = generateTimeSlots(session.start_time, session.end_time, 50)
       slots.forEach(slot => {
-        allTimeSlots.push({
-          id: `${session.id}-${slot}`,
-          day: session.day,
-          start_time: slot,
-          end_time: slot, // We'll calculate end time based on 50-minute duration
-          time_slot: session.time_slot
-        })
+        // Only add if not occupied
+        if (!occupiedTimes.has(slot)) {
+          allTimeSlots.push({
+            id: `${session.id}-${slot}`,
+            day: session.day,
+            start_time: slot,
+            end_time: slot,
+            time_slot: session.time_slot
+          })
+        }
       })
     })
     
@@ -159,7 +181,18 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
     navigate(`/confirmacao-agendamento?${params.toString()}`)
   }
 
-  const selectedTimes = selectedDate ? getAvailableTimesForDate(selectedDate) : []
+  // Load available times when date is selected
+  useEffect(() => {
+    if (selectedDate) {
+      setLoadingTimes(true)
+      getAvailableTimesForDate(selectedDate).then(times => {
+        setAvailableTimes(times)
+        setLoadingTimes(false)
+      })
+    } else {
+      setAvailableTimes([])
+    }
+  }, [selectedDate, professionalId])
 
   return (
     <div className="space-y-6 max-w-md mx-auto">
@@ -227,14 +260,14 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
       )}
 
       {/* Available Times */}
-      {selectedDate && selectedTimes.length > 0 && (
+      {selectedDate && !loadingTimes && availableTimes.length > 0 && (
         <div className="bg-card p-4 rounded-xl border shadow-sm space-y-4">
           <h4 className="font-medium text-center flex items-center justify-center gap-2 text-foreground">
             <Clock className="h-4 w-4 text-primary" />
             Horários Disponíveis
           </h4>
           <div className="grid grid-cols-3 gap-2">
-            {selectedTimes.map((session) => (
+            {availableTimes.map((session) => (
               <Button
                 key={session.id}
                 variant={selectedTime === session.start_time ? "default" : "outline"}
@@ -254,8 +287,17 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
         </div>
       )}
 
+      {/* Loading times */}
+      {selectedDate && loadingTimes && (
+        <div className="text-center p-4 bg-muted/50 rounded-xl border">
+          <p className="text-sm text-muted-foreground">
+            🔄 Carregando horários disponíveis...
+          </p>
+        </div>
+      )}
+
       {/* No times available */}
-      {selectedDate && selectedTimes.length === 0 && (
+      {selectedDate && !loadingTimes && availableTimes.length === 0 && (
         <div className="text-center p-4 bg-muted/50 rounded-xl border">
           <p className="text-sm text-muted-foreground">
             ⚠️ Nenhum horário disponível para esta data
