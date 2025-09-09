@@ -40,6 +40,10 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminAnalytics from "@/pages/admin/Analytics";
 import AdminUsers from "@/pages/admin/Users";
 import AdminConfigurations from "@/pages/admin/Configurations";
+import AdminProfessionals from "@/pages/admin/Professionals";
+import AdminAppointments from "@/pages/admin/Appointments";
+import AdminFinancial from "@/pages/admin/Financial";
+import AdminRoles from "@/pages/admin/Roles";
 
 import "./App.css";
 
@@ -98,6 +102,10 @@ const App: React.FC = () => {
                   <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
                   <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
                   <Route path="/admin/configuracoes" element={<AdminLayout><AdminConfigurations /></AdminLayout>} />
+                  <Route path="/admin/professionals" element={<AdminLayout><AdminProfessionals /></AdminLayout>} />
+                  <Route path="/admin/appointments" element={<AdminLayout><AdminAppointments /></AdminLayout>} />
+                  <Route path="/admin/financial" element={<AdminLayout><AdminFinancial /></AdminLayout>} />
+                  <Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />
                   
                   <Route path="*" element={<NotFound />} />
                 </Routes>
