@@ -58,7 +58,7 @@ export type Database = {
           nome_paciente: string
           observacoes: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
-          professional_id: string | null
+          professional_id: number
           status: string
           stripe_session_id: string | null
           telefone_paciente: string
@@ -76,7 +76,7 @@ export type Database = {
           nome_paciente: string
           observacoes?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
-          professional_id?: string | null
+          professional_id: number
           status?: string
           stripe_session_id?: string | null
           telefone_paciente: string
@@ -94,7 +94,7 @@ export type Database = {
           nome_paciente?: string
           observacoes?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
-          professional_id?: string | null
+          professional_id?: number
           status?: string
           stripe_session_id?: string | null
           telefone_paciente?: string
@@ -104,10 +104,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "agendamentos_professional_id_fkey"
+            foreignKeyName: "fk_agendamentos_professional_id"
             columns: ["professional_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "profissionais"
             referencedColumns: ["id"]
           },
         ]

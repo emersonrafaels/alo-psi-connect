@@ -59,10 +59,11 @@ const MyAppointments = () => {
 
       if (isProfessional && professionalId) {
         // If user is a professional, get appointments for their professional profile
+        const professionalIdNumber = parseInt(professionalId)
         const { data, error } = await supabase
           .from('agendamentos')
           .select('*')
-          .eq('professional_id', professionalId)
+          .eq('professional_id', professionalIdNumber)
           .order('data_consulta', { ascending: true })
         
         appointmentsData = data
@@ -105,7 +106,7 @@ const MyAppointments = () => {
             const { data: professionalData, error: professionalError } = await supabase
               .from('profissionais')
               .select('display_name, profissao, telefone, email_secundario')
-              .eq('profile_id', appointment.professional_id)
+              .eq('id', appointment.professional_id)
               .single()
 
             if (professionalError) {

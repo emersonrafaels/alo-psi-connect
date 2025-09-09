@@ -121,10 +121,12 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
     
     // Check for existing appointments on this date
     const dateString = format(date, 'yyyy-MM-dd')
+    // Convert professionalId to number for the query
+    const professionalIdNumber = parseInt(professionalId)
     const { data: existingAppointments } = await supabase
       .from('agendamentos')
       .select('horario, status, payment_status')
-      .eq('professional_id', professionalId)
+      .eq('professional_id', professionalIdNumber)
       .eq('data_consulta', dateString)
       .in('status', ['pendente', 'confirmado'])
     

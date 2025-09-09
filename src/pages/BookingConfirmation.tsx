@@ -209,7 +209,7 @@ const BookingConfirmation = () => {
       
       // Preparar dados do agendamento
       const agendamentoData = {
-        professional_id: professionalData.profile_id,
+        professional_id: parseInt(bookingData.professionalId),
         nome_paciente: formData.name,
         email_paciente: formData.email,
         telefone_paciente: formData.phone,
