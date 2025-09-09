@@ -17,7 +17,7 @@ const Blog = () => {
       title: "Como Identificar e Superar a Síndrome do Impostor na Universidade",
       excerpt: "Você já se sentiu como se não merecesse estar na universidade? A síndrome do impostor afeta muitos estudantes...",
       date: "15 Janeiro, 2025",
-      readTime: "7 min read",
+      readTime: "7 min de leitura",
       author: "Dra. Marina Silva",
       tags: ["Síndrome do Impostor", "Autoestima", "Universidade"]
     },
@@ -25,7 +25,7 @@ const Blog = () => {
       title: "5 Técnicas de Mindfulness para Reduzir a Ansiedade Acadêmica",
       excerpt: "Descubra práticas simples de mindfulness que podem ser aplicadas no dia a dia universitário para diminuir a ansiedade...",
       date: "12 Janeiro, 2025", 
-      readTime: "5 min read",
+      readTime: "5 min de leitura",
       author: "Dr. Carlos Mendes",
       tags: ["Mindfulness", "Ansiedade", "Técnicas"]
     },
@@ -33,7 +33,7 @@ const Blog = () => {
       title: "Sinais de Que Você Precisa Buscar Ajuda Psicológica",
       excerpt: "Reconhecer quando é hora de procurar apoio profissional é fundamental para sua saúde mental...",
       date: "10 Janeiro, 2025",
-      readTime: "6 min read",
+      readTime: "6 min de leitura",
       author: "Dra. Ana Paula Costa",
       tags: ["Saúde Mental", "Terapia", "Autocuidado"]
     },
@@ -41,7 +41,7 @@ const Blog = () => {
       title: "Gerenciando o Estresse Durante o Período de Provas",
       excerpt: "Estratégias práticas para manter o equilíbrio emocional durante os momentos mais intensos do semestre...",
       date: "8 Janeiro, 2025",
-      readTime: "8 min read",
+      readTime: "8 min de leitura",
       author: "Dr. Roberto Oliveira",
       tags: ["Estresse", "Provas", "Estratégias"]
     },
@@ -49,7 +49,7 @@ const Blog = () => {
       title: "O Impacto das Redes Sociais na Saúde Mental dos Universitários",
       excerpt: "Como o uso excessivo das redes sociais pode afetar seu bem-estar e dicas para um uso mais consciente...",
       date: "5 Janeiro, 2025",
-      readTime: "6 min read",
+      readTime: "6 min de leitura",
       author: "Dra. Fernanda Ribeiro",
       tags: ["Redes Sociais", "Bem-estar", "Digital"]
     }
@@ -91,7 +91,7 @@ const Blog = () => {
                 <span>•</span>
                 <span>15 Janeiro, 2025</span>
                 <span>•</span>
-                <span>10 min read</span>
+                <span>10 min de leitura</span>
               </div>
               <p className="text-muted-foreground mb-6 text-lg leading-relaxed">
                 A ansiedade acadêmica é uma realidade que afeta milhões de estudantes universitários no Brasil. 

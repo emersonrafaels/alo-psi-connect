@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNewsletter } from "@/hooks/useNewsletter";
 import { useState } from "react";
-import { Mail, MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, MessageCircle, Heart } from "lucide-react";
+import { Mail, MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, MessageCircle, Heart, MessageCircleIcon } from "lucide-react";
 
 const Footer = () => {
   const { subscribe, isLoading } = useNewsletter();
@@ -130,7 +130,7 @@ const Footer = () => {
               </div>
               <p>CNPJ: 12.345.678/0001-90, Brasil</p>
               <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
+                <MessageCircleIcon className="w-4 h-4" />
                 <a href="tel:+5511947994163" className="hover:opacity-100 transition-opacity">
                   (11) 94799-4163
                 </a>
