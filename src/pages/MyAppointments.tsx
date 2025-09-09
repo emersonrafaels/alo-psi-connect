@@ -283,14 +283,16 @@ const MyAppointments = () => {
     
     return appointments.filter(appointment => {
       const appointmentDateTime = new Date(`${appointment.data_consulta}T${appointment.horario}`)
+      const paymentStatus = getPaymentStatus(appointment)
+      const isCancelled = appointment.status === 'cancelado' || paymentStatus === 'expired'
       
       switch (status) {
         case 'upcoming':
-          return appointmentDateTime > now && appointment.status !== 'cancelado'
+          return appointmentDateTime > now && !isCancelled
         case 'past':
-          return appointmentDateTime <= now && appointment.status !== 'cancelado'
+          return appointmentDateTime <= now && !isCancelled
         case 'cancelled':
-          return appointment.status === 'cancelado'
+          return isCancelled
         default:
           return true
       }
