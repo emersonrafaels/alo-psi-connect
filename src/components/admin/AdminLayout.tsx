@@ -48,7 +48,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar />
-        <main className="flex-1 min-w-0">
+        <div className="flex-1 flex flex-col min-w-0">
           <header className="sticky top-0 z-40 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-6 shadow-sm">
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-semibold text-foreground">
@@ -61,10 +61,10 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               </div>
             </div>
           </header>
-          <div className="p-6 space-y-6">
+          <main className="flex-1 p-6 space-y-6 overflow-auto">
             {children}
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </SidebarProvider>
   );
