@@ -81,7 +81,7 @@ const PaymentSuccess = () => {
           const { data: notifyResult, error: notifyError } = await supabase.functions.invoke('notify-booking-status', {
             body: {
               tipo_evento: 'pagamento_sucesso',
-              cliente: {
+              paciente: {
                 nome: data.nome_paciente,
                 email: data.email_paciente,
                 telefone: data.telefone_paciente || 'N/A',
@@ -99,7 +99,7 @@ const PaymentSuccess = () => {
                 status: 'confirmado',
                 id: data.id
               },
-              notificacao_para: ['cliente', 'profissional', 'admin']
+              notificacao_para: ['paciente', 'profissional', 'admin']
             }
           });
           

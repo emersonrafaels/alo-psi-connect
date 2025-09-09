@@ -7,7 +7,7 @@ const corsHeaders = {
 
 interface NotificationRequest {
   tipo_evento: 'agendamento_sucesso' | 'agendamento_erro' | 'pagamento_sucesso' | 'pagamento_erro';
-  cliente: {
+  paciente: {
     nome: string;
     email: string;
     telefone: string;

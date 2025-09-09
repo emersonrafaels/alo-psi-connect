@@ -257,7 +257,7 @@ const BookingConfirmation = () => {
           const { data: notifyResult, error: notifyError } = await supabase.functions.invoke('notify-booking-status', {
             body: {
               tipo_evento: 'agendamento_erro',
-              cliente: {
+              paciente: {
                 nome: formData.name,
                 email: formData.email,
                 telefone: formData.phone,
@@ -323,7 +323,7 @@ const BookingConfirmation = () => {
         const { data: notifyResult, error: notifyError } = await supabase.functions.invoke('notify-booking-status', {
           body: {
             tipo_evento: 'agendamento_sucesso',
-            cliente: {
+            paciente: {
               nome: formData.name,
               email: formData.email,
               telefone: formData.phone,
@@ -341,7 +341,7 @@ const BookingConfirmation = () => {
               status: 'pendente',
               id: agendamento.id
             },
-            notificacao_para: ['cliente', 'profissional', 'admin']
+            notificacao_para: ['paciente', 'profissional', 'admin']
           }
         });
         
@@ -376,7 +376,7 @@ const BookingConfirmation = () => {
           await supabase.functions.invoke('notify-booking-status', {
             body: {
               tipo_evento: 'pagamento_erro',
-              cliente: {
+              paciente: {
                 nome: formData.name,
                 email: formData.email,
                 telefone: formData.phone,

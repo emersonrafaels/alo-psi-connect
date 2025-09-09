@@ -190,11 +190,15 @@ export default function AdminUsers() {
                       <p className="font-medium">{user.nome}</p>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
-                    <Badge 
-                      variant={user.tipo_usuario === 'profissional' ? 'default' : 'secondary'}
-                    >
-                      {user.tipo_usuario}
-                    </Badge>
+                    {user.tipo_usuario === 'paciente' && (
+                      <Badge variant="secondary">Paciente</Badge>
+                    )}
+                    {user.tipo_usuario === 'profissional' && (
+                      <Badge variant="outline">Profissional</Badge>
+                    )}
+                    {user.tipo_usuario === 'admin' && (
+                      <Badge variant="default">Administrador</Badge>
+                    )}
                   </div>
                   
                   <div className="flex items-center gap-2 mb-2 ml-14">
