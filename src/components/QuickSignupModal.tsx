@@ -129,7 +129,7 @@ const QuickSignupModal: React.FC<QuickSignupModalProps> = ({
               user_id: authData.user.id,
               nome: formData.name,
               email: formData.email,
-              tipo_usuario: 'paciente'
+              tipo_usuario: 'cliente'
             });
 
           if (profileError) {

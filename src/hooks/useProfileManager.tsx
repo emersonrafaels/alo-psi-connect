@@ -42,7 +42,7 @@ export const useProfileManager = () => {
           user_id: user.id,
           email: user.email || '',
           nome: data.nome || user.user_metadata?.full_name || '',
-          tipo_usuario: 'paciente',
+          tipo_usuario: 'cliente',
           ...cleanData,
           updated_at: new Date().toISOString()
         }, {

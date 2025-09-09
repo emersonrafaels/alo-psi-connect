@@ -114,9 +114,9 @@ export default function AdminUsers() {
     );
   }
 
-  const pacientes = users.filter(user => user.tipo_usuario === 'paciente');
+  const clientes = users.filter(user => user.tipo_usuario === 'cliente');
   const profissionais = users.filter(user => user.tipo_usuario === 'profissional');
-  const admins = users.filter(user => user.roles && user.roles.length > 0);
+  const adminsWithRoles = users.filter(user => user.roles && user.roles.length > 0);
 
   return (
     <div className="space-y-6">
@@ -140,11 +140,11 @@ export default function AdminUsers() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pacientes</CardTitle>
+            <CardTitle className="text-sm font-medium">Clientes</CardTitle>
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pacientes.length}</div>
+            <div className="text-2xl font-bold">{clientes.length}</div>
           </CardContent>
         </Card>
 
@@ -164,7 +164,7 @@ export default function AdminUsers() {
             <Settings className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{admins.length}</div>
+            <div className="text-2xl font-bold">{adminsWithRoles.length}</div>
           </CardContent>
         </Card>
       </div>
