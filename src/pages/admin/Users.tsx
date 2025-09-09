@@ -114,7 +114,7 @@ export default function AdminUsers() {
     );
   }
 
-  const clientes = users.filter(user => user.tipo_usuario === 'cliente');
+  const pacientes = users.filter(user => user.tipo_usuario === 'paciente');
   const profissionais = users.filter(user => user.tipo_usuario === 'profissional');
   const adminsWithRoles = users.filter(user => user.roles && user.roles.length > 0);
 
@@ -140,11 +140,11 @@ export default function AdminUsers() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Clientes</CardTitle>
+            <CardTitle className="text-sm font-medium">Pacientes</CardTitle>
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{clientes.length}</div>
+            <div className="text-2xl font-bold">{pacientes.length}</div>
           </CardContent>
         </Card>
 

@@ -67,7 +67,7 @@ const PatientForm = () => {
           genero: formData.genero,
           cpf: formData.cpf,
           como_conheceu: formData.comoConheceu,
-          tipo_usuario: 'cliente'
+          tipo_usuario: 'paciente'
         })
         .select()
         .single();
