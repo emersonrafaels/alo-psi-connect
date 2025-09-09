@@ -94,12 +94,13 @@ export const AdminSidebar = () => {
 
   return (
     <Sidebar
-      className={state === "collapsed" ? "w-14" : "w-64"}
       collapsible="icon"
     >
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Administração</SidebarGroupLabel>
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
+            Administração
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {filteredItems.map((item) => (
@@ -114,8 +115,8 @@ export const AdminSidebar = () => {
                           : "hover:bg-muted/50"
                       }
                     >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {state !== "collapsed" && <span>{item.title}</span>}
+                      <item.icon className="h-4 w-4" />
+                      <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
