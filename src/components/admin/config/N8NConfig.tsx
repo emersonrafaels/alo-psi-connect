@@ -279,17 +279,17 @@ export const N8NConfig = () => {
             'professional.display_name': '"Dr. Maria Santos"',
             
             // Chat related
-            'timestamp': `"${new Date().toISOString()}"`,
-            'session_id': '"test-session-' + Date.now() + '"',
-            'user_message': '"Olá, preciso de ajuda para encontrar um psicólogo"',
-            'context': '"busca-profissionais"',
-            'page': '"/professionals"',
-            'filters': '"{\\"specialty\\": \\"Psicologia\\", \\"location\\": \\"São Paulo\\"}"',
+            'timestamp': `${JSON.stringify(new Date().toISOString())}`,
+            'session_id': JSON.stringify(`test-session-${Date.now()}`),
+            'user_message': JSON.stringify("Olá, preciso de ajuda para encontrar um psicólogo"),
+            'context': JSON.stringify("busca-profissionais"),
+            'page': JSON.stringify("/professionals"),
+            'filters': JSON.stringify(JSON.stringify({"specialty": "Psicologia", "location": "São Paulo"})),
             'professionals': '[]'
           };
           
           // Return the test value if found, otherwise return a generic string
-          return testValues[varName] || '"test_value"';
+          return testValues[varName] || JSON.stringify("test_value");
         });
         
         console.log('Processed template for testing:', processedTemplate);
