@@ -91,6 +91,29 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
     const config = configs.find(c => c.category === category && c.key === key);
     if (!config) return defaultValue;
     
+    // Para campos de template, sempre retornar como string formatada
+    if (key.endsWith('_template')) {
+      // Se o valor já é um objeto/array, converte para string JSON formatada
+      if (typeof config.value === 'object') {
+        return JSON.stringify(config.value, null, 2);
+      }
+      
+      // Se é uma string que parece com JSON, faz parse e re-stringify para formatar
+      if (typeof config.value === 'string' && (config.value.startsWith('{') || config.value.startsWith('['))) {
+        try {
+          const parsed = JSON.parse(config.value);
+          return JSON.stringify(parsed, null, 2);
+        } catch (error) {
+          console.warn(`Failed to parse JSON template value for ${category}.${key}:`, config.value);
+          return config.value;
+        }
+      }
+      
+      // Para outros valores, retorna como string
+      return String(config.value);
+    }
+    
+    // Para configurações não-template, mantém a lógica original
     // Se o valor já é um objeto/array, retorna diretamente
     if (typeof config.value === 'object') {
       return config.value;
