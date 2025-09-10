@@ -269,27 +269,28 @@ export const N8NConfig = () => {
           // Map variables to appropriate test values
           const testValues: Record<string, any> = {
             // Appointment related
-            'appointment.id': '"test-appointment-123"',
-            'appointment.nome_paciente': '"João Silva"',
-            'appointment.email_paciente': '"joao@exemplo.com"',
-            'appointment.data_consulta': '"2024-01-15"',
-            'appointment.horario': '"14:30"',
-            'appointment.valor': '150.00',
-            'appointment.payment_status': '"paid"',
-            'professional.display_name': '"Dr. Maria Santos"',
+            'appointment.id': "test-appointment-123",
+            'appointment.nome_paciente': "João Silva",
+            'appointment.email_paciente': "joao@exemplo.com",
+            'appointment.data_consulta': "2024-01-15",
+            'appointment.horario': "14:30",
+            'appointment.valor': 150.00,
+            'appointment.payment_status': "paid",
+            'professional.display_name': "Dr. Maria Santos",
             
             // Chat related
-            'timestamp': `${JSON.stringify(new Date().toISOString())}`,
-            'session_id': JSON.stringify(`test-session-${Date.now()}`),
-            'user_message': JSON.stringify("Olá, preciso de ajuda para encontrar um psicólogo"),
-            'context': JSON.stringify("busca-profissionais"),
-            'page': JSON.stringify("/professionals"),
-            'filters': JSON.stringify(JSON.stringify({"specialty": "Psicologia", "location": "São Paulo"})),
-            'professionals': '[]'
+            'timestamp': new Date().toISOString(),
+            'session_id': `test-session-${Date.now()}`,
+            'user_message': "Olá, preciso de ajuda para encontrar um psicólogo",
+            'context': "busca-profissionais",
+            'page': "/professionals",
+            'filters': {"specialty": "Psicologia", "location": "São Paulo"},
+            'professionals': []
           };
           
-          // Return the test value if found, otherwise return a generic string
-          return testValues[varName] || JSON.stringify("test_value");
+          // Return the test value properly JSON stringified
+          const value = testValues[varName];
+          return value !== undefined ? JSON.stringify(value) : JSON.stringify("test_value");
         });
         
         console.log('Processed template for testing:', processedTemplate);
