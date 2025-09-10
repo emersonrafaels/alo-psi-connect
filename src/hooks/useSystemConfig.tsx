@@ -64,8 +64,10 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
         .upsert({
           category,
           key,
-          value: JSON.stringify(value),
+          value: typeof value === 'string' ? value : JSON.stringify(value),
           updated_by: (await supabase.auth.getUser()).data.user?.id
+        }, {
+          onConflict: 'category,key'
         });
 
       if (error) throw error;
