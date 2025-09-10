@@ -138,9 +138,29 @@ export const N8NConfig = () => {
           if (!url) return { type, status: 'not_configured' };
           
           try {
-            const response = await fetch(url, { method: 'HEAD' });
-            return { type, status: response.ok ? 'online' : 'offline' };
-          } catch {
+            // Use GET request with health check parameter and timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+            
+            const response = await fetch(`${url}?health=check`, { 
+              method: 'GET',
+              signal: controller.signal,
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              }
+            });
+            
+            clearTimeout(timeoutId);
+            
+            // Accept any response (200-299) or specific N8N responses
+            if (response.ok || response.status === 404 || response.status === 405) {
+              return { type, status: 'online' };
+            } else {
+              return { type, status: 'offline' };
+            }
+          } catch (error) {
+            console.warn(`Webhook status check failed for ${type}:`, error);
             return { type, status: 'offline' };
           }
         })
@@ -218,24 +238,43 @@ export const N8NConfig = () => {
         return;
       }
 
-      // Test payload
-      const testPayload = JSON.parse(template.replace(/\{\{[^}]+\}\}/g, 'test_value'));
+      // Test payload with better error handling for templates
+      let testPayload;
+      try {
+        testPayload = JSON.parse(template.replace(/\{\{[^}]+\}\}/g, '"test_value"'));
+      } catch (parseError) {
+        toast({
+          title: "Erro no template",
+          description: "Template payload inválido. Verifique a sintaxe JSON.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Add timeout for webhook test
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'User-Agent': 'N8N-Config-Test'
         },
-        body: JSON.stringify(testPayload)
+        body: JSON.stringify(testPayload),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
-      if (response.ok) {
+      if (response.ok || response.status === 200 || response.status === 201) {
         setWebhookStatus(prev => ({ ...prev, [type]: 'online' }));
         toast({
           title: "Webhook testado com sucesso",
           description: `O webhook de ${type === 'booking' ? 'agendamento' : type === 'payment' ? 'pagamento' : 'chat'} respondeu corretamente (${response.status})`
         });
       } else {
+        console.warn(`Webhook test failed for ${type}:`, response.status, response.statusText);
         setWebhookStatus(prev => ({ ...prev, [type]: 'offline' }));
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
