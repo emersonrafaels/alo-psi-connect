@@ -46,10 +46,10 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar />
-        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 group-data-[sidebar-state=collapsed]:ml-12 group-data-[sidebar-state=expanded]:ml-64">
+        <div className="flex-1 flex flex-col min-w-0">
           <header className="sticky top-0 z-40 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-8 shadow-sm">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted">
@@ -66,7 +66,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             </div>
           </header>
           <main className="flex-1 overflow-auto bg-background">
-            <div className="px-8 py-8 space-y-8 w-full">
+            <div className="container mx-auto px-6 py-6 space-y-6 max-w-7xl">
               {children}
             </div>
           </main>

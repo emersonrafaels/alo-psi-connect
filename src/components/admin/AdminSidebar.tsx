@@ -94,6 +94,8 @@ export const AdminSidebar = () => {
 
   return (
     <Sidebar
+      side="left"
+      variant="sidebar"
       collapsible="icon"
     >
       <SidebarContent>
