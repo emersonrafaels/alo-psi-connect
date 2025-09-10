@@ -30,11 +30,11 @@ export const N8NConfig = () => {
   const [usageData, setUsageData] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
-    // Configurações originais
-    booking_webhook_url: getConfig('n8n', 'booking_webhook_url', ''),
-    payment_webhook_url: getConfig('n8n', 'payment_webhook_url', ''),
-    send_appointment_notifications: getConfig('n8n', 'send_appointment_notifications', true),
-    booking_payload_template: getConfig('n8n', 'booking_payload_template', JSON.stringify({
+    // Configurações originais - inicializar com valores padrão
+    booking_webhook_url: '',
+    payment_webhook_url: '',
+    send_appointment_notifications: true,
+    booking_payload_template: JSON.stringify({
       event: 'appointment_created',
       appointment: {
         id: '{{appointment.id}}',
@@ -45,21 +45,21 @@ export const N8NConfig = () => {
         time: '{{appointment.horario}}',
         value: '{{appointment.valor}}'
       }
-    }, null, 2)),
-    payment_payload_template: getConfig('n8n', 'payment_payload_template', JSON.stringify({
+    }, null, 2),
+    payment_payload_template: JSON.stringify({
       event: 'payment_updated',
       appointment: {
         id: '{{appointment.id}}',
         payment_status: '{{appointment.payment_status}}',
         patient_email: '{{appointment.email_paciente}}'
       }
-    }, null, 2)),
-    // Novas configurações para chat AI
-    chat_webhook_url: getConfig('n8n_chat', 'webhook_url', ''),
-    chat_enabled: getConfig('n8n_chat', 'enabled', false),
-    chat_timeout_seconds: getConfig('n8n_chat', 'timeout_seconds', 30),
-    chat_fallback_openai: getConfig('n8n_chat', 'fallback_openai', true),
-    chat_payload_template: getConfig('n8n_chat', 'payload_template', JSON.stringify({
+    }, null, 2),
+    // Novas configurações para chat AI - inicializar com valores padrão
+    chat_webhook_url: '',
+    chat_enabled: false,
+    chat_timeout_seconds: 30,
+    chat_fallback_openai: true,
+    chat_payload_template: JSON.stringify({
       event: "ai_chat_message",
       timestamp: "{{timestamp}}",
       session_id: "{{session_id}}",
@@ -71,8 +71,58 @@ export const N8NConfig = () => {
       },
       professionals: "{{professionals}}",
       platform: "alopsi"
-    }, null, 2))
+    }, null, 2)
   });
+
+  // Update formData when configs are loaded
+  useEffect(() => {
+    if (configs.length > 0) {
+      setFormData({
+        // Configurações originais
+        booking_webhook_url: getConfig('n8n', 'booking_webhook_url', ''),
+        payment_webhook_url: getConfig('n8n', 'payment_webhook_url', ''),
+        send_appointment_notifications: getConfig('n8n', 'send_appointment_notifications', true),
+        booking_payload_template: getConfig('n8n', 'booking_payload_template', JSON.stringify({
+          event: 'appointment_created',
+          appointment: {
+            id: '{{appointment.id}}',
+            patient_name: '{{appointment.nome_paciente}}',
+            patient_email: '{{appointment.email_paciente}}',
+            professional_name: '{{professional.display_name}}',
+            date: '{{appointment.data_consulta}}',
+            time: '{{appointment.horario}}',
+            value: '{{appointment.valor}}'
+          }
+        }, null, 2)),
+        payment_payload_template: getConfig('n8n', 'payment_payload_template', JSON.stringify({
+          event: 'payment_updated',
+          appointment: {
+            id: '{{appointment.id}}',
+            payment_status: '{{appointment.payment_status}}',
+            patient_email: '{{appointment.email_paciente}}'
+          }
+        }, null, 2)),
+        // Novas configurações para chat AI
+        chat_webhook_url: getConfig('n8n_chat', 'webhook_url', ''),
+        chat_enabled: getConfig('n8n_chat', 'enabled', false),
+        chat_timeout_seconds: getConfig('n8n_chat', 'timeout_seconds', 30),
+        chat_fallback_openai: getConfig('n8n_chat', 'fallback_openai', true),
+        chat_payload_template: getConfig('n8n_chat', 'payload_template', JSON.stringify({
+          event: "ai_chat_message",
+          timestamp: "{{timestamp}}",
+          session_id: "{{session_id}}",
+          user: {
+            message: "{{user_message}}",
+            context: "{{context}}",
+            page: "{{page}}",
+            filters: "{{filters}}"
+          },
+          professionals: "{{professionals}}",
+          platform: "alopsi"
+        }, null, 2))
+      });
+    }
+  }, [configs, getConfig]);
 
   // Check webhook status on load
   useEffect(() => {
