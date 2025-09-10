@@ -41,11 +41,23 @@ export const AIAssistantConfig = () => {
   });
 
   const [formData, setFormData] = useState({
-    system_prompt: getConfig('ai_assistant', 'system_prompt', ''),
-    model: getConfig('ai_assistant', 'model', 'gpt-5-2025-08-07'),
-    max_completion_tokens: getConfig('ai_assistant', 'max_completion_tokens', 1500),
-    include_professional_data: getConfig('ai_assistant', 'include_professional_data', true)
+    system_prompt: '',
+    model: 'gpt-5-2025-08-07',
+    max_completion_tokens: 1500,
+    include_professional_data: true
   });
+
+  // Update formData when configs are loaded
+  useEffect(() => {
+    if (configs.length > 0) {
+      setFormData({
+        system_prompt: getConfig('ai_assistant', 'system_prompt', ''),
+        model: getConfig('ai_assistant', 'model', 'gpt-5-2025-08-07'),
+        max_completion_tokens: getConfig('ai_assistant', 'max_completion_tokens', 1500),
+        include_professional_data: getConfig('ai_assistant', 'include_professional_data', true)
+      });
+    }
+  }, [configs, getConfig]);
 
   const handleSave = async () => {
     setSaving(true);
