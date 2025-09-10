@@ -124,63 +124,84 @@ export const N8NConfig = () => {
     }
   }, [configs, getConfig]);
 
-  // Check webhook status on load
-  useEffect(() => {
-    const checkWebhookStatus = async () => {
-      const webhooks = [
-        { type: 'booking', url: formData.booking_webhook_url },
-        { type: 'payment', url: formData.payment_webhook_url },
-        { type: 'chat', url: formData.chat_webhook_url }
-      ];
+  const checkWebhookStatus = async () => {
+    const webhooks = [
+      { type: 'booking', url: formData.booking_webhook_url },
+      { type: 'payment', url: formData.payment_webhook_url },
+      { type: 'chat', url: formData.chat_webhook_url }
+    ];
 
-      const statusChecks = await Promise.allSettled(
-        webhooks.map(async ({ type, url }) => {
-          if (!url) return { type, status: 'not_configured' };
+    console.log('Checking webhook status for URLs:', webhooks);
+
+    const statusChecks = await Promise.allSettled(
+      webhooks.map(async ({ type, url }) => {
+        if (!url) return { type, status: 'not_configured' };
+        
+        try {
+          // Use GET request with health check parameter and timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
           
-          try {
-            // Use GET request with health check parameter and timeout
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-            
-            const response = await fetch(`${url}?health=check`, { 
-              method: 'GET',
-              signal: controller.signal,
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              }
-            });
-            
-            clearTimeout(timeoutId);
-            
-            // Accept any response (200-299) or specific N8N responses
-            if (response.ok || response.status === 404 || response.status === 405) {
-              return { type, status: 'online' };
-            } else {
-              return { type, status: 'offline' };
+          const response = await fetch(`${url}?health=check`, { 
+            method: 'GET',
+            signal: controller.signal,
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
             }
-          } catch (error) {
-            console.warn(`Webhook status check failed for ${type}:`, error);
+          });
+          
+          clearTimeout(timeoutId);
+          
+          // Accept any response (200-299) or specific N8N responses
+          if (response.ok || response.status === 404 || response.status === 405) {
+            console.log(`Webhook ${type} is online (status: ${response.status})`);
+            return { type, status: 'online' };
+          } else {
+            console.log(`Webhook ${type} is offline (status: ${response.status})`);
             return { type, status: 'offline' };
           }
-        })
-      );
-
-      const newStatus = { booking: 'unknown', payment: 'unknown', chat: 'unknown' };
-      statusChecks.forEach((result, index) => {
-        if (result.status === 'fulfilled') {
-          const { type, status } = result.value;
-          newStatus[type as keyof typeof newStatus] = status;
+        } catch (error) {
+          console.warn(`Webhook status check failed for ${type}:`, error);
+          return { type, status: 'offline' };
         }
-      });
-      
-      setWebhookStatus(newStatus);
-    };
+      })
+    );
 
-    if (hasPermission && !loading) {
-      checkWebhookStatus();
+    const newStatus = { booking: 'unknown', payment: 'unknown', chat: 'unknown' };
+    statusChecks.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        const { type, status } = result.value;
+        newStatus[type as keyof typeof newStatus] = status;
+      }
+    });
+    
+    console.log('Updated webhook status:', newStatus);
+    setWebhookStatus(newStatus);
+  };
+
+  // Check webhook status after configs are loaded and formData is updated
+  useEffect(() => {
+    if (!loading && hasPermission && configs.length > 0) {
+      // Wait a bit for formData to be updated with loaded configs
+      const timeoutId = setTimeout(() => {
+        if (formData.booking_webhook_url || formData.payment_webhook_url || formData.chat_webhook_url) {
+          console.log('Initial webhook status check with URLs:', {
+            booking: formData.booking_webhook_url,
+            payment: formData.payment_webhook_url,
+            chat: formData.chat_webhook_url
+          });
+          checkWebhookStatus();
+        }
+      }, 1000);
       
-      // Mock usage data
+      return () => clearTimeout(timeoutId);
+    }
+  }, [loading, hasPermission, configs.length, formData.booking_webhook_url, formData.payment_webhook_url, formData.chat_webhook_url]);
+
+  // Generate mock usage data
+  useEffect(() => {
+    if (hasPermission && !loading) {
       const mockData = Array.from({ length: 7 }, (_, i) => ({
         name: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR', { weekday: 'short' }),
         booking: Math.floor(Math.random() * 20) + 5,
@@ -189,7 +210,7 @@ export const N8NConfig = () => {
       }));
       setUsageData(mockData);
     }
-  }, [hasPermission, loading, formData.booking_webhook_url, formData.payment_webhook_url, formData.chat_webhook_url]);
+  }, [hasPermission, loading]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -238,14 +259,46 @@ export const N8NConfig = () => {
         return;
       }
 
-      // Test payload with better error handling for templates
+      // Test payload with improved variable substitution
       let testPayload;
       try {
-        testPayload = JSON.parse(template.replace(/\{\{[^}]+\}\}/g, '"test_value"'));
+        // Replace template variables with appropriate test values based on context
+        const processedTemplate = template.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
+          const varName = variable.trim();
+          
+          // Map variables to appropriate test values
+          const testValues: Record<string, any> = {
+            // Appointment related
+            'appointment.id': '"test-appointment-123"',
+            'appointment.nome_paciente': '"João Silva"',
+            'appointment.email_paciente': '"joao@exemplo.com"',
+            'appointment.data_consulta': '"2024-01-15"',
+            'appointment.horario': '"14:30"',
+            'appointment.valor': '150.00',
+            'appointment.payment_status': '"paid"',
+            'professional.display_name': '"Dr. Maria Santos"',
+            
+            // Chat related
+            'timestamp': `"${new Date().toISOString()}"`,
+            'session_id': '"test-session-' + Date.now() + '"',
+            'user_message': '"Olá, preciso de ajuda para encontrar um psicólogo"',
+            'context': '"busca-profissionais"',
+            'page': '"/professionals"',
+            'filters': '"{\\"specialty\\": \\"Psicologia\\", \\"location\\": \\"São Paulo\\"}"',
+            'professionals': '[]'
+          };
+          
+          // Return the test value if found, otherwise return a generic string
+          return testValues[varName] || '"test_value"';
+        });
+        
+        console.log('Processed template for testing:', processedTemplate);
+        testPayload = JSON.parse(processedTemplate);
       } catch (parseError) {
+        console.error('Template parsing error:', parseError);
         toast({
           title: "Erro no template",
-          description: "Template payload inválido. Verifique a sintaxe JSON.",
+          description: "Template payload inválido. Verifique a sintaxe JSON e as variáveis.",
           variant: "destructive"
         });
         return;
