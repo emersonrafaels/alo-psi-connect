@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Check, ExternalLink, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 interface GoogleCalendarIntegrationProps {
@@ -20,16 +21,34 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
+  const { user, session } = useAuth();
 
   const handleConnectCalendar = async () => {
+    if (!user || !session) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para conectar o Google Calendar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
+      console.log('Iniciando conexão com Google Calendar para usuário:', user.id);
+      
       // Chama a edge function para iniciar o OAuth do Google Calendar
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
-        body: { action: 'connect' }
+        body: { action: 'connect' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na edge function:', error);
+        throw error;
+      }
 
       if (data.authUrl) {
         // Abre a URL de autorização em uma nova janela
@@ -42,9 +61,10 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
         });
       }
     } catch (error: any) {
+      console.error('Erro completo na conexão:', error);
       toast({
         title: "Erro na conexão",
-        description: error.message,
+        description: error.message || "Erro desconhecido ao conectar o Google Calendar",
         variant: "destructive",
       });
     } finally {
@@ -53,10 +73,22 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
   };
 
   const handleDisconnectCalendar = async () => {
+    if (!user || !session) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para desconectar o Google Calendar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase.functions.invoke('google-calendar-auth', {
-        body: { action: 'disconnect' }
+        body: { action: 'disconnect' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
@@ -78,10 +110,22 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
   };
 
   const handleSyncCalendar = async () => {
+    if (!user || !session) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para sincronizar o Google Calendar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSyncing(true);
     try {
       const { data, error } = await supabase.functions.invoke('google-calendar-sync', {
-        body: { action: 'sync' }
+        body: { action: 'sync' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;

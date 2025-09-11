@@ -18,30 +18,35 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log('Iniciando google-calendar-auth function...');
+    
     // Get the authorization header first
     const authHeader = req.headers.get('Authorization');
+    console.log('Authorization header presente:', !!authHeader);
+    
     if (!authHeader) {
+      console.error('Header de autorização não encontrado');
       throw new Error('Header de autorização não encontrado');
     }
 
+    // Create Supabase client with service role for auth validation
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    // Get the authenticated user
+    // Get the authenticated user using the token
     const token = authHeader.replace('Bearer ', '');
+    console.log('Token extraído, validando usuário...');
+    
     const { data: user, error: userError } = await supabaseClient.auth.getUser(token);
 
     if (userError || !user.user) {
       console.error('Authentication error:', userError);
-      throw new Error('Usuário não autenticado');
+      throw new Error('Usuário não autenticado: ' + (userError?.message || 'Token inválido'));
     }
+
+    console.log('Usuário autenticado com sucesso:', user.user.id);
 
     const { action, code }: GoogleCalendarAuthRequest = await req.json();
 

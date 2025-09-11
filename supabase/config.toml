@@ -67,3 +67,9 @@ verify_jwt = false
 
 [functions.manage-user-roles]
 verify_jwt = true
+
+[functions.google-calendar-auth]
+verify_jwt = true
+
+[functions.google-calendar-sync]
+verify_jwt = true
