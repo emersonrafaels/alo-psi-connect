@@ -50,9 +50,9 @@ const handler = async (req: Request): Promise<Response> => {
         installments: 12
       },
       back_urls: {
-        success: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '')}.vercel.app/pagamento-sucesso?agendamento=${agendamentoId}`,
-        failure: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '')}.vercel.app/pagamento-cancelado?agendamento=${agendamentoId}`,
-        pending: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '')}.vercel.app/pagamento-sucesso?agendamento=${agendamentoId}`
+        success: `${Deno.env.get('APP_BASE_URL') || 'https://alopsi.com.br'}/pagamento-sucesso?agendamento=${agendamentoId}`,
+        failure: `${Deno.env.get('APP_BASE_URL') || 'https://alopsi.com.br'}/pagamento-cancelado?agendamento=${agendamentoId}`,
+        pending: `${Deno.env.get('APP_BASE_URL') || 'https://alopsi.com.br'}/pagamento-sucesso?agendamento=${agendamentoId}`
       },
       auto_return: "approved",
       external_reference: agendamentoId,

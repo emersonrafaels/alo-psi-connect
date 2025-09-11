@@ -433,7 +433,7 @@ const MyAppointments = () => {
                       </p>
                       {tab === 'all' && (
                         <Button asChild>
-                          <Link to="https://alo-psi-connect.lovable.app/profissionais">
+                          <Link to="/profissionais">
                             Agendar Consulta
                           </Link>
                         </Button>

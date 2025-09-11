@@ -19,3 +19,11 @@ export function stripHtmlTags(html: string): string {
   // Clean up extra whitespace and line breaks
   return decoded.replace(/\s+/g, ' ').trim();
 }
+
+export function getBaseUrl(): string {
+  // In production, use the configured base URL or fallback to current origin
+  if (typeof window !== 'undefined') {
+    return import.meta.env.VITE_APP_BASE_URL || window.location.origin;
+  }
+  return import.meta.env.VITE_APP_BASE_URL || 'https://alopsi.com.br';
+}
