@@ -18,22 +18,28 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Get the authorization header first
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Header de autorização não encontrado');
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
+          headers: { Authorization: authHeader },
         },
       }
     );
 
     // Get the authenticated user
-    const authHeader = req.headers.get('Authorization')!;
     const token = authHeader.replace('Bearer ', '');
-    const { data: user } = await supabaseClient.auth.getUser(token);
+    const { data: user, error: userError } = await supabaseClient.auth.getUser(token);
 
-    if (!user.user) {
+    if (userError || !user.user) {
+      console.error('Authentication error:', userError);
       throw new Error('Usuário não autenticado');
     }
 
