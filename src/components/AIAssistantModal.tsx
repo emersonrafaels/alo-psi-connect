@@ -26,11 +26,15 @@ interface AIAssistantModalProps {
 export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssistantModalProps) => {
   const { getConfig } = useSystemConfig(['n8n_chat', 'ai_assistant']);
   const [sessionId] = useState(() => crypto.randomUUID());
+  
+  // Get customizable content from config
+  const initialMessage = getConfig('ai_assistant', 'initial_message', '👋 Olá! Sou seu assistente de saúde mental especializado da AloPsi. Estou aqui para te ajudar a encontrar o profissional ideal para suas consultas online.\n\nComo posso te ajudar hoje?\n\n🔍 Sobre o que você gostaria de conversar:\n• Que tipo de apoio psicológico você está buscando?\n• Alguma especialidade específica (ansiedade, depressão, relacionamentos, etc.)?\n• Prefere Psicólogo(a), Psiquiatra(a) ou Psicoterapeuta(a)?\n\n⏰ Horários e disponibilidade:\n• Qual período prefere? (manhã, tarde ou noite)\n• Que dias da semana funcionam melhor para você?\n\n💰 Investimento:\n• Qual sua faixa de orçamento para as consultas?\n• Busca valores mais acessíveis ou tem flexibilidade?\n\n📱 Todas as consultas são realizadas online - você pode ter sessões de qualquer lugar');
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: "👋 Olá! Sou seu assistente de saúde mental especializado da **AloPsi**. Estou aqui para te ajudar a encontrar o profissional ideal para suas consultas online.\n\n**Como posso te ajudar hoje?**\n\n🔍 **Sobre o que você gostaria de conversar:**\n• Que tipo de apoio psicológico você está buscando?\n• Alguma especialidade específica (ansiedade, depressão, relacionamentos, etc.)?\n• Prefere Psicólogo(a), Psiquiatra(a) ou Psicoterapeuta(a)?\n\n⏰ **Horários e disponibilidade:**\n• Qual período prefere? (manhã, tarde ou noite)\n• Que dias da semana funcionam melhor para você?\n\n💰 **Investimento:**\n• Qual sua faixa de orçamento para as consultas?\n• Busca valores mais acessíveis ou tem flexibilidade?\n\n📱 **Todas as consultas são realizadas online** - você pode ter sessões de qualquer lugar com total privacidade e comodidade!",
+      content: initialMessage,
       timestamp: new Date()
     }
   ])
@@ -296,9 +300,11 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
                 </AvatarFallback>
               </Avatar>
               <div>
-                <DialogTitle className="text-xl">Assistente de Saúde Mental</DialogTitle>
+                <DialogTitle className="text-xl">
+                  {getConfig('ai_assistant', 'title', 'Assistente de Saúde Mental')}
+                </DialogTitle>
                 <p className="text-sm text-muted-foreground">
-                  Powered by IA • Te ajudo a encontrar o profissional ideal
+                  {getConfig('ai_assistant', 'subtitle', 'Powered by IA • Te ajudo a encontrar o profissional ideal')}
                 </p>
               </div>
             </div>

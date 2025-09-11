@@ -40,7 +40,10 @@ export const AIAssistantConfig = () => {
     system_prompt: '',
     model: 'gpt-4o-mini',
     max_tokens: 1500,
-    include_professional_data: true
+    include_professional_data: true,
+    title: 'Assistente de Saúde Mental',
+    subtitle: 'Powered by IA • Te ajudo a encontrar o profissional ideal',
+    initial_message: '👋 Olá! Sou seu assistente de saúde mental especializado da AloPsi. Estou aqui para te ajudar a encontrar o profissional ideal para suas consultas online.\n\nComo posso te ajudar hoje?\n\n🔍 Sobre o que você gostaria de conversar:\n• Que tipo de apoio psicológico você está buscando?\n• Alguma especialidade específica (ansiedade, depressão, relacionamentos, etc.)?\n• Prefere Psicólogo(a), Psiquiatra(a) ou Psicoterapeuta(a)?\n\n⏰ Horários e disponibilidade:\n• Qual período prefere? (manhã, tarde ou noite)\n• Que dias da semana funcionam melhor para você?\n\n💰 Investimento:\n• Qual sua faixa de orçamento para as consultas?\n• Busca valores mais acessíveis ou tem flexibilidade?\n\n📱 Todas as consultas são realizadas online - você pode ter sessões de qualquer lugar'
   });
 
   // Update formData when configs are loaded
@@ -50,7 +53,10 @@ export const AIAssistantConfig = () => {
         system_prompt: getConfig('ai_assistant', 'system_prompt', ''),
         model: getConfig('ai_assistant', 'model', 'gpt-4o-mini'),
         max_tokens: getConfig('ai_assistant', 'max_tokens', 1500),
-        include_professional_data: getConfig('ai_assistant', 'include_professional_data', true)
+        include_professional_data: getConfig('ai_assistant', 'include_professional_data', true),
+        title: getConfig('ai_assistant', 'title', 'Assistente de Saúde Mental'),
+        subtitle: getConfig('ai_assistant', 'subtitle', 'Powered by IA • Te ajudo a encontrar o profissional ideal'),
+        initial_message: getConfig('ai_assistant', 'initial_message', '👋 Olá! Sou seu assistente de saúde mental especializado da AloPsi. Estou aqui para te ajudar a encontrar o profissional ideal para suas consultas online.\n\nComo posso te ajudar hoje?\n\n🔍 Sobre o que você gostaria de conversar:\n• Que tipo de apoio psicológico você está buscando?\n• Alguma especialidade específica (ansiedade, depressão, relacionamentos, etc.)?\n• Prefere Psicólogo(a), Psiquiatra(a) ou Psicoterapeuta(a)?\n\n⏰ Horários e disponibilidade:\n• Qual período prefere? (manhã, tarde ou noite)\n• Que dias da semana funcionam melhor para você?\n\n💰 Investimento:\n• Qual sua faixa de orçamento para as consultas?\n• Busca valores mais acessíveis ou tem flexibilidade?\n\n📱 Todas as consultas são realizadas online - você pode ter sessões de qualquer lugar')
       });
     }
   }, [configs, getConfig]);
@@ -62,7 +68,10 @@ export const AIAssistantConfig = () => {
         updateConfig('ai_assistant', 'system_prompt', formData.system_prompt),
         updateConfig('ai_assistant', 'model', formData.model),
         updateConfig('ai_assistant', 'max_tokens', formData.max_tokens),
-        updateConfig('ai_assistant', 'include_professional_data', formData.include_professional_data)
+        updateConfig('ai_assistant', 'include_professional_data', formData.include_professional_data),
+        updateConfig('ai_assistant', 'title', formData.title),
+        updateConfig('ai_assistant', 'subtitle', formData.subtitle),
+        updateConfig('ai_assistant', 'initial_message', formData.initial_message)
       ]);
     } finally {
       setSaving(false);
@@ -228,6 +237,54 @@ export const AIAssistantConfig = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Título do Assistente</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Ex: Assistente de Saúde Mental"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Título exibido no cabeçalho do chat
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="subtitle">Subtítulo</Label>
+                  <Input
+                    id="subtitle"
+                    value={formData.subtitle}
+                    onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
+                    placeholder="Ex: Powered by IA • Te ajudo a encontrar o profissional ideal"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Descrição exibida abaixo do título
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="initial_message">Mensagem Inicial do Assistente</Label>
+                <Textarea
+                  id="initial_message"
+                  value={formData.initial_message}
+                  onChange={(e) => setFormData(prev => ({ ...prev, initial_message: e.target.value }))}
+                  placeholder="Digite a mensagem de boas-vindas do assistente..."
+                  className="min-h-[200px] text-sm"
+                />
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">Mensagem: {formData.initial_message.length} caracteres</Badge>
+                  <Badge variant={formData.initial_message.length > 2000 ? "destructive" : "secondary"}>
+                    {formData.initial_message.length > 2000 ? "Muito longa" : "Tamanho adequado"}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Esta será a primeira mensagem que os usuários verão ao abrir o chat
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="system_prompt">System Prompt</Label>
                 <Textarea
