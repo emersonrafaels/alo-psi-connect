@@ -18,6 +18,9 @@ import { ChevronLeft, ChevronRight, Eye, EyeOff, Check } from 'lucide-react';
 import { PhotoUpload } from '@/components/ui/photo-upload';
 import { Badge } from '@/components/ui/badge';
 import { useProfileManager } from '@/hooks/useProfileManager';
+import { ScheduleSelector } from '@/components/ScheduleSelector';
+import { SpecialtiesSelector } from '@/components/SpecialtiesSelector';
+import { GoogleCalendarIntegration } from '@/components/GoogleCalendarIntegration';
 
 const ProfessionalForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -45,7 +48,11 @@ const ProfessionalForm = () => {
     comoConheceu: '',
     resumoProfissional: '',
     senha: '',
-    confirmarSenha: ''
+    confirmarSenha: '',
+    // Novos campos
+    especialidades: [] as string[],
+    horarios: [] as any[],
+    googleCalendarConnected: false
   });
 
   // Salvar foto do Google automaticamente se disponível
@@ -62,7 +69,7 @@ const ProfessionalForm = () => {
     saveGoogleProfilePhoto();
   }, [googleData, saveGooglePhoto, formData.fotoPerfilUrl]);
 
-  const totalSteps = 4;
+  const totalSteps = 7;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleNext = () => {
@@ -110,7 +117,7 @@ const ProfessionalForm = () => {
       if (profileError) throw profileError;
 
       // Criar dados específicos do profissional
-      const { error: professionalError } = await supabase
+      const { data: professional, error: professionalError } = await supabase
         .from('profissionais')
         .insert({
           profile_id: profile.id,
@@ -127,10 +134,30 @@ const ProfessionalForm = () => {
           resumo_profissional: formData.resumoProfissional,
           foto_perfil_url: formData.fotoPerfilUrl,
           possui_e_psi: formData.possuiEPsi === 'sim',
+          servicos_raw: formData.especialidades.join(', '), // Salvar especialidades
           ativo: false // Aguardando aprovação
-        });
+        })
+        .select()
+        .single();
 
       if (professionalError) throw professionalError;
+
+      // Salvar horários de atendimento
+      if (formData.horarios.length > 0) {
+        const horariosFormatted = formData.horarios.map(horario => ({
+          user_id: parseInt(user.id),
+          day: horario.day,
+          start_time: horario.startTime,
+          end_time: horario.endTime,
+          minutos_janela: horario.duration
+        }));
+
+        const { error: horariosError } = await supabase
+          .from('profissionais_sessoes')
+          .insert(horariosFormatted);
+
+        if (horariosError) throw horariosError;
+      }
 
       toast({
         title: "Cadastro realizado com sucesso!",
@@ -149,7 +176,7 @@ const ProfessionalForm = () => {
     }
   };
 
-  const updateFormData = (field: string, value: string) => {
+  const updateFormData = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -404,10 +431,40 @@ const ProfessionalForm = () => {
     </div>
   );
 
+  const renderStep5 = () => (
+    <div className="space-y-6">
+      <SpecialtiesSelector
+        value={formData.especialidades}
+        onChange={(especialidades) => updateFormData('especialidades', especialidades)}
+      />
+    </div>
+  );
+
+  const renderStep6 = () => (
+    <div className="space-y-6">
+      <ScheduleSelector
+        value={formData.horarios}
+        onChange={(horarios) => updateFormData('horarios', horarios)}
+      />
+    </div>
+  );
+
+  const renderStep7 = () => (
+    <div className="space-y-6">
+      <GoogleCalendarIntegration
+        isConnected={formData.googleCalendarConnected}
+        onConnectionChange={(connected) => updateFormData('googleCalendarConnected', connected)}
+      />
+    </div>
+  );
+
   const canProceedStep1 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf;
   const canProceedStep2 = formData.profissao && formData.possuiEPsi && formData.crpCrm;
   const canProceedStep3 = true; // Campos opcionais
-  const canSubmit = formData.resumoProfissional && formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha;
+  const canProceedStep4 = formData.resumoProfissional && formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha;
+  const canProceedStep5 = formData.especialidades.length > 0;
+  const canProceedStep6 = formData.horarios.length > 0;
+  const canSubmit = true; // Google Calendar é opcional
 
   return (
     <div className="min-h-screen bg-background">
@@ -433,14 +490,17 @@ const ProfessionalForm = () => {
               <ProgressIndicator 
                 currentStep={currentStep} 
                 totalSteps={totalSteps} 
-                stepLabels={['Dados Pessoais', 'Profissão', 'Perfil', 'Finalização']}
+                stepLabels={['Dados Pessoais', 'Profissão', 'Perfil', 'Resumo', 'Especialidades', 'Horários', 'Agenda']}
                 className="mb-6"
               />
               <CardTitle className="text-center text-xl">
                 {currentStep === 1 ? 'Seus dados pessoais' :
                  currentStep === 2 ? 'Informações profissionais' :
                  currentStep === 3 ? 'Perfil e contatos' :
-                 'Finalização do cadastro'}
+                 currentStep === 4 ? 'Resumo e credenciais' :
+                 currentStep === 5 ? 'Suas especialidades' :
+                 currentStep === 6 ? 'Horários de atendimento' :
+                 'Integração com agenda'}
               </CardTitle>
             </CardHeader>
             
@@ -449,6 +509,9 @@ const ProfessionalForm = () => {
               {currentStep === 2 && renderStep2()}
               {currentStep === 3 && renderStep3()}
               {currentStep === 4 && renderStep4()}
+              {currentStep === 5 && renderStep5()}
+              {currentStep === 6 && renderStep6()}
+              {currentStep === 7 && renderStep7()}
 
               <div className="flex justify-between pt-6">
                 <Button
@@ -467,7 +530,10 @@ const ProfessionalForm = () => {
                     disabled={
                       (currentStep === 1 && !canProceedStep1) ||
                       (currentStep === 2 && !canProceedStep2) ||
-                      (currentStep === 3 && !canProceedStep3)
+                      (currentStep === 3 && !canProceedStep3) ||
+                      (currentStep === 4 && !canProceedStep4) ||
+                      (currentStep === 5 && !canProceedStep5) ||
+                      (currentStep === 6 && !canProceedStep6)
                     }
                     variant="teal"
                     className="flex items-center gap-2"
