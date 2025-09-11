@@ -386,52 +386,18 @@ const ProfessionalForm = () => {
   const renderStep4 = () => (
     <div className="space-y-6">
       <div>
-        <Label htmlFor="senha">Senha <span className="text-red-500">*</span></Label>
-        <div className="relative">
-          <Input
-            id="senha"
-            type={showPassword ? "text" : "password"}
-            value={formData.senha}
-            onChange={(e) => updateFormData('senha', e.target.value)}
-            required
-            minLength={6}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </Button>
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="confirmarSenha">Confirmar Senha <span className="text-red-500">*</span></Label>
-        <div className="relative">
-          <Input
-            id="confirmarSenha"
-            type={showConfirmPassword ? "text" : "password"}
-            value={formData.confirmarSenha}
-            onChange={(e) => updateFormData('confirmarSenha', e.target.value)}
-            required
-            minLength={6}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-          >
-            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </Button>
-        </div>
-        {formData.confirmarSenha && formData.senha !== formData.confirmarSenha && (
-          <p className="text-sm text-red-500 mt-1">As senhas não coincidem</p>
-        )}
+        <Label htmlFor="resumoProfissional">Escreva seu resumo profissional <span className="text-red-500">*</span></Label>
+        <p className="text-sm text-muted-foreground mb-3">
+          Descreva sua experiência, especializações e abordagem terapêutica. Este texto será exibido no seu perfil público.
+        </p>
+        <Textarea
+          id="resumoProfissional"
+          value={formData.resumoProfissional}
+          onChange={(e) => updateFormData('resumoProfissional', e.target.value)}
+          placeholder="Descreva sua experiência, especializações e abordagem terapêutica..."
+          rows={6}
+          required
+        />
       </div>
     </div>
   );
@@ -500,18 +466,52 @@ const ProfessionalForm = () => {
   const renderStep8 = () => (
     <div className="space-y-6">
       <div>
-        <Label htmlFor="resumoProfissional">Escreva seu resumo profissional <span className="text-red-500">*</span></Label>
-        <p className="text-sm text-muted-foreground mb-3">
-          Descreva sua experiência, especializações e abordagem terapêutica. Este texto será exibido no seu perfil público.
-        </p>
-        <Textarea
-          id="resumoProfissional"
-          value={formData.resumoProfissional}
-          onChange={(e) => updateFormData('resumoProfissional', e.target.value)}
-          placeholder="Descreva sua experiência, especializações e abordagem terapêutica..."
-          rows={6}
-          required
-        />
+        <Label htmlFor="senha">Senha <span className="text-red-500">*</span></Label>
+        <div className="relative">
+          <Input
+            id="senha"
+            type={showPassword ? "text" : "password"}
+            value={formData.senha}
+            onChange={(e) => updateFormData('senha', e.target.value)}
+            required
+            minLength={6}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="confirmarSenha">Confirmar Senha <span className="text-red-500">*</span></Label>
+        <div className="relative">
+          <Input
+            id="confirmarSenha"
+            type={showConfirmPassword ? "text" : "password"}
+            value={formData.confirmarSenha}
+            onChange={(e) => updateFormData('confirmarSenha', e.target.value)}
+            required
+            minLength={6}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          >
+            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        </div>
+        {formData.confirmarSenha && formData.senha !== formData.confirmarSenha && (
+          <p className="text-sm text-red-500 mt-1">As senhas não coincidem</p>
+        )}
       </div>
     </div>
   );
@@ -519,11 +519,11 @@ const ProfessionalForm = () => {
   const canProceedStep1 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf;
   const canProceedStep2 = formData.profissao && formData.possuiEPsi && formData.crpCrm;
   const canProceedStep3 = true; // Campos opcionais
-  const canProceedStep4 = formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha;
+  const canProceedStep4 = formData.resumoProfissional; // Resumo é obrigatório
   const canProceedStep5 = formData.especialidades.length > 0;
   const canProceedStep6 = formData.intervaloHorarios && formData.horarios.length > 0;
   const canProceedStep7 = true; // Google Calendar é opcional
-  const canSubmit = formData.resumoProfissional; // Resumo é obrigatório na última etapa
+  const canSubmit = formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha; // Credenciais na última etapa
 
   return (
     <div className="min-h-screen bg-background">
@@ -549,18 +549,18 @@ const ProfessionalForm = () => {
               <ProgressIndicator 
                 currentStep={currentStep} 
                 totalSteps={totalSteps} 
-                stepLabels={['Dados Pessoais', 'Profissão', 'Perfil', 'Credenciais', 'Especialidades', 'Horários', 'Agenda', 'Resumo']}
+                stepLabels={['Dados Pessoais', 'Profissão', 'Perfil', 'Resumo', 'Especialidades', 'Horários', 'Agenda', 'Credenciais']}
                 className="mb-6"
               />
               <CardTitle className="text-center text-xl">
                 {currentStep === 1 ? 'Seus dados pessoais' :
                  currentStep === 2 ? 'Informações profissionais' :
                  currentStep === 3 ? 'Perfil e contatos' :
-                 currentStep === 4 ? 'Credenciais de acesso' :
+                 currentStep === 4 ? 'Resumo profissional' :
                  currentStep === 5 ? 'Suas especialidades' :
                  currentStep === 6 ? 'Horários de atendimento' :
                  currentStep === 7 ? 'Integração com agenda' :
-                 'Resumo profissional'}
+                 'Credenciais de acesso'}
               </CardTitle>
             </CardHeader>
             

@@ -32,10 +32,6 @@ const DAYS_OF_WEEK = [
 ];
 
 const DURATIONS = [
-  { value: 30, label: '30 minutos' },
-  { value: 45, label: '45 minutos' },
-  { value: 60, label: '60 minutos' },
-  { value: 90, label: '90 minutos' },
   { value: 50, label: '50 minutos' }
 ];
 
@@ -205,12 +201,7 @@ export const ScheduleSelector: React.FC<ScheduleSelectorProps> = ({ value, onCha
                   <SelectValue placeholder="Duração" />
                 </SelectTrigger>
                 <SelectContent>
-                  {DURATIONS.sort((a, b) => {
-                    // 50 minutos sempre por último
-                    if (a.value === 50) return 1;
-                    if (b.value === 50) return -1;
-                    return a.value - b.value;
-                  }).map((duration) => (
+                  {DURATIONS.map((duration) => (
                     <SelectItem key={duration.value} value={duration.value.toString()}>
                       {duration.label}
                     </SelectItem>
