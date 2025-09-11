@@ -62,14 +62,14 @@ export const N8NConfig = () => {
     chat_max_retries: 3,
     chat_retry_delay_ms: 1000,
     chat_retry_backoff_multiplier: 2,
-    chat_payload_template: '{"event": "ai_chat_message", "timestamp": "{{timestamp}}", "session_id": "{{session_id}}", "user": {"message": "{{user_message}}", "context": "{{context}}", "page": "{{page}}", "filters": {{filters}}}, "professionals": {{professionals}}, "platform": "alopsi"}'
+    chat_payload_template: '{"event": "ai_chat_message", "timestamp": "{{timestamp}}", "session_id": "{{session_id}}", "user": {"message": "{{user_message}}", "context": "{{context}}", "page": "{{page}}", "filters": "{{filters}}"}, "professionals": "{{professionals}}", "platform": "alopsi"}'
   });
 
   // Update formData when configs are loaded
   useEffect(() => {
     if (configs.length > 0) {
       // Get the payload template as string (it's stored as JSON string in the database)
-      const payloadTemplate = getConfig('n8n_chat', 'payload_template', '{"event": "ai_chat_message", "timestamp": "{{timestamp}}", "session_id": "{{session_id}}", "user": {"message": "{{user_message}}", "context": "{{context}}", "page": "{{page}}", "filters": {{filters}}}, "professionals": {{professionals}}, "platform": "alopsi"}');
+      const payloadTemplate = getConfig('n8n_chat', 'payload_template', '{"event": "ai_chat_message", "timestamp": "{{timestamp}}", "session_id": "{{session_id}}", "user": {"message": "{{user_message}}", "context": "{{context}}", "page": "{{page}}", "filters": "{{filters}}"}, "professionals": "{{professionals}}", "platform": "alopsi"}');
       
       setFormData({
         // Configurações originais
@@ -271,17 +271,37 @@ export const N8NConfig = () => {
       console.log('Creating payload from template:', template);
       console.log('With variables:', variables);
       
+      // First, validate that the template is valid JSON by checking structure
+      let templateCopy = template;
+      
+      // Replace all variables with test values to validate JSON structure
+      const testTemplate = templateCopy.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
+        const varName = variable.trim();
+        // Use appropriate test values based on common variable names
+        if (varName === 'filters' || varName === 'professionals') {
+          return '{}'; // Empty object for validation
+        }
+        return '"test_value"'; // String value for validation
+      });
+      
+      // Validate JSON structure
+      try {
+        JSON.parse(testTemplate);
+      } catch (validationError) {
+        throw new Error(`Template JSON inválido: ${validationError.message}`);
+      }
+      
       // Process template and substitute variables
-      const processedTemplate = template.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
+      const processedTemplate = templateCopy.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
         const varName = variable.trim();
         const value = variables[varName];
         
         if (value === undefined) {
           console.warn(`Template variable ${varName} not found, using fallback`);
-          return JSON.stringify("test_value");
+          return '"test_value"';
         }
         
-        // For objects and arrays, return as JSON string without quotes
+        // For objects and arrays, replace the quoted placeholder with actual JSON
         if (typeof value === 'object') {
           return JSON.stringify(value);
         }
