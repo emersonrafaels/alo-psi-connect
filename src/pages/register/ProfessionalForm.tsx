@@ -85,8 +85,6 @@ const ProfessionalForm = () => {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
-
     if (formData.senha !== formData.confirmarSenha) {
       toast({
         title: "Erro",
@@ -98,11 +96,29 @@ const ProfessionalForm = () => {
 
     setLoading(true);
     try {
+      let currentUser = user;
+      
+      // Se não há usuário logado, criar a conta primeiro
+      if (!currentUser) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.senha,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`
+          }
+        });
+
+        if (authError) throw authError;
+        if (!authData.user) throw new Error('Erro ao criar conta');
+        
+        currentUser = authData.user;
+      }
+
       // Criar perfil
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .insert({
-          user_id: user.id,
+          user_id: currentUser.id,
           nome: formData.nome,
           email: formData.email,
           data_nascimento: formData.dataNascimento,
@@ -121,7 +137,7 @@ const ProfessionalForm = () => {
         .from('profissionais')
         .insert({
           profile_id: profile.id,
-          user_id: parseInt(user.id), // Converter para integer conforme schema existente
+          user_id: parseInt(currentUser.id), // Converter para integer conforme schema existente
           display_name: formData.nome,
           user_email: formData.email,
           user_login: formData.email,
@@ -145,7 +161,7 @@ const ProfessionalForm = () => {
       // Salvar horários de atendimento
       if (formData.horarios.length > 0) {
         const horariosFormatted = formData.horarios.map(horario => ({
-          user_id: parseInt(user.id),
+          user_id: parseInt(currentUser.id),
           day: horario.day,
           start_time: horario.startTime,
           end_time: horario.endTime,
@@ -210,7 +226,7 @@ const ProfessionalForm = () => {
               value={formData.email}
               onChange={(e) => updateFormData('email', e.target.value)}
               required
-              disabled
+              disabled={!!user}
             />
             {googleData?.emailVerified && (
               <Badge variant="secondary" className="text-xs">

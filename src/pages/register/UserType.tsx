@@ -15,18 +15,13 @@ const UserType = () => {
   const { hasProfile, loading } = useUserProfile();
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-
-    // Se já tem perfil, redirecionar para home
-    if (!loading && hasProfile) {
+    // Se o usuário está logado e já tem perfil, redirecionar para home
+    if (user && !loading && hasProfile) {
       navigate('/');
     }
   }, [user, hasProfile, loading, navigate]);
 
-  if (!user || loading) return null;
+  if (loading) return null;
 
   const handleUserTypeSelection = (tipo: 'paciente' | 'profissional') => {
     if (tipo === 'paciente') {

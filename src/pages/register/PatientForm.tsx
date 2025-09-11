@@ -13,12 +13,14 @@ import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Eye, EyeOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const PatientForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -33,10 +35,12 @@ const PatientForm = () => {
     genero: '',
     cpf: '',
     instituicaoEnsino: '',
-    comoConheceu: ''
+    comoConheceu: '',
+    senha: '',
+    confirmarSenha: ''
   });
 
-  const totalSteps = 3;
+  const totalSteps = user ? 3 : 4; // 4 passos se não há usuário logado (inclui senha)
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleNext = () => {
@@ -52,15 +56,40 @@ const PatientForm = () => {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
-
     setLoading(true);
     try {
+      let currentUser = user;
+      
+      // Se não há usuário logado, criar a conta primeiro
+      if (!currentUser) {
+        if (formData.senha !== formData.confirmarSenha) {
+          toast({
+            title: "Erro",
+            description: "As senhas não coincidem",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.senha,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`
+          }
+        });
+
+        if (authError) throw authError;
+        if (!authData.user) throw new Error('Erro ao criar conta');
+        
+        currentUser = authData.user;
+      }
+
       // Criar perfil
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .insert({
-          user_id: user.id,
+          user_id: currentUser.id,
           nome: formData.nome,
           email: formData.email,
           data_nascimento: formData.dataNascimento,
@@ -160,7 +189,7 @@ const PatientForm = () => {
               value={formData.email}
               onChange={(e) => updateFormData('email', e.target.value)}
               required
-              disabled
+              disabled={!!user}
             />
             {googleData?.emailVerified && (
               <Badge variant="secondary" className="text-xs">
@@ -244,9 +273,64 @@ const PatientForm = () => {
     </div>
   );
 
+  const renderStep4 = () => (
+    <div className="space-y-6">
+      <div>
+        <Label htmlFor="senha">Senha <span className="text-red-500">*</span></Label>
+        <div className="relative">
+          <Input
+            id="senha"
+            type={showPassword ? "text" : "password"}
+            value={formData.senha}
+            onChange={(e) => updateFormData('senha', e.target.value)}
+            required
+            minLength={6}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="confirmarSenha">Confirmar Senha <span className="text-red-500">*</span></Label>
+        <div className="relative">
+          <Input
+            id="confirmarSenha"
+            type={showConfirmPassword ? "text" : "password"}
+            value={formData.confirmarSenha}
+            onChange={(e) => updateFormData('confirmarSenha', e.target.value)}
+            required
+            minLength={6}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          >
+            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        </div>
+        {formData.confirmarSenha && formData.senha !== formData.confirmarSenha && (
+          <p className="text-sm text-red-500 mt-1">As senhas não coincidem</p>
+        )}
+      </div>
+    </div>
+  );
+
   const canProceedStep1 = formData.ehEstudante !== '';
   const canProceedStep2 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf;
-  const canSubmit = canProceedStep2 && (formData.ehEstudante === 'formado' || formData.instituicaoEnsino);
+  const canProceedStep3 = (formData.ehEstudante === 'formado' || formData.instituicaoEnsino);
+  const canProceedStep4 = user ? true : (formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha);
+  const canSubmit = user ? canProceedStep3 : canProceedStep4;
 
   return (
     <div className="min-h-screen bg-background">
@@ -272,13 +356,14 @@ const PatientForm = () => {
               <ProgressIndicator 
                 currentStep={currentStep} 
                 totalSteps={totalSteps} 
-                stepLabels={['Perfil', 'Dados Pessoais', 'Finalização']}
+                stepLabels={user ? ['Perfil', 'Dados Pessoais', 'Finalização'] : ['Perfil', 'Dados Pessoais', 'Informações', 'Senha']}
                 className="mb-6"
               />
               <CardTitle className="text-center text-xl">
                 {currentStep === 1 ? 'Defina seu perfil' :
                  currentStep === 2 ? 'Seus dados pessoais' :
-                 'Informações adicionais'}
+                 currentStep === 3 ? 'Informações adicionais' :
+                 'Defina sua senha'}
               </CardTitle>
             </CardHeader>
             
@@ -286,6 +371,7 @@ const PatientForm = () => {
               {currentStep === 1 && renderStep1()}
               {currentStep === 2 && renderStep2()}
               {currentStep === 3 && renderStep3()}
+              {currentStep === 4 && renderStep4()}
 
               <div className="flex justify-between pt-6">
                 <Button
@@ -303,7 +389,8 @@ const PatientForm = () => {
                     onClick={handleNext}
                     disabled={
                       (currentStep === 1 && !canProceedStep1) ||
-                      (currentStep === 2 && !canProceedStep2)
+                      (currentStep === 2 && !canProceedStep2) ||
+                      (currentStep === 3 && !canProceedStep3)
                     }
                     className="flex items-center gap-2"
                   >
