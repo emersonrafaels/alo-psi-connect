@@ -20,13 +20,14 @@ import { Badge } from '@/components/ui/badge';
 import { useProfileManager } from '@/hooks/useProfileManager';
 import { ScheduleSelector } from '@/components/ScheduleSelector';
 import { SpecialtiesSelector } from '@/components/SpecialtiesSelector';
-import { GoogleCalendarIntegration } from '@/components/GoogleCalendarIntegration';
+import { GoogleCalendarWelcomeModal } from '@/components/GoogleCalendarWelcomeModal';
 
 const ProfessionalForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showGoogleCalendarModal, setShowGoogleCalendarModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -52,8 +53,7 @@ const ProfessionalForm = () => {
     // Novos campos
     especialidades: [] as string[],
     horarios: [] as any[],
-    intervaloHorarios: '30', // 30 ou 60 minutos
-    googleCalendarConnected: false
+    intervaloHorarios: '30' // 30 ou 60 minutos
   });
 
   // Salvar foto do Google automaticamente se disponível
@@ -70,7 +70,7 @@ const ProfessionalForm = () => {
     saveGoogleProfilePhoto();
   }, [googleData, saveGooglePhoto, formData.fotoPerfilUrl]);
 
-  const totalSteps = 8;
+  const totalSteps = 7;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleNext = () => {
@@ -181,7 +181,8 @@ const ProfessionalForm = () => {
         description: "Seu perfil será analisado e em breve estará disponível na plataforma.",
       });
 
-      navigate('/');
+      // Mostrar modal do Google Calendar ao invés de navegar diretamente
+      setShowGoogleCalendarModal(true);
     } catch (error: any) {
       toast({
         title: "Erro no cadastro",
@@ -456,15 +457,6 @@ const ProfessionalForm = () => {
 
   const renderStep7 = () => (
     <div className="space-y-6">
-      <GoogleCalendarIntegration
-        isConnected={formData.googleCalendarConnected}
-        onConnectionChange={(connected) => updateFormData('googleCalendarConnected', connected)}
-      />
-    </div>
-  );
-
-  const renderStep8 = () => (
-    <div className="space-y-6">
       <div>
         <Label htmlFor="senha">Senha <span className="text-red-500">*</span></Label>
         <div className="relative">
@@ -509,12 +501,18 @@ const ProfessionalForm = () => {
             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
         </div>
-        {formData.confirmarSenha && formData.senha !== formData.confirmarSenha && (
-          <p className="text-sm text-red-500 mt-1">As senhas não coincidem</p>
-        )}
+      </div>
+
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <h4 className="text-sm font-medium text-green-900 mb-2">Quase pronto!</h4>
+        <p className="text-sm text-green-700">
+          Após finalizar o cadastro, você será automaticamente logado e poderá conectar sua agenda do Google Calendar 
+          para uma melhor gestão dos seus horários.
+        </p>
       </div>
     </div>
   );
+
 
   const canProceedStep1 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf;
   const canProceedStep2 = formData.profissao && formData.possuiEPsi && formData.crpCrm;
@@ -522,7 +520,6 @@ const ProfessionalForm = () => {
   const canProceedStep4 = formData.resumoProfissional; // Resumo é obrigatório
   const canProceedStep5 = formData.especialidades.length > 0;
   const canProceedStep6 = formData.intervaloHorarios && formData.horarios.length > 0;
-  const canProceedStep7 = true; // Google Calendar é opcional
   const canSubmit = formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha; // Credenciais na última etapa
 
   return (
@@ -572,7 +569,6 @@ const ProfessionalForm = () => {
               {currentStep === 5 && renderStep5()}
               {currentStep === 6 && renderStep6()}
               {currentStep === 7 && renderStep7()}
-              {currentStep === 8 && renderStep8()}
 
               <div className="flex justify-between pt-6">
                 <Button
@@ -594,8 +590,7 @@ const ProfessionalForm = () => {
                       (currentStep === 3 && !canProceedStep3) ||
                       (currentStep === 4 && !canProceedStep4) ||
                       (currentStep === 5 && !canProceedStep5) ||
-                      (currentStep === 6 && !canProceedStep6) ||
-                      (currentStep === 7 && !canProceedStep7)
+                      (currentStep === 6 && !canProceedStep6)
                     }
                     variant="teal"
                     className="flex items-center gap-2"
@@ -632,6 +627,15 @@ const ProfessionalForm = () => {
       </main>
       
       <Footer />
+
+      {/* Modal do Google Calendar após cadastro */}
+      <GoogleCalendarWelcomeModal
+        isOpen={showGoogleCalendarModal}
+        onClose={() => {
+          setShowGoogleCalendarModal(false);
+          navigate('/');
+        }}
+      />
     </div>
   );
 };

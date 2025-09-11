@@ -14,13 +14,18 @@ import Footer from '@/components/ui/footer';
 import { PhotoUpload } from '@/components/ui/photo-upload';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileManager } from '@/hooks/useProfileManager';
+import { useUserType } from '@/hooks/useUserType';
+import { useGoogleCalendarStatus } from '@/hooks/useGoogleCalendarStatus';
 import { useToast } from '@/hooks/use-toast';
+import { GoogleCalendarIntegration } from '@/components/GoogleCalendarIntegration';
 import { ArrowLeft, Camera, Check } from 'lucide-react';
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, loading: profileLoading, updateProfile } = useProfileManager();
+  const { isProfessional } = useUserType();
+  const { isConnected: googleCalendarConnected, refetch: refetchGoogleCalendar } = useGoogleCalendarStatus();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -281,6 +286,33 @@ const Profile = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Seção do Google Calendar para profissionais */}
+          {isProfessional && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Integração com Google Calendar</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <GoogleCalendarIntegration
+                  isConnected={googleCalendarConnected}
+                  onConnectionChange={(connected) => {
+                    if (connected) {
+                      refetchGoogleCalendar();
+                    }
+                  }}
+                />
+                {googleCalendarConnected && (
+                  <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-sm text-yellow-800">
+                      <strong>⚠️ Atenção:</strong> Desconectar o Google Calendar pode resultar em conflitos de agendamento. 
+                      Recomendamos manter a integração ativa para uma melhor gestão dos seus horários.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
       
