@@ -27,9 +27,33 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get professional data if not provided
+    // Get AI Assistant configurations from database
+    const { data: configData, error: configError } = await supabase
+      .from('system_configurations')
+      .select('key, value')
+      .eq('category', 'ai_assistant');
+
+    let aiConfig = {
+      model: 'gpt-4o-mini',
+      max_tokens: 1500,
+      system_prompt: '',
+      include_professional_data: true
+    };
+
+    if (configData && !configError) {
+      configData.forEach(config => {
+        if (config.key === 'model') aiConfig.model = config.value;
+        if (config.key === 'max_tokens') aiConfig.max_tokens = parseInt(config.value) || 1500;
+        if (config.key === 'system_prompt') aiConfig.system_prompt = config.value;
+        if (config.key === 'include_professional_data') aiConfig.include_professional_data = config.value === 'true' || config.value === true;
+      });
+    }
+
+    console.log('Using AI configuration:', aiConfig);
+
+    // Get professional data if not provided and if enabled in config
     let professionalsData = professionals;
-    if (!professionalsData) {
+    if (!professionalsData && aiConfig.include_professional_data) {
       const { data, error } = await supabase
         .from('profissionais')
         .select(`
@@ -51,6 +75,8 @@ serve(async (req) => {
       } else {
         professionalsData = data || [];
       }
+    } else if (!aiConfig.include_professional_data) {
+      professionalsData = [];
     }
 
     // Prepare professionals data for AI
@@ -66,7 +92,8 @@ serve(async (req) => {
       tempo_consulta: prof.tempo_consulta
     }));
 
-    const systemPrompt = `Você é o assistente oficial da **AloPsi**, uma plataforma brasileira especializada em conectar pessoas com profissionais de saúde mental através de telemedicina.
+    // Use custom system prompt if configured, otherwise use default
+    const systemPrompt = aiConfig.system_prompt || `Você é o assistente oficial da **AloPsi**, uma plataforma brasileira especializada em conectar pessoas com profissionais de saúde mental através de telemedicina.
 
 ## SOBRE A ALOPSI 🏥
 
@@ -94,7 +121,7 @@ serve(async (req) => {
 ✅ Suporte técnico completo
 
 ## CONTEXTO DOS PROFISSIONAIS DISPONÍVEIS:
-${JSON.stringify(professionalsInfo, null, 2)}
+${JSON.stringify(profissionalsInfo, null, 2)}
 
 ## SUA FUNÇÃO COMO ASSISTENTE 🤖
 
@@ -170,30 +197,64 @@ REGRAS DE FORMATAÇÃO:
 - Mantenha parágrafos curtos e organizados
 - Sempre forneça pelo menos 2 opções de ação para cada profissional recomendado`;
 
+    console.log('System prompt length:', systemPrompt.length);
+
+    // Validate model to ensure it's a real OpenAI model
+    const validModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4', 'gpt-3.5-turbo'];
+    const modelToUse = validModels.includes(aiConfig.model) ? aiConfig.model : 'gpt-4o-mini';
+    
+    if (modelToUse !== aiConfig.model) {
+      console.warn(`Invalid model "${aiConfig.model}" replaced with "${modelToUse}"`);
+    }
+
+    console.log('Making OpenAI request with:', {
+      model: modelToUse,
+      max_tokens: aiConfig.max_tokens,
+      professionalCount: professionalsData?.length || 0
+    });
+
+    const requestBody: any = {
+      model: modelToUse,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message }
+      ],
+      stream: false
+    };
+
+    // Use max_tokens for older models, max_completion_tokens for newer ones
+    if (modelToUse === 'gpt-4o' || modelToUse === 'gpt-4o-mini') {
+      requestBody.max_tokens = aiConfig.max_tokens;
+    } else {
+      requestBody.max_completion_tokens = aiConfig.max_tokens;
+    }
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: message }
-        ],
-        max_completion_tokens: 1000,
-        stream: false
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('OpenAI API error:', error);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('OpenAI API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: error
+      });
+      throw new Error(`OpenAI API error: ${response.status} - ${error}`);
     }
 
     const data = await response.json();
+    console.log('OpenAI response received:', {
+      model: data.model,
+      usage: data.usage,
+      finishReason: data.choices?.[0]?.finish_reason
+    });
+
     const aiResponse = data.choices[0].message.content;
 
     return new Response(JSON.stringify({ 

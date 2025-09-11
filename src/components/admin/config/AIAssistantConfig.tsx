@@ -17,14 +17,10 @@ import { UsageChart } from './UsageChart';
 import { ConfigDataTable } from './ConfigDataTable';
 
 const GPT_MODELS = [
-  { value: 'gpt-5-2025-08-07', label: 'GPT-5 (Flagship)' },
-  { value: 'gpt-5-mini-2025-08-07', label: 'GPT-5 Mini (Fast)' },
-  { value: 'gpt-5-nano-2025-08-07', label: 'GPT-5 Nano (Fastest)' },
-  { value: 'gpt-4.1-2025-04-14', label: 'GPT-4.1 (Reliable)' },
-  { value: 'o3-2025-04-16', label: 'O3 (Reasoning)' },
-  { value: 'o4-mini-2025-04-16', label: 'O4 Mini (Fast Reasoning)' },
-  { value: 'gpt-4o', label: 'GPT-4o (Legacy)' },
-  { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Legacy)' }
+  { value: 'gpt-4o', label: 'GPT-4o (Mais Avançado)' },
+  { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Rápido)' },
+  { value: 'gpt-4', label: 'GPT-4 (Confiável)' },
+  { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (Econômico)' }
 ];
 
 export const AIAssistantConfig = () => {
@@ -42,8 +38,8 @@ export const AIAssistantConfig = () => {
 
   const [formData, setFormData] = useState({
     system_prompt: '',
-    model: 'gpt-5-2025-08-07',
-    max_completion_tokens: 1500,
+    model: 'gpt-4o-mini',
+    max_tokens: 1500,
     include_professional_data: true
   });
 
@@ -52,8 +48,8 @@ export const AIAssistantConfig = () => {
     if (configs.length > 0) {
       setFormData({
         system_prompt: getConfig('ai_assistant', 'system_prompt', ''),
-        model: getConfig('ai_assistant', 'model', 'gpt-5-2025-08-07'),
-        max_completion_tokens: getConfig('ai_assistant', 'max_completion_tokens', 1500),
+        model: getConfig('ai_assistant', 'model', 'gpt-4o-mini'),
+        max_tokens: getConfig('ai_assistant', 'max_tokens', 1500),
         include_professional_data: getConfig('ai_assistant', 'include_professional_data', true)
       });
     }
@@ -65,7 +61,7 @@ export const AIAssistantConfig = () => {
       await Promise.all([
         updateConfig('ai_assistant', 'system_prompt', formData.system_prompt),
         updateConfig('ai_assistant', 'model', formData.model),
-        updateConfig('ai_assistant', 'max_completion_tokens', formData.max_completion_tokens),
+        updateConfig('ai_assistant', 'max_tokens', formData.max_tokens),
         updateConfig('ai_assistant', 'include_professional_data', formData.include_professional_data)
       ]);
     } finally {
@@ -106,22 +102,49 @@ export const AIAssistantConfig = () => {
     setTesting(true);
     try {
       const startTime = Date.now();
-      const { data, error } = await supabase.functions.invoke('ai-assistant', {
-        body: { message: 'Este é um teste de configuração. Responda brevemente sobre psicologia.' }
-      });
+      
+      // Timeout para evitar espera infinita
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout de 30 segundos')), 30000)
+      );
 
-      if (error) throw error;
+      const response = await Promise.race([
+        supabase.functions.invoke('ai-assistant', {
+          body: { message: 'Este é um teste de configuração. Responda brevemente sobre psicologia.' }
+        }),
+        timeout
+      ]);
+
+      const { data, error } = response as any;
+
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(`Erro na função: ${error.message}`);
+      }
+
+      if (!data?.success) {
+        console.error('AI Assistant error:', data?.error);
+        throw new Error(data?.error || 'Erro desconhecido do assistente');
+      }
 
       const responseTime = Date.now() - startTime;
+      const aiResponse = data?.response || 'Resposta vazia';
+      
       toast({
-        title: "Teste realizado com sucesso",
-        description: `Assistente respondeu em ${responseTime}ms. Resposta: "${data?.message?.substring(0, 100)}..."`
+        title: "✅ Teste realizado com sucesso",
+        description: `Assistente respondeu em ${responseTime}ms. Resposta: "${aiResponse.substring(0, 100)}..."`
       });
-    } catch (error) {
+
+      console.log('Teste bem-sucedido:', {
+        responseTime: `${responseTime}ms`,
+        response: aiResponse
+      });
+      
+    } catch (error: any) {
       console.error('Test error:', error);
       toast({
-        title: "Erro no teste",
-        description: "Falha ao testar o assistente de IA",
+        title: "❌ Erro no teste",
+        description: error.message || "Falha ao testar o assistente de IA",
         variant: "destructive"
       });
     } finally {
@@ -253,13 +276,13 @@ export const AIAssistantConfig = () => {
                   <Input
                     id="max_tokens"
                     type="number"
-                    value={formData.max_completion_tokens}
-                    onChange={(e) => setFormData(prev => ({ ...prev, max_completion_tokens: parseInt(e.target.value) }))}
+                    value={formData.max_tokens}
+                    onChange={(e) => setFormData(prev => ({ ...prev, max_tokens: parseInt(e.target.value) }))}
                     min={100}
                     max={4000}
                   />
                   <p className="text-sm text-muted-foreground">
-                    Controla o tamanho máximo das respostas ({formData.max_completion_tokens * 0.75} palavras aprox.)
+                    Controla o tamanho máximo das respostas ({formData.max_tokens * 0.75} palavras aprox.)
                   </p>
                 </div>
               </div>
@@ -403,7 +426,7 @@ export const AIAssistantConfig = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Max tokens:</span>
-                    <Badge variant="outline">{formData.max_completion_tokens}</Badge>
+                    <Badge variant="outline">{formData.max_tokens}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Sistema ativo:</span>
