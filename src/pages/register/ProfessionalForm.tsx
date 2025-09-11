@@ -184,9 +184,32 @@ const ProfessionalForm = () => {
       // Mostrar modal do Google Calendar ao invés de navegar diretamente
       setShowGoogleCalendarModal(true);
     } catch (error: any) {
+      let errorMessage = error.message;
+      
+      // Tratamento de erros mais específicos
+      if (error.message?.includes('Email rate limit exceeded')) {
+        errorMessage = 'Muitas tentativas de envio de email. Tente novamente em alguns minutos.';
+      } else if (error.message?.includes('User already registered')) {
+        errorMessage = 'Este email já está cadastrado no sistema.';
+      } else if (error.message?.includes('Invalid email')) {
+        errorMessage = 'Email inválido. Verifique o formato do email.';
+      } else if (error.message?.includes('Password should be at least')) {
+        errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
+      } else if (error.message?.includes('duplicate key value')) {
+        if (error.message.includes('email')) {
+          errorMessage = 'Este email já está cadastrado no sistema.';
+        } else if (error.message.includes('cpf')) {
+          errorMessage = 'Este CPF já está cadastrado no sistema.';
+        } else {
+          errorMessage = 'Dados já existem no sistema. Verifique as informações.';
+        }
+      } else if (error.message?.includes('profiles_pkey')) {
+        errorMessage = 'Usuário já possui um perfil cadastrado.';
+      }
+      
       toast({
         title: "Erro no cadastro",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -543,21 +566,61 @@ const ProfessionalForm = () => {
 
           <Card>
             <CardHeader>
-              <ProgressIndicator 
-                currentStep={currentStep} 
-                totalSteps={totalSteps} 
-                stepLabels={['Dados Pessoais', 'Profissão', 'Perfil', 'Resumo', 'Especialidades', 'Horários', 'Agenda', 'Credenciais']}
-                className="mb-6"
-              />
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">Passo {currentStep} de {totalSteps}</span>
+                  <span className="text-sm text-muted-foreground">100% concluído</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {[
+                    { number: 1, title: 'Dados Pessoais', completed: currentStep > 1 },
+                    { number: 2, title: 'Profissão', completed: currentStep > 2 },
+                    { number: 3, title: 'Perfil', completed: currentStep > 3 },
+                    { number: 4, title: 'Resumo', completed: currentStep > 4 },
+                    { number: 5, title: 'Especialidades', completed: currentStep > 5 },
+                    { number: 6, title: 'Horários', completed: currentStep > 6 },
+                    { number: 7, title: 'Credenciais', completed: currentStep > 7 }
+                  ].map((step, index) => (
+                    <div key={step.number} className="flex items-center">
+                      <div
+                        className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all cursor-pointer hover:scale-105
+                          ${step.completed || currentStep === step.number
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-muted text-muted-foreground'
+                          }`}
+                        onClick={() => setCurrentStep(step.number)}
+                        title={step.title}
+                      >
+                        {step.completed ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          step.number
+                        )}
+                      </div>
+                      {index < 6 && (
+                        <div className={`h-1 w-8 ${step.completed ? 'bg-primary' : 'bg-muted'}`} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="text-center text-xs text-muted-foreground mt-2">
+                  {currentStep === 1 ? 'Dados Pessoais' :
+                   currentStep === 2 ? 'Profissão' :
+                   currentStep === 3 ? 'Perfil' :
+                   currentStep === 4 ? 'Resumo' :
+                   currentStep === 5 ? 'Especialidades' :
+                   currentStep === 6 ? 'Horários' :
+                   'Credenciais'}
+                </div>
+              </div>
               <CardTitle className="text-center text-xl">
-                {currentStep === 1 ? 'Seus dados pessoais' :
-                 currentStep === 2 ? 'Informações profissionais' :
-                 currentStep === 3 ? 'Perfil e contatos' :
-                 currentStep === 4 ? 'Resumo profissional' :
-                 currentStep === 5 ? 'Suas especialidades' :
-                 currentStep === 6 ? 'Horários de atendimento' :
-                 currentStep === 7 ? 'Integração com agenda' :
-                 'Credenciais de acesso'}
+                 {currentStep === 1 ? 'Seus dados pessoais' :
+                  currentStep === 2 ? 'Informações profissionais' :
+                  currentStep === 3 ? 'Perfil e contatos' :
+                  currentStep === 4 ? 'Resumo profissional' :
+                  currentStep === 5 ? 'Suas especialidades' :
+                  currentStep === 6 ? 'Horários de atendimento' :
+                  'Credenciais de acesso'}
               </CardTitle>
             </CardHeader>
             
