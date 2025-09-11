@@ -213,6 +213,8 @@ export type Database = {
           email: string
           foto_perfil_url: string | null
           genero: string | null
+          google_calendar_refresh_token: string | null
+          google_calendar_token: string | null
           id: string
           nome: string
           tipo_usuario: string
@@ -227,6 +229,8 @@ export type Database = {
           email: string
           foto_perfil_url?: string | null
           genero?: string | null
+          google_calendar_refresh_token?: string | null
+          google_calendar_token?: string | null
           id?: string
           nome: string
           tipo_usuario: string
@@ -241,6 +245,8 @@ export type Database = {
           email?: string
           foto_perfil_url?: string | null
           genero?: string | null
+          google_calendar_refresh_token?: string | null
+          google_calendar_token?: string | null
           id?: string
           nome?: string
           tipo_usuario?: string
