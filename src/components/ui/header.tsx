@@ -24,7 +24,6 @@ const Header = () => {
     { name: "Profissionais", href: "/profissionais" },
     { name: "Blog", href: "/blog" },
     { name: "Trabalhe Conosco", href: "/trabalhe-conosco" },
-    { name: "Agendar Consulta", href: "/profissionais" },
     { name: "Contato", href: "/contato" },
   ]
 
