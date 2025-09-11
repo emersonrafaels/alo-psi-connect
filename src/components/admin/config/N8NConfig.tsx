@@ -54,29 +54,23 @@ export const N8NConfig = () => {
         patient_email: '{{appointment.email_paciente}}'
       }
     }, null, 2),
-    // Novas configurações para chat AI - inicializar com valores padrão
+    // Configurações para chat AI com retry
     chat_webhook_url: '',
     chat_enabled: false,
     chat_timeout_seconds: 30,
     chat_fallback_openai: true,
-    chat_payload_template: JSON.stringify({
-      event: "ai_chat_message",
-      timestamp: "{{timestamp}}",
-      session_id: "{{session_id}}",
-      user: {
-        message: "{{user_message}}",
-        context: "{{context}}",
-        page: "{{page}}",
-        filters: "{{filters}}"
-      },
-      professionals: "{{professionals}}",
-      platform: "alopsi"
-    }, null, 2)
+    chat_max_retries: 3,
+    chat_retry_delay_ms: 1000,
+    chat_retry_backoff_multiplier: 2,
+    chat_payload_template: '{"event": "ai_chat_message", "timestamp": "{{timestamp}}", "session_id": "{{session_id}}", "user": {"message": "{{user_message}}", "context": "{{context}}", "page": "{{page}}", "filters": {{filters}}}, "professionals": {{professionals}}, "platform": "alopsi"}'
   });
 
   // Update formData when configs are loaded
   useEffect(() => {
     if (configs.length > 0) {
+      // Get the payload template as string (it's stored as JSON string in the database)
+      const payloadTemplate = getConfig('n8n_chat', 'payload_template', '{"event": "ai_chat_message", "timestamp": "{{timestamp}}", "session_id": "{{session_id}}", "user": {"message": "{{user_message}}", "context": "{{context}}", "page": "{{page}}", "filters": {{filters}}}, "professionals": {{professionals}}, "platform": "alopsi"}');
+      
       setFormData({
         // Configurações originais
         booking_webhook_url: getConfig('n8n', 'booking_webhook_url', ''),
@@ -102,24 +96,29 @@ export const N8NConfig = () => {
             patient_email: '{{appointment.email_paciente}}'
           }
         }, null, 2)),
-        // Novas configurações para chat AI
+        // Configurações para chat AI com retry
         chat_webhook_url: getConfig('n8n_chat', 'webhook_url', ''),
         chat_enabled: getConfig('n8n_chat', 'enabled', false),
-        chat_timeout_seconds: getConfig('n8n_chat', 'timeout_seconds', 30),
+        chat_timeout_seconds: parseInt(getConfig('n8n_chat', 'timeout_seconds', '30')),
         chat_fallback_openai: getConfig('n8n_chat', 'fallback_openai', true),
-        chat_payload_template: getConfig('n8n_chat', 'payload_template', JSON.stringify({
-          event: "ai_chat_message",
-          timestamp: "{{timestamp}}",
-          session_id: "{{session_id}}",
-          user: {
-            message: "{{user_message}}",
-            context: "{{context}}",
-            page: "{{page}}",
-            filters: "{{filters}}"
-          },
-          professionals: "{{professionals}}",
-          platform: "alopsi"
-        }, null, 2))
+        chat_max_retries: parseInt(getConfig('n8n_chat', 'max_retries', '3')),
+        chat_retry_delay_ms: parseInt(getConfig('n8n_chat', 'retry_delay_ms', '1000')),
+        chat_retry_backoff_multiplier: parseFloat(getConfig('n8n_chat', 'retry_backoff_multiplier', '2')),
+        // Format template nicely for display if it's a JSON string
+        chat_payload_template: (() => {
+          try {
+            // If it's a JSON object, stringify it nicely
+            if (typeof payloadTemplate === 'object') {
+              return JSON.stringify(payloadTemplate, null, 2);
+            }
+            // If it's a string, try to parse and reformat
+            const parsed = JSON.parse(payloadTemplate);
+            return JSON.stringify(parsed, null, 2);
+          } catch {
+            // If parsing fails, return as-is
+            return payloadTemplate;
+          }
+        })()
       });
     }
   }, [configs, getConfig]);
@@ -215,6 +214,23 @@ export const N8NConfig = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Validate chat payload template before saving
+      let payloadToSave = formData.chat_payload_template;
+      if (formData.chat_payload_template) {
+        try {
+          // Try to parse and minify the JSON template
+          const parsed = JSON.parse(formData.chat_payload_template);
+          payloadToSave = JSON.stringify(parsed); // Minified version for storage
+        } catch (error) {
+          toast({
+            title: "Erro no template",
+            description: "Template do payload de chat contém JSON inválido",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
       await Promise.all([
         // Configurações originais
         updateConfig('n8n', 'booking_webhook_url', formData.booking_webhook_url),
@@ -222,16 +238,97 @@ export const N8NConfig = () => {
         updateConfig('n8n', 'send_appointment_notifications', formData.send_appointment_notifications),
         updateConfig('n8n', 'booking_payload_template', formData.booking_payload_template),
         updateConfig('n8n', 'payment_payload_template', formData.payment_payload_template),
-        // Novas configurações para chat AI
+        // Configurações para chat AI com retry
         updateConfig('n8n_chat', 'webhook_url', formData.chat_webhook_url),
         updateConfig('n8n_chat', 'enabled', formData.chat_enabled),
-        updateConfig('n8n_chat', 'timeout_seconds', formData.chat_timeout_seconds),
+        updateConfig('n8n_chat', 'timeout_seconds', formData.chat_timeout_seconds.toString()),
         updateConfig('n8n_chat', 'fallback_openai', formData.chat_fallback_openai),
-        updateConfig('n8n_chat', 'payload_template', formData.chat_payload_template)
+        updateConfig('n8n_chat', 'max_retries', formData.chat_max_retries.toString()),
+        updateConfig('n8n_chat', 'retry_delay_ms', formData.chat_retry_delay_ms.toString()),
+        updateConfig('n8n_chat', 'retry_backoff_multiplier', formData.chat_retry_backoff_multiplier.toString()),
+        updateConfig('n8n_chat', 'payload_template', payloadToSave)
       ]);
+      
+      toast({
+        title: "✅ Configurações salvas",
+        description: "Todas as configurações do N8N foram atualizadas com sucesso"
+      });
+    } catch (error) {
+      console.error('Error saving config:', error);
+      toast({
+        title: "❌ Erro ao salvar",
+        description: "Não foi possível salvar as configurações",
+        variant: "destructive"
+      });
     } finally {
       setSaving(false);
     }
+  };
+
+  // Utility function to create payload from template
+  const createPayloadFromTemplate = (template: string, variables: Record<string, any>): any => {
+    try {
+      console.log('Creating payload from template:', template);
+      console.log('With variables:', variables);
+      
+      // Process template and substitute variables
+      const processedTemplate = template.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
+        const varName = variable.trim();
+        const value = variables[varName];
+        
+        if (value === undefined) {
+          console.warn(`Template variable ${varName} not found, using fallback`);
+          return JSON.stringify("test_value");
+        }
+        
+        // For objects and arrays, return as JSON string without quotes
+        if (typeof value === 'object') {
+          return JSON.stringify(value);
+        }
+        
+        // For primitives, return as JSON string
+        return JSON.stringify(value);
+      });
+      
+      console.log('Processed template for testing:', processedTemplate);
+      const parsed = JSON.parse(processedTemplate);
+      console.log('Successfully parsed payload:', parsed);
+      return parsed;
+    } catch (error) {
+      console.error('Template processing error:', error);
+      throw new Error(`Template inválido: ${error.message}`);
+    }
+  };
+
+  // Retry function with exponential backoff for testing
+  const retryWebhookTest = async (
+    operation: () => Promise<any>,
+    maxRetries: number = 3,
+    baseDelay: number = 1000,
+    backoffMultiplier: number = 2
+  ): Promise<any> => {
+    let lastError: Error;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Webhook test attempt ${attempt}/${maxRetries}`);
+        return await operation();
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`Webhook test attempt ${attempt} failed:`, error);
+        
+        if (attempt === maxRetries) {
+          break;
+        }
+        
+        // Calculate delay with exponential backoff
+        const delay = baseDelay * Math.pow(backoffMultiplier, attempt - 1);
+        console.log(`Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    throw lastError;
   };
 
   const testWebhook = async (type: 'booking' | 'payment' | 'chat') => {
@@ -247,7 +344,8 @@ export const N8NConfig = () => {
         template = formData.payment_payload_template;
       } else if (type === 'chat') {
         url = formData.chat_webhook_url;
-        template = formData.chat_payload_template;
+        // Use template from database for chat to test exactly what's saved
+        template = getConfig('n8n_chat', 'payload_template', formData.chat_payload_template);
       }
       
       if (!url) {
@@ -259,95 +357,113 @@ export const N8NConfig = () => {
         return;
       }
 
-      // Test payload with improved variable substitution
+      if (!template) {
+        toast({
+          title: "Template não encontrado",
+          description: `Template do payload de ${type === 'booking' ? 'agendamento' : type === 'payment' ? 'pagamento' : 'chat'} não está configurado`,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Test payload with comprehensive variable substitution
       let testPayload;
       try {
-        // Replace template variables with appropriate test values based on context
-        const processedTemplate = template.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
-          const varName = variable.trim();
+        // Map variables to appropriate test values
+        const testValues: Record<string, any> = {
+          // Appointment related
+          'appointment.id': "test-appointment-123",
+          'appointment.nome_paciente': "João Silva",
+          'appointment.email_paciente': "joao@exemplo.com",
+          'appointment.data_consulta': "2024-01-15",
+          'appointment.horario': "14:30",
+          'appointment.valor': 150.00,
+          'appointment.payment_status': "paid",
+          'professional.display_name': "Dr. Maria Santos",
           
-          // Map variables to appropriate test values
-          const testValues: Record<string, any> = {
-            // Appointment related
-            'appointment.id': "test-appointment-123",
-            'appointment.nome_paciente': "João Silva",
-            'appointment.email_paciente': "joao@exemplo.com",
-            'appointment.data_consulta': "2024-01-15",
-            'appointment.horario': "14:30",
-            'appointment.valor': 150.00,
-            'appointment.payment_status': "paid",
-            'professional.display_name': "Dr. Maria Santos",
-            
-            // Chat related
-            'timestamp': new Date().toISOString(),
-            'session_id': `test-session-${Date.now()}`,
-            'user_message': "Olá, preciso de ajuda para encontrar um psicólogo",
-            'context': "busca-profissionais",
-            'page': "/professionals",
-            'filters': {"specialty": "Psicologia", "location": "São Paulo"},
-            'professionals': []
-          };
-          
-          // Return properly formatted values - no quotes for objects/arrays
-          const value = testValues[varName];
-          if (value === undefined) {
-            return JSON.stringify("test_value");
-          }
-          
-          // For objects and arrays, don't JSON stringify (they're already in the template structure)
-          if (typeof value === 'object') {
-            return JSON.stringify(value);
-          }
-          
-          // For strings, numbers, booleans - stringify them
-          return JSON.stringify(value);
-        });
+          // Chat related
+          'timestamp': new Date().toISOString(),
+          'session_id': `test-session-${Date.now()}`,
+          'user_message': "Olá, preciso de ajuda para encontrar um psicólogo especializado em ansiedade",
+          'context': "busca-profissionais",
+          'page': "/professionals?specialty=psicologia&location=sao-paulo",
+          'filters': {"specialty": "Psicologia", "location": "São Paulo", "price_range": "100-200"},
+          'professionals': [
+            {"id": 1, "name": "Dr. Maria Santos", "specialty": "Psicologia Clínica"},
+            {"id": 2, "name": "Dr. João Silva", "specialty": "Psiquiatria"}
+          ]
+        };
         
-        console.log('Processed template for testing:', processedTemplate);
-        testPayload = JSON.parse(processedTemplate);
+        console.log('Testing with values:', testValues);
+        testPayload = createPayloadFromTemplate(template, testValues);
+        
       } catch (parseError) {
         console.error('Template parsing error:', parseError);
         toast({
           title: "Erro no template",
-          description: "Template payload inválido. Verifique a sintaxe JSON e as variáveis.",
+          description: `Template payload inválido: ${parseError.message}`,
           variant: "destructive"
         });
         return;
       }
       
-      // Add timeout for webhook test
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'N8N-Config-Test'
-        },
-        body: JSON.stringify(testPayload),
-        signal: controller.signal
+      // Define webhook operation with timeout
+      const webhookOperation = async () => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+        
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'User-Agent': 'AloPsi-N8N-Config-Test',
+              'X-Test-Mode': 'true'
+            },
+            body: JSON.stringify(testPayload),
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          return response;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          throw error;
+        }
+      };
+
+      // Execute test with retry system
+      const response = await retryWebhookTest(webhookOperation, 2, 1000, 2); // 2 retries for testing
+
+      setWebhookStatus(prev => ({ ...prev, [type]: 'online' }));
+      toast({
+        title: "✅ Webhook testado com sucesso",
+        description: `O webhook de ${type === 'booking' ? 'agendamento' : type === 'payment' ? 'pagamento' : 'chat'} respondeu corretamente (${response.status})`,
       });
       
-      clearTimeout(timeoutId);
-
-      if (response.ok || response.status === 200 || response.status === 201) {
-        setWebhookStatus(prev => ({ ...prev, [type]: 'online' }));
-        toast({
-          title: "Webhook testado com sucesso",
-          description: `O webhook de ${type === 'booking' ? 'agendamento' : type === 'payment' ? 'pagamento' : 'chat'} respondeu corretamente (${response.status})`
-        });
-      } else {
-        console.warn(`Webhook test failed for ${type}:`, response.status, response.statusText);
-        setWebhookStatus(prev => ({ ...prev, [type]: 'offline' }));
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
     } catch (error) {
       console.error('Webhook test error:', error);
       setWebhookStatus(prev => ({ ...prev, [type]: 'offline' }));
+      
+      let errorMessage = "Erro desconhecido";
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = "Timeout - webhook não respondeu em tempo hábil";
+        } else if (error.message.includes('fetch')) {
+          errorMessage = "Erro de conexão - verifique a URL";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
-        title: "Erro no teste do webhook",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
+        title: "❌ Erro no teste do webhook",
+        description: `Falha após tentativas de retry: ${errorMessage}`,
         variant: "destructive"
       });
     } finally {
@@ -578,6 +694,68 @@ export const N8NConfig = () => {
                     Tempo limite para resposta do N8N (recomendado: 30s)
                   </p>
                 </div>
+              </div>
+
+              {/* Retry Configuration Section */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">⚡ Configuração de Retry (Sistema de Tentativas)</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="chat_max_retries">Máximo de Tentativas</Label>
+                    <Input
+                      id="chat_max_retries"
+                      type="number"
+                      value={formData.chat_max_retries}
+                      onChange={(e) => setFormData(prev => ({ ...prev, chat_max_retries: parseInt(e.target.value) }))}
+                      min={1}
+                      max={5}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Quantas vezes tentar novamente se falhar (1-5)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="chat_retry_delay">Delay Inicial (ms)</Label>
+                    <Input
+                      id="chat_retry_delay"
+                      type="number"
+                      value={formData.chat_retry_delay_ms}
+                      onChange={(e) => setFormData(prev => ({ ...prev, chat_retry_delay_ms: parseInt(e.target.value) }))}
+                      min={100}
+                      max={10000}
+                      step={100}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Tempo de espera inicial entre tentativas
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="chat_backoff_multiplier">Multiplicador de Backoff</Label>
+                    <Input
+                      id="chat_backoff_multiplier"
+                      type="number"
+                      value={formData.chat_retry_backoff_multiplier}
+                      onChange={(e) => setFormData(prev => ({ ...prev, chat_retry_backoff_multiplier: parseFloat(e.target.value) }))}
+                      min={1}
+                      max={5}
+                      step={0.1}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Fator de crescimento do delay (2.0 = dobra a cada tentativa)
+                    </p>
+                  </div>
+                </div>
+                <Alert>
+                  <Settings className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Exemplo:</strong> Com 3 tentativas, delay 1000ms e multiplicador 2.0: <br/>
+                    • 1ª tentativa: Imediato <br/>
+                    • 2ª tentativa: Após 1000ms <br/>
+                    • 3ª tentativa: Após 2000ms
+                  </AlertDescription>
+                </Alert>
               </div>
 
               <div className="flex items-center space-x-2">

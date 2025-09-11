@@ -48,6 +48,67 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
     scrollToBottom()
   }, [messages])
 
+  // Utility function to create payload from template
+  const createPayloadFromTemplate = (template: string, variables: Record<string, any>): any => {
+    try {
+      // Process template and substitute variables
+      const processedTemplate = template.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
+        const varName = variable.trim();
+        const value = variables[varName];
+        
+        if (value === undefined) {
+          console.warn(`Template variable ${varName} not found`);
+          return JSON.stringify(null);
+        }
+        
+        // For objects and arrays, return as JSON string without quotes
+        if (typeof value === 'object') {
+          return JSON.stringify(value);
+        }
+        
+        // For primitives, return as JSON string
+        return JSON.stringify(value);
+      });
+      
+      console.log('Processed template:', processedTemplate);
+      return JSON.parse(processedTemplate);
+    } catch (error) {
+      console.error('Template processing error:', error);
+      throw new Error(`Invalid template: ${error.message}`);
+    }
+  };
+
+  // Retry function with exponential backoff
+  const retryWithBackoff = async (
+    operation: () => Promise<any>,
+    maxRetries: number = 3,
+    baseDelay: number = 1000,
+    backoffMultiplier: number = 2
+  ): Promise<any> => {
+    let lastError: Error;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`N8N attempt ${attempt}/${maxRetries}`);
+        return await operation();
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`N8N attempt ${attempt} failed:`, error);
+        
+        if (attempt === maxRetries) {
+          break;
+        }
+        
+        // Calculate delay with exponential backoff
+        const delay = baseDelay * Math.pow(backoffMultiplier, attempt - 1);
+        console.log(`Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    throw lastError;
+  };
+
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return
 
@@ -63,58 +124,99 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
     setIsLoading(true)
 
     try {
-      // Verificar se N8N está habilitado
+      // Get N8N configurations
       const n8nEnabled = getConfig('n8n_chat', 'enabled', false);
       const n8nWebhookUrl = getConfig('n8n_chat', 'webhook_url', '');
       const fallbackOpenAI = getConfig('n8n_chat', 'fallback_openai', true);
       const timeoutSeconds = getConfig('n8n_chat', 'timeout_seconds', 30);
+      const maxRetries = parseInt(getConfig('n8n_chat', 'max_retries', '3'));
+      const retryDelay = parseInt(getConfig('n8n_chat', 'retry_delay_ms', '1000'));
+      const backoffMultiplier = parseFloat(getConfig('n8n_chat', 'retry_backoff_multiplier', '2'));
+      const payloadTemplate = getConfig('n8n_chat', 'payload_template', '');
 
       let response;
       let success = false;
 
-      // Tentar N8N primeiro se habilitado
+      // Try N8N first if enabled
       if (n8nEnabled && n8nWebhookUrl) {
         try {
-          console.log('Enviando para N8N:', n8nWebhookUrl);
+          console.log('Attempting N8N webhook with retry system...');
           
-          // Preparar payload para N8N
-          const payload = {
-            event: "ai_chat_message",
+          // Prepare variables for template substitution
+          const variables = {
             timestamp: new Date().toISOString(),
             session_id: sessionId,
-            user: {
-              message: inputMessage,
-              context: "busca de profissionais",
-              page: window.location.pathname + window.location.search,
-              filters: Object.fromEntries(new URLSearchParams(window.location.search))
-            },
-            professionals: professionals || [],
-            platform: "alopsi"
+            user_message: inputMessage,
+            context: "busca de profissionais",
+            page: window.location.pathname + window.location.search,
+            filters: Object.fromEntries(new URLSearchParams(window.location.search)),
+            professionals: professionals || []
           };
 
-          const n8nResponse = await fetch(n8nWebhookUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-          });
-
-          if (!n8nResponse.ok) {
-            throw new Error(`N8N HTTP ${n8nResponse.status}: ${n8nResponse.statusText}`);
+          // Create payload from database template
+          let payload;
+          if (payloadTemplate) {
+            payload = createPayloadFromTemplate(payloadTemplate, variables);
+          } else {
+            // Fallback to hardcoded payload if template not found
+            payload = {
+              event: "ai_chat_message",
+              timestamp: variables.timestamp,
+              session_id: variables.session_id,
+              user: {
+                message: variables.user_message,
+                context: variables.context,
+                page: variables.page,
+                filters: variables.filters
+              },
+              professionals: variables.professionals,
+              platform: "alopsi"
+            };
           }
 
-          const n8nData = await n8nResponse.json();
-          response = n8nData.response || n8nData.message || 'Resposta recebida do N8N';
+          console.log('N8N payload prepared:', payload);
+
+          // Define the N8N operation with timeout
+          const n8nOperation = async () => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutSeconds * 1000);
+
+            try {
+              const n8nResponse = await fetch(n8nWebhookUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'User-Agent': 'AloPsi-Chat-Assistant'
+                },
+                body: JSON.stringify(payload),
+                signal: controller.signal
+              });
+
+              clearTimeout(timeoutId);
+
+              if (!n8nResponse.ok) {
+                throw new Error(`N8N HTTP ${n8nResponse.status}: ${n8nResponse.statusText}`);
+              }
+
+              const n8nData = await n8nResponse.json();
+              return n8nData.response || n8nData.message || 'Resposta recebida do N8N';
+            } catch (error) {
+              clearTimeout(timeoutId);
+              throw error;
+            }
+          };
+
+          // Execute with retry
+          response = await retryWithBackoff(n8nOperation, maxRetries, retryDelay, backoffMultiplier);
           success = true;
-          console.log('N8N respondeu com sucesso:', response);
+          console.log('N8N responded successfully:', response);
 
         } catch (n8nError) {
-          console.error('N8N Error:', n8nError);
+          console.error('N8N failed after all retries:', n8nError);
           if (!fallbackOpenAI) {
             throw n8nError;
           }
-          console.log('Usando OpenAI como fallback...');
+          console.log('Using OpenAI as fallback...');
         }
       }
 
