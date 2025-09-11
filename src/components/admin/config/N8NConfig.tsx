@@ -288,9 +288,19 @@ export const N8NConfig = () => {
             'professionals': []
           };
           
-          // Return the test value properly JSON stringified
+          // Return properly formatted values - no quotes for objects/arrays
           const value = testValues[varName];
-          return value !== undefined ? JSON.stringify(value) : JSON.stringify("test_value");
+          if (value === undefined) {
+            return JSON.stringify("test_value");
+          }
+          
+          // For objects and arrays, don't JSON stringify (they're already in the template structure)
+          if (typeof value === 'object') {
+            return JSON.stringify(value);
+          }
+          
+          // For strings, numbers, booleans - stringify them
+          return JSON.stringify(value);
         });
         
         console.log('Processed template for testing:', processedTemplate);
