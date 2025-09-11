@@ -52,6 +52,7 @@ const ProfessionalForm = () => {
     // Novos campos
     especialidades: [] as string[],
     horarios: [] as any[],
+    intervaloHorarios: '30', // 30 ou 60 minutos
     googleCalendarConnected: false
   });
 
@@ -69,7 +70,7 @@ const ProfessionalForm = () => {
     saveGoogleProfilePhoto();
   }, [googleData, saveGooglePhoto, formData.fotoPerfilUrl]);
 
-  const totalSteps = 7;
+  const totalSteps = 8;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleNext = () => {
@@ -385,18 +386,6 @@ const ProfessionalForm = () => {
   const renderStep4 = () => (
     <div className="space-y-6">
       <div>
-        <Label htmlFor="resumoProfissional">Escreva o resumo profissional <span className="text-red-500">*</span></Label>
-        <Textarea
-          id="resumoProfissional"
-          value={formData.resumoProfissional}
-          onChange={(e) => updateFormData('resumoProfissional', e.target.value)}
-          placeholder="Descreva sua experiência, especializações e abordagem terapêutica..."
-          rows={4}
-          required
-        />
-      </div>
-
-      <div>
         <Label htmlFor="senha">Senha <span className="text-red-500">*</span></Label>
         <div className="relative">
           <Input
@@ -458,9 +447,43 @@ const ProfessionalForm = () => {
 
   const renderStep6 = () => (
     <div className="space-y-6">
+      <div>
+        <Label className="text-base font-medium mb-4 block">
+          Configuração de Intervalos <span className="text-red-500">*</span>
+        </Label>
+        <p className="text-sm text-muted-foreground mb-4">
+          Escolha o intervalo entre os horários disponíveis para agendamento.
+        </p>
+        <RadioGroup 
+          value={formData.intervaloHorarios} 
+          onValueChange={(value) => updateFormData('intervaloHorarios', value)}
+          className="space-y-3"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="30" id="intervalo-30" />
+            <Label htmlFor="intervalo-30" className="cursor-pointer">
+              <div>
+                <div className="font-medium">30 em 30 minutos</div>
+                <div className="text-sm text-muted-foreground">Ex: 10:00, 10:30, 11:00, 11:30...</div>
+              </div>
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="60" id="intervalo-60" />
+            <Label htmlFor="intervalo-60" className="cursor-pointer">
+              <div>
+                <div className="font-medium">1 em 1 hora</div>
+                <div className="text-sm text-muted-foreground">Ex: 10:00, 11:00, 12:00, 13:00...</div>
+              </div>
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+
       <ScheduleSelector
         value={formData.horarios}
         onChange={(horarios) => updateFormData('horarios', horarios)}
+        intervalMinutes={parseInt(formData.intervaloHorarios)}
       />
     </div>
   );
@@ -474,13 +497,33 @@ const ProfessionalForm = () => {
     </div>
   );
 
+  const renderStep8 = () => (
+    <div className="space-y-6">
+      <div>
+        <Label htmlFor="resumoProfissional">Escreva seu resumo profissional <span className="text-red-500">*</span></Label>
+        <p className="text-sm text-muted-foreground mb-3">
+          Descreva sua experiência, especializações e abordagem terapêutica. Este texto será exibido no seu perfil público.
+        </p>
+        <Textarea
+          id="resumoProfissional"
+          value={formData.resumoProfissional}
+          onChange={(e) => updateFormData('resumoProfissional', e.target.value)}
+          placeholder="Descreva sua experiência, especializações e abordagem terapêutica..."
+          rows={6}
+          required
+        />
+      </div>
+    </div>
+  );
+
   const canProceedStep1 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf;
   const canProceedStep2 = formData.profissao && formData.possuiEPsi && formData.crpCrm;
   const canProceedStep3 = true; // Campos opcionais
-  const canProceedStep4 = formData.resumoProfissional && formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha;
+  const canProceedStep4 = formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha;
   const canProceedStep5 = formData.especialidades.length > 0;
-  const canProceedStep6 = formData.horarios.length > 0;
-  const canSubmit = true; // Google Calendar é opcional
+  const canProceedStep6 = formData.intervaloHorarios && formData.horarios.length > 0;
+  const canProceedStep7 = true; // Google Calendar é opcional
+  const canSubmit = formData.resumoProfissional; // Resumo é obrigatório na última etapa
 
   return (
     <div className="min-h-screen bg-background">
@@ -506,17 +549,18 @@ const ProfessionalForm = () => {
               <ProgressIndicator 
                 currentStep={currentStep} 
                 totalSteps={totalSteps} 
-                stepLabels={['Dados Pessoais', 'Profissão', 'Perfil', 'Resumo', 'Especialidades', 'Horários', 'Agenda']}
+                stepLabels={['Dados Pessoais', 'Profissão', 'Perfil', 'Credenciais', 'Especialidades', 'Horários', 'Agenda', 'Resumo']}
                 className="mb-6"
               />
               <CardTitle className="text-center text-xl">
                 {currentStep === 1 ? 'Seus dados pessoais' :
                  currentStep === 2 ? 'Informações profissionais' :
                  currentStep === 3 ? 'Perfil e contatos' :
-                 currentStep === 4 ? 'Resumo e credenciais' :
+                 currentStep === 4 ? 'Credenciais de acesso' :
                  currentStep === 5 ? 'Suas especialidades' :
                  currentStep === 6 ? 'Horários de atendimento' :
-                 'Integração com agenda'}
+                 currentStep === 7 ? 'Integração com agenda' :
+                 'Resumo profissional'}
               </CardTitle>
             </CardHeader>
             
@@ -528,6 +572,7 @@ const ProfessionalForm = () => {
               {currentStep === 5 && renderStep5()}
               {currentStep === 6 && renderStep6()}
               {currentStep === 7 && renderStep7()}
+              {currentStep === 8 && renderStep8()}
 
               <div className="flex justify-between pt-6">
                 <Button
@@ -549,7 +594,8 @@ const ProfessionalForm = () => {
                       (currentStep === 3 && !canProceedStep3) ||
                       (currentStep === 4 && !canProceedStep4) ||
                       (currentStep === 5 && !canProceedStep5) ||
-                      (currentStep === 6 && !canProceedStep6)
+                      (currentStep === 6 && !canProceedStep6) ||
+                      (currentStep === 7 && !canProceedStep7)
                     }
                     variant="teal"
                     className="flex items-center gap-2"
