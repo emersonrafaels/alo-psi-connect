@@ -175,8 +175,8 @@ const ProfessionalForm = () => {
       if (!data?.success) throw new Error('Erro no processamento do cadastro');
 
       toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Seu perfil será analisado e em breve estará disponível na plataforma.",
+        title: "Cadastro Finalizado!",
+        description: "Seu perfil profissional foi criado com sucesso. Bem-vindo(a) à nossa plataforma!",
       });
 
       // Mostrar modal do Google Calendar ao invés de navegar diretamente
@@ -215,7 +215,7 @@ const ProfessionalForm = () => {
       }
       
       toast({
-        title: "Erro no cadastro",
+        title: "Erro no Cadastro",
         description: errorMessage,
         variant: "destructive",
       });

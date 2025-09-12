@@ -23,22 +23,48 @@ serve(async (req) => {
 
     console.log('Creating professional profile for user:', userId);
 
-    // Create profile with admin privileges
-    const { data: profile, error: profileError } = await supabaseAdmin
+    // Check if profile already exists
+    const { data: existingProfile, error: checkError } = await supabaseAdmin
       .from('profiles')
-      .insert({
-        user_id: userId,
-        ...profileData
-      })
-      .select()
+      .select('*')
+      .eq('user_id', userId)
       .single();
 
-    if (profileError) {
-      console.error('Profile creation error:', profileError);
-      throw profileError;
+    let profile;
+    if (existingProfile) {
+      console.log('Profile already exists, updating:', existingProfile.id);
+      // Update existing profile
+      const { data: updatedProfile, error: updateError } = await supabaseAdmin
+        .from('profiles')
+        .update(profileData)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        throw updateError;
+      }
+      profile = updatedProfile;
+    } else {
+      // Create new profile
+      const { data: newProfile, error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          user_id: userId,
+          ...profileData
+        })
+        .select()
+        .single();
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        throw profileError;
+      }
+      profile = newProfile;
     }
 
-    console.log('Profile created successfully:', profile.id);
+    console.log('Profile processed successfully:', profile.id);
 
     // Get the highest user_id from profissionais table to generate next integer ID
     const { data: maxUserIdData } = await supabaseAdmin
@@ -53,28 +79,64 @@ serve(async (req) => {
 
     console.log('Using user_id for professional:', nextUserId);
 
-    // Create professional data with generated integer user_id
-    const { data: professional, error: professionalError } = await supabaseAdmin
+    // Check if professional already exists
+    const { data: existingProfessional } = await supabaseAdmin
       .from('profissionais')
-      .insert({
-        profile_id: profile.id,
-        user_id: nextUserId, // Use generated integer ID
-        ...professionalData
-      })
-      .select()
+      .select('*')
+      .eq('profile_id', profile.id)
       .single();
 
-    if (professionalError) {
-      console.error('Professional creation error:', professionalError);
-      throw professionalError;
+    let professional;
+    let finalUserId = nextUserId;
+    
+    if (existingProfessional) {
+      console.log('Professional already exists, updating:', existingProfessional.id);
+      finalUserId = existingProfessional.user_id; // Use existing user_id
+      
+      // Update existing professional
+      const { data: updatedProfessional, error: updateError } = await supabaseAdmin
+        .from('profissionais')
+        .update(professionalData)
+        .eq('profile_id', profile.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Professional update error:', updateError);
+        throw updateError;
+      }
+      professional = updatedProfessional;
+    } else {
+      // Create new professional with generated integer user_id
+      const { data: newProfessional, error: professionalError } = await supabaseAdmin
+        .from('profissionais')
+        .insert({
+          profile_id: profile.id,
+          user_id: nextUserId, // Use generated integer ID
+          ...professionalData
+        })
+        .select()
+        .single();
+
+      if (professionalError) {
+        console.error('Professional creation error:', professionalError);
+        throw professionalError;
+      }
+      professional = newProfessional;
     }
 
-    console.log('Professional data created successfully:', professional.id);
+    console.log('Professional processed successfully:', professional.id);
 
-    // Create schedules if provided
+    // Handle schedules if provided
     if (horariosData && horariosData.length > 0) {
+      // First, delete existing schedules for this user
+      await supabaseAdmin
+        .from('profissionais_sessoes')
+        .delete()
+        .eq('user_id', finalUserId);
+
       const horariosFormatted = horariosData.map((horario: any) => ({
-        user_id: nextUserId, // Use the same integer ID
+        user_id: finalUserId, // Use the correct user_id
         day: horario.day,
         start_time: horario.startTime,
         end_time: horario.endTime,
@@ -90,7 +152,7 @@ serve(async (req) => {
         throw horariosError;
       }
 
-      console.log('Schedules created successfully');
+      console.log('Schedules processed successfully');
     }
 
     return new Response(
