@@ -139,8 +139,7 @@ serve(async (req) => {
         user_id: finalUserId, // Use the correct user_id
         day: horario.day,
         start_time: horario.startTime,
-        end_time: horario.endTime,
-        minutos_janela: horario.duration || 30
+        end_time: horario.endTime
       }));
 
       const { error: horariosError } = await supabaseAdmin
