@@ -21,6 +21,7 @@ import { useProfileManager } from '@/hooks/useProfileManager';
 import { ScheduleSelector } from '@/components/ScheduleSelector';
 import { SpecialtiesSelector } from '@/components/SpecialtiesSelector';
 import { GoogleCalendarWelcomeModal } from '@/components/GoogleCalendarWelcomeModal';
+import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 
 const ProfessionalForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -28,6 +29,7 @@ const ProfessionalForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showGoogleCalendarModal, setShowGoogleCalendarModal] = useState(false);
+  const [showExistingAccountModal, setShowExistingAccountModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -70,10 +72,44 @@ const ProfessionalForm = () => {
     saveGoogleProfilePhoto();
   }, [googleData, saveGooglePhoto, formData.fotoPerfilUrl]);
 
+  // Verificar se há dados pendentes de cadastro profissional
+  useEffect(() => {
+    const pendingData = sessionStorage.getItem('pendingProfessionalData');
+    const continueRegistration = sessionStorage.getItem('continueRegistration');
+    
+    if (pendingData && continueRegistration === 'true' && user) {
+      try {
+        const parsedData = JSON.parse(pendingData);
+        setFormData(parsedData);
+        sessionStorage.removeItem('pendingProfessionalData');
+        sessionStorage.removeItem('continueRegistration');
+        
+        toast({
+          title: "Dados recuperados",
+          description: "Seus dados foram recuperados. Continue o cadastro onde parou.",
+          variant: "default",
+        });
+      } catch (error) {
+        console.error('Erro ao recuperar dados pendentes:', error);
+      }
+    }
+  }, [user, toast]);
+
   const totalSteps = 7;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // Se estamos no step 1 e não há usuário logado, verificar se email já existe
+    if (currentStep === 1 && !user && formData.email) {
+      const emailCheck = await checkEmailExists(formData.email);
+      if (emailCheck?.exists) {
+        // Salvar dados do formulário para recuperar após login
+        sessionStorage.setItem('pendingProfessionalData', JSON.stringify(formData));
+        setShowExistingAccountModal(true);
+        return;
+      }
+    }
+
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
@@ -99,8 +135,18 @@ const ProfessionalForm = () => {
     try {
       let currentUser = user;
       
-      // Se não há usuário logado, criar a conta primeiro
+      // Se não há usuário logado, verificar se email já existe antes de criar conta
       if (!currentUser) {
+        const emailCheck = await checkEmailExists(formData.email);
+        if (emailCheck?.exists) {
+          // Salvar dados do formulário
+          sessionStorage.setItem('pendingProfessionalData', JSON.stringify(formData));
+          setShowExistingAccountModal(true);
+          setLoading(false);
+          return;
+        }
+
+        // Criar a conta
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.senha,
@@ -221,6 +267,20 @@ const ProfessionalForm = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkEmailExists = async (email: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-email-exists', {
+        body: { email }
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error: any) {
+      console.error('Erro ao verificar email:', error);
+      return null;
     }
   };
 
@@ -718,6 +778,13 @@ const ProfessionalForm = () => {
           setShowGoogleCalendarModal(false);
           navigate('/');
         }}
+      />
+
+      {/* Modal de conta existente */}
+      <ExistingAccountModal
+        isOpen={showExistingAccountModal}
+        onClose={() => setShowExistingAccountModal(false)}
+        email={formData.email}
       />
     </div>
   );

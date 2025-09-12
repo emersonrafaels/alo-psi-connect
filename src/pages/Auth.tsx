@@ -172,12 +172,35 @@ const Auth = () => {
                     type="button" 
                     variant="link" 
                     className="text-sm text-muted-foreground hover:text-primary"
-                    onClick={() => {
-                      // TODO: Implement forgot password
-                      toast({
-                        title: "Recurso em desenvolvimento",
-                        description: "A recuperação de senha estará disponível em breve.",
-                      });
+                    onClick={async () => {
+                      if (!email) {
+                        toast({
+                          title: "Digite seu email",
+                          description: "Por favor, digite seu email no campo acima antes de recuperar a senha.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      
+                      try {
+                        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                          redirectTo: `${window.location.origin}/auth?reset=true`,
+                        });
+
+                        if (error) throw error;
+
+                        toast({
+                          title: "Email enviado!",
+                          description: "Verifique sua caixa de entrada para redefinir sua senha.",
+                          variant: "default",
+                        });
+                      } catch (error: any) {
+                        toast({
+                          title: "Erro ao enviar email",
+                          description: "Não foi possível enviar o email de recuperação. Tente novamente.",
+                          variant: "destructive",
+                        });
+                      }
                     }}
                   >
                     Esqueci minha senha
