@@ -567,13 +567,15 @@ const ProfessionalForm = () => {
           <Card>
             <CardHeader>
               <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-muted-foreground">Passo {currentStep} de {totalSteps}</span>
                   <span className="text-sm text-muted-foreground">100% concluído</span>
                 </div>
-                <div className="flex items-center gap-2">
+                
+                {/* Timeline horizontal distribuída */}
+                <div className="flex items-center justify-between w-full">
                   {[
-                    { number: 1, title: 'Dados Pessoais', completed: currentStep > 1 },
+                    { number: 1, title: 'Dados\nPessoais', completed: currentStep > 1 },
                     { number: 2, title: 'Profissão', completed: currentStep > 2 },
                     { number: 3, title: 'Perfil', completed: currentStep > 3 },
                     { number: 4, title: 'Resumo', completed: currentStep > 4 },
@@ -581,15 +583,26 @@ const ProfessionalForm = () => {
                     { number: 6, title: 'Horários', completed: currentStep > 6 },
                     { number: 7, title: 'Credenciais', completed: currentStep > 7 }
                   ].map((step, index) => (
-                    <div key={step.number} className="flex items-center">
+                    <div key={step.number} className="flex flex-col items-center relative">
+                      {/* Linha de conexão */}
+                      {index < 6 && (
+                        <div 
+                          className={`absolute top-4 left-8 w-full h-0.5 -z-10 
+                            ${step.completed ? 'bg-primary' : 'bg-muted'}`} 
+                          style={{ width: 'calc(100vw / 7 - 2rem)' }}
+                        />
+                      )}
+                      
+                      {/* Círculo do step */}
                       <div
-                        className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all cursor-pointer hover:scale-105
-                          ${step.completed || currentStep === step.number
+                        className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all cursor-pointer hover:scale-105 mb-2
+                          ${step.completed 
                             ? 'bg-primary text-primary-foreground' 
+                            : currentStep === step.number
+                            ? 'bg-primary text-primary-foreground'
                             : 'bg-muted text-muted-foreground'
                           }`}
                         onClick={() => setCurrentStep(step.number)}
-                        title={step.title}
                       >
                         {step.completed ? (
                           <Check className="h-4 w-4" />
@@ -597,20 +610,20 @@ const ProfessionalForm = () => {
                           step.number
                         )}
                       </div>
-                      {index < 6 && (
-                        <div className={`h-1 w-8 ${step.completed ? 'bg-primary' : 'bg-muted'}`} />
-                      )}
+                      
+                      {/* Nome do step */}
+                      <span 
+                        className={`text-xs text-center whitespace-pre-line leading-tight cursor-pointer
+                          ${step.completed || currentStep === step.number 
+                            ? 'text-primary font-medium' 
+                            : 'text-muted-foreground'
+                          }`}
+                        onClick={() => setCurrentStep(step.number)}
+                      >
+                        {step.title}
+                      </span>
                     </div>
                   ))}
-                </div>
-                <div className="text-center text-xs text-muted-foreground mt-2">
-                  {currentStep === 1 ? 'Dados Pessoais' :
-                   currentStep === 2 ? 'Profissão' :
-                   currentStep === 3 ? 'Perfil' :
-                   currentStep === 4 ? 'Resumo' :
-                   currentStep === 5 ? 'Especialidades' :
-                   currentStep === 6 ? 'Horários' :
-                   'Credenciais'}
                 </div>
               </div>
               <CardTitle className="text-center text-xl">
