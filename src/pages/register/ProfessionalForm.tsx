@@ -113,68 +113,66 @@ const ProfessionalForm = () => {
         if (!authData.user) throw new Error('Erro ao criar conta');
         
         currentUser = authData.user;
+        
+        // Aguardar um pouco para garantir que a autenticação seja processada
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
-      // Criar perfil
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: currentUser.id,
-          nome: formData.nome,
-          email: formData.email,
-          data_nascimento: formData.dataNascimento,
-          genero: formData.genero,
-          cpf: formData.cpf,
-          como_conheceu: formData.comoConheceu,
-          tipo_usuario: 'profissional'
-        })
-        .select()
-        .single();
-
-      if (profileError) throw profileError;
-
-      // Criar dados específicos do profissional
-      const { data: professional, error: professionalError } = await supabase
-        .from('profissionais')
-        .insert({
-          profile_id: profile.id,
-          user_id: parseInt(currentUser.id), // Converter para integer conforme schema existente
-          display_name: formData.nome,
-          user_email: formData.email,
-          user_login: formData.email,
-          first_name: formData.nome.split(' ')[0],
-          last_name: formData.nome.split(' ').slice(1).join(' '),
-          profissao: formData.profissao,
-          crp_crm: formData.crpCrm,
-          cpf: formData.cpf,
-          linkedin: formData.linkedin,
-          resumo_profissional: formData.resumoProfissional,
-          foto_perfil_url: formData.fotoPerfilUrl,
-          possui_e_psi: formData.possuiEPsi === 'sim',
-          servicos_raw: formData.especialidades.join(', '), // Salvar especialidades
-          ativo: false // Aguardando aprovação
-        })
-        .select()
-        .single();
-
-      if (professionalError) throw professionalError;
-
-      // Salvar horários de atendimento
-      if (formData.horarios.length > 0) {
-        const horariosFormatted = formData.horarios.map(horario => ({
-          user_id: parseInt(currentUser.id),
-          day: horario.day,
-          start_time: horario.startTime,
-          end_time: horario.endTime,
-          minutos_janela: horario.duration
-        }));
-
-        const { error: horariosError } = await supabase
-          .from('profissionais_sessoes')
-          .insert(horariosFormatted);
-
-        if (horariosError) throw horariosError;
+      // Verificar se o usuário está realmente autenticado
+      const { data: { user: authenticatedUser } } = await supabase.auth.getUser();
+      if (!authenticatedUser && !currentUser) {
+        throw new Error('Erro na autenticação. Tente novamente.');
       }
+
+      const userToUse = authenticatedUser || currentUser;
+
+      // Preparar dados para a edge function
+      const profileData = {
+        nome: formData.nome,
+        email: formData.email,
+        data_nascimento: formData.dataNascimento || null,
+        genero: formData.genero || null,
+        cpf: formData.cpf || null,
+        como_conheceu: formData.comoConheceu || null,
+        tipo_usuario: 'profissional'
+      };
+
+      const professionalData = {
+        display_name: formData.nome,
+        user_email: formData.email,
+        user_login: formData.email,
+        first_name: formData.nome.split(' ')[0] || formData.nome,
+        last_name: formData.nome.split(' ').slice(1).join(' ') || '',
+        profissao: formData.profissao || null,
+        crp_crm: formData.crpCrm || null,
+        cpf: formData.cpf || null,
+        linkedin: formData.linkedin || null,
+        resumo_profissional: formData.resumoProfissional || null,
+        foto_perfil_url: formData.fotoPerfilUrl || null,
+        possui_e_psi: formData.possuiEPsi === 'sim',
+        servicos_raw: formData.especialidades.length > 0 ? formData.especialidades.join(', ') : null,
+        ativo: false
+      };
+
+      const horariosData = formData.horarios.map(horario => ({
+        day: horario.day,
+        startTime: horario.startTime,
+        endTime: horario.endTime,
+        duration: horario.duration || 30
+      }));
+
+      // Usar edge function para criar perfil com privilégios administrativos
+      const { data, error } = await supabase.functions.invoke('create-professional-profile', {
+        body: {
+          userId: userToUse.id,
+          profileData,
+          professionalData,
+          horariosData: horariosData.length > 0 ? horariosData : null
+        }
+      });
+
+      if (error) throw new Error(error.message || 'Erro ao criar perfil');
+      if (!data?.success) throw new Error('Erro no processamento do cadastro');
 
       toast({
         title: "Cadastro realizado com sucesso!",
@@ -184,6 +182,7 @@ const ProfessionalForm = () => {
       // Mostrar modal do Google Calendar ao invés de navegar diretamente
       setShowGoogleCalendarModal(true);
     } catch (error: any) {
+      console.error('Erro detalhado:', error);
       let errorMessage = error.message;
       
       // Tratamento de erros mais específicos
@@ -205,6 +204,14 @@ const ProfessionalForm = () => {
         }
       } else if (error.message?.includes('profiles_pkey')) {
         errorMessage = 'Usuário já possui um perfil cadastrado.';
+      } else if (error.message?.includes('violates row-level security policy')) {
+        errorMessage = 'Erro de permissão. Verifique se todos os campos obrigatórios foram preenchidos.';
+      } else if (error.message?.includes('Erro na autenticação')) {
+        errorMessage = 'Erro na autenticação. Tente novamente.';
+      } else if (error.message?.includes('Erro ao criar perfil')) {
+        errorMessage = 'Erro ao criar perfil. Verifique os dados e tente novamente.';
+      } else if (error.message?.includes('Erro no processamento do cadastro')) {
+        errorMessage = 'Erro no processamento do cadastro. Tente novamente.';
       }
       
       toast({
