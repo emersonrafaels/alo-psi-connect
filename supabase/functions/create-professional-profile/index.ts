@@ -40,12 +40,25 @@ serve(async (req) => {
 
     console.log('Profile created successfully:', profile.id);
 
-    // Create professional data
+    // Get the highest user_id from profissionais table to generate next integer ID
+    const { data: maxUserIdData } = await supabaseAdmin
+      .from('profissionais')
+      .select('user_id')
+      .order('user_id', { ascending: false })
+      .limit(1);
+
+    const nextUserId = maxUserIdData && maxUserIdData.length > 0 
+      ? (maxUserIdData[0].user_id || 0) + 1 
+      : 1;
+
+    console.log('Using user_id for professional:', nextUserId);
+
+    // Create professional data with generated integer user_id
     const { data: professional, error: professionalError } = await supabaseAdmin
       .from('profissionais')
       .insert({
         profile_id: profile.id,
-        user_id: parseInt(userId),
+        user_id: nextUserId, // Use generated integer ID
         ...professionalData
       })
       .select()
@@ -61,7 +74,7 @@ serve(async (req) => {
     // Create schedules if provided
     if (horariosData && horariosData.length > 0) {
       const horariosFormatted = horariosData.map((horario: any) => ({
-        user_id: parseInt(userId),
+        user_id: nextUserId, // Use the same integer ID
         day: horario.day,
         start_time: horario.startTime,
         end_time: horario.endTime,
@@ -94,10 +107,17 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Function error:', error);
+    
+    // Get more specific error message
+    const errorMessage = error?.message || 'Erro desconhecido';
+    const errorDetails = error?.details || error?.code || 'Sem detalhes adicionais';
+    
+    console.error('Error details:', errorDetails);
+    
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: error 
+        error: errorMessage,
+        details: errorDetails
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

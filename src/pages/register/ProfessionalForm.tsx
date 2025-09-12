@@ -576,7 +576,7 @@ const ProfessionalForm = () => {
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-muted-foreground">Passo {currentStep} de {totalSteps}</span>
-                  <span className="text-sm text-muted-foreground">100% concluído</span>
+                  <span className="text-sm text-muted-foreground">{Math.round(progressPercentage)}% concluído</span>
                 </div>
                 
                 {/* Timeline horizontal distribuída */}
