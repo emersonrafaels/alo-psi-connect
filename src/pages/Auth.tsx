@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PasswordResetForm } from '@/components/PasswordResetForm';
 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -17,11 +18,16 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
   
   const { toast } = useToast();
   const navigate = useNavigate();
   
   const { user } = useAuth();
+
+  // Verificar se é modo de reset de senha
+  const isResetMode = searchParams.get('reset') === 'true';
+  const resetToken = searchParams.get('token');
 
   useEffect(() => {
     // Se usuário já está logado, redirecionar para home ou página anterior
@@ -104,6 +110,32 @@ const Auth = () => {
     }
   };
 
+  // Se estiver em modo reset, mostrar apenas o formulário de reset
+  if (isResetMode) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        
+        <main className="container mx-auto px-4 py-20">
+          <div className="max-w-md mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                Redefinir senha
+              </h1>
+              <p className="text-muted-foreground">
+                Digite sua nova senha abaixo
+              </p>
+            </div>
+
+            <PasswordResetForm token={resetToken || undefined} />
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -183,27 +215,33 @@ const Auth = () => {
                       }
                       
                       try {
-                        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                          redirectTo: `${window.location.origin}/auth?reset=true`,
+                        setLoading(true);
+                        
+                        const { data, error } = await supabase.functions.invoke('send-password-reset', {
+                          body: { email }
                         });
 
                         if (error) throw error;
 
                         toast({
                           title: "Email enviado!",
-                          description: "Verifique sua caixa de entrada para redefinir sua senha.",
+                          description: "Se o email existir, você receberá instruções de recuperação.",
                           variant: "default",
                         });
                       } catch (error: any) {
+                        console.error('Password reset error:', error);
                         toast({
                           title: "Erro ao enviar email",
                           description: "Não foi possível enviar o email de recuperação. Tente novamente.",
                           variant: "destructive",
                         });
+                      } finally {
+                        setLoading(false);
                       }
                     }}
+                    disabled={loading}
                   >
-                    Esqueci minha senha
+                    {loading ? "Enviando..." : "Esqueci minha senha"}
                   </Button>
                 </div>
               </form>

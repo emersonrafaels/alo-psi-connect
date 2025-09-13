@@ -42,20 +42,21 @@ export const ExistingAccountModal: React.FC<ExistingAccountModalProps> = ({
     try {
       setSendingReset(true);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?reset=true`,
+      const { data, error } = await supabase.functions.invoke('send-password-reset', {
+        body: { email }
       });
 
       if (error) throw error;
 
       toast({
         title: "Email enviado!",
-        description: "Verifique sua caixa de entrada para redefinir sua senha.",
+        description: "Se o email existir, você receberá instruções de recuperação.",
         variant: "default",
       });
       
       onClose();
     } catch (error: any) {
+      console.error('Password reset error:', error);
       toast({
         title: "Erro ao enviar email",
         description: "Não foi possível enviar o email de recuperação. Tente novamente.",
