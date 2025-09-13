@@ -1,10 +1,13 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Valid roles based on app_role enum
+const VALID_ROLES = ['admin', 'super_admin', 'moderator'];
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -14,10 +17,20 @@ serve(async (req) => {
 
   try {
     const { userId, action, role } = await req.json();
+    
+    console.log('Role management request:', { userId, action, role });
 
     if (!userId || !action || !role) {
       return new Response(
         JSON.stringify({ error: 'userId, action, and role are required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate role
+    if (!VALID_ROLES.includes(role)) {
+      return new Response(
+        JSON.stringify({ error: `Invalid role. Valid roles are: ${VALID_ROLES.join(', ')}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -33,8 +46,8 @@ serve(async (req) => {
 
     // Create Supabase client
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      'https://mbuljmpamdocnxppueww.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1idWxqbXBhbWRvY254cHB1ZXd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwMTMxNzUsImV4cCI6MjA3MTU4OTE3NX0.byP_5kv4bwOSpenNl0giMneBNv7396XjWkFMOwc_ttY',
       {
         global: {
           headers: { Authorization: authHeader },
