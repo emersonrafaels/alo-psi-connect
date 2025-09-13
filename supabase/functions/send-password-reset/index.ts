@@ -87,7 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Enviar email com template personalizado
     const emailResponse = await resend.emails.send({
-      from: "Alô, Psi <noreply@alopsi.com.br>",
+      from: "Alô, Psi <onboarding@resend.dev>",
       to: [email],
       subject: "Recuperação de senha - Alô, Psi",
       html: `
