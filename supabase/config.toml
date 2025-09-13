@@ -26,8 +26,8 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["https://localhost:3000"]
+site_url = "https://alopsi.com.br"
+additional_redirect_urls = ["https://alopsi.com.br", "http://localhost:3000", "https://localhost:3000"]
 jwt_expiry = 3600
 refresh_token_rotation_enabled = true
 refresh_token_reuse_interval = 10
@@ -73,3 +73,6 @@ verify_jwt = true
 
 [functions.google-calendar-sync]
 verify_jwt = true
+
+[functions.send-password-reset]
+verify_jwt = false
