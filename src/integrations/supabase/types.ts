@@ -145,6 +145,42 @@ export type Database = {
         }
         Relationships: []
       }
+      deleted_users: {
+        Row: {
+          deleted_at: string
+          deleted_by: string | null
+          deletion_reason: string | null
+          email: string
+          id: string
+          nome: string
+          original_user_id: string
+          tipo_usuario: string
+          user_data: Json | null
+        }
+        Insert: {
+          deleted_at?: string
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          email: string
+          id?: string
+          nome: string
+          original_user_id: string
+          tipo_usuario: string
+          user_data?: Json | null
+        }
+        Update: {
+          deleted_at?: string
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          email?: string
+          id?: string
+          nome?: string
+          original_user_id?: string
+          tipo_usuario?: string
+          user_data?: Json | null
+        }
+        Relationships: []
+      }
       newsletter_subscriptions: {
         Row: {
           ativo: boolean

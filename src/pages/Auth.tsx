@@ -55,6 +55,23 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Check if user is in deleted_users table before attempting login
+      const { data: deletedUser, error: deletedUserError } = await supabase
+        .from('deleted_users')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (deletedUser) {
+        toast({
+          title: "Conta não encontrada",
+          description: "Esta conta não existe mais no sistema.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,

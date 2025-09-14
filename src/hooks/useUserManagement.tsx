@@ -81,30 +81,31 @@ export const useUserManagement = () => {
     }
   };
 
-  const deleteUser = async (userId: string) => {
+  const deleteUser = async (userId: string, deletionReason?: string) => {
     setLoading(true);
     try {
-      // For now, we'll just remove all roles and mark as inactive
-      // In a real implementation, you might want a proper soft delete
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
+      const { data, error } = await supabase.functions.invoke('delete-user-completely', {
+        body: { userId, deletionReason }
+      });
 
       if (error) {
         throw error;
       }
 
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
       toast({
-        title: "Usuário removido",
-        description: "Todas as roles do usuário foram removidas",
+        title: "Usuário deletado completamente",
+        description: `Usuário ${data.deletedUser?.nome} (${data.deletedUser?.email}) foi removido do sistema`,
       });
 
-      return { success: true };
+      return { success: true, data: data.deletedUser };
     } catch (error: any) {
       console.error('Error deleting user:', error);
       toast({
-        title: "Erro ao remover usuário",
+        title: "Erro ao deletar usuário",
         description: error.message || "Erro desconhecido",
         variant: "destructive",
       });

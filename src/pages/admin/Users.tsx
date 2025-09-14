@@ -8,6 +8,7 @@ import { UserManagementModal } from '@/components/admin/UserManagementModal';
 import { RoleManagementDialog } from '@/components/admin/RoleManagementDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useUserManagement } from '@/hooks/useUserManagement';
+import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
 import { Users as UsersIcon, User, Calendar, Settings, Trash2 } from 'lucide-react';
 
 interface UserProfile {
@@ -228,28 +229,29 @@ export default function AdminUsers() {
                   </Button>
                   
                   <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-2 text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                        Remover
-                      </Button>
-                    </AlertDialogTrigger>
+                     <AlertDialogTrigger asChild>
+                       <Button variant="outline" size="sm" className="gap-2 text-destructive hover:text-destructive">
+                         <Trash2 className="h-4 w-4" />
+                         Deletar
+                       </Button>
+                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Remover usuário</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja remover todas as roles admin de {user.nome}? 
-                          Esta ação não pode ser desfeita.
-                        </AlertDialogDescription>
+                       <AlertDialogTitle>Deletar usuário completamente</AlertDialogTitle>
+                         <AlertDialogDescription>
+                           <strong>ATENÇÃO:</strong> Tem certeza que deseja deletar completamente o usuário {user.nome}? 
+                           Esta ação irá remover TODOS os dados do usuário do sistema e não pode ser desfeita.
+                           Todos os agendamentos serão cancelados e o usuário não conseguirá mais fazer login.
+                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteUser(user.user_id || '')}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Remover
-                        </AlertDialogAction>
+                         <AlertDialogAction
+                           onClick={() => handleDeleteUser(user.user_id || '')}
+                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                         >
+                           Deletar Completamente
+                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -259,6 +261,9 @@ export default function AdminUsers() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Deleted Users Table */}
+      <DeletedUsersTable />
 
       {/* Role Management Dialog */}
       <RoleManagementDialog
