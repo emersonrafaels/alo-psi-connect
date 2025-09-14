@@ -72,16 +72,26 @@ const Header = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={profile?.foto_perfil_url} alt={profile?.nome || user.email || ''} />
-                      <AvatarFallback className="text-xs text-white bg-primary">
-                        {getInitials(profile?.nome || user.email || 'U')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="hidden sm:inline hidden sm:inline text-gray-800 dark:text-gray-200">
-                      {profile?.nome?.split(' ')[0] || user.email}
-                    </span>
+                  <Button
+                  variant="outline"
+                  size="sm"
+                  className="
+                    border-accent text-primary dark:text-primary-foreground
+                    hover:bg-accent hover:text-[#0B2B4C] 
+                    dark:hover:text-[#0B2B4C]
+                    dark:border-transparent
+                    flex items-center gap-2
+                  "
+                  >
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={profile?.foto_perfil_url} alt={profile?.nome || user.email || ''} />
+                    <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                    {getInitials(profile?.nome || user.email || 'U')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:inline">
+                    {profile?.nome?.split(' ')[0] || user.email}
+                  </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
