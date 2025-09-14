@@ -46,7 +46,7 @@ export const GoogleCalendarWelcomeModal: React.FC<GoogleCalendarWelcomeModalProp
                   <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
                   <div>
                     <h4 className="font-medium text-green-900">Privacidade</h4>
-                    <p className="text-sm text-green-700">A permissão compartilha apenas a situação dos horários como Livre ou Ocupado</p>
+                    <p className="text-sm text-green-700">A permissão compartilha apenas a situação dos horários como Livre ou Ocupado.</p>
                   </div>
                 </div>
               </CardContent>
