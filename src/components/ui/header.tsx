@@ -125,11 +125,19 @@ const Header = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <>
+                <>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="border-accent text-primary dark:text-primary-foreground hover:bg-accent hover:text-accent-foreground"
+                  className="
+                  border-accent 
+                  text-primary 
+                  dark:text-primary-foreground 
+                  hover:bg-accent 
+                  hover:text-[#0B2B4C] 
+                  dark:hover:text-[#0B2B4C]
+                  dark:border-transparent
+                  "
                   onClick={() => navigate('/cadastro/tipo-usuario')}
                 >
                   Cadastrar
@@ -137,12 +145,12 @@ const Header = () => {
                 <Button 
                   variant="default" 
                   size="sm" 
-                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                  className="bg-accent text-[#0B2B4C] hover:bg-accent/90"
                   onClick={() => navigate('/auth')}
                 >
                   Entrar
                 </Button>
-              </>
+                </>
             )}
           </div>
 

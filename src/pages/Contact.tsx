@@ -11,14 +11,14 @@ const Contact = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="bg-gray-50 py-16">
+      <section className="bg-gray-50 dark:bg-gray-900 py-16">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl lg:text-5xl font-bold mb-6">
+          <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-foreground">
             Entre em Contato
           </h1>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Estamos aqui para ajudar. Entre em contato conosco e tire suas dúvidas.
-          </p>
+        <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+          Estamos aqui para ajudar. Entre em contato conosco e tire suas dúvidas.
+        </p>
         </div>
       </section>
 
@@ -44,23 +44,27 @@ const Contact = () => {
                 <Input placeholder="(11) 99999-9999" />
               </div>
               
-              <div>
+                <div>
                 <label className="block text-sm font-medium mb-2">Assunto</label>
                 <Input placeholder="Qual o motivo do contato?" />
-              </div>
-              
-              <div>
+                </div>
+
+                <div>
                 <label className="block text-sm font-medium mb-2">Mensagem</label>
-                <textarea 
+                <textarea
                   placeholder="Escreva sua mensagem aqui..."
                   rows={6}
-                  className="w-full p-3 border border-input rounded-md resize-none"
+                  className="w-full p-3 rounded-md resize-none
+                  border border-input 
+                  bg-background text-foreground 
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                  disabled:cursor-not-allowed disabled:opacity-50"
                 />
-              </div>
-              
-              <Button variant="default" size="lg" className="w-full">
+                </div>
+
+                <Button variant="default" size="lg" className="w-full">
                 Enviar Mensagem
-              </Button>
+                </Button>
             </form>
           </div>
 
