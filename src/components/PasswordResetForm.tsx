@@ -29,6 +29,8 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ token }) =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Token recebido:', token);
+    
     if (!token) {
       toast({
         title: "Token inválido",
@@ -59,6 +61,8 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ token }) =
     setLoading(true);
 
     try {
+      console.log('Verificando token no banco:', token);
+      
       // Verificar se o token é válido
       const { data: tokenData, error: tokenError } = await supabase
         .from('password_reset_tokens')
@@ -68,7 +72,10 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ token }) =
         .gte('expires_at', new Date().toISOString())
         .single();
 
+      console.log('Resultado da consulta:', { tokenData, tokenError });
+
       if (tokenError || !tokenData) {
+        console.error('Token inválido:', tokenError);
         toast({
           title: "Token inválido",
           description: "O link de recuperação é inválido ou expirou.",
