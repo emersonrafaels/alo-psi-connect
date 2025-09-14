@@ -25,6 +25,7 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
 
   const handleConnectCalendar = async () => {
     if (!user || !session) {
+      console.error('Erro: Usuário não autenticado', { user: !!user, session: !!session });
       toast({
         title: "Erro de autenticação",
         description: "Você precisa estar logado para conectar o Google Calendar.",
@@ -35,7 +36,11 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
 
     setLoading(true);
     try {
-      console.log('Iniciando conexão com Google Calendar para usuário:', user.id);
+      console.log('Iniciando conexão com Google Calendar:', {
+        userId: user.id,
+        hasSession: !!session,
+        hasAccessToken: !!session.access_token
+      });
       
       // Chama a edge function para iniciar o OAuth do Google Calendar
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
@@ -45,12 +50,20 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
         },
       });
 
+      console.log('Response from edge function:', { data, error });
+
       if (error) {
         console.error('Erro na edge function:', error);
-        throw error;
+        throw new Error(error.message || 'Erro na comunicação com o servidor');
       }
 
-      if (data.authUrl) {
+      if (data?.error) {
+        console.error('Erro retornado pela função:', data.error);
+        throw new Error(data.error);
+      }
+
+      if (data?.authUrl) {
+        console.log('Opening Google auth URL:', data.authUrl);
         // Abre a URL de autorização em uma nova janela
         window.open(data.authUrl, 'google-auth', 'width=500,height=600');
         
@@ -59,12 +72,27 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
           title: "Redirecionando para o Google",
           description: "Complete a autorização na janela que se abriu.",
         });
+      } else {
+        console.error('No authUrl received:', data);
+        throw new Error('URL de autorização não recebida');
       }
     } catch (error: any) {
-      console.error('Erro completo na conexão:', error);
+      console.error('Erro completo na conexão:', {
+        message: error.message,
+        stack: error.stack,
+        error
+      });
+      
+      let errorMessage = error.message || "Erro desconhecido ao conectar o Google Calendar";
+      
+      // Tratamento específico para erro de credenciais
+      if (errorMessage.includes('credentials not configured')) {
+        errorMessage = "As credenciais do Google Calendar não foram configuradas. Entre em contato com o administrador.";
+      }
+      
       toast({
         title: "Erro na conexão",
-        description: error.message || "Erro desconhecido ao conectar o Google Calendar",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

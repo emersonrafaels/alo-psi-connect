@@ -20,7 +20,19 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log('Iniciando google-calendar-auth function...');
     
-    // Get the authorization header first
+    // Check if required secrets are available
+    const clientId = Deno.env.get('GOOGLE_CALENDAR_CLIENT_ID');
+    const clientSecret = Deno.env.get('GOOGLE_CALENDAR_CLIENT_SECRET');
+    
+    console.log('Google Calendar Client ID available:', !!clientId);
+    console.log('Google Calendar Client Secret available:', !!clientSecret);
+    
+    if (!clientId || !clientSecret) {
+      console.error('Google Calendar credentials not configured');
+      throw new Error('Google Calendar credentials not configured. Please contact administrator.');
+    }
+    
+    // Get the authorization header
     const authHeader = req.headers.get('Authorization');
     console.log('Authorization header presente:', !!authHeader);
     
@@ -49,14 +61,10 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Usuário autenticado com sucesso:', user.user.id);
 
     const { action, code }: GoogleCalendarAuthRequest = await req.json();
+    console.log('Action requested:', action);
 
-    const clientId = Deno.env.get('GOOGLE_CALENDAR_CLIENT_ID');
-    const clientSecret = Deno.env.get('GOOGLE_CALENDAR_CLIENT_SECRET');
     const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/google-calendar-auth`;
-
-    if (!clientId || !clientSecret) {
-      throw new Error('Configuração do Google Calendar não encontrada');
-    }
+    console.log('Redirect URI:', redirectUri);
 
     if (action === 'connect') {
       if (code) {
@@ -76,10 +84,13 @@ const handler = async (req: Request): Promise<Response> => {
         });
 
         if (!tokenResponse.ok) {
-          throw new Error('Erro ao obter token de acesso');
+          const errorText = await tokenResponse.text();
+          console.error('Token exchange failed:', errorText);
+          throw new Error(`Erro ao obter token de acesso: ${tokenResponse.status} - ${errorText}`);
         }
 
         const tokenData = await tokenResponse.json();
+        console.log('Token exchange successful:', !!tokenData.access_token);
 
         // Save tokens to user profile or professional table
         const { error: updateError } = await supabaseClient
