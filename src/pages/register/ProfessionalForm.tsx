@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { useProfileManager } from '@/hooks/useProfileManager';
 import { ScheduleSelector } from '@/components/ScheduleSelector';
 import { SpecialtiesSelector } from '@/components/SpecialtiesSelector';
+import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { GoogleCalendarWelcomeModal } from '@/components/GoogleCalendarWelcomeModal';
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 
@@ -122,6 +123,16 @@ const ProfessionalForm = () => {
   };
 
   const handleSubmit = async () => {
+    // Validação de senha
+    if (formData.senha.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A senha deve ter pelo menos 6 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (formData.senha !== formData.confirmarSenha) {
       toast({
         title: "Erro",
@@ -568,6 +579,11 @@ const ProfessionalForm = () => {
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
         </div>
+        
+        <PasswordStrengthIndicator 
+          password={formData.senha}
+          className="mt-3"
+        />
       </div>
 
       <div>
@@ -610,7 +626,7 @@ const ProfessionalForm = () => {
   const canProceedStep4 = formData.resumoProfissional; // Resumo é obrigatório
   const canProceedStep5 = formData.especialidades.length > 0;
   const canProceedStep6 = formData.intervaloHorarios && formData.horarios.length > 0;
-  const canSubmit = formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha; // Credenciais na última etapa
+  const canSubmit = formData.senha && formData.senha.length >= 6 && formData.confirmarSenha && formData.senha === formData.confirmarSenha; // Credenciais na última etapa
 
   return (
     <div className="min-h-screen bg-background">

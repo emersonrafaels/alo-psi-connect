@@ -135,9 +135,35 @@ serve(async (req) => {
         .delete()
         .eq('user_id', finalUserId);
 
+      // Map days to database constraint format (mon, tue, wed, etc.)
+      const dayMapping: Record<string, string> = {
+        'mon': 'mon',
+        'tue': 'tue', 
+        'wed': 'wed',
+        'thu': 'thu',
+        'fri': 'fri',
+        'sat': 'sat',
+        'sun': 'sun',
+        // Support for legacy formats
+        'monday': 'mon',
+        'tuesday': 'tue',
+        'wednesday': 'wed', 
+        'thursday': 'thu',
+        'friday': 'fri',
+        'saturday': 'sat',
+        'sunday': 'sun',
+        'segunda': 'mon',
+        'terca': 'tue',
+        'quarta': 'wed', 
+        'quinta': 'thu',
+        'sexta': 'fri',
+        'sabado': 'sat',
+        'domingo': 'sun'
+      };
+
       const horariosFormatted = horariosData.map((horario: any) => ({
         user_id: finalUserId, // Use the correct user_id
-        day: horario.day,
+        day: dayMapping[horario.day] || horario.day, // Map to database format
         start_time: horario.startTime,
         end_time: horario.endTime
       }));

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -74,6 +75,9 @@ export const ExistingAccountModal: React.FC<ExistingAccountModalProps> = ({
           <DialogTitle className="text-center text-xl font-semibold">
             Conta já existe
           </DialogTitle>
+          <DialogDescription className="text-center text-muted-foreground">
+            Este email já está cadastrado no sistema. Faça login para continuar.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 p-2">

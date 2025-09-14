@@ -22,13 +22,13 @@ interface ScheduleSelectorProps {
 }
 
 const DAYS_OF_WEEK = [
-  { value: 'segunda', label: 'Segunda-feira' },
-  { value: 'terca', label: 'Terça-feira' },
-  { value: 'quarta', label: 'Quarta-feira' },
-  { value: 'quinta', label: 'Quinta-feira' },
-  { value: 'sexta', label: 'Sexta-feira' },
-  { value: 'sabado', label: 'Sábado' },
-  { value: 'domingo', label: 'Domingo' }
+  { value: 'mon', label: 'Segunda-feira' },
+  { value: 'tue', label: 'Terça-feira' },
+  { value: 'wed', label: 'Quarta-feira' },
+  { value: 'thu', label: 'Quinta-feira' },
+  { value: 'fri', label: 'Sexta-feira' },
+  { value: 'sat', label: 'Sábado' },
+  { value: 'sun', label: 'Domingo' }
 ];
 
 const DURATIONS = [
