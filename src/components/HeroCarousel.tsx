@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { usePublicConfig } from '@/hooks/usePublicConfig';
+import Autoplay from 'embla-carousel-autoplay';
 
 // Helper function to convert S3 URLs to HTTPS format
 const convertS3ToHttps = (url: string): string => {
@@ -18,24 +19,34 @@ const convertS3ToHttps = (url: string): string => {
 export const HeroCarousel = () => {
   const { getConfig, loading } = usePublicConfig(['homepage']);
 
-  const { isCarousel, images } = useMemo(() => {
-    if (loading) return { isCarousel: false, images: [] };
+  const { isCarousel, images, autoPlayOptions } = useMemo(() => {
+    if (loading) return { isCarousel: false, images: [], autoPlayOptions: null };
     
     const carouselMode = getConfig('homepage', 'hero_carousel_mode', 'false');
     const imageUrls = getConfig('homepage', 'hero_images', []);
+    const autoPlay = getConfig('homepage', 'hero_carousel_auto_play', false);
+    const autoPlayDelay = getConfig('homepage', 'hero_carousel_auto_play_delay', 5);
     
-    console.log('HeroCarousel Debug:', { carouselMode, imageUrls, loading });
+    console.log('HeroCarousel Debug:', { carouselMode, imageUrls, autoPlay, autoPlayDelay, loading });
     
     // Converter carouselMode string para boolean
     const isCarouselEnabled = carouselMode === 'true' || carouselMode === true;
+    const isAutoPlayEnabled = autoPlay === 'true' || autoPlay === true;
     
     const processedImages = Array.isArray(imageUrls) 
       ? imageUrls.map(convertS3ToHttps).filter(Boolean)
       : [convertS3ToHttps(imageUrls)].filter(Boolean);
     
+    const autoPlayPluginOptions = isAutoPlayEnabled ? {
+      delay: Number(autoPlayDelay) * 1000, // Convert seconds to milliseconds
+      stopOnMouseEnter: true,
+      stopOnInteraction: false
+    } : null;
+    
     return {
       isCarousel: isCarouselEnabled,
-      images: processedImages
+      images: processedImages,
+      autoPlayOptions: autoPlayPluginOptions
     };
   }, [loading, getConfig]);
 
@@ -65,9 +76,20 @@ export const HeroCarousel = () => {
     );
   }
 
+  const carouselOptions = {
+    align: "start" as const,
+    loop: true
+  };
+
+  const carouselPlugins = autoPlayOptions ? [Autoplay(autoPlayOptions)] : [];
+
   return (
     <div className="relative">
-      <Carousel className="w-full" opts={{ align: "start", loop: true }}>
+      <Carousel 
+        className="w-full" 
+        opts={carouselOptions}
+        plugins={carouselPlugins}
+      >
         <CarouselContent>
           {images.map((image, index) => (
             <CarouselItem key={index}>

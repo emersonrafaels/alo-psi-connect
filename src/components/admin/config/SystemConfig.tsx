@@ -40,6 +40,8 @@ export const SystemConfig = () => {
     payment_cancel_redirect: '/pagamento-cancelado',
     // Homepage settings
     hero_carousel_mode: false,
+    hero_carousel_auto_play: false,
+    hero_carousel_auto_play_delay: 5,
     hero_images: ['https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png']
   });
 
@@ -64,6 +66,8 @@ export const SystemConfig = () => {
         payment_cancel_redirect: getConfig('system', 'payment_cancel_redirect', '/pagamento-cancelado'),
         // Homepage settings
         hero_carousel_mode: getConfig('homepage', 'hero_carousel_mode', false),
+        hero_carousel_auto_play: getConfig('homepage', 'hero_carousel_auto_play', false),
+        hero_carousel_auto_play_delay: getConfig('homepage', 'hero_carousel_auto_play_delay', 5),
         hero_images: heroImages
       });
 
@@ -141,6 +145,8 @@ export const SystemConfig = () => {
         updateConfig('system', 'payment_cancel_redirect', formData.payment_cancel_redirect),
         // Homepage settings
         updateConfig('homepage', 'hero_carousel_mode', formData.hero_carousel_mode),
+        updateConfig('homepage', 'hero_carousel_auto_play', formData.hero_carousel_auto_play),
+        updateConfig('homepage', 'hero_carousel_auto_play_delay', formData.hero_carousel_auto_play_delay),
         updateConfig('homepage', 'hero_images', formData.hero_images)
       ]);
     } finally {
@@ -408,6 +414,44 @@ export const SystemConfig = () => {
                     onCheckedChange={(checked) => setFormData(prev => ({ ...prev, hero_carousel_mode: checked }))}
                   />
                 </div>
+
+                {formData.hero_carousel_mode && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="auto_play">Passagem Automática</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Ative para o carrossel passar automaticamente
+                        </p>
+                      </div>
+                      <Switch
+                        id="auto_play"
+                        checked={formData.hero_carousel_auto_play}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, hero_carousel_auto_play: checked }))}
+                      />
+                    </div>
+
+                    {formData.hero_carousel_auto_play && (
+                      <div className="space-y-2">
+                        <Label htmlFor="auto_play_delay">Tempo entre Transições (segundos)</Label>
+                        <Input
+                          id="auto_play_delay"
+                          type="number"
+                          min="1"
+                          max="30"
+                          value={formData.hero_carousel_auto_play_delay}
+                          onChange={(e) => setFormData(prev => ({ 
+                            ...prev, 
+                            hero_carousel_auto_play_delay: Number(e.target.value) 
+                          }))}
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Recomendado: 3-8 segundos para boa experiência do usuário
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
                 
                 <div className="space-y-2">
                   <Label htmlFor="hero_images">URLs das Imagens (S3)</Label>
