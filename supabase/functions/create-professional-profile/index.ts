@@ -186,15 +186,15 @@ serve(async (req) => {
     
     try {
       // Check if this is a new user by checking if they have an unconfirmed email
-      // AND if they were created very recently (within last 5 minutes)
+      // AND if they were created very recently (within last 10 minutes)
       const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
       
       if (!authError && authUser.user && !authUser.user.email_confirmed_at) {
         // Check if user was created recently (indicates new registration)
         const userCreatedAt = new Date(authUser.user.created_at);
-        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
         
-        if (userCreatedAt > fiveMinutesAgo) {
+        if (userCreatedAt > tenMinutesAgo) {
           isNewUser = true;
         console.log('Sending confirmation email for new professional user:', profileData.email);
         
@@ -227,7 +227,7 @@ serve(async (req) => {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                from: 'Alô, Psi! <noreply@alopsi.com>',
+                from: 'Alô, Psi! <noreply@alopsi.com.br>',
                 to: [profileData.email],
                 subject: 'Confirme seu email - Alô, Psi!',
                 html: `

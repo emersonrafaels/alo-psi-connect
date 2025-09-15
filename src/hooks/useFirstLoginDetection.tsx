@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
-import { useUserProfile } from './useUserProfile';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FirstLoginState {
@@ -11,15 +10,18 @@ interface FirstLoginState {
 }
 
 export const useFirstLoginDetection = (): FirstLoginState => {
-  const { user } = useAuth();
-  const { profile } = useUserProfile();
+  const { user, loading: authLoading } = useAuth();
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [isProfessional, setIsProfessional] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkFirstLogin = async () => {
-      if (!user || !profile) {
+      if (authLoading) {
+        return; // Wait for auth to load
+      }
+      
+      if (!user) {
         setLoading(false);
         return;
       }
@@ -55,7 +57,7 @@ export const useFirstLoginDetection = (): FirstLoginState => {
     };
 
     checkFirstLogin();
-  }, [user, profile]);
+  }, [user, authLoading]);
 
   const markFirstLoginComplete = () => {
     if (user) {
