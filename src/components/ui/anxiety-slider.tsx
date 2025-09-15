@@ -74,9 +74,6 @@ export const AnxietySlider = React.forwardRef<
         <span className="text-4xl transition-transform duration-200 hover:scale-110">
           {currentEmoji}
         </span>
-        <div className="transition-transform duration-200 hover:scale-110">
-          <WavePattern intensity={currentValue} />
-        </div>
         <div className="text-center">
           <div className="text-lg font-medium" style={{ color: currentColor }}>
             {currentValue}/5
