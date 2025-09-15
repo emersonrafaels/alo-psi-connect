@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -48,11 +48,6 @@ export const EmailConfirmationForm: React.FC<EmailConfirmationFormProps> = ({ to
           description: "Sua conta foi ativada com sucesso.",
         });
 
-        // Redirecionar para login após 3 segundos
-        setTimeout(() => {
-          navigate('/auth', { replace: true });
-        }, 3000);
-
       } catch (error: any) {
         console.error('Email confirmation error:', error);
         setError(error.message || 'Erro ao confirmar email');
@@ -71,7 +66,17 @@ export const EmailConfirmationForm: React.FC<EmailConfirmationFormProps> = ({ to
 
   return (
     <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
+      <CardHeader className="relative">
+        {success && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute top-2 right-2"
+            onClick={() => navigate('/auth', { replace: true })}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
         <CardTitle className="text-center">Confirmação de Email</CardTitle>
         <CardDescription className="text-center">
           {loading && "Confirmando seu email..."}
@@ -95,7 +100,7 @@ export const EmailConfirmationForm: React.FC<EmailConfirmationFormProps> = ({ to
                 Email confirmado com sucesso!
               </h3>
               <p className="text-muted-foreground mt-2">
-                Sua conta foi ativada. Você será redirecionado para o login em instantes.
+                Sua conta foi ativada com sucesso!
               </p>
             </div>
             <Button 
