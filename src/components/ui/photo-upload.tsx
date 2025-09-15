@@ -44,40 +44,69 @@ export const PhotoUpload = ({
   }, [currentPhotoUrl]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validações
-    if (file.size > 10 * 1024 * 1024) { // 10MB
-      toast({
-        title: "Erro",
-        description: "A imagem deve ter no máximo 10MB",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Erro",
-        description: "Por favor, selecione apenas arquivos de imagem",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Cleanup previous object URL
-    if (localObjectUrl) {
-      URL.revokeObjectURL(localObjectUrl);
-    }
-
-    // Create local preview URL
-    const objectUrl = URL.createObjectURL(file);
-    setLocalObjectUrl(objectUrl);
-    setPreviewUrl(objectUrl);
+    console.log('PhotoUpload: handleFileSelect triggered');
     
-    // Notify parent component
-    onPhotoSelected(file);
+    const file = event.target.files?.[0];
+    console.log('PhotoUpload: File selected:', file);
+    
+    if (!file) {
+      console.log('PhotoUpload: No file selected');
+      return;
+    }
+
+    try {
+      console.log('PhotoUpload: Starting file validations...');
+      
+      // Validações
+      if (file.size > 10 * 1024 * 1024) { // 10MB
+        console.error('PhotoUpload: File too large:', file.size);
+        toast({
+          title: "Erro",
+          description: "A imagem deve ter no máximo 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        console.error('PhotoUpload: Invalid file type:', file.type);
+        toast({
+          title: "Erro",
+          description: "Por favor, selecione apenas arquivos de imagem",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('PhotoUpload: File validations passed');
+
+      // Cleanup previous object URL
+      if (localObjectUrl) {
+        console.log('PhotoUpload: Cleaning up previous object URL');
+        URL.revokeObjectURL(localObjectUrl);
+      }
+
+      console.log('PhotoUpload: Creating new object URL...');
+      // Create local preview URL
+      const objectUrl = URL.createObjectURL(file);
+      console.log('PhotoUpload: Object URL created:', objectUrl);
+      
+      setLocalObjectUrl(objectUrl);
+      setPreviewUrl(objectUrl);
+      
+      console.log('PhotoUpload: Notifying parent component...');
+      // Notify parent component
+      onPhotoSelected(file);
+      
+      console.log('PhotoUpload: File selection completed successfully');
+    } catch (error) {
+      console.error('PhotoUpload: Error in handleFileSelect:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao processar o arquivo. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
 

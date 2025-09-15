@@ -72,6 +72,10 @@ const Profile = () => {
   }, [profile, user, profileLoading]);
 
   const handleSubmit = async () => {
+    console.log('Profile: handleSubmit started');
+    console.log('Profile: selectedFile:', selectedFile);
+    console.log('Profile: formData:', formData);
+    
     setLoading(true);
 
     try {
@@ -79,14 +83,29 @@ const Profile = () => {
 
       // Se há um arquivo selecionado, fazer upload primeiro
       if (selectedFile) {
+        console.log('Profile: Starting photo upload...');
         // Usar a função uploadProfilePhoto já disponível do hook
         const photoUrl = await uploadProfilePhoto(selectedFile);
-        finalFormData.foto_perfil_url = photoUrl;
+        console.log('Profile: Photo upload result:', photoUrl);
+        
+        if (photoUrl) {
+          finalFormData.foto_perfil_url = photoUrl;
+          console.log('Profile: Photo URL added to form data:', photoUrl);
+        } else {
+          console.error('Profile: Photo upload failed');
+          toast({
+            title: "Erro no upload",
+            description: "Erro ao fazer upload da foto. Perfil será salvo sem a nova foto.",
+            variant: "destructive",
+          });
+        }
       }
 
+      console.log('Profile: Updating profile with final data:', finalFormData);
       const { error } = await updateProfile(finalFormData);
       
       if (!error) {
+        console.log('Profile: Update successful');
         // Limpar arquivo selecionado após sucesso
         setSelectedFile(null);
         
@@ -95,6 +114,7 @@ const Profile = () => {
           description: "Suas informações foram salvas com sucesso.",
         });
       } else {
+        console.error('Profile: Update error:', error);
         toast({
           title: "Erro ao atualizar",
           description: "Houve um problema ao salvar suas informações. Tente novamente.",
@@ -102,14 +122,16 @@ const Profile = () => {
         });
       }
     } catch (error: any) {
+      console.error('Profile: Catch block error:', error);
       toast({
         title: "Erro no upload",
         description: error.message || "Erro ao fazer upload da foto",
         variant: "destructive",
       });
+    } finally {
+      console.log('Profile: Setting loading to false');
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const updateFormData = (field: string, value: string) => {
@@ -117,10 +139,12 @@ const Profile = () => {
   };
 
   const handlePhotoSelected = (file: File | null) => {
+    console.log('Profile handlePhotoSelected: File received:', file);
     setSelectedFile(file);
   };
 
   const handlePhotoUrlChange = (url: string) => {
+    console.log('Profile handlePhotoUrlChange: URL received:', url);
     updateFormData('foto_perfil_url', url);
   };
 
