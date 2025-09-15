@@ -1,34 +1,51 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from './button';
 import { Input } from './input';
 import { Label } from './label';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Upload, X, Image as ImageIcon, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
 
 interface PhotoUploadProps {
-  onPhotoUploaded: (url: string) => void;
+  onPhotoSelected: (file: File | null) => void;
+  onPhotoUrlChange: (url: string) => void;
   currentPhotoUrl?: string;
+  selectedFile?: File | null;
   label?: string;
   className?: string;
 }
 
 export const PhotoUpload = ({ 
-  onPhotoUploaded, 
+  onPhotoSelected,
+  onPhotoUrlChange,
   currentPhotoUrl, 
+  selectedFile,
   label = "Foto de Perfil",
   className = ""
 }: PhotoUploadProps) => {
-  const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(currentPhotoUrl || '');
+  const [localObjectUrl, setLocalObjectUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user } = useAuth();
   const { toast } = useToast();
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Cleanup object URL when component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      if (localObjectUrl) {
+        URL.revokeObjectURL(localObjectUrl);
+      }
+    };
+  }, [localObjectUrl]);
+
+  // Update preview when currentPhotoUrl changes
+  useEffect(() => {
+    if (currentPhotoUrl !== previewUrl) {
+      setPreviewUrl(currentPhotoUrl || '');
+    }
+  }, [currentPhotoUrl]);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user) return;
+    if (!file) return;
 
     // Validações
     if (file.size > 10 * 1024 * 1024) { // 10MB
@@ -49,63 +66,58 @@ export const PhotoUpload = ({
       return;
     }
 
-    setUploading(true);
-
-    try {
-      // Criar FormData para enviar para a Edge Function
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('professionalId', user.id); // Usar user.id como identificador
-
-      // Chamar a Edge Function upload-to-s3
-      const { data, error } = await supabase.functions.invoke('upload-to-s3', {
-        body: formData,
-      });
-
-      if (error) throw error;
-
-      const photoUrl = data.url;
-      setPreviewUrl(photoUrl);
-      onPhotoUploaded(photoUrl);
-
-      toast({
-        title: "Sucesso",
-        description: "Foto enviada com sucesso!",
-      });
-
-    } catch (error: any) {
-      console.error('Erro no upload para S3:', error);
-      toast({
-        title: "Erro no upload",
-        description: error.message || "Erro ao fazer upload da imagem",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
+    // Cleanup previous object URL
+    if (localObjectUrl) {
+      URL.revokeObjectURL(localObjectUrl);
     }
+
+    // Create local preview URL
+    const objectUrl = URL.createObjectURL(file);
+    setLocalObjectUrl(objectUrl);
+    setPreviewUrl(objectUrl);
+    
+    // Notify parent component
+    onPhotoSelected(file);
   };
 
 
   const clearPhoto = () => {
+    // Cleanup object URL
+    if (localObjectUrl) {
+      URL.revokeObjectURL(localObjectUrl);
+      setLocalObjectUrl(null);
+    }
+    
     setPreviewUrl('');
-    onPhotoUploaded('');
+    onPhotoSelected(null);
+    onPhotoUrlChange('');
+    
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
+
+  // Show current preview (local file or server URL)
+  const displayUrl = localObjectUrl || previewUrl;
+  const isPendingSave = !!selectedFile;
 
   return (
     <div className={`space-y-4 ${className}`}>
       <Label>{label}</Label>
       
       {/* Preview da foto */}
-      {previewUrl && (
+      {displayUrl && (
         <div className="relative inline-block">
           <img 
-            src={previewUrl} 
+            src={displayUrl} 
             alt="Preview" 
             className="w-32 h-32 object-cover rounded-lg border"
           />
+          {isPendingSave && (
+            <div className="absolute -top-1 -left-1 bg-orange-500 text-white p-1 rounded-full shadow-lg">
+              <Clock className="h-3 w-3" />
+            </div>
+          )}
           <Button
             type="button"
             variant="destructive"
@@ -118,17 +130,21 @@ export const PhotoUpload = ({
         </div>
       )}
 
+      {/* Indicador de pendência */}
+      {isPendingSave && (
+        <p className="text-sm text-orange-600 flex items-center gap-1">
+          <Clock className="h-4 w-4" />
+          Foto pendente - salve o formulário para enviar
+        </p>
+      )}
+
       {/* Upload área */}
       <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
         <div className="text-center space-y-4">
           <div className="flex flex-col items-center gap-2">
-            {uploading ? (
-              <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
-            ) : (
-              <Upload className="h-8 w-8 text-muted-foreground" />
-            )}
+            <Upload className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              {uploading ? 'Enviando...' : 'Clique para fazer upload ou arraste uma imagem'}
+              Clique para selecionar uma imagem
             </p>
           </div>
 
@@ -145,7 +161,6 @@ export const PhotoUpload = ({
               type="button"
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
               className="w-full"
             >
               <ImageIcon className="h-4 w-4 mr-2" />

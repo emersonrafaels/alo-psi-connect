@@ -23,7 +23,7 @@ import { ArrowLeft, Camera, Check } from 'lucide-react';
 const Profile = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { profile, loading: profileLoading, updateProfile } = useProfileManager();
+  const { profile, loading: profileLoading, updateProfile, uploadProfilePhoto } = useProfileManager();
   const { isProfessional } = useUserType();
   const { isConnected: googleCalendarConnected, refetch: refetchGoogleCalendar } = useGoogleCalendarStatus();
   const { toast } = useToast();
@@ -38,6 +38,8 @@ const Profile = () => {
     foto_perfil_url: '',
     como_conheceu: ''
   });
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Popula o formulário quando o perfil é carregado
   useEffect(() => {
@@ -72,17 +74,37 @@ const Profile = () => {
   const handleSubmit = async () => {
     setLoading(true);
 
-    const { error } = await updateProfile(formData);
-    
-    if (!error) {
+    try {
+      let finalFormData = { ...formData };
+
+      // Se há um arquivo selecionado, fazer upload primeiro
+      if (selectedFile) {
+        // Usar a função uploadProfilePhoto já disponível do hook
+        const photoUrl = await uploadProfilePhoto(selectedFile);
+        finalFormData.foto_perfil_url = photoUrl;
+      }
+
+      const { error } = await updateProfile(finalFormData);
+      
+      if (!error) {
+        // Limpar arquivo selecionado após sucesso
+        setSelectedFile(null);
+        
+        toast({
+          title: "Perfil atualizado",
+          description: "Suas informações foram salvas com sucesso.",
+        });
+      } else {
+        toast({
+          title: "Erro ao atualizar",
+          description: "Houve um problema ao salvar suas informações. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram salvas com sucesso.",
-      });
-    } else {
-      toast({
-        title: "Erro ao atualizar",
-        description: "Houve um problema ao salvar suas informações. Tente novamente.",
+        title: "Erro no upload",
+        description: error.message || "Erro ao fazer upload da foto",
         variant: "destructive",
       });
     }
@@ -92,6 +114,14 @@ const Profile = () => {
 
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handlePhotoSelected = (file: File | null) => {
+    setSelectedFile(file);
+  };
+
+  const handlePhotoUrlChange = (url: string) => {
+    updateFormData('foto_perfil_url', url);
   };
 
   const getInitials = (name: string) => {
@@ -176,18 +206,9 @@ const Profile = () => {
                 </div>
                 
                 <PhotoUpload
-                  onPhotoUploaded={async (url) => {
-                    console.log('Profile - photo uploaded:', url);
-                    updateFormData('foto_perfil_url', url);
-                    
-                    // Salva imediatamente a nova foto no perfil
-                    const result = await updateProfile({ foto_perfil_url: url });
-                    if (result.error) {
-                      console.error('Error updating profile with new photo:', result.error);
-                    } else {
-                      console.log('Profile updated with new photo successfully');
-                    }
-                  }}
+                  onPhotoSelected={handlePhotoSelected}
+                  onPhotoUrlChange={handlePhotoUrlChange}
+                  selectedFile={selectedFile}
                   currentPhotoUrl={formData.foto_perfil_url}
                   label="Alterar Foto"
                   className="w-auto"
