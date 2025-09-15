@@ -39,19 +39,35 @@ const Profile = () => {
     como_conheceu: ''
   });
 
+  // Popula o formulário quando o perfil é carregado
   useEffect(() => {
+    console.log('Profile effect - profile:', profile, 'user:', user);
+    
     if (profile) {
+      console.log('Profile effect - setting form data from profile');
       setFormData({
         nome: profile.nome || '',
-        email: profile.email || '',
+        email: profile.email || user?.email || '',
         data_nascimento: profile.data_nascimento || '',
         genero: profile.genero || '',
         cpf: profile.cpf || '',
         foto_perfil_url: profile.foto_perfil_url || '',
         como_conheceu: profile.como_conheceu || ''
       });
+    } else if (user && !profileLoading) {
+      console.log('Profile effect - no profile but user exists, setting form data from user');
+      // Se não há perfil mas há usuário, preencher com dados básicos
+      setFormData({
+        nome: user.user_metadata?.full_name || user.user_metadata?.name || '',
+        email: user.email || '',
+        data_nascimento: '',
+        genero: '',
+        cpf: '',
+        foto_perfil_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
+        como_conheceu: ''
+      });
     }
-  }, [profile]);
+  }, [profile, user, profileLoading]);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -160,7 +176,18 @@ const Profile = () => {
                 </div>
                 
                 <PhotoUpload
-                  onPhotoUploaded={(url) => updateFormData('foto_perfil_url', url)}
+                  onPhotoUploaded={async (url) => {
+                    console.log('Profile - photo uploaded:', url);
+                    updateFormData('foto_perfil_url', url);
+                    
+                    // Salva imediatamente a nova foto no perfil
+                    const result = await updateProfile({ foto_perfil_url: url });
+                    if (result.error) {
+                      console.error('Error updating profile with new photo:', result.error);
+                    } else {
+                      console.log('Profile updated with new photo successfully');
+                    }
+                  }}
                   currentPhotoUrl={formData.foto_perfil_url}
                   label="Alterar Foto"
                   className="w-auto"

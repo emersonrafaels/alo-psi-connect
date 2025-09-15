@@ -52,27 +52,21 @@ export const PhotoUpload = ({
     setUploading(true);
 
     try {
-      // Gerar nome único para o arquivo
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      // Criar FormData para enviar para a Edge Function
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('professionalId', user.id); // Usar user.id como identificador
 
-      // Upload para o Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('profile-photos')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      // Chamar a Edge Function upload-to-s3
+      const { data, error } = await supabase.functions.invoke('upload-to-s3', {
+        body: formData,
+      });
 
       if (error) throw error;
 
-      // Obter URL pública
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile-photos')
-        .getPublicUrl(data.path);
-
-      setPreviewUrl(publicUrl);
-      onPhotoUploaded(publicUrl);
+      const photoUrl = data.url;
+      setPreviewUrl(photoUrl);
+      onPhotoUploaded(photoUrl);
 
       toast({
         title: "Sucesso",
@@ -80,9 +74,10 @@ export const PhotoUpload = ({
       });
 
     } catch (error: any) {
+      console.error('Erro no upload para S3:', error);
       toast({
         title: "Erro no upload",
-        description: error.message,
+        description: error.message || "Erro ao fazer upload da imagem",
         variant: "destructive",
       });
     } finally {
