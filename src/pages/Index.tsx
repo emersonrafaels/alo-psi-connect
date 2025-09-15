@@ -7,6 +7,7 @@ import ProfessionalCard from "@/components/professional-card";
 import { FirstLoginWelcome } from "@/components/FirstLoginWelcome";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { supabase } from "@/integrations/supabase/client";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
 interface FeaturedProfessional {
   id: number;
   display_name: string;
@@ -18,9 +19,32 @@ interface FeaturedProfessional {
 const Index = () => {
   const [featuredProfessionals, setFeaturedProfessionals] = useState<FeaturedProfessional[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getConfig } = usePublicConfig(['homepage']);
   useEffect(() => {
     fetchFeaturedProfessionals();
+    preloadCriticalImages();
   }, []);
+
+  // Preload critical hero images for faster loading
+  const preloadCriticalImages = () => {
+    const heroImages = getConfig('homepage', 'hero_images', []);
+    const imagesToPreload = [
+      "https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png",
+      ...(Array.isArray(heroImages) ? heroImages.slice(0, 2) : [heroImages]).filter(Boolean)
+    ];
+
+    imagesToPreload.forEach(src => {
+      if (src) {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = src.startsWith('s3://') 
+          ? src.replace(/^s3:\/\/([^\/]+)\/(.+)$/, 'https://$1.s3.us-east-1.amazonaws.com/$2')
+          : src;
+        document.head.appendChild(link);
+      }
+    });
+  };
   const fetchFeaturedProfessionals = async () => {
     try {
       const {
