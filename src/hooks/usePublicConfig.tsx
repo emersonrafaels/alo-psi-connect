@@ -100,6 +100,10 @@ export const usePublicConfig = (allowedCategories?: string[]) => {
       }
     }
     
+    // Tratar valores boolean vindos como string
+    if (config.value === 'true') return true;
+    if (config.value === 'false') return false;
+    
     // Para valores simples (string, number, boolean), retorna diretamente
     return config.value;
   }, [configs]);
