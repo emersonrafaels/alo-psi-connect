@@ -21,7 +21,6 @@ interface Schedule {
   start_time: string;
   end_time: string;
   time_slot: number;
-  minutos_janela: number;
 }
 
 interface ScheduleManagerProps {
@@ -40,10 +39,8 @@ const DAYS_OF_WEEK = [
 
 const TIME_SLOTS = [
   { value: 30, label: '30 minutos' },
-  { value: 45, label: '45 minutos' },
-  { value: 60, label: '1 hora' },
-  { value: 90, label: '1h 30min' },
-  { value: 120, label: '2 horas' }
+  { value: 50, label: '50 minutos' },
+  { value: 60, label: '1 hora' }
 ];
 
 const BUFFER_TIME = [
@@ -104,8 +101,7 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
       day: '',
       start_time: '09:00',
       end_time: '17:00',
-      time_slot: 60,
-      minutos_janela: 15
+      time_slot: 50
     };
 
     setSchedules(prev => [...prev, newSchedule as Schedule]);
@@ -162,23 +158,15 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
         return;
       }
 
-      // Preparar dados para salvar (removendo minutos_janela se for 0 para usar o DEFAULT)
-      const schedulesToSave = validSchedules.map(schedule => {
-        const scheduleData: any = {
-          user_id: professionalId,
-          day: schedule.day,
-          start_time: schedule.start_time,
-          end_time: schedule.end_time,
-          time_slot: schedule.time_slot
-        };
-        
-        // Só incluir minutos_janela se não for 0 (para usar o valor DEFAULT da tabela)
-        if (schedule.minutos_janela && schedule.minutos_janela > 0) {
-          scheduleData.minutos_janela = schedule.minutos_janela;
-        }
-        
-        return scheduleData;
-      });
+      // Preparar dados para salvar - usando apenas os campos necessários como no cadastro
+      const schedulesToSave = validSchedules.map(schedule => ({
+        user_id: professionalId,
+        day: schedule.day,
+        start_time: schedule.start_time,
+        end_time: schedule.end_time,
+        time_slot: schedule.time_slot
+        // Não incluir minutos_janela pois está causando erro
+      }));
 
       // Primeiro, deletar todos os horários existentes
       const { error: deleteError } = await supabase
@@ -230,7 +218,7 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
     return time.slice(0, 5); // Remove seconds if present
   };
 
-  const generateTimeSlots = (startTime: string, endTime: string, slotDuration: number, bufferTime: number) => {
+  const generateTimeSlots = (startTime: string, endTime: string, slotDuration: number) => {
     const start = new Date(`2000-01-01T${startTime}:00`);
     const end = new Date(`2000-01-01T${endTime}:00`);
     const slots = [];
@@ -244,7 +232,8 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
           end: next.toTimeString().slice(0, 5)
         });
       }
-      current = new Date(next.getTime() + bufferTime * 60000);
+      // Sem intervalo adicional, usar apenas a duração da consulta
+      current = new Date(next.getTime());
     }
 
     return slots;
@@ -414,8 +403,7 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
                         {generateTimeSlots(
                           schedule.start_time,
                           schedule.end_time,
-                          schedule.time_slot,
-                          schedule.minutos_janela || 0
+                          schedule.time_slot
                         ).map((slot, slotIndex) => (
                           <Badge key={slotIndex} variant="secondary" className="text-xs">
                             {slot.start} - {slot.end}

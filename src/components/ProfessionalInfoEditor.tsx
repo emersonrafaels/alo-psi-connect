@@ -244,14 +244,35 @@ export const ProfessionalInfoEditor: React.FC<ProfessionalInfoEditorProps> = ({
             />
           </div>
 
-          <div className="flex items-center space-x-3">
-            <Switch
-              id="ativo"
-              checked={formData.ativo}
-              onCheckedChange={(checked) => updateFormData('ativo', checked)}
-              disabled={!isEditing}
-            />
-            <Label htmlFor="ativo">Perfil ativo para agendamentos</Label>
+          <div className="col-span-full">
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+              <div className="flex items-center space-x-3">
+                <Switch
+                  id="ativo"
+                  checked={formData.ativo}
+                  onCheckedChange={(checked) => updateFormData('ativo', checked)}
+                  disabled={!isEditing}
+                />
+                <div>
+                  <Label htmlFor="ativo" className="text-base font-medium">
+                    Perfil ativo para agendamentos
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {formData.ativo 
+                      ? "Seu perfil está visível e pode receber agendamentos" 
+                      : "Seu perfil está oculto e não pode receber agendamentos"
+                    }
+                  </p>
+                </div>
+              </div>
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                formData.ativo 
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+              }`}>
+                {formData.ativo ? 'ATIVO' : 'INATIVO'}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -285,17 +306,29 @@ export const ProfessionalInfoEditor: React.FC<ProfessionalInfoEditorProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="tempo_consulta">Duração da consulta (minutos)</Label>
-            <Input
-              id="tempo_consulta"
-              type="number"
-              min="15"
-              step="15"
-              value={formData.tempo_consulta}
-              onChange={(e) => updateFormData('tempo_consulta', e.target.value)}
-              disabled={!isEditing}
-              placeholder="50"
-            />
+            <Label htmlFor="tempo_consulta">Duração da consulta</Label>
+            {isEditing ? (
+              <Select
+                value={formData.tempo_consulta}
+                onValueChange={(value) => updateFormData('tempo_consulta', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a duração" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30">30 minutos</SelectItem>
+                  <SelectItem value="50">50 minutos</SelectItem>
+                  <SelectItem value="60">1 hora</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id="tempo_consulta"
+                value={formData.tempo_consulta ? `${formData.tempo_consulta} minutos` : ''}
+                disabled={true}
+                placeholder="Duração da consulta"
+              />
+            )}
           </div>
         </div>
 
