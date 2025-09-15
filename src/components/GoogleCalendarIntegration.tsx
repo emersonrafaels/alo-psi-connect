@@ -281,19 +281,13 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
                 </div>
               </div>
               
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-orange-900">Configuração necessária:</h4>
-                  <div className="text-sm text-orange-700 space-y-2">
-                    <p>Se encontrar problemas de acesso bloqueado:</p>
-                    <ol className="list-decimal list-inside space-y-1 ml-2">
-                      <li>Acesse o Google Cloud Console</li>
-                      <li>Vá em "OAuth consent screen"</li>
-                      <li>Configure o status como "Testing"</li>
-                      <li>Adicione seu email como usuário de teste</li>
-                      <li>Salve as configurações e tente novamente</li>
-                    </ol>
-                  </div>
+                  <h4 className="text-sm font-medium text-blue-900">💡 Dica importante:</h4>
+                  <p className="text-sm text-blue-700">
+                    A conexão com o Google Calendar é opcional, mas recomendada para uma melhor experiência. 
+                    Se tiver alguma dificuldade, entre em contato com nosso suporte.
+                  </p>
                 </div>
               </div>
             </div>
