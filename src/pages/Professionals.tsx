@@ -125,10 +125,11 @@ const Professionals = () => {
           const profissaoMatch = prof.profissao?.toLowerCase().includes(espLower) || false
           // Verificar nos serviços
           const servicosMatch = prof.servicos_raw?.toLowerCase().includes(espLower) || false
-          // Mapeamento de especialidades
+          
+          // Mapeamento específico para cada especialidade
           const especialidadeMap: { [key: string]: string[] } = {
             'psicologia': ['psicologo', 'psicologa', 'psicologia'],
-            'psicoterapia': ['psicoterapeuta', 'psicoterapia', 'terapia'],
+            'psicoterapia': ['psicoterapeuta', 'psicoterapia'],
             'psiquiatria': ['psiquiatra', 'psiquiatria']
           }
           
