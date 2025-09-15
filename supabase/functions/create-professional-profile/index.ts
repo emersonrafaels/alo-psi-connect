@@ -261,6 +261,7 @@ serve(async (req) => {
               console.error('Failed to send confirmation email:', await emailResponse.text());
             }
           }
+          }
         }
       }
     } catch (emailError) {
