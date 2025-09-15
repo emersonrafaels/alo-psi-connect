@@ -129,47 +129,54 @@ const handler = async (req: Request): Promise<Response> => {
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>Confirme seu email</title>
           </head>
-          <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
-            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(30, 64, 175, 0.1);">
               <!-- Header -->
-              <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0;">
+              <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0;">
                 <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Alô, Psi</h1>
-                <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 16px;">Plataforma de Saúde Mental</p>
+                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Conectando você ao cuidado mental</p>
               </div>
               
               <!-- Content -->
               <div style="padding: 40px 30px;">
-                <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">Confirme seu email</h2>
+                <h2 style="color: #1e40af; margin: 0 0 20px 0; font-size: 24px;">Confirme seu email</h2>
                 
-                <p style="color: #6b7280; margin: 0 0 25px 0; font-size: 16px; line-height: 1.6;">
+                <p style="color: #4b5563; margin: 0 0 25px 0; font-size: 16px; line-height: 1.6;">
                   Obrigado por se cadastrar na Alô Psi! Para começar a usar nossa plataforma, confirme seu endereço de email clicando no botão abaixo:
                 </p>
                 
                 <!-- Button -->
                 <div style="text-align: center; margin: 30px 0;">
                   <a href="${confirmationUrl}" 
-                     style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);">
+                     style="display: inline-block; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);">
                     Confirmar Email
                   </a>
                 </div>
                 
-                <p style="color: #9ca3af; margin: 25px 0 0 0; font-size: 14px; line-height: 1.5;">
-                  Se você não conseguir clicar no botão, copie e cole este link no seu navegador:<br>
-                  <a href="${confirmationUrl}" style="color: #6366f1; word-break: break-all;">${confirmationUrl}</a>
+                <p style="color: #6b7280; margin: 25px 0 0 0; font-size: 14px; line-height: 1.5;">
+                  Se você não conseguir clicar no botão, copie e cole este link no seu navegador:
                 </p>
                 
-                <p style="color: #9ca3af; margin: 20px 0 0 0; font-size: 14px;">
-                  Este link expira em 24 horas por motivos de segurança.
-                </p>
+                <div style="background-color: #f1f5f9; padding: 15px; border-radius: 6px; border-left: 4px solid #1e40af; margin: 15px 0;">
+                  <p style="margin: 0; font-size: 14px; color: #4b5563; word-break: break-all;">
+                    ${confirmationUrl}
+                  </p>
+                </div>
+                
+                <div style="background-color: #fef3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #0891b2; margin: 20px 0;">
+                  <p style="margin: 0; font-size: 14px; color: #a16207;">
+                    <strong>⏰ Atenção:</strong> Este link expira em 24 horas por motivos de segurança.
+                  </p>
+                </div>
               </div>
               
               <!-- Footer -->
-              <div style="background-color: #f9fafb; padding: 25px 30px; border-radius: 0 0 8px 8px; text-align: center;">
-                <p style="color: #9ca3af; margin: 0; font-size: 13px;">
+              <div style="background-color: #f8fafc; padding: 25px 30px; border-radius: 0 0 8px 8px; text-align: center; border-top: 1px solid #e2e8f0;">
+                <p style="color: #6b7280; margin: 0; font-size: 13px;">
                   Se você não solicitou este email, pode ignorá-lo com segurança.
                 </p>
                 <p style="color: #9ca3af; margin: 10px 0 0 0; font-size: 13px;">
-                  © 2024 Alô Psi - Todos os direitos reservados
+                  Enviado com 💙 pela equipe do <strong>Alô, Psi</strong>
                 </p>
               </div>
             </div>

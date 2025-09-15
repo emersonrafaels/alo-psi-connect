@@ -227,27 +227,60 @@ serve(async (req) => {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                from: 'Alô, Psi! <noreply@alopsi.com.br>',
+                from: 'Alô, Psi <noreply@alopsi.com.br>',
                 to: [profileData.email],
-                subject: 'Confirme seu email - Alô, Psi!',
+                subject: 'Bem-vindo à Alô, Psi - Confirme seu email',
                 html: `
-                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h1 style="color: #333; text-align: center;">Bem-vindo ao Alô, Psi!</h1>
-                    <p style="color: #666; font-size: 16px;">Olá ${profileData.nome},</p>
-                    <p style="color: #666; font-size: 16px;">
-                      Obrigado por se cadastrar como profissional! Para ativar sua conta, clique no link abaixo:
-                    </p>
-                    <div style="text-align: center; margin: 30px 0;">
-                      <a href="${Deno.env.get('APP_BASE_URL') || 'http://localhost:3000'}/auth-callback?token=${confirmationToken}&type=email_confirmation" 
-                         style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                        Confirmar Email
-                      </a>
-                    </div>
-                    <p style="color: #666; font-size: 14px;">
-                      Este link expira em 24 horas.
-                    </p>
-                    <p style="color: #666; font-size: 14px;">
-                      Se você não solicitou este cadastro, pode ignorar este email.
+                  <!DOCTYPE html>
+                  <html>
+                    <head>
+                      <meta charset="utf-8">
+                      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                      <title>Bem-vindo à Alô Psi</title>
+                    </head>
+                    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; background-color: #f8fafc;">
+                      <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(30, 64, 175, 0.1);">
+                        
+                        <!-- Header -->
+                        <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 40px 20px; text-align: center;">
+                          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Alô, Psi</h1>
+                          <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Conectando você ao cuidado mental</p>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div style="padding: 40px 20px;">
+                          <h2 style="color: #1e40af; margin: 0 0 20px 0; font-size: 24px;">🎉 Bem-vindo à nossa equipe!</h2>
+                          
+                          <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">
+                            Olá, <strong>${profileData.nome}</strong>!
+                          </p>
+                          
+                          <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">
+                            Obrigado por se cadastrar como profissional! Sua conta foi criada com sucesso em nossa plataforma. Estamos muito felizes em tê-lo(a) conosco!
+                          </p>
+                          
+                          <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #1e40af;">
+                            <p style="margin: 0; font-size: 16px; color: #4b5563;">
+                              Para começar a utilizar todos os recursos da plataforma, confirme seu email clicando no botão abaixo:
+                            </p>
+                          </div>
+                          
+                          <!-- CTA Button -->
+                          <div style="text-align: center; margin: 30px 0;">
+                            <a href="${Deno.env.get('APP_BASE_URL') || 'http://localhost:3000'}/auth-callback?token=${confirmationToken}&type=email_confirmation" 
+                               style="display: inline-block; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);">
+                              ✅ Confirmar Email
+                            </a>
+                          </div>
+                          
+                          <div style="background-color: #fef3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #0891b2; margin: 30px 0;">
+                            <p style="margin: 0; font-size: 14px; color: #a16207;">
+                              <strong>⏰ Importante:</strong> Este link expira em 24 horas por segurança.
+                            </p>
+                          </div>
+                          
+                          <p style="margin: 20px 0; font-size: 14px; color: #6b7280;">
+                            Se você não solicitou este cadastro, pode ignorar este email com segurança.
                     </p>
                   </div>
                 `

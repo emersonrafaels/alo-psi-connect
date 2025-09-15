@@ -90,44 +90,74 @@ const handler = async (req: Request): Promise<Response> => {
     
     try {
       const emailResponse = await resend.emails.send({
-        from: "Alopsi <alopsi.host@gmail.com>",
+        from: "Alô, Psi <noreply@alopsi.com.br>",
         to: [email],
-        subject: "Bem-vindo(a) ao Newsletter da Alopsi!",
+        subject: "Bem-vindo ao Newsletter - Alô, Psi",
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="color: #2563eb; margin-bottom: 10px;">Bem-vindo(a) ao Newsletter da Alopsi!</h1>
-              <p style="color: #666; font-size: 16px;">Obrigado por se inscrever em nosso newsletter</p>
-            </div>
-            
-            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-              <h2 style="color: #1e293b; margin-bottom: 15px;">O que você receberá:</h2>
-              <ul style="color: #475569; line-height: 1.6;">
-                <li>Dicas de saúde mental e bem-estar</li>
-                <li>Informações sobre nossos profissionais</li>
-                <li>Novidades sobre serviços e tratamentos</li>
-                <li>Conteúdo exclusivo para assinantes</li>
-              </ul>
-            </div>
-            
-            <div style="text-align: center; margin-bottom: 30px;">
-              <p style="color: #666; margin-bottom: 20px;">
-                ${nome ? `Olá, ${nome}! ` : ''}Estamos felizes em tê-lo(a) conosco.
-              </p>
-              <a href="https://www.instagram.com/medcos_br/" 
-                 style="background: #2563eb; color: white; padding: 12px 24px; 
-                        text-decoration: none; border-radius: 6px; display: inline-block;">
-                Siga-nos no Instagram
-              </a>
-            </div>
-            
-            <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center;">
-              <p style="color: #94a3b8; font-size: 14px;">
-                Alopsi - Cuidando da sua saúde mental<br>
-                R. Joaquim Távora, 1240 - Vila Mariana, São Paulo - SP
-              </p>
-            </div>
-          </div>
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Bem-vindo ao Newsletter Alô Psi</title>
+            </head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; background-color: #f8fafc;">
+              <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(30, 64, 175, 0.1);">
+                
+                <!-- Header -->
+                <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 40px 20px; text-align: center;">
+                  <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Alô, Psi</h1>
+                  <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Conectando você ao cuidado mental</p>
+                </div>
+                
+                <!-- Content -->
+                <div style="padding: 40px 20px;">
+                  <h2 style="color: #1e40af; margin: 0 0 20px 0; font-size: 24px;">🎉 Bem-vindo ao Newsletter!</h2>
+                  
+                  <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">
+                    ${nome ? `Olá, ${nome}! ` : ''}Obrigado por se inscrever em nosso newsletter. Estamos felizes em tê-lo(a) conosco!
+                  </p>
+                  
+                  <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #1e40af;">
+                    <h3 style="color: #1e40af; margin: 0 0 15px 0; font-size: 18px;">📬 O que você receberá:</h3>
+                    <ul style="color: #4b5563; line-height: 1.8; margin: 0; padding-left: 20px;">
+                      <li>Dicas de saúde mental e bem-estar</li>
+                      <li>Informações sobre nossos profissionais</li>
+                      <li>Novidades sobre serviços e tratamentos</li>
+                      <li>Conteúdo exclusivo para assinantes</li>
+                    </ul>
+                  </div>
+                  
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="https://www.instagram.com/alopsi.br/" 
+                       style="display: inline-block; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);">
+                      📱 Siga-nos no Instagram
+                    </a>
+                  </div>
+                  
+                  <div style="background-color: #e0f2fe; padding: 20px; border-radius: 6px; border-left: 4px solid #0891b2; margin: 30px 0;">
+                    <p style="margin: 0; font-size: 14px; color: #0f4c5c;">
+                      <strong>💡 Dica:</strong> Adicione nosso email (${Deno.env.get("RESEND_FROM_EMAIL") || "noreply@alopsi.com.br"}) aos seus contatos para não perder nenhuma novidade!
+                    </p>
+                  </div>
+                </div>
+                
+                <!-- Footer -->
+                <div style="background-color: #f8fafc; padding: 30px 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+                  <p style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280;">
+                    <strong>Alô, Psi</strong> - Cuidando da sua saúde mental
+                  </p>
+                  <p style="margin: 0 0 15px 0; font-size: 13px; color: #9ca3af;">
+                    R. Joaquim Távora, 1240 - Vila Mariana, São Paulo - SP
+                  </p>
+                  <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+                    Enviado com 💙 pela equipe do Alô, Psi
+                  </p>
+                </div>
+                
+              </div>
+            </body>
+          </html>
         `,
       });
 

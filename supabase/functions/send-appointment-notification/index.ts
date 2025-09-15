@@ -47,57 +47,84 @@ const handler = async (req: Request): Promise<Response> => {
     }).format(agendamento.valor);
 
     const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">
-          🎉 Nova Consulta Agendada - Pagamento Confirmado
-        </h2>
-        
-        <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #1e40af; margin-top: 0;">📋 Informações da Consulta</h3>
-          <p><strong>ID do Agendamento:</strong> ${agendamento.id}</p>
-          <p><strong>Data:</strong> ${dataFormatada}</p>
-          <p><strong>Horário:</strong> ${horarioFormatado}</p>
-          <p><strong>Valor:</strong> ${valorFormatado}</p>
-          <p><strong>Status:</strong> Pagamento Confirmado ✅</p>
-          <p><strong>ID do Pagamento:</strong> ${paymentId}</p>
-        </div>
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Nova Consulta Agendada</title>
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; background-color: #f8fafc;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(30, 64, 175, 0.1);">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 40px 20px; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Alô, Psi</h1>
+              <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Conectando você ao cuidado mental</p>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 40px 20px;">
+              <h2 style="color: #1e40af; margin: 0 0 20px 0; font-size: 24px;">🎉 Nova Consulta Agendada</h2>
+              
+              <div style="background-color: #dcfce7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;">
+                <p style="margin: 0; font-size: 16px; color: #15803d;">
+                  <strong>✅ Pagamento Confirmado</strong> - A consulta foi agendada com sucesso!
+                </p>
+              </div>
+              
+              <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e40af;">
+                <h3 style="color: #1e40af; margin: 0 0 15px 0; font-size: 18px;">📋 Informações da Consulta</h3>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>ID:</strong> ${agendamento.id}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Data:</strong> ${dataFormatada}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Horário:</strong> ${horarioFormatado}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Valor:</strong> ${valorFormatado}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>ID do Pagamento:</strong> ${paymentId}</p>
+              </div>
 
-        <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #1e40af; margin-top: 0;">👤 Dados do Paciente</h3>
-          <p><strong>Nome:</strong> ${agendamento.nome_paciente}</p>
-          <p><strong>Email:</strong> ${agendamento.email_paciente}</p>
-          <p><strong>Telefone:</strong> ${agendamento.telefone_paciente}</p>
-          ${agendamento.observacoes ? `<p><strong>Observações:</strong> ${agendamento.observacoes}</p>` : ''}
-        </div>
+              <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0891b2;">
+                <h3 style="color: #0891b2; margin: 0 0 15px 0; font-size: 18px;">👤 Dados do Paciente</h3>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Nome:</strong> ${agendamento.nome_paciente}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Email:</strong> ${agendamento.email_paciente}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Telefone:</strong> ${agendamento.telefone_paciente}</p>
+                ${agendamento.observacoes ? `<p style="margin: 10px 0 5px 0; color: #4b5563;"><strong>Observações:</strong> ${agendamento.observacoes}</p>` : ''}
+              </div>
 
-        <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #1e40af; margin-top: 0;">👨‍⚕️ Profissional</h3>
-          <p><strong>Nome:</strong> ${agendamento.profissionais.display_name}</p>
-          <p><strong>Profissão:</strong> ${agendamento.profissionais.profissao}</p>
-          <p><strong>Email:</strong> ${agendamento.profissionais.user_email}</p>
-          <p><strong>Telefone:</strong> ${agendamento.profissionais.telefone}</p>
-        </div>
+              <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e40af;">
+                <h3 style="color: #1e40af; margin: 0 0 15px 0; font-size: 18px;">👨‍⚕️ Profissional Responsável</h3>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Nome:</strong> ${agendamento.profissionais.display_name}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Profissão:</strong> ${agendamento.profissionais.profissao}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Email:</strong> ${agendamento.profissionais.user_email}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Telefone:</strong> ${agendamento.profissionais.telefone}</p>
+              </div>
 
-        <div style="background-color: #dcfce7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;">
-          <h4 style="color: #15803d; margin-top: 0;">✅ Próximos Passos</h4>
-          <ul style="color: #166534;">
-            <li>O paciente receberá uma confirmação por email</li>
-            <li>Entre em contato com o paciente para confirmar detalhes</li>
-            <li>Prepare-se para a consulta na data e horário agendados</li>
-          </ul>
-        </div>
-
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-          <p style="color: #6b7280; font-size: 14px;">
-            Email enviado automaticamente pelo sistema Alopsi<br>
-            Data: ${new Date().toLocaleString('pt-BR')}
-          </p>
-        </div>
-      </div>
+              <div style="background-color: #fef3cd; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #0891b2;">
+                <h4 style="color: #a16207; margin: 0 0 15px 0; font-size: 16px;">📋 Próximos Passos</h4>
+                <ul style="color: #a16207; margin: 0; padding-left: 20px; line-height: 1.8;">
+                  <li>O paciente receberá uma confirmação por email</li>
+                  <li>Entre em contato com o paciente para confirmar detalhes</li>
+                  <li>Prepare-se para a consulta na data e horário agendados</li>
+                </ul>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="background-color: #f8fafc; padding: 30px 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+              <p style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280;">
+                Email enviado automaticamente pelo sistema <strong>Alô, Psi</strong>
+              </p>
+              <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+                Data: ${new Date().toLocaleString('pt-BR')}
+              </p>
+            </div>
+            
+          </div>
+        </body>
+      </html>
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "Alopsi <noreply@alopsi.com>",
+      from: "Alô, Psi <noreply@alopsi.com.br>",
       to: ["alopsi.host@gmail.com"],
       subject: `🎉 Nova Consulta Agendada - ${agendamento.profissionais.display_name} - ${dataFormatada}`,
       html: emailHtml,

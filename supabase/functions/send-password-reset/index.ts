@@ -98,62 +98,62 @@ const handler = async (req: Request): Promise<Response> => {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Recuperação de senha</title>
           </head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8fafc;">
-            <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(30, 64, 175, 0.1);">
               
               <!-- Header -->
-              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
+              <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 40px 20px; text-align: center;">
                 <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Alô, Psi</h1>
                 <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Conectando você ao cuidado mental</p>
               </div>
               
               <!-- Content -->
               <div style="padding: 40px 20px;">
-                <h2 style="color: #1a202c; margin: 0 0 20px 0; font-size: 24px;">Recuperação de senha</h2>
+                <h2 style="color: #1e40af; margin: 0 0 20px 0; font-size: 24px;">Recuperação de senha</h2>
                 
-                <p style="margin: 0 0 20px 0; font-size: 16px; color: #4a5568;">
+                <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">
                   Olá! Recebemos uma solicitação para redefinir a senha da sua conta no Alô, Psi.
                 </p>
                 
-                <p style="margin: 0 0 30px 0; font-size: 16px; color: #4a5568;">
+                <p style="margin: 0 0 30px 0; font-size: 16px; color: #4b5563;">
                   Clique no botão abaixo para criar uma nova senha:
                 </p>
                 
                 <!-- CTA Button -->
                 <div style="text-align: center; margin: 30px 0;">
                   <a href="${resetLink}" 
-                     style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; transition: transform 0.2s;">
+                     style="display: inline-block; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);">
                     Redefinir senha
                   </a>
                 </div>
                 
-                <p style="margin: 30px 0 20px 0; font-size: 14px; color: #718096;">
+                <p style="margin: 30px 0 20px 0; font-size: 14px; color: #6b7280;">
                   Se o botão não funcionar, copie e cole este link no seu navegador:
                 </p>
                 
-                <div style="background-color: #f7fafc; padding: 15px; border-radius: 6px; border-left: 4px solid #667eea; margin: 20px 0;">
-                  <p style="margin: 0; font-size: 14px; color: #4a5568; word-break: break-all;">
+                <div style="background-color: #f1f5f9; padding: 15px; border-radius: 6px; border-left: 4px solid #1e40af; margin: 20px 0;">
+                  <p style="margin: 0; font-size: 14px; color: #4b5563; word-break: break-all;">
                     ${resetLink}
                   </p>
                 </div>
                 
-                <div style="background-color: #fef5e7; padding: 15px; border-radius: 6px; border-left: 4px solid #f6ad55; margin: 30px 0;">
-                  <p style="margin: 0; font-size: 14px; color: #744210;">
+                <div style="background-color: #fef3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #0891b2; margin: 30px 0;">
+                  <p style="margin: 0; font-size: 14px; color: #a16207;">
                     <strong>⚠️ Importante:</strong> Este link expira em 1 hora por segurança.
                   </p>
                 </div>
                 
-                <p style="margin: 30px 0 20px 0; font-size: 14px; color: #718096;">
+                <p style="margin: 30px 0 20px 0; font-size: 14px; color: #6b7280;">
                   Se você não solicitou esta alteração, pode ignorar este email com segurança. Sua senha atual permanecerá inalterada.
                 </p>
               </div>
               
               <!-- Footer -->
-              <div style="background-color: #f7fafc; padding: 30px 20px; text-align: center; border-top: 1px solid #e2e8f0;">
-                <p style="margin: 0 0 10px 0; font-size: 14px; color: #718096;">
-                  Enviado com 💜 pela equipe do <strong>Alô, Psi</strong>
+              <div style="background-color: #f8fafc; padding: 30px 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+                <p style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280;">
+                  Enviado com 💙 pela equipe do <strong>Alô, Psi</strong>
                 </p>
-                <p style="margin: 0; font-size: 12px; color: #a0aec0;">
+                <p style="margin: 0; font-size: 12px; color: #9ca3af;">
                   Este é um email automático, não responda esta mensagem.
                 </p>
               </div>
