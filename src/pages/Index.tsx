@@ -1,61 +1,44 @@
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import Header from "@/components/ui/header"
-import Footer from "@/components/ui/footer"
-import SearchSection from "@/components/search-section"
-import ProfessionalCard from "@/components/professional-card"
-import { FirstLoginWelcome } from "@/components/FirstLoginWelcome"
-import { supabase } from "@/integrations/supabase/client"
-
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import Header from "@/components/ui/header";
+import Footer from "@/components/ui/footer";
+import SearchSection from "@/components/search-section";
+import ProfessionalCard from "@/components/professional-card";
+import { FirstLoginWelcome } from "@/components/FirstLoginWelcome";
+import { supabase } from "@/integrations/supabase/client";
 interface FeaturedProfessional {
-  id: number
-  display_name: string
-  profissao: string | null
-  crp_crm: string | null
-  servicos_raw: string | null
-  preco_consulta: number | null
+  id: number;
+  display_name: string;
+  profissao: string | null;
+  crp_crm: string | null;
+  servicos_raw: string | null;
+  preco_consulta: number | null;
 }
-
 const Index = () => {
-  const [featuredProfessionals, setFeaturedProfessionals] = useState<FeaturedProfessional[]>([])
-  const [loading, setLoading] = useState(true)
-
+  const [featuredProfessionals, setFeaturedProfessionals] = useState<FeaturedProfessional[]>([]);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
-    fetchFeaturedProfessionals()
-  }, [])
-
+    fetchFeaturedProfessionals();
+  }, []);
   const fetchFeaturedProfessionals = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profissionais')
-        .select('id, display_name, profissao, crp_crm, servicos_raw, preco_consulta')
-        .eq('ativo', true)
-        .not('servicos_raw', 'is', null)
-        .not('preco_consulta', 'is', null)
-        .order('display_name')
-        .limit(2)
-
-      if (error) throw error
-
-      setFeaturedProfessionals(data || [])
+      const {
+        data,
+        error
+      } = await supabase.from('profissionais').select('id, display_name, profissao, crp_crm, servicos_raw, preco_consulta').eq('ativo', true).not('servicos_raw', 'is', null).not('preco_consulta', 'is', null).order('display_name').limit(2);
+      if (error) throw error;
+      setFeaturedProfessionals(data || []);
     } catch (error) {
-      console.error('Erro ao buscar profissionais em destaque:', error)
+      console.error('Erro ao buscar profissionais em destaque:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
+  };
   const formatSpecialties = (servicos: string | null) => {
-    if (!servicos) return []
-    return servicos
-      .split(',')
-      .map(s => s.trim())
-      .filter(s => s.length > 0)
-      .slice(0, 3) // Mostrar apenas as 3 primeiras especialidades
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
+    if (!servicos) return [];
+    return servicos.split(',').map(s => s.trim()).filter(s => s.length > 0).slice(0, 3); // Mostrar apenas as 3 primeiras especialidades
+  };
+  return <div className="min-h-screen bg-background">
       <Header />
       
       {/* Hero Section */}
@@ -71,30 +54,16 @@ const Index = () => {
                 Encontre profissionais especializados em saúde mental com atendimento humanizado e de qualidade.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  variant="default" 
-                  size="lg" 
-                  className="bg-primary text-primary-foreground"
-                  onClick={() => window.location.href = '/profissionais'}
-                >
+                <Button variant="default" size="lg" className="bg-primary text-primary-foreground" onClick={() => window.location.href = '/profissionais'}>
                   Encontrar Profissional
                 </Button>
-              <Button 
-                variant="accent" 
-                size="lg"
-                onClick={() => window.location.href = '/profissionais'}
-              >
+              <Button variant="accent" size="lg" onClick={() => window.location.href = '/profissionais'}>
                 Agendar Consulta
               </Button>
               </div>
             </div>
             <div className="relative">
-              <img 
-                src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png"
-                alt="Profissional de saúde mental oferecendo cuidado e acolhimento"
-                className="w-full h-80 object-cover rounded-lg"
-                loading="lazy"
-              />
+              <img src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png" alt="Profissional de saúde mental oferecendo cuidado e acolhimento" className="w-full h-80 object-cover rounded-lg" loading="lazy" />
             </div>
           </div>
         </div>
@@ -124,23 +93,12 @@ const Index = () => {
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
               <div className="relative w-24 h-24 mx-auto mb-6">
                 <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 36 36">
-                  <path
-                    d="M18 2.0845
+                  <path d="M18 2.0845
                       a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#e5e7eb"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="2" />
+                  <path d="M18 2.0845
                       a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                    strokeDasharray="83, 100"
-                  />
+                      a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray="83, 100" />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-2xl font-bold text-gray-900">83%</span>
@@ -155,23 +113,12 @@ const Index = () => {
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
               <div className="relative w-24 h-24 mx-auto mb-6">
                 <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 36 36">
-                  <path
-                    d="M18 2.0845
+                  <path d="M18 2.0845
                       a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#e5e7eb"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="2" />
+                  <path d="M18 2.0845
                       a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="2"
-                    strokeDasharray="53, 100"
-                  />
+                      a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" strokeWidth="2" strokeDasharray="53, 100" />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-2xl font-bold text-gray-900">53%</span>
@@ -219,8 +166,8 @@ const Index = () => {
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}></div>
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+        }}></div>
         </div>
         
         <div className="container mx-auto px-4 relative">
@@ -242,7 +189,7 @@ const Index = () => {
                     <span className="text-2xl">👨‍⚕️</span>
                   </div>
                   <div>
-                    <h3 className="text-3xl font-bold text-white">250+</h3>
+                    <h3 className="text-3xl font-bold text-white">30+</h3>
                     <p className="text-teal-100">Psicólogos Credenciados</p>
                   </div>
                 </div>
@@ -286,16 +233,7 @@ const Index = () => {
             <div className="relative">
               <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20">
                 <div className="aspect-video rounded-xl overflow-hidden shadow-2xl">
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    src="https://www.youtube.com/embed/_5JzohY3G58"
-                    title="Vídeo sobre Saúde Mental e Medicina"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    className="w-full h-full"
-                  ></iframe>
+                  <iframe width="100%" height="100%" src="https://www.youtube.com/embed/_5JzohY3G58" title="Vídeo sobre Saúde Mental e Medicina" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen className="w-full h-full"></iframe>
                 </div>
                 <div className="mt-4 text-center">
                   <p className="text-white font-semibold">
@@ -318,10 +256,11 @@ const Index = () => {
             Profissionais em Destaque
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {loading ? (
-              // Loading skeleton
-              Array.from({ length: 2 }).map((_, index) => (
-                <div key={index} className="bg-card p-6 rounded-lg border animate-pulse">
+            {loading ?
+          // Loading skeleton
+          Array.from({
+            length: 2
+          }).map((_, index) => <div key={index} className="bg-card p-6 rounded-lg border animate-pulse">
                   <div className="h-6 bg-muted rounded mb-3 w-3/4"></div>
                   <div className="h-4 bg-muted rounded mb-2 w-1/2"></div>
                   <div className="space-y-2">
@@ -333,26 +272,11 @@ const Index = () => {
                     <div className="h-6 bg-muted rounded w-20"></div>
                     <div className="h-6 bg-muted rounded w-18"></div>
                   </div>
-                </div>
-              ))
-            ) : featuredProfessionals.length > 0 ? (
-              featuredProfessionals.map((professional) => (
-                <ProfessionalCard
-                  key={professional.id}
-                  id={professional.id}
-                  name={professional.display_name}
-                  title={`${professional.profissao || 'Profissional'} - ${professional.crp_crm || 'CRP/CRM'}`}
-                  specialties={formatSpecialties(professional.servicos_raw)}
-                  isCompactView
-                />
-              ))
-            ) : (
-              <div className="col-span-2 text-center py-8">
+                </div>) : featuredProfessionals.length > 0 ? featuredProfessionals.map(professional => <ProfessionalCard key={professional.id} id={professional.id} name={professional.display_name} title={`${professional.profissao || 'Profissional'} - ${professional.crp_crm || 'CRP/CRM'}`} specialties={formatSpecialties(professional.servicos_raw)} isCompactView />) : <div className="col-span-2 text-center py-8">
                 <p className="text-muted-foreground">
                   Nenhum profissional disponível no momento
                 </p>
-              </div>
-            )}
+              </div>}
           </div>
         </div>
       </section>
@@ -364,12 +288,7 @@ const Index = () => {
             Empatia, Compreensão, Transformação: <br />
             O Seu Caminho Para A Cura.
           </h2>
-          <Button 
-            variant="accent" 
-            size="lg" 
-            className="mt-8"
-            onClick={() => window.location.href = '/profissionais'}
-          >
+          <Button variant="accent" size="lg" className="mt-8" onClick={() => window.location.href = '/profissionais'}>
             Agendar Consulta
           </Button>
         </div>
@@ -379,8 +298,6 @@ const Index = () => {
       
       {/* Welcome modal para primeiro login de profissionais */}
       <FirstLoginWelcome />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
