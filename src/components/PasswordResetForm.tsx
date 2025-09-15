@@ -63,42 +63,22 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ token }) =
     try {
       console.log('Verificando token no banco:', token);
       
-      // Verificar se o token é válido
-      const { data: tokenData, error: tokenError } = await supabase
-        .from('password_reset_tokens')
-        .select('*')
-        .eq('token', token)
-        .eq('used', false)
-        .gte('expires_at', new Date().toISOString())
-        .single();
+      // Chamar a edge function para resetar a senha
+      const { data, error } = await supabase.functions.invoke('reset-password', {
+        body: { 
+          token: token,
+          password: password
+        }
+      });
 
-      console.log('Resultado da consulta:', { tokenData, tokenError });
-
-      if (tokenError || !tokenData) {
-        console.error('Token inválido:', tokenError);
+      if (error) {
+        console.error('Reset password error:', error);
         toast({
-          title: "Token inválido",
-          description: "O link de recuperação é inválido ou expirou.",
+          title: "Erro ao redefinir senha",
+          description: error.message || "O link de recuperação é inválido ou expirou.",
           variant: "destructive",
         });
         return;
-      }
-
-      // Atualizar a senha do usuário
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: password
-      });
-
-      if (updateError) throw updateError;
-
-      // Marcar o token como usado
-      const { error: markUsedError } = await supabase
-        .from('password_reset_tokens')
-        .update({ used: true })
-        .eq('token', token);
-
-      if (markUsedError) {
-        console.error('Error marking token as used:', markUsedError);
       }
 
       toast({
