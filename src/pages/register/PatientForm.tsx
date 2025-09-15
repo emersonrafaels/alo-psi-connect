@@ -29,15 +29,19 @@ const PatientForm = () => {
 
   const [formData, setFormData] = useState({
     ehEstudante: '',
+    estudanteStatus: '', // Changed from ehEstudante to match function
     nome: googleData?.fullName || '',
     email: user?.email || googleData?.email || '',
     dataNascimento: '',
     genero: '',
     cpf: '',
     instituicaoEnsino: '',
+    instituicao: '', // Added for consistency
     comoConheceu: '',
     senha: '',
-    confirmarSenha: ''
+    confirmarSenha: '',
+    password: '', // Added for edge function compatibility
+    telefone: '' // Added for edge function compatibility
   });
 
   const totalSteps = user ? 3 : 4; // 4 passos se não há usuário logado (inclui senha)
@@ -56,74 +60,120 @@ const PatientForm = () => {
   };
 
   const handleSubmit = async () => {
+    if (!canSubmit) return;
+    
     setLoading(true);
+    
     try {
-      let currentUser = user;
-      
-      // Se não há usuário logado, criar a conta primeiro
-      if (!currentUser) {
-        if (formData.senha !== formData.confirmarSenha) {
+      // If Google user, handle specially (they're already authenticated)
+      if (googleData) {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session?.user) {
+          console.error('No active session found for Google user');
           toast({
             title: "Erro",
-            description: "As senhas não coincidem",
+            description: "Erro na autenticação. Tente fazer login novamente.",
             variant: "destructive",
           });
           return;
         }
+
+        console.log('Google user session found, creating profile...');
         
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.senha,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`
+        // For Google users, call the edge function with their existing user ID
+        const { data, error } = await supabase.functions.invoke('create-patient-profile', {
+          body: {
+            nome: formData.nome,
+            email: formData.email,
+            password: '', // Google users don't need password
+            dataNascimento: formData.dataNascimento,
+            genero: formData.genero,
+            cpf: formData.cpf,
+            comoConheceu: formData.comoConheceu,
+            ehEstudante: formData.ehEstudante === 'estudante',
+            instituicaoEnsino: formData.ehEstudante === 'estudante' ? formData.instituicaoEnsino : null,
+            telefone: '',
+            existingUserId: session.user.id // Pass existing user ID for Google users
           }
         });
 
-        if (authError) throw authError;
-        if (!authData.user) throw new Error('Erro ao criar conta');
-        
-        currentUser = authData.user;
+        if (error) {
+          console.error('Error creating Google user profile:', error);
+          toast({
+            title: "Erro no cadastro",
+            description: "Erro ao criar perfil. Tente novamente.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        toast({
+          title: "Cadastro realizado com sucesso!",
+          description: "Bem-vindo ao Alô, Psi!",
+        });
+        navigate('/');
+        return;
       }
 
-      // Criar perfil
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: currentUser.id,
+      // For email/password users, use the edge function
+      if (formData.senha !== formData.confirmarSenha) {
+        toast({
+          title: "Erro",
+          description: "As senhas não coincidem",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log('Creating patient profile via edge function...');
+      
+      const { data, error } = await supabase.functions.invoke('create-patient-profile', {
+        body: {
           nome: formData.nome,
           email: formData.email,
-          data_nascimento: formData.dataNascimento,
+          password: formData.senha,
+          dataNascimento: formData.dataNascimento,
           genero: formData.genero,
           cpf: formData.cpf,
-          como_conheceu: formData.comoConheceu,
-          tipo_usuario: 'paciente'
-        })
-        .select()
-        .single();
+          comoConheceu: formData.comoConheceu,
+          ehEstudante: formData.ehEstudante === 'estudante',
+          instituicaoEnsino: formData.ehEstudante === 'estudante' ? formData.instituicaoEnsino : null,
+          telefone: ''
+        }
+      });
 
-      if (profileError) throw profileError;
+      if (error) {
+        console.error('Registration error:', error);
+        if (error.message && error.message.includes('User already registered')) {
+          toast({
+            title: "Erro",
+            description: "Este email já está cadastrado. Tente fazer login.",
+            variant: "destructive",
+          });
+          navigate('/auth');
+        } else {
+          toast({
+            title: "Erro no cadastro",
+            description: error.message || "Erro ao realizar cadastro. Tente novamente.",
+            variant: "destructive",
+          });
+        }
+        return;
+      }
 
-      // Criar dados específicos do paciente
-      const { error: patientError } = await supabase
-        .from('pacientes')
-        .insert({
-          profile_id: profile.id,
-          eh_estudante: formData.ehEstudante === 'estudante',
-          instituicao_ensino: formData.instituicaoEnsino
-        });
-
-      if (patientError) throw patientError;
-
+      console.log('Patient profile created successfully:', data);
       toast({
         title: "Cadastro realizado com sucesso!",
         description: "Bem-vindo ao Alô, Psi!",
       });
+      navigate('/auth');
 
-      navigate('/');
     } catch (error: any) {
+      console.error('Registration error:', error);
       toast({
         title: "Erro no cadastro",
-        description: error.message,
+        description: error.message || "Erro ao realizar cadastro. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -142,8 +192,11 @@ const PatientForm = () => {
           Você é estudante ou formado? <span className="text-red-500">*</span>
         </Label>
         <RadioGroup 
-          value={formData.ehEstudante} 
-          onValueChange={(value) => updateFormData('ehEstudante', value)}
+          value={formData.estudanteStatus} 
+          onValueChange={(value) => {
+            updateFormData('estudanteStatus', value);
+            updateFormData('ehEstudante', value);
+          }}
           className="space-y-3"
         >
           <div className="flex items-center space-x-2">
@@ -244,14 +297,17 @@ const PatientForm = () => {
     <div className="space-y-6">
       <div>
         <Label htmlFor="instituicaoEnsino">
-          Instituição de ensino {formData.ehEstudante === 'estudante' && <span className="text-red-500">*</span>}
+          Instituição de ensino {formData.estudanteStatus === 'estudante' && <span className="text-red-500">*</span>}
         </Label>
         <Input
           id="instituicaoEnsino"
           value={formData.instituicaoEnsino}
-          onChange={(e) => updateFormData('instituicaoEnsino', e.target.value)}
+          onChange={(e) => {
+            updateFormData('instituicaoEnsino', e.target.value);
+            updateFormData('instituicao', e.target.value);
+          }}
           placeholder="Nome da sua instituição de ensino"
-          required={formData.ehEstudante === 'estudante'}
+          required={formData.estudanteStatus === 'estudante'}
         />
       </div>
 
@@ -326,9 +382,9 @@ const PatientForm = () => {
     </div>
   );
 
-  const canProceedStep1 = formData.ehEstudante !== '';
+  const canProceedStep1 = formData.estudanteStatus !== '';
   const canProceedStep2 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf;
-  const canProceedStep3 = (formData.ehEstudante === 'formado' || formData.instituicaoEnsino);
+  const canProceedStep3 = (formData.estudanteStatus === 'formado' || formData.instituicaoEnsino);
   const canProceedStep4 = user ? true : (formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha);
   const canSubmit = user ? canProceedStep3 : canProceedStep4;
 

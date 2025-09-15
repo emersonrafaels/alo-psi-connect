@@ -85,3 +85,9 @@ verify_jwt = false
 
 [functions.confirm-email]
 verify_jwt = false
+
+[functions.create-patient-profile]
+verify_jwt = false
+
+[functions.create-professional-profile]
+verify_jwt = false
