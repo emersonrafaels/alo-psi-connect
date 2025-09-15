@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { formatUserDisplayName } from '@/lib/utils';
 
 export interface CreateUserData {
   email: string;
@@ -96,9 +97,12 @@ export const useUserManagement = () => {
         throw new Error(data.error);
       }
 
+      const userName = formatUserDisplayName(data.deletedUser || {});
+      const userEmail = data.deletedUser?.email || 'email não disponível';
+      
       toast({
         title: "Usuário deletado completamente",
-        description: `Usuário ${data.deletedUser?.nome} (${data.deletedUser?.email}) foi removido do sistema`,
+        description: `${userName} (${userEmail}) foi removido do sistema`,
       });
 
       return { success: true, data: data.deletedUser };

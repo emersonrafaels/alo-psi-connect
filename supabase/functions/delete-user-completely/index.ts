@@ -180,16 +180,22 @@ Deno.serve(async (req) => {
 
     console.log(`User ${userId} deleted successfully`);
 
+    // Ensure we return properly formatted user data
+    const formattedUserData = {
+      id: userId,
+      nome: profile.nome || null,
+      email: profile.email || null,
+      tipo_usuario: profile.tipo_usuario || 'unknown',
+      deletedAt: new Date().toISOString()
+    };
+
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: 'User deleted completely',
-        deletedUser: {
-          email: profile.email,
-          nome: profile.nome
-        }
+        deletedUser: formattedUserData
       }),
-      { headers: corsHeaders }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {

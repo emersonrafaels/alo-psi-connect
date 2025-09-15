@@ -27,3 +27,16 @@ export function getBaseUrl(): string {
   }
   return import.meta.env.VITE_APP_BASE_URL || 'https://alopsi.com.br';
 }
+
+export function formatUserDisplayName(user: { nome?: string | null; email?: string | null; id?: string | null }): string {
+  if (user.nome && user.nome.trim()) {
+    return user.nome.trim();
+  }
+  if (user.email && user.email.trim()) {
+    return user.email.trim();
+  }
+  if (user.id) {
+    return `Usuário ${user.id.substring(0, 8)}`;
+  }
+  return 'Usuário desconhecido';
+}
