@@ -14,7 +14,7 @@ import { SleepSlider } from '@/components/ui/sleep-slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Save, Heart, Edit, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, Heart, Edit, AlertCircle, Download, Share } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -167,6 +167,100 @@ const MoodEntry = () => {
       ...prev,
       tags: prev.tags.filter(tag => tag !== tagToRemove)
     }));
+  };
+
+  const exportToPDF = async () => {
+    try {
+      const { jsPDF } = await import('jspdf');
+      const html2canvas = (await import('html2canvas')).default;
+      
+      const doc = new jsPDF();
+      const date = new Date(formData.date).toLocaleDateString('pt-BR');
+      
+      // Header
+      doc.setFontSize(20);
+      doc.text('Diário Emocional - Alô, Psi!', 20, 30);
+      
+      doc.setFontSize(14);
+      doc.text(`Data: ${date}`, 20, 50);
+      
+      // Content
+      let yPosition = 70;
+      doc.setFontSize(12);
+      
+      doc.text(`Humor: ${formData.mood_score[0]}/10`, 20, yPosition);
+      yPosition += 15;
+      
+      doc.text(`Energia: ${formData.energy_level[0]}/5`, 20, yPosition);
+      yPosition += 15;
+      
+      doc.text(`Ansiedade: ${formData.anxiety_level[0]}/5`, 20, yPosition);
+      yPosition += 15;
+      
+      if (formData.sleep_hours) {
+        doc.text(`Horas de Sono: ${formData.sleep_hours}h`, 20, yPosition);
+        yPosition += 15;
+      }
+      
+      doc.text(`Qualidade do Sono: ${formData.sleep_quality[0]}/5`, 20, yPosition);
+      yPosition += 15;
+      
+      if (formData.tags.length > 0) {
+        doc.text(`Tags: ${formData.tags.join(', ')}`, 20, yPosition);
+        yPosition += 15;
+      }
+      
+      if (formData.journal_text) {
+        yPosition += 10;
+        doc.text('Reflexões:', 20, yPosition);
+        yPosition += 15;
+        
+        const lines = doc.splitTextToSize(formData.journal_text, 170);
+        doc.text(lines, 20, yPosition);
+      }
+      
+      doc.save(`diario-emocional-${formData.date}.pdf`);
+      
+      toast({
+        title: "PDF exportado com sucesso!",
+        description: "Seu diário emocional foi salvo em PDF.",
+      });
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast({
+        title: "Erro ao exportar PDF",
+        description: "Ocorreu um erro ao tentar exportar o PDF.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const shareWhatsApp = () => {
+    const date = new Date(formData.date).toLocaleDateString('pt-BR');
+    const moodEmoji = ['😢', '😞', '😐', '😊', '😃', '🤩', '😍', '🥰', '😁', '🌟'][formData.mood_score[0] - 1] || '😊';
+    
+    let message = `*Meu Diário Emocional - ${date}* ${moodEmoji}\n\n`;
+    message += `💭 Humor: ${formData.mood_score[0]}/10\n`;
+    message += `⚡ Energia: ${formData.energy_level[0]}/5\n`;
+    message += `😰 Ansiedade: ${formData.anxiety_level[0]}/5\n`;
+    message += `💤 Qualidade do Sono: ${formData.sleep_quality[0]}/5\n`;
+    
+    if (formData.sleep_hours) {
+      message += `🕒 Horas de Sono: ${formData.sleep_hours}h\n`;
+    }
+    
+    if (formData.tags.length > 0) {
+      message += `🏷️ Tags: ${formData.tags.join(', ')}\n`;
+    }
+    
+    if (formData.journal_text) {
+      message += `\n📝 *Reflexões:*\n${formData.journal_text}\n`;
+    }
+    
+    message += `\n_Registrado através do Alô, Psi! 💚_`;
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   if (!user) {
@@ -357,6 +451,30 @@ const MoodEntry = () => {
                   Cancelar
                 </Button>
               </div>
+
+              {/* Export and Share */}
+              {(isEditMode || formData.mood_score[0] || formData.journal_text) && (
+                <div className="flex gap-3 pt-2 border-t">
+                  <Button 
+                    variant="outline" 
+                    onClick={exportToPDF}
+                    className="flex items-center gap-2"
+                    disabled={saving || checkingExisting}
+                  >
+                    <Download className="h-4 w-4" />
+                    Exportar PDF
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={shareWhatsApp}
+                    className="flex items-center gap-2"
+                    disabled={saving || checkingExisting}
+                  >
+                    <Share className="h-4 w-4" />
+                    Compartilhar
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
