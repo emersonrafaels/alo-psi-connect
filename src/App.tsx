@@ -91,6 +91,7 @@ const App: React.FC = () => {
                   <Route path="/professional-profile" element={<ProfessionalProfile />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/auth-callback" element={<AuthCallback />} />
                   
                   {/* Redirect old routes to new cadastro routes */}
                   <Route path="/registrar" element={<UserType />} />
