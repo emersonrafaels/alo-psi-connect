@@ -405,17 +405,17 @@ export const SystemConfig = () => {
                   <Label htmlFor="hero_images">URLs das Imagens (S3)</Label>
                   <Textarea
                     id="hero_images"
-                    value={Array.isArray(formData.hero_images) ? formData.hero_images.join('\n') : formData.hero_images}
+                    value={Array.isArray(formData.hero_images) ? formData.hero_images.join(', ') : formData.hero_images}
                     onChange={(e) => {
-                      const urls = e.target.value.split('\n').filter(url => url.trim() !== '');
+                      const urls = e.target.value.split(',').map(url => url.trim()).filter(url => url !== '');
                       setFormData(prev => ({ ...prev, hero_images: urls }));
                     }}
-                    placeholder="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png"
+                    placeholder="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero1.png, https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero2.png"
                     rows={4}
                   />
                   <p className="text-sm text-muted-foreground">
                     {formData.hero_carousel_mode 
-                      ? "Insira uma URL por linha para múltiplas imagens no carrossel"
+                      ? "Separe múltiplas URLs por vírgula para o carrossel"
                       : "Insira uma única URL de imagem"
                     }
                   </p>
