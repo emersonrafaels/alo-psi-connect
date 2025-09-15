@@ -157,6 +157,92 @@ export const useMoodEntries = () => {
     }
   };
 
+  const getEntryByDate = async (date: string): Promise<MoodEntry | null> => {
+    if (!user || !profile) {
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('mood_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('date', date)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error checking existing entry:', error);
+      return null;
+    }
+  };
+
+  const createOrUpdateEntry = async (entryData: Omit<MoodEntry, 'id' | 'user_id' | 'profile_id' | 'created_at' | 'updated_at'>) => {
+    if (!user || !profile) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para salvar uma entrada.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    try {
+      // Check if entry already exists for this date
+      const existingEntry = await getEntryByDate(entryData.date);
+      
+      if (existingEntry) {
+        // Update existing entry
+        const { data, error } = await supabase
+          .from('mood_entries')
+          .update(entryData)
+          .eq('id', existingEntry.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso",
+          description: "Entrada atualizada com sucesso!",
+        });
+
+        fetchEntries();
+        return data;
+      } else {
+        // Create new entry
+        const { data, error } = await supabase
+          .from('mood_entries')
+          .insert({
+            ...entryData,
+            user_id: user.id,
+            profile_id: profile.id,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso",
+          description: "Entrada do diário criada com sucesso!",
+        });
+
+        fetchEntries();
+        return data;
+      }
+    } catch (error) {
+      console.error('Error saving mood entry:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a entrada do diário.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   useEffect(() => {
     fetchEntries();
   }, [user, profile]);
@@ -167,6 +253,8 @@ export const useMoodEntries = () => {
     createEntry,
     updateEntry,
     deleteEntry,
+    getEntryByDate,
+    createOrUpdateEntry,
     refetch: fetchEntries,
   };
 };
