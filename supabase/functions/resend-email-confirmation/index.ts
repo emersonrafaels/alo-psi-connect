@@ -46,10 +46,23 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Check if user exists and get their confirmation status
-    const { data: user, error: userError } = await supabase.auth.admin.getUserByEmail(email);
+    const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+    
+    if (listError) {
+      console.error('Error listing users:', listError);
+      return new Response(
+        JSON.stringify({ error: "Erro ao buscar usuário" }),
+        { 
+          status: 500, 
+          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        }
+      );
+    }
 
-    if (userError || !user) {
-      console.error('User not found:', userError);
+    const user = users.users.find(u => u.email === email);
+
+    if (!user) {
+      console.error('User not found for email:', email);
       return new Response(
         JSON.stringify({ error: "Usuário não encontrado" }),
         { 
@@ -60,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Check if user is already confirmed
-    if (user.user.email_confirmed_at) {
+    if (user.email_confirmed_at) {
       return new Response(
         JSON.stringify({ 
           message: "Email já confirmado",
@@ -76,13 +89,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Resend confirmation email
-    const { error: resendError } = await supabase.auth.admin.generateLink({
-      type: 'signup',
-      email: email,
-      options: {
-        redirectTo: `${Deno.env.get("APP_BASE_URL") || "https://alopsi.com.br"}/`
-      }
+    // Resend confirmation email using inviteUserByEmail
+    const { error: resendError } = await supabase.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${Deno.env.get("APP_BASE_URL") || "https://alopsi.com.br"}/`
     });
 
     if (resendError) {
