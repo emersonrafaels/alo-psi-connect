@@ -16,6 +16,26 @@ serve(async (req) => {
   try {
     console.log('Starting upload process...')
     
+    // Initialize Supabase client for profile data
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Supabase credentials not configured')
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    
+    // Get auth header to identify user
+    const authHeader = req.headers.get('authorization')
+    let userId: string | null = null
+    
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      const { data: { user } } = await supabase.auth.getUser(token)
+      userId = user?.id || null
+    }
+    
     // Parse form data first
     const formData = await req.formData()
     const file = formData.get('file') as File
@@ -38,17 +58,33 @@ serve(async (req) => {
       throw new Error('File too large. Maximum size is 10MB')
     }
 
+    // Get user profile data for better filename
+    let userProfile = null
+    if (userId) {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('nome, tipo_usuario')
+          .eq('user_id', userId)
+          .maybeSingle()
+        userProfile = data
+        console.log('User profile found:', userProfile)
+      } catch (error) {
+        console.log('Could not fetch user profile:', error)
+      }
+    }
+
     // Try S3 upload first, fallback to Supabase Storage
     let publicUrl: string | null = null
 
     try {
       console.log('Attempting S3 upload...')
-      publicUrl = await uploadToS3(file, professionalId)
+      publicUrl = await uploadToS3(file, professionalId, userProfile, userId)
       console.log('S3 upload successful:', publicUrl)
     } catch (s3Error) {
       console.log('S3 upload failed, trying Supabase Storage fallback...', s3Error)
       try {
-        publicUrl = await uploadToSupabaseStorage(file, professionalId)
+        publicUrl = await uploadToSupabaseStorage(file, professionalId, userProfile, userId)
         console.log('Supabase Storage upload successful:', publicUrl)
       } catch (supabaseError) {
         console.error('Both S3 and Supabase Storage failed:', supabaseError)
@@ -91,7 +127,7 @@ serve(async (req) => {
 })
 
 // S3 upload function using native fetch with AWS v4 signature
-async function uploadToS3(file: File, professionalId?: string): Promise<string> {
+async function uploadToS3(file: File, professionalId?: string, userProfile?: any, userId?: string): Promise<string> {
   const AWS_ACCESS_KEY_ID = Deno.env.get('AWS_ACCESS_KEY_ID')
   const AWS_SECRET_ACCESS_KEY = Deno.env.get('AWS_SECRET_ACCESS_KEY')
   const AWS_REGION = Deno.env.get('AWS_REGION') || 'us-east-1'
@@ -100,11 +136,9 @@ async function uploadToS3(file: File, professionalId?: string): Promise<string> 
     throw new Error('AWS credentials not configured')
   }
 
-  // Generate unique filename
-  const timestamp = new Date().toISOString().replace(/[:.-]/g, '')
-  const extension = file.name.split('.').pop()
-  const fileName = `${professionalId || 'professional'}_${timestamp}.${extension}`
-  const key = `imagens/fotosPerfil/profile-pictures/${fileName}`
+  // Generate filename with user profile data
+  const { fileName, folderPath } = generateFileName(file, userProfile, userId, professionalId)
+  const key = `${folderPath}/${fileName}`
 
   const bucketName = 'alopsi-website'
   const region = AWS_REGION
@@ -160,7 +194,7 @@ async function uploadToS3(file: File, professionalId?: string): Promise<string> 
 }
 
 // Supabase Storage fallback function
-async function uploadToSupabaseStorage(file: File, professionalId?: string): Promise<string> {
+async function uploadToSupabaseStorage(file: File, professionalId?: string, userProfile?: any, userId?: string): Promise<string> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
@@ -170,10 +204,8 @@ async function uploadToSupabaseStorage(file: File, professionalId?: string): Pro
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // Generate unique filename
-  const timestamp = new Date().toISOString().replace(/[:.-]/g, '')
-  const extension = file.name.split('.').pop()
-  const fileName = `${professionalId || 'professional'}_${timestamp}.${extension}`
+  // Generate filename with user profile data
+  const { fileName } = generateFileName(file, userProfile, userId, professionalId)
   const filePath = `profile-pictures/${fileName}`
 
   const fileBuffer = await file.arrayBuffer()
@@ -244,4 +276,37 @@ async function hmacSha256Raw(key: Uint8Array | CryptoKey, message: string): Prom
   const msgBuffer = new TextEncoder().encode(message)
   const signature = await crypto.subtle.sign('HMAC', cryptoKey, msgBuffer)
   return new Uint8Array(signature)
+}
+
+// Helper function to generate organized filename and folder structure
+function generateFileName(file: File, userProfile?: any, userId?: string, professionalId?: string): { fileName: string, folderPath: string } {
+  const now = new Date()
+  const timestamp = now.toISOString().replace(/[:.-]/g, '').substring(0, 15) // YYYYMMDDTHHMMSS
+  const year = now.getFullYear()
+  const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  
+  // Sanitize name function
+  const sanitizeName = (name: string): string => {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove accents
+      .replace(/[^a-z0-9]/g, '_') // Replace special chars with underscore
+      .replace(/_+/g, '_') // Remove multiple underscores
+      .replace(/^_|_$/g, '') // Remove leading/trailing underscores
+      .substring(0, 20) // Limit length
+  }
+  
+  // Extract user info with fallbacks
+  const userType = userProfile?.tipo_usuario || 'user'
+  const userName = userProfile?.nome ? sanitizeName(userProfile.nome) : 'usuario'
+  const userIdShort = userId ? userId.substring(0, 8) : (professionalId || 'unknown')
+  
+  // Create filename: tipo-nome-id_curto-timestamp.ext
+  const fileName = `${userType}-${userName}-${userIdShort}-${timestamp}.${extension}`
+  
+  // Create folder path: imagens/fotosPerfil/{tipo_usuario}/{year}/
+  const folderPath = `imagens/fotosPerfil/${userType}/${year}`
+  
+  return { fileName, folderPath }
 }
