@@ -27,29 +27,39 @@ export const useFirstLoginDetection = (): FirstLoginState => {
       }
 
       try {
+        console.log('🔍 [useFirstLoginDetection] Checking first login for user:', user.email);
+        
         // Verifica se é profissional
-        const { data: professional } = await supabase
+        const { data: professional, error: profError } = await supabase
           .from('profissionais')
           .select('id, user_id')
           .eq('user_email', user.email)
           .maybeSingle();
+
+        console.log('🔍 [useFirstLoginDetection] Professional check result:', { professional, profError });
 
         const userIsProfessional = !!professional;
         setIsProfessional(userIsProfessional);
 
         if (userIsProfessional) {
           // Para profissionais, verifica se ainda não viu o modal de boas-vindas
-          // Usamos um campo ou a data de criação para determinar se é primeiro login
           const loginKey = `google_calendar_welcome_shown_${user.id}`;
           const hasSeenWelcome = localStorage.getItem(loginKey);
           
+          console.log('🔍 [useFirstLoginDetection] Professional user - localStorage key:', loginKey);
+          console.log('🔍 [useFirstLoginDetection] Has seen welcome before:', hasSeenWelcome);
+          
           // Se não viu o welcome e é profissional, é primeiro login
-          setIsFirstLogin(!hasSeenWelcome);
+          const isFirst = !hasSeenWelcome;
+          setIsFirstLogin(isFirst);
+          
+          console.log('🔍 [useFirstLoginDetection] Final result - isFirstLogin:', isFirst, 'isProfessional:', userIsProfessional);
         } else {
+          console.log('🔍 [useFirstLoginDetection] Not a professional user');
           setIsFirstLogin(false);
         }
       } catch (error) {
-        console.error('Error checking first login:', error);
+        console.error('❌ [useFirstLoginDetection] Error checking first login:', error);
         setIsFirstLogin(false);
       } finally {
         setLoading(false);
