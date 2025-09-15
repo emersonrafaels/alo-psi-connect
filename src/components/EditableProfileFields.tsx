@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useProfileManager } from '@/hooks/useProfileManager';
 import { Save, Edit, X, User } from 'lucide-react';
@@ -180,13 +181,29 @@ export const EditableProfileFields: React.FC<EditableProfileFieldsProps> = ({
 
           <div>
             <Label htmlFor="genero">Gênero</Label>
-            <Input
-              id="genero"
-              value={formData.genero}
-              onChange={(e) => updateFormData('genero', e.target.value)}
-              disabled={!isEditing}
-              placeholder="Ex: Masculino, Feminino, Outro"
-            />
+            {isEditing ? (
+              <Select
+                value={formData.genero}
+                onValueChange={(value) => updateFormData('genero', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione seu gênero" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Masculino">Masculino</SelectItem>
+                  <SelectItem value="Feminino">Feminino</SelectItem>
+                  <SelectItem value="Outro">Outro</SelectItem>
+                  <SelectItem value="Prefiro não informar">Prefiro não informar</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id="genero"
+                value={formData.genero}
+                disabled={true}
+                placeholder="Ex: Masculino, Feminino, Outro"
+              />
+            )}
           </div>
 
           <div>
@@ -202,13 +219,34 @@ export const EditableProfileFields: React.FC<EditableProfileFieldsProps> = ({
 
           <div>
             <Label htmlFor="como_conheceu">Como nos conheceu?</Label>
-            <Input
-              id="como_conheceu"
-              value={formData.como_conheceu}
-              onChange={(e) => updateFormData('como_conheceu', e.target.value)}
-              disabled={!isEditing}
-              placeholder="Ex: Google, indicação, redes sociais"
-            />
+            {isEditing ? (
+              <Select
+                value={formData.como_conheceu}
+                onValueChange={(value) => updateFormData('como_conheceu', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Como nos conheceu?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Google">Google</SelectItem>
+                  <SelectItem value="Instagram">Instagram</SelectItem>
+                  <SelectItem value="Facebook">Facebook</SelectItem>
+                  <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                  <SelectItem value="YouTube">YouTube</SelectItem>
+                  <SelectItem value="TikTok">TikTok</SelectItem>
+                  <SelectItem value="Indicação de amigo">Indicação de amigo</SelectItem>
+                  <SelectItem value="Indicação médica">Indicação médica</SelectItem>
+                  <SelectItem value="Outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id="como_conheceu"
+                value={formData.como_conheceu}
+                disabled={true}
+                placeholder="Ex: Google, indicação, redes sociais"
+              />
+            )}
           </div>
         </div>
       </CardContent>

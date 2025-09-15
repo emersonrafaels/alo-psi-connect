@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Save, Edit, X } from 'lucide-react';
@@ -185,13 +186,28 @@ export const ProfessionalInfoEditor: React.FC<ProfessionalInfoEditorProps> = ({
 
           <div>
             <Label htmlFor="profissao">Profissão</Label>
-            <Input
-              id="profissao"
-              value={formData.profissao}
-              onChange={(e) => updateFormData('profissao', e.target.value)}
-              disabled={!isEditing}
-              placeholder="Ex: Psicólogo(a)"
-            />
+            {isEditing ? (
+              <Select
+                value={formData.profissao}
+                onValueChange={(value) => updateFormData('profissao', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione sua profissão" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Psicólogo">Psicólogo</SelectItem>
+                  <SelectItem value="Psiquiatra">Psiquiatra</SelectItem>
+                  <SelectItem value="Psicoterapeuta">Psicoterapeuta</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id="profissao"
+                value={formData.profissao}
+                disabled={true}
+                placeholder="Ex: Psicólogo(a)"
+              />
+            )}
           </div>
 
           <div>

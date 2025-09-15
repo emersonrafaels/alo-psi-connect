@@ -17,7 +17,10 @@ import {
   Stethoscope, 
   Clock, 
   Calendar,
-  ArrowLeft
+  ArrowLeft,
+  Save,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import { GoogleCalendarIntegration } from './GoogleCalendarIntegration';
 import { SpecialtiesSelector } from './SpecialtiesSelector';
@@ -433,6 +436,40 @@ export const ProfessionalProfile: React.FC = () => {
                       }
                     }}
                   />
+                  
+                  <div className="flex justify-end pt-4 border-t">
+                    <Button 
+                      onClick={async () => {
+                        if (!professionalData?.id) return;
+                        
+                        try {
+                          const { error } = await supabase
+                            .from('profissionais')
+                            .update({ 
+                              servicos_raw: professionalData.servicos_raw 
+                            })
+                            .eq('id', professionalData.id);
+
+                          if (error) throw error;
+
+                          toast({
+                            title: "Especialidades atualizadas",
+                            description: "Suas especialidades foram salvas com sucesso.",
+                          });
+                        } catch (error: any) {
+                          toast({
+                            title: "Erro ao salvar",
+                            description: error.message || "Não foi possível atualizar as especialidades.",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      disabled={!professionalData?.id}
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Salvar Especialidades
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

@@ -162,15 +162,23 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
         return;
       }
 
-      // Preparar dados para salvar
-      const schedulesToSave = validSchedules.map(schedule => ({
-        user_id: professionalId,
-        day: schedule.day,
-        start_time: schedule.start_time,
-        end_time: schedule.end_time,
-        time_slot: schedule.time_slot,
-        minutos_janela: schedule.minutos_janela
-      }));
+      // Preparar dados para salvar (removendo minutos_janela se for 0 para usar o DEFAULT)
+      const schedulesToSave = validSchedules.map(schedule => {
+        const scheduleData: any = {
+          user_id: professionalId,
+          day: schedule.day,
+          start_time: schedule.start_time,
+          end_time: schedule.end_time,
+          time_slot: schedule.time_slot
+        };
+        
+        // Só incluir minutos_janela se não for 0 (para usar o valor DEFAULT da tabela)
+        if (schedule.minutos_janela && schedule.minutos_janela > 0) {
+          scheduleData.minutos_janela = schedule.minutos_janela;
+        }
+        
+        return scheduleData;
+      });
 
       // Primeiro, deletar todos os horários existentes
       const { error: deleteError } = await supabase
