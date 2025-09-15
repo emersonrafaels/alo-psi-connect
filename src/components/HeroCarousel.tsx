@@ -21,15 +21,20 @@ export const HeroCarousel = () => {
   const { isCarousel, images } = useMemo(() => {
     if (loading) return { isCarousel: false, images: [] };
     
-    const carouselMode = getConfig('homepage', 'hero_carousel_mode', false);
+    const carouselMode = getConfig('homepage', 'hero_carousel_mode', 'false');
     const imageUrls = getConfig('homepage', 'hero_images', []);
+    
+    console.log('HeroCarousel Debug:', { carouselMode, imageUrls, loading });
+    
+    // Converter carouselMode string para boolean
+    const isCarouselEnabled = carouselMode === 'true' || carouselMode === true;
     
     const processedImages = Array.isArray(imageUrls) 
       ? imageUrls.map(convertS3ToHttps).filter(Boolean)
       : [convertS3ToHttps(imageUrls)].filter(Boolean);
     
     return {
-      isCarousel: carouselMode,
+      isCarousel: isCarouselEnabled,
       images: processedImages
     };
   }, [loading, getConfig]);
