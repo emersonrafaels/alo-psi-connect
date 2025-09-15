@@ -280,12 +280,16 @@ export const ProfessionalProfile: React.FC = () => {
                         {getInitials(professionalData?.display_name || profile?.nome || 'P')}
                       </AvatarFallback>
                     </Avatar>
+                  </div>
+                  
+                  {/* Botão de upload separado e mais elegante */}
+                  <div className="w-full max-w-xs">
                     <PhotoUpload
                       onPhotoSelected={handlePhotoUpload}
                       onPhotoUrlChange={() => {}}
                       currentPhotoUrl={professionalData?.foto_perfil_url || profile?.foto_perfil_url || ''}
                       label=""
-                      className="absolute -bottom-2 -right-2 z-10"
+                      className="w-full"
                     />
                   </div>
                 </div>

@@ -167,41 +167,65 @@ export const PhotoUpload = ({
         </p>
       )}
 
-      {/* Upload área */}
-      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
-        <div className="text-center space-y-4">
-          <div className="flex flex-col items-center gap-2">
-            <Upload className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              Clique para selecionar uma imagem
+      {/* Upload área - só mostra se não tem foto */}
+      {!displayUrl && (
+        <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 hover:border-primary/50 transition-colors">
+          <div className="text-center space-y-4">
+            <div className="flex flex-col items-center gap-2">
+              <Upload className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                Clique para selecionar uma imagem
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full hover:bg-primary/10 hover:border-primary/50"
+              >
+                <ImageIcon className="h-4 w-4 mr-2" />
+                Escolher arquivo
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              PNG, JPG, GIF até 10MB
             </p>
           </div>
-
-          <div className="space-y-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full"
-            >
-              <ImageIcon className="h-4 w-4 mr-2" />
-              Escolher arquivo
-            </Button>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            PNG, JPG, GIF até 10MB
-          </p>
         </div>
-      </div>
+      )}
+
+      {/* Botão para trocar foto quando já tem uma */}
+      {displayUrl && (
+        <>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full mt-2"
+          >
+            <ImageIcon className="h-4 w-4 mr-2" />
+            Alterar foto
+          </Button>
+        </>
+      )}
     </div>
   );
 };
