@@ -13,7 +13,9 @@ import { SleepSlider } from '@/components/ui/sleep-slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, Heart, User, Calendar, TrendingUp, Lock } from 'lucide-react';
+import { AlertCircle, Heart, User, Calendar, TrendingUp, Lock, Download, Share } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 
@@ -102,6 +104,88 @@ const MoodExperience = () => {
   };
 
   const stats = getDemoStats();
+
+  const exportToPDF = async () => {
+    try {
+      const pdf = new jsPDF();
+      
+      // Header
+      pdf.setFontSize(20);
+      pdf.text('Diário Emocional - Entrada Demo', 20, 20);
+      
+      // Date
+      pdf.setFontSize(12);
+      pdf.text(`Data: ${new Date(formData.date).toLocaleDateString('pt-BR')}`, 20, 40);
+      
+      // Metrics
+      pdf.text(`Humor: ${formData.mood_score[0]}/10`, 20, 55);
+      pdf.text(`Energia: ${formData.energy_level[0]}/5`, 20, 70);
+      pdf.text(`Ansiedade: ${formData.anxiety_level[0]}/5`, 20, 85);
+      
+      if (formData.sleep_hours) {
+        pdf.text(`Horas de sono: ${formData.sleep_hours}h`, 20, 100);
+        pdf.text(`Qualidade do sono: ${formData.sleep_quality[0]}/5`, 20, 115);
+      }
+      
+      // Tags
+      if (formData.tags.length > 0) {
+        pdf.text(`Tags: ${formData.tags.join(', ')}`, 20, formData.sleep_hours ? 130 : 100);
+      }
+      
+      // Journal
+      if (formData.journal_text) {
+        const startY = formData.sleep_hours ? 145 : (formData.tags.length > 0 ? 115 : 100);
+        pdf.text('Reflexões:', 20, startY);
+        const splitText = pdf.splitTextToSize(formData.journal_text, 170);
+        pdf.text(splitText, 20, startY + 15);
+      }
+      
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text('Gerado pelo Diário Emocional - Versão Demo', 20, 280);
+      
+      pdf.save(`diario-emocional-demo-${formData.date}.pdf`);
+      
+      toast({
+        title: "PDF exportado!",
+        description: "Seu diário emocional foi salvo com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      toast({
+        title: "Erro ao exportar",
+        description: "Não foi possível gerar o PDF. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const shareWhatsApp = () => {
+    const moodEmoji = formData.mood_score[0] >= 8 ? '😊' : formData.mood_score[0] >= 6 ? '😐' : '😔';
+    const energyEmoji = formData.energy_level[0] >= 4 ? '⚡' : formData.energy_level[0] >= 3 ? '🔋' : '🪫';
+    const anxietyEmoji = formData.anxiety_level[0] <= 2 ? '😌' : formData.anxiety_level[0] <= 3 ? '😬' : '😰';
+    
+    const message = `📱 *Meu Diário Emocional - ${new Date(formData.date).toLocaleDateString('pt-BR')}*
+
+${moodEmoji} *Humor:* ${formData.mood_score[0]}/10
+${energyEmoji} *Energia:* ${formData.energy_level[0]}/5  
+${anxietyEmoji} *Ansiedade:* ${formData.anxiety_level[0]}/5
+
+${formData.sleep_hours ? `😴 *Sono:* ${formData.sleep_hours}h (qualidade: ${formData.sleep_quality[0]}/5)\n` : ''}${formData.tags.length > 0 ? `🏷️ *Tags:* ${formData.tags.join(', ')}\n` : ''}${formData.journal_text ? `\n📝 *Reflexões:*\n${formData.journal_text}\n` : ''}
+---
+✨ Registrado com o Diário Emocional (Demo)`;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+    
+    toast({
+      title: "Compartilhado!",
+      description: "Seu diário foi aberto no WhatsApp para compartilhamento.",
+    });
+  };
+
+  // Check if form has meaningful content for showing export/share buttons
+  const hasContent = formData.mood_score[0] !== 5 || formData.journal_text.length > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -261,9 +345,32 @@ const MoodExperience = () => {
                       />
                     </div>
 
-                    <Button onClick={handleSubmit} className="w-full">
-                      Registrar Entrada ({entriesLeft} restantes)
-                    </Button>
+                    <div className="space-y-4">
+                      <Button onClick={handleSubmit} className="w-full">
+                        Registrar Entrada ({entriesLeft} restantes)
+                      </Button>
+                      
+                      {hasContent && (
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={exportToPDF}
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Exportar PDF
+                          </Button>
+                          <Button
+                            onClick={shareWhatsApp}
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            <Share className="h-4 w-4 mr-2" />
+                            Compartilhar
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </>
                 ) : (
                   <div className="text-center py-8 space-y-4">
