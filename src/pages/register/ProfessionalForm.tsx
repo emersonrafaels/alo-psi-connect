@@ -21,7 +21,7 @@ import { useProfileManager } from '@/hooks/useProfileManager';
 import { ScheduleSelector } from '@/components/ScheduleSelector';
 import { SpecialtiesSelector } from '@/components/SpecialtiesSelector';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
-import { GoogleCalendarWelcomeModal } from '@/components/GoogleCalendarWelcomeModal';
+
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
 
@@ -30,7 +30,7 @@ const ProfessionalForm = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showGoogleCalendarModal, setShowGoogleCalendarModal] = useState(false);
+  
   const [showExistingAccountModal, setShowExistingAccountModal] = useState(false);
   const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
   const navigate = useNavigate();
@@ -241,8 +241,8 @@ const ProfessionalForm = () => {
           title: "Cadastro Finalizado!",
           description: "Seu perfil profissional foi criado com sucesso. Bem-vindo(a) à nossa plataforma!",
         });
-        // Mostrar modal do Google Calendar para usuários já confirmados
-        setShowGoogleCalendarModal(true);
+        // Redirecionar para login após cadastro bem-sucedido
+        navigate('/auth');
       }
     } catch (error: any) {
       console.error('Erro detalhado:', error);
@@ -802,14 +802,6 @@ const ProfessionalForm = () => {
       
       <Footer />
 
-      {/* Modal do Google Calendar após cadastro */}
-      <GoogleCalendarWelcomeModal
-        isOpen={showGoogleCalendarModal}
-        onClose={() => {
-          setShowGoogleCalendarModal(false);
-          navigate('/');
-        }}
-      />
 
       {/* Modal de conta existente */}
       <ExistingAccountModal

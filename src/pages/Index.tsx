@@ -4,6 +4,7 @@ import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
 import SearchSection from "@/components/search-section"
 import ProfessionalCard from "@/components/professional-card"
+import { FirstLoginWelcome } from "@/components/FirstLoginWelcome"
 import { supabase } from "@/integrations/supabase/client"
 
 interface FeaturedProfessional {
@@ -375,6 +376,9 @@ const Index = () => {
       </section>
 
       <Footer />
+      
+      {/* Welcome modal para primeiro login de profissionais */}
+      <FirstLoginWelcome />
     </div>
   );
 };
