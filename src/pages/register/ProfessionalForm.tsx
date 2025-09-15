@@ -37,7 +37,7 @@ const ProfessionalForm = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { saveGooglePhoto } = useProfileManager();
+  const { saveGooglePhoto, uploadProfilePhoto } = useProfileManager();
   const googleData = location.state?.googleData || null;
 
   const [formData, setFormData] = useState({
@@ -451,13 +451,35 @@ const ProfessionalForm = () => {
     <div className="space-y-6">
       <div className="space-y-2">
         <PhotoUpload
-          onPhotoSelected={(file) => {
-            // Para o formulário de registro, ainda fazemos upload imediato
-            // pois não temos um botão de salvar separado
+          onPhotoSelected={async (file) => {
             if (file) {
-              // Aqui você precisaria implementar o upload imediato
-              // ou manter a funcionalidade original
-              console.log('Selected file:', file);
+              setLoading(true);
+              try {
+                const { uploadProfilePhoto } = useProfileManager();
+                const photoUrl = await uploadProfilePhoto(file);
+                if (photoUrl) {
+                  updateFormData('fotoPerfilUrl', photoUrl);
+                  toast({
+                    title: "Foto enviada",
+                    description: "Sua foto foi enviada com sucesso!",
+                  });
+                } else {
+                  toast({
+                    title: "Erro no upload",
+                    description: "Não foi possível enviar a foto. Tente novamente.",
+                    variant: "destructive",
+                  });
+                }
+              } catch (error) {
+                console.error('Erro no upload:', error);
+                toast({
+                  title: "Erro no upload",
+                  description: "Erro ao enviar foto. Tente novamente.",
+                  variant: "destructive",
+                });
+              } finally {
+                setLoading(false);
+              }
             }
           }}
           onPhotoUrlChange={(url) => updateFormData('fotoPerfilUrl', url)}
