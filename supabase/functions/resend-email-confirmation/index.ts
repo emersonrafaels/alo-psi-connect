@@ -111,8 +111,10 @@ const handler = async (req: Request): Promise<Response> => {
       throw tokenError;
     }
 
-    // Create confirmation URL
+    // Create confirmation URL - UPDATED to use correct auth route
     const confirmationUrl = `${Deno.env.get("APP_BASE_URL") || "https://alopsi.com.br"}/auth?confirm=true&token=${confirmationToken}`;
+    
+    console.log('Generated confirmation URL:', confirmationUrl); // Debug log
 
     // Send custom email via Resend
     const emailResponse = await resend.emails.send({
