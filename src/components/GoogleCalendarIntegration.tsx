@@ -70,7 +70,7 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
         // Aguarda a autorização (isso seria melhorado com postMessage)
         toast({
           title: "Redirecionando para o Google",
-          description: "Complete a autorização na janela que se abriu.",
+          description: "Complete a autorização na janela que se abriu. Se for bloqueado, verifique as configurações do Google Cloud Console.",
         });
       } else {
         console.error('No authUrl received:', data);
@@ -85,9 +85,13 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
       
       let errorMessage = error.message || "Erro desconhecido ao conectar o Google Calendar";
       
-      // Tratamento específico para erro de credenciais
+      // Tratamento específico para diferentes tipos de erro
       if (errorMessage.includes('credentials not configured')) {
         errorMessage = "As credenciais do Google Calendar não foram configuradas. Entre em contato com o administrador.";
+      } else if (errorMessage.includes('access_blocked') || errorMessage.includes('disallowed_useragent')) {
+        errorMessage = "Acesso bloqueado pelo Google. A aplicação precisa ser configurada no modo 'Testing' no Google Cloud Console.";
+      } else if (errorMessage.includes('redirect_uri_mismatch')) {
+        errorMessage = "Erro de configuração: URL de redirecionamento não autorizada no Google Cloud Console.";
       }
       
       toast({
@@ -264,15 +268,33 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
           )}
 
           {!isConnected && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-blue-900">Benefícios da integração:</h4>
-                <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• Evita agendamentos em conflito</li>
-                  <li>• Atualização automática da disponibilidade</li>
-                  <li>• Reduz cancelamentos de última hora</li>
-                  <li>• Melhora a experiência do paciente</li>
-                </ul>
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-blue-900">Benefícios da integração:</h4>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>• Evita agendamentos em conflito</li>
+                    <li>• Atualização automática da disponibilidade</li>
+                    <li>• Reduz cancelamentos de última hora</li>
+                    <li>• Melhora a experiência do paciente</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-orange-900">Configuração necessária:</h4>
+                  <div className="text-sm text-orange-700 space-y-2">
+                    <p>Se encontrar problemas de acesso bloqueado:</p>
+                    <ol className="list-decimal list-inside space-y-1 ml-2">
+                      <li>Acesse o Google Cloud Console</li>
+                      <li>Vá em "OAuth consent screen"</li>
+                      <li>Configure o status como "Testing"</li>
+                      <li>Adicione seu email como usuário de teste</li>
+                      <li>Salve as configurações e tente novamente</li>
+                    </ol>
+                  </div>
+                </div>
               </div>
             </div>
           )}

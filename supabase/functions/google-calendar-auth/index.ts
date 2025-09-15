@@ -170,10 +170,30 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error: any) {
     console.error('Error in google-calendar-auth function:', error);
+    
+    // Melhor tratamento de diferentes tipos de erro
+    let errorMessage = error.message;
+    let statusCode = 500;
+    
+    if (error.message.includes('credentials not configured')) {
+      statusCode = 503;
+      errorMessage = 'Google Calendar credentials not configured. Please contact administrator.';
+    } else if (error.message.includes('redirect_uri_mismatch')) {
+      statusCode = 400;
+      errorMessage = 'OAuth redirect URI mismatch. Please check Google Cloud Console configuration.';
+    } else if (error.message.includes('access_denied')) {
+      statusCode = 403;
+      errorMessage = 'Access denied by Google. Please check OAuth consent screen configuration.';
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: errorMessage,
+        details: error.message,
+        timestamp: new Date().toISOString()
+      }),
       {
-        status: 500,
+        status: statusCode,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
