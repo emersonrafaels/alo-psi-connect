@@ -166,7 +166,16 @@ const MultiSelectCombobox = ({
     if (selectedValues.includes(value)) {
       onSelectionChange(selectedValues.filter(item => item !== value));
     } else {
-      onSelectionChange([...selectedValues, value]);
+      // Special logic for psicoterapia: auto-select "psicologia" when selecting "psicoterapia"
+      if (value === "psicoterapia") {
+        const newValues = [...selectedValues, value];
+        if (!selectedValues.includes("psicologia")) {
+          newValues.push("psicologia");
+        }
+        onSelectionChange(newValues);
+      } else {
+        onSelectionChange([...selectedValues, value]);
+      }
     }
   };
 
