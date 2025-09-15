@@ -9,20 +9,24 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PasswordResetForm } from '@/components/PasswordResetForm';
 import { EmailConfirmationForm } from '@/components/EmailConfirmationForm';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff } from 'lucide-react';
+import { useEmailResend } from '@/hooks/useEmailResend';
+import { Eye, EyeOff, Mail } from 'lucide-react';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
   const [searchParams] = useSearchParams();
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { resendEmailConfirmation, loading: resendLoading } = useEmailResend();
   
   const { user } = useAuth();
 
@@ -79,7 +83,23 @@ const Auth = () => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Detectar erro de email não confirmado
+        if (error.message.includes('Email not confirmed')) {
+          setEmailNotConfirmed(true);
+          toast({
+            title: "Email não confirmado",
+            description: "Você precisa confirmar seu email antes de fazer login.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
+
+      // Limpar estado de email não confirmado se login for bem-sucedido
+      setEmailNotConfirmed(false);
 
       toast({
         title: "Login realizado com sucesso!",
@@ -100,13 +120,32 @@ const Auth = () => {
         navigate('/')
       }
     } catch (error: any) {
-      toast({
-        title: "Erro no login",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Não mostrar toast adicional se já detectamos email não confirmado
+      if (!error.message.includes('Email not confirmed')) {
+        toast({
+          title: "Erro no login",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      toast({
+        title: "Digite seu email",
+        description: "Por favor, digite seu email no campo acima antes de reenviar a confirmação.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const result = await resendEmailConfirmation(email);
+    if (result.success) {
+      setEmailNotConfirmed(false);
     }
   };
 
@@ -344,6 +383,25 @@ const Auth = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Alerta para email não confirmado */}
+          {emailNotConfirmed && (
+            <Alert className="mt-4">
+              <Mail className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between">
+                <span>Seu email ainda não foi confirmado. Verifique sua caixa de entrada.</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResendConfirmation}
+                  disabled={resendLoading}
+                  className="ml-4"
+                >
+                  {resendLoading ? "Enviando..." : "Reenviar"}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
       </main>
       
