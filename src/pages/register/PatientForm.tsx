@@ -15,12 +15,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ChevronLeft, ChevronRight, Check, Eye, EyeOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 
 const PatientForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showExistingAccountModal, setShowExistingAccountModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -44,10 +46,43 @@ const PatientForm = () => {
     telefone: '' // Added for edge function compatibility
   });
 
+  // Verificar se há dados pendentes de cadastro de paciente
+  useEffect(() => {
+    const pendingData = sessionStorage.getItem('pendingPatientData');
+    const continueRegistration = sessionStorage.getItem('continueRegistration');
+    
+    if (pendingData && continueRegistration === 'true' && user) {
+      try {
+        const parsedData = JSON.parse(pendingData);
+        setFormData(parsedData);
+        sessionStorage.removeItem('pendingPatientData');
+        sessionStorage.removeItem('continueRegistration');
+        
+        toast({
+          title: "Dados recuperados",
+          description: "Seus dados foram recuperados. Continue o cadastro onde parou.",
+          variant: "default",
+        });
+      } catch (error) {
+        console.error('Erro ao recuperar dados pendentes:', error);
+      }
+    }
+  }, [user, toast]);
   const totalSteps = user ? 3 : 4; // 4 passos se não há usuário logado (inclui senha)
   const progressPercentage = (currentStep / totalSteps) * 100;
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // Se estamos no step 2 e não há usuário logado, verificar se email já existe
+    if (currentStep === 2 && !user && formData.email) {
+      const emailCheck = await checkEmailExists(formData.email);
+      if (emailCheck?.exists) {
+        // Salvar dados do formulário para recuperar após login
+        sessionStorage.setItem('pendingPatientData', JSON.stringify(formData));
+        setShowExistingAccountModal(true);
+        return;
+      }
+    }
+
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
@@ -65,6 +100,17 @@ const PatientForm = () => {
     setLoading(true);
     
     try {
+      // Se não há usuário logado, verificar se email já existe antes de criar conta
+      if (!user) {
+        const emailCheck = await checkEmailExists(formData.email);
+        if (emailCheck?.exists) {
+          // Salvar dados do formulário
+          sessionStorage.setItem('pendingPatientData', JSON.stringify(formData));
+          setShowExistingAccountModal(true);
+          setLoading(false);
+          return;
+        }
+      }
       // If Google user, handle specially (they're already authenticated)
       if (googleData) {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -183,6 +229,20 @@ const PatientForm = () => {
 
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const checkEmailExists = async (email: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-email-exists', {
+        body: { email }
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error: any) {
+      console.error('Erro ao verificar email:', error);
+      return null;
+    }
   };
 
   const renderStep1 = () => (
@@ -481,6 +541,12 @@ const PatientForm = () => {
       </main>
       
       <Footer />
+
+      <ExistingAccountModal 
+        isOpen={showExistingAccountModal}
+        onClose={() => setShowExistingAccountModal(false)}
+        email={formData.email}
+      />
     </div>
   );
 };

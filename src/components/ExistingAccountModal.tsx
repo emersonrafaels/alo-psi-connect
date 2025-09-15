@@ -31,7 +31,9 @@ export const ExistingAccountModal: React.FC<ExistingAccountModalProps> = ({
   const handleLogin = () => {
     // Salvar dados do formulário no sessionStorage para recuperar após login
     const pendingProfessionalData = sessionStorage.getItem('pendingProfessionalData');
-    if (pendingProfessionalData) {
+    const pendingPatientData = sessionStorage.getItem('pendingPatientData');
+    
+    if (pendingProfessionalData || pendingPatientData) {
       sessionStorage.setItem('continueRegistration', 'true');
     }
     

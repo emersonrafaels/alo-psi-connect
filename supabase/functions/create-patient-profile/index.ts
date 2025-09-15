@@ -87,16 +87,37 @@ serve(async (req) => {
     let profileData;
     
     if (existingProfile) {
-      console.log('Profile already exists for user:', userId);
-      return new Response(
-        JSON.stringify({ error: 'User already registered', details: 'Este email já está cadastrado. Tente fazer login.' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      console.log('Profile already exists, updating:', existingProfile.id);
+      // Update existing profile
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          nome,
+          email,
+          data_nascimento: dataNascimento,
+          genero,
+          cpf,
+          como_conheceu: comoConheceu,
+          tipo_usuario: 'paciente'
+        })
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Error updating profile:', updateError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to update profile', details: updateError.message }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      profileData = updatedProfile;
     } else {
-      // Create profile
+      // Create new profile
       const { data: newProfileData, error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -126,34 +147,69 @@ serve(async (req) => {
       profileData = newProfileData;
     }
 
-    console.log('Profile created:', profileData);
+    console.log('Profile processed successfully:', profileData.id);
 
-    // Create patient record
-    const { data: patientData, error: patientError } = await supabase
+    // Check if patient already exists
+    const { data: existingPatient } = await supabase
       .from('pacientes')
-      .insert({
-        profile_id: profileData.id,
-        eh_estudante: ehEstudante,
-        instituicao_ensino: ehEstudante ? instituicaoEnsino : null
-      })
-      .select()
+      .select('*')
+      .eq('profile_id', profileData.id)
       .single();
 
-    if (patientError) {
-      console.error('Error creating patient record:', patientError);
-      // Clean up user and profile if patient creation fails
-      await supabase.from('profiles').delete().eq('id', profileData.id);
-      await supabase.auth.admin.deleteUser(userId);
-      return new Response(
-        JSON.stringify({ error: 'Failed to create patient record', details: patientError.message }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+    let patientData;
+    
+    if (existingPatient) {
+      console.log('Patient already exists, updating:', existingPatient.id);
+      // Update existing patient
+      const { data: updatedPatient, error: updateError } = await supabase
+        .from('pacientes')
+        .update({
+          eh_estudante: ehEstudante,
+          instituicao_ensino: ehEstudante ? instituicaoEnsino : null
+        })
+        .eq('profile_id', profileData.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Error updating patient record:', updateError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to update patient record', details: updateError.message }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      patientData = updatedPatient;
+    } else {
+      // Create patient record
+      const { data: newPatientData, error: patientError } = await supabase
+        .from('pacientes')
+        .insert({
+          profile_id: profileData.id,
+          eh_estudante: ehEstudante,
+          instituicao_ensino: ehEstudante ? instituicaoEnsino : null
+        })
+        .select()
+        .single();
+
+      if (patientError) {
+        console.error('Error creating patient record:', patientError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to create patient record', details: patientError.message }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      patientData = newPatientData;
     }
 
-    console.log('Patient record created:', patientData);
+    console.log('Patient record processed successfully:', patientData.id);
 
     return new Response(
       JSON.stringify({ 
