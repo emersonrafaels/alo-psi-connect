@@ -4,8 +4,76 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MapPin, Phone, Mail, Clock } from "lucide-react"
+import { useState } from "react"
+import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 
 const Contact = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+      toast({
+        variant: "destructive",
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos obrigatórios."
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('send-contact-email', {
+        body: formData
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Mensagem enviada!",
+        description: "Recebemos sua mensagem e retornaremos em breve."
+      });
+
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: ''
+      });
+
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar",
+        description: "Ocorreu um erro ao enviar sua mensagem. Tente novamente."
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -27,33 +95,61 @@ const Contact = () => {
           {/* Contact Form */}
           <div>
             <h2 className="text-3xl font-bold mb-8">Envie uma Mensagem</h2>
-            <form className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Nome Completo</label>
-                  <Input placeholder="Seu nome completo" />
+                  <label className="block text-sm font-medium mb-2">Nome Completo *</label>
+                  <Input 
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Seu nome completo" 
+                    required
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">E-mail</label>
-                  <Input type="email" placeholder="seu@email.com" />
+                  <label className="block text-sm font-medium mb-2">E-mail *</label>
+                  <Input 
+                    type="email" 
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="seu@email.com" 
+                    required
+                  />
                 </div>
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-2">Telefone</label>
-                <Input placeholder="(11) 99999-9999" />
+                <Input 
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="(11) 99999-9999" 
+                />
               </div>
               
                 <div>
-                <label className="block text-sm font-medium mb-2">Assunto</label>
-                <Input placeholder="Qual o motivo do contato?" />
+                <label className="block text-sm font-medium mb-2">Assunto *</label>
+                <Input 
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleInputChange}
+                  placeholder="Qual o motivo do contato?" 
+                  required
+                />
                 </div>
 
                 <div>
-                <label className="block text-sm font-medium mb-2">Mensagem</label>
+                <label className="block text-sm font-medium mb-2">Mensagem *</label>
                 <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
                   placeholder="Escreva sua mensagem aqui..."
                   rows={6}
+                  required
                   className="w-full p-3 rounded-md resize-none
                   border border-input 
                   bg-background text-foreground 
@@ -62,8 +158,14 @@ const Contact = () => {
                 />
                 </div>
 
-                <Button variant="default" size="lg" className="w-full">
-                Enviar Mensagem
+                <Button 
+                  type="submit" 
+                  variant="default" 
+                  size="lg" 
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Enviando..." : "Enviar Mensagem"}
                 </Button>
             </form>
           </div>
