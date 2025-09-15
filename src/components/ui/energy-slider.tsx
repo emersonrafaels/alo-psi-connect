@@ -26,28 +26,27 @@ const getEnergyColor = (value: number) => {
 }
 
 const BatteryIcon = ({ level }: { level: number }) => {
-  // Calcular preenchimento baseado no nível, com contenção dentro da bateria
-  const getFillPercentage = (level: number) => {
+  // Altura do preenchimento baseada no nível (progressão linear)
+  const getFillHeight = (level: number) => {
     switch(level) {
-      case 1: return 15
-      case 2: return 35
-      case 3: return 55
-      case 4: return 75
-      case 5: return 90
-      default: return 55
+      case 1: return '20%'
+      case 2: return '40%'
+      case 3: return '60%'
+      case 4: return '80%'
+      case 5: return '95%'
+      default: return '60%'
     }
   }
   
-  const fillPercentage = getFillPercentage(level)
+  const fillHeight = getFillHeight(level)
   
   return (
     <div className="relative">
       <Battery className="h-8 w-8" />
       <div 
-        className="absolute bottom-[4px] left-[4px] right-[6px] transition-all duration-300"
+        className="absolute bottom-[3px] left-[3px] w-[18px] transition-all duration-300"
         style={{
-          height: `${Math.min(75, fillPercentage)}%`,
-          width: `${fillPercentage}%`,
+          height: fillHeight,
           backgroundColor: getEnergyColor(level),
           borderRadius: '1px'
         }}
