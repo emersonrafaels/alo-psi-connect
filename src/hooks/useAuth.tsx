@@ -50,9 +50,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    // Redirect to homepage after logout
-    window.location.href = '/';
+    try {
+      // Always clear local state first
+      setSession(null);
+      setUser(null);
+      
+      // Clear any localStorage/sessionStorage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Attempt server logout (but don't fail if it errors)
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Logout error (continuing anyway):', error);
+    } finally {
+      // Force redirect regardless of server response
+      window.location.href = '/';
+    }
   };
 
   return (

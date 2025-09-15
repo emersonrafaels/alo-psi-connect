@@ -1,9 +1,10 @@
 import { Navigate, Link } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from './AdminSidebar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Menu, Home } from 'lucide-react';
+import { Menu, Home, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface AdminLayoutProps {
@@ -12,6 +13,7 @@ interface AdminLayoutProps {
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { isAdmin, loading } = useAdminAuth();
+  const { signOut } = useAuth();
 
   if (loading) {
     return (
@@ -65,12 +67,18 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                 </span>
               </div>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/" className="flex items-center gap-2">
-                <Home className="h-4 w-4" />
-                <span className="hidden sm:inline">Voltar ao Site</span>
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link to="/" className="flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  <span className="hidden sm:inline">Voltar ao Site</span>
+                </Link>
+              </Button>
+              <Button onClick={signOut} variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Sair</span>
+              </Button>
+            </div>
           </header>
           <main className="flex-1 overflow-auto bg-background">
             <div className="container mx-auto px-6 py-6 space-y-6 max-w-7xl">
