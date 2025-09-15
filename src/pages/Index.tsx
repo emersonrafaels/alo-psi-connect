@@ -5,6 +5,7 @@ import Footer from "@/components/ui/footer";
 import SearchSection from "@/components/search-section";
 import ProfessionalCard from "@/components/professional-card";
 import { FirstLoginWelcome } from "@/components/FirstLoginWelcome";
+import { HeroCarousel } from "@/components/HeroCarousel";
 import { supabase } from "@/integrations/supabase/client";
 interface FeaturedProfessional {
   id: number;
@@ -62,9 +63,7 @@ const Index = () => {
               </Button>
               </div>
             </div>
-            <div className="relative">
-              <img src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png" alt="Profissional de saúde mental oferecendo cuidado e acolhimento" className="w-full h-80 object-cover rounded-lg" loading="lazy" />
-            </div>
+            <HeroCarousel />
           </div>
         </div>
       </section>

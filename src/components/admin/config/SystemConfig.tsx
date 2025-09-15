@@ -6,15 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
-import { Save, Settings, Mail, CreditCard, Clock, TrendingUp, Users, Database, Shield, AlertTriangle } from 'lucide-react';
+import { Save, Settings, Mail, CreditCard, Clock, TrendingUp, Users, Database, Shield, AlertTriangle, Image, ToggleLeft } from 'lucide-react';
 import { MetricsCard } from './MetricsCard';
 import { UsageChart } from './UsageChart';
 import { ConfigDataTable } from './ConfigDataTable';
 import { supabase } from '@/integrations/supabase/client';
 
 export const SystemConfig = () => {
-  const { getConfig, updateConfig, loading, hasPermission, configs } = useSystemConfig(['system']);
+  const { getConfig, updateConfig, loading, hasPermission, configs } = useSystemConfig(['system', 'homepage']);
   const [saving, setSaving] = useState(false);
   const [systemMetrics, setSystemMetrics] = useState({
     totalAppointments: 0,
@@ -35,7 +37,10 @@ export const SystemConfig = () => {
     // Payment settings (moved to separate hook)
     mercado_pago_access_token: getConfig('system', 'mercado_pago_access_token', ''),
     payment_success_redirect: getConfig('system', 'payment_success_redirect', '/pagamento-sucesso'),
-    payment_cancel_redirect: getConfig('system', 'payment_cancel_redirect', '/pagamento-cancelado')
+    payment_cancel_redirect: getConfig('system', 'payment_cancel_redirect', '/pagamento-cancelado'),
+    // Homepage settings
+    hero_carousel_mode: getConfig('homepage', 'hero_carousel_mode', false),
+    hero_images: getConfig('homepage', 'hero_images', ['https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png'])
   });
 
   // Fetch system metrics and analytics
@@ -104,7 +109,10 @@ export const SystemConfig = () => {
         // Payment settings
         updateConfig('system', 'mercado_pago_access_token', formData.mercado_pago_access_token),
         updateConfig('system', 'payment_success_redirect', formData.payment_success_redirect),
-        updateConfig('system', 'payment_cancel_redirect', formData.payment_cancel_redirect)
+        updateConfig('system', 'payment_cancel_redirect', formData.payment_cancel_redirect),
+        // Homepage settings
+        updateConfig('homepage', 'hero_carousel_mode', formData.hero_carousel_mode),
+        updateConfig('homepage', 'hero_images', formData.hero_images)
       ]);
     } finally {
       setSaving(false);
@@ -340,6 +348,62 @@ export const SystemConfig = () => {
                     onChange={(e) => setFormData(prev => ({ ...prev, payment_cancel_redirect: e.target.value }))}
                     placeholder="/pagamento-cancelado"
                   />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Homepage Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Image className="h-5 w-5" />
+                Configurações da Homepage
+              </CardTitle>
+              <CardDescription>
+                Configure as imagens do hero da página inicial
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="carousel_mode">Modo Carrossel</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Ative para usar múltiplas imagens em carrossel
+                    </p>
+                  </div>
+                  <Switch
+                    id="carousel_mode"
+                    checked={formData.hero_carousel_mode}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, hero_carousel_mode: checked }))}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="hero_images">URLs das Imagens (S3)</Label>
+                  <Textarea
+                    id="hero_images"
+                    value={Array.isArray(formData.hero_images) ? formData.hero_images.join('\n') : formData.hero_images}
+                    onChange={(e) => {
+                      const urls = e.target.value.split('\n').filter(url => url.trim() !== '');
+                      setFormData(prev => ({ ...prev, hero_images: urls }));
+                    }}
+                    placeholder="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png"
+                    rows={4}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {formData.hero_carousel_mode 
+                      ? "Insira uma URL por linha para múltiplas imagens no carrossel"
+                      : "Insira uma única URL de imagem"
+                    }
+                  </p>
+                  <Badge variant={Array.isArray(formData.hero_images) && formData.hero_images.length > 0 ? "default" : "destructive"}>
+                    {Array.isArray(formData.hero_images) && formData.hero_images.length > 0 
+                      ? `${formData.hero_images.length} imagem(ns) configurada(s)` 
+                      : "Nenhuma imagem configurada"
+                    }
+                  </Badge>
                 </div>
               </div>
             </CardContent>
