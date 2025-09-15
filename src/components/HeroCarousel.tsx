@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { useSystemConfig } from '@/hooks/useSystemConfig';
+import { usePublicConfig } from '@/hooks/usePublicConfig';
 
 // Helper function to convert S3 URLs to HTTPS format
 const convertS3ToHttps = (url: string): string => {
@@ -16,7 +16,7 @@ const convertS3ToHttps = (url: string): string => {
 };
 
 export const HeroCarousel = () => {
-  const { getConfig, loading } = useSystemConfig(['homepage']);
+  const { getConfig, loading } = usePublicConfig(['homepage']);
 
   const { isCarousel, images } = useMemo(() => {
     if (loading) return { isCarousel: false, images: [] };
