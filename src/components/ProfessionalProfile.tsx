@@ -23,11 +23,13 @@ import { GoogleCalendarIntegration } from './GoogleCalendarIntegration';
 import { SpecialtiesSelector } from './SpecialtiesSelector';
 import { ScheduleManager } from './ScheduleManager';
 import { ProfessionalInfoEditor } from './ProfessionalInfoEditor';
+import { EditableProfileFields } from './EditableProfileFields';
 import { PhotoUpload } from './ui/photo-upload';
 import { useNavigate } from 'react-router-dom';
 
 interface ProfessionalData {
   id: number;
+  user_id: number;
   display_name: string;
   foto_perfil_url: string | null;
   profissao: string | null;
@@ -168,6 +170,7 @@ export const ProfessionalProfile: React.FC = () => {
         });
       }
     } catch (error: any) {
+      console.error('Erro no upload da foto:', error);
       toast({
         title: "Erro no upload",
         description: "Não foi possível atualizar a foto.",
@@ -394,13 +397,20 @@ export const ProfessionalProfile: React.FC = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="info" className="mt-8">
+            <TabsContent value="info" className="mt-8 space-y-6">
+              <EditableProfileFields 
+                profile={profile}
+                onUpdate={() => {
+                  // Trigger a refetch of profile data if needed
+                }}
+              />
+              
               <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none rounded-lg"></div>
                 <div className="relative">
                   <ProfessionalInfoEditor 
                     professionalData={professionalData}
-                    onUpdate={setProfessionalData}
+                    onUpdate={(data) => setProfessionalData(data)}
                   />
                 </div>
               </Card>
@@ -455,7 +465,7 @@ export const ProfessionalProfile: React.FC = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="relative">
-                  <ScheduleManager professionalId={professionalData?.id} />
+                  <ScheduleManager professionalId={professionalData?.user_id} />
                 </CardContent>
               </Card>
             </TabsContent>

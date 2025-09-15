@@ -63,7 +63,12 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
   // Carregar horários existentes
   useEffect(() => {
     const loadSchedules = async () => {
-      if (!professionalId) return;
+      if (!professionalId) {
+        console.log('ScheduleManager: No professionalId provided');
+        return;
+      }
+
+      console.log('ScheduleManager: Loading schedules for professional ID:', professionalId);
 
       try {
         const { data, error } = await supabase
@@ -73,8 +78,12 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
           .order('day')
           .order('start_time');
 
-        if (error) throw error;
+        if (error) {
+          console.error('ScheduleManager: Error loading schedules:', error);
+          throw error;
+        }
 
+        console.log('ScheduleManager: Loaded schedules:', data);
         setSchedules(data || []);
       } catch (error: any) {
         toast({

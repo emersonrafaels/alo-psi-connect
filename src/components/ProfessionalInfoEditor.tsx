@@ -11,6 +11,7 @@ import { Save, Edit, X } from 'lucide-react';
 
 interface ProfessionalData {
   id: number;
+  user_id: number;
   display_name: string;
   foto_perfil_url: string | null;
   profissao: string | null;
