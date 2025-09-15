@@ -26,18 +26,19 @@ const getEnergyColor = (value: number) => {
 }
 
 const BatteryIcon = ({ level }: { level: number }) => {
-  const fillPercentage = level === 5 ? 85 : (level / 5) * 70
+  // Para nível 5, mostrar bateria 100% cheia
+  const fillPercentage = level === 5 ? 100 : (level / 5) * 80
   
   return (
     <div className="relative">
       <Battery className="h-8 w-8" />
       <div 
-        className="absolute bottom-[4px] left-[4px] right-[4px] rounded-[2px] transition-all duration-300"
+        className="absolute bottom-[3px] left-[3px] rounded-[1px] transition-all duration-300"
         style={{
-          height: '70%',
-          width: `${fillPercentage}%`,
+          height: '75%',
+          width: level === 5 ? 'calc(100% - 6px)' : `${fillPercentage}%`,
           backgroundColor: getEnergyColor(level),
-          opacity: level === 5 ? 1 : 0.8
+          opacity: 1
         }}
       />
     </div>
