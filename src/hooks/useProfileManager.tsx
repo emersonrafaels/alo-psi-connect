@@ -69,18 +69,29 @@ export const useProfileManager = () => {
     if (!user) return null;
 
     try {
+      console.log('Starting photo upload for user:', user.id);
+      
       // Criar FormData para enviar para a Edge Function
       const formData = new FormData();
       formData.append('file', file);
       formData.append('professionalId', user.id); // Usar user.id como identificador
 
+      console.log('Calling upload-to-s3 function...');
+      
       // Chamar a Edge Function upload-to-s3
       const { data, error } = await supabase.functions.invoke('upload-to-s3', {
         body: formData,
       });
 
+      console.log('Upload response:', { data, error });
+
       if (error) throw error;
 
+      if (!data?.url) {
+        throw new Error('No URL returned from upload');
+      }
+
+      console.log('Photo uploaded successfully:', data.url);
       return data.url;
     } catch (error: any) {
       console.error('Erro no upload para S3:', error);

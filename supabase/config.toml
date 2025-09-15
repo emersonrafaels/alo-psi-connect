@@ -91,3 +91,6 @@ verify_jwt = false
 
 [functions.create-professional-profile]
 verify_jwt = false
+
+[functions.upload-to-s3]
+verify_jwt = true
