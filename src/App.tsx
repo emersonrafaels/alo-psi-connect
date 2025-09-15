@@ -35,6 +35,13 @@ import NotFound from "./pages/NotFound";
 import MyAppointments from "./pages/MyAppointments";
 import RescheduleAppointment from "./pages/RescheduleAppointment";
 
+// Mood diary pages
+import MoodDiary from "./pages/MoodDiary";
+import MoodExperience from "./pages/MoodExperience";
+import MoodEntry from "./pages/MoodEntry";
+import MoodHistory from "./pages/MoodHistory";
+import MoodAnalytics from "./pages/MoodAnalytics";
+
 // Admin pages
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -98,6 +105,13 @@ const App: React.FC = () => {
                   {/* Rotas de Agendamentos */}
                   <Route path="/agendamentos" element={<MyAppointments />} />
                   <Route path="/reagendar/:appointmentId" element={<RescheduleAppointment />} />
+                  
+                  {/* Rotas do Diário Emocional */}
+                  <Route path="/diario-emocional" element={<MoodDiary />} />
+                  <Route path="/diario-emocional/experiencia" element={<MoodExperience />} />
+                  <Route path="/diario-emocional/nova-entrada" element={<MoodEntry />} />
+                  <Route path="/diario-emocional/historico" element={<MoodHistory />} />
+                  <Route path="/diario-emocional/analises" element={<MoodAnalytics />} />
                   
                   {/* Rotas Admin */}
                   <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />

@@ -214,6 +214,94 @@ export type Database = {
         }
         Relationships: []
       }
+      mood_entries: {
+        Row: {
+          anxiety_level: number | null
+          created_at: string | null
+          date: string
+          energy_level: number | null
+          id: string
+          journal_text: string | null
+          mood_score: number | null
+          profile_id: string | null
+          sleep_hours: number | null
+          sleep_quality: number | null
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          anxiety_level?: number | null
+          created_at?: string | null
+          date: string
+          energy_level?: number | null
+          id?: string
+          journal_text?: string | null
+          mood_score?: number | null
+          profile_id?: string | null
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          anxiety_level?: number | null
+          created_at?: string | null
+          date?: string
+          energy_level?: number | null
+          id?: string
+          journal_text?: string | null
+          mood_score?: number | null
+          profile_id?: string | null
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mood_entries_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mood_factors: {
+        Row: {
+          created_at: string | null
+          factor_type: string
+          factor_value: Json | null
+          id: string
+          mood_entry_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          factor_type: string
+          factor_value?: Json | null
+          id?: string
+          mood_entry_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          factor_type?: string
+          factor_value?: Json | null
+          id?: string
+          mood_entry_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mood_factors_mood_entry_id_fkey"
+            columns: ["mood_entry_id"]
+            isOneToOne: false
+            referencedRelation: "mood_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscriptions: {
         Row: {
           ativo: boolean
