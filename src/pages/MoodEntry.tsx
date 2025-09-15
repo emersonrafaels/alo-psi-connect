@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useMoodEntries } from '@/hooks/useMoodEntries';
+import { useMoodEntries, type MoodEntry } from '@/hooks/useMoodEntries';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -14,33 +14,79 @@ import { SleepSlider } from '@/components/ui/sleep-slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Save, Heart } from 'lucide-react';
+import { ArrowLeft, Save, Heart, Edit, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const MoodEntry = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { createEntry, updateEntry, entries } = useMoodEntries();
+  const { getEntryByDate, createOrUpdateEntry } = useMoodEntries();
   const { toast } = useToast();
 
   const editDate = searchParams.get('date');
-  const isEdit = !!editDate;
-  const existingEntry = isEdit ? entries.find(e => e.date === editDate) : null;
-
+  
   const [formData, setFormData] = useState({
     date: editDate || new Date().toISOString().split('T')[0],
-    mood_score: [existingEntry?.mood_score || 5],
-    energy_level: [existingEntry?.energy_level || 3],
-    anxiety_level: [existingEntry?.anxiety_level || 3],
-    sleep_hours: existingEntry?.sleep_hours?.toString() || '',
-    sleep_quality: [existingEntry?.sleep_quality || 3],
-    journal_text: existingEntry?.journal_text || '',
-    tags: existingEntry?.tags || [],
+    mood_score: [5],
+    energy_level: [3],
+    anxiety_level: [3],
+    sleep_hours: '',
+    sleep_quality: [3],
+    journal_text: '',
+    tags: [] as string[],
   });
 
   const [newTag, setNewTag] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [checkingExisting, setCheckingExisting] = useState(false);
+  const [currentEntry, setCurrentEntry] = useState<MoodEntry | null>(null);
+
+  // Check for existing entry when date changes
+  const checkExistingEntry = async (date: string) => {
+    if (!user) return;
+    
+    setCheckingExisting(true);
+    try {
+      const existingEntry = await getEntryByDate(date);
+      
+      if (existingEntry) {
+        // Load existing data into form
+        setFormData({
+          date: existingEntry.date,
+          mood_score: [existingEntry.mood_score],
+          energy_level: [existingEntry.energy_level],
+          anxiety_level: [existingEntry.anxiety_level],
+          sleep_hours: existingEntry.sleep_hours?.toString() || '',
+          sleep_quality: [existingEntry.sleep_quality || 3],
+          journal_text: existingEntry.journal_text || '',
+          tags: existingEntry.tags || [],
+        });
+        setCurrentEntry(existingEntry);
+        setIsEditMode(true);
+      } else {
+        // Reset form for new entry
+        setFormData({
+          date: date,
+          mood_score: [5],
+          energy_level: [3],
+          anxiety_level: [3],
+          sleep_hours: '',
+          sleep_quality: [3],
+          journal_text: '',
+          tags: [],
+        });
+        setCurrentEntry(null);
+        setIsEditMode(false);
+      }
+    } catch (error) {
+      console.error('Error checking existing entry:', error);
+    } finally {
+      setCheckingExisting(false);
+    }
+  };
 
   // Redirect non-authenticated users
   useEffect(() => {
@@ -48,6 +94,20 @@ const MoodEntry = () => {
       navigate('/diario-emocional/experiencia');
     }
   }, [user, navigate]);
+
+  // Check for existing entry on date change
+  useEffect(() => {
+    if (user && formData.date) {
+      checkExistingEntry(formData.date);
+    }
+  }, [formData.date, user]);
+
+  // Handle initial load with edit date
+  useEffect(() => {
+    if (editDate && user) {
+      checkExistingEntry(editDate);
+    }
+  }, [editDate, user]);
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -65,12 +125,7 @@ const MoodEntry = () => {
         tags: formData.tags.length > 0 ? formData.tags : undefined,
       };
 
-      let result;
-      if (isEdit && existingEntry) {
-        result = await updateEntry(existingEntry.id, entryData);
-      } else {
-        result = await createEntry(entryData);
-      }
+      const result = await createOrUpdateEntry(entryData);
 
       if (result) {
         navigate('/diario-emocional');
@@ -80,6 +135,21 @@ const MoodEntry = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleDateChange = (newDate: string) => {
+    // Prevent selecting future dates
+    const today = new Date().toISOString().split('T')[0];
+    if (newDate > today) {
+      toast({
+        title: "Data inválida",
+        description: "Você não pode registrar sentimentos para datas futuras.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setFormData(prev => ({ ...prev, date: newDate }));
   };
 
   const addTag = () => {
@@ -120,39 +190,60 @@ const MoodEntry = () => {
             </Button>
             <div>
               <h1 className="text-2xl font-bold">
-                {isEdit ? 'Editar Entrada' : 'Nova Entrada do Diário'}
+                {isEditMode ? 'Editar Entrada' : 'Nova Entrada do Diário'}
               </h1>
               <p className="text-muted-foreground">
-                {isEdit 
-                  ? `Editando entrada de ${new Date(editDate!).toLocaleDateString('pt-BR')}`
-                  : 'Registre como você está se sentindo hoje'
+                {isEditMode 
+                  ? `Editando entrada de ${new Date(formData.date).toLocaleDateString('pt-BR')}`
+                  : 'Registre como você está se sentindo na data selecionada'
                 }
               </p>
             </div>
           </div>
+
+          {/* Status Alert */}
+          {isEditMode && (
+            <Alert>
+              <Edit className="h-4 w-4" />
+              <AlertDescription>
+                Você está editando uma entrada existente para {new Date(formData.date).toLocaleDateString('pt-BR')}. 
+                Suas alterações irão sobrescrever os dados anteriores.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Form */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Heart className="h-5 w-5" />
-                Como você está se sentindo?
+                {isEditMode ? 'Editando seus sentimentos' : 'Como você está se sentindo?'}
               </CardTitle>
               <CardDescription>
-                Preencha os campos abaixo para registrar seu estado emocional
+                {isEditMode 
+                  ? 'Atualize os campos abaixo para modificar seu registro emocional'
+                  : 'Preencha os campos abaixo para registrar como você se sente na data selecionada'
+                }
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Date */}
               <div className="space-y-2">
-                <Label htmlFor="date">Data</Label>
+                <Label htmlFor="date">Data dos Sentimentos</Label>
                 <Input
                   id="date"
                   type="date"
                   value={formData.date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                  onChange={(e) => handleDateChange(e.target.value)}
                   max={new Date().toISOString().split('T')[0]}
+                  disabled={checkingExisting}
                 />
+                <p className="text-sm text-muted-foreground">
+                  Selecione a data em que você estava se sentindo desta forma
+                </p>
+                {checkingExisting && (
+                  <p className="text-sm text-blue-600">Verificando entrada existente...</p>
+                )}
               </div>
 
               {/* Mood Score */}
@@ -252,16 +343,16 @@ const MoodEntry = () => {
               <div className="flex gap-3 pt-4">
                 <Button 
                   onClick={handleSubmit} 
-                  disabled={saving}
+                  disabled={saving || checkingExisting}
                   className="flex-1 flex items-center gap-2"
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? 'Salvando...' : (isEdit ? 'Atualizar Entrada' : 'Salvar Entrada')}
+                  {saving ? 'Salvando...' : (isEditMode ? 'Atualizar Entrada' : 'Salvar Entrada')}
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => navigate('/diario-emocional')}
-                  disabled={saving}
+                  disabled={saving || checkingExisting}
                 >
                   Cancelar
                 </Button>
