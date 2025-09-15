@@ -64,7 +64,9 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Action requested:', action);
 
     const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/google-calendar-auth`;
+    const appBaseUrl = Deno.env.get('APP_BASE_URL') || 'https://loving-orangutan-c0dbe2.lovable.app';
     console.log('Redirect URI:', redirectUri);
+    console.log('App Base URL:', appBaseUrl);
 
     if (action === 'connect') {
       if (code) {
