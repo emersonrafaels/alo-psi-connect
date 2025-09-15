@@ -6,7 +6,10 @@ import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
+import { MoodSlider } from '@/components/ui/mood-slider';
+import { EnergySlider } from '@/components/ui/energy-slider';
+import { AnxietySlider } from '@/components/ui/anxiety-slider';
+import { SleepSlider } from '@/components/ui/sleep-slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -167,53 +170,29 @@ const MoodExperience = () => {
 
                     {/* Mood Score */}
                     <div className="space-y-2">
-                      <Label>Humor (1-10)</Label>
-                      <div className="px-3">
-                        <Slider
-                          value={formData.mood_score}
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, mood_score: value }))}
-                          max={10}
-                          min={1}
-                          step={1}
-                        />
-                      </div>
-                      <div className="text-center text-sm text-muted-foreground">
-                        {formData.mood_score[0]}/10
-                      </div>
+                      <Label>Humor</Label>
+                      <MoodSlider
+                        value={formData.mood_score}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, mood_score: value }))}
+                      />
                     </div>
 
                     {/* Energy Level */}
                     <div className="space-y-2">
-                      <Label>Nível de Energia (1-5)</Label>
-                      <div className="px-3">
-                        <Slider
-                          value={formData.energy_level}
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, energy_level: value }))}
-                          max={5}
-                          min={1}
-                          step={1}
-                        />
-                      </div>
-                      <div className="text-center text-sm text-muted-foreground">
-                        {formData.energy_level[0]}/5
-                      </div>
+                      <Label>Nível de Energia</Label>
+                      <EnergySlider
+                        value={formData.energy_level}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, energy_level: value }))}
+                      />
                     </div>
 
                     {/* Anxiety Level */}
                     <div className="space-y-2">
-                      <Label>Nível de Ansiedade (1-5)</Label>
-                      <div className="px-3">
-                        <Slider
-                          value={formData.anxiety_level}
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, anxiety_level: value }))}
-                          max={5}
-                          min={1}
-                          step={1}
-                        />
-                      </div>
-                      <div className="text-center text-sm text-muted-foreground">
-                        {formData.anxiety_level[0]}/5
-                      </div>
+                      <Label>Nível de Ansiedade</Label>
+                      <AnxietySlider
+                        value={formData.anxiety_level}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, anxiety_level: value }))}
+                      />
                     </div>
 
                     {/* Sleep */}
@@ -232,19 +211,11 @@ const MoodExperience = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Qualidade do Sono (1-5)</Label>
-                        <div className="px-3">
-                          <Slider
-                            value={formData.sleep_quality}
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, sleep_quality: value }))}
-                            max={5}
-                            min={1}
-                            step={1}
-                          />
-                        </div>
-                        <div className="text-center text-xs text-muted-foreground">
-                          {formData.sleep_quality[0]}/5
-                        </div>
+                        <Label>Qualidade do Sono</Label>
+                        <SleepSlider
+                          value={formData.sleep_quality}
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, sleep_quality: value }))}
+                        />
                       </div>
                     </div>
 
