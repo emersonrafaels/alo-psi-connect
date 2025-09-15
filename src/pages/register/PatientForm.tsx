@@ -353,10 +353,24 @@ const PatientForm = () => {
           <Input
             id="cpf"
             value={formData.cpf}
-            onChange={(e) => updateFormData('cpf', e.target.value)}
+            onChange={(e) => {
+              // Only allow digits and format as XXX.XXX.XXX-XX
+              let value = e.target.value.replace(/\D/g, '').slice(0, 11);
+              value = value
+          .replace(/^(\d{3})(\d)/, '$1.$2')
+          .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+          .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+              updateFormData('cpf', value);
+            }}
             placeholder="000.000.000-00"
             required
+            maxLength={14}
+            pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
+            inputMode="numeric"
           />
+          {formData.cpf && !/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf) && (
+            <p className="text-sm text-red-500 mt-1">CPF deve ter 11 dígitos no formato XXX.XXX.XXX-XX</p>
+          )}
         </div>
       </div>
     </div>
