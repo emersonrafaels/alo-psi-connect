@@ -356,6 +356,33 @@ export const ProfessionalProfile: React.FC = () => {
             </CardContent>
           </Card>
 
+          {/* Profile Link */}
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">Link do seu perfil</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Compartilhe este link para que pacientes vejam seu perfil
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const url = `${window.location.origin}/professional/${professionalData?.id}`;
+                    navigator.clipboard.writeText(url);
+                    toast({
+                      title: "Link copiado!",
+                      description: "O link do seu perfil foi copiado para a área de transferência.",
+                    });
+                  }}
+                >
+                  Copiar Link do Perfil
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Modern Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-muted/30 backdrop-blur-sm rounded-xl">

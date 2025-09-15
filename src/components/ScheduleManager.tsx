@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -39,16 +38,7 @@ const DAYS_OF_WEEK = [
 
 const TIME_SLOTS = [
   { value: 30, label: '30 minutos' },
-  { value: 50, label: '50 minutos' },
-  { value: 60, label: '1 hora' }
-];
-
-const BUFFER_TIME = [
-  { value: 0, label: 'Sem intervalo' },
-  { value: 15, label: '15 minutos' },
-  { value: 30, label: '30 minutos' },
-  { value: 45, label: '45 minutos' },
-  { value: 60, label: '1 hora' }
+  { value: 50, label: '50 minutos' }
 ];
 
 export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId }) => {
@@ -158,14 +148,13 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
         return;
       }
 
-      // Preparar dados para salvar - usando apenas os campos necessários como no cadastro
+      // Preparar dados para salvar
       const schedulesToSave = validSchedules.map(schedule => ({
         user_id: professionalId,
         day: schedule.day,
         start_time: schedule.start_time,
         end_time: schedule.end_time,
         time_slot: schedule.time_slot
-        // Não incluir minutos_janela pois está causando erro
       }));
 
       // Primeiro, deletar todos os horários existentes
@@ -232,7 +221,6 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
           end: next.toTimeString().slice(0, 5)
         });
       }
-      // Sem intervalo adicional, usar apenas a duração da consulta
       current = new Date(next.getTime());
     }
 
@@ -265,166 +253,265 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-medium">Horários de Atendimento</h3>
-          <p className="text-sm text-muted-foreground">
-            Configure seus dias e horários disponíveis para consultas
-          </p>
-        </div>
-        <Button onClick={addNewSchedule} variant="outline">
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Horário
-        </Button>
+      <div className="text-center">
+        <h3 className="text-xl font-medium">Horários de atendimento</h3>
       </div>
 
-      {schedules.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Nenhum horário configurado</h3>
-            <p className="text-muted-foreground mb-4">
-              Adicione seus horários de atendimento para que pacientes possam agendar consultas.
-            </p>
-            <Button onClick={addNewSchedule}>
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Primeiro Horário
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <div className="space-y-4">
-            {schedules.map((schedule, index) => (
-              <Card key={index}>
-                <CardContent className="pt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div>
-                      <Label>Dia da semana</Label>
-                      <Select
-                        value={schedule.day}
-                        onValueChange={(value) => updateSchedule(index, 'day', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o dia" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DAYS_OF_WEEK.map(day => (
-                            <SelectItem key={day.value} value={day.value}>
-                              {day.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+      {/* Configuração de Intervalos */}
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-base font-medium">
+            Configuração de Intervalos <span className="text-destructive">*</span>
+          </h4>
+          <p className="text-sm text-muted-foreground mt-1">
+            Escolha o intervalo entre os horários disponíveis para agendamento.
+          </p>
+        </div>
 
-                    <div>
-                      <Label>Horário início</Label>
-                      <Select
-                        value={schedule.start_time}
-                        onValueChange={(value) => updateSchedule(index, 'start_time', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 24 }, (_, i) => {
-                            const hour = i.toString().padStart(2, '0');
-                            return (
-                              <SelectItem key={`${hour}:00`} value={`${hour}:00`}>
-                                {hour}:00
+        <div className="space-y-3">
+          <label className="flex items-start space-x-3 cursor-pointer">
+            <input
+              type="radio"
+              name="time_interval"
+              value="30"
+              checked={true}
+              readOnly
+              className="mt-1"
+            />
+            <div>
+              <div className="font-medium">30 em 30 minutos</div>
+              <div className="text-sm text-muted-foreground">Ex: 10:00, 10:30, 11:00, 11:30...</div>
+            </div>
+          </label>
+
+          <label className="flex items-start space-x-3 cursor-pointer opacity-50">
+            <input
+              type="radio"
+              name="time_interval"
+              value="60"
+              disabled
+              className="mt-1"
+            />
+            <div>
+              <div className="font-medium">1 em 1 hora</div>
+              <div className="text-sm text-muted-foreground">Ex: 10:00, 11:00, 12:00, 13:00...</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      {/* Dias e Horários de Atendimento */}
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-base font-medium">
+            Dias e Horários de Atendimento <span className="text-destructive">*</span>
+          </h4>
+          <p className="text-sm text-muted-foreground mt-1">
+            Configure os dias da semana e horários em que você está disponível para atendimento.
+          </p>
+        </div>
+
+        {/* Adicionar novo horário */}
+        <div className="space-y-4">
+          <h5 className="font-medium">Adicionar novo horário:</h5>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+              <Label className="text-sm font-medium">Dia da semana</Label>
+              <Select value="" onValueChange={(value) => {
+                const newSchedule = {
+                  day: value,
+                  start_time: '09:00',
+                  end_time: '17:00',
+                  time_slot: 50
+                };
+                setSchedules(prev => [...prev, newSchedule as Schedule]);
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o dia" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DAYS_OF_WEEK.map(day => (
+                    <SelectItem key={day.value} value={day.value}>
+                      {day.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium">Hora início</Label>
+              <Select value="" disabled>
+                <SelectTrigger>
+                  <SelectValue placeholder="Início" />
+                </SelectTrigger>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium">Hora fim</Label>
+              <Select value="" disabled>
+                <SelectTrigger>
+                  <SelectValue placeholder="Fim" />
+                </SelectTrigger>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium">Duração consulta</Label>
+              <Select value="50" disabled>
+                <SelectTrigger>
+                  <SelectValue placeholder="50 minutos" />
+                </SelectTrigger>
+              </Select>
+            </div>
+          </div>
+
+          <Button variant="outline" className="w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Horário
+          </Button>
+        </div>
+
+        {schedules.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Nenhum horário configurado. Adicione pelo menos um horário de atendimento.</p>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4">
+              {schedules.map((schedule, index) => (
+                <Card key={index}>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                      <div>
+                        <Label>Dia da semana</Label>
+                        <Select
+                          value={schedule.day}
+                          onValueChange={(value) => updateSchedule(index, 'day', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o dia" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DAYS_OF_WEEK.map(day => (
+                              <SelectItem key={day.value} value={day.value}>
+                                {day.label}
                               </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                    <div>
-                      <Label>Horário fim</Label>
-                      <Select
-                        value={schedule.end_time}
-                        onValueChange={(value) => updateSchedule(index, 'end_time', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 24 }, (_, i) => {
-                            const hour = i.toString().padStart(2, '0');
-                            return (
-                              <SelectItem key={`${hour}:00`} value={`${hour}:00`}>
-                                {hour}:00
+                      <div>
+                        <Label>Horário início</Label>
+                        <Select
+                          value={schedule.start_time}
+                          onValueChange={(value) => updateSchedule(index, 'start_time', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => {
+                              const hour = i.toString().padStart(2, '0');
+                              return (
+                                <SelectItem key={`${hour}:00`} value={`${hour}:00`}>
+                                  {hour}:00
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label>Horário fim</Label>
+                        <Select
+                          value={schedule.end_time}
+                          onValueChange={(value) => updateSchedule(index, 'end_time', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => {
+                              const hour = i.toString().padStart(2, '0');
+                              return (
+                                <SelectItem key={`${hour}:00`} value={`${hour}:00`}>
+                                  {hour}:00
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label>Duração consulta</Label>
+                        <Select
+                          value={schedule.time_slot?.toString()}
+                          onValueChange={(value) => updateSchedule(index, 'time_slot', parseInt(value))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TIME_SLOTS.map(slot => (
+                              <SelectItem key={slot.value} value={slot.value.toString()}>
+                                {slot.label}
                               </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                    <div>
-                      <Label>Duração consulta</Label>
-                      <Select
-                        value={schedule.time_slot?.toString()}
-                        onValueChange={(value) => updateSchedule(index, 'time_slot', parseInt(value))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {TIME_SLOTS.map(slot => (
-                            <SelectItem key={slot.value} value={slot.value.toString()}>
-                              {slot.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex items-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeSchedule(index)}
-                        className="w-full"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Preview dos horários */}
-                  {schedule.day && schedule.start_time && schedule.end_time && schedule.time_slot && (
-                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                      <Label className="text-sm font-medium mb-2 block">
-                        Horários disponíveis - {getDayLabel(schedule.day)}:
-                      </Label>
-                      <div className="flex flex-wrap gap-2">
-                        {generateTimeSlots(
-                          schedule.start_time,
-                          schedule.end_time,
-                          schedule.time_slot
-                        ).map((slot, slotIndex) => (
-                          <Badge key={slotIndex} variant="secondary" className="text-xs">
-                            {slot.start} - {slot.end}
-                          </Badge>
-                        ))}
+                      <div className="flex items-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeSchedule(index)}
+                          className="w-full"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
 
-          <div className="flex justify-end">
-            <Button onClick={saveSchedules} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Salvando...' : 'Salvar Horários'}
-            </Button>
-          </div>
-        </>
-      )}
+                    {/* Preview dos horários */}
+                    {schedule.day && schedule.start_time && schedule.end_time && schedule.time_slot && (
+                      <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                        <Label className="text-sm font-medium mb-2 block">
+                          Horários disponíveis - {getDayLabel(schedule.day)}:
+                        </Label>
+                        <div className="flex flex-wrap gap-2">
+                          {generateTimeSlots(
+                            schedule.start_time,
+                            schedule.end_time,
+                            schedule.time_slot
+                          ).map((slot, slotIndex) => (
+                            <Badge key={slotIndex} variant="secondary" className="text-xs">
+                              {slot.start} - {slot.end}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={saveSchedules} disabled={saving}>
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? 'Salvando...' : 'Salvar Horários'}
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Informações sobre como funciona */}
       <Card>
