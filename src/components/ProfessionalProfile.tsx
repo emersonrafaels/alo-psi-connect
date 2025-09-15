@@ -112,6 +112,7 @@ export const ProfessionalProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('info');
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Carregar dados do profissional
   useEffect(() => {
@@ -270,29 +271,17 @@ export const ProfessionalProfile: React.FC = () => {
             <CardContent className="relative pt-8 pb-6">
               <div className="flex flex-col lg:flex-row items-start gap-8">
                 {/* Avatar Section */}
-                <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-25 group-hover:opacity-75 transition duration-300"></div>
+                <div className="relative">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-25 hover:opacity-75 transition duration-300"></div>
                   <div className="relative">
-                    <Avatar className="h-32 w-32 border-4 border-background shadow-2xl">
-                      <AvatarImage 
-                        src={professionalData?.foto_perfil_url || profile?.foto_perfil_url} 
-                        alt={professionalData?.display_name || profile?.nome}
-                        className="object-cover"
-                      />
-                      <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-primary to-accent text-primary-foreground">
-                        {getInitials(professionalData?.display_name || profile?.nome || 'P')}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  
-                  {/* Botão de upload separado e mais elegante */}
-                  <div className="w-full max-w-xs">
                     <PhotoUpload
                       onPhotoSelected={handlePhotoUpload}
                       onPhotoUrlChange={() => {}}
                       currentPhotoUrl={professionalData?.foto_perfil_url || profile?.foto_perfil_url || ''}
-                      label=""
-                      className="w-full"
+                      selectedFile={selectedFile}
+                      compact={true}
+                      size="lg"
+                      className="border-4 border-background shadow-2xl"
                     />
                   </div>
                 </div>

@@ -12,6 +12,8 @@ interface PhotoUploadProps {
   selectedFile?: File | null;
   label?: string;
   className?: string;
+  compact?: boolean;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 export const PhotoUpload = ({ 
@@ -20,7 +22,9 @@ export const PhotoUpload = ({
   currentPhotoUrl, 
   selectedFile,
   label = "Foto de Perfil",
-  className = ""
+  className = "",
+  compact = false,
+  size = 'md'
 }: PhotoUploadProps) => {
   const [previewUrl, setPreviewUrl] = useState(currentPhotoUrl || '');
   const [localObjectUrl, setLocalObjectUrl] = useState<string | null>(null);
@@ -130,6 +134,86 @@ export const PhotoUpload = ({
   const displayUrl = localObjectUrl || previewUrl;
   const isPendingSave = !!selectedFile;
 
+  // Size classes based on size prop
+  const sizeClasses = {
+    sm: 'w-16 h-16',
+    md: 'w-32 h-32', 
+    lg: 'w-48 h-48'
+  };
+
+  const avatarSize = sizeClasses[size];
+
+  if (compact) {
+    return (
+      <div className={`relative ${className}`}>
+        {!label && <Label className="sr-only">{label}</Label>}
+        
+        {/* Input oculto */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+
+        {/* Avatar com overlay de upload */}
+        <div className="relative group">
+          {displayUrl ? (
+            <img 
+              src={displayUrl} 
+              alt="Foto de perfil" 
+              className={`${avatarSize} object-cover rounded-full border-2 border-border`}
+            />
+          ) : (
+            <div className={`${avatarSize} bg-muted rounded-full border-2 border-dashed border-muted-foreground/50 flex items-center justify-center`}>
+              <Upload className="h-6 w-6 text-muted-foreground" />
+            </div>
+          )}
+          
+          {/* Overlay de upload que aparece no hover */}
+          <div 
+            className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="h-5 w-5 text-white" />
+          </div>
+
+          {/* Indicador de pendência */}
+          {isPendingSave && (
+            <div className="absolute -top-1 -right-1 bg-orange-500 text-white p-1 rounded-full shadow-lg">
+              <Clock className="h-3 w-3" />
+            </div>
+          )}
+
+          {/* Botão de remover */}
+          {displayUrl && (
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                clearPhoto();
+              }}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+
+        {/* Indicador de pendência abaixo */}
+        {isPendingSave && (
+          <p className="text-xs text-orange-600 flex items-center gap-1 mt-2">
+            <Clock className="h-3 w-3" />
+            Pendente
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={`space-y-4 ${className}`}>
       <Label>{label}</Label>
@@ -140,7 +224,7 @@ export const PhotoUpload = ({
           <img 
             src={displayUrl} 
             alt="Preview" 
-            className="w-32 h-32 object-cover rounded-lg border"
+            className={`${avatarSize} object-cover rounded-lg border`}
           />
           {isPendingSave && (
             <div className="absolute -top-1 -left-1 bg-orange-500 text-white p-1 rounded-full shadow-lg">
