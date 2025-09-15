@@ -30,13 +30,17 @@ async function createSignature(
     .join(';')
     
   const urlObj = new URL(url)
+  
+  // Handle UNSIGNED-PAYLOAD or calculate hash
+  const payloadHash = payload === 'UNSIGNED-PAYLOAD' ? 'UNSIGNED-PAYLOAD' : await sha256(payload)
+  
   const canonicalRequest = [
     method,
     urlObj.pathname,
     urlObj.search.slice(1),
     canonicalHeaders,
     signedHeaders,
-    await sha256(payload)
+    payloadHash
   ].join('\n')
 
   // Create string to sign
@@ -135,7 +139,7 @@ serve(async (req) => {
       'GET',
       url,
       headers,
-      '',
+      'UNSIGNED-PAYLOAD',
       AWS_REGION,
       's3',
       AWS_ACCESS_KEY_ID,
