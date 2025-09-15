@@ -82,9 +82,9 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold mb-2">Endereço</h3>
                         <p className="text-muted-foreground">
-                          Rua Aurora Azul, 1423 - Vila Harmonia<br />
-                          São Paulo - SP, CNPJ: 12.345.678/0001-90<br />
-                          Brasil
+                          R. Joaquim Távora, 1240 - Vila Mariana<br />
+                          São Paulo - SP, 04015-013<br />
+                          CNPJ: 12.345.678/0001-90, Brasil
                         </p>
                       </div>
                     </div>
@@ -99,7 +99,7 @@ const Contact = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold mb-2">Telefone</h3>
-                        <p className="text-muted-foreground">+55 (11) 98765-4321</p>
+                        <p className="text-muted-foreground">(11) 97587-2447</p>
                       </div>
                     </div>
                   </CardContent>
@@ -113,7 +113,7 @@ const Contact = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold mb-2">E-mail</h3>
-                        <p className="text-muted-foreground">suporte@alopsi.com.br</p>
+                        <p className="text-muted-foreground">alopsi.host@gmail.com</p>
                       </div>
                     </div>
                   </CardContent>
@@ -130,7 +130,10 @@ const Contact = () => {
                         <p className="text-muted-foreground">
                           Segunda a Sexta: 8h às 18h<br />
                           Sábado: 8h às 12h<br />
-                          Domingo: Fechado
+                          Domingo: Fechado<br />
+                          <span className="text-xs italic mt-2 block">
+                            *Horário de contato com nosso time de atendimento, que responderá prontamente quando estiver online.
+                          </span>
                         </p>
                       </div>
                     </div>
