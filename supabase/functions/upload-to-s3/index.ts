@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { S3Client, PutObjectCommand } from "https://esm.sh/@aws-sdk/client-s3@3.400.0"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,6 +21,16 @@ serve(async (req) => {
     if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) {
       throw new Error('AWS credentials not configured')
     }
+
+    console.log('AWS credentials found, initializing S3 client...')
+
+    const s3Client = new S3Client({
+      region: AWS_REGION,
+      credentials: {
+        accessKeyId: AWS_ACCESS_KEY_ID,
+        secretAccessKey: AWS_SECRET_ACCESS_KEY,
+      },
+    })
 
     const formData = await req.formData()
     const file = formData.get('file') as File
@@ -47,22 +58,15 @@ serve(async (req) => {
     
     console.log('Uploading to S3 with key:', key)
 
-    // Direct fetch to AWS S3 API instead of using SDK
-    const url = `https://alopsi-website.s3.amazonaws.com/${key}`
-    
-    const response = await fetch(url, {
-      method: 'PUT',
-      body: new Uint8Array(fileBuffer),
-      headers: {
-        'Content-Type': file.type,
-        'x-amz-acl': 'public-read',
-        'Authorization': `AWS ${AWS_ACCESS_KEY_ID}:${await generateSignature(key, file.type, AWS_SECRET_ACCESS_KEY)}`,
-      },
+    const command = new PutObjectCommand({
+      Bucket: 'alopsi-website',
+      Key: key,
+      Body: new Uint8Array(fileBuffer),
+      ContentType: file.type,
+      ACL: 'public-read',
     })
 
-    if (!response.ok) {
-      throw new Error(`S3 upload failed: ${response.status} ${response.statusText}`)
-    }
+    await s3Client.send(command)
 
     const publicUrl = `https://alopsi-website.s3.amazonaws.com/${key}`
 
@@ -97,25 +101,3 @@ serve(async (req) => {
     )
   }
 })
-
-// Simple signature generation for AWS S3
-async function generateSignature(key: string, contentType: string, secretKey: string): Promise<string> {
-  const stringToSign = `PUT\n\n${contentType}\n\nx-amz-acl:public-read\n/${key}`
-  
-  const encoder = new TextEncoder()
-  const data = encoder.encode(stringToSign)
-  const keyData = encoder.encode(secretKey)
-  
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'HMAC', hash: 'SHA-1' },
-    false,
-    ['sign']
-  )
-  
-  const signature = await crypto.subtle.sign('HMAC', cryptoKey, data)
-  const base64Signature = btoa(String.fromCharCode(...new Uint8Array(signature)))
-  
-  return base64Signature
-}
