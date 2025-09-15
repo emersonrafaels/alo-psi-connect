@@ -128,6 +128,7 @@ serve(async (req) => {
     const headers = {
       'Host': `${bucket}.s3.${AWS_REGION}.amazonaws.com`,
       'X-Amz-Date': timestamp,
+      'X-Amz-Content-Sha256': 'UNSIGNED-PAYLOAD',
     }
 
     const authorization = await createSignature(
