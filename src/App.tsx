@@ -28,6 +28,7 @@ import UserType from "./pages/register/UserType";
 import PatientForm from "./pages/register/PatientForm";
 import ProfessionalForm from "./pages/register/ProfessionalForm";
 import Profile from "./pages/Profile";
+import { ProfessionalProfile } from "./components/ProfessionalProfile";
 import NotFound from "./pages/NotFound";
 
 // Appointment management pages
@@ -80,6 +81,7 @@ const App: React.FC = () => {
                   <Route path="/contato" element={<Contact />} />
                   <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
                   <Route path="/perfil" element={<Profile />} />
+                  <Route path="/professional-profile" element={<ProfessionalProfile />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   
