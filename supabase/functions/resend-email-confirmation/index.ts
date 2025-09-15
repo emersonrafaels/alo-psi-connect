@@ -112,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Create confirmation URL
-    const confirmationUrl = `${Deno.env.get("APP_BASE_URL") || "https://alopsi.com.br"}/confirm-email?token=${confirmationToken}`;
+    const confirmationUrl = `${Deno.env.get("APP_BASE_URL") || "https://alopsi.com.br"}/auth?confirm=true&token=${confirmationToken}`;
 
     // Send custom email via Resend
     const emailResponse = await resend.emails.send({

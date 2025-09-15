@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PasswordResetForm } from '@/components/PasswordResetForm';
+import { EmailConfirmationForm } from '@/components/EmailConfirmationForm';
 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -25,9 +26,10 @@ const Auth = () => {
   
   const { user } = useAuth();
 
-  // Verificar se é modo de reset de senha
+  // Verificar se é modo de reset de senha ou confirmação de email
   const isResetMode = searchParams.get('reset') === 'true';
-  const resetToken = searchParams.get('token');
+  const isConfirmMode = searchParams.get('confirm') === 'true';
+  const token = searchParams.get('token');
 
   useEffect(() => {
     // Se usuário já está logado, redirecionar para home ou página anterior
@@ -144,7 +146,33 @@ const Auth = () => {
               </p>
             </div>
 
-            <PasswordResetForm token={resetToken || undefined} />
+            <PasswordResetForm token={token || undefined} />
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+    );
+  }
+
+  // Se estiver em modo confirmação de email, mostrar apenas o formulário de confirmação
+  if (isConfirmMode) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        
+        <main className="container mx-auto px-4 py-20">
+          <div className="max-w-md mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                Confirmação de Email
+              </h1>
+              <p className="text-muted-foreground">
+                Confirmando sua conta...
+              </p>
+            </div>
+
+            <EmailConfirmationForm token={token || undefined} />
           </div>
         </main>
         
