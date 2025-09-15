@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
@@ -87,7 +87,7 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
     }
   };
 
-  const getConfig = (category: string, key: string, defaultValue: any = null) => {
+  const getConfig = useCallback((category: string, key: string, defaultValue: any = null) => {
     const config = configs.find(c => c.category === category && c.key === key);
     if (!config) return defaultValue;
     
@@ -131,7 +131,7 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
     
     // Para valores simples (string, number, boolean), retorna diretamente
     return config.value;
-  };
+  }, [configs]);
 
   const getConfigsByCategory = (category: string) => {
     return configs.filter(c => c.category === category);

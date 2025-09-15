@@ -1,20 +1,37 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 
+// Helper function to convert S3 URLs to HTTPS format
+const convertS3ToHttps = (url: string): string => {
+  if (url.startsWith('s3://')) {
+    // Convert s3://bucket-name/path to https://bucket-name.s3.us-east-1.amazonaws.com/path
+    const s3Match = url.match(/^s3:\/\/([^\/]+)\/(.+)$/);
+    if (s3Match) {
+      const [, bucket, path] = s3Match;
+      return `https://${bucket}.s3.us-east-1.amazonaws.com/${path}`;
+    }
+  }
+  return url;
+};
+
 export const HeroCarousel = () => {
   const { getConfig, loading } = useSystemConfig(['homepage']);
-  const [isCarousel, setIsCarousel] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (!loading) {
-      const carouselMode = getConfig('homepage', 'hero_carousel_mode', false);
-      const imageUrls = getConfig('homepage', 'hero_images', []);
-      
-      setIsCarousel(carouselMode);
-      setImages(Array.isArray(imageUrls) ? imageUrls : [imageUrls].filter(Boolean));
-    }
+  const { isCarousel, images } = useMemo(() => {
+    if (loading) return { isCarousel: false, images: [] };
+    
+    const carouselMode = getConfig('homepage', 'hero_carousel_mode', false);
+    const imageUrls = getConfig('homepage', 'hero_images', []);
+    
+    const processedImages = Array.isArray(imageUrls) 
+      ? imageUrls.map(convertS3ToHttps).filter(Boolean)
+      : [convertS3ToHttps(imageUrls)].filter(Boolean);
+    
+    return {
+      isCarousel: carouselMode,
+      images: processedImages
+    };
   }, [loading, getConfig]);
 
   if (loading || images.length === 0) {
