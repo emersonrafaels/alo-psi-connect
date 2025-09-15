@@ -9,7 +9,8 @@ import { RoleManagementDialog } from '@/components/admin/RoleManagementDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
-import { Users as UsersIcon, User, Calendar, Settings, Trash2 } from 'lucide-react';
+import { useEmailResend } from '@/hooks/useEmailResend';
+import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -30,6 +31,7 @@ export default function AdminUsers() {
   const [selectedUserName, setSelectedUserName] = useState<string>('');
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const { deleteUser } = useUserManagement();
+  const { resendEmailConfirmation, resendPasswordReset, loading: emailLoading } = useEmailResend();
 
   useEffect(() => {
     fetchUsers();
@@ -218,6 +220,28 @@ export default function AdminUsers() {
                 </div>
                 
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => resendEmailConfirmation(user.email)}
+                    disabled={emailLoading}
+                    className="gap-2"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Reenviar Confirmação
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => resendPasswordReset(user.email)}
+                    disabled={emailLoading}
+                    className="gap-2"
+                  >
+                    <KeyRound className="h-4 w-4" />
+                    Reset Senha
+                  </Button>
+                  
                   <Button
                     variant="outline"
                     size="sm"
