@@ -47,17 +47,75 @@ serve(async (req) => {
       userId = existingUserId;
       console.log('Using existing user ID:', userId);
     } else {
-      // Create user account for email/password users
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: false, // Auto-confirm email for direct registration
-      });
+      // Check if user already exists
+      const { data: existingUser } = await supabase.auth.admin.getUserByEmail(email);
+      
+      if (existingUser?.user) {
+        console.log('User already exists, using existing user ID:', existingUser.user.id);
+        userId = existingUser.user.id;
+      } else {
+        // Create user account for email/password users
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: false, // Auto-confirm email for direct registration
+        });
 
-      if (authError || !authData.user) {
-        console.error('Error creating user:', authError);
+        if (authError || !authData.user) {
+          console.error('Error creating user:', authError);
+          return new Response(
+            JSON.stringify({ error: 'Failed to create user account', details: authError?.message }),
+            { 
+              status: 400, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+
+        userId = authData.user.id;
+        console.log('User created with ID:', userId);
+      }
+    }
+
+    // Check if profile already exists
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    let profileData;
+    
+    if (existingProfile) {
+      console.log('Profile already exists for user:', userId);
+      return new Response(
+        JSON.stringify({ error: 'User already registered', details: 'Este email já está cadastrado. Tente fazer login.' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    } else {
+      // Create profile
+      const { data: newProfileData, error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: userId,
+          nome,
+          email,
+          data_nascimento: dataNascimento,
+          genero,
+          cpf,
+          como_conheceu: comoConheceu,
+          tipo_usuario: 'paciente'
+        })
+        .select()
+        .single();
+
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
         return new Response(
-          JSON.stringify({ error: 'Failed to create user account', details: authError?.message }),
+          JSON.stringify({ error: 'Failed to create profile', details: profileError.message }),
           { 
             status: 400, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -65,37 +123,7 @@ serve(async (req) => {
         );
       }
 
-      userId = authData.user.id;
-      console.log('User created with ID:', userId);
-    }
-
-    // Create profile
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        user_id: userId,
-        nome,
-        email,
-        data_nascimento: dataNascimento,
-        genero,
-        cpf,
-        como_conheceu: comoConheceu,
-        tipo_usuario: 'paciente'
-      })
-      .select()
-      .single();
-
-    if (profileError) {
-      console.error('Error creating profile:', profileError);
-      // Clean up user if profile creation fails
-      await supabase.auth.admin.deleteUser(userId);
-      return new Response(
-        JSON.stringify({ error: 'Failed to create profile', details: profileError.message }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      profileData = newProfileData;
     }
 
     console.log('Profile created:', profileData);
