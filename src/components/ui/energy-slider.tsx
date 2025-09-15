@@ -1,7 +1,6 @@
 import * as React from "react"
 import * as SliderPrimitive from "@radix-ui/react-slider"
 import { cn } from "@/lib/utils"
-import { Battery, BatteryLow } from "lucide-react"
 
 interface EnergySliderProps {
   value: number[]
@@ -17,6 +16,14 @@ const energyLabels = {
   5: "Muito Energizado"
 }
 
+const energyEmojis = {
+  1: "😴",
+  2: "😪", 
+  3: "😐",
+  4: "😊",
+  5: "⚡"
+}
+
 const getEnergyColor = (value: number) => {
   if (value <= 1) return "hsl(var(--destructive))"
   if (value <= 2) return "hsl(var(--warning))"
@@ -25,35 +32,6 @@ const getEnergyColor = (value: number) => {
   return "hsl(var(--success))"
 }
 
-const BatteryIcon = ({ level }: { level: number }) => {
-  // Altura do preenchimento baseada no nível (progressão linear)
-  const getFillHeight = (level: number) => {
-    switch(level) {
-      case 1: return '20%'
-      case 2: return '40%'
-      case 3: return '60%'
-      case 4: return '80%'
-      case 5: return '95%'
-      default: return '60%'
-    }
-  }
-  
-  const fillHeight = getFillHeight(level)
-  
-  return (
-    <div className="relative">
-      <Battery className="h-8 w-8" />
-      <div 
-        className="absolute bottom-[3px] left-[3px] w-[18px] transition-all duration-300"
-        style={{
-          height: fillHeight,
-          backgroundColor: getEnergyColor(level),
-          borderRadius: '1px'
-        }}
-      />
-    </div>
-  )
-}
 
 export const EnergySlider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
@@ -66,9 +44,9 @@ export const EnergySlider = React.forwardRef<
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-center space-x-3">
-        <div className="transition-transform duration-200 hover:scale-110" style={{ color: currentColor }}>
-          <BatteryIcon level={currentValue} />
-        </div>
+        <span className="text-4xl transition-transform duration-200 hover:scale-110">
+          {energyEmojis[currentValue as keyof typeof energyEmojis]}
+        </span>
         <div className="text-center">
           <div className="text-lg font-medium" style={{ color: currentColor }}>
             {currentValue}/5
