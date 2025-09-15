@@ -97,24 +97,146 @@ export const ImageAssociationModal = ({ open, onOpenChange }: ImageAssociationMo
       .replace(/[^a-z0-9]/g, '');
   };
 
-  const suggestMatches = (file: S3File): Professional[] => {
+  const calculateMatchScore = (file: S3File, prof: Professional): { score: number; reasons: string[] } => {
     const fileName = file.key.split('/').pop() || '';
     const baseName = fileName.split('_')[0] || fileName.split('.')[0];
     const normalizedFileName = normalizeString(baseName);
+    
+    const normalizedName = normalizeString(prof.display_name);
+    const normalizedEmail = normalizeString(prof.user_email.split('@')[0]);
+    const firstName = normalizeString(prof.display_name.split(' ')[0]);
+    const lastName = normalizeString(prof.display_name.split(' ').pop() || '');
+    const fullNameParts = prof.display_name.split(' ').map(part => normalizeString(part));
+    
+    let score = 0;
+    const reasons: string[] = [];
 
+    // ID exato no nome do arquivo (maior prioridade)
+    if (prof.id.toString() === baseName) {
+      score += 100;
+      reasons.push('ID exato no arquivo');
+    }
+
+    // Nome completo exato
+    if (normalizedFileName === normalizedName) {
+      score += 90;
+      reasons.push('Nome completo exato');
+    }
+
+    // Email (username) exato
+    if (normalizedFileName === normalizedEmail) {
+      score += 85;
+      reasons.push('Username do email exato');
+    }
+
+    // Primeiro nome + último nome
+    if (normalizedFileName === firstName + lastName) {
+      score += 80;
+      reasons.push('Primeiro + último nome');
+    }
+
+    // Primeiro nome exato
+    if (normalizedFileName === firstName && firstName.length > 2) {
+      score += 70;
+      reasons.push('Primeiro nome exato');
+    }
+
+    // Último nome exato
+    if (normalizedFileName === lastName && lastName.length > 2) {
+      score += 65;
+      reasons.push('Último nome exato');
+    }
+
+    // Contém nome completo
+    if (normalizedFileName.includes(normalizedName) || normalizedName.includes(normalizedFileName)) {
+      score += 60;
+      reasons.push('Nome similar');
+    }
+
+    // Contém primeiro nome
+    if (normalizedFileName.includes(firstName) && firstName.length > 2) {
+      score += 50;
+      reasons.push('Contém primeiro nome');
+    }
+
+    // Contém partes do nome
+    const matchingParts = fullNameParts.filter(part => 
+      part.length > 2 && normalizedFileName.includes(part)
+    );
+    if (matchingParts.length > 0) {
+      score += matchingParts.length * 25;
+      reasons.push(`Contém ${matchingParts.length} parte(s) do nome`);
+    }
+
+    // Contém email username
+    if (normalizedFileName.includes(normalizedEmail) && normalizedEmail.length > 3) {
+      score += 40;
+      reasons.push('Contém username do email');
+    }
+
+    return { score, reasons };
+  };
+
+  const suggestMatches = (file: S3File): Array<Professional & { matchScore: number; matchReasons: string[] }> => {
     return professionals
-      .filter(prof => {
-        const normalizedName = normalizeString(prof.display_name);
-        const normalizedEmail = normalizeString(prof.user_email.split('@')[0]);
-        const firstName = normalizeString(prof.display_name.split(' ')[0]);
-        
-        return normalizedName.includes(normalizedFileName) ||
-               normalizedFileName.includes(normalizedName) ||
-               normalizedEmail.includes(normalizedFileName) ||
-               normalizedFileName.includes(firstName) ||
-               prof.id.toString() === baseName;
+      .map(prof => {
+        const { score, reasons } = calculateMatchScore(file, prof);
+        return { ...prof, matchScore: score, matchReasons: reasons };
       })
-      .slice(0, 3);
+      .filter(prof => prof.matchScore > 0)
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .slice(0, 5);
+  };
+
+  const getAutomaticAssociations = () => {
+    const automaticAssociations: Record<number, { url: string; score: number; reasons: string[] }> = {};
+    
+    s3Files.forEach(file => {
+      const matches = suggestMatches(file);
+      if (matches.length > 0) {
+        const bestMatch = matches[0];
+        // Aplicar automaticamente apenas para matches com alta confiança (score >= 80)
+        // e que não tenham conflitos (próximo match tem score muito menor)
+        if (bestMatch.matchScore >= 80 && 
+            (matches.length === 1 || matches[1].matchScore < bestMatch.matchScore * 0.7)) {
+          if (!automaticAssociations[bestMatch.id] || 
+              automaticAssociations[bestMatch.id].score < bestMatch.matchScore) {
+            automaticAssociations[bestMatch.id] = {
+              url: file.url,
+              score: bestMatch.matchScore,
+              reasons: bestMatch.matchReasons
+            };
+          }
+        }
+      }
+    });
+
+    return automaticAssociations;
+  };
+
+  const applyAutomaticAssociations = () => {
+    const automatic = getAutomaticAssociations();
+    const newAssociations = { ...associations };
+    
+    Object.entries(automatic).forEach(([professionalId, data]) => {
+      newAssociations[parseInt(professionalId)] = data.url;
+    });
+    
+    setAssociations(newAssociations);
+    
+    const count = Object.keys(automatic).length;
+    if (count > 0) {
+      toast({
+        title: "Associações automáticas aplicadas",
+        description: `${count} associação(ões) de alta confiança foram aplicadas automaticamente`,
+      });
+    } else {
+      toast({
+        title: "Nenhuma associação automática",
+        description: "Não foram encontradas associações com alta confiança suficiente",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAssociation = (professionalId: number, fileUrl: string) => {
@@ -194,7 +316,7 @@ export const ImageAssociationModal = ({ open, onOpenChange }: ImageAssociationMo
         
         <Tabs defaultValue="automatic" className="h-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="automatic">Associação Automática</TabsTrigger>
+            <TabsTrigger value="automatic">Associação Inteligente</TabsTrigger>
             <TabsTrigger value="manual">Associação Manual</TabsTrigger>
           </TabsList>
           
@@ -210,11 +332,18 @@ export const ImageAssociationModal = ({ open, onOpenChange }: ImageAssociationMo
                 />
               </div>
               <Button 
+                onClick={applyAutomaticAssociations}
+                variant="secondary"
+                size="sm"
+              >
+                Auto-Associar (Alta Confiança)
+              </Button>
+              <Button 
                 onClick={applyAssociations}
                 disabled={Object.keys(associations).length === 0 || loading}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Aplicar Associações ({Object.keys(associations).length})
+                Aplicar Todas ({Object.keys(associations).length})
               </Button>
             </div>
 
@@ -223,9 +352,10 @@ export const ImageAssociationModal = ({ open, onOpenChange }: ImageAssociationMo
                 {filteredS3Files.map((file) => {
                   const suggestions = suggestMatches(file);
                   const fileName = file.key.split('/').pop() || '';
+                  const automaticMatch = getAutomaticAssociations()[suggestions[0]?.id];
                   
                   return (
-                    <Card key={file.key} className="p-4">
+                    <Card key={file.key} className={`p-4 ${automaticMatch ? 'border-green-500 bg-green-50/50' : ''}`}>
                       <div className="flex items-start gap-4">
                         <img
                           src={file.url}
@@ -233,35 +363,56 @@ export const ImageAssociationModal = ({ open, onOpenChange }: ImageAssociationMo
                           className="w-16 h-16 object-cover rounded-lg"
                         />
                         <div className="flex-1 space-y-2">
-                          <p className="text-sm font-medium truncate">{fileName}</p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium truncate">{fileName}</p>
+                            {automaticMatch && (
+                              <Badge variant="default" className="text-xs bg-green-600">
+                                Auto-Match ({automaticMatch.score}%)
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {new Date(file.lastModified).toLocaleDateString()}
                           </p>
                           
                           {suggestions.length > 0 && (
                             <div className="space-y-2">
-                              <p className="text-xs font-medium">Sugestões:</p>
+                              <p className="text-xs font-medium">
+                                Sugestões Inteligentes:
+                              </p>
                               {suggestions.map((prof) => (
-                                <div key={prof.id} className="flex items-center gap-2">
-                                  <Avatar className="h-6 w-6">
-                                    <AvatarImage src={prof.foto_perfil_url || ''} />
-                                    <AvatarFallback className="text-xs">
-                                      {getInitials(prof.display_name)}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="text-xs flex-1">{prof.display_name}</span>
-                                  <Button
-                                    size="sm"
-                                    variant={associations[prof.id] === file.url ? "default" : "outline"}
-                                    onClick={() => handleAssociation(prof.id, file.url)}
-                                    className="h-6 px-2"
-                                  >
-                                    {associations[prof.id] === file.url ? (
-                                      <Check className="h-3 w-3" />
-                                    ) : (
-                                      <LinkIcon className="h-3 w-3" />
-                                    )}
-                                  </Button>
+                                <div key={prof.id} className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-6 w-6">
+                                      <AvatarImage src={prof.foto_perfil_url || ''} />
+                                      <AvatarFallback className="text-xs">
+                                        {getInitials(prof.display_name)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-xs flex-1">{prof.display_name}</span>
+                                    <Badge variant="outline" className="text-xs">
+                                      {prof.matchScore}%
+                                    </Badge>
+                                    <Button
+                                      size="sm"
+                                      variant={associations[prof.id] === file.url ? "default" : "outline"}
+                                      onClick={() => handleAssociation(prof.id, file.url)}
+                                      className="h-6 px-2"
+                                    >
+                                      {associations[prof.id] === file.url ? (
+                                        <Check className="h-3 w-3" />
+                                      ) : (
+                                        <LinkIcon className="h-3 w-3" />
+                                      )}
+                                    </Button>
+                                  </div>
+                                  {prof.matchReasons && prof.matchReasons.length > 0 && (
+                                    <div className="ml-8">
+                                      <p className="text-xs text-muted-foreground">
+                                        {prof.matchReasons.join(', ')}
+                                      </p>
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
