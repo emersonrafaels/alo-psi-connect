@@ -215,9 +215,13 @@ serve(async (req) => {
 
     console.log('Patient record processed successfully:', patientData.id);
 
-    // Send confirmation email if user was created (not existing user from Google)
+    // Check if user was just created (email not confirmed)
+    const { data: authUserData } = await supabase.auth.admin.getUserById(userId);
+    const isNewUser = authUserData?.user && !authUserData.user.email_confirmed_at;
+    
+    // Send confirmation email if user needs email confirmation
     let confirmationEmailSent = false;
-    if (!existingUserId) {
+    if (isNewUser) {
       try {
         console.log('Sending confirmation email for new user:', email);
         
@@ -283,6 +287,8 @@ serve(async (req) => {
             } else {
               console.error('Failed to send confirmation email:', await emailResponse.text());
             }
+          } else {
+            console.error('RESEND_API_KEY not found');
           }
         }
       } catch (emailError) {
@@ -297,7 +303,7 @@ serve(async (req) => {
         patient: patientData,
         user: { id: userId, email },
         confirmationEmailSent,
-        isNewUser: !existingUserId
+        isNewUser
       }),
       { 
         status: 200, 

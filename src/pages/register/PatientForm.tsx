@@ -209,6 +209,7 @@ const PatientForm = () => {
       }
 
       console.log('Patient profile created successfully:', data);
+      console.log('isNewUser:', data.isNewUser, 'confirmationEmailSent:', data.confirmationEmailSent);
       
       // Check if this is a new user that needs email confirmation
       if (data.isNewUser && data.confirmationEmailSent) {
