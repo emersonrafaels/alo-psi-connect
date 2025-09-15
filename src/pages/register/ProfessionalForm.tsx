@@ -23,6 +23,7 @@ import { SpecialtiesSelector } from '@/components/SpecialtiesSelector';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { GoogleCalendarWelcomeModal } from '@/components/GoogleCalendarWelcomeModal';
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
+import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
 
 const ProfessionalForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -31,6 +32,7 @@ const ProfessionalForm = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showGoogleCalendarModal, setShowGoogleCalendarModal] = useState(false);
   const [showExistingAccountModal, setShowExistingAccountModal] = useState(false);
+  const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -233,12 +235,7 @@ const ProfessionalForm = () => {
 
       // Check if this is a new user that needs email confirmation
       if (data.isNewUser && data.confirmationEmailSent) {
-        toast({
-          title: "Cadastro realizado com sucesso!",
-          description: "Enviamos um email de confirmação. Verifique sua caixa de entrada para ativar sua conta.",
-        });
-        // Navigate to auth page with confirmation message instead of showing Google Calendar modal
-        navigate('/auth?message=confirmation-sent');
+        setShowEmailConfirmationModal(true);
       } else {
         toast({
           title: "Cadastro Finalizado!",
@@ -818,6 +815,13 @@ const ProfessionalForm = () => {
       <ExistingAccountModal
         isOpen={showExistingAccountModal}
         onClose={() => setShowExistingAccountModal(false)}
+        email={formData.email}
+      />
+      
+      {/* Modal de confirmação de email */}
+      <EmailConfirmationModal
+        isOpen={showEmailConfirmationModal}
+        onClose={() => setShowEmailConfirmationModal(false)}
         email={formData.email}
       />
     </div>

@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ChevronLeft, ChevronRight, Check, Eye, EyeOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
+import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
 
 const PatientForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -23,6 +24,7 @@ const PatientForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showExistingAccountModal, setShowExistingAccountModal] = useState(false);
+  const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -213,11 +215,7 @@ const PatientForm = () => {
       
       // Check if this is a new user that needs email confirmation
       if (data.isNewUser && data.confirmationEmailSent) {
-        toast({
-          title: "Cadastro realizado com sucesso!",
-          description: "Enviamos um email de confirmação. Verifique sua caixa de entrada para ativar sua conta.",
-        });
-        navigate('/auth?message=confirmation-sent');
+        setShowEmailConfirmationModal(true);
       } else {
         toast({
           title: "Cadastro realizado com sucesso!",
@@ -556,6 +554,12 @@ const PatientForm = () => {
       <ExistingAccountModal 
         isOpen={showExistingAccountModal}
         onClose={() => setShowExistingAccountModal(false)}
+        email={formData.email}
+      />
+      
+      <EmailConfirmationModal
+        isOpen={showEmailConfirmationModal}
+        onClose={() => setShowEmailConfirmationModal(false)}
         email={formData.email}
       />
     </div>
