@@ -9,7 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { EditProfessionalModal } from "@/components/admin/EditProfessionalModal";
-import { Eye, Mail, Phone, User, CheckCircle, XCircle, Search, DollarSign, Clock, Users, UserCheck, UserX, Edit } from "lucide-react";
+import { ImageAssociationModal } from "@/components/admin/ImageAssociationModal";
+import { Eye, Mail, Phone, User, CheckCircle, XCircle, Search, DollarSign, Clock, Users, UserCheck, UserX, Edit, Images } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -35,6 +36,7 @@ const Professionals = () => {
   const [editingProfessional, setEditingProfessional] = useState<Professional | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [imageAssociationOpen, setImageAssociationOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: professionals, isLoading, refetch } = useQuery({
@@ -224,6 +226,15 @@ const Professionals = () => {
                 {filter === "inactive" && "Inativos"}
               </Button>
             ))}
+            <Button
+              variant="outline"
+              onClick={() => setImageAssociationOpen(true)}
+              size="sm"
+              className="ml-2"
+            >
+              <Images className="h-4 w-4 mr-2" />
+              Associar Imagens S3
+            </Button>
           </div>
         </div>
 
@@ -439,6 +450,12 @@ const Professionals = () => {
           open={!!editingProfessional}
           onOpenChange={(open) => !open && setEditingProfessional(null)}
           onSuccess={refetch}
+        />
+
+        {/* Image Association Modal */}
+        <ImageAssociationModal
+          open={imageAssociationOpen}
+          onOpenChange={setImageAssociationOpen}
         />
       </div>
     </AdminLayout>
