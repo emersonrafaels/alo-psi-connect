@@ -180,16 +180,22 @@ serve(async (req) => {
       console.log('Schedules processed successfully');
     }
 
-    // Send confirmation email for new users (check if user was just created)
+    // Send confirmation email for new users (need to check if user was just created)
     let confirmationEmailSent = false;
     let isNewUser = false;
     
     try {
-      // Check if this is a new user by checking if they have a confirmed email
+      // Check if this is a new user by checking if they have an unconfirmed email
+      // AND if they were created very recently (within last 5 minutes)
       const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
       
       if (!authError && authUser.user && !authUser.user.email_confirmed_at) {
-        isNewUser = true;
+        // Check if user was created recently (indicates new registration)
+        const userCreatedAt = new Date(authUser.user.created_at);
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        
+        if (userCreatedAt > fiveMinutesAgo) {
+          isNewUser = true;
         console.log('Sending confirmation email for new professional user:', profileData.email);
         
         // Generate confirmation token

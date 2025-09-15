@@ -41,11 +41,13 @@ serve(async (req) => {
     console.log('Creating patient profile for:', email);
 
     let userId;
+    let isNewUser = false; // Track if we're creating a new user
 
     // If existing user ID is provided (Google users), use it
     if (existingUserId) {
       userId = existingUserId;
-      console.log('Using existing user ID:', userId);
+      isNewUser = false; // Google users don't need email confirmation
+      console.log('Using existing user ID (Google):', userId);
     } else {
       // Check if user already exists by querying profiles table instead
       const { data: existingProfile } = await supabase
@@ -57,12 +59,13 @@ serve(async (req) => {
       if (existingProfile?.user_id) {
         console.log('User already exists, using existing user ID:', existingProfile.user_id);
         userId = existingProfile.user_id;
+        isNewUser = false; // Existing user
       } else {
         // Create user account for email/password users
         const { data: authData, error: authError } = await supabase.auth.admin.createUser({
           email,
           password,
-          email_confirm: false, // Auto-confirm email for direct registration
+          email_confirm: false, // Don't auto-confirm - we'll send our own email
         });
 
         if (authError || !authData.user) {
@@ -77,7 +80,8 @@ serve(async (req) => {
         }
 
         userId = authData.user.id;
-        console.log('User created with ID:', userId);
+        isNewUser = true; // New user created, needs confirmation
+        console.log('New user created with ID:', userId);
       }
     }
 
@@ -215,13 +219,9 @@ serve(async (req) => {
 
     console.log('Patient record processed successfully:', patientData.id);
 
-    // Check if user was just created (email not confirmed)
-    const { data: authUserData } = await supabase.auth.admin.getUserById(userId);
-    const isNewUser = authUserData?.user && !authUserData.user.email_confirmed_at;
-    
-    // Send confirmation email if user needs email confirmation
+    // Send confirmation email if user was created in this session
     let confirmationEmailSent = false;
-    if (isNewUser) {
+    if (isNewUser && !existingUserId) { // Only for new email/password users, not Google users
       try {
         console.log('Sending confirmation email for new user:', email);
         
