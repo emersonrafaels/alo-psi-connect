@@ -43,9 +43,14 @@ export const SystemConfig = () => {
     hero_images: ['https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png']
   });
 
+  // Separate state for textarea input
+  const [heroImagesInput, setHeroImagesInput] = useState('');
+
   // Update formData when configs are loaded
   useEffect(() => {
     if (!loading && configs.length > 0) {
+      const heroImages = getConfig('homepage', 'hero_images', ['https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png']);
+      
       setFormData({
         // System settings
         auto_cancel_hours: getConfig('system', 'auto_cancel_hours', 24),
@@ -59,8 +64,11 @@ export const SystemConfig = () => {
         payment_cancel_redirect: getConfig('system', 'payment_cancel_redirect', '/pagamento-cancelado'),
         // Homepage settings
         hero_carousel_mode: getConfig('homepage', 'hero_carousel_mode', false),
-        hero_images: getConfig('homepage', 'hero_images', ['https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png'])
+        hero_images: heroImages
       });
+
+      // Initialize the textarea input with the joined URLs
+      setHeroImagesInput(Array.isArray(heroImages) ? heroImages.join(', ') : '');
     }
   }, [loading, configs, getConfig]);
 
@@ -405,9 +413,15 @@ export const SystemConfig = () => {
                   <Label htmlFor="hero_images">URLs das Imagens (S3)</Label>
                   <Textarea
                     id="hero_images"
-                    value={Array.isArray(formData.hero_images) ? formData.hero_images.join(', ') : formData.hero_images}
+                    value={heroImagesInput}
                     onChange={(e) => {
+                      console.log('Input value:', e.target.value);
+                      setHeroImagesInput(e.target.value);
+                    }}
+                    onBlur={(e) => {
+                      // Only process URLs when user finishes editing
                       const urls = e.target.value.split(',').map(url => url.trim()).filter(url => url !== '');
+                      console.log('Processed URLs:', urls);
                       setFormData(prev => ({ ...prev, hero_images: urls }));
                     }}
                     placeholder="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero1.png, https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero2.png"
