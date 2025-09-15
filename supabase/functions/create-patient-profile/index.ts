@@ -47,12 +47,16 @@ serve(async (req) => {
       userId = existingUserId;
       console.log('Using existing user ID:', userId);
     } else {
-      // Check if user already exists
-      const { data: existingUser } = await supabase.auth.admin.getUserByEmail(email);
+      // Check if user already exists by querying profiles table instead
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', email)
+        .maybeSingle();
       
-      if (existingUser?.user) {
-        console.log('User already exists, using existing user ID:', existingUser.user.id);
-        userId = existingUser.user.id;
+      if (existingProfile?.user_id) {
+        console.log('User already exists, using existing user ID:', existingProfile.user_id);
+        userId = existingProfile.user_id;
       } else {
         // Create user account for email/password users
         const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -82,7 +86,7 @@ serve(async (req) => {
       .from('profiles')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     let profileData;
     
@@ -154,7 +158,7 @@ serve(async (req) => {
       .from('pacientes')
       .select('*')
       .eq('profile_id', profileData.id)
-      .single();
+      .maybeSingle();
 
     let patientData;
     
