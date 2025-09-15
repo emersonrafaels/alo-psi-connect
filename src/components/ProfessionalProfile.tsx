@@ -97,7 +97,6 @@ const SpecialtiesEditor: React.FC<{
     </div>
   );
 };
-}
 
 export const ProfessionalProfile: React.FC = () => {
   const navigate = useNavigate();
