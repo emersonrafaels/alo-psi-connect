@@ -209,11 +209,21 @@ const PatientForm = () => {
       }
 
       console.log('Patient profile created successfully:', data);
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Bem-vindo ao Alô, Psi!",
-      });
-      navigate('/auth');
+      
+      // Check if this is a new user that needs email confirmation
+      if (data.isNewUser && data.confirmationEmailSent) {
+        toast({
+          title: "Cadastro realizado com sucesso!",
+          description: "Enviamos um email de confirmação. Verifique sua caixa de entrada para ativar sua conta.",
+        });
+        navigate('/auth?message=confirmation-sent');
+      } else {
+        toast({
+          title: "Cadastro realizado com sucesso!",
+          description: "Bem-vindo ao Alô, Psi!",
+        });
+        navigate('/auth');
+      }
 
     } catch (error: any) {
       console.error('Registration error:', error);

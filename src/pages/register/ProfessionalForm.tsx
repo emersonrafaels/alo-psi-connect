@@ -231,13 +231,22 @@ const ProfessionalForm = () => {
       if (error) throw new Error(error.message || 'Erro ao criar perfil');
       if (!data?.success) throw new Error('Erro no processamento do cadastro');
 
-      toast({
-        title: "Cadastro Finalizado!",
-        description: "Seu perfil profissional foi criado com sucesso. Bem-vindo(a) à nossa plataforma!",
-      });
-
-      // Mostrar modal do Google Calendar ao invés de navegar diretamente
-      setShowGoogleCalendarModal(true);
+      // Check if this is a new user that needs email confirmation
+      if (data.isNewUser && data.confirmationEmailSent) {
+        toast({
+          title: "Cadastro realizado com sucesso!",
+          description: "Enviamos um email de confirmação. Verifique sua caixa de entrada para ativar sua conta.",
+        });
+        // Navigate to auth page with confirmation message instead of showing Google Calendar modal
+        navigate('/auth?message=confirmation-sent');
+      } else {
+        toast({
+          title: "Cadastro Finalizado!",
+          description: "Seu perfil profissional foi criado com sucesso. Bem-vindo(a) à nossa plataforma!",
+        });
+        // Mostrar modal do Google Calendar para usuários já confirmados
+        setShowGoogleCalendarModal(true);
+      }
     } catch (error: any) {
       console.error('Erro detalhado:', error);
       let errorMessage = error.message;

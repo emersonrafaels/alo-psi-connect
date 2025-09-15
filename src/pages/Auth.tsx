@@ -34,6 +34,9 @@ const Auth = () => {
   const isResetMode = searchParams.get('reset') === 'true';
   const isConfirmMode = searchParams.get('confirm') === 'true';
   const token = searchParams.get('token');
+  
+  // Check for confirmation message in URL params
+  const showConfirmationMessage = searchParams.get('message') === 'confirmation-sent';
 
   useEffect(() => {
     // Se usuário já está logado, redirecionar para home ou página anterior
@@ -234,6 +237,23 @@ const Auth = () => {
               Entre ou crie sua conta para continuar
             </p>
           </div>
+
+          {/* Show confirmation message if needed */}
+          {showConfirmationMessage && (
+            <Card className="mb-6 border-blue-200 bg-blue-50">
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-3">
+                  <Mail className="h-6 w-6 text-blue-600" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900">Email de confirmação enviado!</h3>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Verifique sua caixa de entrada e clique no link para ativar sua conta.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

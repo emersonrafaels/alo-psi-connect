@@ -180,11 +180,94 @@ serve(async (req) => {
       console.log('Schedules processed successfully');
     }
 
+    // Send confirmation email for new users (check if user was just created)
+    let confirmationEmailSent = false;
+    let isNewUser = false;
+    
+    try {
+      // Check if this is a new user by checking if they have a confirmed email
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
+      
+      if (!authError && authUser.user && !authUser.user.email_confirmed_at) {
+        isNewUser = true;
+        console.log('Sending confirmation email for new professional user:', profileData.email);
+        
+        // Generate confirmation token
+        const confirmationToken = crypto.randomUUID();
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours from now
+
+        // Save token to database
+        const { error: tokenError } = await supabaseAdmin
+          .from('email_confirmation_tokens')
+          .insert({
+            user_id: userId,
+            email: profileData.email,
+            token: confirmationToken,
+            expires_at: expiresAt.toISOString(),
+            used: false
+          });
+
+        if (tokenError) {
+          console.error('Error saving confirmation token:', tokenError);
+        } else {
+          // Send email using Resend
+          const resendApiKey = Deno.env.get('RESEND_API_KEY');
+          if (resendApiKey) {
+            const emailResponse = await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${resendApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                from: 'Alô, Psi! <noreply@alopsi.com>',
+                to: [profileData.email],
+                subject: 'Confirme seu email - Alô, Psi!',
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h1 style="color: #333; text-align: center;">Bem-vindo ao Alô, Psi!</h1>
+                    <p style="color: #666; font-size: 16px;">Olá ${profileData.nome},</p>
+                    <p style="color: #666; font-size: 16px;">
+                      Obrigado por se cadastrar como profissional! Para ativar sua conta, clique no link abaixo:
+                    </p>
+                    <div style="text-align: center; margin: 30px 0;">
+                      <a href="${Deno.env.get('APP_BASE_URL') || 'http://localhost:3000'}/auth-callback?token=${confirmationToken}&type=email_confirmation" 
+                         style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                        Confirmar Email
+                      </a>
+                    </div>
+                    <p style="color: #666; font-size: 14px;">
+                      Este link expira em 24 horas.
+                    </p>
+                    <p style="color: #666; font-size: 14px;">
+                      Se você não solicitou este cadastro, pode ignorar este email.
+                    </p>
+                  </div>
+                `
+              }),
+            });
+
+            if (emailResponse.ok) {
+              confirmationEmailSent = true;
+              console.log('Confirmation email sent successfully');
+            } else {
+              console.error('Failed to send confirmation email:', await emailResponse.text());
+            }
+          }
+        }
+      }
+    } catch (emailError) {
+      console.error('Error sending confirmation email:', emailError);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
         profile: profile,
-        professional: professional 
+        professional: professional,
+        confirmationEmailSent,
+        isNewUser
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
