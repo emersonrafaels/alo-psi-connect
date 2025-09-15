@@ -189,7 +189,7 @@ const Index = () => {
                   </div>
                   <div>
                     <h3 className="text-3xl font-bold text-white">30+</h3>
-                    <p className="text-teal-100">Psicólogos Credenciados</p>
+                    <p className="text-teal-100">Profissionais Cadastrados</p>
                   </div>
                 </div>
                 <p className="text-sm text-teal-100/80">
