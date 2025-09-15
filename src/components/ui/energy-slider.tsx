@@ -32,12 +32,12 @@ const BatteryIcon = ({ level }: { level: number }) => {
     <div className="relative">
       <Battery className="h-8 w-8" />
       <div 
-        className="absolute bottom-1 left-1 rounded-sm transition-all duration-300"
+        className="absolute bottom-[6px] left-[6px] rounded-sm transition-all duration-300"
         style={{
-          width: `${Math.max(fillPercentage - 20, 0)}%`,
-          height: '60%',
+          width: `${Math.max(fillPercentage - 25, 5)}%`,
+          height: '65%',
           backgroundColor: getEnergyColor(level),
-          opacity: 0.8
+          opacity: level === 5 ? 1 : 0.8
         }}
       />
     </div>
