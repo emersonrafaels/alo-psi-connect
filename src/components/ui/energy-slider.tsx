@@ -26,21 +26,38 @@ const getEnergyColor = (value: number) => {
 }
 
 const BatteryIcon = ({ level }: { level: number }) => {
-  // Para nível 5, mostrar bateria 100% cheia
-  const fillPercentage = level === 5 ? 100 : (level / 5) * 80
+  // Progressão linear mais precisa para o preenchimento visual
+  const getFillDimensions = (level: number) => {
+    const baseWidth = 18; // largura interna da bateria em pixels
+    const baseHeight = 20; // altura interna da bateria em pixels
+    
+    switch(level) {
+      case 1: return { width: '20%', height: '60%' }
+      case 2: return { width: '40%', height: '70%' }
+      case 3: return { width: '60%', height: '75%' }
+      case 4: return { width: '80%', height: '80%' }
+      case 5: return { width: '90%', height: '85%' } // Completamente cheio
+      default: return { width: '60%', height: '75%' }
+    }
+  }
+  
+  const { width, height } = getFillDimensions(level)
   
   return (
     <div className="relative">
       <Battery className="h-8 w-8" />
       <div 
-        className="absolute bottom-[3px] left-[3px] rounded-[1px] transition-all duration-300"
-        style={{
-          height: '75%',
-          width: level === 5 ? 'calc(100% - 6px)' : `${fillPercentage}%`,
-          backgroundColor: getEnergyColor(level),
-          opacity: 1
-        }}
-      />
+        className="absolute inset-0 flex items-end justify-center pb-[2px] transition-all duration-300"
+      >
+        <div
+          className="rounded-[1px]"
+          style={{
+            width,
+            height,
+            backgroundColor: getEnergyColor(level),
+          }}
+        />
+      </div>
     </div>
   )
 }
