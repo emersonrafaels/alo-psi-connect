@@ -26,16 +26,16 @@ const getEnergyColor = (value: number) => {
 }
 
 const BatteryIcon = ({ level }: { level: number }) => {
-  const fillPercentage = (level / 5) * 100
+  const fillPercentage = level === 5 ? 85 : (level / 5) * 70
   
   return (
     <div className="relative">
       <Battery className="h-8 w-8" />
       <div 
-        className="absolute bottom-[6px] left-[6px] rounded-sm transition-all duration-300"
+        className="absolute bottom-[4px] left-[4px] right-[4px] rounded-[2px] transition-all duration-300"
         style={{
-          width: `${Math.max(fillPercentage - 25, 5)}%`,
-          height: '65%',
+          height: '70%',
+          width: `${fillPercentage}%`,
           backgroundColor: getEnergyColor(level),
           opacity: level === 5 ? 1 : 0.8
         }}
