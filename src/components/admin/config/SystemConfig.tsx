@@ -29,19 +29,40 @@ export const SystemConfig = () => {
 
   const [formData, setFormData] = useState({
     // System settings
-    auto_cancel_hours: getConfig('system', 'auto_cancel_hours', 24),
-    max_file_size_mb: getConfig('system', 'max_file_size_mb', 10),
-    // Email settings (moved to separate hook)
-    sender_name: getConfig('system', 'sender_name', 'AloPsi'),
-    support_email: getConfig('system', 'support_email', 'contato@alopsi.com.br'),
-    // Payment settings (moved to separate hook)
-    mercado_pago_access_token: getConfig('system', 'mercado_pago_access_token', ''),
-    payment_success_redirect: getConfig('system', 'payment_success_redirect', '/pagamento-sucesso'),
-    payment_cancel_redirect: getConfig('system', 'payment_cancel_redirect', '/pagamento-cancelado'),
+    auto_cancel_hours: 24,
+    max_file_size_mb: 10,
+    // Email settings
+    sender_name: 'AloPsi',
+    support_email: 'contato@alopsi.com.br',
+    // Payment settings
+    mercado_pago_access_token: '',
+    payment_success_redirect: '/pagamento-sucesso',
+    payment_cancel_redirect: '/pagamento-cancelado',
     // Homepage settings
-    hero_carousel_mode: getConfig('homepage', 'hero_carousel_mode', false),
-    hero_images: getConfig('homepage', 'hero_images', ['https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png'])
+    hero_carousel_mode: false,
+    hero_images: ['https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png']
   });
+
+  // Update formData when configs are loaded
+  useEffect(() => {
+    if (!loading && configs.length > 0) {
+      setFormData({
+        // System settings
+        auto_cancel_hours: getConfig('system', 'auto_cancel_hours', 24),
+        max_file_size_mb: getConfig('system', 'max_file_size_mb', 10),
+        // Email settings
+        sender_name: getConfig('system', 'sender_name', 'AloPsi'),
+        support_email: getConfig('system', 'support_email', 'contato@alopsi.com.br'),
+        // Payment settings
+        mercado_pago_access_token: getConfig('system', 'mercado_pago_access_token', ''),
+        payment_success_redirect: getConfig('system', 'payment_success_redirect', '/pagamento-sucesso'),
+        payment_cancel_redirect: getConfig('system', 'payment_cancel_redirect', '/pagamento-cancelado'),
+        // Homepage settings
+        hero_carousel_mode: getConfig('homepage', 'hero_carousel_mode', false),
+        hero_images: getConfig('homepage', 'hero_images', ['https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png'])
+      });
+    }
+  }, [loading, configs, getConfig]);
 
   // Fetch system metrics and analytics
   useEffect(() => {
