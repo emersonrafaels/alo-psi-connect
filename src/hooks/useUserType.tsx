@@ -28,6 +28,15 @@ export const useUserType = (): UserTypeInfo => {
         return;
       }
 
+      // Quick check: if profile type is not 'profissional', skip database query
+      if (profile.tipo_usuario !== 'profissional') {
+        console.log('🔍 [useUserType] Profile type is not professional:', profile.tipo_usuario);
+        setIsProfessional(false);
+        setProfessionalId(null);
+        setLoading(false);
+        return;
+      }
+
       try {
         // Check if user has a professional profile AND it's active
         const { data: professionalData, error } = await supabase

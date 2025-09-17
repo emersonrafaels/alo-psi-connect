@@ -187,14 +187,35 @@ const ProfessionalForm = () => {
       // Upload da foto se foi selecionada
       let uploadedPhotoUrl = formData.fotoPerfilUrl;
       if (selectedPhotoFile) {
-        console.log('Fazendo upload da foto após autenticação...');
-        uploadedPhotoUrl = await uploadProfilePhoto(selectedPhotoFile);
-        if (uploadedPhotoUrl) {
-          console.log('Foto carregada com sucesso:', uploadedPhotoUrl);
-        } else {
-          console.warn('Falha no upload da foto, continuando sem foto de perfil');
+        console.log('🔄 Fazendo upload da foto após autenticação...', { fileName: selectedPhotoFile.name, fileSize: selectedPhotoFile.size });
+        
+        try {
+          uploadedPhotoUrl = await uploadProfilePhoto(selectedPhotoFile);
+          if (uploadedPhotoUrl) {
+            console.log('✅ Foto carregada com sucesso:', uploadedPhotoUrl);
+            // Garantir que a foto seja incluída nos dados
+            setFormData(prev => ({ ...prev, fotoPerfilUrl: uploadedPhotoUrl! }));
+          } else {
+            console.warn('❌ Falha no upload da foto - função retornou null');
+          }
+        } catch (error) {
+          console.error('❌ Erro durante upload da foto:', error);
+          uploadedPhotoUrl = null;
+        }
+      } else if (formData.fotoPerfilUrl && formData.fotoPerfilUrl.startsWith('http')) {
+        // Se há uma URL de foto do Google, tentar salvá-la
+        console.log('🔄 Salvando foto do Google...', formData.fotoPerfilUrl);
+        try {
+          uploadedPhotoUrl = await saveGooglePhoto(formData.fotoPerfilUrl);
+          if (uploadedPhotoUrl) {
+            console.log('✅ Foto do Google salva com sucesso:', uploadedPhotoUrl);
+          }
+        } catch (error) {
+          console.error('❌ Erro ao salvar foto do Google:', error);
         }
       }
+
+      console.log('📸 URL final da foto:', uploadedPhotoUrl);
 
       // Preparar dados para a edge function
       const profileData = {
@@ -204,7 +225,8 @@ const ProfessionalForm = () => {
         genero: formData.genero || null,
         cpf: formData.cpf || null,
         como_conheceu: formData.comoConheceu || null,
-        tipo_usuario: 'profissional'
+        tipo_usuario: 'profissional',
+        foto_perfil_url: uploadedPhotoUrl || null
       };
 
       const professionalData = {
@@ -230,6 +252,13 @@ const ProfessionalForm = () => {
         endTime: horario.endTime,
         duration: horario.duration || 30
       }));
+
+      console.log('📤 Enviando dados para edge function:', { 
+        userId: userToUse.id, 
+        profileHasPhoto: !!profileData.foto_perfil_url,
+        professionalHasPhoto: !!professionalData.foto_perfil_url,
+        photoUrl: uploadedPhotoUrl
+      });
 
       // Usar edge function para criar perfil com privilégios administrativos
       const { data, error } = await supabase.functions.invoke('create-professional-profile', {
