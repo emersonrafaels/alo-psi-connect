@@ -33,6 +33,9 @@ All colors MUST be HSL.
     --teal: 188 94% 37%; /* Teal from design elements */
     --teal-foreground: 0 0% 100%;
 
+    --success: 142 71% 45%; /* Green for success states */
+    --success-foreground: 0 0% 100%;
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
@@ -101,6 +104,9 @@ All colors MUST be HSL.
 
     --teal: 188 94% 37%; /* Mantém o teal */
     --teal-foreground: 210 40% 98%;
+
+    --success: 142 71% 50%; /* Green for success states in dark mode */
+    --success-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
