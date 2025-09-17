@@ -31,6 +31,7 @@ import { ProfessionalInfoEditor } from './ProfessionalInfoEditor';
 import { EditableProfileFields } from './EditableProfileFields';
 import { PhotoUpload } from './ui/photo-upload';
 import { BankingInfoEditor } from './BankingInfoEditor';
+import { ProfessionalStatusToggle } from './ProfessionalStatusToggle';
 import { UnavailabilityManager } from './admin/UnavailabilityManager';
 import { useNavigate } from 'react-router-dom';
 
@@ -276,19 +277,29 @@ export const ProfessionalProfile: React.FC = () => {
             <CardContent className="relative pt-8 pb-6">
               <div className="flex flex-col lg:flex-row items-start gap-8">
                 {/* Avatar Section */}
-                <div className="relative">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-25 hover:opacity-75 transition duration-300"></div>
+                <div className="space-y-4">
                   <div className="relative">
-                    <PhotoUpload
-                      onPhotoSelected={handlePhotoUpload}
-                      onPhotoUrlChange={() => {}}
-                      currentPhotoUrl={professionalData?.foto_perfil_url || profile?.foto_perfil_url || ''}
-                      selectedFile={selectedFile}
-                      compact={true}
-                      size="lg"
-                      className="border-4 border-background shadow-2xl"
-                    />
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-25 hover:opacity-75 transition duration-300"></div>
+                    <div className="relative">
+                      <PhotoUpload
+                        onPhotoSelected={handlePhotoUpload}
+                        onPhotoUrlChange={() => {}}
+                        currentPhotoUrl={professionalData?.foto_perfil_url || profile?.foto_perfil_url || ''}
+                        selectedFile={selectedFile}
+                        compact={true}
+                        size="lg"
+                        className="border-4 border-background shadow-2xl"
+                      />
+                    </div>
                   </div>
+                  
+                  {/* Status Toggle */}
+                  <ProfessionalStatusToggle 
+                    professionalData={professionalData}
+                    onUpdate={(isActive) => {
+                      setProfessionalData(prev => prev ? { ...prev, ativo: isActive } : null);
+                    }}
+                  />
                 </div>
                 
                 {/* Professional Info */}
@@ -326,15 +337,9 @@ export const ProfessionalProfile: React.FC = () => {
                           {professionalData.tempo_consulta} min
                         </span>
                       </div>
-                    )}
-                    <Badge 
-                      variant={professionalData?.ativo ? "default" : "secondary"}
-                      className="px-3 py-1 font-medium"
-                    >
-                      {professionalData?.ativo ? "✓ Ativo" : "○ Inativo"}
-                    </Badge>
-                  </div>
-                </div>
+                     )}
+                   </div>
+                 </div>
 
                 {/* Calendar Status */}
                 <div className="flex flex-col items-center lg:items-end gap-3">
