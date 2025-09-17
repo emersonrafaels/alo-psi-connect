@@ -394,6 +394,42 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_unavailability: {
+        Row: {
+          all_day: boolean
+          created_at: string
+          date: string
+          end_time: string | null
+          id: string
+          professional_id: number
+          reason: string | null
+          start_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          all_day?: boolean
+          created_at?: string
+          date: string
+          end_time?: string | null
+          id?: string
+          professional_id: number
+          reason?: string | null
+          start_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          all_day?: boolean
+          created_at?: string
+          date?: string
+          end_time?: string | null
+          id?: string
+          professional_id?: number
+          reason?: string | null
+          start_time?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           como_conheceu: string | null

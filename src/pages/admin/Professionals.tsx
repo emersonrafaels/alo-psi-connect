@@ -10,7 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { EditProfessionalModal } from "@/components/admin/EditProfessionalModal";
 import { ImageAssociationModal } from "@/components/admin/ImageAssociationModal";
-import { Eye, Mail, Phone, User, CheckCircle, XCircle, Search, DollarSign, Clock, Users, UserCheck, UserX, Edit, Images } from "lucide-react";
+import { UnavailabilityManager } from "@/components/admin/UnavailabilityManager";
+import { Eye, Mail, Phone, User, CheckCircle, XCircle, Search, DollarSign, Clock, Users, UserCheck, UserX, Edit, Images, Calendar } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -37,6 +38,8 @@ const Professionals = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [imageAssociationOpen, setImageAssociationOpen] = useState(false);
+  const [unavailabilityModalOpen, setUnavailabilityModalOpen] = useState(false);
+  const [selectedProfessionalForUnavailability, setSelectedProfessionalForUnavailability] = useState<Professional | null>(null);
   const { toast } = useToast();
 
   const { data: professionals, isLoading, refetch } = useQuery({
@@ -337,6 +340,18 @@ const Professionals = () => {
                       Editar
                     </Button>
                     
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedProfessionalForUnavailability(professional);
+                        setUnavailabilityModalOpen(true);
+                      }}
+                    >
+                      <Calendar className="h-4 w-4 mr-1" />
+                      Bloqueios
+                    </Button>
+                    
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button
@@ -457,6 +472,23 @@ const Professionals = () => {
           open={imageAssociationOpen}
           onOpenChange={setImageAssociationOpen}
         />
+
+        {/* Unavailability Management Modal */}
+        <Dialog open={unavailabilityModalOpen} onOpenChange={setUnavailabilityModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                Gerenciar Indisponibilidades - {selectedProfessionalForUnavailability?.display_name}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedProfessionalForUnavailability && (
+              <UnavailabilityManager 
+                professionalId={selectedProfessionalForUnavailability.id}
+                professionalName={selectedProfessionalForUnavailability.display_name}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
