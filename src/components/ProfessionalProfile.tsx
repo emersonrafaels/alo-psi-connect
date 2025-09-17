@@ -239,8 +239,6 @@ export const ProfessionalProfile: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/20">
-      <Header />
-      
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Modern Header with Breadcrumb */}
