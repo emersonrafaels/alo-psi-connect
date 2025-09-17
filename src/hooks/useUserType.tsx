@@ -11,7 +11,7 @@ interface UserTypeInfo {
 
 export const useUserType = (): UserTypeInfo => {
   const { user } = useAuth();
-  const { profile } = useUserProfile();
+  const { profile, refetch: refetchProfile } = useUserProfile();
   const [isProfessional, setIsProfessional] = useState(false);
   const [professionalId, setProfessionalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,9 +38,11 @@ export const useUserType = (): UserTypeInfo => {
           setIsProfessional(false);
           setProfessionalId(null);
         } else if (professionalData) {
+          console.log('Professional found:', professionalData);
           setIsProfessional(true);
           setProfessionalId(professionalData.id.toString());
         } else {
+          console.log('No professional profile found for user');
           setIsProfessional(false);
           setProfessionalId(null);
         }
@@ -55,6 +57,14 @@ export const useUserType = (): UserTypeInfo => {
 
     checkProfessionalStatus();
   }, [user, profile]);
+
+  // Force refresh when profile changes due to the data fix
+  useEffect(() => {
+    if (profile && profile.tipo_usuario === 'profissional' && !isProfessional && !loading) {
+      console.log('Profile updated to professional, refreshing...');
+      refetchProfile();
+    }
+  }, [profile, isProfessional, loading, refetchProfile]);
 
   return { isProfessional, professionalId, loading };
 };
