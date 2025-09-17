@@ -10,10 +10,11 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, addDays, isAfter, isBefore, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarDays, Clock, Trash2, Edit, Plus } from 'lucide-react';
+import { CalendarDays, Clock, Trash2, Edit, Plus, Repeat, CalendarRange } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
@@ -55,12 +56,20 @@ interface UnavailabilityManagerProps {
 
 export const UnavailabilityManager = ({ professionalId, professionalName }: UnavailabilityManagerProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [blockingMode, setBlockingMode] = useState<'single' | 'period' | 'recurring'>('single');
   const [formData, setFormData] = useState({
     date: '',
+    endDate: '', // For period blocking
     start_time: '',
     end_time: '',
     all_day: false,
-    reason: ''
+    reason: '',
+    recurring: {
+      type: 'weekly', // weekly, monthly
+      dayOfWeek: '', // for weekly recurrence
+      dayOfMonth: '', // for monthly recurrence
+      endRecurrence: '' // when to stop recurring
+    }
   });
   const [editingRecord, setEditingRecord] = useState<UnavailabilityRecord | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -155,17 +164,69 @@ export const UnavailabilityManager = ({ professionalId, professionalName }: Unav
   const resetForm = () => {
     setFormData({
       date: '',
+      endDate: '',
       start_time: '',
       end_time: '',
       all_day: false,
-      reason: ''
+      reason: '',
+      recurring: {
+        type: 'weekly',
+        dayOfWeek: '',
+        dayOfMonth: '',
+        endRecurrence: ''
+      }
     });
     setEditingRecord(null);
+    setBlockingMode('single');
   };
 
-  const handleSubmit = () => {
+  const generateRecurringDates = (startDate: string, endDate: string, type: string, dayOfWeek?: string) => {
+    const dates = [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    let current = new Date(start);
+    
+    if (type === 'weekly' && dayOfWeek) {
+      const targetDay = parseInt(dayOfWeek);
+      // Find first occurrence of the target day
+      while (current.getDay() !== targetDay && current <= end) {
+        current = addDays(current, 1);
+      }
+      
+      while (current <= end) {
+        dates.push(format(current, 'yyyy-MM-dd'));
+        current = addDays(current, 7);
+      }
+    } else if (type === 'monthly') {
+      while (current <= end) {
+        dates.push(format(current, 'yyyy-MM-dd'));
+        // Move to next month, same day
+        const nextMonth = new Date(current);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        current = nextMonth;
+      }
+    }
+    
+    return dates;
+  };
+
+  const handleSubmit = async () => {
     if (!formData.date) {
       toast({ title: 'Selecione uma data', variant: 'destructive' });
+      return;
+    }
+
+    // Check if date is in the past
+    const selectedDate = new Date(formData.date);
+    const today = startOfDay(new Date());
+    
+    if (isBefore(selectedDate, today)) {
+      toast({ 
+        title: 'Data inválida', 
+        description: 'Não é possível bloquear datas que já passaram',
+        variant: 'destructive' 
+      });
       return;
     }
 
@@ -174,19 +235,79 @@ export const UnavailabilityManager = ({ professionalId, professionalName }: Unav
       return;
     }
 
-    const submitData = {
+    const baseData = {
       professional_id: professionalId,
-      date: formData.date,
       start_time: formData.all_day ? null : formData.start_time,
       end_time: formData.all_day ? null : formData.end_time,
       all_day: formData.all_day,
       reason: formData.reason || null
     };
 
-    if (editingRecord) {
-      updateMutation.mutate({ id: editingRecord.id, ...submitData });
-    } else {
-      createMutation.mutate(submitData);
+    try {
+      let datesToCreate = [];
+
+      if (blockingMode === 'single') {
+        datesToCreate = [formData.date];
+      } else if (blockingMode === 'period') {
+        if (!formData.endDate) {
+          toast({ title: 'Selecione a data final do período', variant: 'destructive' });
+          return;
+        }
+        
+        const start = new Date(formData.date);
+        const end = new Date(formData.endDate);
+        
+        if (isBefore(end, start)) {
+          toast({ title: 'Data final deve ser posterior à data inicial', variant: 'destructive' });
+          return;
+        }
+        
+        let current = new Date(start);
+        while (current <= end) {
+          datesToCreate.push(format(current, 'yyyy-MM-dd'));
+          current = addDays(current, 1);
+        }
+      } else if (blockingMode === 'recurring') {
+        if (!formData.recurring.endRecurrence) {
+          toast({ title: 'Selecione quando parar a recorrência', variant: 'destructive' });
+          return;
+        }
+        
+        datesToCreate = generateRecurringDates(
+          formData.date,
+          formData.recurring.endRecurrence,
+          formData.recurring.type,
+          formData.recurring.dayOfWeek
+        );
+      }
+
+      // Create multiple records
+      const recordsToCreate = datesToCreate.map(date => ({
+        ...baseData,
+        date
+      }));
+
+      if (editingRecord) {
+        updateMutation.mutate({ id: editingRecord.id, ...baseData, date: formData.date });
+      } else {
+        // Bulk create
+        const { error } = await supabase
+          .from('professional_unavailability')
+          .insert(recordsToCreate);
+
+        if (error) throw error;
+
+        queryClient.invalidateQueries({ queryKey: ['professional-unavailability', professionalId] });
+        toast({ 
+          title: 'Bloqueios criados com sucesso!', 
+          description: `${datesToCreate.length} dia(s) bloqueado(s)` 
+        });
+        setIsDialogOpen(false);
+        resetForm();
+      }
+    } catch (error: any) {
+      console.error('Error creating blocks:', error);
+      toast({ title: 'Erro ao criar bloqueios', variant: 'destructive' });
     }
   };
 
@@ -194,11 +315,19 @@ export const UnavailabilityManager = ({ professionalId, professionalName }: Unav
     setEditingRecord(record);
     setFormData({
       date: record.date,
+      endDate: '',
       start_time: record.start_time || '',
       end_time: record.end_time || '',
       all_day: record.all_day,
-      reason: record.reason || ''
+      reason: record.reason || '',
+      recurring: {
+        type: 'weekly',
+        dayOfWeek: '',
+        dayOfMonth: '',
+        endRecurrence: ''
+      }
     });
+    setBlockingMode('single'); // Edit always single mode
     setIsDialogOpen(true);
   };
 
@@ -250,15 +379,127 @@ export const UnavailabilityManager = ({ professionalId, professionalName }: Unav
             </DialogHeader>
             
             <div className="space-y-4">
+              {/* Blocking Mode Selection */}
               <div>
-                <Label htmlFor="date">Data</Label>
+                <Label>Tipo de Bloqueio</Label>
+                <Select value={blockingMode} onValueChange={(value: 'single' | 'period' | 'recurring') => setBlockingMode(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="single">
+                      <div className="flex items-center gap-2">
+                        <CalendarDays className="h-4 w-4" />
+                        Data específica
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="period">
+                      <div className="flex items-center gap-2">
+                        <CalendarRange className="h-4 w-4" />
+                        Período (várias datas)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="recurring">
+                      <div className="flex items-center gap-2">
+                        <Repeat className="h-4 w-4" />
+                        Recorrente
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Date Selection */}
+              <div>
+                <Label htmlFor="date">
+                  {blockingMode === 'period' ? 'Data inicial' : 'Data'}
+                </Label>
                 <Input
                   id="date"
                   type="date"
                   value={formData.date}
+                  min={format(new Date(), 'yyyy-MM-dd')} // Prevent past dates
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 />
               </div>
+
+              {/* End Date for Period */}
+              {blockingMode === 'period' && (
+                <div>
+                  <Label htmlFor="endDate">Data final</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={formData.endDate}
+                    min={formData.date || format(new Date(), 'yyyy-MM-dd')}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  />
+                </div>
+              )}
+
+              {/* Recurring Options */}
+              {blockingMode === 'recurring' && (
+                <div className="space-y-4 p-4 border rounded-lg bg-accent/20">
+                  <div>
+                    <Label>Tipo de recorrência</Label>
+                    <Select 
+                      value={formData.recurring.type} 
+                      onValueChange={(value) => setFormData({ 
+                        ...formData, 
+                        recurring: { ...formData.recurring, type: value }
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">Semanal</SelectItem>
+                        <SelectItem value="monthly">Mensal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {formData.recurring.type === 'weekly' && (
+                    <div>
+                      <Label>Dia da semana</Label>
+                      <Select 
+                        value={formData.recurring.dayOfWeek} 
+                        onValueChange={(value) => setFormData({ 
+                          ...formData, 
+                          recurring: { ...formData.recurring, dayOfWeek: value }
+                        })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o dia" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Domingo</SelectItem>
+                          <SelectItem value="1">Segunda-feira</SelectItem>
+                          <SelectItem value="2">Terça-feira</SelectItem>
+                          <SelectItem value="3">Quarta-feira</SelectItem>
+                          <SelectItem value="4">Quinta-feira</SelectItem>
+                          <SelectItem value="5">Sexta-feira</SelectItem>
+                          <SelectItem value="6">Sábado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div>
+                    <Label htmlFor="endRecurrence">Repetir até</Label>
+                    <Input
+                      id="endRecurrence"
+                      type="date"
+                      value={formData.recurring.endRecurrence}
+                      min={formData.date || format(new Date(), 'yyyy-MM-dd')}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        recurring: { ...formData.recurring, endRecurrence: e.target.value }
+                      })}
+                    />
+                  </div>
+                </div>
+              )}
               
               <div className="flex items-center space-x-2">
                 <Switch
@@ -341,6 +582,7 @@ export const UnavailabilityManager = ({ professionalId, professionalName }: Unav
                 selected={selectedDate}
                 onSelect={setSelectedDate}
                 locale={ptBR}
+                disabled={(date) => isBefore(date, startOfDay(new Date()))} // Disable past dates
                 modifiers={{
                   blocked: blockedDates
                 }}
