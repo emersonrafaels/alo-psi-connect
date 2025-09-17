@@ -32,6 +32,24 @@ export const useUserProfile = () => {
         }
 
         console.log('useUserProfile: Profile data fetched:', data);
+
+        // Se há perfil, verificar se é profissional e buscar foto adicional
+        if (data && data.tipo_usuario === 'profissional') {
+          console.log('useUserProfile: User is professional, fetching photo from profissionais table');
+          
+          const { data: professionalData } = await supabase
+            .from('profissionais')
+            .select('foto_perfil_url')
+            .eq('profile_id', data.id)
+            .maybeSingle();
+
+          if (professionalData?.foto_perfil_url && !data.foto_perfil_url) {
+            // Se há foto no profissionais mas não no profiles, usar a do profissionais
+            data.foto_perfil_url = professionalData.foto_perfil_url;
+            console.log('useUserProfile: Using photo from profissionais table:', professionalData.foto_perfil_url);
+          }
+        }
+
         setProfile(data);
 
         // Se não há perfil, criar um automaticamente

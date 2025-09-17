@@ -125,6 +125,15 @@ serve(async (req) => {
       professional = newProfessional;
     }
 
+    // Sync photo between profissionais and profiles tables
+    if (professional?.foto_perfil_url && professional.foto_perfil_url !== profile.foto_perfil_url) {
+      console.log('Syncing photo from profissionais to profiles table');
+      await supabaseAdmin
+        .from('profiles')
+        .update({ foto_perfil_url: professional.foto_perfil_url })
+        .eq('id', profile.id);
+    }
+
     console.log('Professional processed successfully:', professional.id);
 
     // Handle schedules if provided
