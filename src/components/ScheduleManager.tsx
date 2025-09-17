@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -67,6 +68,8 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [scheduleToDelete, setScheduleToDelete] = useState<Schedule | null>(null);
   const [newSchedule, setNewSchedule] = useState<Partial<Schedule>>({
     day: '',
     start_time: '09:00',
@@ -179,13 +182,20 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
     setNewSchedule(prev => ({ ...prev, [field]: value }));
   };
 
-  const deleteSchedule = async (scheduleId: number) => {
+  const handleDeleteClick = (schedule: Schedule) => {
+    setScheduleToDelete(schedule);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!scheduleToDelete) return;
+
     setSaving(true);
     try {
       const { error } = await supabase
         .from('profissionais_sessoes')
         .delete()
-        .eq('id', scheduleId);
+        .eq('id', scheduleToDelete.id);
 
       if (error) throw error;
 
@@ -204,6 +214,8 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
       });
     } finally {
       setSaving(false);
+      setShowDeleteModal(false);
+      setScheduleToDelete(null);
     }
   };
 
@@ -278,7 +290,7 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => deleteSchedule(schedule.id)}
+                  onClick={() => handleDeleteClick(schedule)}
                   disabled={saving}
                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
@@ -411,6 +423,37 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
           </CardContent>
         </Card>
       )}
+
+      {/* Modal de confirmação para deletar */}
+      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar este horário?
+              {scheduleToDelete && (
+                <div className="mt-2 p-3 bg-muted rounded-lg">
+                  <div className="font-medium">{getDayLabel(scheduleToDelete.day)}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {formatTime(scheduleToDelete.start_time)} - {formatTime(scheduleToDelete.end_time)} ({scheduleToDelete.time_slot}min)
+                  </div>
+                </div>
+              )}
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={saving}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {saving ? 'Deletando...' : 'Deletar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
