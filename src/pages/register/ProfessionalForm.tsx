@@ -464,36 +464,90 @@ const ProfessionalForm = () => {
   const renderStep3 = () => (
     <div className="space-y-6">
       <div className="space-y-2">
-        <PhotoUpload
+         <PhotoUpload
           onPhotoSelected={async (file) => {
-            if (file) {
-              setLoading(true);
-              try {
-                const { uploadProfilePhoto } = useProfileManager();
-                const photoUrl = await uploadProfilePhoto(file);
-                if (photoUrl) {
-                  updateFormData('fotoPerfilUrl', photoUrl);
-                  toast({
-                    title: "Foto enviada",
-                    description: "Sua foto foi enviada com sucesso!",
-                  });
-                } else {
-                  toast({
-                    title: "Erro no upload",
-                    description: "Não foi possível enviar a foto. Tente novamente.",
-                    variant: "destructive",
-                  });
-                }
-              } catch (error) {
-                console.error('Erro no upload:', error);
+            if (!file) return;
+
+            // Validar autenticação
+            if (!user && !googleData) {
+              toast({
+                title: "Erro",
+                description: "Usuário não autenticado. Faça login primeiro.",
+                variant: "destructive",
+              });
+              return;
+            }
+
+            // Validar arquivo
+            if (!file.type.startsWith('image/')) {
+              toast({
+                title: "Erro",
+                description: "Por favor, selecione apenas arquivos de imagem.",
+                variant: "destructive",
+              });
+              return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) { // 10MB
+              toast({
+                title: "Erro",
+                description: "Arquivo muito grande. Máximo 10MB.",
+                variant: "destructive",
+              });
+              return;
+            }
+
+            console.log('Iniciando upload de foto:', {
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: file.type,
+              userId: user?.id || 'google-signup'
+            });
+
+            setLoading(true);
+            try {
+              const photoUrl = await uploadProfilePhoto(file);
+              
+              if (photoUrl) {
+                console.log('Upload bem-sucedido:', photoUrl);
+                updateFormData('fotoPerfilUrl', photoUrl);
                 toast({
-                  title: "Erro no upload",
-                  description: "Erro ao enviar foto. Tente novamente.",
-                  variant: "destructive",
+                  title: "Sucesso",
+                  description: "Foto carregada com sucesso!",
                 });
-              } finally {
-                setLoading(false);
+              } else {
+                throw new Error('Nenhuma URL retornada do upload');
               }
+            } catch (error: any) {
+              console.error('Erro detalhado no upload:', {
+                error: error.message,
+                stack: error.stack,
+                fileName: file.name,
+                fileSize: file.size,
+                userId: user?.id || 'google-signup'
+              });
+              
+              let errorMessage = 'Erro ao fazer upload da foto';
+              
+              if (error.message?.includes('No URL returned')) {
+                errorMessage = 'Falha no servidor de upload. Tente novamente.';
+              } else if (error.message?.includes('unauthorized') || error.message?.includes('Unauthorized')) {
+                errorMessage = 'Não autorizado. Verifique sua autenticação.';
+              } else if (error.message?.includes('size')) {
+                errorMessage = 'Arquivo muito grande. Máximo 10MB.';
+              } else if (error.message?.includes('type')) {
+                errorMessage = 'Tipo de arquivo não suportado. Use JPG, PNG ou WebP.';
+              } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+                errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+              }
+              
+              toast({
+                title: "Erro no upload",
+                description: errorMessage,
+                variant: "destructive",
+              });
+            } finally {
+              setLoading(false);
             }
           }}
           onPhotoUrlChange={(url) => updateFormData('fotoPerfilUrl', url)}

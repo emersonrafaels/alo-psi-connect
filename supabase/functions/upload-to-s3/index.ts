@@ -1,42 +1,40 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-amz-date, x-amz-content-sha256',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Starting upload process...')
-    
-    // Initialize Supabase client for profile data
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Supabase credentials not configured')
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    // Get user from Authorization header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('Authorization header required')
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-    
-    // Get auth header to identify user
-    const authHeader = req.headers.get('authorization')
-    let userId: string | null = null
-    
-    if (authHeader?.startsWith('Bearer ')) {
-      const token = authHeader.substring(7)
-      const { data: { user } } = await supabase.auth.getUser(token)
-      userId = user?.id || null
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    )
+
+    if (userError || !user) {
+      throw new Error('Unauthorized')
     }
-    
-    // Parse form data first
+
+    console.log('User authenticated:', user.id)
+
+    // Parse form data
     const formData = await req.formData()
     const file = formData.get('file') as File
     const professionalId = formData.get('professionalId') as string
@@ -45,268 +43,251 @@ serve(async (req) => {
       throw new Error('No file provided')
     }
 
-    console.log('File received:', file.name, file.type, file.size)
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-    if (!allowedTypes.includes(file.type)) {
-      throw new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed')
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Only image files are allowed')
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      throw new Error('File too large. Maximum size is 10MB')
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      throw new Error('File size exceeds 10MB limit')
     }
 
-    // Get user profile data for better filename
-    let userProfile = null
-    if (userId) {
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('nome, tipo_usuario')
-          .eq('user_id', userId)
-          .maybeSingle()
-        userProfile = data
-        console.log('User profile found:', userProfile)
-      } catch (error) {
-        console.log('Could not fetch user profile:', error)
-      }
-    }
+    console.log('File details:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      professionalId
+    })
 
-    // Try S3 upload first, fallback to Supabase Storage
-    let publicUrl: string | null = null
+    // Get user profile data for folder structure
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('nome, tipo_usuario')
+      .eq('user_id', user.id)
+      .single()
 
+    console.log('User profile:', profile)
+
+    // Try S3 upload first
     try {
-      console.log('Attempting S3 upload...')
-      publicUrl = await uploadToS3(file, professionalId, userProfile, userId)
-      console.log('S3 upload successful:', publicUrl)
+      const s3Url = await uploadToS3(file, user, profile, professionalId)
+      if (s3Url) {
+        console.log('S3 upload successful:', s3Url)
+        return new Response(
+          JSON.stringify({ url: s3Url }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200 
+          }
+        )
+      }
     } catch (s3Error) {
-      console.log('S3 upload failed, trying Supabase Storage fallback...', s3Error)
-      try {
-        publicUrl = await uploadToSupabaseStorage(file, professionalId, userProfile, userId)
-        console.log('Supabase Storage upload successful:', publicUrl)
-      } catch (supabaseError) {
-        console.error('Both S3 and Supabase Storage failed:', supabaseError)
-        throw new Error('Failed to upload file to any storage service')
-      }
+      console.log('S3 upload failed, falling back to Supabase Storage:', s3Error)
     }
 
-    if (!publicUrl) {
-      throw new Error('Failed to get upload URL')
+    // Fallback to Supabase Storage
+    const supabaseUrl_final = await uploadToSupabaseStorage(supabase, file, user, profile)
+    if (supabaseUrl_final) {
+      console.log('Supabase Storage upload successful:', supabaseUrl_final)
+      return new Response(
+        JSON.stringify({ url: supabaseUrl_final }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      )
     }
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        url: publicUrl,
-        storage: publicUrl.includes('supabase') ? 'supabase' : 's3'
-      }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    )
+    throw new Error('Both S3 and Supabase Storage uploads failed')
+
   } catch (error) {
-    console.error('Error uploading:', error)
+    console.error('Upload error:', error)
     return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Failed to upload file' 
-      }),
+      JSON.stringify({ error: error.message }),
       { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        }, 
-        status: 500 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400 
       }
     )
   }
 })
 
-// S3 upload function using native fetch with AWS v4 signature
-async function uploadToS3(file: File, professionalId?: string, userProfile?: any, userId?: string): Promise<string> {
-  const AWS_ACCESS_KEY_ID = Deno.env.get('AWS_ACCESS_KEY_ID')
-  const AWS_SECRET_ACCESS_KEY = Deno.env.get('AWS_SECRET_ACCESS_KEY')
-  const AWS_REGION = Deno.env.get('AWS_REGION') || 'us-east-1'
+async function uploadToS3(
+  file: File, 
+  user: any, 
+  profile: any, 
+  professionalId: string
+): Promise<string | null> {
+  const region = Deno.env.get('AWS_REGION') || 'us-east-1'
+  const bucket = 'alopsi-uploads'
+  const accessKeyId = Deno.env.get('AWS_ACCESS_KEY_ID')
+  const secretAccessKey = Deno.env.get('AWS_SECRET_ACCESS_KEY')
 
-  if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) {
+  if (!accessKeyId || !secretAccessKey) {
     throw new Error('AWS credentials not configured')
   }
 
-  // Generate filename with user profile data
-  const { fileName, folderPath } = generateFileName(file, userProfile, userId, professionalId)
+  const { fileName, folderPath } = generateFileName(file, user, profile, professionalId)
   const key = `${folderPath}/${fileName}`
 
-  const bucketName = 'alopsi-website'
-  const region = AWS_REGION
-  const host = `${bucketName}.s3.${region}.amazonaws.com`
+  console.log('S3 upload details:', { bucket, key, region })
+
+  // Generate S3 signed URL and upload
+  const host = `${bucket}.s3.${region}.amazonaws.com`
   const url = `https://${host}/${key}`
-
-  // Get current timestamp and date for AWS signature
-  const now = new Date()
-  const amzDate = now.toISOString().replace(/[:\-]|\.\d{3}/g, '')
-  const dateStamp = amzDate.substr(0, 8)
-
-  // Create canonical request
-  const method = 'PUT'
-  const canonicalUri = `/${key}`
-  const canonicalQuerystring = ''
-  const canonicalHeaders = `host:${host}\nx-amz-content-sha256:UNSIGNED-PAYLOAD\nx-amz-date:${amzDate}\n`
-  const signedHeaders = 'host;x-amz-content-sha256;x-amz-date'
-  const payloadHash = 'UNSIGNED-PAYLOAD'
-
-  const canonicalRequest = `${method}\n${canonicalUri}\n${canonicalQuerystring}\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`
-
-  // Create string to sign
+  
+  const date = new Date()
+  const dateStamp = date.toISOString().slice(0, 10).replace(/-/g, '')
+  const amzDate = date.toISOString().replace(/[:\-]|\.\d{3}/g, '')
+  
   const algorithm = 'AWS4-HMAC-SHA256'
   const credentialScope = `${dateStamp}/${region}/s3/aws4_request`
-  const stringToSign = `${algorithm}\n${amzDate}\n${credentialScope}\n${await sha256(canonicalRequest)}`
+  const credential = `${accessKeyId}/${credentialScope}`
 
-  // Calculate signature
-  const signingKey = await getSignatureKey(AWS_SECRET_ACCESS_KEY, dateStamp, region, 's3')
-  const signature = await hmacSha256(signingKey, stringToSign)
+  const signatureKey = await getSignatureKey(secretAccessKey, dateStamp, region, 's3')
+  
+  const headers = {
+    'Host': host,
+    'X-Amz-Date': amzDate,
+    'X-Amz-Content-Sha256': await sha256(await file.arrayBuffer()),
+    'Content-Type': file.type,
+  }
 
-  // Create authorization header
-  const authorizationHeader = `${algorithm} Credential=${AWS_ACCESS_KEY_ID}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
+  const canonicalHeaders = Object.entries(headers)
+    .map(([key, value]) => `${key.toLowerCase()}:${value}`)
+    .join('\n') + '\n'
 
-  // Upload file
-  const fileBuffer = await file.arrayBuffer()
-  const response = await fetch(url, {
+  const signedHeaders = Object.keys(headers)
+    .map(key => key.toLowerCase())
+    .sort()
+    .join(';')
+
+  const canonicalRequest = [
+    'PUT',
+    `/${key}`,
+    '',
+    canonicalHeaders,
+    signedHeaders,
+    headers['X-Amz-Content-Sha256']
+  ].join('\n')
+
+  const stringToSign = [
+    algorithm,
+    amzDate,
+    credentialScope,
+    await sha256(canonicalRequest)
+  ].join('\n')
+
+  const signature = await hmacSha256(signatureKey, stringToSign)
+  
+  const authorizationHeader = `${algorithm} Credential=${credential}, SignedHeaders=${signedHeaders}, Signature=${signature}`
+
+  const uploadResponse = await fetch(url, {
     method: 'PUT',
-    body: new Uint8Array(fileBuffer),
     headers: {
-      'Content-Type': file.type,
-      'x-amz-content-sha256': payloadHash,
-      'x-amz-date': amzDate,
+      ...headers,
       'Authorization': authorizationHeader,
     },
+    body: file,
   })
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`S3 upload failed: ${response.status} ${response.statusText} - ${errorText}`)
+  if (!uploadResponse.ok) {
+    throw new Error(`S3 upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`)
   }
 
-  return `https://${bucketName}.s3.amazonaws.com/${key}`
+  return url
 }
 
-// Supabase Storage fallback function
-async function uploadToSupabaseStorage(file: File, professionalId?: string, userProfile?: any, userId?: string): Promise<string> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+async function uploadToSupabaseStorage(
+  supabase: any,
+  file: File,
+  user: any,
+  profile: any
+): Promise<string | null> {
+  const { fileName } = generateFileName(file, user, profile, user.id)
+  const filePath = `${user.id}/${fileName}`
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Supabase credentials not configured')
-  }
+  console.log('Supabase Storage upload:', { filePath })
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-  // Generate filename with user profile data
-  const { fileName } = generateFileName(file, userProfile, userId, professionalId)
-  const filePath = `profile-pictures/${fileName}`
-
-  const fileBuffer = await file.arrayBuffer()
-  
   const { data, error } = await supabase.storage
     .from('profile-photos')
-    .upload(filePath, new Uint8Array(fileBuffer), {
-      contentType: file.type,
-      upsert: false
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true
     })
 
   if (error) {
     throw new Error(`Supabase Storage upload failed: ${error.message}`)
   }
 
-  const { data: urlData } = supabase.storage
+  const { data: publicUrlData } = supabase.storage
     .from('profile-photos')
     .getPublicUrl(filePath)
 
-  return urlData.publicUrl
+  return publicUrlData?.publicUrl || null
 }
 
-// Helper functions for AWS signature
-async function sha256(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message)
+async function sha256(message: string | ArrayBuffer): Promise<string> {
+  const msgBuffer = typeof message === 'string' ? new TextEncoder().encode(message) : message
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 async function hmacSha256(key: CryptoKey, message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message)
-  const signature = await crypto.subtle.sign('HMAC', key, msgBuffer)
-  const signatureArray = Array.from(new Uint8Array(signature))
-  return signatureArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  const encoder = new TextEncoder()
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(message))
+  const hashArray = Array.from(new Uint8Array(signature))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-async function getSignatureKey(key: string, dateStamp: string, regionName: string, serviceName: string): Promise<CryptoKey> {
+async function getSignatureKey(
+  key: string,
+  dateStamp: string,
+  regionName: string,
+  serviceName: string
+): Promise<CryptoKey> {
   const kDate = await hmacSha256Raw(new TextEncoder().encode('AWS4' + key), dateStamp)
   const kRegion = await hmacSha256Raw(kDate, regionName)
   const kService = await hmacSha256Raw(kRegion, serviceName)
   const kSigning = await hmacSha256Raw(kService, 'aws4_request')
-  
-  return await crypto.subtle.importKey(
+  return kSigning
+}
+
+async function hmacSha256Raw(key: Uint8Array | CryptoKey, message: string): Promise<CryptoKey> {
+  const encoder = new TextEncoder()
+  const keyData = key instanceof Uint8Array ? key : await crypto.subtle.exportKey('raw', key)
+  const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    kSigning,
+    keyData instanceof Uint8Array ? keyData : new Uint8Array(keyData as ArrayBuffer),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign']
   )
+  return cryptoKey
 }
 
-async function hmacSha256Raw(key: Uint8Array | CryptoKey, message: string): Promise<Uint8Array> {
-  let cryptoKey: CryptoKey
+function generateFileName(
+  file: File,
+  user: any,
+  profile: any,
+  professionalId: string
+): { fileName: string; folderPath: string } {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const extension = file.name.split('.').pop() || 'jpg'
+  const userType = profile?.tipo_usuario || 'user'
+  const userName = profile?.nome ? sanitizeName(profile.nome) : 'unnamed'
   
-  if (key instanceof Uint8Array) {
-    cryptoKey = await crypto.subtle.importKey(
-      'raw',
-      key,
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    )
-  } else {
-    cryptoKey = key
-  }
-  
-  const msgBuffer = new TextEncoder().encode(message)
-  const signature = await crypto.subtle.sign('HMAC', cryptoKey, msgBuffer)
-  return new Uint8Array(signature)
-}
-
-// Helper function to generate organized filename and folder structure
-function generateFileName(file: File, userProfile?: any, userId?: string, professionalId?: string): { fileName: string, folderPath: string } {
-  const now = new Date()
-  const timestamp = now.toISOString().replace(/[:.-]/g, '').substring(0, 15) // YYYYMMDDTHHMMSS
-  const year = now.getFullYear()
-  const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-  
-  // Sanitize name function
-  const sanitizeName = (name: string): string => {
-    return name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Remove accents
-      .replace(/[^a-z0-9]/g, '_') // Replace special chars with underscore
-      .replace(/_+/g, '_') // Remove multiple underscores
-      .replace(/^_|_$/g, '') // Remove leading/trailing underscores
-      .substring(0, 20) // Limit length
-  }
-  
-  // Extract user info with fallbacks
-  const userType = userProfile?.tipo_usuario || 'user'
-  const userName = userProfile?.nome ? sanitizeName(userProfile.nome) : 'usuario'
-  const userIdShort = userId ? userId.substring(0, 8) : (professionalId || 'unknown')
-  
-  // Create filename: tipo-nome-id_curto-timestamp.ext
-  const fileName = `${userType}-${userName}-${userIdShort}-${timestamp}.${extension}`
-  
-  // Create folder path: imagens/fotosPerfil/{tipo_usuario}/{year}/
-  const folderPath = `imagens/fotosPerfil/${userType}/${year}`
+  const fileName = `${userName}-${user.id}-${professionalId}-${timestamp}.${extension}`
+  const folderPath = `${userType}-photos/${sanitizeName(userName)}-${user.id}`
   
   return { fileName, folderPath }
+}
+
+function sanitizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim()
 }
