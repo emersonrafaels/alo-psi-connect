@@ -65,9 +65,12 @@ serve(async (req) => {
           preco_consulta,
           servicos_raw,
           crp_crm,
-          tempo_consulta
+          tempo_consulta,
+          formacao_raw,
+          idiomas_raw
         `)
-        .eq('ativo', true);
+        .eq('ativo', true)
+        .order('display_name');
 
       if (error) {
         console.error('Error fetching professionals:', error);
@@ -84,13 +87,14 @@ serve(async (req) => {
       id: prof.id,
       nome: prof.display_name,
       profissao: prof.profissao,
-      resumo: prof.resumo,
-      resumo_profissional: prof.resumo_profissional,
-      preco: prof.preco_consulta,
+      resumo: prof.resumo || prof.resumo_profissional,
+      preco: prof.preco_consulta ? `R$ ${prof.preco_consulta}` : 'Consultar valor',
       especialidades: prof.servicos_raw,
-      crp_crm: prof.crp_crm,
-      tempo_consulta: prof.tempo_consulta
-    }));
+      registro: prof.crp_crm,
+      duracao_sessao: prof.tempo_consulta ? `${prof.tempo_consulta} minutos` : '50 minutos',
+      formacao: prof.formacao_raw,
+      idiomas: prof.idiomas_raw
+    })).filter(prof => prof.nome); // Remove profissionais sem nome
 
     // Use custom system prompt if configured, otherwise use default
     const systemPrompt = aiConfig.system_prompt || `Você é o assistente oficial da **AloPsi**, uma plataforma brasileira especializada em conectar pessoas com profissionais de saúde mental através de telemedicina.
