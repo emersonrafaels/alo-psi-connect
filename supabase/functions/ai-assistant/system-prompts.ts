@@ -64,12 +64,19 @@ ${professionalDataText}
 - Mencionar faixa de preço preferida
 - Especificar horário de preferência (manhã, tarde, noite)
 - Pedir recomendações gerais de profissionais
+- Perguntar "quais profissionais atendem na noite/tarde/manhã"
+- Buscar por profissionais disponíveis em determinado período
 
-📅 **Use check_availability quando:**
-- Usuário interessado em profissional específico
-- Perguntar sobre horários disponíveis
-- Querer agendar consulta em data específica
-- Verificar disponibilidade em período específico
+📅 **Use check_availability APENAS quando:**
+- Usuário mencionar uma DATA ESPECÍFICA (ex: "hoje", "amanhã", "sexta-feira", "15/01/2024")
+- Querer verificar horários livres para agendamento
+- Interessado em profissional específico E mencionar data
+- SEMPRE inclua o parâmetro 'date' no formato YYYY-MM-DD quando usar esta ferramenta
+
+⚠️ **IMPORTANTE:** 
+- Para perguntas sobre horários gerais SEM data específica, use search_professionals
+- Para perguntas com datas específicas, use check_availability COM o parâmetro date
+- NUNCA use check_availability sem o parâmetro date
 
 === FORMATO DE RESPOSTA OTIMIZADO ===
 

@@ -202,32 +202,128 @@ serve(async (req) => {
       case 'check_availability': {
         const { professional_id, date, time_period } = parameters;
         
-        // Get professional schedules
-        const { data: schedules } = await supabase
+        // Validate required parameters
+        if (!professional_id) {
+          result = { error: 'professional_id é obrigatório para verificar disponibilidade' };
+          break;
+        }
+
+        // Get professional schedules first
+        const { data: schedules, error: schedError } = await supabase
           .from('profissionais_sessoes')
           .select('*')
           .eq('user_id', professional_id);
 
-        // Get existing appointments for the date
-        const { data: appointments } = await supabase
+        if (schedError) {
+          console.error('❌ Error fetching schedules:', schedError);
+          result = { error: `Erro ao buscar horários: ${schedError.message}` };
+          break;
+        }
+
+        if (!schedules || schedules.length === 0) {
+          result = { 
+            message: 'Este profissional não possui horários cadastrados.',
+            available_times: [],
+            schedules: []
+          };
+          break;
+        }
+
+        // If no date is provided, return general schedule information
+        if (!date) {
+          const organizedSchedules = {
+            weekdays: schedules.filter(s => !['saturday', 'sunday'].includes(s.day?.toLowerCase())),
+            weekend: schedules.filter(s => ['saturday', 'sunday'].includes(s.day?.toLowerCase())),
+            by_period: {
+              morning: schedules.filter(s => {
+                const hour = parseInt(s.start_time.split(':')[0]);
+                return hour >= 8 && hour < 12;
+              }),
+              afternoon: schedules.filter(s => {
+                const hour = parseInt(s.start_time.split(':')[0]);
+                return hour >= 12 && hour < 18;
+              }),
+              evening: schedules.filter(s => {
+                const hour = parseInt(s.start_time.split(':')[0]);
+                return hour >= 18;
+              })
+            }
+          };
+
+          result = {
+            message: 'Horários gerais disponíveis para este profissional',
+            schedules: organizedSchedules,
+            total_slots: schedules.length
+          };
+          break;
+        }
+
+        // Validate date format if provided
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(date)) {
+          result = { error: 'Formato de data inválido. Use YYYY-MM-DD' };
+          break;
+        }
+
+        // Get existing appointments for the specific date
+        const { data: appointments, error: apptError } = await supabase
           .from('agendamentos')
           .select('horario, status')
           .eq('professional_id', professional_id)
           .eq('data_consulta', date)
           .in('status', ['confirmado', 'pendente']);
 
+        if (apptError) {
+          console.error('❌ Error fetching appointments:', apptError);
+          result = { error: `Erro ao verificar agendamentos: ${apptError.message}` };
+          break;
+        }
+
         const bookedTimes = appointments?.map(a => a.horario) || [];
         
+        // Get day of week for the date
+        const targetDate = new Date(date);
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayOfWeek = dayNames[targetDate.getDay()];
+        
+        // Filter schedules for this day of week
+        const daySchedules = schedules.filter(schedule => 
+          schedule.day?.toLowerCase() === dayOfWeek
+        );
+
         // Calculate available times based on schedules and booked times
-        const availableTimes = schedules?.filter(schedule => {
+        const availableTimes = daySchedules.filter(schedule => {
           const scheduleTime = schedule.start_time;
           return !bookedTimes.includes(scheduleTime);
-        }) || [];
+        });
+
+        // Filter by time period if specified
+        let filteredTimes = availableTimes;
+        if (time_period) {
+          filteredTimes = availableTimes.filter(schedule => {
+            const hour = parseInt(schedule.start_time.split(':')[0]);
+            switch (time_period.toLowerCase()) {
+              case 'manha': case 'manhã': case 'morning':
+                return hour >= 8 && hour < 12;
+              case 'tarde': case 'afternoon':
+                return hour >= 12 && hour < 18;
+              case 'noite': case 'evening': case 'night':
+                return hour >= 18;
+              default:
+                return true;
+            }
+          });
+        }
 
         result = {
-          available_times: availableTimes,
+          date: date,
+          day_of_week: dayOfWeek,
+          available_times: filteredTimes,
           booked_times: bookedTimes,
-          total_slots: schedules?.length || 0
+          total_day_slots: daySchedules.length,
+          message: filteredTimes.length > 0 
+            ? `Encontrados ${filteredTimes.length} horários disponíveis para ${date}`
+            : `Nenhum horário disponível para ${date}${time_period ? ` no período ${time_period}` : ''}`
         };
         break;
       }
