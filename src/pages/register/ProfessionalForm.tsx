@@ -14,7 +14,7 @@ import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Eye, EyeOff, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, EyeOff, Check, Clock } from 'lucide-react';
 import { PhotoUpload } from '@/components/ui/photo-upload';
 import { Badge } from '@/components/ui/badge';
 import { useProfileManager } from '@/hooks/useProfileManager';
@@ -60,7 +60,8 @@ const ProfessionalForm = () => {
     // Novos campos
     especialidades: [] as string[],
     horarios: [] as any[],
-    intervaloHorarios: '30' // 30 ou 60 minutos
+    precoConsulta: '', // Novo campo obrigatório
+    intervaloHorarios: '50' // Fixado em 50 minutos
   });
 
   // Salvar foto do Google automaticamente se disponível
@@ -243,6 +244,8 @@ const ProfessionalForm = () => {
         foto_perfil_url: uploadedPhotoUrl || null,
         possui_e_psi: formData.possuiEPsi === 'sim',
         servicos_raw: formData.especialidades.length > 0 ? formData.especialidades.join(', ') : null,
+        preco_consulta: formData.precoConsulta ? parseFloat(formData.precoConsulta) : null,
+        tempo_consulta: 50, // Fixado em 50 minutos
         ativo: true
       };
 
@@ -616,6 +619,25 @@ const ProfessionalForm = () => {
         value={formData.especialidades}
         onChange={(especialidades) => updateFormData('especialidades', especialidades)}
       />
+      
+      <div>
+        <Label htmlFor="precoConsulta" className="text-base font-medium">
+          Preço da Consulta (R$) <span className="text-red-500">*</span>
+        </Label>
+        <p className="text-sm text-muted-foreground mb-3">
+          Informe o valor que você cobra por consulta (50 minutos).
+        </p>
+        <Input
+          id="precoConsulta"
+          type="number"
+          step="0.01"
+          min="0"
+          value={formData.precoConsulta}
+          onChange={(e) => updateFormData('precoConsulta', e.target.value)}
+          placeholder="Ex: 120.00"
+          required
+        />
+      </div>
     </div>
   );
 
@@ -623,41 +645,27 @@ const ProfessionalForm = () => {
     <div className="space-y-6">
       <div>
         <Label className="text-base font-medium mb-4 block">
-          Configuração de Intervalos <span className="text-red-500">*</span>
+          Duração da Consulta
         </Label>
         <p className="text-sm text-muted-foreground mb-4">
-          Escolha o intervalo entre os horários disponíveis para agendamento.
+          Duração padrão: 50 minutos por consulta
         </p>
-        <RadioGroup 
-          value={formData.intervaloHorarios} 
-          onValueChange={(value) => updateFormData('intervaloHorarios', value)}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="30" id="intervalo-30" />
-            <Label htmlFor="intervalo-30" className="cursor-pointer">
-              <div>
-                <div className="font-medium">30 em 30 minutos</div>
-                <div className="text-sm text-muted-foreground">Ex: 10:00, 10:30, 11:00, 11:30...</div>
-              </div>
-            </Label>
+        <div className="p-4 bg-muted/50 rounded-lg border">
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-primary" />
+            <span className="font-medium">50 minutos</span>
+            <Badge variant="default">Padrão</Badge>
           </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="60" id="intervalo-60" />
-            <Label htmlFor="intervalo-60" className="cursor-pointer">
-              <div>
-                <div className="font-medium">1 em 1 hora</div>
-                <div className="text-sm text-muted-foreground">Ex: 10:00, 11:00, 12:00, 13:00...</div>
-              </div>
-            </Label>
-          </div>
-        </RadioGroup>
+          <p className="text-sm text-muted-foreground mt-2">
+            Esta é a duração padrão utilizada por todos os profissionais na plataforma.
+          </p>
+        </div>
       </div>
 
       <ScheduleSelector
         value={formData.horarios}
         onChange={(horarios) => updateFormData('horarios', horarios)}
-        intervalMinutes={parseInt(formData.intervaloHorarios)}
+        intervalMinutes={50}
       />
     </div>
   );
@@ -730,7 +738,7 @@ const ProfessionalForm = () => {
   const canProceedStep2 = formData.profissao && formData.possuiEPsi && formData.crpCrm;
   const canProceedStep3 = true; // Campos opcionais
   const canProceedStep4 = formData.resumoProfissional; // Resumo é obrigatório
-  const canProceedStep5 = formData.especialidades.length > 0;
+  const canProceedStep5 = formData.especialidades.length > 0 && formData.precoConsulta;
   const canProceedStep6 = formData.intervaloHorarios && formData.horarios.length > 0;
   const canSubmit = formData.senha && formData.senha.length >= 6 && formData.confirmarSenha && formData.senha === formData.confirmarSenha; // Credenciais na última etapa
 

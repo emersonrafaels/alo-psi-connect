@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, Edit, X } from 'lucide-react';
+import { Save, Edit, X, Clock } from 'lucide-react';
 
 interface ProfessionalData {
   id: number;
@@ -45,7 +46,6 @@ export const ProfessionalInfoEditor: React.FC<ProfessionalInfoEditorProps> = ({
     crp_crm: professionalData?.crp_crm || '',
     resumo_profissional: professionalData?.resumo_profissional || '',
     preco_consulta: professionalData?.preco_consulta?.toString() || '',
-    tempo_consulta: professionalData?.tempo_consulta?.toString() || '',
     telefone: professionalData?.telefone || '',
     email_secundario: professionalData?.email_secundario || '',
     ativo: professionalData?.ativo || false
@@ -59,7 +59,6 @@ export const ProfessionalInfoEditor: React.FC<ProfessionalInfoEditorProps> = ({
         crp_crm: professionalData.crp_crm || '',
         resumo_profissional: professionalData.resumo_profissional || '',
         preco_consulta: professionalData.preco_consulta?.toString() || '',
-        tempo_consulta: professionalData.tempo_consulta?.toString() || '',
         telefone: professionalData.telefone || '',
         email_secundario: professionalData.email_secundario || '',
         ativo: professionalData.ativo || false
@@ -78,7 +77,7 @@ export const ProfessionalInfoEditor: React.FC<ProfessionalInfoEditorProps> = ({
         crp_crm: formData.crp_crm,
         resumo_profissional: formData.resumo_profissional,
         preco_consulta: formData.preco_consulta ? parseFloat(formData.preco_consulta) : null,
-        tempo_consulta: formData.tempo_consulta ? parseInt(formData.tempo_consulta) : null,
+        tempo_consulta: 50, // Fixado em 50 minutos
         telefone: formData.telefone,
         email_secundario: formData.email_secundario,
         ativo: formData.ativo
@@ -117,7 +116,6 @@ export const ProfessionalInfoEditor: React.FC<ProfessionalInfoEditorProps> = ({
         crp_crm: professionalData.crp_crm || '',
         resumo_profissional: professionalData.resumo_profissional || '',
         preco_consulta: professionalData.preco_consulta?.toString() || '',
-        tempo_consulta: professionalData.tempo_consulta?.toString() || '',
         telefone: professionalData.telefone || '',
         email_secundario: professionalData.email_secundario || '',
         ativo: professionalData.ativo || false
@@ -307,28 +305,16 @@ export const ProfessionalInfoEditor: React.FC<ProfessionalInfoEditorProps> = ({
 
           <div>
             <Label htmlFor="tempo_consulta">Duração da consulta</Label>
-            {isEditing ? (
-              <Select
-                value={formData.tempo_consulta}
-                onValueChange={(value) => updateFormData('tempo_consulta', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a duração" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="30">30 minutos</SelectItem>
-                  <SelectItem value="50">50 minutos</SelectItem>
-                  <SelectItem value="60">1 hora</SelectItem>
-                </SelectContent>
-              </Select>
-            ) : (
-              <Input
-                id="tempo_consulta"
-                value={formData.tempo_consulta ? `${formData.tempo_consulta} minutos` : ''}
-                disabled={true}
-                placeholder="Duração da consulta"
-              />
-            )}
+            <div className="p-3 bg-muted/50 rounded-lg border">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" />
+                <span className="font-medium">50 minutos</span>
+                <Badge variant="default">Padrão</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Duração padrão para todas as consultas
+              </p>
+            </div>
           </div>
         </div>
 
@@ -341,9 +327,7 @@ export const ProfessionalInfoEditor: React.FC<ProfessionalInfoEditorProps> = ({
               {formData.preco_consulta && (
                 <p>• Valor da consulta: R$ {parseFloat(formData.preco_consulta).toFixed(2)}</p>
               )}
-              {formData.tempo_consulta && (
-                <p>• Duração da consulta: {formData.tempo_consulta} minutos</p>
-              )}
+              <p>• Duração da consulta: 50 minutos</p>
             </div>
           </div>
         )}

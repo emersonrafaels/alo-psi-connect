@@ -483,7 +483,10 @@ export type Database = {
       }
       profissionais: {
         Row: {
+          agencia: string | null
           ativo: boolean
+          banco: string | null
+          conta: string | null
           cpf: string | null
           crp_crm: string | null
           display_name: string
@@ -496,6 +499,7 @@ export type Database = {
           idiomas_raw: string | null
           last_name: string | null
           linkedin: string | null
+          pix: string | null
           possui_e_psi: boolean | null
           preco_consulta: number | null
           profile_id: string | null
@@ -505,12 +509,16 @@ export type Database = {
           servicos_raw: string | null
           telefone: string | null
           tempo_consulta: number | null
+          tipo_conta: string | null
           user_email: string
           user_id: number
           user_login: string
         }
         Insert: {
+          agencia?: string | null
           ativo?: boolean
+          banco?: string | null
+          conta?: string | null
           cpf?: string | null
           crp_crm?: string | null
           display_name: string
@@ -523,6 +531,7 @@ export type Database = {
           idiomas_raw?: string | null
           last_name?: string | null
           linkedin?: string | null
+          pix?: string | null
           possui_e_psi?: boolean | null
           preco_consulta?: number | null
           profile_id?: string | null
@@ -532,12 +541,16 @@ export type Database = {
           servicos_raw?: string | null
           telefone?: string | null
           tempo_consulta?: number | null
+          tipo_conta?: string | null
           user_email: string
           user_id: number
           user_login: string
         }
         Update: {
+          agencia?: string | null
           ativo?: boolean
+          banco?: string | null
+          conta?: string | null
           cpf?: string | null
           crp_crm?: string | null
           display_name?: string
@@ -550,6 +563,7 @@ export type Database = {
           idiomas_raw?: string | null
           last_name?: string | null
           linkedin?: string | null
+          pix?: string | null
           possui_e_psi?: boolean | null
           preco_consulta?: number | null
           profile_id?: string | null
@@ -559,6 +573,7 @@ export type Database = {
           servicos_raw?: string | null
           telefone?: string | null
           tempo_consulta?: number | null
+          tipo_conta?: string | null
           user_email?: string
           user_id?: number
           user_login?: string
