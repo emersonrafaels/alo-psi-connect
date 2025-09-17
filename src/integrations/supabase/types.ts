@@ -112,6 +112,68 @@ export type Database = {
           },
         ]
       }
+      ai_chat_messages: {
+        Row: {
+          content: string
+          id: string
+          metadata: Json | null
+          role: string
+          session_id: string
+          timestamp: string
+        }
+        Insert: {
+          content: string
+          id?: string
+          metadata?: Json | null
+          role: string
+          session_id: string
+          timestamp?: string
+        }
+        Update: {
+          content?: string
+          id?: string
+          metadata?: Json | null
+          role?: string
+          session_id?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_chat_sessions"
+            referencedColumns: ["session_id"]
+          },
+        ]
+      }
+      ai_chat_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          session_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          session_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           author_email: string
@@ -805,6 +867,10 @@ export type Database = {
       }
     }
     Functions: {
+      clean_old_chat_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
