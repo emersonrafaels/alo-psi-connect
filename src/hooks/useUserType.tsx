@@ -18,14 +18,26 @@ export const useUserType = (): UserTypeInfo => {
 
   useEffect(() => {
     const checkProfessionalStatus = async () => {
-      console.log('🔍 [useUserType] Checking professional status...', { user: !!user, profile: !!profile, profileType: profile?.tipo_usuario });
+      console.log('🔍 [useUserType] Checking professional status...', { 
+        user: !!user, 
+        userId: user?.id,
+        profile: !!profile, 
+        profileId: profile?.id,
+        profileType: profile?.tipo_usuario,
+        userEmail: user?.email || profile?.email
+      });
       
-      if (!user || !profile) {
-        console.log('🔍 [useUserType] No user or profile, setting as non-professional');
+      if (!user) {
+        console.log('🔍 [useUserType] No user, setting as non-professional');
         setIsProfessional(false);
         setProfessionalId(null);
         setLoading(false);
         return;
+      }
+
+      if (!profile) {
+        console.log('🔍 [useUserType] No profile yet, keeping loading state');
+        return; // Keep loading until profile loads
       }
 
       // Quick check: if profile type is not 'profissional', skip database query
@@ -80,6 +92,13 @@ export const useUserType = (): UserTypeInfo => {
       refetchProfile();
     }
   }, [profile, isProfessional, loading, refetchProfile]);
+
+  // Reset loading when user changes
+  useEffect(() => {
+    if (user) {
+      setLoading(true);
+    }
+  }, [user]);
 
   console.log('🔍 [useUserType] Final state:', { isProfessional, professionalId, loading, profileType: profile?.tipo_usuario });
 
