@@ -8,6 +8,7 @@ import { Bot, Send, User, Loader2, X } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useSystemConfig } from "@/hooks/useSystemConfig"
+import { useAuth } from "@/hooks/useAuth"
 import ReactMarkdown from "react-markdown"
 
 interface Message {
@@ -25,6 +26,7 @@ interface AIAssistantModalProps {
 
 export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssistantModalProps) => {
   const { getConfig } = useSystemConfig(['n8n_chat', 'ai_assistant']);
+  const { user } = useAuth();
   const [sessionId] = useState(() => crypto.randomUUID());
   
   // Get customizable content from config
@@ -226,22 +228,34 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
 
       // Fallback para OpenAI se N8N falhou ou não está habilitado
       if (!success) {
+        console.log('Calling AI Assistant with payload:', {
+          message: inputMessage,
+          sessionId: sessionId,
+          userId: user?.id,
+          professionals: professionals
+        });
+
         const { data, error } = await supabase.functions.invoke('ai-assistant', {
           body: {
             message: inputMessage,
+            sessionId: sessionId,
+            userId: user?.id,
             professionals: professionals
           }
         });
 
         if (error) {
+          console.error('Supabase function error:', error);
           throw error;
         }
 
-        if (!data.success) {
-          throw new Error(data.error || 'Erro desconhecido');
+        console.log('AI Assistant response:', data);
+
+        if (data && !data.success && data.error) {
+          throw new Error(data.error);
         }
 
-        response = data.response;
+        response = data?.response || data;
       }
 
       const assistantMessage: Message = {

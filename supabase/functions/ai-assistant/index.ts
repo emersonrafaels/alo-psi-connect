@@ -18,7 +18,15 @@ serve(async (req) => {
   try {
     const { message, professionals: providedProfessionals, sessionId, userId } = await req.json();
 
-    console.log('🤖 AI Assistant request received:', { message, sessionId, userId, providedProfessionals: !!providedProfessionals });
+    // Ensure we have a valid session ID
+    const validSessionId = sessionId || crypto.randomUUID();
+
+    console.log('🤖 AI Assistant request received:', { 
+      message: message?.substring(0, 100) + '...', 
+      sessionId: validSessionId, 
+      userId, 
+      providedProfessionals: !!providedProfessionals 
+    });
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
@@ -30,7 +38,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Manage chat session and memory window
-    await manageSessionAndMemory(supabase, sessionId, userId, message);
+    await manageSessionAndMemory(supabase, validSessionId, userId, message);
 
     // Get AI configuration
     const { data: configs } = await supabase
@@ -51,7 +59,7 @@ serve(async (req) => {
     console.log('📋 AI Configuration:', { model, maxTokens, includeProData, systemPromptLength: systemPrompt.length });
 
     // Get conversation history for memory window
-    const conversationHistory = await getConversationHistory(supabase, sessionId);
+    const conversationHistory = await getConversationHistory(supabase, validSessionId);
 
     // Fetch enhanced professional data if needed
     let professionals = providedProfessionals;
@@ -308,13 +316,14 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
     }
     
     // Save assistant response to conversation history
-    await saveMessage(supabase, sessionId, 'assistant', assistantMessage);
+    await saveMessage(supabase, validSessionId, 'assistant', assistantMessage);
     
     console.log('✅ OpenAI response received, length:', assistantMessage.length);
 
     return new Response(JSON.stringify({ 
       response: assistantMessage,
-      sessionId 
+      sessionId: validSessionId,
+      success: true
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
