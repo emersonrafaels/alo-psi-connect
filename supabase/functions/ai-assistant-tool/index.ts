@@ -44,6 +44,9 @@ serve(async (req) => {
             preco_consulta,
             tempo_consulta,
             formacao_raw,
+            formacao_normalizada,
+            servicos_raw,
+            servicos_normalizados,
             idiomas_raw,
             telefone,
             email_secundario,
@@ -60,10 +63,34 @@ serve(async (req) => {
           query = query.ilike('profissao', `%${profession}%`);
         }
 
+        // Apply specialty filter using normalized specialties
+        if (specialties) {
+          // For array of specialties, check if any specialty matches
+          if (Array.isArray(specialties)) {
+            query = query.overlaps('servicos_normalizados', specialties);
+          } else {
+            // For single specialty, check if it's contained in the array
+            query = query.contains('servicos_normalizados', [specialties]);
+          }
+        }
+
+        // Apply price range filter - handle null/zero values properly
         if (price_range) {
           const [min, max] = price_range;
-          if (min) query = query.gte('preco_consulta', min);
-          if (max) query = query.lte('preco_consulta', max);
+          
+          // Only apply price filters if values are valid numbers
+          if (typeof min === 'number' && min > 0) {
+            query = query.gte('preco_consulta', min);
+          }
+          if (typeof max === 'number' && max > 0) {
+            query = query.lte('preco_consulta', max);
+          }
+          
+          // Exclude professionals with null or zero prices from price-filtered searches
+          if ((typeof min === 'number' && min > 0) || (typeof max === 'number' && max > 0)) {
+            query = query.not('preco_consulta', 'is', null);
+            query = query.gt('preco_consulta', 0);
+          }
         }
 
         const { data: professionals, error: profError } = await query;
@@ -118,8 +145,11 @@ serve(async (req) => {
             summary: prof.resumo_profissional,
             photo: prof.foto_perfil_url,
             price: prof.preco_consulta,
+            price_formatted: prof.preco_consulta ? 
+              `R$ ${prof.preco_consulta.toFixed(2)}` : 'A consultar',
             consultation_time: prof.tempo_consulta,
-            formation: prof.formacao_raw,
+            formation: prof.formacao_normalizada?.join(', ') || prof.formacao_raw || 'Não especificado',
+            specialties: prof.servicos_normalizados?.join(', ') || 'Não especificado',
             languages: prof.idiomas_raw,
             phone: prof.telefone,
             secondary_email: prof.email_secundario,

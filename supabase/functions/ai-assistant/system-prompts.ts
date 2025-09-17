@@ -29,12 +29,13 @@ export function getEnhancedSystemPrompt(basePrompt: string, professionalDataText
 - Suporte técnico especializado
 
 💰 **Informações sobre valores e pagamento:**
-- Consultas com valores acessíveis e transparentes
+- Consultas com valores acessíveis e transparentes (a partir de R$ 120/sessão)
 - Pagamento seguro via cartão de crédito ou PIX
 - Primeira consulta com condições especiais
 - Possibilidade de reagendamento sem custos adicionais
 - Cancelamento com antecedência de 24h
 - Recibos disponíveis para reembolso do plano de saúde
+- Profissionais com preço "A consultar" oferecem valores personalizados
 
 🕐 **Horários e disponibilidade:**
 - Manhã: 08:00 às 12:00
@@ -61,11 +62,17 @@ ${professionalDataText}
 🔍 **Use search_professionals quando:**
 - Usuário mencionar especialidade específica (ansiedade, depressão, etc.)
 - Perguntar sobre tipos de profissionais (psicólogo, psiquiatra)
-- Mencionar faixa de preço preferida
+- Mencionar faixa de preço preferida (ex: "até R$ 200", "entre R$ 100 e R$ 180")
 - Especificar horário de preferência (manhã, tarde, noite)
 - Pedir recomendações gerais de profissionais
 - Perguntar "quais profissionais atendem na noite/tarde/manhã"
 - Buscar por profissionais disponíveis em determinado período
+
+📋 **Parâmetros importantes para search_professionals:**
+- price_range: [min, max] - Ex: [0, 200] para profissionais até R$ 200
+- specialties: "Ansiedade" ou ["Ansiedade", "Depressão"] para múltiplas
+- profession: "psicólogo", "psiquiatra", etc.
+- availability_period: "manha", "tarde", "noite"
 
 📅 **Use check_availability APENAS quando:**
 - Usuário mencionar uma DATA ESPECÍFICA (ex: "hoje", "amanhã", "sexta-feira", "15/01/2024")
