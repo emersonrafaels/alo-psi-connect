@@ -2,13 +2,14 @@ import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Menu, X, User, LogOut, Settings, Calendar, Shield } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase } from "lucide-react"
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/useAuth"
 import { useUserProfile } from "@/hooks/useUserProfile"
 import { useAdminAuth } from "@/hooks/useAdminAuth"
+import { useUserType } from "@/hooks/useUserType"
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -17,6 +18,7 @@ const Header = () => {
   const { user, signOut } = useAuth()
   const { profile } = useUserProfile()
   const { isAdmin } = useAdminAuth()
+  const { isProfessional } = useUserType()
 
   const navigation = [
     { name: "Home", href: "/" },
@@ -105,6 +107,12 @@ const Header = () => {
                     <Calendar className="h-4 w-4 mr-2" />
                     Meus Agendamentos
                   </DropdownMenuItem>
+                  {isProfessional && (
+                    <DropdownMenuItem onClick={() => navigate('/professional-profile')}>
+                      <Briefcase className="h-4 w-4 mr-2" />
+                      Área Profissional
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => navigate('/perfil')}>
                     <Settings className="h-4 w-4 mr-2" />
                     Meu Perfil
@@ -181,6 +189,36 @@ const Header = () => {
                   {item.name}
                 </Link>
               ))}
+              {user && (
+                <>
+                  <Link
+                    to="/agendamentos"
+                    className="text-sm hover:text-accent transition-colors flex items-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Meus Agendamentos
+                  </Link>
+                  {isProfessional && (
+                    <Link
+                      to="/professional-profile"
+                      className="text-sm hover:text-accent transition-colors flex items-center gap-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Briefcase className="h-4 w-4" />
+                      Área Profissional
+                    </Link>
+                  )}
+                  <Link
+                    to="/perfil"
+                    className="text-sm hover:text-accent transition-colors flex items-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Settings className="h-4 w-4" />
+                    Meu Perfil
+                  </Link>
+                </>
+              )}
               <div className="flex flex-col space-y-2 pt-4 border-t border-primary-foreground/20">
                 <div className="flex justify-center pb-2">
                   <ThemeToggle />

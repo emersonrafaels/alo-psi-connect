@@ -20,7 +20,8 @@ import {
   ArrowLeft,
   Save,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Ban
 } from 'lucide-react';
 import { GoogleCalendarIntegration } from './GoogleCalendarIntegration';
 import { SpecialtiesSelector } from './SpecialtiesSelector';
@@ -28,6 +29,7 @@ import { ScheduleManager } from './ScheduleManager';
 import { ProfessionalInfoEditor } from './ProfessionalInfoEditor';
 import { EditableProfileFields } from './EditableProfileFields';
 import { PhotoUpload } from './ui/photo-upload';
+import { UnavailabilityManager } from './admin/UnavailabilityManager';
 import { useNavigate } from 'react-router-dom';
 
 interface ProfessionalData {
@@ -385,7 +387,7 @@ export const ProfessionalProfile: React.FC = () => {
 
           {/* Modern Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-muted/30 backdrop-blur-sm rounded-xl">
+            <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-muted/30 backdrop-blur-sm rounded-xl">
               <TabsTrigger 
                 value="info" 
                 className="flex items-center gap-2 py-3 px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground transition-all duration-200"
@@ -406,6 +408,13 @@ export const ProfessionalProfile: React.FC = () => {
               >
                 <Clock className="h-4 w-4" />
                 <span className="hidden sm:inline">Horários</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="blocks" 
+                className="flex items-center gap-2 py-3 px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground transition-all duration-200"
+              >
+                <Ban className="h-4 w-4" />
+                <span className="hidden sm:inline">Bloqueios</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="calendar" 
@@ -519,6 +528,33 @@ export const ProfessionalProfile: React.FC = () => {
                 </CardHeader>
                 <CardContent className="relative">
                   <ScheduleManager professionalId={professionalData?.user_id} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="blocks" className="mt-8">
+              <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none rounded-lg"></div>
+                <CardHeader className="relative">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-destructive/10 rounded-lg">
+                      <Ban className="h-5 w-5 text-destructive" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Gerenciar Bloqueios</CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Configure dias e horários específicos em que você não estará disponível
+                      </p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="relative">
+                  {professionalData?.id && (
+                    <UnavailabilityManager 
+                      professionalId={professionalData.id}
+                      professionalName={professionalData.display_name}
+                    />
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

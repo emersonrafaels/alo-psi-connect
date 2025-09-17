@@ -388,7 +388,7 @@ const Profile = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground mb-2">
-                        Gerencie suas especialidades, horários e agenda profissional
+                        Acesse a área completa para gerenciar especialidades, horários, bloqueios e integração com Google Calendar
                       </p>
                       <div className="flex items-center gap-2 text-sm">
                         <div className={`w-2 h-2 rounded-full ${googleCalendarConnected ? 'bg-green-500' : 'bg-gray-300'}`} />
@@ -402,30 +402,6 @@ const Profile = () => {
                 </CardContent>
               </Card>
 
-              {/* Integração com Google Calendar */}
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Integração com Google Calendar</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <GoogleCalendarIntegration
-                    isConnected={googleCalendarConnected}
-                    onConnectionChange={(connected) => {
-                      if (connected) {
-                        refetchGoogleCalendar();
-                      }
-                    }}
-                  />
-                  {googleCalendarConnected && (
-                    <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                      <p className="text-sm text-yellow-800">
-                        <strong>⚠️ Atenção:</strong> Desconectar o Google Calendar pode resultar em conflitos de agendamento. 
-                        Recomendamos manter a integração ativa para uma melhor gestão dos seus horários.
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
             </>
           )}
         </div>
