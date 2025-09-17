@@ -554,6 +554,7 @@ export type Database = {
           display_name: string
           email_secundario: string | null
           first_name: string | null
+          formacao_normalizada: string[] | null
           formacao_raw: string | null
           foto_id: number | null
           foto_perfil_url: string | null
@@ -568,6 +569,7 @@ export type Database = {
           profissao: string | null
           resumo: string | null
           resumo_profissional: string | null
+          servicos_normalizados: string[] | null
           servicos_raw: string | null
           telefone: string | null
           tempo_consulta: number | null
@@ -586,6 +588,7 @@ export type Database = {
           display_name: string
           email_secundario?: string | null
           first_name?: string | null
+          formacao_normalizada?: string[] | null
           formacao_raw?: string | null
           foto_id?: number | null
           foto_perfil_url?: string | null
@@ -600,6 +603,7 @@ export type Database = {
           profissao?: string | null
           resumo?: string | null
           resumo_profissional?: string | null
+          servicos_normalizados?: string[] | null
           servicos_raw?: string | null
           telefone?: string | null
           tempo_consulta?: number | null
@@ -618,6 +622,7 @@ export type Database = {
           display_name?: string
           email_secundario?: string | null
           first_name?: string | null
+          formacao_normalizada?: string[] | null
           formacao_raw?: string | null
           foto_id?: number | null
           foto_perfil_url?: string | null
@@ -632,6 +637,7 @@ export type Database = {
           profissao?: string | null
           resumo?: string | null
           resumo_profissional?: string | null
+          servicos_normalizados?: string[] | null
           servicos_raw?: string | null
           telefone?: string | null
           tempo_consulta?: number | null
@@ -881,6 +887,14 @@ export type Database = {
       is_admin: {
         Args: { _user_id: string }
         Returns: boolean
+      }
+      normalize_specialties: {
+        Args: { raw_specialties: string[] }
+        Returns: string[]
+      }
+      parse_php_serialized_array: {
+        Args: { php_data: string }
+        Returns: string[]
       }
     }
     Enums: {
