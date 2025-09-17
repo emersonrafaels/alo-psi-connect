@@ -119,10 +119,86 @@ export const useUserManagement = () => {
     }
   };
 
+  const updateUserType = async (userId: string, newType: 'paciente' | 'profissional') => {
+    setLoading(true);
+    try {
+      // Update the user type in profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ tipo_usuario: newType })
+        .eq('user_id', userId);
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      // If changing to professional, ensure a professional profile exists
+      if (newType === 'profissional') {
+        // Get the profile id
+        const { data: profile, error: getProfileError } = await supabase
+          .from('profiles')
+          .select('id, nome, email')
+          .eq('user_id', userId)
+          .single();
+
+        if (getProfileError) {
+          throw getProfileError;
+        }
+
+        // Check if professional profile already exists
+        const { data: existingProf, error: checkError } = await supabase
+          .from('profissionais')
+          .select('id')
+          .eq('profile_id', profile.id)
+          .maybeSingle();
+
+        if (checkError) {
+          throw checkError;
+        }
+
+        // Create professional profile if it doesn't exist
+        if (!existingProf) {
+          const { error: profError } = await supabase
+            .from('profissionais')
+            .insert({
+              profile_id: profile.id,
+              user_id: 1, // Default value as required by schema
+              user_login: profile.email,
+              user_email: profile.email,
+              display_name: profile.nome,
+              ativo: false // Start as inactive until approved
+            });
+
+          if (profError) {
+            throw profError;
+          }
+        }
+      }
+
+      toast({
+        title: "Tipo de usuário atualizado",
+        description: `Usuário foi alterado para ${newType}`,
+      });
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error updating user type:', error);
+      toast({
+        title: "Erro ao atualizar tipo de usuário",
+        description: error.message || "Erro desconhecido",
+        variant: "destructive",
+      });
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     createAdminUser,
     manageUserRole,
-    deleteUser
+    deleteUser,
+    updateUserType
   };
 };

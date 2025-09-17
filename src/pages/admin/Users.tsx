@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { UserManagementModal } from '@/components/admin/UserManagementModal';
 import { RoleManagementDialog } from '@/components/admin/RoleManagementDialog';
+import { UserTypeManagementDialog } from '@/components/admin/UserTypeManagementDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
@@ -29,7 +30,9 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedUserName, setSelectedUserName] = useState<string>('');
+  const [selectedUserType, setSelectedUserType] = useState<string>('');
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [typeDialogOpen, setTypeDialogOpen] = useState(false);
   const { deleteUser } = useUserManagement();
   const { resendEmailConfirmation, resendPasswordReset, loading: emailLoading } = useEmailResend();
 
@@ -77,6 +80,13 @@ export default function AdminUsers() {
     setSelectedUserId(userId);
     setSelectedUserName(userName);
     setRoleDialogOpen(true);
+  };
+
+  const handleTypeManagement = (userId: string, userName: string, userType: string) => {
+    setSelectedUserId(userId);
+    setSelectedUserName(userName);
+    setSelectedUserType(userType);
+    setTypeDialogOpen(true);
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -252,6 +262,16 @@ export default function AdminUsers() {
                     Gerenciar Roles
                   </Button>
                   
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleTypeManagement(user.user_id || '', user.nome, user.tipo_usuario)}
+                    className="gap-2"
+                  >
+                    <User className="h-4 w-4" />
+                    Gerenciar Tipo
+                  </Button>
+                  
                   <AlertDialog>
                      <AlertDialogTrigger asChild>
                        <Button variant="outline" size="sm" className="gap-2 text-destructive hover:text-destructive">
@@ -296,6 +316,16 @@ export default function AdminUsers() {
         userId={selectedUserId}
         userName={selectedUserName}
         onRoleUpdated={fetchUsers}
+      />
+
+      {/* User Type Management Dialog */}
+      <UserTypeManagementDialog
+        open={typeDialogOpen}
+        onOpenChange={setTypeDialogOpen}
+        userId={selectedUserId}
+        userName={selectedUserName}
+        currentType={selectedUserType}
+        onTypeUpdated={fetchUsers}
       />
     </div>
   );
