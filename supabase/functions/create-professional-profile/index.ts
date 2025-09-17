@@ -212,7 +212,14 @@ serve(async (req) => {
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours from now
 
-        // Save token to database
+        // Invalidate any existing tokens for this user first
+        await supabaseAdmin
+          .from('email_confirmation_tokens')
+          .update({ used: true })
+          .eq('user_id', userId)
+          .eq('used', false);
+
+        // Save new token to database
         const { error: tokenError } = await supabaseAdmin
           .from('email_confirmation_tokens')
           .insert({
@@ -274,9 +281,9 @@ serve(async (req) => {
                             </p>
                           </div>
                           
-                          <!-- CTA Button -->
+                           <!-- CTA Button -->
                           <div style="text-align: center; margin: 30px 0;">
-                            <a href="${Deno.env.get('APP_BASE_URL') || 'http://localhost:3000'}/auth-callback?token=${confirmationToken}&type=email_confirmation" 
+                            <a href="${Deno.env.get('APP_BASE_URL') || 'http://localhost:3000'}/auth?confirm=true&token=${confirmationToken}" 
                                style="display: inline-block; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);">
                               ✅ Confirmar Email
                             </a>

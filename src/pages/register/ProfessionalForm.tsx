@@ -155,14 +155,14 @@ const ProfessionalForm = () => {
           return;
         }
 
-        // Criar a conta - sem confirmação por email
+        // Criar a conta - sem email automático do Supabase
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.senha,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            // Desabilitar envio automático de email de confirmação
             data: {
-              confirmEmailDisabled: true
+              skip_confirmation: true
             }
           }
         });

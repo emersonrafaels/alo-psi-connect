@@ -96,14 +96,22 @@ const handler = async (req: Request): Promise<Response> => {
     const confirmationToken = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // Store token in database
+    // Invalidate any existing tokens for this user first
+    await supabase
+      .from('email_confirmation_tokens')
+      .update({ used: true })
+      .eq('user_id', user.id)
+      .eq('used', false);
+
+    // Store new token in database
     const { error: tokenError } = await supabase
       .from('email_confirmation_tokens')
       .insert({
         user_id: user.id,
         email: email,
         token: confirmationToken,
-        expires_at: expiresAt.toISOString()
+        expires_at: expiresAt.toISOString(),
+        used: false
       });
 
     if (tokenError) {

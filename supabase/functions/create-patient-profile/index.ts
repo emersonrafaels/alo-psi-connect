@@ -230,7 +230,14 @@ serve(async (req) => {
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours from now
 
-        // Save token to database
+        // Invalidate any existing tokens for this user first
+        await supabase
+          .from('email_confirmation_tokens')
+          .update({ used: true })
+          .eq('user_id', userId)
+          .eq('used', false);
+
+        // Save new token to database
         const { error: tokenError } = await supabase
           .from('email_confirmation_tokens')
           .insert({
@@ -264,12 +271,12 @@ serve(async (req) => {
                     <p style="color: #666; font-size: 16px;">
                       Obrigado por se cadastrar! Para ativar sua conta, clique no link abaixo:
                     </p>
-                    <div style="text-align: center; margin: 30px 0;">
-                      <a href="${Deno.env.get('APP_BASE_URL') || 'http://localhost:3000'}/auth-callback?token=${confirmationToken}&type=email_confirmation" 
-                         style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                        Confirmar Email
-                      </a>
-                    </div>
+                     <div style="text-align: center; margin: 30px 0;">
+                       <a href="${Deno.env.get('APP_BASE_URL') || 'http://localhost:3000'}/auth?confirm=true&token=${confirmationToken}" 
+                          style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                         Confirmar Email
+                       </a>
+                     </div>
                     <p style="color: #666; font-size: 14px;">
                       Este link expira em 24 horas.
                     </p>

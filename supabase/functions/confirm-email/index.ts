@@ -34,6 +34,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Email confirmation request received");
     
     const { token }: ConfirmEmailRequest = await req.json();
+    console.log("Token received:", token);
     
     if (!token) {
       return new Response(
@@ -46,12 +47,15 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Find the token in database
+    console.log("Searching for token in database...");
     const { data: tokenData, error: tokenError } = await supabase
       .from('email_confirmation_tokens')
       .select('*')
       .eq('token', token)
       .eq('used', false)
       .single();
+
+    console.log("Token search result:", { tokenData, tokenError });
 
     if (tokenError || !tokenData) {
       console.error('Token not found or error:', tokenError);
@@ -78,18 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Mark token as used
-    const { error: updateTokenError } = await supabase
-      .from('email_confirmation_tokens')
-      .update({ used: true })
-      .eq('id', tokenData.id);
-
-    if (updateTokenError) {
-      console.error('Error updating token:', updateTokenError);
-      throw updateTokenError;
-    }
-
-    // Confirm the user's email
+    // Confirm the user's email FIRST
     const { error: confirmError } = await supabase.auth.admin.updateUserById(
       tokenData.user_id,
       { 
@@ -100,6 +93,18 @@ const handler = async (req: Request): Promise<Response> => {
     if (confirmError) {
       console.error('Error confirming user email:', confirmError);
       throw confirmError;
+    }
+
+    // Mark token as used AFTER successful confirmation
+    const { error: updateTokenError } = await supabase
+      .from('email_confirmation_tokens')
+      .update({ used: true })
+      .eq('id', tokenData.id);
+
+    if (updateTokenError) {
+      console.error('Error updating token:', updateTokenError);
+      // Don't throw here since the email was already confirmed successfully
+      console.warn('Token marked as used but email confirmation was successful');
     }
 
     console.log('Email confirmed successfully for user:', tokenData.user_id);
