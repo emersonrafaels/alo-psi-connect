@@ -59,6 +59,20 @@ const Auth = () => {
   }, [user, navigate]);
 
 
+  const checkEmailExists = async (email: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-email-exists', {
+        body: { email }
+      });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error checking email:', error);
+      return null;
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -98,6 +112,64 @@ const Auth = () => {
           setLoading(false);
           return;
         }
+
+        // Se for erro de credenciais inválidas, verificar se email existe
+        if (error.message.includes('Invalid login credentials')) {
+          const emailCheck = await checkEmailExists(email);
+          
+          if (emailCheck && !emailCheck.exists) {
+            // Email não existe - sugerir criar conta
+            toast({
+              title: "Email não cadastrado",
+              description: "Este email não está cadastrado. Deseja criar uma conta?",
+              variant: "destructive",
+              action: (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/cadastro/tipo-usuario')}
+                  className="ml-auto"
+                >
+                  Criar conta
+                </Button>
+              ),
+            });
+            setLoading(false);
+            return;
+          } else {
+            // Email existe mas senha está incorreta
+            toast({
+              title: "Senha incorreta",
+              description: "A senha informada está incorreta. Esqueceu sua senha?",
+              variant: "destructive",
+              action: (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      await supabase.functions.invoke('send-password-reset', {
+                        body: { email }
+                      });
+                      toast({
+                        title: "Email enviado!",
+                        description: "Verifique sua caixa de entrada para redefinir sua senha.",
+                      });
+                    } catch (error) {
+                      console.error('Password reset error:', error);
+                    }
+                  }}
+                  className="ml-auto"
+                >
+                  Recuperar senha
+                </Button>
+              ),
+            });
+            setLoading(false);
+            return;
+          }
+        }
+        
         throw error;
       }
 
@@ -123,14 +195,12 @@ const Auth = () => {
         navigate('/')
       }
     } catch (error: any) {
-      // Não mostrar toast adicional se já detectamos email não confirmado
-      if (!error.message.includes('Email not confirmed')) {
-        toast({
-          title: "Erro no login",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      // Fallback para outros tipos de erro
+      toast({
+        title: "Erro no login",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
