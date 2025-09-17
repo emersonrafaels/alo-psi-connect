@@ -18,7 +18,10 @@ export const useUserType = (): UserTypeInfo => {
 
   useEffect(() => {
     const checkProfessionalStatus = async () => {
+      console.log('🔍 [useUserType] Checking professional status...', { user: !!user, profile: !!profile, profileType: profile?.tipo_usuario });
+      
       if (!user || !profile) {
+        console.log('🔍 [useUserType] No user or profile, setting as non-professional');
         setIsProfessional(false);
         setProfessionalId(null);
         setLoading(false);
@@ -26,28 +29,31 @@ export const useUserType = (): UserTypeInfo => {
       }
 
       try {
-        // Check if user has a professional profile
+        // Check if user has a professional profile AND it's active
         const { data: professionalData, error } = await supabase
           .from('profissionais')
-          .select('id, profile_id')
+          .select('id, profile_id, ativo')
           .eq('profile_id', profile.id)
+          .eq('ativo', true)  // Only get active professionals
           .maybeSingle();
 
+        console.log('🔍 [useUserType] Professional query result:', { professionalData, error, profileId: profile.id });
+
         if (error && error.code !== 'PGRST116') {
-          console.error('Error checking professional status:', error);
+          console.error('❌ [useUserType] Error checking professional status:', error);
           setIsProfessional(false);
           setProfessionalId(null);
         } else if (professionalData) {
-          console.log('Professional found:', professionalData);
+          console.log('✅ [useUserType] Active professional found:', professionalData);
           setIsProfessional(true);
           setProfessionalId(professionalData.id.toString());
         } else {
-          console.log('No professional profile found for user');
+          console.log('❌ [useUserType] No active professional profile found for user');
           setIsProfessional(false);
           setProfessionalId(null);
         }
       } catch (error) {
-        console.error('Error checking professional status:', error);
+        console.error('❌ [useUserType] Error checking professional status:', error);
         setIsProfessional(false);
         setProfessionalId(null);
       } finally {
@@ -61,10 +67,12 @@ export const useUserType = (): UserTypeInfo => {
   // Force refresh when profile changes due to the data fix
   useEffect(() => {
     if (profile && profile.tipo_usuario === 'profissional' && !isProfessional && !loading) {
-      console.log('Profile updated to professional, refreshing...');
+      console.log('🔄 [useUserType] Profile updated to professional, refreshing...');
       refetchProfile();
     }
   }, [profile, isProfessional, loading, refetchProfile]);
+
+  console.log('🔍 [useUserType] Final state:', { isProfessional, professionalId, loading, profileType: profile?.tipo_usuario });
 
   return { isProfessional, professionalId, loading };
 };
