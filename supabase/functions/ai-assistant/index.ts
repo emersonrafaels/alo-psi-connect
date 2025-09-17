@@ -291,28 +291,86 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
     }
 
     const data = await openAiResponse.json();
-    let assistantMessage = data.choices[0].message.content;
+    const choice = data.choices[0];
+    let assistantMessage: string;
     
     // Handle tool calls if present
-    const toolCalls = data.choices[0].message.tool_calls;
-    if (toolCalls && toolCalls.length > 0) {
-      console.log('🔧 Processing tool calls:', toolCalls.length);
+    if (choice.message.tool_calls) {
+      console.log('🔧 Processing tool calls:', choice.message.tool_calls.length);
       
-      for (const toolCall of toolCalls) {
-        if (toolCall.function.name === 'search_professionals' || toolCall.function.name === 'check_availability') {
-          const toolResponse = await supabase.functions.invoke('ai-assistant-tool', {
-            body: {
-              action: toolCall.function.name,
-              parameters: JSON.parse(toolCall.function.arguments)
-            }
-          });
-
-          if (toolResponse.data) {
-            // Add tool result to context for next API call if needed
-            console.log('🔧 Tool response received:', toolCall.function.name);
+      const toolResults = [];
+      
+      for (const toolCall of choice.message.tool_calls) {
+        const { name, arguments: args } = toolCall.function;
+        const parsedArgs = JSON.parse(args);
+        
+        console.log(`🔧 Calling tool: ${name} with args:`, parsedArgs);
+        
+        // Call the ai-assistant-tool function
+        const { data: toolResponse, error: toolError } = await supabase.functions.invoke('ai-assistant-tool', {
+          body: {
+            action: name,
+            parameters: parsedArgs
           }
+        });
+        
+        if (toolError) {
+          console.error(`❌ Tool call error for ${name}:`, toolError);
+          toolResults.push({
+            tool_call_id: toolCall.id,
+            role: 'tool',
+            name: name,
+            content: `Error: ${toolError.message}`
+          });
+        } else {
+          console.log(`🔧 Tool response received: ${name}`);
+          toolResults.push({
+            tool_call_id: toolCall.id,
+            role: 'tool',
+            name: name,
+            content: JSON.stringify(toolResponse)
+          });
         }
       }
+      
+      // Make a second call to OpenAI with the tool results
+      console.log('🔄 Making second OpenAI call with tool results...');
+      const secondOpenaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: modelToUse,
+          messages: [
+            ...messages,
+            choice.message,
+            ...toolResults
+          ],
+          max_tokens: maxTokens,
+          temperature: 0.7
+        }),
+      });
+
+      const secondOpenaiData = await secondOpenaiResponse.json();
+      
+      if (!secondOpenaiResponse.ok) {
+        console.error('❌ Second OpenAI API call error:', secondOpenaiData);
+        throw new Error(`OpenAI API error: ${secondOpenaiData.error?.message}`);
+      }
+
+      assistantMessage = secondOpenaiData.choices[0].message.content;
+      console.log('✅ Tool integration completed successfully');
+    } else {
+      assistantMessage = choice.message.content;
+      console.log('✅ Direct response received (no tools used)');
+    }
+
+    // Validate assistant message before saving
+    if (!assistantMessage || assistantMessage.trim() === '') {
+      console.error('❌ Assistant message is empty or null');
+      assistantMessage = 'Desculpe, ocorreu um problema ao processar sua solicitação. Tente novamente.';
     }
     
     // Save assistant response to conversation history
