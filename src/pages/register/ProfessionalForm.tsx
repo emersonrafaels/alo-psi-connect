@@ -33,6 +33,8 @@ const ProfessionalForm = () => {
   
   const [showExistingAccountModal, setShowExistingAccountModal] = useState(false);
   const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string>('');
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -63,17 +65,11 @@ const ProfessionalForm = () => {
 
   // Salvar foto do Google automaticamente se disponível
   useEffect(() => {
-    const saveGoogleProfilePhoto = async () => {
-      if (googleData?.picture && !formData.fotoPerfilUrl) {
-        const photoUrl = await saveGooglePhoto(googleData.picture);
-        if (photoUrl) {
-          setFormData(prev => ({ ...prev, fotoPerfilUrl: photoUrl }));
-        }
-      }
-    };
-
-    saveGoogleProfilePhoto();
-  }, [googleData, saveGooglePhoto, formData.fotoPerfilUrl]);
+    if (googleData?.picture && !formData.fotoPerfilUrl && !photoPreviewUrl) {
+      setFormData(prev => ({ ...prev, fotoPerfilUrl: googleData.picture }));
+      setPhotoPreviewUrl(googleData.picture);
+    }
+  }, [googleData, formData.fotoPerfilUrl, photoPreviewUrl]);
 
   // Verificar se há dados pendentes de cadastro profissional
   useEffect(() => {
@@ -185,6 +181,18 @@ const ProfessionalForm = () => {
 
       const userToUse = authenticatedUser || currentUser;
 
+      // Upload da foto se foi selecionada
+      let uploadedPhotoUrl = formData.fotoPerfilUrl;
+      if (selectedPhotoFile) {
+        console.log('Fazendo upload da foto após autenticação...');
+        uploadedPhotoUrl = await uploadProfilePhoto(selectedPhotoFile);
+        if (uploadedPhotoUrl) {
+          console.log('Foto carregada com sucesso:', uploadedPhotoUrl);
+        } else {
+          console.warn('Falha no upload da foto, continuando sem foto de perfil');
+        }
+      }
+
       // Preparar dados para a edge function
       const profileData = {
         nome: formData.nome,
@@ -207,7 +215,7 @@ const ProfessionalForm = () => {
         cpf: formData.cpf || null,
         linkedin: formData.linkedin || null,
         resumo_profissional: formData.resumoProfissional || null,
-        foto_perfil_url: formData.fotoPerfilUrl || null,
+        foto_perfil_url: uploadedPhotoUrl || null,
         possui_e_psi: formData.possuiEPsi === 'sim',
         servicos_raw: formData.especialidades.length > 0 ? formData.especialidades.join(', ') : null,
         ativo: false
@@ -465,18 +473,8 @@ const ProfessionalForm = () => {
     <div className="space-y-6">
       <div className="space-y-2">
          <PhotoUpload
-          onPhotoSelected={async (file) => {
+          onPhotoSelected={(file) => {
             if (!file) return;
-
-            // Validar autenticação
-            if (!user && !googleData) {
-              toast({
-                title: "Erro",
-                description: "Usuário não autenticado. Faça login primeiro.",
-                variant: "destructive",
-              });
-              return;
-            }
 
             // Validar arquivo
             if (!file.type.startsWith('image/')) {
@@ -497,67 +495,38 @@ const ProfessionalForm = () => {
               return;
             }
 
-            console.log('Iniciando upload de foto:', {
+            // Armazenar arquivo localmente para upload posterior
+            setSelectedPhotoFile(file);
+            
+            // Criar URL para preview
+            const previewUrl = URL.createObjectURL(file);
+            setPhotoPreviewUrl(previewUrl);
+            
+            console.log('Foto selecionada para upload posterior:', {
               fileName: file.name,
               fileSize: file.size,
-              fileType: file.type,
-              userId: user?.id || 'google-signup'
+              fileType: file.type
             });
 
-            setLoading(true);
-            try {
-              const photoUrl = await uploadProfilePhoto(file);
-              
-              if (photoUrl) {
-                console.log('Upload bem-sucedido:', photoUrl);
-                updateFormData('fotoPerfilUrl', photoUrl);
-                toast({
-                  title: "Sucesso",
-                  description: "Foto carregada com sucesso!",
-                });
-              } else {
-                throw new Error('Nenhuma URL retornada do upload');
-              }
-            } catch (error: any) {
-              console.error('Erro detalhado no upload:', {
-                error: error.message,
-                stack: error.stack,
-                fileName: file.name,
-                fileSize: file.size,
-                userId: user?.id || 'google-signup'
-              });
-              
-              let errorMessage = 'Erro ao fazer upload da foto';
-              
-              if (error.message?.includes('No URL returned')) {
-                errorMessage = 'Falha no servidor de upload. Tente novamente.';
-              } else if (error.message?.includes('unauthorized') || error.message?.includes('Unauthorized')) {
-                errorMessage = 'Não autorizado. Verifique sua autenticação.';
-              } else if (error.message?.includes('size')) {
-                errorMessage = 'Arquivo muito grande. Máximo 10MB.';
-              } else if (error.message?.includes('type')) {
-                errorMessage = 'Tipo de arquivo não suportado. Use JPG, PNG ou WebP.';
-              } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
-                errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
-              }
-              
-              toast({
-                title: "Erro no upload",
-                description: errorMessage,
-                variant: "destructive",
-              });
-            } finally {
-              setLoading(false);
-            }
+            toast({
+              title: "Foto selecionada",
+              description: "A foto será carregada quando finalizar o cadastro.",
+            });
           }}
           onPhotoUrlChange={(url) => updateFormData('fotoPerfilUrl', url)}
-          currentPhotoUrl={formData.fotoPerfilUrl}
+          currentPhotoUrl={photoPreviewUrl || formData.fotoPerfilUrl}
           label="Foto de Perfil"
         />
-        {googleData?.picture && formData.fotoPerfilUrl && (
+        {googleData?.picture && photoPreviewUrl && (
           <Badge variant="secondary" className="text-xs">
             <Check className="h-3 w-3 mr-1" />
             Foto importada do Google
+          </Badge>
+        )}
+        {selectedPhotoFile && (
+          <Badge variant="secondary" className="text-xs">
+            <Check className="h-3 w-3 mr-1" />
+            Foto selecionada: {selectedPhotoFile.name}
           </Badge>
         )}
       </div>
