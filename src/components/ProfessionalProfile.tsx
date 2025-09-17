@@ -275,9 +275,9 @@ export const ProfessionalProfile: React.FC = () => {
           <Card className="mb-8 overflow-hidden border-0 shadow-lg bg-card/50 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 pointer-events-none"></div>
             <CardContent className="relative pt-8 pb-6">
-              <div className="flex flex-col lg:flex-row items-start gap-8">
-                {/* Avatar Section */}
-                <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Avatar Section - 3 columns */}
+                <div className="lg:col-span-3 flex flex-col items-center lg:items-start space-y-4">
                   <div className="relative">
                     <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-25 hover:opacity-75 transition duration-300"></div>
                     <div className="relative">
@@ -292,57 +292,71 @@ export const ProfessionalProfile: React.FC = () => {
                       />
                     </div>
                   </div>
-                  
-                  {/* Status Toggle */}
-                  <ProfessionalStatusToggle 
-                    professionalData={professionalData}
-                    onUpdate={(isActive) => {
-                      setProfessionalData(prev => prev ? { ...prev, ativo: isActive } : null);
-                    }}
-                  />
                 </div>
                 
-                {/* Professional Info */}
-                <div className="flex-1 space-y-4">
-                  <div>
-                    <h2 className="text-3xl font-bold text-foreground mb-1">
-                      {professionalData?.display_name || profile?.nome}
-                    </h2>
-                    {professionalData?.profissao && (
-                      <p className="text-xl text-muted-foreground flex items-center gap-2">
-                        {professionalData.profissao}
-                        {professionalData.crp_crm && (
-                          <>
-                            <span className="w-1 h-1 bg-muted-foreground rounded-full"></span>
-                            <span className="font-mono text-lg">{professionalData.crp_crm}</span>
-                          </>
-                        )}
-                      </p>
-                    )}
+                {/* Professional Info - 6 columns */}
+                <div className="lg:col-span-6 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h2 className="text-3xl font-bold text-foreground">
+                          {professionalData?.display_name || profile?.nome}
+                        </h2>
+                        {/* Status Badge Inline */}
+                        <Badge 
+                          variant={professionalData?.ativo ? "default" : "secondary"}
+                          className="text-xs font-medium"
+                        >
+                          {professionalData?.ativo ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </div>
+                      {professionalData?.profissao && (
+                        <p className="text-xl text-muted-foreground flex items-center gap-2 mb-3">
+                          <Stethoscope className="h-5 w-5" />
+                          {professionalData.profissao}
+                          {professionalData.crp_crm && (
+                            <>
+                              <span className="w-1 h-1 bg-muted-foreground rounded-full"></span>
+                              <span className="font-mono text-lg">{professionalData.crp_crm}</span>
+                            </>
+                          )}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   
-                  {/* Professional Stats */}
-                  <div className="flex flex-wrap items-center gap-6">
-                    {professionalData?.preco_consulta && (
-                      <div className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 rounded-full">
-                        <span className="text-sm font-medium text-accent-foreground">
-                          R$ {professionalData.preco_consulta.toFixed(2)}
-                        </span>
-                      </div>
-                    )}
-                    {professionalData?.tempo_consulta && (
-                      <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full">
-                        <Clock className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-medium text-primary">
-                          {professionalData.tempo_consulta} min
-                        </span>
-                      </div>
-                     )}
-                   </div>
-                 </div>
+                  {/* Professional Stats & Status Toggle */}
+                  <div className="flex flex-col sm:flex-row items-start gap-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      {professionalData?.preco_consulta && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 rounded-full">
+                          <span className="text-sm font-medium text-accent-foreground">
+                            R$ {professionalData.preco_consulta.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                      {professionalData?.tempo_consulta && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full">
+                          <Clock className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-medium text-primary">
+                            {professionalData.tempo_consulta} min
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Status Toggle */}
+                    <ProfessionalStatusToggle 
+                      professionalData={professionalData}
+                      onUpdate={(isActive) => {
+                        setProfessionalData(prev => prev ? { ...prev, ativo: isActive } : null);
+                      }}
+                    />
+                  </div>
+                </div>
 
-                {/* Calendar Status */}
-                <div className="flex flex-col items-center lg:items-end gap-3">
+                {/* Calendar Status - 3 columns */}
+                <div className="lg:col-span-3 flex justify-center lg:justify-end">
                   <div className="flex items-center gap-3 px-4 py-3 bg-background/80 backdrop-blur-sm rounded-xl border shadow-sm">
                     <div className={`w-3 h-3 rounded-full ${
                       googleCalendarConnected 

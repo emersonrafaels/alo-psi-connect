@@ -58,47 +58,33 @@ export const ProfessionalStatusToggle: React.FC<ProfessionalStatusToggleProps> =
   if (!professionalData) return null;
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardContent className="pt-6 pb-4">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="profile-status" className="text-sm font-medium">
-              Status do perfil
-            </Label>
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            ) : (
-              <Switch
-                id="profile-status"
-                checked={professionalData.ativo}
-                onCheckedChange={handleToggle}
-                disabled={loading}
-              />
-            )}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {professionalData.ativo ? (
-              <CheckCircle className="h-4 w-4 text-green-500" />
-            ) : (
-              <XCircle className="h-4 w-4 text-red-500" />
-            )}
-            <Badge 
-              variant={professionalData.ativo ? "default" : "secondary"}
-              className="text-xs"
-            >
-              {professionalData.ativo ? "Ativo" : "Inativo"}
-            </Badge>
-          </div>
-          
-          <p className="text-xs text-muted-foreground">
-            {professionalData.ativo 
-              ? "Seu perfil está visível e disponível para agendamentos"
-              : "Seu perfil está oculto e não receberá novos agendamentos"
-            }
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex items-center gap-3 p-3 bg-card/60 rounded-lg border shadow-sm backdrop-blur-sm">
+      <div className="flex items-center gap-2">
+        <Label htmlFor="profile-status" className="text-sm font-medium whitespace-nowrap">
+          Status
+        </Label>
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        ) : (
+          <Switch
+            id="profile-status"
+            checked={professionalData.ativo}
+            onCheckedChange={handleToggle}
+            disabled={loading}
+          />
+        )}
+      </div>
+      
+      <div className="flex items-center gap-2">
+        {professionalData.ativo ? (
+          <CheckCircle className="h-4 w-4 text-green-500" />
+        ) : (
+          <XCircle className="h-4 w-4 text-destructive" />
+        )}
+        <span className="text-xs text-muted-foreground">
+          {professionalData.ativo ? "Visível" : "Oculto"}
+        </span>
+      </div>
+    </div>
   );
 };
