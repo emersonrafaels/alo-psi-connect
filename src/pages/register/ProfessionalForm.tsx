@@ -155,12 +155,15 @@ const ProfessionalForm = () => {
           return;
         }
 
-        // Criar a conta
+        // Criar a conta - sem confirmação por email
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.senha,
           options: {
-            emailRedirectTo: `${window.location.origin}/`
+            emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              confirmEmailDisabled: true
+            }
           }
         });
 
