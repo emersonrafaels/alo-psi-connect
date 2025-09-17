@@ -28,7 +28,7 @@ import UserType from "./pages/register/UserType";
 import PatientForm from "./pages/register/PatientForm";
 import ProfessionalForm from "./pages/register/ProfessionalForm";
 import Profile from "./pages/Profile";
-import { ProfessionalProfile } from "./components/ProfessionalProfile";
+import ProfessionalProfile from "./pages/ProfessionalProfile";
 import NotFound from "./pages/NotFound";
 
 // Appointment management pages

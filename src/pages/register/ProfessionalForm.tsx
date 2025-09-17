@@ -221,7 +221,7 @@ const ProfessionalForm = () => {
         foto_perfil_url: uploadedPhotoUrl || null,
         possui_e_psi: formData.possuiEPsi === 'sim',
         servicos_raw: formData.especialidades.length > 0 ? formData.especialidades.join(', ') : null,
-        ativo: false
+        ativo: true
       };
 
       const horariosData = formData.horarios.map(horario => ({
