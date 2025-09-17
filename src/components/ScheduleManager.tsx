@@ -36,6 +36,28 @@ const DAYS_OF_WEEK = [
   { value: 'sunday', label: 'Domingo' }
 ];
 
+// Mapeamento entre formato do banco (abreviado) e formato do componente (completo)
+const DAY_FORMAT_MAP: Record<string, string> = {
+  'mon': 'monday',
+  'tue': 'tuesday', 
+  'wed': 'wednesday',
+  'thu': 'thursday',
+  'fri': 'friday',
+  'sat': 'saturday',
+  'sun': 'sunday'
+};
+
+// Mapeamento reverso para salvar no formato do banco
+const DAY_FORMAT_REVERSE_MAP: Record<string, string> = {
+  'monday': 'mon',
+  'tuesday': 'tue',
+  'wednesday': 'wed', 
+  'thursday': 'thu',
+  'friday': 'fri',
+  'saturday': 'sat',
+  'sunday': 'sun'
+};
+
 const TIME_SLOTS = [
   { value: 30, label: '30 minutos' },
   { value: 50, label: '50 minutos' }
@@ -51,11 +73,11 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
   useEffect(() => {
     const loadSchedules = async () => {
       if (!professionalId) {
-        console.log('ScheduleManager: No professionalId provided');
+        console.log('📅 [ScheduleManager] No professionalId provided');
         return;
       }
 
-      console.log('ScheduleManager: Loading schedules for professional ID:', professionalId);
+      console.log('📅 [ScheduleManager] Loading schedules for professional ID:', professionalId);
 
       try {
         const { data, error } = await supabase
@@ -66,13 +88,37 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
           .order('start_time');
 
         if (error) {
-          console.error('ScheduleManager: Error loading schedules:', error);
+          console.error('❌ [ScheduleManager] Error loading schedules:', error);
           throw error;
         }
 
-        console.log('ScheduleManager: Loaded schedules:', data);
-        setSchedules(data || []);
+        console.log('📅 [ScheduleManager] Raw data from database:', data);
+
+        // Converter os dados do banco para o formato esperado pelo componente
+        const convertedSchedules = (data || []).map((dbSchedule: any) => {
+          const convertedDay = DAY_FORMAT_MAP[dbSchedule.day] || dbSchedule.day;
+          const timeSlot = dbSchedule.time_slot || 50; // Default para 50 minutos se for null
+          
+          const converted = {
+            id: dbSchedule.id,
+            day: convertedDay,
+            start_time: dbSchedule.start_time.slice(0, 5), // Remove seconds
+            end_time: dbSchedule.end_time.slice(0, 5), // Remove seconds  
+            time_slot: timeSlot
+          };
+
+          console.log('🔄 [ScheduleManager] Converting:', {
+            original: { day: dbSchedule.day, time_slot: dbSchedule.time_slot },
+            converted: { day: converted.day, time_slot: converted.time_slot }
+          });
+
+          return converted;
+        });
+
+        console.log('✅ [ScheduleManager] Converted schedules:', convertedSchedules);
+        setSchedules(convertedSchedules);
       } catch (error: any) {
+        console.error('❌ [ScheduleManager] Exception:', error);
         toast({
           title: "Erro ao carregar horários",
           description: error.message,
@@ -148,14 +194,22 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
         return;
       }
 
-      // Preparar dados para salvar
-      const schedulesToSave = validSchedules.map(schedule => ({
-        user_id: professionalId,
-        day: schedule.day,
-        start_time: schedule.start_time,
-        end_time: schedule.end_time,
-        time_slot: schedule.time_slot
-      }));
+      // Preparar dados para salvar - converter de volta para o formato do banco
+      const schedulesToSave = validSchedules.map(schedule => {
+        const dbDay = DAY_FORMAT_REVERSE_MAP[schedule.day] || schedule.day;
+        console.log('💾 [ScheduleManager] Converting for save:', { 
+          componentDay: schedule.day, 
+          dbDay: dbDay 
+        });
+        
+        return {
+          user_id: professionalId,
+          day: dbDay,
+          start_time: schedule.start_time,
+          end_time: schedule.end_time,
+          time_slot: schedule.time_slot
+        };
+      });
 
       // Primeiro, deletar todos os horários existentes
       const { error: deleteError } = await supabase
@@ -182,7 +236,16 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
 
       if (loadError) throw loadError;
 
-      setSchedules(data || []);
+      // Converter os dados recarregados
+      const reloadedSchedules = (data || []).map((dbSchedule: any) => ({
+        id: dbSchedule.id,
+        day: DAY_FORMAT_MAP[dbSchedule.day] || dbSchedule.day,
+        start_time: dbSchedule.start_time.slice(0, 5),
+        end_time: dbSchedule.end_time.slice(0, 5),
+        time_slot: dbSchedule.time_slot || 50
+      }));
+
+      setSchedules(reloadedSchedules);
 
       toast({
         title: "Horários salvos",
