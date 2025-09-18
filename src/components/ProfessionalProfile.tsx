@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/ui/header';
-import Footer from '@/components/ui/footer';
+
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileManager } from '@/hooks/useProfileManager';
 import { useUserType } from '@/hooks/useUserType';
@@ -630,7 +630,7 @@ export const ProfessionalProfile: React.FC = () => {
           </Tabs>
         </div>
       </main>
-      <Footer />
+      
     </div>
   );
 };
