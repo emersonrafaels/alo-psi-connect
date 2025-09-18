@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Save, Heart, Edit, AlertCircle, Download, Share } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { parseISODateLocal } from '@/lib/utils';
 
 const MoodEntry = () => {
   const navigate = useNavigate();
