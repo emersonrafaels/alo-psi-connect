@@ -69,9 +69,9 @@ const App: React.FC = () => {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="light" storageKey="alopsi-theme">
-          <AuthProvider>
-            <TooltipProvider>
-              <BrowserRouter>
+          <TooltipProvider>
+            <BrowserRouter>
+              <AuthProvider>
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/sobre" element={<About />} />
@@ -127,11 +127,11 @@ const App: React.FC = () => {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <WhatsAppFloat />
-              </BrowserRouter>
-              <Toaster />
-              <Sonner />
-            </TooltipProvider>
-          </AuthProvider>
+              </AuthProvider>
+            </BrowserRouter>
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </React.StrictMode>
