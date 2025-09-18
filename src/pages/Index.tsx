@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
@@ -17,6 +18,7 @@ interface FeaturedProfessional {
   preco_consulta: number | null;
 }
 const Index = () => {
+  const navigate = useNavigate();
   const [featuredProfessionals, setFeaturedProfessionals] = useState<FeaturedProfessional[]>([]);
   const [loading, setLoading] = useState(true);
   const { getConfig } = usePublicConfig(['homepage']);
@@ -79,10 +81,10 @@ const Index = () => {
                 Encontre profissionais especializados em saúde mental com atendimento humanizado e de qualidade.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button variant="default" size="lg" className="bg-primary text-primary-foreground" onClick={() => window.location.href = '/profissionais'}>
+                <Button variant="default" size="lg" className="bg-primary text-primary-foreground" onClick={() => navigate('/profissionais')}>
                   Encontrar Profissional
                 </Button>
-              <Button variant="accent" size="lg" onClick={() => window.location.href = '/profissionais'}>
+              <Button variant="accent" size="lg" onClick={() => navigate('/profissionais')}>
                 Agendar Consulta
               </Button>
               </div>
@@ -311,7 +313,7 @@ const Index = () => {
             Empatia, Compreensão, Transformação: <br />
             O Seu Caminho Para A Cura.
           </h2>
-          <Button variant="accent" size="lg" className="mt-8" onClick={() => window.location.href = '/profissionais'}>
+          <Button variant="accent" size="lg" className="mt-8" onClick={() => navigate('/profissionais')}>
             Agendar Consulta
           </Button>
         </div>

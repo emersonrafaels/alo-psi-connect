@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
@@ -54,6 +55,7 @@ interface Professional {
 }
 
 const Professionals = () => {
+  const navigate = useNavigate()
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [filteredProfessionals, setFilteredProfessionals] = useState<Professional[]>([])
   const [loading, setLoading] = useState(true)
@@ -398,7 +400,7 @@ const Professionals = () => {
   }
 
   const handleTimeSlotClick = (professional: Professional, day: string, time: string) => {
-    // Redirect to booking confirmation page with professional and time slot info
+    // Navigate to booking confirmation page with professional and time slot info
     const searchParams = new URLSearchParams({
       professionalId: professional.id.toString(),
       professionalName: professional.display_name,
@@ -406,7 +408,7 @@ const Professionals = () => {
       time,
       price: professional.preco_consulta?.toString() || '0'
     })
-    window.location.href = `/agendamento?${searchParams.toString()}`
+    navigate(`/agendamento?${searchParams.toString()}`)
   }
 
   const getAvatarColor = (name: string) => {

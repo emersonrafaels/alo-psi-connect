@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,6 +26,7 @@ interface AIAssistantModalProps {
 }
 
 export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssistantModalProps) => {
+  const navigate = useNavigate();
   const { getConfig } = useSystemConfig(['n8n_chat', 'ai_assistant']);
   const { user } = useAuth();
   const [sessionId] = useState(() => crypto.randomUUID());
@@ -368,7 +370,7 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
                                   className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg font-medium transition-all duration-200 no-underline hover:scale-105 border border-primary/20"
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    window.location.href = href || '';
+                                    navigate(href || '/');
                                   }}
                                 >
                                   {children}
