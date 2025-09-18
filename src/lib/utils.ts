@@ -40,3 +40,45 @@ export function formatUserDisplayName(user: { nome?: string | null; email?: stri
   }
   return 'Usuário desconhecido';
 }
+
+// Date utilities to handle timezone issues consistently
+export function parseISODateLocal(isoDateString: string): Date {
+  // Force local timezone interpretation by adding T00:00:00
+  return new Date(isoDateString + 'T00:00:00');
+}
+
+export function formatDateBR(date: Date | string, formatType: 'short' | 'long' | 'numeric' = 'numeric'): string {
+  const dateObj = typeof date === 'string' ? parseISODateLocal(date) : date;
+  
+  switch (formatType) {
+    case 'short':
+      return dateObj.toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: '2-digit' 
+      });
+    case 'long':
+      return dateObj.toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+    case 'numeric':
+    default:
+      return dateObj.toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+      });
+  }
+}
+
+export function formatDateTimeBR(dateTime: Date | string): string {
+  const dateObj = typeof dateTime === 'string' ? new Date(dateTime) : dateTime;
+  return dateObj.toLocaleString('pt-BR', { 
+    day: '2-digit', 
+    month: '2-digit', 
+    year: 'numeric',
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+}

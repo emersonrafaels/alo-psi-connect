@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
+import { parseISODateLocal } from '@/lib/utils';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -22,14 +23,14 @@ const MoodAnalytics = () => {
   // Prepare data for charts
   const last30Days = entries
     .filter(entry => {
-      const entryDate = new Date(entry.date);
+      const entryDate = parseISODateLocal(entry.date);
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       return entryDate >= thirtyDaysAgo;
     })
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .sort((a, b) => parseISODateLocal(a.date).getTime() - parseISODateLocal(b.date).getTime())
     .map(entry => ({
-      date: new Date(entry.date).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }),
+      date: parseISODateLocal(entry.date).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }),
       humor: entry.mood_score,
       energia: entry.energy_level,
       ansiedade: entry.anxiety_level,
@@ -67,7 +68,7 @@ const MoodAnalytics = () => {
     const weeks: Record<string, Array<typeof entries[0]>> = {};
     
     entries.forEach(entry => {
-      const date = new Date(entry.date);
+      const date = parseISODateLocal(entry.date);
       const startOfWeek = new Date(date);
       startOfWeek.setDate(date.getDate() - date.getDay());
       const weekKey = startOfWeek.toISOString().split('T')[0];

@@ -15,6 +15,7 @@ import { Eye, EyeOff, User, Mail, Lock, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
+import { parseISODateLocal } from '@/lib/utils';
 
 interface QuickSignupModalProps {
   isOpen: boolean;
@@ -258,7 +259,7 @@ const QuickSignupModal: React.FC<QuickSignupModalProps> = ({
                 <div className="text-muted-foreground space-y-1">
                   <div className="flex justify-between">
                     <span>Data:</span>
-                    <span>{new Date(bookingData.date).toLocaleDateString('pt-BR')}</span>
+                    <span>{parseISODateLocal(bookingData.date).toLocaleDateString('pt-BR')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Horário:</span>

@@ -175,7 +175,7 @@ const MoodEntry = () => {
       const html2canvas = (await import('html2canvas')).default;
       
       const doc = new jsPDF();
-      const date = new Date(formData.date).toLocaleDateString('pt-BR');
+      const date = parseISODateLocal(formData.date).toLocaleDateString('pt-BR');
       
       // Header
       doc.setFontSize(20);
@@ -236,7 +236,7 @@ const MoodEntry = () => {
   };
 
   const shareWhatsApp = () => {
-    const date = new Date(formData.date).toLocaleDateString('pt-BR');
+    const date = parseISODateLocal(formData.date).toLocaleDateString('pt-BR');
     const moodEmoji = ['😢', '😞', '😐', '😊', '😃', '🤩', '😍', '🥰', '😁', '🌟'][formData.mood_score[0] - 1] || '😊';
     
     let message = `*Meu Diário Emocional - ${date}* ${moodEmoji}\n\n`;

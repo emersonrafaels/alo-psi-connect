@@ -13,6 +13,7 @@ import { Calendar, Clock, DollarSign, User, ArrowLeft, CreditCard, MapPin, Phone
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
 import { useUserProfile } from "@/hooks/useUserProfile"
+import { parseISODateLocal } from '@/lib/utils';
 import { useBookingTracking } from "@/hooks/useBookingTracking"
 import { useAuthRedirect } from "@/hooks/useAuthRedirect"
 import { supabase } from "@/integrations/supabase/client"
@@ -363,7 +364,7 @@ const BookingConfirmation = () => {
             agendamentoId: agendamento.id,
             valor: parseFloat(bookingData.price),
             title: `Consulta com ${bookingData.professionalName}`,
-            description: `Consulta agendada para ${new Date(bookingData.date).toLocaleDateString('pt-BR')} às ${bookingData.time}`
+            description: `Consulta agendada para ${parseISODateLocal(bookingData.date).toLocaleDateString('pt-BR')} às ${bookingData.time}`
           }
         }
       )
@@ -557,7 +558,7 @@ const BookingConfirmation = () => {
                     <div>
                       <p className="text-sm font-medium">Data</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(bookingData.date).toLocaleDateString('pt-BR')}
+                        {parseISODateLocal(bookingData.date).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
                   </div>

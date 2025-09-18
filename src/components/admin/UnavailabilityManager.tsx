@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { format, addDays, isAfter, isBefore, startOfDay } from 'date-fns';
+import { parseISODateLocal } from '@/lib/utils';
 import { ptBR } from 'date-fns/locale';
 import { CalendarDays, Clock, Trash2, Edit, Plus, Repeat, CalendarRange } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -218,7 +219,7 @@ export const UnavailabilityManager = ({ professionalId, professionalName }: Unav
     }
 
     // Check if date is in the past
-    const selectedDate = new Date(formData.date);
+    const selectedDate = parseISODateLocal(formData.date);
     const today = startOfDay(new Date());
     
     if (isBefore(selectedDate, today)) {
@@ -254,8 +255,8 @@ export const UnavailabilityManager = ({ professionalId, professionalName }: Unav
           return;
         }
         
-        const start = new Date(formData.date);
-        const end = new Date(formData.endDate);
+        const start = parseISODateLocal(formData.date);
+        const end = parseISODateLocal(formData.endDate);
         
         if (isBefore(end, start)) {
           toast({ title: 'Data final deve ser posterior à data inicial', variant: 'destructive' });
@@ -336,7 +337,7 @@ export const UnavailabilityManager = ({ professionalId, professionalName }: Unav
   };
 
   // Get blocked dates for calendar highlighting
-  const blockedDates = unavailabilityRecords.map(record => new Date(record.date));
+  const blockedDates = unavailabilityRecords.map(record => parseISODateLocal(record.date));
 
   if (isLoading) {
     return (
@@ -615,7 +616,7 @@ export const UnavailabilityManager = ({ professionalId, professionalName }: Unav
                         <div className="flex items-center gap-2">
                           <CalendarDays className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">
-                            {format(new Date(record.date), 'dd/MM/yyyy', { locale: ptBR })}
+                            {format(parseISODateLocal(record.date), 'dd/MM/yyyy', { locale: ptBR })}
                           </span>
                           <Badge variant={record.all_day ? 'destructive' : 'secondary'}>
                             {record.all_day ? 'Dia inteiro' : 'Horário específico'}

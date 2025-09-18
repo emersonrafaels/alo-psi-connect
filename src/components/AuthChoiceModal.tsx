@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User, UserCheck, ArrowRight, Clock, Shield, Calendar } from 'lucide-react';
+import { parseISODateLocal } from '@/lib/utils';
 
 interface AuthChoiceModalProps {
   isOpen: boolean;
@@ -142,7 +143,7 @@ const AuthChoiceModal: React.FC<AuthChoiceModalProps> = ({
           <div className="text-sm text-muted-foreground space-y-1">
             <div className="flex justify-between">
               <span>Data:</span>
-              <span>{new Date(bookingData.date).toLocaleDateString('pt-BR')}</span>
+              <span>{parseISODateLocal(bookingData.date).toLocaleDateString('pt-BR')}</span>
             </div>
             <div className="flex justify-between">
               <span>Horário:</span>
