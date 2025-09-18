@@ -4,9 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, Edit, X, CreditCard } from 'lucide-react';
+import { Save, Edit, X, CreditCard, ChevronsUpDown, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ProfessionalData {
   id: number;
@@ -22,12 +25,83 @@ interface BankingInfoEditorProps {
   onUpdate: (data: Partial<ProfessionalData>) => void;
 }
 
+// Comprehensive list of Brazilian banks
+const BRAZILIAN_BANKS = [
+  "Banco do Brasil",
+  "Caixa Econômica Federal",
+  "Banco Bradesco",
+  "Itaú Unibanco",
+  "Banco Santander",
+  "BTG Pactual",
+  "Nubank",
+  "Banco Inter",
+  "C6 Bank",
+  "Banco Original",
+  "Banco Safra",
+  "Banco Votorantim",
+  "Banco Pine",
+  "Banco BS2",
+  "Banco BV",
+  "Banco Pan",
+  "Banco BMG",
+  "Banco Daycoval",
+  "Banco Sofisa",
+  "Banco Fibra",
+  "Banco Mercantil do Brasil",
+  "Banco da Amazônia",
+  "Banco do Nordeste",
+  "Banrisul",
+  "Banco Sicoob",
+  "Banco Sicredi",
+  "Banco Cooperativo do Brasil",
+  "Banco Rural",
+  "Banco Rendimento",
+  "Banco Topázio",
+  "Banco Tribanco",
+  "Banco Paulista",
+  "Banco Industrial do Brasil",
+  "Banco ABC Brasil",
+  "Banco Alfa",
+  "Banco Arbi",
+  "Banco Bari",
+  "Banco Bocom BBM",
+  "Banco BRB",
+  "Banco Citibank",
+  "Banco Credit Suisse",
+  "Banco Crédit Agricole",
+  "Banco Guanabara",
+  "Banco Itaú BBA",
+  "Banco J.P. Morgan",
+  "Banco Modal",
+  "Banco Morgan Stanley",
+  "Banco Ourinvest",
+  "Banco Ribeirão Preto",
+  "Banco Semear",
+  "Banco UBS",
+  "Banco Voiter",
+  "Banco XP",
+  "Banco Yamaha Motor",
+  "BancoSeguro",
+  "Banestes",
+  "Banpará",
+  "BRDE",
+  "Caixa Geral - Brasil",
+  "CCB - Caixa de Crédito Brasil",
+  "Credisis",
+  "Hipercard",
+  "HSBC Brasil",
+  "Pagseguro Internet",
+  "Stone Pagamentos",
+  "Will Bank"
+].sort();
+
 export const BankingInfoEditor: React.FC<BankingInfoEditorProps> = ({
   professionalData,
   onUpdate
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [openBankCombobox, setOpenBankCombobox] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -151,13 +225,56 @@ export const BankingInfoEditor: React.FC<BankingInfoEditorProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="banco">Banco</Label>
-            <Input
-              id="banco"
-              value={formData.banco}
-              onChange={(e) => updateFormData('banco', e.target.value)}
-              disabled={!isEditing}
-              placeholder="Nome do banco"
-            />
+            {isEditing ? (
+              <Popover open={openBankCombobox} onOpenChange={setOpenBankCombobox}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openBankCombobox}
+                    className="w-full justify-between"
+                  >
+                    {formData.banco || "Selecione um banco..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar banco..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhum banco encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {BRAZILIAN_BANKS.map((bank) => (
+                          <CommandItem
+                            key={bank}
+                            value={bank}
+                            onSelect={(currentValue) => {
+                              updateFormData('banco', currentValue === formData.banco ? "" : currentValue);
+                              setOpenBankCombobox(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.banco === bank ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {bank}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <Input
+                id="banco"
+                value={formData.banco}
+                disabled={true}
+                placeholder="Nome do banco"
+              />
+            )}
           </div>
 
           <div>
