@@ -130,17 +130,55 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
       .eq('data_consulta', dateString)
       .in('status', ['pendente', 'confirmado'])
     
+    // Check for professional unavailability/blocks on this date
+    const { data: unavailabilityRecords } = await supabase
+      .from('professional_unavailability')
+      .select('*')
+      .eq('professional_id', professionalIdNumber)
+      .eq('date', dateString)
+    
+    // Check if the entire day is blocked
+    const isDayBlocked = unavailabilityRecords?.some(record => record.all_day)
+    if (isDayBlocked) {
+      return [] // No times available - entire day is blocked
+    }
+    
     const occupiedTimes = new Set(
       (existingAppointments || []).map(apt => apt.horario.substring(0, 5))
     )
     
+    // Get blocked time ranges for this day
+    const blockedTimeRanges = (unavailabilityRecords || [])
+      .filter(record => !record.all_day && record.start_time && record.end_time)
+      .map(record => ({
+        start: record.start_time,
+        end: record.end_time
+      }))
+    
+    // Helper function to check if a time slot is blocked
+    const isTimeBlocked = (timeSlot: string) => {
+      return blockedTimeRanges.some(range => {
+        const slotTime = new Date(`2000-01-01T${timeSlot}:00`)
+        const startTime = new Date(`2000-01-01T${range.start}`)
+        const endTime = new Date(`2000-01-01T${range.end}`)
+        
+        // Check if the slot falls within any blocked time range
+        // We also need to check if the consultation would end within the blocked period
+        const slotEndTime = new Date(slotTime.getTime() + 50 * 60 * 1000) // 50 minutes consultation
+        
+        return (slotTime >= startTime && slotTime < endTime) || 
+               (slotEndTime > startTime && slotEndTime <= endTime) ||
+               (slotTime < startTime && slotEndTime > endTime)
+      })
+    }
+
     // Generate time slots for each session range
     const allTimeSlots = []
     daysSessions.forEach(session => {
       const slots = generateTimeSlots(session.start_time, session.end_time, 50)
       slots.forEach(slot => {
-        // Only add if not occupied
-        if (!occupiedTimes.has(slot)) {
+        // Only add if not occupied and not blocked
+        if (!occupiedTimes.has(slot) && !isTimeBlocked(slot)) {
           allTimeSlots.push({
             id: `${session.id}-${slot}`,
             day: session.day,
