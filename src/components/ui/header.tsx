@@ -15,7 +15,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, signOut } = useAuth()
+  const { user, loading, signOut } = useAuth()
   const { profile } = useUserProfile()
   const { isAdmin } = useAdminAuth()
   const { isProfessional } = useUserType()
@@ -24,7 +24,7 @@ const Header = () => {
     { name: "Home", href: "/" },
     { name: "Sobre", href: "/sobre" },
     { name: "Profissionais", href: "/profissionais" },
-    { name: "Diário Emocional", href: user ? "/diario-emocional" : "/diario-emocional/experiencia" },
+    { name: "Diário Emocional", href: loading ? "/diario-emocional/experiencia" : (user ? "/diario-emocional" : "/diario-emocional/experiencia") },
     { name: "Blog", href: "/blog" },
     { name: "Trabalhe Conosco", href: "/trabalhe-conosco" },
     { name: "Contato", href: "/contato" },
