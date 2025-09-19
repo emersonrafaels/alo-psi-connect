@@ -29,6 +29,7 @@ const MoodEntry = () => {
   const { toast } = useToast();
 
   const editDate = searchParams.get('date');
+  const [selectedTab, setSelectedTab] = useState('texto');
   
   const [formData, setFormData] = useState({
     date: editDate || new Date().toISOString().split('T')[0],
@@ -431,7 +432,7 @@ const MoodEntry = () => {
               {/* Journal & Audio */}
               <div className="space-y-3">
                 <Label>Reflexões do Dia (opcional)</Label>
-                <Tabs defaultValue="texto" className="w-full">
+                <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="texto">Texto</TabsTrigger>
                     <TabsTrigger value="audio">Áudio</TabsTrigger>
@@ -453,6 +454,10 @@ const MoodEntry = () => {
                       entryDate={formData.date}
                       existingAudioUrl={formData.audio_url || undefined}
                       onAudioUploaded={(audioUrl) => setFormData(prev => ({ ...prev, audio_url: audioUrl }))}
+                      onTranscriptionComplete={(transcription, reflection) => {
+                        setFormData(prev => ({ ...prev, journal_text: reflection }));
+                        setSelectedTab('texto');
+                      }}
                       className="w-full"
                     />
                   </TabsContent>

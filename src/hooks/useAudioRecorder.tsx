@@ -14,6 +14,8 @@ interface UseAudioRecorderReturn {
   uploadAudio: (userId: string, entryDate: string) => Promise<string | null>;
   hasPermission: boolean;
   requestPermission: () => Promise<boolean>;
+  audioChunksRef: React.MutableRefObject<Blob[]>;
+  mediaRecorderRef: React.MutableRefObject<MediaRecorder | null>;
 }
 
 export const useAudioRecorder = (): UseAudioRecorderReturn => {
@@ -185,5 +187,7 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
     uploadAudio,
     hasPermission,
     requestPermission,
+    audioChunksRef,
+    mediaRecorderRef,
   };
 };

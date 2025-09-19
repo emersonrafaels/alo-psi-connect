@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Mic, MicOff, Play, Pause, Trash2, Upload } from 'lucide-react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
 interface AudioRecorderProps {
   onAudioUploaded?: (audioUrl: string) => void;
+  onTranscriptionComplete?: (transcription: string, reflection: string) => void;
   existingAudioUrl?: string;
   userId: string;
   entryDate: string;
@@ -15,6 +17,7 @@ interface AudioRecorderProps {
 
 export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   onAudioUploaded,
+  onTranscriptionComplete,
   existingAudioUrl,
   userId,
   entryDate,
@@ -29,10 +32,13 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     deleteRecording,
     uploadAudio,
     hasPermission,
-    requestPermission
+    requestPermission,
+    audioChunksRef,
+    mediaRecorderRef
   } = useAudioRecorder();
   
   const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isTranscribing, setIsTranscribing] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement>(null);
 
   const formatDuration = (seconds: number) => {
@@ -57,6 +63,52 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     const uploadedUrl = await uploadAudio(userId, entryDate);
     if (uploadedUrl && onAudioUploaded) {
       onAudioUploaded(uploadedUrl);
+    }
+  };
+
+  const handleTranscribeAndUpload = async () => {
+    if (!audioUrl || !audioChunksRef.current) return;
+    
+    setIsTranscribing(true);
+    
+    try {
+      // First upload the audio
+      const uploadedUrl = await uploadAudio(userId, entryDate);
+      
+      if (uploadedUrl && onAudioUploaded) {
+        onAudioUploaded(uploadedUrl);
+      }
+
+      // Then transcribe the audio
+      const audioBlob = new Blob(audioChunksRef.current, { 
+        type: mediaRecorderRef.current?.mimeType || 'audio/webm'
+      });
+      
+      // Convert to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      
+      reader.onload = async () => {
+        const base64Audio = (reader.result as string).split(',')[1];
+        
+        const { data: transcriptionData, error } = await supabase.functions.invoke('transcribe-audio', {
+          body: { audio: base64Audio }
+        });
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (transcriptionData && onTranscriptionComplete) {
+          onTranscriptionComplete(transcriptionData.transcription, transcriptionData.reflection);
+        }
+        
+        setIsTranscribing(false);
+      };
+      
+    } catch (error) {
+      console.error('Error transcribing audio:', error);
+      setIsTranscribing(false);
     }
   };
 
@@ -177,27 +229,49 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
             </div>
           </div>
           
+          {isTranscribing && (
+            <div className="bg-primary/10 rounded-lg p-3 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm font-medium text-primary">Transcrevendo com Alô, Psi...</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Aguarde enquanto a IA processa seu áudio</p>
+            </div>
+          )}
+          
           <div className="flex gap-2">
             <Button 
               onClick={deleteRecording}
               variant="outline"
               size="sm"
               className="flex-1"
-              disabled={state === 'uploading'}
+              disabled={state === 'uploading' || isTranscribing}
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Deletar
             </Button>
             
-            <Button 
-              onClick={handleUpload}
-              size="sm"
-              className="flex-1"
-              disabled={state === 'uploading'}
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              {state === 'uploading' ? 'Salvando...' : 'Salvar'}
-            </Button>
+            {onTranscriptionComplete ? (
+              <Button 
+                onClick={handleTranscribeAndUpload}
+                size="sm"
+                className="flex-1"
+                disabled={state === 'uploading' || isTranscribing}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {isTranscribing ? 'Transcrevendo...' : state === 'uploading' ? 'Salvando...' : 'Transcrever e Salvar'}
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleUpload}
+                size="sm"
+                className="flex-1"
+                disabled={state === 'uploading' || isTranscribing}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {state === 'uploading' ? 'Salvando...' : 'Salvar'}
+              </Button>
+            )}
           </div>
         </div>
       )}
