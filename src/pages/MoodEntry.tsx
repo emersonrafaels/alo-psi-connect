@@ -15,6 +15,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Save, Heart, Edit, AlertCircle, Download, Share } from 'lucide-react';
+import { AudioRecorder } from '@/components/ui/audio-recorder';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { parseISODateLocal } from '@/lib/utils';
@@ -36,6 +38,7 @@ const MoodEntry = () => {
     sleep_hours: '',
     sleep_quality: [3],
     journal_text: '',
+    audio_url: '',
     tags: [] as string[],
   });
 
@@ -63,6 +66,7 @@ const MoodEntry = () => {
           sleep_hours: existingEntry.sleep_hours?.toString() || '',
           sleep_quality: [existingEntry.sleep_quality || 3],
           journal_text: existingEntry.journal_text || '',
+          audio_url: existingEntry.audio_url || '',
           tags: existingEntry.tags || [],
         });
         setCurrentEntry(existingEntry);
@@ -77,6 +81,7 @@ const MoodEntry = () => {
           sleep_hours: '',
           sleep_quality: [3],
           journal_text: '',
+          audio_url: '',
           tags: [],
         });
         setCurrentEntry(null);
@@ -123,6 +128,7 @@ const MoodEntry = () => {
         sleep_hours: formData.sleep_hours ? parseFloat(formData.sleep_hours) : undefined,
         sleep_quality: formData.sleep_quality[0],
         journal_text: formData.journal_text || undefined,
+        audio_url: formData.audio_url || undefined,
         tags: formData.tags.length > 0 ? formData.tags : undefined,
       };
 
@@ -422,16 +428,35 @@ const MoodEntry = () => {
                 )}
               </div>
 
-              {/* Journal */}
-              <div className="space-y-2">
-                <Label htmlFor="journal">Reflexões do Dia (opcional)</Label>
-                <Textarea
-                  id="journal"
-                  value={formData.journal_text}
-                  onChange={(e) => setFormData(prev => ({ ...prev, journal_text: e.target.value }))}
-                  placeholder="Como foi seu dia? O que você aprendeu? Como se sentiu? Aconteceu algo especial? Use este espaço para refletir sobre seus sentimentos e experiências..."
-                  className="min-h-32"
-                />
+              {/* Journal & Audio */}
+              <div className="space-y-3">
+                <Label>Reflexões do Dia (opcional)</Label>
+                <Tabs defaultValue="texto" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="texto">Texto</TabsTrigger>
+                    <TabsTrigger value="audio">Áudio</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="texto" className="space-y-2">
+                    <Textarea
+                      id="journal"
+                      value={formData.journal_text}
+                      onChange={(e) => setFormData(prev => ({ ...prev, journal_text: e.target.value }))}
+                      placeholder="Como foi seu dia? O que você aprendeu? Como se sentiu? Aconteceu algo especial? Use este espaço para refletir sobre seus sentimentos e experiências..."
+                      className="min-h-32"
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="audio" className="space-y-2">
+                    <AudioRecorder
+                      userId={user?.id || ''}
+                      entryDate={formData.date}
+                      existingAudioUrl={formData.audio_url || undefined}
+                      onAudioUploaded={(audioUrl) => setFormData(prev => ({ ...prev, audio_url: audioUrl }))}
+                      className="w-full"
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
 
               {/* Submit */}

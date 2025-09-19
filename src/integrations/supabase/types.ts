@@ -279,6 +279,7 @@ export type Database = {
       mood_entries: {
         Row: {
           anxiety_level: number | null
+          audio_url: string | null
           created_at: string | null
           date: string
           energy_level: number | null
@@ -294,6 +295,7 @@ export type Database = {
         }
         Insert: {
           anxiety_level?: number | null
+          audio_url?: string | null
           created_at?: string | null
           date: string
           energy_level?: number | null
@@ -309,6 +311,7 @@ export type Database = {
         }
         Update: {
           anxiety_level?: number | null
+          audio_url?: string | null
           created_at?: string | null
           date?: string
           energy_level?: number | null

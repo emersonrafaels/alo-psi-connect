@@ -15,6 +15,7 @@ export interface MoodEntry {
   sleep_hours?: number;
   sleep_quality?: number;
   journal_text?: string;
+  audio_url?: string;
   tags?: string[];
   created_at: string;
   updated_at: string;
