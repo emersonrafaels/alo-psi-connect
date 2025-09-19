@@ -24,6 +24,16 @@ const MoodExperience = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  
+  // All hooks must be called at the top level, before any conditional returns
+  const { 
+    demoEntries, 
+    canAddMore, 
+    entriesLeft, 
+    addDemoEntry, 
+    getDemoStats,
+    isAtLimit 
+  } = useMoodExperience();
 
   // Redirect authenticated users to the main diary page
   useEffect(() => {
@@ -43,14 +53,6 @@ const MoodExperience = () => {
       </div>
     );
   }
-  const { 
-    demoEntries, 
-    canAddMore, 
-    entriesLeft, 
-    addDemoEntry, 
-    getDemoStats,
-    isAtLimit 
-  } = useMoodExperience();
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
