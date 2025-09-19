@@ -35,6 +35,20 @@ const MoodExperience = () => {
     isAtLimit 
   } = useMoodExperience();
 
+  // All state must be declared at the top level
+  const [formData, setFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
+    mood_score: [5],
+    energy_level: [3],
+    anxiety_level: [3],
+    sleep_hours: '',
+    sleep_quality: [3],
+    journal_text: '',
+    tags: [] as string[],
+  });
+
+  const [newTag, setNewTag] = useState('');
+
   // Redirect authenticated users to the main diary page
   useEffect(() => {
     if (!authLoading && user) {
@@ -53,19 +67,6 @@ const MoodExperience = () => {
       </div>
     );
   }
-
-  const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    mood_score: [5],
-    energy_level: [3],
-    anxiety_level: [3],
-    sleep_hours: '',
-    sleep_quality: [3],
-    journal_text: '',
-    tags: [] as string[],
-  });
-
-  const [newTag, setNewTag] = useState('');
 
   const handleSubmit = () => {
     if (!canAddMore) {
