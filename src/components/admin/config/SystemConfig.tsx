@@ -48,33 +48,31 @@ export const SystemConfig = () => {
   // Separate state for textarea input
   const [heroImagesInput, setHeroImagesInput] = useState('');
 
-  // Update formData when configs are loaded
-  useEffect(() => {
-    if (!loading && configs.length > 0) {
-      const heroImages = getConfig('homepage', 'hero_images', ['https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png']);
-      
-      setFormData({
-        // System settings
-        auto_cancel_hours: getConfig('system', 'auto_cancel_hours', 24),
-        max_file_size_mb: getConfig('system', 'max_file_size_mb', 10),
-        // Email settings
-        sender_name: getConfig('system', 'sender_name', 'AloPsi'),
-        support_email: getConfig('system', 'support_email', 'contato@alopsi.com.br'),
-        // Payment settings
-        mercado_pago_access_token: getConfig('system', 'mercado_pago_access_token', ''),
-        payment_success_redirect: getConfig('system', 'payment_success_redirect', '/pagamento-sucesso'),
-        payment_cancel_redirect: getConfig('system', 'payment_cancel_redirect', '/pagamento-cancelado'),
-        // Homepage settings
-        hero_carousel_mode: getConfig('homepage', 'hero_carousel_mode', false),
-        hero_carousel_auto_play: getConfig('homepage', 'hero_carousel_auto_play', false),
-        hero_carousel_auto_play_delay: getConfig('homepage', 'hero_carousel_auto_play_delay', 5),
-        hero_images: heroImages
-      });
+  const handleSaveGuestLimit = async () => {
+    try {
+      const limitNumber = parseInt(guestLimit, 10);
+      if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > 10) {
+        toast({
+          title: "Valor inválido",
+          description: "O limite deve ser um número entre 1 e 10.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      // Initialize the textarea input with the joined URLs
-      setHeroImagesInput(Array.isArray(heroImages) ? heroImages.join(', ') : '');
+      await updateConfig('system', 'guest_diary_limit', guestLimit);
+      toast({
+        title: "Configuração salva",
+        description: "O limite de entradas guest foi atualizado com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar a configuração.",
+        variant: "destructive",
+      });
     }
-  }, [loading, configs, getConfig]);
+  };
 
   // Fetch system metrics and analytics
   useEffect(() => {

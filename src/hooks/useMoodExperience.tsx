@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useGuestConfig } from './useGuestConfig';
 
 export interface DemoMoodEntry {
   id: string;
@@ -13,29 +14,33 @@ export interface DemoMoodEntry {
 }
 
 const DEMO_STORAGE_KEY = 'mood_diary_demo_entries';
-const DEMO_LIMIT = 3;
 
 export const useMoodExperience = () => {
+  const { getGuestDiaryLimit, loading: configLoading } = useGuestConfig();
   const [demoEntries, setDemoEntries] = useState<DemoMoodEntry[]>([]);
   const [canAddMore, setCanAddMore] = useState(true);
 
   // Load demo entries from localStorage
   useEffect(() => {
+    if (configLoading) return;
+    
+    const limit = getGuestDiaryLimit();
     const stored = localStorage.getItem(DEMO_STORAGE_KEY);
     if (stored) {
       try {
         const entries = JSON.parse(stored);
         setDemoEntries(entries);
-        setCanAddMore(entries.length < DEMO_LIMIT);
+        setCanAddMore(entries.length < limit);
       } catch (error) {
         console.error('Error parsing demo entries:', error);
         setDemoEntries([]);
       }
     }
-  }, []);
+  }, [configLoading, getGuestDiaryLimit]);
 
   const addDemoEntry = (entry: Omit<DemoMoodEntry, 'id'>) => {
-    if (demoEntries.length >= DEMO_LIMIT) {
+    const limit = getGuestDiaryLimit();
+    if (demoEntries.length >= limit) {
       return false; // Can't add more
     }
 
@@ -46,7 +51,7 @@ export const useMoodExperience = () => {
 
     const updatedEntries = [newEntry, ...demoEntries];
     setDemoEntries(updatedEntries);
-    setCanAddMore(updatedEntries.length < DEMO_LIMIT);
+    setCanAddMore(updatedEntries.length < limit);
     
     localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(updatedEntries));
     return true;
@@ -73,13 +78,17 @@ export const useMoodExperience = () => {
     };
   };
 
+  const limit = getGuestDiaryLimit();
+  
   return {
     demoEntries,
     canAddMore,
-    entriesLeft: DEMO_LIMIT - demoEntries.length,
+    entriesLeft: limit - demoEntries.length,
     addDemoEntry,
     clearDemoData,
     getDemoStats,
-    isAtLimit: demoEntries.length >= DEMO_LIMIT,
+    isAtLimit: demoEntries.length >= limit,
+    limit,
+    loading: configLoading,
   };
 };
