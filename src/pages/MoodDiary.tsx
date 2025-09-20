@@ -7,14 +7,18 @@ import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Calendar, Plus, TrendingUp, Heart, BarChart3 } from 'lucide-react';
+import { Calendar, Plus, TrendingUp, Heart, BarChart3, Share2, Mail, Download } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { shareWhatsApp, shareTelegram, shareEmail, copyToClipboard } from '@/utils/shareHelpers';
+import { generateProfessionalPDF, downloadPDF } from '@/utils/pdfGenerator';
+import { useToast } from '@/hooks/use-toast';
 
 const MoodDiary = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { profile } = useUserProfile();
   const { entries, loading: entriesLoading } = useMoodEntries();
+  const { toast } = useToast();
 
   // Redirect non-authenticated users to experience page
   useEffect(() => {
@@ -22,6 +26,108 @@ const MoodDiary = () => {
       navigate('/diario-emocional/experiencia');
     }
   }, [user, authLoading, navigate]);
+
+  const handleShare = async (platform: string, entry?: any) => {
+    const shareData = entry || (entries.length > 0 ? entries[0] : null);
+    
+    if (!shareData) {
+      toast({
+        title: "Nenhuma entrada encontrada",
+        description: "Adicione uma entrada primeiro para compartilhar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const stats = {
+      totalEntries: entries.length,
+      avgMood: entries.length > 0 ? entries.reduce((sum, e) => sum + e.mood_score, 0) / entries.length : 0,
+      avgEnergy: entries.length > 0 ? entries.reduce((sum, e) => sum + e.energy_level, 0) / entries.length : 0,
+      avgAnxiety: entries.length > 0 ? entries.reduce((sum, e) => sum + e.anxiety_level, 0) / entries.length : 0,
+    };
+
+    const message = `🌟 Meu Diário Emocional de ${new Date(shareData.date).toLocaleDateString('pt-BR')}
+
+📊 Como estou me sentindo:
+• Humor: ${shareData.mood_score}/10
+• Energia: ${shareData.energy_level}/5  
+• Ansiedade: ${shareData.anxiety_level}/5
+${shareData.sleep_quality ? `• Qualidade do sono: ${shareData.sleep_quality}/5` : ''}
+
+${shareData.journal_text ? `💭 Reflexão: "${shareData.journal_text.substring(0, 100)}..."` : ''}
+
+📈 Estatísticas gerais:
+• Total de entradas: ${stats.totalEntries}
+• Humor médio: ${stats.avgMood.toFixed(1)}/10
+
+#DiarioEmocional #BemEstar #AutoCuidado`;
+
+    try {
+      switch (platform) {
+        case 'whatsapp':
+          shareWhatsApp(message);
+          break;
+        case 'telegram':
+          shareTelegram(message);
+          break;
+        case 'email':
+          shareEmail('Meu Diário Emocional', message);
+          break;
+        case 'copy':
+          await copyToClipboard(message);
+          toast({
+            title: "Copiado!",
+            description: "Conteúdo copiado para a área de transferência.",
+          });
+          break;
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao compartilhar",
+        description: "Não foi possível compartilhar o conteúdo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const exportToPDF = () => {
+    if (entries.length === 0) {
+      toast({
+        title: "Nenhuma entrada encontrada",
+        description: "Adicione uma entrada primeiro para gerar o PDF.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const recentEntry = entries[0];
+    const stats = {
+      totalEntries: entries.length,
+      avgMood: entries.reduce((sum, e) => sum + e.mood_score, 0) / entries.length,
+      avgEnergy: entries.reduce((sum, e) => sum + e.energy_level, 0) / entries.length,
+      avgAnxiety: entries.reduce((sum, e) => sum + e.anxiety_level, 0) / entries.length,
+    };
+
+    try {
+      const pdf = generateProfessionalPDF(recentEntry, stats, { 
+        includeLogo: true, 
+        includeStats: true, 
+        includeGraphs: false 
+      });
+      downloadPDF(pdf, 'diario-emocional');
+      
+      toast({
+        title: "PDF gerado com sucesso!",
+        description: "Seu relatório foi baixado.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Não foi possível gerar o relatório.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (authLoading || entriesLoading) {
     return (
@@ -147,30 +253,79 @@ const MoodDiary = () => {
                 </div>
               )}
               
-              <div className="flex gap-3 justify-center">
-                <Button 
-                  onClick={() => navigate('/diario-emocional/nova-entrada')}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  {todayEntry ? 'Editar Entrada de Hoje' : 'Nova Entrada'}
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => navigate('/diario-emocional/historico')}
-                  className="flex items-center gap-2"
-                >
-                  <Calendar className="h-4 w-4" />
-                  Ver Histórico
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => navigate('/diario-emocional/analises')}
-                  className="flex items-center gap-2"
-                >
-                  <BarChart3 className="h-4 w-4" />
-                  Ver Análises
-                </Button>
+              <div className="space-y-4">
+                <div className="flex gap-3 justify-center flex-wrap">
+                  <Button 
+                    onClick={() => navigate('/diario-emocional/nova-entrada')}
+                    className="flex items-center gap-2"
+                    size="lg"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {todayEntry ? 'Editar Entrada de Hoje' : 'Nova Entrada'}
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate('/diario-emocional/historico')}
+                    className="flex items-center gap-2"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Ver Histórico
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate('/diario-emocional/analises')}
+                    className="flex items-center gap-2"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    Ver Análises
+                  </Button>
+                </div>
+                
+                {entries.length > 0 && (
+                  <div className="pt-4 border-t">
+                    <p className="text-sm text-muted-foreground text-center mb-3">
+                      Compartilhar progresso:
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <Button 
+                        onClick={() => handleShare('whatsapp')}
+                        variant="outline" 
+                        size="sm"
+                        className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                      >
+                        <Share2 className="mr-2 h-4 w-4" />
+                        WhatsApp
+                      </Button>
+                      <Button 
+                        onClick={() => handleShare('telegram')}
+                        variant="outline" 
+                        size="sm"
+                        className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                      >
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Telegram
+                      </Button>
+                      <Button 
+                        onClick={() => handleShare('email')}
+                        variant="outline" 
+                        size="sm"
+                        className="bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+                      >
+                        <Mail className="mr-2 h-4 w-4" />
+                        Email
+                      </Button>
+                      <Button 
+                        onClick={exportToPDF}
+                        variant="outline" 
+                        size="sm"
+                        className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Salvar PDF
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
