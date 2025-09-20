@@ -441,12 +441,21 @@ const MoodExperience = () => {
                         Registrar Entrada ({entriesLeft} restantes)
                       </Button>
                       
-                      <div className="flex gap-2 flex-wrap">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button 
+                          onClick={() => handleShare('whatsapp')}
+                          variant="outline" 
+                          size="sm"
+                          className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                        >
+                          <Share2 className="mr-2 h-4 w-4" />
+                          WhatsApp
+                        </Button>
                         <Button 
                           onClick={() => handleShare('telegram')}
                           variant="outline" 
                           size="sm"
-                          className="flex-1 min-w-[100px] bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                          className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                         >
                           <Share2 className="mr-2 h-4 w-4" />
                           Telegram
@@ -455,10 +464,19 @@ const MoodExperience = () => {
                           onClick={() => handleShare('email')}
                           variant="outline" 
                           size="sm"
-                          className="flex-1 min-w-[100px] bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+                          className="bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
                         >
                           <Mail className="mr-2 h-4 w-4" />
                           Email
+                        </Button>
+                        <Button 
+                          onClick={exportToPDF}
+                          variant="outline" 
+                          size="sm"
+                          className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Salvar PDF
                         </Button>
                       </div>
                     </div>
