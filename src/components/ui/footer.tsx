@@ -172,4 +172,6 @@ const Footer = () => {
       </div>
     </footer>;
 };
+
+export { Footer };
 export default Footer;

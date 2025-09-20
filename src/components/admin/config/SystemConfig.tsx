@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
+import { useToast } from '@/hooks/use-toast';
 import { Save, Settings, Mail, CreditCard, Clock, TrendingUp, Users, Database, Shield, AlertTriangle, Image, ToggleLeft } from 'lucide-react';
 import { MetricsCard } from './MetricsCard';
 import { UsageChart } from './UsageChart';
@@ -17,7 +18,9 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const SystemConfig = () => {
   const { getConfig, updateConfig, loading, hasPermission, configs } = useSystemConfig(['system', 'homepage']);
+  const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [guestLimit, setGuestLimit] = useState('3');
   const [systemMetrics, setSystemMetrics] = useState({
     totalAppointments: 0,
     totalUsers: 0,
