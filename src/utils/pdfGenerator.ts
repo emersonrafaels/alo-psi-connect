@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { DemoMoodEntry } from '@/hooks/useMoodExperience';
+import { getTodayLocalDateString } from '@/lib/utils';
 
 interface PDFConfig {
   includeLogo?: boolean;
@@ -200,6 +201,6 @@ export const generateProfessionalPDF = (
 };
 
 export const downloadPDF = (pdf: jsPDF, filename: string = 'diario-emocional') => {
-  const timestamp = new Date().toISOString().split('T')[0];
+  const timestamp = getTodayLocalDateString();
   pdf.save(`${filename}-${timestamp}.pdf`);
 };

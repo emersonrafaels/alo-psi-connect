@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Download, ChevronUp, ChevronDown } from 'lucide-react';
 import { SystemConfig } from '@/hooks/useSystemConfig';
+import { getTodayLocalDateString } from '@/lib/utils';
 
 interface ConfigDataTableProps {
   title: string;
@@ -82,7 +83,7 @@ export const ConfigDataTable = ({ title, description, data, onEdit }: ConfigData
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `configuracoes_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `configuracoes_${getTodayLocalDateString()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

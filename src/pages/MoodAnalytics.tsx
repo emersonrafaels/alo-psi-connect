@@ -71,7 +71,7 @@ const MoodAnalytics = () => {
       const date = parseISODateLocal(entry.date);
       const startOfWeek = new Date(date);
       startOfWeek.setDate(date.getDate() - date.getDay());
-      const weekKey = startOfWeek.toISOString().split('T')[0];
+      const weekKey = `${startOfWeek.getFullYear()}-${String(startOfWeek.getMonth() + 1).padStart(2, '0')}-${String(startOfWeek.getDate()).padStart(2, '0')}`;
       
       if (!weeks[weekKey]) weeks[weekKey] = [];
       weeks[weekKey].push(entry);

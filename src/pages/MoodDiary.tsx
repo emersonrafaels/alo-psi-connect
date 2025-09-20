@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { shareWhatsApp, shareTelegram, shareEmail, copyToClipboard } from '@/utils/shareHelpers';
 import { generateProfessionalPDF, downloadPDF } from '@/utils/pdfGenerator';
 import { useToast } from '@/hooks/use-toast';
+import { getTodayLocalDateString } from '@/lib/utils';
 
 const MoodDiary = () => {
   const navigate = useNavigate();
@@ -149,7 +150,7 @@ ${shareData.journal_text ? `💭 Reflexão: "${shareData.journal_text.substring(
     );
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayLocalDateString();
   const todayEntry = entries.find(entry => entry.date === today);
   
   const recentEntries = entries.slice(0, 7);

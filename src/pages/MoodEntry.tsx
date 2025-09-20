@@ -19,7 +19,7 @@ import { AudioRecorder } from '@/components/ui/audio-recorder';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { parseISODateLocal } from '@/lib/utils';
+import { parseISODateLocal, getTodayLocalDateString } from '@/lib/utils';
 
 const MoodEntry = () => {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ const MoodEntry = () => {
   const [selectedTab, setSelectedTab] = useState('texto');
   
   const [formData, setFormData] = useState({
-    date: editDate || new Date().toISOString().split('T')[0],
+    date: editDate || getTodayLocalDateString(),
     mood_score: [5],
     energy_level: [3],
     anxiety_level: [3],
@@ -147,7 +147,7 @@ const MoodEntry = () => {
 
   const handleDateChange = (newDate: string) => {
     // Prevent selecting future dates
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayLocalDateString();
     if (newDate > today) {
       toast({
         title: "Data inválida",
@@ -337,7 +337,7 @@ const MoodEntry = () => {
                   type="date"
                   value={formData.date}
                   onChange={(e) => handleDateChange(e.target.value)}
-                  max={new Date().toISOString().split('T')[0]}
+                  max={getTodayLocalDateString()}
                   disabled={checkingExisting}
                 />
                 <p className="text-sm text-muted-foreground">

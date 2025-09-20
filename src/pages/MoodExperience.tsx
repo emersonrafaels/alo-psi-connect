@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { generateProfessionalPDF, downloadPDF } from "@/utils/pdfGenerator";
 import { generateWhatsAppMessage, shareWhatsApp, shareTelegram, shareEmail, copyToClipboard } from "@/utils/shareHelpers";
 import { Calendar, FileText, Share2, TrendingUp, Heart, Brain, Zap, Moon, Tag, Download, MessageCircle, Sparkles, Target, Mail, Copy } from "lucide-react";
-import { formatDateBR } from "@/lib/utils";
+import { formatDateBR, getTodayLocalDateString } from "@/lib/utils";
 
 const MoodExperience = () => {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const MoodExperience = () => {
 
   // All state must be declared at the top level
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayLocalDateString(),
     mood_score: [5],
     energy_level: [3],
     anxiety_level: [3],
@@ -101,7 +101,7 @@ const MoodExperience = () => {
       
       // Reset form
       setFormData({
-        date: new Date().toISOString().split('T')[0],
+        date: getTodayLocalDateString(),
         mood_score: [5],
         energy_level: [3],
         anxiety_level: [3],
@@ -315,7 +315,7 @@ const MoodExperience = () => {
                         type="date"
                         value={formData.date}
                         onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                        max={new Date().toISOString().split('T')[0]}
+                        max={getTodayLocalDateString()}
                       />
                     </div>
 

@@ -47,6 +47,15 @@ export function parseISODateLocal(isoDateString: string): Date {
   return new Date(isoDateString + 'T00:00:00');
 }
 
+export function getTodayLocalDateString(): string {
+  // Get today's date in local timezone as YYYY-MM-DD string
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function formatDateBR(date: Date | string, formatType: 'short' | 'long' | 'numeric' = 'numeric'): string {
   const dateObj = typeof date === 'string' ? parseISODateLocal(date) : date;
   
