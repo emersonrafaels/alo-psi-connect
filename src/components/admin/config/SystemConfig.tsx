@@ -333,7 +333,7 @@ export const SystemConfig = () => {
                     value={guestLimit}
                     onChange={(e) => setGuestLimit(e.target.value)}
                     min={1}
-                    max={10}
+                    max={100}
                   />
                   <p className="text-sm text-muted-foreground">
                     Quantidade máxima de entradas no diário emocional para usuários não logados
