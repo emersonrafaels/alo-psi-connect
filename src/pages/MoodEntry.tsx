@@ -27,7 +27,7 @@ const MoodEntry = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { profile, loading } = useUserProfile();
-  const { getEntryByDate, createOrUpdateEntry } = useMoodEntries();
+  const { getEntryByDate, getEntryById, createOrUpdateEntry } = useMoodEntries();
   const { toast } = useToast();
 
   const editDate = searchParams.get('date');
@@ -98,6 +98,49 @@ const MoodEntry = () => {
     }
   };
 
+  // Load entry by ID (priority method)
+  const loadEntryById = async (id: string) => {
+    if (!user) return;
+    
+    setCheckingExisting(true);
+    try {
+      const existingEntry = await getEntryById(id);
+      
+      if (existingEntry) {
+        // Load existing data into form
+        setFormData({
+          date: existingEntry.date,
+          mood_score: [existingEntry.mood_score],
+          energy_level: [existingEntry.energy_level],
+          anxiety_level: [existingEntry.anxiety_level],
+          sleep_hours: existingEntry.sleep_hours?.toString() || '',
+          sleep_quality: [existingEntry.sleep_quality || 3],
+          journal_text: existingEntry.journal_text || '',
+          audio_url: existingEntry.audio_url || '',
+          tags: existingEntry.tags || [],
+        });
+        setCurrentEntry(existingEntry);
+        setIsEditMode(true);
+      } else {
+        toast({
+          title: "Entrada não encontrada",
+          description: "A entrada solicitada não foi encontrada ou você não tem permissão para acessá-la.",
+          variant: "destructive",
+        });
+        navigate('/diario-emocional/nova-entrada');
+      }
+    } catch (error) {
+      console.error('Error loading entry by ID:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar a entrada.",
+        variant: "destructive",
+      });
+    } finally {
+      setCheckingExisting(false);
+    }
+  };
+
   // Redirect non-authenticated users
   useEffect(() => {
     if (!user) {
@@ -116,14 +159,22 @@ const MoodEntry = () => {
       return;
     }
 
-    const targetDate = editDate || getTodayLocalDateString();
+    const entryId = searchParams.get('id');
+    const urlDate = searchParams.get('date');
     
-    console.log('MoodEntry: Loading data for date:', targetDate, 'Profile ID:', profile.id);
+    if (entryId) {
+      // Load by ID (priority method - more reliable)
+      console.log('MoodEntry: Loading entry by ID:', entryId);
+      loadEntryById(entryId);
+    } else {
+      // Load by date (fallback method)
+      const targetDate = urlDate || getTodayLocalDateString();
+      console.log('MoodEntry: Loading data for date:', targetDate, 'Profile ID:', profile.id);
+      checkExistingEntry(targetDate);
+    }
     
-    // Check for existing entry and load data
-    checkExistingEntry(targetDate);
     setInitialized(true);
-  }, [user, profile, loading, editDate]);
+  }, [user, profile, loading, searchParams]);
 
   // Handle user-initiated date changes (when user changes date in the UI)
   useEffect(() => {

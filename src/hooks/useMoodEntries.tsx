@@ -180,6 +180,27 @@ export const useMoodEntries = () => {
     }
   };
 
+  const getEntryById = async (id: string): Promise<MoodEntry | null> => {
+    if (!user) {
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('mood_entries')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', user.id) // Security: ensure entry belongs to user
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching entry by ID:', error);
+      return null;
+    }
+  };
+
   const createOrUpdateEntry = async (entryData: Omit<MoodEntry, 'id' | 'user_id' | 'profile_id' | 'created_at' | 'updated_at'>) => {
     if (!user || !profile) {
       toast({
@@ -260,6 +281,7 @@ export const useMoodEntries = () => {
     updateEntry,
     deleteEntry,
     getEntryByDate,
+    getEntryById,
     createOrUpdateEntry,
     refetch: fetchEntries,
   };
