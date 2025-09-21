@@ -188,7 +188,7 @@ const MoodEntry = () => {
         mood_score: formData.mood_score[0],
         energy_level: formData.energy_level[0],
         anxiety_level: formData.anxiety_level[0],
-        sleep_hours: formData.sleep_hours ? parseInt(formData.sleep_hours) : undefined,
+        sleep_hours: formData.sleep_hours && !isNaN(parseInt(formData.sleep_hours)) ? parseInt(formData.sleep_hours) : undefined,
         sleep_quality: formData.sleep_quality[0],
         journal_text: formData.journal_text || undefined,
         tags: formData.tags.length > 0 ? formData.tags : undefined

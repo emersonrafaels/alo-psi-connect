@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import { DemoMoodEntry } from '@/hooks/useMoodExperience';
-import { getTodayLocalDateString } from '@/lib/utils';
+import { getTodayLocalDateString, parseISODateLocal } from '@/lib/utils';
 
 interface PDFConfig {
   includeLogo?: boolean;
@@ -61,7 +61,7 @@ export const generateProfessionalPDF = (
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    pdf.text(`Data: ${new Date(entry.date).toLocaleDateString('pt-BR')}`, 20, yPosition);
+    pdf.text(`Data: ${parseISODateLocal(entry.date).toLocaleDateString('pt-BR')}`, 20, yPosition);
     yPosition += 15;
 
     // Métricas principais
@@ -101,7 +101,7 @@ export const generateProfessionalPDF = (
       yPosition += 5;
       pdf.setFontSize(14);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Qualidade do Sono', 20, yPosition);
+      pdf.text('Informações do Sono', 20, yPosition);
       yPosition += 10;
 
       if (entry.sleep_hours) {
