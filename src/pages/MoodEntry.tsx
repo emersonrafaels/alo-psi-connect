@@ -48,6 +48,7 @@ const MoodEntry = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [checkingExisting, setCheckingExisting] = useState(false);
   const [currentEntry, setCurrentEntry] = useState<MoodEntry | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   // Check for existing entry when date changes
   const checkExistingEntry = async (date: string) => {
@@ -102,19 +103,37 @@ const MoodEntry = () => {
     }
   }, [user, navigate]);
 
-  // Check for existing entry on date change
+  // Single consolidated useEffect for data loading and initialization
   useEffect(() => {
-    if (user && formData.date) {
+    console.log('MoodEntry useEffect triggered:', { user: !!user, editDate, formDataDate: formData.date, initialized });
+    
+    if (!user) return;
+
+    // Determine the target date (editDate has priority over formData.date)
+    const targetDate = editDate || formData.date;
+    
+    if (!targetDate) return;
+
+    // Prevent multiple initializations for the same conditions
+    const currentKey = `${user.id}-${targetDate}`;
+    
+    if (!initialized) {
+      console.log('Initializing with date:', targetDate);
+      checkExistingEntry(targetDate);
+      setInitialized(true);
+    }
+  }, [user, editDate, initialized]);
+
+  // Handle date changes from user interaction (not initial load)
+  useEffect(() => {
+    if (!user || !initialized) return;
+    
+    // Only check if this is a user-initiated date change (not initial load)
+    if (!editDate && formData.date) {
+      console.log('Date changed by user to:', formData.date);
       checkExistingEntry(formData.date);
     }
-  }, [formData.date, user]);
-
-  // Handle initial load with edit date
-  useEffect(() => {
-    if (editDate && user) {
-      checkExistingEntry(editDate);
-    }
-  }, [editDate, user]);
+  }, [formData.date, user, initialized, editDate]);
 
   const handleSubmit = async () => {
     if (!user) return;
