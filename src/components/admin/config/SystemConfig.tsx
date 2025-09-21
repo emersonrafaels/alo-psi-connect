@@ -77,6 +77,33 @@ export const SystemConfig = () => {
     }
   };
 
+  // Initialize form data with configs
+  useEffect(() => {
+    if (!loading && hasPermission) {
+      // Load all configuration values
+      setFormData({
+        auto_cancel_hours: getConfig('system', 'auto_cancel_hours', 24),
+        max_file_size_mb: getConfig('system', 'max_file_size_mb', 10),
+        sender_name: getConfig('system', 'sender_name', 'AloPsi'),
+        support_email: getConfig('system', 'support_email', 'contato@alopsi.com.br'),
+        mercado_pago_access_token: getConfig('system', 'mercado_pago_access_token', ''),
+        payment_success_redirect: getConfig('system', 'payment_success_redirect', '/pagamento-sucesso'),
+        payment_cancel_redirect: getConfig('system', 'payment_cancel_redirect', '/pagamento-cancelado'),
+        hero_carousel_mode: getConfig('homepage', 'hero_carousel_mode', false),
+        hero_carousel_auto_play: getConfig('homepage', 'hero_carousel_auto_play', false),
+        hero_carousel_auto_play_delay: getConfig('homepage', 'hero_carousel_auto_play_delay', 5),
+        hero_images: getConfig('homepage', 'hero_images', ['https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png'])
+      });
+
+      // Load guest diary limit
+      setGuestLimit(getConfig('system', 'guest_diary_limit', '3'));
+
+      // Set hero images input
+      const heroImages = getConfig('homepage', 'hero_images', ['https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png']);
+      setHeroImagesInput(Array.isArray(heroImages) ? heroImages.join(', ') : heroImages);
+    }
+  }, [loading, hasPermission, getConfig]);
+
   // Fetch system metrics and analytics
   useEffect(() => {
     const fetchSystemMetrics = async () => {
@@ -133,10 +160,23 @@ export const SystemConfig = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Validate guest limit before saving
+      const limitNumber = parseInt(guestLimit, 10);
+      if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > 10) {
+        toast({
+          title: "Erro de validação",
+          description: "O limite de entradas para visitantes deve ser um número entre 1 e 10.",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
+
       await Promise.all([
         // System settings
         updateConfig('system', 'auto_cancel_hours', formData.auto_cancel_hours),
         updateConfig('system', 'max_file_size_mb', formData.max_file_size_mb),
+        updateConfig('system', 'guest_diary_limit', guestLimit),
         // Email settings
         updateConfig('system', 'sender_name', formData.sender_name),
         updateConfig('system', 'support_email', formData.support_email),
@@ -282,6 +322,24 @@ export const SystemConfig = () => {
                   </p>
                   <Badge variant={formData.max_file_size_mb <= 10 ? "default" : "secondary"}>
                     {formData.max_file_size_mb <= 10 ? "Otimizado" : "Alto"}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="guest_diary_limit">Limite de Entradas para Visitantes</Label>
+                  <Input
+                    id="guest_diary_limit"
+                    type="number"
+                    value={guestLimit}
+                    onChange={(e) => setGuestLimit(e.target.value)}
+                    min={1}
+                    max={10}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Quantidade máxima de entradas no diário emocional para usuários não logados
+                  </p>
+                  <Badge variant={parseInt(guestLimit) >= 1 && parseInt(guestLimit) <= 5 ? "default" : "secondary"}>
+                    {parseInt(guestLimit) >= 1 && parseInt(guestLimit) <= 5 ? "Recomendado" : "Personalizado"}
                   </Badge>
                 </div>
               </div>
