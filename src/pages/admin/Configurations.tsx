@@ -3,9 +3,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AIAssistantConfig } from '@/components/admin/config/AIAssistantConfig';
 import { N8NConfig } from '@/components/admin/config/N8NConfig';
 import { SystemConfig } from '@/components/admin/config/SystemConfig';
+import AudioTranscriptionConfig from '@/components/admin/config/AudioTranscriptionConfig';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { Settings, Bot, Webhook, Cog, Shield } from 'lucide-react';
+import { Settings, Bot, Webhook, Cog, Shield, Mic } from 'lucide-react';
 
 export default function Configurations() {
   const { hasRole, loading } = useAdminAuth();
@@ -43,10 +44,14 @@ export default function Configurations() {
         </div>
 
         <Tabs defaultValue="ai" className="space-y-6">
-          <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="ai" className="flex items-center gap-2">
               <Bot className="h-4 w-4" />
               Assistente IA
+            </TabsTrigger>
+            <TabsTrigger value="transcription" className="flex items-center gap-2">
+              <Mic className="h-4 w-4" />
+              Transcrição de Áudio
             </TabsTrigger>
             <TabsTrigger value="n8n" className="flex items-center gap-2">
               <Webhook className="h-4 w-4" />
@@ -62,6 +67,10 @@ export default function Configurations() {
 
           <TabsContent value="ai">
             <AIAssistantConfig />
+          </TabsContent>
+
+          <TabsContent value="transcription">
+            <AudioTranscriptionConfig />
           </TabsContent>
 
           <TabsContent value="n8n">
