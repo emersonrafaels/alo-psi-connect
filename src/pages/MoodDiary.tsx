@@ -252,8 +252,19 @@ const MoodDiary = () => {
                     size="lg"
                   >
                     <Plus className="h-4 w-4" />
-                    {todayEntry ? 'Editar Entrada de Hoje' : 'Nova Entrada'}
+                    Incluir Entrada
                   </Button>
+                  {todayEntry && (
+                    <Button 
+                      variant="secondary"
+                      onClick={() => navigate(`/diario-emocional/nova-entrada?date=${getTodayLocalDateString()}`)}
+                      className="flex items-center gap-2"
+                      size="lg"
+                    >
+                      <Heart className="h-4 w-4" />
+                      Editar Entrada de Hoje
+                    </Button>
+                  )}
                   <Button 
                     variant="outline"
                     onClick={() => navigate('/diario-emocional/historico')}
