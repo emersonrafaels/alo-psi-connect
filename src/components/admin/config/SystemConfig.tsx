@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Settings, Mail, CreditCard, Clock, TrendingUp, Users, Database, Shield, AlertTriangle, Image, ToggleLeft, Share2 } from 'lucide-react';
+import { Save, Settings, Mail, CreditCard, Clock, TrendingUp, Users, Database, Shield, AlertTriangle, Image, ToggleLeft, Share2, Brain } from 'lucide-react';
 import { MetricsCard } from './MetricsCard';
 import { UsageChart } from './UsageChart';
 import { ConfigDataTable } from './ConfigDataTable';
@@ -34,6 +34,9 @@ export const SystemConfig = () => {
     // System settings
     auto_cancel_hours: 24,
     max_file_size_mb: 10,
+    // AI Insights settings
+    guest_insights_limit: 3,
+    user_insights_limit: 6,
     // Email settings
     sender_name: 'AloPsi',
     support_email: 'contato@alopsi.com.br',
@@ -84,6 +87,8 @@ export const SystemConfig = () => {
       setFormData({
         auto_cancel_hours: getConfig('system', 'auto_cancel_hours', 24),
         max_file_size_mb: getConfig('system', 'max_file_size_mb', 10),
+        guest_insights_limit: getConfig('system', 'guest_insights_limit', 3),
+        user_insights_limit: getConfig('system', 'user_insights_limit', 6),
         sender_name: getConfig('system', 'sender_name', 'AloPsi'),
         support_email: getConfig('system', 'support_email', 'contato@alopsi.com.br'),
         mercado_pago_access_token: getConfig('system', 'mercado_pago_access_token', ''),
@@ -177,6 +182,8 @@ export const SystemConfig = () => {
         updateConfig('system', 'auto_cancel_hours', formData.auto_cancel_hours),
         updateConfig('system', 'max_file_size_mb', formData.max_file_size_mb),
         updateConfig('system', 'guest_diary_limit', guestLimit),
+        updateConfig('system', 'guest_insights_limit', formData.guest_insights_limit),
+        updateConfig('system', 'user_insights_limit', formData.user_insights_limit),
         // Email settings
         updateConfig('system', 'sender_name', formData.sender_name),
         updateConfig('system', 'support_email', formData.support_email),
@@ -340,6 +347,58 @@ export const SystemConfig = () => {
                   </p>
                   <Badge variant={parseInt(guestLimit) >= 1 && parseInt(guestLimit) <= 5 ? "default" : "secondary"}>
                     {parseInt(guestLimit) >= 1 && parseInt(guestLimit) <= 5 ? "Recomendado" : "Personalizado"}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* AI Insights Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Configurações de Insights de IA
+              </CardTitle>
+              <CardDescription>
+                Configure os limites de geração de insights para diferentes tipos de usuários
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="guest_insights_limit">Limite de Insights para Visitantes</Label>
+                  <Input
+                    id="guest_insights_limit"
+                    type="number"
+                    value={formData.guest_insights_limit}
+                    onChange={(e) => setFormData(prev => ({ ...prev, guest_insights_limit: parseInt(e.target.value) }))}
+                    min={1}
+                    max={20}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Número máximo de insights de IA que visitantes podem gerar por mês
+                  </p>
+                  <Badge variant={formData.guest_insights_limit >= 1 && formData.guest_insights_limit <= 5 ? "default" : "secondary"}>
+                    {formData.guest_insights_limit >= 1 && formData.guest_insights_limit <= 5 ? "Recomendado" : "Personalizado"}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="user_insights_limit">Limite de Insights para Usuários Logados</Label>
+                  <Input
+                    id="user_insights_limit"
+                    type="number"
+                    value={formData.user_insights_limit}
+                    onChange={(e) => setFormData(prev => ({ ...prev, user_insights_limit: parseInt(e.target.value) }))}
+                    min={1}
+                    max={50}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Número máximo de insights de IA que usuários registrados podem gerar por mês
+                  </p>
+                  <Badge variant={formData.user_insights_limit >= 5 && formData.user_insights_limit <= 10 ? "default" : "secondary"}>
+                    {formData.user_insights_limit >= 5 && formData.user_insights_limit <= 10 ? "Recomendado" : "Personalizado"}
                   </Badge>
                 </div>
               </div>
