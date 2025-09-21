@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useUserProfile } from './useUserProfile';
@@ -36,13 +36,19 @@ export const useMoodEntries = () => {
   const { toast } = useToast();
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const fetchingRef = useRef(false);
 
-  const fetchEntries = async () => {
-    if (!user || !profile) {
-      setLoading(false);
+  const fetchEntries = useCallback(async () => {
+    // Evitar múltiplos fetches simultâneos
+    if (fetchingRef.current || !user || !profile) {
+      if (!user || !profile) {
+        setLoading(false);
+      }
       return;
     }
 
+    fetchingRef.current = true;
+    
     try {
       const { data, error } = await supabase
         .from('mood_entries')
@@ -61,10 +67,11 @@ export const useMoodEntries = () => {
       });
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
-  };
+  }, [user?.id, profile?.id, toast]);
 
-  const createEntry = async (entryData: Omit<MoodEntry, 'id' | 'user_id' | 'profile_id' | 'created_at' | 'updated_at'>) => {
+  const createEntry = useCallback(async (entryData: Omit<MoodEntry, 'id' | 'user_id' | 'profile_id' | 'created_at' | 'updated_at'>) => {
     if (!user || !profile) {
       toast({
         title: "Erro",
@@ -103,9 +110,9 @@ export const useMoodEntries = () => {
       });
       return null;
     }
-  };
+  }, [user, profile, fetchEntries, toast]);
 
-  const updateEntry = async (id: string, entryData: Partial<MoodEntry>) => {
+  const updateEntry = useCallback(async (id: string, entryData: Partial<MoodEntry>) => {
     try {
       const { data, error } = await supabase
         .from('mood_entries')
@@ -132,9 +139,9 @@ export const useMoodEntries = () => {
       });
       return null;
     }
-  };
+  }, [fetchEntries, toast]);
 
-  const deleteEntry = async (id: string) => {
+  const deleteEntry = useCallback(async (id: string) => {
     try {
       const { error } = await supabase
         .from('mood_entries')
@@ -157,9 +164,9 @@ export const useMoodEntries = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [fetchEntries, toast]);
 
-  const getEntryByDate = async (date: string): Promise<MoodEntry | null> => {
+  const getEntryByDate = useCallback(async (date: string): Promise<MoodEntry | null> => {
     if (!user || !profile) {
       return null;
     }
@@ -178,9 +185,9 @@ export const useMoodEntries = () => {
       console.error('Error checking existing entry:', error);
       return null;
     }
-  };
+  }, [user]);
 
-  const getEntryById = async (id: string): Promise<MoodEntry | null> => {
+  const getEntryById = useCallback(async (id: string): Promise<MoodEntry | null> => {
     if (!user) {
       return null;
     }
@@ -199,9 +206,9 @@ export const useMoodEntries = () => {
       console.error('Error fetching entry by ID:', error);
       return null;
     }
-  };
+  }, [user]);
 
-  const createOrUpdateEntry = async (entryData: Omit<MoodEntry, 'id' | 'user_id' | 'profile_id' | 'created_at' | 'updated_at'>) => {
+  const createOrUpdateEntry = useCallback(async (entryData: Omit<MoodEntry, 'id' | 'user_id' | 'profile_id' | 'created_at' | 'updated_at'>) => {
     if (!user || !profile) {
       toast({
         title: "Erro",
@@ -268,11 +275,14 @@ export const useMoodEntries = () => {
       });
       return null;
     }
-  };
+  }, [user, profile, getEntryByDate, fetchEntries, toast]);
 
   useEffect(() => {
-    fetchEntries();
-  }, [user, profile]);
+    // Só executa quando temos usuário e perfil estáveis
+    if (user?.id && profile?.id && !fetchingRef.current) {
+      fetchEntries();
+    }
+  }, [user?.id, profile?.id, fetchEntries]);
 
   return {
     entries,

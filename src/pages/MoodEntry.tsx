@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoodEntries, type MoodEntry } from '@/hooks/useMoodEntries';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -15,7 +17,7 @@ import { SleepSlider } from '@/components/ui/sleep-slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Save, Heart, Edit, AlertCircle, Download, Share } from 'lucide-react';
+import { ArrowLeft, Save, Heart, Edit, AlertCircle, Download, Share, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { AudioRecorder } from '@/components/ui/audio-recorder';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +53,53 @@ const MoodEntry = () => {
   const [checkingExisting, setCheckingExisting] = useState(false);
   const [currentEntry, setCurrentEntry] = useState<MoodEntry | null>(null);
   const [initialized, setInitialized] = useState(false);
+
+  // Persistência local para rascunhos
+  const [localDraft, setLocalDraft, clearLocalDraft] = useLocalStorage(`mood-entry-draft-${user?.id}`, null);
+
+  // Função para auto-save
+  const autoSaveEntry = useCallback(async (data: any) => {
+    if (!user || !profile || !data.date) return;
+    
+    try {
+      const entryData = {
+        date: normalizeDateForStorage(data.date),
+        mood_score: data.mood_score[0],
+        energy_level: data.energy_level[0],
+        anxiety_level: data.anxiety_level[0],
+        sleep_hours: data.sleep_hours ? parseFloat(data.sleep_hours) : undefined,
+        sleep_quality: data.sleep_quality[0],
+        journal_text: data.journal_text || undefined,
+        audio_url: data.audio_url || undefined,
+        tags: data.tags.length > 0 ? data.tags : undefined,
+      };
+
+      const result = await createOrUpdateEntry(entryData);
+      if (result) {
+        // Limpar rascunho local após salvamento bem-sucedido
+        clearLocalDraft();
+        return result;
+      }
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      throw error;
+    }
+  }, [user, profile, createOrUpdateEntry, clearLocalDraft]);
+
+  // Auto-save hook
+  const { isSaving: isAutoSaving, saveStatus, forceSave } = useAutoSave(formData, {
+    enabled: initialized && !checkingExisting && formData.date !== '',
+    delay: 3000, // 3 segundos de delay
+    onSave: autoSaveEntry,
+    onSuccess: () => {
+      console.log('Auto-save successful');
+    },
+    onError: (error) => {
+      console.error('Auto-save error:', error);
+      // Salvar no localStorage como backup em caso de erro
+      setLocalDraft(formData);
+    }
+  });
 
   // Check for existing entry when date changes
   const checkExistingEntry = async (date: string) => {
@@ -141,6 +190,39 @@ const MoodEntry = () => {
     }
   };
 
+  // Recuperar rascunho local no carregamento
+  useEffect(() => {
+    if (localDraft && !initialized && user) {
+      console.log('Recuperando rascunho local:', localDraft);
+      setFormData(localDraft);
+      toast({
+        title: "Rascunho recuperado",
+        description: "Suas alterações não salvas foram recuperadas.",
+      });
+    }
+  }, [localDraft, initialized, user, toast]);
+
+  // Salvar rascunho local a cada mudança
+  useEffect(() => {
+    if (initialized && user && formData.date) {
+      setLocalDraft(formData);
+    }
+  }, [formData, initialized, user, setLocalDraft]);
+
+  // Avisar antes de sair da página com dados não salvos
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (saveStatus === 'saving' || isAutoSaving) {
+        e.preventDefault();
+        e.returnValue = 'Você tem alterações sendo salvas. Tem certeza que deseja sair?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [saveStatus, isAutoSaving]);
+
   // Redirect non-authenticated users
   useEffect(() => {
     if (!user) {
@@ -192,25 +274,24 @@ const MoodEntry = () => {
 
     setSaving(true);
     try {
-      const entryData = {
-        date: normalizeDateForStorage(formData.date),
-        mood_score: formData.mood_score[0],
-        energy_level: formData.energy_level[0],
-        anxiety_level: formData.anxiety_level[0],
-        sleep_hours: formData.sleep_hours ? parseFloat(formData.sleep_hours) : undefined,
-        sleep_quality: formData.sleep_quality[0],
-        journal_text: formData.journal_text || undefined,
-        audio_url: formData.audio_url || undefined,
-        tags: formData.tags.length > 0 ? formData.tags : undefined,
-      };
-
-      const result = await createOrUpdateEntry(entryData);
-
-      if (result) {
-        navigate('/diario-emocional');
-      }
+      await forceSave(); // Forçar auto-save imediato
+      
+      toast({
+        title: "Sucesso",
+        description: "Entrada salva com sucesso!",
+      });
+      
+      // Limpar rascunho local após salvamento manual bem-sucedido
+      clearLocalDraft();
+      
+      navigate('/diario-emocional');
     } catch (error) {
       console.error('Error saving entry:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar entrada. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
@@ -362,7 +443,7 @@ const MoodEntry = () => {
             </div>
           </div>
 
-          {/* Status Alert */}
+              {/* Status Alerts */}
           {isEditMode && (
             <Alert>
               <Edit className="h-4 w-4" />
@@ -371,6 +452,50 @@ const MoodEntry = () => {
                 Suas alterações irão sobrescrever os dados anteriores.
               </AlertDescription>
             </Alert>
+          )}
+
+          {/* Auto-save Status */}
+          {initialized && (
+            <div className="flex items-center gap-2 text-sm">
+              {saveStatus === 'saving' || isAutoSaving ? (
+                <>
+                  <Clock className="h-4 w-4 animate-spin text-blue-500" />
+                  <span className="text-blue-600">Salvando automaticamente...</span>
+                </>
+              ) : saveStatus === 'saved' ? (
+                <>
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-green-600">Rascunho salvo automaticamente</span>
+                </>
+              ) : saveStatus === 'error' ? (
+                <>
+                  <XCircle className="h-4 w-4 text-red-500" />
+                  <span className="text-red-600">Erro no auto-save. Dados salvos localmente.</span>
+                </>
+              ) : null}
+            </div>
+          )}
+
+          {/* Auto-save Status */}
+          {initialized && (
+            <div className="flex items-center gap-2 text-sm">
+              {saveStatus === 'saving' || isAutoSaving ? (
+                <>
+                  <Clock className="h-4 w-4 animate-spin text-blue-500" />
+                  <span className="text-blue-600">Salvando automaticamente...</span>
+                </>
+              ) : saveStatus === 'saved' ? (
+                <>
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-green-600">Rascunho salvo automaticamente</span>
+                </>
+              ) : saveStatus === 'error' ? (
+                <>
+                  <XCircle className="h-4 w-4 text-red-500" />
+                  <span className="text-red-600">Erro no auto-save. Dados salvos localmente.</span>
+                </>
+              ) : null}
+            </div>
           )}
 
           {/* Form */}
@@ -516,6 +641,11 @@ const MoodEntry = () => {
                       onTranscriptionComplete={(transcription, reflection) => {
                         setFormData(prev => ({ ...prev, journal_text: reflection }));
                         setSelectedTab('texto');
+                        
+                        // Auto-save after transcription
+                        setTimeout(() => {
+                          forceSave();
+                        }, 1000);
                       }}
                       className="w-full"
                     />
@@ -527,11 +657,11 @@ const MoodEntry = () => {
               <div className="flex gap-3 pt-4">
                 <Button 
                   onClick={handleSubmit} 
-                  disabled={saving || checkingExisting}
+                  disabled={saving || checkingExisting || isAutoSaving}
                   className="flex-1 flex items-center gap-2"
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? 'Salvando...' : (isEditMode ? 'Atualizar Entrada' : 'Salvar Entrada')}
+                  {saving ? 'Salvando...' : isAutoSaving ? 'Auto-salvando...' : (isEditMode ? 'Atualizar Entrada' : 'Salvar Entrada')}
                 </Button>
                 <Button 
                   variant="outline" 

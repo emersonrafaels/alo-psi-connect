@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -106,5 +106,14 @@ export const useUserProfile = () => {
 
   const refetch = () => setRefetchTrigger(prev => prev + 1);
 
-  return { profile, loading, hasProfile: !!profile, refetch };
+  // Estabilizar objeto profile para evitar re-renders desnecessários
+  const stableProfile = useMemo(() => profile, [profile]);
+  const stableHasProfile = useMemo(() => !!profile, [profile]);
+
+  return { 
+    profile: stableProfile, 
+    loading, 
+    hasProfile: stableHasProfile, 
+    refetch 
+  };
 };
