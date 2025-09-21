@@ -216,44 +216,15 @@ const MoodEntry = () => {
     }
   }, [user, navigate]);
 
-  // Main initialization and data loading effect - Wait for both user and profile
+  // COMPORTAMENTO ESTÁTICO - Sem carregamento automático de dados
   useEffect(() => {
     if (!user || loading || !profile) {
-      console.log('MoodEntry: Waiting for dependencies:', { 
-        user: !!user, 
-        loading, 
-        profile: !!profile 
-      });
       return;
     }
-
-    const entryId = searchParams.get('id');
-    const urlDate = searchParams.get('date');
-    
-    if (entryId) {
-      // Load by ID (priority method - more reliable)
-      console.log('MoodEntry: Loading entry by ID:', entryId);
-      loadEntryById(entryId);
-    } else {
-      // Load by date (fallback method)
-      const targetDate = urlDate || getTodayLocalDateString();
-      console.log('MoodEntry: Loading data for date:', targetDate, 'Profile ID:', profile.id);
-      checkExistingEntry(targetDate);
-    }
-    
     setInitialized(true);
-  }, [user, profile, loading, searchParams]);
+  }, [user, profile, loading]);
 
-  // Handle user-initiated date changes (when user changes date in the UI)
-  useEffect(() => {
-    if (!user || !profile || !initialized) return;
-    
-    // Only trigger for user changes, not initial load or URL-based dates
-    if (!editDate && formData.date !== getTodayLocalDateString()) {
-      console.log('User changed date to:', formData.date);
-      checkExistingEntry(formData.date);
-    }
-  }, [formData.date, user, profile, initialized, editDate]);
+  // COMPORTAMENTO ESTÁTICO - Sem recarregamento por mudança de data
 
   const handleSubmit = async () => {
     if (!user) return;
