@@ -13,7 +13,7 @@ import { generateWhatsAppMessage, shareWhatsApp, shareTelegram, shareEmail, copy
 import { useShareConfig } from '@/hooks/useShareConfig';
 import { generateProfessionalPDF, downloadPDF } from '@/utils/pdfGenerator';
 import { useToast } from '@/hooks/use-toast';
-import { getTodayLocalDateString } from '@/lib/utils';
+import { getTodayLocalDateString, parseISODateLocal } from '@/lib/utils';
 
 const MoodDiary = () => {
   const navigate = useNavigate();
@@ -347,7 +347,7 @@ const MoodDiary = () => {
                     <div key={entry.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                       <div className="space-y-1">
                         <p className="text-sm font-medium">
-                          {new Date(entry.date).toLocaleDateString('pt-BR', {
+                          {parseISODateLocal(entry.date).toLocaleDateString('pt-BR', {
                             weekday: 'long',
                             year: 'numeric',
                             month: 'long',
