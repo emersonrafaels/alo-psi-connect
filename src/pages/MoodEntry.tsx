@@ -179,55 +179,30 @@ const MoodEntry = () => {
 
   const exportToPDF = async () => {
     try {
-      const { jsPDF } = await import('jspdf');
-      const html2canvas = (await import('html2canvas')).default;
+      const { generateProfessionalPDF, downloadPDF } = await import('@/utils/pdfGenerator');
       
-      const doc = new jsPDF();
-      const date = parseISODateLocal(formData.date).toLocaleDateString('pt-BR');
-      
-      // Header
-      doc.setFontSize(20);
-      doc.text('Diário Emocional - Alô, Psi!', 20, 30);
-      
-      doc.setFontSize(14);
-      doc.text(`Data: ${date}`, 20, 50);
-      
-      // Content
-      let yPosition = 70;
-      doc.setFontSize(12);
-      
-      doc.text(`Humor: ${formData.mood_score[0]}/10`, 20, yPosition);
-      yPosition += 15;
-      
-      doc.text(`Energia: ${formData.energy_level[0]}/5`, 20, yPosition);
-      yPosition += 15;
-      
-      doc.text(`Ansiedade: ${formData.anxiety_level[0]}/5`, 20, yPosition);
-      yPosition += 15;
-      
-      if (formData.sleep_hours) {
-        doc.text(`Horas de Sono: ${formData.sleep_hours}h`, 20, yPosition);
-        yPosition += 15;
-      }
-      
-      doc.text(`Qualidade do Sono: ${formData.sleep_quality[0]}/5`, 20, yPosition);
-      yPosition += 15;
-      
-      if (formData.tags.length > 0) {
-        doc.text(`Tags: ${formData.tags.join(', ')}`, 20, yPosition);
-        yPosition += 15;
-      }
-      
-      if (formData.journal_text) {
-        yPosition += 10;
-        doc.text('Reflexões:', 20, yPosition);
-        yPosition += 15;
-        
-        const lines = doc.splitTextToSize(formData.journal_text, 170);
-        doc.text(lines, 20, yPosition);
-      }
-      
-      doc.save(`diario-emocional-${formData.date}.pdf`);
+      // Converter formData para o formato DemoMoodEntry
+      const moodEntry = {
+        id: `temp-${Date.now()}`, // ID temporário para a entrada
+        date: formData.date,
+        mood_score: formData.mood_score[0],
+        energy_level: formData.energy_level[0],
+        anxiety_level: formData.anxiety_level[0],
+        sleep_hours: formData.sleep_hours ? parseInt(formData.sleep_hours) : undefined,
+        sleep_quality: formData.sleep_quality[0],
+        journal_text: formData.journal_text || undefined,
+        tags: formData.tags.length > 0 ? formData.tags : undefined
+      };
+
+      // Gerar PDF profissional
+      const pdf = generateProfessionalPDF(moodEntry, undefined, {
+        includeLogo: true,
+        includeStats: false,
+        includeGraphs: false
+      });
+
+      // Download do PDF
+      downloadPDF(pdf, 'diario-emocional');
       
       toast({
         title: "PDF exportado com sucesso!",
