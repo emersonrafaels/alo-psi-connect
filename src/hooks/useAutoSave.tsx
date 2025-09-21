@@ -14,7 +14,7 @@ export const useAutoSave = <T,>(
   options: UseAutoSaveOptions = {}
 ) => {
   const {
-    delay = 2000,
+    delay = 1000, // Reduzido para 1 segundo
     enabled = true,
     onSave,
     onSuccess,
@@ -64,10 +64,6 @@ export const useAutoSave = <T,>(
 
   // Debounced save effect
   useEffect(() => {
-    if (!enabled || !onSave) {
-      return;
-    }
-
     // Verificar se os dados mudaram
     const hasChanged = JSON.stringify(data) !== JSON.stringify(lastDataRef.current);
     
@@ -80,10 +76,12 @@ export const useAutoSave = <T,>(
         clearTimeout(timeoutRef.current);
       }
 
-      // Configurar novo timeout
-      timeoutRef.current = setTimeout(() => {
-        performSave();
-      }, delay);
+      // Auto-save no banco apenas se habilitado
+      if (enabled && onSave) {
+        timeoutRef.current = setTimeout(() => {
+          performSave();
+        }, delay);
+      }
     }
 
     return () => {
@@ -101,6 +99,29 @@ export const useAutoSave = <T,>(
     hasUnsavedChanges.current = true;
     await performSave();
   }, [performSave]);
+
+  // Auto-save imediato em casos críticos
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && hasUnsavedChanges.current) {
+        forceSave();
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      if (hasUnsavedChanges.current) {
+        forceSave();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [forceSave]);
 
   // Função para verificar se há mudanças não salvas
   const hasUnsaved = useCallback(() => {

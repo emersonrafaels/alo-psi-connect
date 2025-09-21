@@ -202,12 +202,38 @@ const MoodEntry = () => {
     }
   }, [localDraft, initialized, user, toast]);
 
-  // Salvar rascunho local a cada mudança
+  // Salvar rascunho local IMEDIATAMENTE a cada mudança
   useEffect(() => {
-    if (initialized && user && formData.date) {
+    if (user?.id) {
       setLocalDraft(formData);
     }
-  }, [formData, initialized, user, setLocalDraft]);
+  }, [formData, user?.id, setLocalDraft]);
+
+  // Recuperar dados perdidos do localStorage
+  useEffect(() => {
+    if (localDraft && initialized && user?.id) {
+      // Verificar se há dados mais recentes no localStorage
+      const localDataStr = JSON.stringify(localDraft);
+      const currentDataStr = JSON.stringify(formData);
+      
+      if (localDataStr !== currentDataStr && Object.keys(localDraft).length > Object.keys(formData).length) {
+        console.log('Recuperando dados do localStorage:', localDraft);
+        setFormData(prev => ({ ...prev, ...localDraft }));
+        toast({
+          title: "Dados recuperados",
+          description: "Seus dados foram recuperados do rascunho local.",
+        });
+      }
+    }
+  }, [localDraft, user?.id, initialized]);
+
+  // Auto-save imediato ao completar transcrição
+  useEffect(() => {
+    if (formData.audio_url && !saving) {
+      console.log('Transcrição completada, salvando imediatamente...');
+      forceSave();
+    }
+  }, [formData.audio_url, forceSave, saving]);
 
   // Avisar antes de sair da página com dados não salvos
   useEffect(() => {
