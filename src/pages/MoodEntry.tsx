@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoodEntries, type MoodEntry } from '@/hooks/useMoodEntries';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
@@ -25,6 +26,7 @@ const MoodEntry = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { profile, loading } = useUserProfile();
   const { getEntryByDate, createOrUpdateEntry } = useMoodEntries();
   const { toast } = useToast();
 
@@ -103,29 +105,36 @@ const MoodEntry = () => {
     }
   }, [user, navigate]);
 
-  // Main initialization and data loading effect
+  // Main initialization and data loading effect - Wait for both user and profile
   useEffect(() => {
-    if (!user) return;
+    if (!user || loading || !profile) {
+      console.log('MoodEntry: Waiting for dependencies:', { 
+        user: !!user, 
+        loading, 
+        profile: !!profile 
+      });
+      return;
+    }
 
     const targetDate = editDate || getTodayLocalDateString();
     
-    console.log('MoodEntry: Loading data for date:', targetDate);
+    console.log('MoodEntry: Loading data for date:', targetDate, 'Profile ID:', profile.id);
     
     // Check for existing entry and load data
     checkExistingEntry(targetDate);
     setInitialized(true);
-  }, [user, editDate]);
+  }, [user, profile, loading, editDate]);
 
   // Handle user-initiated date changes (when user changes date in the UI)
   useEffect(() => {
-    if (!user || !initialized) return;
+    if (!user || !profile || !initialized) return;
     
     // Only trigger for user changes, not initial load or URL-based dates
     if (!editDate && formData.date !== getTodayLocalDateString()) {
       console.log('User changed date to:', formData.date);
       checkExistingEntry(formData.date);
     }
-  }, [formData.date, user, initialized, editDate]);
+  }, [formData.date, user, profile, initialized, editDate]);
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -259,6 +268,19 @@ const MoodEntry = () => {
 
   if (!user) {
     return null; // Will redirect
+  }
+
+  if (loading || !profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">
+            {loading ? 'Carregando perfil...' : 'Preparando entrada de humor...'}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
