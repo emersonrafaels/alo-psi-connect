@@ -176,6 +176,22 @@ serve(async (req) => {
     const data = await response.json();
     const insights = data.choices[0].message.content;
 
+    // Save insight to history
+    const { data: historyEntry, error: historyError } = await supabase
+      .from('ai_insights_history')
+      .insert({
+        user_id: userId,
+        session_id: isGuest ? sessionId : null,
+        insight_content: insights,
+        mood_data: moodEntries
+      })
+      .select()
+      .single();
+
+    if (historyError) {
+      console.error('Error saving insight to history:', historyError);
+    }
+
     // Update usage count
     if (usageData) {
       // Update existing record
@@ -204,6 +220,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         insights,
+        insightId: historyEntry?.id,
         currentUsage: currentUsage + 1,
         limit: currentLimit,
         isGuest

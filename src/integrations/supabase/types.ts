@@ -174,6 +174,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_insights_history: {
+        Row: {
+          created_at: string
+          feedback_comment: string | null
+          feedback_rating: boolean | null
+          feedback_submitted_at: string | null
+          id: string
+          insight_content: string
+          mood_data: Json
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          feedback_comment?: string | null
+          feedback_rating?: boolean | null
+          feedback_submitted_at?: string | null
+          id?: string
+          insight_content: string
+          mood_data: Json
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          feedback_comment?: string | null
+          feedback_rating?: boolean | null
+          feedback_submitted_at?: string | null
+          id?: string
+          insight_content?: string
+          mood_data?: Json
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_insights_usage: {
         Row: {
           created_at: string

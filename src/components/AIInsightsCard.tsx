@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Sparkles, AlertCircle, User, UserCheck } from 'lucide-react';
+import { Brain, Sparkles, AlertCircle, User, UserCheck, History, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAIInsights } from '@/hooks/useAIInsights';
+import InsightHistoryCard from './InsightHistoryCard';
 
 interface MoodEntry {
   date: string;
@@ -24,6 +25,9 @@ interface AIInsightsCardProps {
 }
 
 export const AIInsightsCard = ({ moodEntries, className }: AIInsightsCardProps) => {
+  const [hasGenerated, setHasGenerated] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  
   const {
     insights,
     loading,
@@ -33,10 +37,18 @@ export const AIInsightsCard = ({ moodEntries, className }: AIInsightsCardProps) 
     limitReached,
     generateInsights,
     clearInsights,
-    isGuest
+    isGuest,
+    insightHistory,
+    historyLoading,
+    fetchInsightHistory,
+    submitFeedback
   } = useAIInsights();
 
-  const [hasGenerated, setHasGenerated] = useState(false);
+  useEffect(() => {
+    if (showHistory) {
+      fetchInsightHistory();
+    }
+  }, [showHistory, fetchInsightHistory]);
 
   const handleGenerateInsights = async () => {
     await generateInsights(moodEntries);
@@ -187,6 +199,43 @@ export const AIInsightsCard = ({ moodEntries, className }: AIInsightsCardProps) 
             </ul>
           </div>
         )}
+
+        <Separator className="my-6" />
+        
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium flex items-center gap-2">
+              <History className="h-4 w-4" />
+              Histórico de Insights
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowHistory(!showHistory)}
+              className="text-xs"
+            >
+              {showHistory ? (
+                <>
+                  <ChevronUp className="h-4 w-4 mr-1" />
+                  Ocultar
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4 mr-1" />
+                  Mostrar
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {showHistory && (
+            <InsightHistoryCard
+              history={insightHistory}
+              loading={historyLoading}
+              onSubmitFeedback={submitFeedback}
+            />
+          )}
+        </div>
       </CardContent>
     </Card>
   );

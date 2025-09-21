@@ -16,11 +16,22 @@ interface MoodEntry {
 
 interface InsightResponse {
   insights?: string;
+  insightId?: string;
   currentUsage: number;
   limit: number;
   isGuest: boolean;
   limitReached?: boolean;
   error?: string;
+}
+
+interface InsightHistory {
+  id: string;
+  insight_content: string;
+  mood_data: any;
+  created_at: string;
+  feedback_rating?: boolean;
+  feedback_comment?: string;
+  feedback_submitted_at?: string;
 }
 
 export const useAIInsights = () => {
@@ -30,6 +41,8 @@ export const useAIInsights = () => {
   const [currentUsage, setCurrentUsage] = useState(0);
   const [limit, setLimit] = useState(0);
   const [limitReached, setLimitReached] = useState(false);
+  const [insightHistory, setInsightHistory] = useState<InsightHistory[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   
   const { user } = useAuth();
   const { getConfig } = usePublicConfig(['system']);
@@ -106,6 +119,58 @@ export const useAIInsights = () => {
     }
   }, [user, getSessionId]);
 
+  const fetchInsightHistory = useCallback(async () => {
+    if (!user && !getSessionId()) return;
+    
+    setHistoryLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('ai_insights_history')
+        .select('*')
+        .eq(user ? 'user_id' : 'session_id', user?.id || getSessionId())
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setInsightHistory(data || []);
+    } catch (err) {
+      console.error('Error fetching insight history:', err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [user, getSessionId]);
+
+  const submitFeedback = useCallback(async (insightId: string, rating: boolean, comment?: string) => {
+    try {
+      const { error } = await supabase
+        .from('ai_insights_history')
+        .update({
+          feedback_rating: rating,
+          feedback_comment: comment,
+          feedback_submitted_at: new Date().toISOString()
+        })
+        .eq('id', insightId);
+
+      if (error) throw error;
+      
+      // Update local state
+      setInsightHistory(prev => 
+        prev.map(insight => 
+          insight.id === insightId 
+            ? { 
+                ...insight, 
+                feedback_rating: rating, 
+                feedback_comment: comment, 
+                feedback_submitted_at: new Date().toISOString() 
+              }
+            : insight
+        )
+      );
+    } catch (err) {
+      console.error('Error submitting feedback:', err);
+      throw err;
+    }
+  }, []);
+
   const clearInsights = useCallback(() => {
     setInsights('');
     setError('');
@@ -126,6 +191,10 @@ export const useAIInsights = () => {
     limitReached,
     generateInsights,
     clearInsights,
-    isGuest: !user
+    isGuest: !user,
+    insightHistory,
+    historyLoading,
+    fetchInsightHistory,
+    submitFeedback
   };
 };
