@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
 import { parseISODateLocal } from '@/lib/utils';
+import { AIInsightsCard } from '@/components/AIInsightsCard';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -285,7 +286,22 @@ const MoodAnalytics = () => {
                 </Card>
               </div>
 
-              {/* Insights and Top Tags */}
+              {/* AI Insights */}
+              <AIInsightsCard 
+                moodEntries={entries.map(entry => ({
+                  date: entry.date,
+                  mood_score: entry.mood_score || 0,
+                  energy_level: entry.energy_level || 0,
+                  anxiety_level: entry.anxiety_level || 0,
+                  sleep_hours: entry.sleep_hours || 0,
+                  sleep_quality: entry.sleep_quality || 0,
+                  journal_text: entry.journal_text,
+                  tags: entry.tags
+                }))}
+                className="col-span-full"
+              />
+
+              {/* Additional Analytics */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Top Tags */}
                 {topTags.length > 0 && (
@@ -315,11 +331,11 @@ const MoodAnalytics = () => {
                   </Card>
                 )}
 
-                {/* Insights */}
+                {/* Basic Insights */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Insights Personalizados</CardTitle>
-                    <CardDescription>Observações baseadas nos seus dados</CardDescription>
+                    <CardTitle>Observações Rápidas</CardTitle>
+                    <CardDescription>Insights básicos sobre seus padrões</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3 text-sm">

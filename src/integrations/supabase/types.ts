@@ -174,6 +174,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_insights_usage: {
+        Row: {
+          created_at: string
+          id: string
+          insights_count: number
+          month_year: string
+          session_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          insights_count?: number
+          month_year: string
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          insights_count?: number
+          month_year?: string
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           author_email: string
