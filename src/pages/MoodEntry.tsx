@@ -219,10 +219,6 @@ const MoodEntry = () => {
       if (localDataStr !== currentDataStr && Object.keys(localDraft).length > Object.keys(formData).length) {
         console.log('Recuperando dados do localStorage:', localDraft);
         setFormData(prev => ({ ...prev, ...localDraft }));
-        toast({
-          title: "Dados recuperados",
-          description: "Seus dados foram recuperados do rascunho local.",
-        });
       }
     }
   }, [localDraft, user?.id, initialized]);
