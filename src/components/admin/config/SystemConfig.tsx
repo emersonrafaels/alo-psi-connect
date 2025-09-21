@@ -10,14 +10,14 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Settings, Mail, CreditCard, Clock, TrendingUp, Users, Database, Shield, AlertTriangle, Image, ToggleLeft, Share2, Brain } from 'lucide-react';
+import { Save, Settings, Mail, CreditCard, Clock, TrendingUp, Users, Database, Shield, AlertTriangle, Image, ToggleLeft, Share2, Brain, Heart } from 'lucide-react';
 import { MetricsCard } from './MetricsCard';
 import { UsageChart } from './UsageChart';
 import { ConfigDataTable } from './ConfigDataTable';
 import { supabase } from '@/integrations/supabase/client';
 
 export const SystemConfig = () => {
-  const { getConfig, updateConfig, loading, hasPermission, configs } = useSystemConfig(['system', 'homepage', 'diary_sharing']);
+  const { getConfig, updateConfig, loading, hasPermission, configs, getConfigsByCategory } = useSystemConfig(['system', 'homepage', 'diary_sharing']);
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [guestLimit, setGuestLimit] = useState('3');
@@ -275,8 +275,9 @@ export const SystemConfig = () => {
       )}
 
       <Tabs defaultValue="config" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="config">Configurações</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="config">Sistema</TabsTrigger>
+          <TabsTrigger value="diary">Diário Emocional</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="financial">Financeiro</TabsTrigger>
           <TabsTrigger value="security">Segurança</TabsTrigger>
@@ -329,76 +330,6 @@ export const SystemConfig = () => {
                   </p>
                   <Badge variant={formData.max_file_size_mb <= 10 ? "default" : "secondary"}>
                     {formData.max_file_size_mb <= 10 ? "Otimizado" : "Alto"}
-                  </Badge>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="guest_diary_limit">Limite de Entradas para Visitantes</Label>
-                  <Input
-                    id="guest_diary_limit"
-                    type="number"
-                    value={guestLimit}
-                    onChange={(e) => setGuestLimit(e.target.value)}
-                    min={1}
-                    max={100}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Quantidade máxima de entradas no diário emocional para usuários não logados
-                  </p>
-                  <Badge variant={parseInt(guestLimit) >= 1 && parseInt(guestLimit) <= 5 ? "default" : "secondary"}>
-                    {parseInt(guestLimit) >= 1 && parseInt(guestLimit) <= 5 ? "Recomendado" : "Personalizado"}
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* AI Insights Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5" />
-                Configurações de Insights de IA
-              </CardTitle>
-              <CardDescription>
-                Configure os limites de geração de insights para diferentes tipos de usuários
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="guest_insights_limit">Limite de Insights para Visitantes</Label>
-                  <Input
-                    id="guest_insights_limit"
-                    type="number"
-                    value={formData.guest_insights_limit}
-                    onChange={(e) => setFormData(prev => ({ ...prev, guest_insights_limit: parseInt(e.target.value) }))}
-                    min={1}
-                    max={20}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Número máximo de insights de IA que visitantes podem gerar por mês
-                  </p>
-                  <Badge variant={formData.guest_insights_limit >= 1 && formData.guest_insights_limit <= 5 ? "default" : "secondary"}>
-                    {formData.guest_insights_limit >= 1 && formData.guest_insights_limit <= 5 ? "Recomendado" : "Personalizado"}
-                  </Badge>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="user_insights_limit">Limite de Insights para Usuários Logados</Label>
-                  <Input
-                    id="user_insights_limit"
-                    type="number"
-                    value={formData.user_insights_limit}
-                    onChange={(e) => setFormData(prev => ({ ...prev, user_insights_limit: parseInt(e.target.value) }))}
-                    min={1}
-                    max={50}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Número máximo de insights de IA que usuários registrados podem gerar por mês
-                  </p>
-                  <Badge variant={formData.user_insights_limit >= 5 && formData.user_insights_limit <= 10 ? "default" : "secondary"}>
-                    {formData.user_insights_limit >= 5 && formData.user_insights_limit <= 10 ? "Recomendado" : "Personalizado"}
                   </Badge>
                 </div>
               </div>
@@ -606,7 +537,102 @@ export const SystemConfig = () => {
             </CardContent>
           </Card>
 
-          {/* Sharing Configuration Section */}
+          <div className="flex gap-3 pt-4">
+            <Button onClick={handleSave} disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Salvando...' : 'Salvar Todas as Configurações'}
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="diary" className="space-y-6">
+          {/* Diary Limits Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="h-5 w-5" />
+                Configurações de Entradas do Diário
+              </CardTitle>
+              <CardDescription>
+                Configure os limites de entradas no diário emocional para diferentes tipos de usuários
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="guest_diary_limit_diary">Limite de Entradas para Visitantes</Label>
+                  <Input
+                    id="guest_diary_limit_diary"
+                    type="number"
+                    value={guestLimit}
+                    onChange={(e) => setGuestLimit(e.target.value)}
+                    min={1}
+                    max={100}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Quantidade máxima de entradas no diário emocional para usuários não logados
+                  </p>
+                  <Badge variant={parseInt(guestLimit) >= 1 && parseInt(guestLimit) <= 5 ? "default" : "secondary"}>
+                    {parseInt(guestLimit) >= 1 && parseInt(guestLimit) <= 5 ? "Recomendado" : "Personalizado"}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* AI Insights Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Configurações de Insights de IA
+              </CardTitle>
+              <CardDescription>
+                Configure os limites de geração de insights para diferentes tipos de usuários
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="guest_insights_limit_diary">Limite de Insights para Visitantes</Label>
+                  <Input
+                    id="guest_insights_limit_diary"
+                    type="number"
+                    value={formData.guest_insights_limit}
+                    onChange={(e) => setFormData(prev => ({ ...prev, guest_insights_limit: parseInt(e.target.value) }))}
+                    min={1}
+                    max={20}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Número máximo de insights de IA que visitantes podem gerar por mês
+                  </p>
+                  <Badge variant={formData.guest_insights_limit >= 1 && formData.guest_insights_limit <= 5 ? "default" : "secondary"}>
+                    {formData.guest_insights_limit >= 1 && formData.guest_insights_limit <= 5 ? "Recomendado" : "Personalizado"}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="user_insights_limit_diary">Limite de Insights para Usuários Logados</Label>
+                  <Input
+                    id="user_insights_limit_diary"
+                    type="number"
+                    value={formData.user_insights_limit}
+                    onChange={(e) => setFormData(prev => ({ ...prev, user_insights_limit: parseInt(e.target.value) }))}
+                    min={1}
+                    max={50}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Número máximo de insights de IA que usuários registrados podem gerar por mês
+                  </p>
+                  <Badge variant={formData.user_insights_limit >= 5 && formData.user_insights_limit <= 10 ? "default" : "secondary"}>
+                    {formData.user_insights_limit >= 5 && formData.user_insights_limit <= 10 ? "Recomendado" : "Personalizado"}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Diary Sharing Settings */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -614,14 +640,14 @@ export const SystemConfig = () => {
                 Configurações de Compartilhamento do Diário
               </CardTitle>
               <CardDescription>
-                Configure as mensagens e textos para compartilhamento do diário emocional. Use variáveis como {"{date}"}, {"{brand_name}"}, {"{website}"}
+                Configure as opções de compartilhamento do diário emocional
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ConfigDataTable 
-                data={configs.filter(config => config.category === 'diary_sharing')}
-                title="Configurações de Compartilhamento"
-                description="Templates de mensagens para compartilhamento"
+              <ConfigDataTable
+                title="Compartilhamento"
+                description="Configurações para compartilhamento do diário"
+                data={getConfigsByCategory('diary_sharing')}
               />
             </CardContent>
           </Card>
@@ -629,7 +655,122 @@ export const SystemConfig = () => {
           <div className="flex gap-3 pt-4">
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Salvando...' : 'Salvar Todas as Configurações'}
+              {saving ? 'Salvando...' : 'Salvar Configurações do Diário'}
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="diary" className="space-y-6">
+          {/* Diary Limits Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="h-5 w-5" />
+                Configurações de Entradas do Diário
+              </CardTitle>
+              <CardDescription>
+                Configure os limites de entradas no diário emocional para diferentes tipos de usuários
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="guest_diary_limit">Limite de Entradas para Visitantes</Label>
+                  <Input
+                    id="guest_diary_limit"
+                    type="number"
+                    value={guestLimit}
+                    onChange={(e) => setGuestLimit(e.target.value)}
+                    min={1}
+                    max={100}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Quantidade máxima de entradas no diário emocional para usuários não logados
+                  </p>
+                  <Badge variant={parseInt(guestLimit) >= 1 && parseInt(guestLimit) <= 5 ? "default" : "secondary"}>
+                    {parseInt(guestLimit) >= 1 && parseInt(guestLimit) <= 5 ? "Recomendado" : "Personalizado"}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* AI Insights Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Configurações de Insights de IA
+              </CardTitle>
+              <CardDescription>
+                Configure os limites de geração de insights para diferentes tipos de usuários
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="guest_insights_limit">Limite de Insights para Visitantes</Label>
+                  <Input
+                    id="guest_insights_limit"
+                    type="number"
+                    value={formData.guest_insights_limit}
+                    onChange={(e) => setFormData(prev => ({ ...prev, guest_insights_limit: parseInt(e.target.value) }))}
+                    min={1}
+                    max={20}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Número máximo de insights de IA que visitantes podem gerar por mês
+                  </p>
+                  <Badge variant={formData.guest_insights_limit >= 1 && formData.guest_insights_limit <= 5 ? "default" : "secondary"}>
+                    {formData.guest_insights_limit >= 1 && formData.guest_insights_limit <= 5 ? "Recomendado" : "Personalizado"}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="user_insights_limit">Limite de Insights para Usuários Logados</Label>
+                  <Input
+                    id="user_insights_limit"
+                    type="number"
+                    value={formData.user_insights_limit}
+                    onChange={(e) => setFormData(prev => ({ ...prev, user_insights_limit: parseInt(e.target.value) }))}
+                    min={1}
+                    max={50}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Número máximo de insights de IA que usuários registrados podem gerar por mês
+                  </p>
+                  <Badge variant={formData.user_insights_limit >= 5 && formData.user_insights_limit <= 10 ? "default" : "secondary"}>
+                    {formData.user_insights_limit >= 5 && formData.user_insights_limit <= 10 ? "Recomendado" : "Personalizado"}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Diary Sharing Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Share2 className="h-5 w-5" />
+                Configurações de Compartilhamento do Diário
+              </CardTitle>
+              <CardDescription>
+                Configure as opções de compartilhamento do diário emocional
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ConfigDataTable
+                title="Compartilhamento"
+                description="Configurações para compartilhamento do diário"
+                data={getConfigsByCategory('diary_sharing')}
+              />
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-3 pt-4">
+            <Button onClick={handleSave} disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Salvando...' : 'Salvar Configurações do Diário'}
             </Button>
           </div>
         </TabsContent>
