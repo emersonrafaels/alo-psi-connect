@@ -142,6 +142,13 @@ serve(async (req) => {
     - Ser encorajador e positivo
     - Focar em ações que a pessoa pode tomar
     
+    FORMATAÇÃO OBRIGATÓRIA:
+    - Use **texto** para destacar pontos importantes
+    - Organize em seções com subtítulos claros
+    - Use quebras de linha para separar ideias
+    - Inclua listas quando apropriado
+    - Mantenha parágrafos curtos e bem estruturados
+    
     Responda em português brasileiro, de forma empática e profissional.
     Limite sua resposta a no máximo 300 palavras.`;
 

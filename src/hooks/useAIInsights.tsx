@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePublicConfig } from './usePublicConfig';
 import { useAuth } from './useAuth';
@@ -43,6 +43,7 @@ export const useAIInsights = () => {
   const [limitReached, setLimitReached] = useState(false);
   const [insightHistory, setInsightHistory] = useState<InsightHistory[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [usageLoading, setUsageLoading] = useState(true);
   
   const { user } = useAuth();
   const { getConfig } = usePublicConfig(['system']);
@@ -56,6 +57,44 @@ export const useAIInsights = () => {
     }
     return sessionId;
   }, []);
+
+  // Fetch current usage count
+  const fetchCurrentUsage = useCallback(async () => {
+    setUsageLoading(true);
+    try {
+      const now = new Date();
+      const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      
+      let whereClause: any = { month_year: monthYear };
+      if (user) {
+        whereClause.user_id = user.id;
+      } else {
+        whereClause.session_id = getSessionId();
+        whereClause.user_id = null;
+      }
+
+      const { data, error } = await supabase
+        .from('ai_insights_usage')
+        .select('insights_count')
+        .match(whereClause)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      setCurrentUsage(data?.insights_count || 0);
+    } catch (err) {
+      console.error('Error fetching current usage:', err);
+    } finally {
+      setUsageLoading(false);
+    }
+  }, [user, getSessionId]);
+
+  // Fetch usage on component mount
+  useEffect(() => {
+    fetchCurrentUsage();
+  }, [fetchCurrentUsage]);
 
   const generateInsights = useCallback(async (moodEntries: MoodEntry[]) => {
     if (!moodEntries || moodEntries.length === 0) {
@@ -195,6 +234,7 @@ export const useAIInsights = () => {
     insightHistory,
     historyLoading,
     fetchInsightHistory,
-    submitFeedback
+    submitFeedback,
+    usageLoading
   };
 };

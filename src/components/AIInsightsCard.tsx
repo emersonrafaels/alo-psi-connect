@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Brain, Sparkles, AlertCircle, User, UserCheck, History, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAIInsights } from '@/hooks/useAIInsights';
 import InsightHistoryCard from './InsightHistoryCard';
+import { FormattedInsightText } from './FormattedInsightText';
 
 interface MoodEntry {
   date: string;
@@ -41,7 +42,8 @@ export const AIInsightsCard = ({ moodEntries, className }: AIInsightsCardProps) 
     insightHistory,
     historyLoading,
     fetchInsightHistory,
-    submitFeedback
+    submitFeedback,
+    usageLoading
   } = useAIInsights();
 
   useEffect(() => {
@@ -84,7 +86,7 @@ export const AIInsightsCard = ({ moodEntries, className }: AIInsightsCardProps) 
               </Badge>
             )}
             <Badge variant="secondary">
-              {remainingUses}/{limit} restantes
+              {usageLoading ? '...' : `${remainingUses}/${limit}`} restantes
             </Badge>
           </div>
         </div>
@@ -98,7 +100,7 @@ export const AIInsightsCard = ({ moodEntries, className }: AIInsightsCardProps) 
         {/* Usage Information */}
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            {isGuest ? 'Insights por sessão' : 'Insights este mês'}: {currentUsage}/{limit}
+            {isGuest ? 'Insights por sessão' : 'Insights este mês'}: {usageLoading ? '...' : `${currentUsage}/${limit}`}
           </span>
           {isGuest && (
             <span className="text-xs">Limite reinicia ao limpar navegador</span>
@@ -176,9 +178,7 @@ export const AIInsightsCard = ({ moodEntries, className }: AIInsightsCardProps) 
                 <h4 className="font-medium">Seus Insights Personalizados</h4>
               </div>
               <div className="bg-muted/50 rounded-lg p-4">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {insights}
-                </p>
+                <FormattedInsightText text={insights} />
               </div>
               <div className="text-xs text-muted-foreground">
                 Insights gerados por IA • Não substitui orientação profissional
