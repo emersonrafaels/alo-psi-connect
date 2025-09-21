@@ -1,19 +1,56 @@
 import { DemoMoodEntry } from '@/hooks/useMoodExperience';
 
-export const generateWhatsAppMessage = (entry: DemoMoodEntry, stats?: any) => {
+interface ShareConfig {
+  shareTitle: string;
+  shareFooter: string;
+  brandName: string;
+  website: string;
+  metricsTitle: string;
+  sleepTitle: string;
+  tagsTitle: string;
+  reflectionsTitle: string;
+  statsTitle: string;
+}
+
+const replaceVariables = (template: string, variables: Record<string, string>): string => {
+  return template.replace(/\{(\w+)\}/g, (match, key) => variables[key] || match);
+};
+
+export const generateWhatsAppMessage = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig) => {
   const date = new Date(entry.date).toLocaleDateString('pt-BR');
   
-  let message = `🌟 *Meu Diário Emocional - ${date}*\n\n`;
+  // Usar configurações padrão se não fornecidas
+  const defaultConfig: ShareConfig = {
+    shareTitle: '🌟 *Meu Diário Emocional - {date}*',
+    shareFooter: '🌟 *Criado com {brand_name}* - Sua plataforma de bem-estar emocional\n💙 Experimente também: {website}',
+    brandName: 'AloPsi',
+    website: 'alopsi.com.br',
+    metricsTitle: '📊 *Métricas do dia:*',
+    sleepTitle: '😴 *Sono:*',
+    tagsTitle: '🏷️ *Tags:*',
+    reflectionsTitle: '📝 *Reflexões:*',
+    statsTitle: '📈 *Minhas estatísticas:*'
+  };
+  
+  const shareConfig = config || defaultConfig;
+  
+  const variables = {
+    date,
+    brand_name: shareConfig.brandName,
+    website: shareConfig.website
+  };
+  
+  let message = replaceVariables(shareConfig.shareTitle, variables) + '\n\n';
   
   // Métricas principais
-  message += `📊 *Métricas do dia:*\n`;
+  message += `${shareConfig.metricsTitle}\n`;
   message += `😊 Humor: ${entry.mood_score}/10\n`;
   message += `⚡ Energia: ${entry.energy_level}/5\n`;
   message += `😰 Ansiedade: ${entry.anxiety_level}/5\n\n`;
   
   // Informações do sono
   if (entry.sleep_hours || entry.sleep_quality) {
-    message += `😴 *Sono:*\n`;
+    message += `${shareConfig.sleepTitle}\n`;
     if (entry.sleep_hours) {
       message += `⏰ Horas: ${entry.sleep_hours}h\n`;
     }
@@ -25,7 +62,7 @@ export const generateWhatsAppMessage = (entry: DemoMoodEntry, stats?: any) => {
   
   // Tags
   if (entry.tags && entry.tags.length > 0) {
-    message += `🏷️ *Tags:* ${entry.tags.join(', ')}\n\n`;
+    message += `${shareConfig.tagsTitle} ${entry.tags.join(', ')}\n\n`;
   }
   
   // Reflexões (limitado a 200 caracteres para WhatsApp)
@@ -33,20 +70,19 @@ export const generateWhatsAppMessage = (entry: DemoMoodEntry, stats?: any) => {
     const truncatedText = entry.journal_text.length > 200 
       ? entry.journal_text.substring(0, 200) + '...' 
       : entry.journal_text;
-    message += `📝 *Reflexões:*\n${truncatedText}\n\n`;
+    message += `${shareConfig.reflectionsTitle}\n${truncatedText}\n\n`;
   }
   
   // Estatísticas gerais (se disponível)
   if (stats) {
-    message += `📈 *Minhas estatísticas:*\n`;
+    message += `${shareConfig.statsTitle}\n`;
     message += `📊 ${stats.totalEntries} entradas registradas\n`;
     message += `😊 Humor médio: ${stats.avgMood}/10\n`;
     message += `⚡ Energia média: ${stats.avgEnergy}/5\n`;
     message += `😰 Ansiedade média: ${stats.avgAnxiety}/5\n\n`;
   }
   
-  message += `🌟 *Criado com AloPsi* - Sua plataforma de bem-estar emocional\n`;
-  message += `💙 Experimente também: alopsi.com.br`;
+  message += replaceVariables(shareConfig.shareFooter, variables);
   
   return message;
 };

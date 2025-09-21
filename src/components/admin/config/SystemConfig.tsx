@@ -10,14 +10,14 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Settings, Mail, CreditCard, Clock, TrendingUp, Users, Database, Shield, AlertTriangle, Image, ToggleLeft } from 'lucide-react';
+import { Save, Settings, Mail, CreditCard, Clock, TrendingUp, Users, Database, Shield, AlertTriangle, Image, ToggleLeft, Share2 } from 'lucide-react';
 import { MetricsCard } from './MetricsCard';
 import { UsageChart } from './UsageChart';
 import { ConfigDataTable } from './ConfigDataTable';
 import { supabase } from '@/integrations/supabase/client';
 
 export const SystemConfig = () => {
-  const { getConfig, updateConfig, loading, hasPermission, configs } = useSystemConfig(['system', 'homepage']);
+  const { getConfig, updateConfig, loading, hasPermission, configs } = useSystemConfig(['system', 'homepage', 'diary_sharing']);
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [guestLimit, setGuestLimit] = useState('3');
@@ -486,6 +486,26 @@ export const SystemConfig = () => {
                   </Badge>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Sharing Configuration Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Share2 className="h-5 w-5" />
+                Configurações de Compartilhamento do Diário
+              </CardTitle>
+              <CardDescription>
+                Configure as mensagens e textos para compartilhamento do diário emocional. Use variáveis como {"{date}"}, {"{brand_name}"}, {"{website}"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ConfigDataTable 
+                data={configs.filter(config => config.category === 'diary_sharing')}
+                title="Configurações de Compartilhamento"
+                description="Templates de mensagens para compartilhamento"
+              />
             </CardContent>
           </Card>
 

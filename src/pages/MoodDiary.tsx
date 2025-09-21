@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Calendar, Plus, TrendingUp, Heart, BarChart3, Share2, Mail, Download } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { shareWhatsApp, shareTelegram, shareEmail, copyToClipboard } from '@/utils/shareHelpers';
+import { generateWhatsAppMessage, shareWhatsApp, shareTelegram, shareEmail, copyToClipboard } from '@/utils/shareHelpers';
+import { useShareConfig } from '@/hooks/useShareConfig';
 import { generateProfessionalPDF, downloadPDF } from '@/utils/pdfGenerator';
 import { useToast } from '@/hooks/use-toast';
 import { getTodayLocalDateString } from '@/lib/utils';
@@ -20,6 +21,7 @@ const MoodDiary = () => {
   const { profile } = useUserProfile();
   const { entries, loading: entriesLoading } = useMoodEntries();
   const { toast } = useToast();
+  const { getShareConfig } = useShareConfig();
 
   // Redirect non-authenticated users to experience page
   useEffect(() => {
@@ -47,21 +49,8 @@ const MoodDiary = () => {
       avgAnxiety: entries.length > 0 ? entries.reduce((sum, e) => sum + e.anxiety_level, 0) / entries.length : 0,
     };
 
-    const message = `🌟 Meu Diário Emocional de ${new Date(shareData.date).toLocaleDateString('pt-BR')}
-
-📊 Como estou me sentindo:
-• Humor: ${shareData.mood_score}/10
-• Energia: ${shareData.energy_level}/5  
-• Ansiedade: ${shareData.anxiety_level}/5
-${shareData.sleep_quality ? `• Qualidade do sono: ${shareData.sleep_quality}/5` : ''}
-
-${shareData.journal_text ? `💭 Reflexão: "${shareData.journal_text.substring(0, 100)}..."` : ''}
-
-📈 Estatísticas gerais:
-• Total de entradas: ${stats.totalEntries}
-• Humor médio: ${stats.avgMood.toFixed(1)}/10
-
-#DiarioEmocional #BemEstar #AutoCuidado`;
+    const shareConfig = getShareConfig();
+    const message = generateWhatsAppMessage(shareData, stats, shareConfig);
 
     try {
       switch (platform) {

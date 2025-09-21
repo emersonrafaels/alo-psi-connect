@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { generateProfessionalPDF, downloadPDF } from "@/utils/pdfGenerator";
 import { generateWhatsAppMessage, shareWhatsApp, shareTelegram, shareEmail, copyToClipboard } from "@/utils/shareHelpers";
+import { useShareConfig } from "@/hooks/useShareConfig";
 import { Calendar, FileText, Share2, TrendingUp, Heart, Brain, Zap, Moon, Tag, Download, MessageCircle, Sparkles, Target, Mail, Copy } from "lucide-react";
 import { formatDateBR, getTodayLocalDateString } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ const MoodExperience = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const { getShareConfig } = useShareConfig();
   
   const { 
     demoEntries, 
@@ -182,7 +184,8 @@ const MoodExperience = () => {
     };
 
     const stats = getDemoStats();
-    const message = generateWhatsAppMessage(currentEntry, stats);
+    const shareConfig = getShareConfig();
+    const message = generateWhatsAppMessage(currentEntry, stats, shareConfig);
 
     try {
       switch (platform) {
