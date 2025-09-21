@@ -100,25 +100,17 @@ export const useAutoSave = <T,>(
     await performSave();
   }, [performSave]);
 
-  // Auto-save imediato em casos críticos
+  // Auto-save apenas antes de sair da página (proteção crítica)
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && hasUnsavedChanges.current) {
-        forceSave();
-      }
-    };
-
     const handleBeforeUnload = () => {
       if (hasUnsavedChanges.current) {
         forceSave();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [forceSave]);

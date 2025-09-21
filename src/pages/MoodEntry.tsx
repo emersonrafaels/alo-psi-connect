@@ -86,18 +86,16 @@ const MoodEntry = () => {
     }
   }, [user, profile, createOrUpdateEntry, clearLocalDraft]);
 
-  // Auto-save hook
+  // Auto-save hook (DISABLED - only manual save)
   const { isSaving: isAutoSaving, saveStatus, forceSave } = useAutoSave(formData, {
-    enabled: initialized && !checkingExisting && formData.date !== '',
-    delay: 3000, // 3 segundos de delay
+    enabled: false, // DISABLED - formulário estático
+    delay: 3000,
     onSave: autoSaveEntry,
     onSuccess: () => {
-      console.log('Auto-save successful');
+      console.log('Manual save successful');
     },
     onError: (error) => {
-      console.error('Auto-save error:', error);
-      // Salvar no localStorage como backup em caso de erro
-      setLocalDraft(formData);
+      console.error('Save error:', error);
     }
   });
 
@@ -202,35 +200,11 @@ const MoodEntry = () => {
     }
   }, [localDraft, initialized, user, toast]);
 
-  // Salvar rascunho local IMEDIATAMENTE a cada mudança
-  useEffect(() => {
-    if (user?.id) {
-      setLocalDraft(formData);
-    }
-  }, [formData, user?.id, setLocalDraft]);
+  // Rascunho local REMOVIDO - comportamento estático
 
-  // Recuperar dados perdidos do localStorage
-  useEffect(() => {
-    if (localDraft && initialized && user?.id) {
-      // Verificar se há dados mais recentes no localStorage
-      const localDataStr = JSON.stringify(localDraft);
-      const currentDataStr = JSON.stringify(formData);
-      
-      if (localDataStr !== currentDataStr && Object.keys(localDraft).length > Object.keys(formData).length) {
-        console.log('Recuperando dados do localStorage:', localDraft);
-        const { date: _, ...localDataWithoutDate } = localDraft;
-        setFormData(prev => ({ ...prev, ...localDataWithoutDate }));
-      }
-    }
-  }, [localDraft, user?.id, initialized]);
+  // Recuperação automática REMOVIDA - comportamento estático
 
-  // Auto-save imediato ao completar transcrição
-  useEffect(() => {
-    if (formData.audio_url && !saving) {
-      console.log('Transcrição completada, salvando imediatamente...');
-      forceSave();
-    }
-  }, [formData.audio_url, forceSave, saving]);
+  // Auto-save após transcrição REMOVIDO - comportamento estático
 
   // Avisar antes de sair da página com dados não salvos
   useEffect(() => {
