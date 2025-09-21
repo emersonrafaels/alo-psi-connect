@@ -54,8 +54,8 @@ const MoodEntry = () => {
   const [currentEntry, setCurrentEntry] = useState<MoodEntry | null>(null);
   const [initialized, setInitialized] = useState(false);
 
-  // Persistência local para rascunhos
-  const [localDraft, setLocalDraft, clearLocalDraft] = useLocalStorage(`mood-entry-draft-${user?.id}`, null);
+  // Persistência local DESABILITADA - comportamento estático
+  const [localDraft, setLocalDraft, clearLocalDraft] = [null, () => {}, () => {}];
 
   // Função para auto-save
   const autoSaveEntry = useCallback(async (data: any) => {
@@ -188,23 +188,12 @@ const MoodEntry = () => {
     }
   };
 
-  // Recuperar rascunho local no carregamento
-  useEffect(() => {
-    if (localDraft && !initialized && user) {
-      console.log('Recuperando rascunho local:', localDraft);
-      setFormData(localDraft);
-      toast({
-        title: "Rascunho recuperado",
-        description: "Suas alterações não salvas foram recuperadas.",
-      });
-    }
-  }, [localDraft, initialized, user, toast]);
+  // localStorage DESABILITADO - comportamento estático
+  // Sem recuperação automática de rascunhos
 
-  // Rascunho local REMOVIDO - comportamento estático
-
-  // Recuperação automática REMOVIDA - comportamento estático
-
-  // Auto-save após transcrição REMOVIDO - comportamento estático
+  // COMPORTAMENTO ESTÁTICO - Sem recuperação automática de rascunhos
+  // COMPORTAMENTO ESTÁTICO - Sem salvamento local automático  
+  // COMPORTAMENTO ESTÁTICO - Sem auto-save após transcrição
 
   // Avisar antes de sair da página com dados não salvos
   useEffect(() => {
