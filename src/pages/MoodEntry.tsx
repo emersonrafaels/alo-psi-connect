@@ -32,7 +32,7 @@ const MoodEntry = () => {
   const [selectedTab, setSelectedTab] = useState('texto');
   
   const [formData, setFormData] = useState({
-    date: editDate || getTodayLocalDateString(),
+    date: getTodayLocalDateString(), // Always start with today, will be updated by useEffect
     mood_score: [5],
     energy_level: [3],
     anxiety_level: [3],
@@ -103,34 +103,26 @@ const MoodEntry = () => {
     }
   }, [user, navigate]);
 
-  // Single consolidated useEffect for data loading and initialization
+  // Main initialization and data loading effect
   useEffect(() => {
-    console.log('MoodEntry useEffect triggered:', { user: !!user, editDate, formDataDate: formData.date, initialized });
-    
     if (!user) return;
 
-    // Determine the target date (editDate has priority over formData.date)
-    const targetDate = editDate || formData.date;
+    const targetDate = editDate || getTodayLocalDateString();
     
-    if (!targetDate) return;
-
-    // Prevent multiple initializations for the same conditions
-    const currentKey = `${user.id}-${targetDate}`;
+    console.log('MoodEntry: Loading data for date:', targetDate);
     
-    if (!initialized) {
-      console.log('Initializing with date:', targetDate);
-      checkExistingEntry(targetDate);
-      setInitialized(true);
-    }
-  }, [user, editDate, initialized]);
+    // Check for existing entry and load data
+    checkExistingEntry(targetDate);
+    setInitialized(true);
+  }, [user, editDate]);
 
-  // Handle date changes from user interaction (not initial load)
+  // Handle user-initiated date changes (when user changes date in the UI)
   useEffect(() => {
     if (!user || !initialized) return;
     
-    // Only check if this is a user-initiated date change (not initial load)
-    if (!editDate && formData.date) {
-      console.log('Date changed by user to:', formData.date);
+    // Only trigger for user changes, not initial load or URL-based dates
+    if (!editDate && formData.date !== getTodayLocalDateString()) {
+      console.log('User changed date to:', formData.date);
       checkExistingEntry(formData.date);
     }
   }, [formData.date, user, initialized, editDate]);
