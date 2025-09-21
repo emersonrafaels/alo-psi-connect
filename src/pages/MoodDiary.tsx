@@ -50,25 +50,26 @@ const MoodDiary = () => {
     };
 
     const shareConfig = getShareConfig();
-    const message = generateWhatsAppMessage(shareData, stats, shareConfig);
 
     try {
       switch (platform) {
         case 'whatsapp':
-          shareWhatsApp(message);
+          shareWhatsApp(shareData, stats, shareConfig);
           break;
         case 'telegram':
-          shareTelegram(message);
+          shareTelegram(shareData, stats, shareConfig);
           break;
         case 'email':
-          shareEmail('Meu Diário Emocional', message);
+          shareEmail(shareData, stats, shareConfig);
           break;
         case 'copy':
-          await copyToClipboard(message);
-          toast({
-            title: "Copiado!",
-            description: "Conteúdo copiado para a área de transferência.",
-          });
+          const success = await copyToClipboard(shareData, stats, shareConfig);
+          if (success) {
+            toast({
+              title: "Copiado!",
+              description: "Conteúdo copiado para a área de transferência.",
+            });
+          }
           break;
       }
     } catch (error) {

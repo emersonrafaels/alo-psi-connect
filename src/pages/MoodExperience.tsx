@@ -185,22 +185,20 @@ const MoodExperience = () => {
 
     const stats = getDemoStats();
     const shareConfig = getShareConfig();
-    const message = generateWhatsAppMessage(currentEntry, stats, shareConfig);
 
     try {
       switch (platform) {
         case 'whatsapp':
-          shareWhatsApp(message);
+          shareWhatsApp(currentEntry, stats, shareConfig);
           break;
         case 'telegram':
-          shareTelegram(message);
+          shareTelegram(currentEntry, stats, shareConfig);
           break;
         case 'email':
-          const subject = `Meu Diário Emocional - ${formatDateBR(formData.date)}`;
-          shareEmail(subject, message);
+          shareEmail(currentEntry, stats, shareConfig);
           break;
         case 'copy':
-          const success = await copyToClipboard(message);
+          const success = await copyToClipboard(currentEntry, stats, shareConfig);
           if (success) {
             toast({
               title: "Copiado!",
