@@ -123,10 +123,7 @@ export const useMoodEntries = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Sucesso",
-        description: "Entrada atualizada com sucesso!",
-      });
+      console.log('Entry updated successfully');
 
       fetchEntries(); // Refresh the list
       return data;
@@ -237,10 +234,7 @@ export const useMoodEntries = () => {
 
         if (error) throw error;
 
-        toast({
-          title: "Sucesso",
-          description: "Entrada atualizada com sucesso!",
-        });
+        console.log('Entry updated successfully');
 
         fetchEntries();
         return data;

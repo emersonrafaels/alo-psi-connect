@@ -218,7 +218,8 @@ const MoodEntry = () => {
       
       if (localDataStr !== currentDataStr && Object.keys(localDraft).length > Object.keys(formData).length) {
         console.log('Recuperando dados do localStorage:', localDraft);
-        setFormData(prev => ({ ...prev, ...localDraft }));
+        const { date: _, ...localDataWithoutDate } = localDraft;
+        setFormData(prev => ({ ...prev, ...localDataWithoutDate }));
       }
     }
   }, [localDraft, user?.id, initialized]);
