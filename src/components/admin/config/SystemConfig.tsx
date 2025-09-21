@@ -162,10 +162,10 @@ export const SystemConfig = () => {
     try {
       // Validate guest limit before saving
       const limitNumber = parseInt(guestLimit, 10);
-      if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > 10) {
+      if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > 100) {
         toast({
           title: "Erro de validação",
-          description: "O limite de entradas para visitantes deve ser um número entre 1 e 10.",
+          description: "O limite de entradas para visitantes deve ser um número entre 1 e 100.",
           variant: "destructive",
         });
         setSaving(false);
