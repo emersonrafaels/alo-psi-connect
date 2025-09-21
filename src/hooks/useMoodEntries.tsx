@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useUserProfile } from './useUserProfile';
 import { useToast } from '@/hooks/use-toast';
+import { normalizeDateForStorage } from '@/lib/utils';
 
 export interface MoodEntry {
   id: string;
@@ -190,14 +191,18 @@ export const useMoodEntries = () => {
     }
 
     try {
+      // Normalize the date to prevent timezone issues
+      const normalizedDate = normalizeDateForStorage(entryData.date);
+      const normalizedEntryData = { ...entryData, date: normalizedDate };
+      
       // Check if entry already exists for this date
-      const existingEntry = await getEntryByDate(entryData.date);
+      const existingEntry = await getEntryByDate(normalizedDate);
       
       if (existingEntry) {
         // Update existing entry
         const { data, error } = await supabase
           .from('mood_entries')
-          .update(entryData)
+          .update(normalizedEntryData)
           .eq('id', existingEntry.id)
           .select()
           .single();
@@ -216,7 +221,7 @@ export const useMoodEntries = () => {
         const { data, error } = await supabase
           .from('mood_entries')
           .insert({
-            ...entryData,
+            ...normalizedEntryData,
             user_id: user.id,
             profile_id: profile.id,
           })

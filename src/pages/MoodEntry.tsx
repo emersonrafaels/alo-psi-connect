@@ -19,7 +19,7 @@ import { AudioRecorder } from '@/components/ui/audio-recorder';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { parseISODateLocal, getTodayLocalDateString } from '@/lib/utils';
+import { parseISODateLocal, getTodayLocalDateString, normalizeDateForStorage } from '@/lib/utils';
 
 const MoodEntry = () => {
   const navigate = useNavigate();
@@ -122,7 +122,7 @@ const MoodEntry = () => {
     setSaving(true);
     try {
       const entryData = {
-        date: formData.date,
+        date: normalizeDateForStorage(formData.date),
         mood_score: formData.mood_score[0],
         energy_level: formData.energy_level[0],
         anxiety_level: formData.anxiety_level[0],

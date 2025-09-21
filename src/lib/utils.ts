@@ -91,3 +91,25 @@ export function formatDateTimeBR(dateTime: Date | string): string {
     minute: '2-digit' 
   });
 }
+
+// Normalize date for storage to prevent timezone issues
+export function normalizeDateForStorage(date: string | Date): string {
+  if (typeof date === 'string') {
+    // If it's already in YYYY-MM-DD format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return date;
+    }
+    // Otherwise parse and normalize
+    const dateObj = new Date(date);
+    return dateObj.toISOString().split('T')[0];
+  }
+  
+  // If it's a Date object, convert to YYYY-MM-DD format
+  return date.toISOString().split('T')[0];
+}
+
+// Get a date object from a local date string without timezone conversion
+export function createLocalDateFromString(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}

@@ -21,7 +21,7 @@ import { generateProfessionalPDF, downloadPDF } from "@/utils/pdfGenerator";
 import { generateWhatsAppMessage, shareWhatsApp, shareTelegram, shareEmail, copyToClipboard } from "@/utils/shareHelpers";
 import { useShareConfig } from "@/hooks/useShareConfig";
 import { Calendar, FileText, Share2, TrendingUp, Heart, Brain, Zap, Moon, Tag, Download, MessageCircle, Sparkles, Target, Mail, Copy } from "lucide-react";
-import { formatDateBR, getTodayLocalDateString } from "@/lib/utils";
+import { formatDateBR, getTodayLocalDateString, normalizeDateForStorage } from "@/lib/utils";
 
 const MoodExperience = () => {
   const navigate = useNavigate();
@@ -85,7 +85,7 @@ const MoodExperience = () => {
     }
 
     const success = addDemoEntry({
-      date: formData.date,
+      date: normalizeDateForStorage(formData.date),
       mood_score: formData.mood_score[0],
       energy_level: formData.energy_level[0],
       anxiety_level: formData.anxiety_level[0],
