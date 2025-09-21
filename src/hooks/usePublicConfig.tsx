@@ -29,53 +29,77 @@ export const usePublicConfig = (allowedCategories?: string[]) => {
       const { data, error } = await query.order('category, key');
 
       if (error) {
-        // Se há erro (provavelmente RLS), usar configurações padrão para homepage
+        // Se há erro (provavelmente RLS), usar configurações padrão
+        const defaultConfigs = [];
+        
         if (allowedCategories?.includes('homepage')) {
-          setConfigs([
+          defaultConfigs.push(
             {
-              id: 'default',
+              id: 'default-homepage-1',
               category: 'homepage',
               key: 'hero_carousel_mode',
               value: 'false',
               updated_at: new Date().toISOString()
             },
             {
-              id: 'default',
+              id: 'default-homepage-2',
               category: 'homepage', 
               key: 'hero_images',
               value: '["https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png"]',
               updated_at: new Date().toISOString()
             }
-          ]);
-        } else {
-          setConfigs([]);
+          );
         }
+        
+        if (allowedCategories?.includes('system')) {
+          defaultConfigs.push({
+            id: 'default-system-1',
+            category: 'system',
+            key: 'guest_diary_limit',
+            value: 10,
+            updated_at: new Date().toISOString()
+          });
+        }
+        
+        setConfigs(defaultConfigs);
       } else {
         setConfigs(data || []);
       }
     } catch (error) {
       console.error('Error fetching public configurations:', error);
       // Usar configurações padrão em caso de erro
+      const defaultConfigs = [];
+      
       if (allowedCategories?.includes('homepage')) {
-        setConfigs([
+        defaultConfigs.push(
           {
-            id: 'default',
+            id: 'default-homepage-1',
             category: 'homepage',
             key: 'hero_carousel_mode', 
             value: 'false',
             updated_at: new Date().toISOString()
           },
           {
-            id: 'default',
+            id: 'default-homepage-2',
             category: 'homepage',
             key: 'hero_images',
             value: '["https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png"]',
             updated_at: new Date().toISOString()
           }
-        ]);
-      } else {
-        setConfigs([]);
+        );
       }
+      
+      if (allowedCategories?.includes('system')) {
+        defaultConfigs.push({
+          id: 'default-system-1',
+          category: 'system',
+          key: 'guest_diary_limit',
+          value: 10,
+          updated_at: new Date().toISOString()
+        });
+      }
+      
+      setConfigs(defaultConfigs);
     } finally {
       setLoading(false);
     }
