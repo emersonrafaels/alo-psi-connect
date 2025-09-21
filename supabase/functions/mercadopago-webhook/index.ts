@@ -88,7 +88,9 @@ const handler = async (req: Request): Promise<Response> => {
                 display_name,
                 user_email,
                 profissao,
-                telefone
+                telefone,
+                tempo_consulta,
+                profile_id
               )
             `)
             .eq('id', agendamentoId)
@@ -97,7 +99,37 @@ const handler = async (req: Request): Promise<Response> => {
           if (fetchError) {
             console.error('Error fetching agendamento:', fetchError);
           } else {
-            // Call email notification function
+            let meetLink = null;
+            
+            // Try to create Google Calendar event
+            try {
+              const calendarResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/create-calendar-event`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  agendamento: agendamento
+                }),
+              });
+
+              if (calendarResponse.ok) {
+                const calendarResult = await calendarResponse.json();
+                if (calendarResult.success) {
+                  meetLink = calendarResult.meetLink;
+                  console.log('Google Calendar event created successfully with Meet link:', meetLink);
+                } else {
+                  console.log('Calendar event creation skipped:', calendarResult.message);
+                }
+              } else {
+                console.error('Failed to create calendar event:', await calendarResponse.text());
+              }
+            } catch (calendarError) {
+              console.error('Error creating calendar event:', calendarError);
+            }
+
+            // Call email notification function (always send emails regardless of calendar creation)
             const emailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-appointment-notification`, {
               method: 'POST',
               headers: {
@@ -106,14 +138,15 @@ const handler = async (req: Request): Promise<Response> => {
               },
               body: JSON.stringify({
                 agendamento: agendamento,
-                paymentId: paymentId
+                paymentId: paymentId,
+                meetLink: meetLink
               }),
             });
 
             if (!emailResponse.ok) {
               console.error('Failed to send email notification:', await emailResponse.text());
             } else {
-              console.log('Email notification sent successfully');
+              console.log('Email notifications sent successfully');
             }
           }
         } catch (emailError) {
