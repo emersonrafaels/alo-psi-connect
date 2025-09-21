@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
+import { parseISODateLocal } from '@/lib/utils';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -65,7 +66,7 @@ const MoodHistory = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
+    return parseISODateLocal(dateString).toLocaleDateString('pt-BR', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -74,7 +75,7 @@ const MoodHistory = () => {
   };
 
   const formatMonth = (monthKey: string) => {
-    return new Date(monthKey + '-01').toLocaleDateString('pt-BR', {
+    return parseISODateLocal(monthKey + '-01').toLocaleDateString('pt-BR', {
       year: 'numeric',
       month: 'long'
     });
@@ -192,7 +193,7 @@ const MoodHistory = () => {
                     <CardContent>
                       <div className="space-y-4">
                         {monthEntries
-                          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                          .sort((a, b) => parseISODateLocal(b.date).getTime() - parseISODateLocal(a.date).getTime())
                           .map((entry) => (
                             <div key={entry.id} className="border rounded-lg p-4 space-y-3">
                               {/* Entry Header */}
