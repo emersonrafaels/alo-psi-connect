@@ -62,14 +62,38 @@ export const N8NConfig = () => {
     chat_max_retries: 3,
     chat_retry_delay_ms: 1000,
     chat_retry_backoff_multiplier: 2,
-    chat_payload_template: '{"event": "ai_chat_message", "timestamp": "{{timestamp}}", "session_id": "{{session_id}}", "user": {"message": "{{user_message}}", "context": "{{context}}", "page": "{{page}}", "filters": "{{filters}}"}, "professionals": "{{professionals}}", "platform": "alopsi"}'
+    chat_payload_template: JSON.stringify({
+      event: "ai_chat_message",
+      timestamp: "{{timestamp}}",
+      session_id: "{{session_id}}",
+      user: {
+        message: "{{user_message}}",
+        context: "{{context}}",
+        page: "{{page}}",
+        filters: "{{filters}}",
+        professionals: "{{professionals}}"
+      },
+      platform: "alopsi"
+    }, null, 2)
   });
 
   // Update formData when configs are loaded
   useEffect(() => {
     if (configs.length > 0) {
       // Get the payload template as string (it's stored as JSON string in the database)
-      const payloadTemplate = getConfig('n8n_chat', 'payload_template', '{"event": "ai_chat_message", "timestamp": "{{timestamp}}", "session_id": "{{session_id}}", "user": {"message": "{{user_message}}", "context": "{{context}}", "page": "{{page}}", "filters": "{{filters}}"}, "professionals": "{{professionals}}", "platform": "alopsi"}');
+      const payloadTemplate = getConfig('n8n_chat', 'payload_template', JSON.stringify({
+        event: "ai_chat_message",
+        timestamp: "{{timestamp}}",
+        session_id: "{{session_id}}",
+        user: {
+          message: "{{user_message}}",
+          context: "{{context}}",
+          page: "{{page}}",
+          filters: "{{filters}}",
+          professionals: "{{professionals}}"
+        },
+        platform: "alopsi"
+      }));
       
       setFormData({
         // Configurações originais
@@ -274,14 +298,22 @@ export const N8NConfig = () => {
       // First, validate that the template is valid JSON by checking structure
       let templateCopy = template;
       
-      // Replace all variables with test values to validate JSON structure
+      // Replace all variables with appropriate test values for validation
       const testTemplate = templateCopy.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
         const varName = variable.trim();
-        // Use appropriate test values based on common variable names
-        if (varName === 'filters' || varName === 'professionals') {
-          return '{}'; // Empty object for validation
+        
+        // Use appropriate test values based on variable names and context
+        if (varName === 'filters' || varName.includes('filter')) {
+          return '{}'; // Empty object for filters (without quotes)
         }
-        return '"test_value"'; // String value for validation
+        if (varName === 'professionals' || varName.includes('professional') && varName.includes('s')) {
+          return '[]'; // Empty array for professionals list (without quotes)
+        }
+        if (varName.includes('professional') && !varName.includes('s')) {
+          return '{}'; // Empty object for single professional (without quotes)
+        }
+        
+        return '"test_value"'; // String value for other variables
       });
       
       // Validate JSON structure
@@ -291,22 +323,32 @@ export const N8NConfig = () => {
         throw new Error(`Template JSON inválido: ${validationError.message}`);
       }
       
-      // Process template and substitute variables
+      // Process template and substitute real variables
       const processedTemplate = templateCopy.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
         const varName = variable.trim();
         const value = variables[varName];
         
         if (value === undefined) {
           console.warn(`Template variable ${varName} not found, using fallback`);
-          return '"test_value"';
+          // Use appropriate fallback based on variable type
+          if (varName === 'filters' || varName.includes('filter')) {
+            return '{}';
+          }
+          if (varName === 'professionals' || varName.includes('professional') && varName.includes('s')) {
+            return '[]';
+          }
+          if (varName.includes('professional') && !varName.includes('s')) {
+            return '{}';
+          }
+          return '"fallback_value"';
         }
         
-        // For objects and arrays, replace the quoted placeholder with actual JSON
-        if (typeof value === 'object') {
+        // For objects and arrays, insert JSON directly (no extra quotes)
+        if (typeof value === 'object' && value !== null) {
           return JSON.stringify(value);
         }
         
-        // For primitives, return as JSON string
+        // For strings, numbers, booleans - JSON stringify to handle quotes properly
         return JSON.stringify(value);
       });
       
