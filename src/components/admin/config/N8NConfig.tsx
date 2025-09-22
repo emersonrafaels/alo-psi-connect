@@ -306,13 +306,24 @@ export const N8NConfig = () => {
   };
 
   // Utility function to create payload from template
-  const createPayloadFromTemplate = (template: string, variables: Record<string, any>): any => {
+  const createPayloadFromTemplate = (template: string | object, variables: Record<string, any>): any => {
     try {
       console.log('Creating payload from template:', template);
       console.log('With variables:', variables);
       
+      // Convert template to string if it's an object
+      let templateString: string;
+      if (typeof template === 'object' && template !== null) {
+        templateString = JSON.stringify(template, null, 2);
+        console.log('Converted object template to JSON string:', templateString);
+      } else if (typeof template === 'string') {
+        templateString = template;
+      } else {
+        throw new Error('Template deve ser uma string JSON ou um objeto');
+      }
+      
       // First, validate basic JSON structure by checking brace/bracket balance
-      let templateCopy = template.trim();
+      let templateCopy = templateString.trim();
       
       // Check for basic JSON structure issues
       const openBraces = (templateCopy.match(/\{/g) || []).length;
