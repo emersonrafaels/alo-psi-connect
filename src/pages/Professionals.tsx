@@ -30,6 +30,7 @@ import {
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSearchFilters } from "@/hooks/useSearchFilters"
+import { useAIAssistantConfig } from "@/hooks/useAIAssistantConfig"
 
 import { AIAssistantModal } from "@/components/AIAssistantModal"
 
@@ -64,6 +65,7 @@ const Professionals = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
   const { getFiltersFromURL, clearFilters: clearURLFilters } = useSearchFilters()
+  const { getAIAssistantConfig } = useAIAssistantConfig()
   
   const [showAIAssistant, setShowAIAssistant] = useState(false)
   const [filters, setFilters] = useState({
@@ -79,6 +81,9 @@ const Professionals = () => {
     nome: ""
   })
   const professionalsPerPage = 9
+
+  // Configurações do assistente IA
+  const { aiConfig } = useAIAssistantConfig()
 
   // Aplicar filtros da URL ao carregar a página
   useEffect(() => {
@@ -619,15 +624,17 @@ const Professionals = () => {
                     </span>
                   )}
                 </Button>
-                <Button
-                  variant="default"
-                  onClick={() => setShowAIAssistant(true)}
-                  className="flex items-center gap-2 btn-gradient shadow-lg"
-                >
-                  <Bot className="h-4 w-4" />
-                  <Sparkles className="h-3 w-3" />
-                  Assistente IA
-                </Button>
+                {aiConfig.enabled && (
+                  <Button
+                    variant="default"
+                    onClick={() => setShowAIAssistant(true)}
+                    className="flex items-center gap-2 btn-gradient shadow-lg"
+                  >
+                    <Bot className="h-4 w-4" />
+                    <Sparkles className="h-3 w-3" />
+                    {aiConfig.title}
+                  </Button>
+                )}
                 {getActiveFiltersCount() > 0 && (
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
                     <X className="h-4 w-4" />
@@ -1234,11 +1241,13 @@ const Professionals = () => {
       <Footer />
       
       {/* AI Assistant Modal */}
-      <AIAssistantModal 
-        open={showAIAssistant}
-        onOpenChange={setShowAIAssistant}
-        professionals={professionals}
-      />
+      {aiConfig.enabled && (
+        <AIAssistantModal 
+          open={showAIAssistant}
+          onOpenChange={setShowAIAssistant}
+          professionals={professionals}
+        />
+      )}
     </div>
   );
 };

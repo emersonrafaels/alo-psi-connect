@@ -9,12 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
-import { Save, TestTube2, Bot, Activity, MessageSquare, TrendingUp, Clock, Users, Zap } from 'lucide-react';
+import { Save, TestTube2, Bot, Activity, MessageSquare, TrendingUp, Clock, Users, Zap, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MetricsCard } from './MetricsCard';
 import { UsageChart } from './UsageChart';
 import { ConfigDataTable } from './ConfigDataTable';
+import { clearConfigCache, forceConfigRefresh } from '@/utils/configCache';
 
 const GPT_MODELS = [
   { value: 'gpt-4o', label: 'GPT-4o (Mais Avançado)' },
@@ -239,6 +240,34 @@ Responda sempre em português brasileiro, de forma clara e objetiva.`),
     }
   };
 
+  const handleClearCache = () => {
+    const success = clearConfigCache();
+    
+    if (success) {
+      toast({
+        title: "✅ Cache limpo com sucesso",
+        description: "Todas as configurações em cache foram removidas. O assistente carregará as configurações mais recentes."
+      });
+    } else {
+      toast({
+        title: "❌ Erro ao limpar cache",
+        description: "Não foi possível limpar o cache. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleForceRefresh = () => {
+    toast({
+      title: "🔄 Atualizando configurações...",
+      description: "A página será recarregada para aplicar as configurações mais recentes."
+    });
+    
+    setTimeout(() => {
+      forceConfigRefresh();
+    }, 1000);
+  };
+
   if (loading) {
     return <div className="p-6">Carregando configurações...</div>;
   }
@@ -439,7 +468,7 @@ Responda sempre em português brasileiro, de forma clara e objetiva.`),
                 Quando habilitado, o assistente terá acesso às informações dos profissionais para dar recomendações personalizadas
               </p>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-wrap gap-3 pt-4">
                 <Button onClick={handleSave} disabled={saving}>
                   <Save className="h-4 w-4 mr-2" />
                   {saving ? 'Salvando...' : 'Salvar Configurações'}
@@ -447,6 +476,14 @@ Responda sempre em português brasileiro, de forma clara e objetiva.`),
                 <Button variant="outline" onClick={handleTest} disabled={testing}>
                   <TestTube2 className="h-4 w-4 mr-2" />
                   {testing ? 'Testando...' : 'Teste Rápido'}
+                </Button>
+                <Button variant="secondary" onClick={handleClearCache}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Limpar Cache
+                </Button>
+                <Button variant="destructive" onClick={handleForceRefresh}>
+                  <Zap className="h-4 w-4 mr-2" />
+                  Forçar Atualização
                 </Button>
               </div>
             </CardContent>
