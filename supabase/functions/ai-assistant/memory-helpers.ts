@@ -4,18 +4,40 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 
 export async function manageSessionAndMemory(supabase: any, sessionId: string, userId?: string, userMessage?: string) {
   try {
-    // Create or update session
-    const { error: sessionError } = await supabase
+    // Check if session already exists
+    const { data: existingSession } = await supabase
       .from('ai_chat_sessions')
-      .upsert({
-        session_id: sessionId,
-        user_id: userId,
-        updated_at: new Date().toISOString(),
-        metadata: { last_activity: new Date().toISOString() }
-      });
+      .select('session_id')
+      .eq('session_id', sessionId)
+      .single();
 
-    if (sessionError) {
-      console.error('❌ Error managing session:', sessionError);
+    if (!existingSession) {
+      // Create new session only if it doesn't exist
+      const { error: sessionError } = await supabase
+        .from('ai_chat_sessions')
+        .insert({
+          session_id: sessionId,
+          user_id: userId,
+          updated_at: new Date().toISOString(),
+          metadata: { last_activity: new Date().toISOString() }
+        });
+
+      if (sessionError) {
+        console.error('❌ Error creating session:', sessionError);
+      }
+    } else {
+      // Update existing session
+      const { error: updateError } = await supabase
+        .from('ai_chat_sessions')
+        .update({
+          updated_at: new Date().toISOString(),
+          metadata: { last_activity: new Date().toISOString() }
+        })
+        .eq('session_id', sessionId);
+
+      if (updateError) {
+        console.error('❌ Error updating session:', updateError);
+      }
     }
 
     // Save user message if provided

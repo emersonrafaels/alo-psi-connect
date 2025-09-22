@@ -73,7 +73,7 @@ serve(async (req) => {
     console.log('📊 Active data sources:', dataSources?.length || 0);
 
     const model = configMap.model || 'gpt-4o-mini';
-    const maxTokens = parseInt(configMap.max_tokens) || 2000;
+    const maxTokens = parseInt(configMap.max_tokens) || 1500; // Reduced to help with rate limits
     const includeProData = configMap.include_professional_data !== false;
     const systemPrompt = configMap.system_prompt || getDefaultSystemPrompt();
 
@@ -290,9 +290,9 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
 
     console.log('🎯 Enhanced system prompt prepared, length:', enhancedSystemPrompt.length);
 
-    // Validate the model
+    // Validate the model and use more cost-effective option to reduce rate limits
     const validModels = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo', 'gpt-4.1-mini-2025-04-14', 'gpt-5-mini-2025-08-07'];
-    const modelToUse = validModels.includes(model) ? model : 'gpt-4o-mini';
+    const modelToUse = validModels.includes(model) ? 'gpt-4o-mini' : 'gpt-4o-mini'; // Always use mini for efficiency
     
     if (model !== modelToUse) {
       console.log(`⚠️ Model ${model} not in valid list, using ${modelToUse} instead`);
@@ -396,6 +396,19 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
     if (!openAiResponse.ok) {
       const errorData = await openAiResponse.text();
       console.error('❌ OpenAI API error:', errorData);
+      
+      // Handle rate limit errors gracefully
+      if (openAiResponse.status === 429) {
+        console.log('⏳ Rate limit hit, returning error message to user');
+        await saveMessage(supabase, validSessionId, 'assistant', 'Desculpe, o assistente está temporariamente sobrecarregado. Tente novamente em alguns segundos.');
+        
+        return new Response(JSON.stringify({ 
+          content: 'Desculpe, o assistente está temporariamente sobrecarregado. Tente novamente em alguns segundos.' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error(`OpenAI API error: ${openAiResponse.status} - ${errorData}`);
     }
 
@@ -472,12 +485,26 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
         body: JSON.stringify(secondRequestBody),
       });
 
-      const secondOpenaiData = await secondOpenaiResponse.json();
-      
       if (!secondOpenaiResponse.ok) {
-        console.error('❌ Second OpenAI API call error:', secondOpenaiData);
-        throw new Error(`OpenAI API error: ${secondOpenaiData.error?.message}`);
+        const secondErrorData = await secondOpenaiResponse.text();
+        console.error('❌ Second OpenAI API call error:', secondErrorData);
+        
+        // Handle rate limit errors gracefully for second call
+        if (secondOpenaiResponse.status === 429) {
+          console.log('⏳ Rate limit hit on second call, returning error message to user');
+          await saveMessage(supabase, validSessionId, 'assistant', 'Desculpe, o assistente está temporariamente sobrecarregado. Tente novamente em alguns segundos.');
+          
+          return new Response(JSON.stringify({ 
+            content: 'Desculpe, o assistente está temporariamente sobrecarregado. Tente novamente em alguns segundos.' 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        throw new Error(`OpenAI API error: ${secondOpenaiResponse.status} - ${secondErrorData}`);
       }
+
+      const secondOpenaiData = await secondOpenaiResponse.json();
 
       assistantMessage = secondOpenaiData.choices[0].message.content;
       console.log('✅ Tool integration completed successfully');

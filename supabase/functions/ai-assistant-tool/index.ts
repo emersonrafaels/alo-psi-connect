@@ -64,8 +64,8 @@ serve(async (req) => {
           const normalizedProfession = profession.toLowerCase().trim();
           
           if (normalizedProfession.includes('psicoterapeuta') || normalizedProfession.includes('psicoterapia')) {
-            // Search for both 'psicoterapeuta' and 'psicólogo' since psychologists also do psychotherapy
-            query = query.or('profissao.ilike.%psicoterapeuta%,profissao.ilike.%psicólogo%');
+            // Filter specifically for professionals with 'psicoterapeuta' profession
+            query = query.ilike('profissao', '%psicoterapeuta%');
           } else {
             query = query.ilike('profissao', `%${profession}%`);
           }
