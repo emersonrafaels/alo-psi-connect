@@ -305,7 +305,7 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
         role: msg.role,
         content: msg.content
       })),
-      { role: 'user', content: userMessage }
+      { role: 'user', content: message }
     ];
 
     // Prepare API request parameters based on model
