@@ -144,7 +144,7 @@ Identifique quando o usuário mencionar gênero e use o parâmetro gender:
 
 💡 **AGENDAMENTO RÁPIDO:**
 - Se o usuário demonstrar interesse, ofereça links diretos de agendamento
-- Use os horários de `next_available_slots` quando disponíveis
+- Use os horários de 'next_available_slots' quando disponíveis
 - Formate assim: "**Data**: Horário ([Agendar](URL))"
 
 📸 **IMPORTANTE - EXIBIÇÃO DE FOTOS:**
