@@ -507,8 +507,11 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
 
   } catch (error) {
     console.error('❌ Error in ai-assistant function:', error);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error details:', JSON.stringify(error, null, 2));
     return new Response(JSON.stringify({ 
-      error: error.message 
+      error: error.message,
+      details: error.stack
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
