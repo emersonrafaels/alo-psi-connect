@@ -295,8 +295,22 @@ export const N8NConfig = () => {
       console.log('Creating payload from template:', template);
       console.log('With variables:', variables);
       
-      // First, validate that the template is valid JSON by checking structure
-      let templateCopy = template;
+      // First, validate basic JSON structure by checking brace/bracket balance
+      let templateCopy = template.trim();
+      
+      // Check for basic JSON structure issues
+      const openBraces = (templateCopy.match(/\{/g) || []).length;
+      const closeBraces = (templateCopy.match(/\}/g) || []).length;
+      const openBrackets = (templateCopy.match(/\[/g) || []).length;
+      const closeBrackets = (templateCopy.match(/\]/g) || []).length;
+      
+      if (openBraces !== closeBraces) {
+        throw new Error(`Template JSON malformado: ${openBraces} '{' mas ${closeBraces} '}'. Verifique se todas as chaves estão fechadas.`);
+      }
+      
+      if (openBrackets !== closeBrackets) {
+        throw new Error(`Template JSON malformado: ${openBrackets} '[' mas ${closeBrackets} ']'. Verifique se todos os arrays estão fechados.`);
+      }
       
       // Replace all variables with appropriate test values for validation
       const testTemplate = templateCopy.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
@@ -320,7 +334,15 @@ export const N8NConfig = () => {
       try {
         JSON.parse(testTemplate);
       } catch (validationError) {
-        throw new Error(`Template JSON inválido: ${validationError.message}`);
+        const errorMsg = validationError.message;
+        // Provide more helpful error messages
+        if (errorMsg.includes("Expected ',' or '}'")) {
+          throw new Error(`Template JSON inválido: Falta vírgula ou chave de fechamento '}'. Verifique a sintaxe JSON. Erro: ${errorMsg}`);
+        }
+        if (errorMsg.includes("Expected ',' or ']'")) {
+          throw new Error(`Template JSON inválido: Falta vírgula ou colchete de fechamento ']'. Verifique a sintaxe JSON. Erro: ${errorMsg}`);
+        }
+        throw new Error(`Template JSON inválido: ${errorMsg}`);
       }
       
       // Process template and substitute real variables
