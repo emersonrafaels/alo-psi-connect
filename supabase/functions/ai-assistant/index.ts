@@ -348,7 +348,7 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
           type: "function",
           function: {
             name: "check_availability",
-            description: "Verifica disponibilidade de horários para um profissional específico",
+            description: "Verifica disponibilidade detalhada para um profissional em data específica, considerando todos os bloqueios e indisponibilidades",
             parameters: {
               type: "object",
               properties: {
@@ -363,6 +363,23 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
                 time_period: {
                   type: "string",
                   description: "Período desejado (manhã, tarde, noite)"
+                }
+              },
+              required: ["professional_id"]
+            }
+          }
+        },
+        {
+          type: "function",
+          function: {
+            name: "get_professional_calendar_status",
+            description: "Obtém status geral do calendário e informações de um profissional",
+            parameters: {
+              type: "object",
+              properties: {
+                professional_id: {
+                  type: "number",
+                  description: "ID do profissional para obter status do calendário"
                 }
               },
               required: ["professional_id"]

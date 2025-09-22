@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 interface ToolRequest {
-  action: 'search_professionals' | 'get_professional_schedules' | 'get_system_config' | 'check_availability' | 'get_next_available_slots';
+  action: 'search_professionals' | 'get_professional_schedules' | 'get_system_config' | 'check_availability' | 'get_next_available_slots' | 'get_professional_calendar_status';
   parameters?: Record<string, any>;
 }
 
@@ -316,13 +316,48 @@ serve(async (req) => {
           break;
         }
 
-        // Get existing appointments for the specific date
+        // Get the day of week for this date
+        const targetDate = new Date(date);
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayOfWeek = dayNames[targetDate.getDay()];
+        
+        // Map day names to numbers for comparison (same logic as CalendarWidget)
+        const dayCodeToNumber = {
+          'sun': 0, 'sunday': 0, 'domingo': 0, 'dom': 0,
+          'mon': 1, 'monday': 1, 'segunda': 1, 'segunda-feira': 1, 'seg': 1,
+          'tue': 2, 'tuesday': 2, 'terça': 2, 'terça-feira': 2, 'terca': 2, 'ter': 2,
+          'wed': 3, 'wednesday': 3, 'quarta': 3, 'quarta-feira': 3, 'qua': 3,
+          'thu': 4, 'thursday': 4, 'quinta': 4, 'quinta-feira': 4, 'qui': 4,
+          'fri': 5, 'friday': 5, 'sexta': 5, 'sexta-feira': 5, 'sex': 5,
+          'sat': 6, 'saturday': 6, 'sábado': 6, 'sabado': 6, 'sab': 6
+        };
+        
+        const currentDayNumber = targetDate.getDay();
+        
+        // Filter schedules for this day (matching CalendarWidget logic)
+        const daySchedules = schedules.filter(schedule => {
+          const sessionDay = schedule.day?.toLowerCase().trim();
+          const sessionDayNumber = dayCodeToNumber[sessionDay];
+          return sessionDayNumber === currentDayNumber;
+        });
+
+        if (daySchedules.length === 0) {
+          result = {
+            date: date,
+            day_of_week: dayOfWeek,
+            available_times: [],
+            message: `Este profissional não atende às ${dayOfWeek}s`
+          };
+          break;
+        }
+
+        // Check for existing appointments on this date
         const { data: appointments, error: apptError } = await supabase
           .from('agendamentos')
-          .select('horario, status')
+          .select('horario, status, payment_status')
           .eq('professional_id', professional_id)
           .eq('data_consulta', date)
-          .in('status', ['confirmado', 'pendente']);
+          .in('status', ['pendente', 'confirmado']);
 
         if (apptError) {
           console.error('❌ Error fetching appointments:', apptError);
@@ -330,29 +365,111 @@ serve(async (req) => {
           break;
         }
 
-        const bookedTimes = appointments?.map(a => a.horario) || [];
-        
-        // Get day of week for the date
-        const targetDate = new Date(date);
-        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        const dayOfWeek = dayNames[targetDate.getDay()];
-        
-        // Filter schedules for this day of week
-        const daySchedules = schedules.filter(schedule => 
-          schedule.day?.toLowerCase() === dayOfWeek
+        // Check for professional unavailability/blocks on this date
+        const { data: unavailabilityRecords, error: unavailError } = await supabase
+          .from('professional_unavailability')
+          .select('*')
+          .eq('professional_id', professional_id)
+          .eq('date', date);
+
+        if (unavailError) {
+          console.error('❌ Error fetching unavailability:', unavailError);
+        }
+
+        // Check if the entire day is blocked
+        const isDayBlocked = unavailabilityRecords?.some(record => record.all_day);
+        if (isDayBlocked) {
+          const blockedReason = unavailabilityRecords?.find(r => r.all_day)?.reason;
+          result = {
+            date: date,
+            day_of_week: dayOfWeek,
+            available_times: [],
+            blocked: true,
+            block_reason: blockedReason,
+            message: `Profissional indisponível no dia ${date}${blockedReason ? ` - ${blockedReason}` : ''}`
+          };
+          break;
+        }
+
+        const occupiedTimes = new Set(
+          (appointments || []).map(apt => apt.horario.substring(0, 5))
         );
 
-        // Calculate available times based on schedules and booked times
-        const availableTimes = daySchedules.filter(schedule => {
-          const scheduleTime = schedule.start_time;
-          return !bookedTimes.includes(scheduleTime);
+        // Get blocked time ranges for this day
+        const blockedTimeRanges = (unavailabilityRecords || [])
+          .filter(record => !record.all_day && record.start_time && record.end_time)
+          .map(record => ({
+            start: record.start_time,
+            end: record.end_time,
+            reason: record.reason
+          }));
+
+        // Helper function to check if a time slot is blocked (matching CalendarWidget logic)
+        const isTimeBlocked = (timeSlot: string) => {
+          return blockedTimeRanges.some(range => {
+            const slotTime = new Date(`2000-01-01T${timeSlot}:00`);
+            const startTime = new Date(`2000-01-01T${range.start}`);
+            const endTime = new Date(`2000-01-01T${range.end}`);
+            
+            // Check if the slot falls within any blocked time range
+            // We also need to check if the consultation would end within the blocked period
+            const slotEndTime = new Date(slotTime.getTime() + 50 * 60 * 1000); // 50 minutes consultation
+            
+            return (slotTime >= startTime && slotTime < endTime) || 
+                   (slotEndTime > startTime && slotEndTime <= endTime) ||
+                   (slotTime < startTime && slotEndTime > endTime);
+          });
+        };
+
+        // Generate time slots for each session range (replicating CalendarWidget logic)
+        const generateTimeSlots = (startTime: string, endTime: string, consultationDuration: number = 50) => {
+          const slots = [];
+          const start = new Date(`2000-01-01T${startTime}`);
+          const end = new Date(`2000-01-01T${endTime}`);
+          
+          // Calculate the last possible start time (end time minus consultation duration)
+          const lastPossibleStart = new Date(end.getTime() - consultationDuration * 60 * 1000);
+          
+          // Generate slots every 30 minutes until we reach the last possible start time
+          const current = new Date(start);
+          while (current <= lastPossibleStart) {
+            const timeString = current.toTimeString().substring(0, 5); // HH:MM format
+            slots.push(timeString);
+            current.setMinutes(current.getMinutes() + 30); // 30-minute intervals
+          }
+          
+          return slots;
+        };
+
+        // Generate all available time slots
+        const allTimeSlots = [];
+        daySchedules.forEach(session => {
+          const slots = generateTimeSlots(session.start_time, session.end_time, 50);
+          slots.forEach(slot => {
+            // Only add if not occupied and not blocked
+            if (!occupiedTimes.has(slot) && !isTimeBlocked(slot)) {
+              allTimeSlots.push({
+                time: slot,
+                session_id: session.id,
+                day: session.day,
+                period: parseInt(slot.split(':')[0]) < 12 ? 'manhã' : 
+                       parseInt(slot.split(':')[0]) < 18 ? 'tarde' : 'noite'
+              });
+            }
+          });
         });
 
+        // Remove duplicates and sort
+        const uniqueSlots = allTimeSlots.filter((slot, index, self) => 
+          index === self.findIndex(s => s.time === slot.time)
+        );
+        uniqueSlots.sort((a, b) => a.time.localeCompare(b.time));
+
         // Filter by time period if specified
-        let filteredTimes = availableTimes;
+        let filteredTimes = uniqueSlots;
         if (time_period) {
-          filteredTimes = availableTimes.filter(schedule => {
-            const hour = parseInt(schedule.start_time.split(':')[0]);
+          filteredTimes = uniqueSlots.filter(slot => {
+            const hour = parseInt(slot.time.split(':')[0]);
             switch (time_period.toLowerCase()) {
               case 'manha': case 'manhã': case 'morning':
                 return hour >= 8 && hour < 12;
@@ -370,11 +487,12 @@ serve(async (req) => {
           date: date,
           day_of_week: dayOfWeek,
           available_times: filteredTimes,
-          booked_times: bookedTimes,
+          occupied_times: Array.from(occupiedTimes),
+          blocked_time_ranges: blockedTimeRanges,
           total_day_slots: daySchedules.length,
           message: filteredTimes.length > 0 
-            ? `Encontrados ${filteredTimes.length} horários disponíveis para ${date}`
-            : `Nenhum horário disponível para ${date}${time_period ? ` no período ${time_period}` : ''}`
+            ? `Encontrados ${filteredTimes.length} horários disponíveis para ${date}${time_period ? ` no período ${time_period}` : ''}`
+            : `Nenhum horário disponível para ${date}${time_period ? ` no período ${time_period}` : ''}${blockedTimeRanges.length > 0 ? ' (alguns horários bloqueados)' : ''}`
         };
         break;
       }
@@ -419,6 +537,93 @@ serve(async (req) => {
         break;
       }
 
+      case 'get_professional_calendar_status': {
+        const { professional_id } = parameters;
+        
+        if (!professional_id) {
+          result = { error: 'professional_id é obrigatório' };
+          break;
+        }
+
+        // Get professional info
+        const { data: professional, error: profError } = await supabase
+          .from('profissionais')
+          .select('display_name, ativo')
+          .eq('id', professional_id)
+          .single();
+
+        if (profError || !professional) {
+          result = { error: 'Profissional não encontrado' };
+          break;
+        }
+
+        if (!professional.ativo) {
+          result = { 
+            professional_id,
+            status: 'inactive',
+            message: 'Este profissional está inativo no momento'
+          };
+          break;
+        }
+
+        // Get professional schedules
+        const { data: schedules, error: schedError } = await supabase
+          .from('profissionais_sessoes')
+          .select('*')
+          .eq('user_id', professional_id);
+
+        if (schedError || !schedules || schedules.length === 0) {
+          result = { 
+            professional_id,
+            name: professional.display_name,
+            status: 'no_schedule',
+            message: 'Este profissional não possui horários cadastrados'
+          };
+          break;
+        }
+
+        // Check for upcoming unavailability (next 7 days)
+        const today = new Date();
+        const next7Days = new Date(today);
+        next7Days.setDate(today.getDate() + 7);
+        
+        const { data: upcomingBlocks } = await supabase
+          .from('professional_unavailability')
+          .select('date, all_day, start_time, end_time, reason')
+          .eq('professional_id', professional_id)
+          .gte('date', today.toISOString().split('T')[0])
+          .lte('date', next7Days.toISOString().split('T')[0]);
+
+        // Get next few available slots
+        const nextSlots = await getNextAvailableSlots(professional_id, schedules, 3);
+
+        // Organize schedule information
+        const scheduleInfo = {
+          weekdays: schedules.filter(s => !['saturday', 'sunday'].includes(s.day?.toLowerCase())),
+          weekend: schedules.filter(s => ['saturday', 'sunday'].includes(s.day?.toLowerCase())),
+          by_period: {
+            morning: schedules.filter(s => parseInt(s.start_time.split(':')[0]) < 12),
+            afternoon: schedules.filter(s => {
+              const hour = parseInt(s.start_time.split(':')[0]);
+              return hour >= 12 && hour < 18;
+            }),
+            evening: schedules.filter(s => parseInt(s.start_time.split(':')[0]) >= 18)
+          }
+        };
+
+        result = {
+          professional_id,
+          name: professional.display_name,
+          status: 'active',
+          schedule_info: scheduleInfo,
+          next_available_slots: nextSlots,
+          upcoming_blocks: upcomingBlocks || [],
+          total_weekly_hours: schedules.length,
+          message: `${professional.display_name} está ativo com ${schedules.length} horários semanais disponíveis`
+        };
+        break;
+      }
+
       default:
         result = { error: `Unknown action: ${action}` };
     }
@@ -436,7 +641,7 @@ serve(async (req) => {
   }
 });
 
-// Helper function to get next available slots for a professional
+// Helper function to get next available slots for a professional (enhanced with CalendarWidget logic)
 async function getNextAvailableSlots(professionalId: number, schedules: any[], limit: number = 5) {
   const slots = [];
   const today = new Date();
@@ -444,67 +649,94 @@ async function getNextAvailableSlots(professionalId: number, schedules: any[], l
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseKey);
   
-  // Helper to get day name from date
-  const getDayName = (date: Date) => {
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    return days[date.getDay()];
+  // Map day names to numbers for comparison (same logic as CalendarWidget)
+  const dayCodeToNumber = {
+    'sun': 0, 'sunday': 0, 'domingo': 0, 'dom': 0,
+    'mon': 1, 'monday': 1, 'segunda': 1, 'segunda-feira': 1, 'seg': 1,
+    'tue': 2, 'tuesday': 2, 'terça': 2, 'terça-feira': 2, 'terca': 2, 'ter': 2,
+    'wed': 3, 'wednesday': 3, 'quarta': 3, 'quarta-feira': 3, 'qua': 3,
+    'thu': 4, 'thursday': 4, 'quinta': 4, 'quinta-feira': 4, 'qui': 4,
+    'fri': 5, 'friday': 5, 'sexta': 5, 'sexta-feira': 5, 'sex': 5,
+    'sat': 6, 'saturday': 6, 'sábado': 6, 'sabado': 6, 'sab': 6
   };
   
-  // Generate time slots from schedule ranges
-  const generateTimeSlots = (startTime: string, endTime: string) => {
+  // Generate time slots from schedule ranges (matching CalendarWidget logic)
+  const generateTimeSlots = (startTime: string, endTime: string, consultationDuration: number = 50) => {
     const slots = [];
     const start = new Date(`2000-01-01T${startTime}`);
     const end = new Date(`2000-01-01T${endTime}`);
-    const consultationDuration = 50; // 50 minutes
     
+    // Calculate the last possible start time (end time minus consultation duration)
     const lastPossibleStart = new Date(end.getTime() - consultationDuration * 60 * 1000);
     
+    // Generate slots every 30 minutes until we reach the last possible start time
     const current = new Date(start);
     while (current <= lastPossibleStart) {
-      const timeString = current.toTimeString().substring(0, 5);
+      const timeString = current.toTimeString().substring(0, 5); // HH:MM format
       slots.push(timeString);
       current.setMinutes(current.getMinutes() + 30); // 30-minute intervals
     }
     
     return slots;
   };
+
+  // Helper function to check if a time slot is blocked
+  const isTimeBlocked = (timeSlot: string, blockedTimeRanges: any[]) => {
+    return blockedTimeRanges.some(range => {
+      const slotTime = new Date(`2000-01-01T${timeSlot}:00`);
+      const startTime = new Date(`2000-01-01T${range.start}`);
+      const endTime = new Date(`2000-01-01T${range.end}`);
+      
+      // Check if the slot falls within any blocked time range
+      // We also need to check if the consultation would end within the blocked period
+      const slotEndTime = new Date(slotTime.getTime() + 50 * 60 * 1000); // 50 minutes consultation
+      
+      return (slotTime >= startTime && slotTime < endTime) || 
+             (slotEndTime > startTime && slotEndTime <= endTime) ||
+             (slotTime < startTime && slotEndTime > endTime);
+    });
+  };
   
   // Check next 30 days
   for (let dayOffset = 1; dayOffset <= 30 && slots.length < limit; dayOffset++) {
     const checkDate = new Date(today);
     checkDate.setDate(today.getDate() + dayOffset);
-    const dayName = getDayName(checkDate);
+    const currentDayNumber = checkDate.getDay();
     const dateString = checkDate.toISOString().split('T')[0];
     
-    // Get schedules for this day
-    const daySchedules = schedules.filter(schedule => 
-      schedule.day?.toLowerCase() === dayName
-    );
+    // Filter schedules for this day (matching CalendarWidget logic)
+    const daySchedules = schedules.filter(schedule => {
+      const sessionDay = schedule.day?.toLowerCase().trim();
+      const sessionDayNumber = dayCodeToNumber[sessionDay];
+      return sessionDayNumber === currentDayNumber;
+    });
     
     if (daySchedules.length === 0) continue;
-    
-    // Check existing appointments for this date
-    const { data: existingAppointments } = await supabase
-      .from('agendamentos')
-      .select('horario')
-      .eq('professional_id', professionalId)
-      .eq('data_consulta', dateString)
-      .in('status', ['pendente', 'confirmado']);
-    
-    // Check for unavailability blocks
+
+    // Check for professional unavailability/blocks on this date
     const { data: unavailabilityRecords } = await supabase
       .from('professional_unavailability')
       .select('*')
       .eq('professional_id', professionalId)
       .eq('date', dateString);
-    
+
+    // Check if the entire day is blocked
     const isDayBlocked = unavailabilityRecords?.some(record => record.all_day);
-    if (isDayBlocked) continue;
+    if (isDayBlocked) continue; // Skip this entire day
+
+    // Check existing appointments for this date
+    const { data: existingAppointments } = await supabase
+      .from('agendamentos')
+      .select('horario, status, payment_status')
+      .eq('professional_id', professionalId)
+      .eq('data_consulta', dateString)
+      .in('status', ['pendente', 'confirmado']);
     
     const occupiedTimes = new Set(
       (existingAppointments || []).map(apt => apt.horario.substring(0, 5))
     );
     
+    // Get blocked time ranges for this day
     const blockedTimeRanges = (unavailabilityRecords || [])
       .filter(record => !record.all_day && record.start_time && record.end_time)
       .map(record => ({
@@ -512,28 +744,17 @@ async function getNextAvailableSlots(professionalId: number, schedules: any[], l
         end: record.end_time
       }));
     
-    // Check if time is blocked
-    const isTimeBlocked = (timeSlot: string) => {
-      return blockedTimeRanges.some(range => {
-        const slotTime = new Date(`2000-01-01T${timeSlot}:00`);
-        const startTime = new Date(`2000-01-01T${range.start}`);
-        const endTime = new Date(`2000-01-01T${range.end}`);
-        const slotEndTime = new Date(slotTime.getTime() + 50 * 60 * 1000);
-        
-        return (slotTime >= startTime && slotTime < endTime) || 
-               (slotEndTime > startTime && slotEndTime <= endTime) ||
-               (slotTime < startTime && slotEndTime > endTime);
-      });
-    };
-    
     // Generate available slots for this day
     for (const schedule of daySchedules) {
-      const timeSlots = generateTimeSlots(schedule.start_time, schedule.end_time);
+      const timeSlots = generateTimeSlots(schedule.start_time, schedule.end_time, 50);
       
       for (const timeSlot of timeSlots) {
         if (slots.length >= limit) break;
         
-        if (!occupiedTimes.has(timeSlot) && !isTimeBlocked(timeSlot)) {
+        if (!occupiedTimes.has(timeSlot) && !isTimeBlocked(timeSlot, blockedTimeRanges)) {
+          const dayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+          const dayName = dayNames[checkDate.getDay()];
+          
           slots.push({
             date: dateString,
             date_formatted: checkDate.toLocaleDateString('pt-BR', { 
@@ -544,10 +765,14 @@ async function getNextAvailableSlots(professionalId: number, schedules: any[], l
             }),
             time: timeSlot,
             day_of_week: dayName,
+            period: parseInt(timeSlot.split(':')[0]) < 12 ? 'manhã' : 
+                   parseInt(timeSlot.split(':')[0]) < 18 ? 'tarde' : 'noite',
             booking_url: `/confirmacao-agendamento?professionalId=${professionalId}&date=${dateString}&time=${timeSlot}`
           });
         }
       }
+      
+      if (slots.length >= limit) break;
     }
   }
   
