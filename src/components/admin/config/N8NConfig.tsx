@@ -305,195 +305,110 @@ export const N8NConfig = () => {
     }
   };
 
-  // Ultra-robust template processing with extensive debugging and error handling
+  // Simplified and robust template processing
   const createPayloadFromTemplate = (template: string | object, variables: Record<string, any>): any => {
     try {
-      console.log('🔄 === INÍCIO DO PROCESSAMENTO DE TEMPLATE ===');
-      console.log('📊 Template original:', {
-        type: typeof template,
-        isNull: template === null,
-        isUndefined: template === undefined,
-        length: typeof template === 'string' ? template.length : 'N/A',
-        firstChars: typeof template === 'string' ? template.substring(0, 50) : JSON.stringify(template).substring(0, 50)
-      });
-      console.log('📊 Variáveis disponíveis:', Object.keys(variables));
+      console.log('🔧 [createPayloadFromTemplate] Iniciando processamento simplificado');
+      console.log('📝 Template original:', template);
+      console.log('📋 Variáveis:', variables);
       
-      // Step 1: Convert template to string with extensive validation
+      // Step 1: Convert to string
       let templateString: string;
       if (typeof template === 'object' && template !== null) {
-        console.log('🔧 Convertendo objeto para string JSON');
         templateString = JSON.stringify(template);
       } else if (typeof template === 'string') {
-        console.log('🔧 Template já é string');
         templateString = template;
       } else {
-        console.error('❌ Template inválido:', template);
-        throw new Error(`Template deve ser uma string JSON ou um objeto. Recebido: ${typeof template}`);
+        throw new Error(`Template inválido: ${typeof template}`);
       }
       
-      console.log('📄 Template string bruto:', {
-        length: templateString.length,
-        hasLineBreaks: templateString.includes('\n'),
-        hasCarriageReturns: templateString.includes('\r'),
-        firstChars: templateString.substring(0, 100)
-      });
-      
-      // Step 2: Aggressive normalization with multiple strategies
-      console.log('🧹 Iniciando normalização agressiva...');
-      
-      // First pass: Remove all whitespace and line breaks
+      // Step 2: Aggressive normalization - remove ALL line breaks and extra spaces
       let normalizedTemplate = templateString
         .replace(/\r\n/g, '')         // Windows line breaks
         .replace(/\r/g, '')           // Mac line breaks  
         .replace(/\n/g, '')           // Unix line breaks
         .replace(/\t/g, '')           // Tabs
-        .replace(/\s{2,}/g, ' ')      // Multiple spaces to single
+        .replace(/\s+/g, ' ')         // Multiple spaces to single
         .trim();
       
-      // Second pass: Fix common JSON issues
-      normalizedTemplate = normalizedTemplate
-        .replace(/,\s*}/g, '}')       // Remove trailing commas in objects
-        .replace(/,\s*]/g, ']')       // Remove trailing commas in arrays
-        .replace(/'\s*:\s*'/g, '":"') // Replace single quotes with double
-        .replace(/([{,]\s*)(\w+):/g, '$1"$2":'); // Quote unquoted keys
+      console.log('🧹 Template normalizado:', normalizedTemplate);
       
-      console.log('✨ Template após normalização:', {
-        length: normalizedTemplate.length,
-        preview: normalizedTemplate.substring(0, 100)
-      });
-      
-      // Step 3: Validate JSON structure before variable substitution
-      console.log('🧪 Testando estrutura JSON...');
-      
-      // Create a test version with placeholder values
-      let testTemplate = normalizedTemplate;
-      const variablePattern = /\{\{([^}]+)\}\}/g;
-      const matches = [...normalizedTemplate.matchAll(variablePattern)];
-      
-      console.log('🔍 Variáveis encontradas:', matches.map(m => m[1].trim()));
-      
-      // Replace all variables with safe test values for structure validation
-      matches.forEach(match => {
-        const fullMatch = match[0];
-        const varName = match[1].trim();
-        
-        // Use appropriate test value based on variable name
-        let testValue = '"test_string"';
-        if (varName.includes('id') || varName.includes('Id')) {
-          testValue = '"test-uuid-123"';
-        } else if (varName.includes('date') || varName.includes('time')) {
-          testValue = '"2024-01-01T12:00:00Z"';
-        } else if (varName.includes('price') || varName.includes('value') || varName.includes('amount')) {
-          testValue = '99.99';
-        } else if (varName.includes('status')) {
-          testValue = '"active"';
-        }
-        
-        testTemplate = testTemplate.replace(fullMatch, testValue);
-      });
-      
-      console.log('🧪 Template de teste:', testTemplate.substring(0, 150));
-      
-      try {
-        JSON.parse(testTemplate);
-        console.log('✅ Estrutura JSON válida!');
-      } catch (structureError) {
-        console.error('❌ Estrutura JSON inválida:', structureError);
-        console.error('❌ Template problemático:', testTemplate);
-        
-        // Try to fix common issues automatically
-        let fixedTemplate = testTemplate
-          .replace(/([^"])(true|false|null)([^"])/g, '$1"$2"$3') // Quote booleans/null
-          .replace(/:\s*([0-9]+\.?[0-9]*)\s*([,}])/g, ':"$1"$2'); // Quote numbers
-        
-        try {
-          JSON.parse(fixedTemplate);
-          console.log('✅ Estrutura corrigida automaticamente');
-          normalizedTemplate = normalizedTemplate
-            .replace(/([^"])(true|false|null)([^"])/g, '$1"$2"$3')
-            .replace(/:\s*([0-9]+\.?[0-9]*)\s*([,}])/g, ':"$1"$2');
-        } catch (finalError) {
-          throw new Error(`Template tem estrutura JSON irreparável: ${structureError.message}`);
-        }
-      }
-      
-      // Step 4: Variable substitution with real values
-      console.log('🔄 Iniciando substituição de variáveis...');
-      
+      // Step 3: Smart variable substitution
       let processedTemplate = normalizedTemplate;
       
-      matches.forEach((match, index) => {
-        const fullMatch = match[0];
-        const variablePath = match[1].trim();
+      Object.entries(variables).forEach(([key, value]) => {
+        const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
         
-        console.log(`🔄 Processando variável ${index + 1}/${matches.length}: ${variablePath}`);
+        console.log(`🔄 Processando: ${key} = ${value} (${typeof value})`);
         
-        let value;
+        // Detect context: is variable inside quotes or expecting a number?
+        const stringContextRegex = new RegExp(`"[^"]*\\{\\{\\s*${key}\\s*\\}\\}[^"]*"`, 'g');
+        const numberContextRegex = new RegExp(`:\\s*\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
         
-        // Handle nested object access
-        if (variablePath.includes('.')) {
-          const keys = variablePath.split('.');
-          value = keys.reduce((obj, key) => {
-            return obj && typeof obj === 'object' ? obj[key] : undefined;
-          }, variables);
+        const isInStringContext = stringContextRegex.test(normalizedTemplate);
+        const isInNumberContext = numberContextRegex.test(normalizedTemplate);
+        
+        let substitutionValue: string;
+        
+        if (isInStringContext) {
+          // Inside quotes - treat as string, escape quotes
+          substitutionValue = String(value).replace(/"/g, '\\"');
+          console.log(`📝 String context: ${key} → "${substitutionValue}"`);
+        } else if (isInNumberContext && (typeof value === 'number' || (!isNaN(Number(value)) && value !== ''))) {
+          // After colon and is numeric - treat as number
+          substitutionValue = String(typeof value === 'number' ? value : Number(value));
+          console.log(`🔢 Number context: ${key} → ${substitutionValue}`);
         } else {
-          value = variables[variablePath];
+          // Default - wrap as string
+          substitutionValue = `"${String(value).replace(/"/g, '\\"')}"`;
+          console.log(`📝 Default string: ${key} → ${substitutionValue}`);
         }
         
-        // Apply fallbacks for missing values
-        if (value === undefined || value === null) {
-          console.log(`⚠️ Variável ${variablePath} não encontrada, usando valor de teste`);
-          value = getTestValue(variablePath);
-        }
-        
-        // Convert to JSON-safe string
-        const jsonSafeValue = getJsonSafeValue(value, variablePath);
-        console.log(`✅ ${fullMatch} → ${jsonSafeValue}`);
-        
-        processedTemplate = processedTemplate.replace(fullMatch, jsonSafeValue);
+        processedTemplate = processedTemplate.replace(regex, substitutionValue);
       });
       
-      console.log('🎯 Template final:', {
-        length: processedTemplate.length,
-        preview: processedTemplate.substring(0, 150)
-      });
+      console.log('🔄 Template processado:', processedTemplate);
       
-      // Step 5: Final JSON parsing with detailed error reporting
-      console.log('🚀 Executando parse JSON final...');
-      
+      // Step 4: Parse JSON
       try {
         const result = JSON.parse(processedTemplate);
-        console.log('🎉 === TEMPLATE PARSEADO COM SUCESSO ===');
+        console.log('✅ Sucesso!', result);
         return result;
       } catch (parseError) {
-        console.error('❌ ERRO NO PARSE FINAL:', parseError);
-        console.error('❌ Template que falhou:', processedTemplate);
+        console.error('❌ Erro de parse:', parseError);
+        console.error('❌ Template problemático:', processedTemplate);
         
-        // Try one more time with aggressive cleanup
-        const cleanedTemplate = processedTemplate
-          .replace(/,(\s*[}\]])/g, '$1')  // Remove trailing commas
-          .replace(/\s+/g, ' ')           // Single spaces
-          .replace(/"\s*:\s*"/g, '":"')   // Clean spacing
-          .trim();
-        
-        try {
-          const finalResult = JSON.parse(cleanedTemplate);
-          console.log('✅ Recuperado com limpeza adicional');
-          return finalResult;
-        } catch (finalError) {
-          throw new Error(`Parse JSON falhou definitivamente: ${finalError.message}. Template: ${cleanedTemplate.substring(0, 100)}`);
+        // Try to identify the exact error location
+        if (parseError instanceof SyntaxError && parseError.message.includes('position')) {
+          const position = parseInt(parseError.message.match(/position (\d+)/)?.[1] || '0');
+          const errorContext = processedTemplate.substring(Math.max(0, position - 20), position + 20);
+          console.error(`🎯 Erro próximo à posição ${position}: "${errorContext}"`);
         }
+        
+        throw new Error(`Parse JSON falhou: ${parseError.message}`);
       }
       
     } catch (error) {
-      console.error('❌ Erro crítico no processamento:', error);
+      console.error('💥 Erro crítico:', error);
       
-      // Emergency fallback - return a basic valid payload
+      // Fallback simples
       return {
-        event: "template_processing_error",
-        error: error.message,
-        timestamp: new Date().toISOString(),
-        fallback: true
+        event: "test",
+        patient: { 
+          name: "Test Patient", 
+          email: "test@example.com" 
+        },
+        professional: { 
+          name: "Test Professional", 
+          email: "prof@example.com" 
+        },
+        booking: { 
+          id: "test-booking", 
+          valor: 150.00, 
+          status: "agendado" 
+        },
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
       };
     }
   };
