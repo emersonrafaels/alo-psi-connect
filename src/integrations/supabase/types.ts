@@ -174,6 +174,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_data_sources: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data_fields: Json | null
+          description: string | null
+          display_name: string
+          enabled: boolean
+          id: string
+          privacy_level: string
+          source_name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data_fields?: Json | null
+          description?: string | null
+          display_name: string
+          enabled?: boolean
+          id?: string
+          privacy_level?: string
+          source_name: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data_fields?: Json | null
+          description?: string | null
+          display_name?: string
+          enabled?: boolean
+          id?: string
+          privacy_level?: string
+          source_name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       ai_insights_history: {
         Row: {
           created_at: string
