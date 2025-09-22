@@ -73,7 +73,7 @@ serve(async (req) => {
     console.log('📊 Active data sources:', dataSources?.length || 0);
 
     const model = configMap.model || 'gpt-4o-mini';
-    const maxTokens = configMap.max_tokens || 2000;
+    const maxTokens = parseInt(configMap.max_tokens) || 2000;
     const includeProData = configMap.include_professional_data !== false;
     const systemPrompt = configMap.system_prompt || getDefaultSystemPrompt();
 
