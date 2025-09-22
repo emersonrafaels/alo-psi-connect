@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,8 +47,22 @@ const handler = async (req: Request): Promise<Response> => {
     const notificationData: NotificationRequest = await req.json();
     console.log('📊 Notification data received:', JSON.stringify(notificationData, null, 2));
 
-    // Call n8n webhook
-    const n8nUrl = 'https://n8n.alopsi.com.br/webhook-test/alopsi-agendamento-mensagem-whatsapp';
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+    // Get webhook URL from system configuration
+    const { data: config } = await supabase
+      .from('system_configurations')
+      .select('value')
+      .eq('category', 'n8n')
+      .eq('key', 'booking_webhook_url')
+      .single();
+
+    // Use configured URL or fallback to default
+    const n8nUrl = config?.value || 'https://n8n.alopsi.com.br/webhook/alopsi-agendamento-mensagem-whatsapp';
+    console.log('🔗 Using webhook URL from config:', n8nUrl);
     
     console.log('🚀 Sending to n8n webhook:', n8nUrl);
     

@@ -308,26 +308,30 @@ export const N8NConfig = () => {
   // Robust template processing function with intelligent fallbacks
   const createPayloadFromTemplate = (template: string | object, variables: Record<string, any>): any => {
     try {
-      console.log('🔄 Iniciando processamento robusto de template');
+      console.log('🔄 Processando template');
+      console.log('📊 Template recebido:', typeof template, template);
       console.log('📊 Variáveis disponíveis:', Object.keys(variables));
       
       // Convert template to string if it's an object
       let templateString: string;
       if (typeof template === 'object' && template !== null) {
-        templateString = JSON.stringify(template, null, 2);
+        templateString = JSON.stringify(template);
       } else if (typeof template === 'string') {
-        templateString = template;
+        templateString = template.trim();
       } else {
         throw new Error('Template deve ser uma string JSON ou um objeto');
       }
       
-      // Step 1: Normalize template (remove problematic formatting)
+      // Step 1: Clean and normalize template
       let normalizedTemplate = templateString
+        .replace(/^\s*[\r\n]/gm, '')  // Remove empty lines
         .replace(/\s*\n\s*/g, ' ')    // Replace line breaks with spaces
         .replace(/\s+/g, ' ')         // Replace multiple spaces with single space
+        .replace(/,\s*}/g, '}')       // Remove trailing commas
+        .replace(/,\s*]/g, ']')       // Remove trailing commas in arrays
         .trim();
       
-      console.log('✨ Template normalizado');
+      console.log('✨ Template normalizado:', normalizedTemplate.substring(0, 100) + '...');
       
       // Step 2: Extract variables and validate structure
       const variablePattern = /\{\{([^}]+)\}\}/g;
@@ -497,16 +501,14 @@ export const N8NConfig = () => {
       let url, template;
       
       if (type === 'booking') {
-        url = formData.booking_webhook_url;
-        template = formData.booking_payload_template;
+        url = getConfig('n8n', 'booking_webhook_url', formData.booking_webhook_url);
+        template = getConfig('n8n', 'booking_payload_template', formData.booking_payload_template);
       } else if (type === 'payment') {
-        url = formData.payment_webhook_url;
-        template = formData.payment_payload_template;
+        url = getConfig('n8n', 'payment_webhook_url', formData.payment_webhook_url);
+        template = getConfig('n8n', 'payment_payload_template', formData.payment_payload_template);
       } else if (type === 'chat') {
-        url = formData.chat_webhook_url;
-        // Use template from database for chat to test exactly what's saved
-        template = getConfig('n8n', 'chat_payload_template', null) || 
-                   getConfig('n8n_chat', 'payload_template', formData.chat_payload_template);
+        url = getConfig('n8n', 'chat_webhook_url', formData.chat_webhook_url);
+        template = getConfig('n8n', 'chat_payload_template', formData.chat_payload_template);
       }
       
       if (!url) {
