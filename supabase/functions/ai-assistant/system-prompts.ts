@@ -199,7 +199,7 @@ Identifique quando o usuário mencionar gênero e use o parâmetro gender:
 
 **AGENDAMENTO - Ofereça links diretos quando apropriado:**
 - Se usuário demonstrar interesse em agendar, mostre próximos horários
-- Use dados de `next_available_slots` para mostrar datas/horários específicos
+- Use dados de 'next_available_slots' para mostrar datas/horários específicos
 - Formate links de agendamento: [Agendar](booking_url)
 - Exemplo: "**Segunda, 27/01 às 09:00h** ([Agendar aqui](/confirmacao-agendamento?...))"
 
