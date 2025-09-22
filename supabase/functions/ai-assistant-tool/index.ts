@@ -31,7 +31,7 @@ serve(async (req) => {
 
     switch (action) {
       case 'search_professionals': {
-        const { specialties, profession, price_range, availability_period } = parameters;
+        const { specialties, profession, price_range, availability_period, gender, include_photos } = parameters;
         
         let query = supabase
           .from('profissionais')
@@ -55,12 +55,19 @@ serve(async (req) => {
             ativo,
             user_id,
             profile_id,
-            profiles!inner(nome, email)
+            profiles!inner(nome, email, genero)
           `)
           .eq('ativo', true);
 
         if (profession) {
           query = query.ilike('profissao', `%${profession}%`);
+        }
+
+        // Apply gender filter
+        if (gender) {
+          const genderValue = gender.toLowerCase() === 'masculino' || gender.toLowerCase() === 'homem' ? 'masculino' : 
+                            gender.toLowerCase() === 'feminino' || gender.toLowerCase() === 'mulher' ? 'feminino' : gender;
+          query = query.eq('profiles.genero', genderValue);
         }
 
         // Apply specialty filter using normalized specialties
@@ -143,7 +150,8 @@ serve(async (req) => {
             name: prof.display_name,
             profession: prof.profissao,
             summary: prof.resumo_profissional,
-            photo: prof.foto_perfil_url,
+            photo: include_photos ? prof.foto_perfil_url : null,
+            gender: prof.profiles?.genero,
             price: prof.preco_consulta,
             price_formatted: prof.preco_consulta ? 
               `R$ ${prof.preco_consulta.toFixed(2)}` : 'A consultar',
