@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 interface ToolRequest {
-  action: 'search_professionals' | 'get_professional_schedules' | 'get_system_config' | 'check_availability';
+  action: 'search_professionals' | 'get_professional_schedules' | 'get_system_config' | 'check_availability' | 'get_next_available_slots';
   parameters?: Record<string, any>;
 }
 
@@ -121,8 +121,8 @@ serve(async (req) => {
           schedulesData = schedules || [];
         }
 
-        // Format professionals with schedule information
-        const formattedProfessionals = professionals?.map(prof => {
+        // Format professionals with schedule information and next available slots
+        const formattedProfessionals = await Promise.all(professionals?.map(async prof => {
           const profSchedules = schedulesData.filter(s => s.user_id === prof.user_id);
           
           // Organize schedules by day and period
@@ -145,6 +145,9 @@ serve(async (req) => {
             });
           });
 
+          // Get next 3 available slots for this professional
+          const nextSlots = await getNextAvailableSlots(prof.id, profSchedules, 3);
+
           return {
             id: prof.id,
             name: prof.display_name,
@@ -164,14 +167,16 @@ serve(async (req) => {
             crp_crm: prof.crp_crm,
             linkedin: prof.linkedin,
             profile_link: `/professional/${prof.id}`,
+            booking_link: `/agendamento?professionalId=${prof.id}`,
             schedules: schedulesByPeriod,
+            next_available_slots: nextSlots,
             availability: {
               morning: schedulesByPeriod.manha.length > 0,
               afternoon: schedulesByPeriod.tarde.length > 0,
               evening: schedulesByPeriod.noite.length > 0
             }
           };
-        }) || [];
+        }) || []);
 
         // Filter by availability period if specified
         if (availability_period) {
@@ -366,6 +371,46 @@ serve(async (req) => {
         break;
       }
 
+      case 'get_next_available_slots': {
+        const { professional_id, limit = 5 } = parameters;
+        
+        if (!professional_id) {
+          result = { error: 'professional_id é obrigatório' };
+          break;
+        }
+
+        // Get professional schedules
+        const { data: schedules, error: schedError } = await supabase
+          .from('profissionais_sessoes')
+          .select('*')
+          .eq('user_id', professional_id);
+
+        if (schedError) {
+          result = { error: `Erro ao buscar horários: ${schedError.message}` };
+          break;
+        }
+
+        if (!schedules || schedules.length === 0) {
+          result = { 
+            professional_id,
+            available_slots: [],
+            message: 'Este profissional não possui horários cadastrados.'
+          };
+          break;
+        }
+
+        const availableSlots = await getNextAvailableSlots(professional_id, schedules, limit);
+        
+        result = {
+          professional_id,
+          available_slots: availableSlots,
+          message: availableSlots.length > 0 
+            ? `Encontrados ${availableSlots.length} horários disponíveis`
+            : 'Nenhum horário disponível nos próximos dias'
+        };
+        break;
+      }
+
       default:
         result = { error: `Unknown action: ${action}` };
     }
@@ -382,3 +427,121 @@ serve(async (req) => {
     });
   }
 });
+
+// Helper function to get next available slots for a professional
+async function getNextAvailableSlots(professionalId: number, schedules: any[], limit: number = 5) {
+  const slots = [];
+  const today = new Date();
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  
+  // Helper to get day name from date
+  const getDayName = (date: Date) => {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    return days[date.getDay()];
+  };
+  
+  // Generate time slots from schedule ranges
+  const generateTimeSlots = (startTime: string, endTime: string) => {
+    const slots = [];
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    const consultationDuration = 50; // 50 minutes
+    
+    const lastPossibleStart = new Date(end.getTime() - consultationDuration * 60 * 1000);
+    
+    const current = new Date(start);
+    while (current <= lastPossibleStart) {
+      const timeString = current.toTimeString().substring(0, 5);
+      slots.push(timeString);
+      current.setMinutes(current.getMinutes() + 30); // 30-minute intervals
+    }
+    
+    return slots;
+  };
+  
+  // Check next 30 days
+  for (let dayOffset = 1; dayOffset <= 30 && slots.length < limit; dayOffset++) {
+    const checkDate = new Date(today);
+    checkDate.setDate(today.getDate() + dayOffset);
+    const dayName = getDayName(checkDate);
+    const dateString = checkDate.toISOString().split('T')[0];
+    
+    // Get schedules for this day
+    const daySchedules = schedules.filter(schedule => 
+      schedule.day?.toLowerCase() === dayName
+    );
+    
+    if (daySchedules.length === 0) continue;
+    
+    // Check existing appointments for this date
+    const { data: existingAppointments } = await supabase
+      .from('agendamentos')
+      .select('horario')
+      .eq('professional_id', professionalId)
+      .eq('data_consulta', dateString)
+      .in('status', ['pendente', 'confirmado']);
+    
+    // Check for unavailability blocks
+    const { data: unavailabilityRecords } = await supabase
+      .from('professional_unavailability')
+      .select('*')
+      .eq('professional_id', professionalId)
+      .eq('date', dateString);
+    
+    const isDayBlocked = unavailabilityRecords?.some(record => record.all_day);
+    if (isDayBlocked) continue;
+    
+    const occupiedTimes = new Set(
+      (existingAppointments || []).map(apt => apt.horario.substring(0, 5))
+    );
+    
+    const blockedTimeRanges = (unavailabilityRecords || [])
+      .filter(record => !record.all_day && record.start_time && record.end_time)
+      .map(record => ({
+        start: record.start_time,
+        end: record.end_time
+      }));
+    
+    // Check if time is blocked
+    const isTimeBlocked = (timeSlot: string) => {
+      return blockedTimeRanges.some(range => {
+        const slotTime = new Date(`2000-01-01T${timeSlot}:00`);
+        const startTime = new Date(`2000-01-01T${range.start}`);
+        const endTime = new Date(`2000-01-01T${range.end}`);
+        const slotEndTime = new Date(slotTime.getTime() + 50 * 60 * 1000);
+        
+        return (slotTime >= startTime && slotTime < endTime) || 
+               (slotEndTime > startTime && slotEndTime <= endTime) ||
+               (slotTime < startTime && slotEndTime > endTime);
+      });
+    };
+    
+    // Generate available slots for this day
+    for (const schedule of daySchedules) {
+      const timeSlots = generateTimeSlots(schedule.start_time, schedule.end_time);
+      
+      for (const timeSlot of timeSlots) {
+        if (slots.length >= limit) break;
+        
+        if (!occupiedTimes.has(timeSlot) && !isTimeBlocked(timeSlot)) {
+          slots.push({
+            date: dateString,
+            date_formatted: checkDate.toLocaleDateString('pt-BR', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }),
+            time: timeSlot,
+            day_of_week: dayName,
+            booking_url: `/confirmacao-agendamento?professionalId=${professionalId}&date=${dateString}&time=${timeSlot}`
+          });
+        }
+      }
+    }
+  }
+  
+  return slots;
+}
