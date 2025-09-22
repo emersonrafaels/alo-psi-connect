@@ -60,7 +60,15 @@ serve(async (req) => {
           .eq('ativo', true);
 
         if (profession) {
-          query = query.ilike('profissao', `%${profession}%`);
+          // Normalize profession search to handle common terms
+          const normalizedProfession = profession.toLowerCase().trim();
+          
+          if (normalizedProfession.includes('psicoterapeuta') || normalizedProfession.includes('psicoterapia')) {
+            // Search for both 'psicoterapeuta' and 'psicólogo' since psychologists also do psychotherapy
+            query = query.or('profissao.ilike.%psicoterapeuta%,profissao.ilike.%psicólogo%');
+          } else {
+            query = query.ilike('profissao', `%${profession}%`);
+          }
         }
 
         // Apply gender filter
