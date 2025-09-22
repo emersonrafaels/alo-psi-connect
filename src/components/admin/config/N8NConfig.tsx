@@ -305,104 +305,185 @@ export const N8NConfig = () => {
     }
   };
 
-  // Robust template processing function with intelligent fallbacks
+  // Ultra-robust template processing with extensive debugging and error handling
   const createPayloadFromTemplate = (template: string | object, variables: Record<string, any>): any => {
     try {
-      console.log('🔄 Processando template');
-      console.log('📊 Template recebido:', typeof template, template);
+      console.log('🔄 === INÍCIO DO PROCESSAMENTO DE TEMPLATE ===');
+      console.log('📊 Template original:', {
+        type: typeof template,
+        isNull: template === null,
+        isUndefined: template === undefined,
+        length: typeof template === 'string' ? template.length : 'N/A',
+        firstChars: typeof template === 'string' ? template.substring(0, 50) : JSON.stringify(template).substring(0, 50)
+      });
       console.log('📊 Variáveis disponíveis:', Object.keys(variables));
       
-      // Convert template to string if it's an object
+      // Step 1: Convert template to string with extensive validation
       let templateString: string;
       if (typeof template === 'object' && template !== null) {
+        console.log('🔧 Convertendo objeto para string JSON');
         templateString = JSON.stringify(template);
       } else if (typeof template === 'string') {
-        templateString = template.trim();
+        console.log('🔧 Template já é string');
+        templateString = template;
       } else {
-        throw new Error('Template deve ser uma string JSON ou um objeto');
+        console.error('❌ Template inválido:', template);
+        throw new Error(`Template deve ser uma string JSON ou um objeto. Recebido: ${typeof template}`);
       }
       
-      // Step 1: Clean and normalize template
+      console.log('📄 Template string bruto:', {
+        length: templateString.length,
+        hasLineBreaks: templateString.includes('\n'),
+        hasCarriageReturns: templateString.includes('\r'),
+        firstChars: templateString.substring(0, 100)
+      });
+      
+      // Step 2: Aggressive normalization with multiple strategies
+      console.log('🧹 Iniciando normalização agressiva...');
+      
+      // First pass: Remove all whitespace and line breaks
       let normalizedTemplate = templateString
-        .replace(/^\s*[\r\n]/gm, '')  // Remove empty lines
-        .replace(/\s*\n\s*/g, ' ')    // Replace line breaks with spaces
-        .replace(/\s+/g, ' ')         // Replace multiple spaces with single space
-        .replace(/,\s*}/g, '}')       // Remove trailing commas
-        .replace(/,\s*]/g, ']')       // Remove trailing commas in arrays
+        .replace(/\r\n/g, '')         // Windows line breaks
+        .replace(/\r/g, '')           // Mac line breaks  
+        .replace(/\n/g, '')           // Unix line breaks
+        .replace(/\t/g, '')           // Tabs
+        .replace(/\s{2,}/g, ' ')      // Multiple spaces to single
         .trim();
       
-      console.log('✨ Template normalizado:', normalizedTemplate.substring(0, 100) + '...');
+      // Second pass: Fix common JSON issues
+      normalizedTemplate = normalizedTemplate
+        .replace(/,\s*}/g, '}')       // Remove trailing commas in objects
+        .replace(/,\s*]/g, ']')       // Remove trailing commas in arrays
+        .replace(/'\s*:\s*'/g, '":"') // Replace single quotes with double
+        .replace(/([{,]\s*)(\w+):/g, '$1"$2":'); // Quote unquoted keys
       
-      // Step 2: Extract variables and validate structure
-      const variablePattern = /\{\{([^}]+)\}\}/g;
-      const foundVariables: string[] = [];
-      let match;
-      
-      while ((match = variablePattern.exec(normalizedTemplate)) !== null) {
-        foundVariables.push(match[1].trim());
-      }
-      
-      console.log('🔍 Variáveis encontradas:', foundVariables);
-      
-      // Step 3: Create test template for validation
-      let testTemplate = normalizedTemplate;
-      foundVariables.forEach(varPath => {
-        const escapedVarPath = varPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\{\\{\\s*${escapedVarPath}\\s*\\}\\}`, 'g');
-        
-        // Use context-aware test values
-        const testValue = getTestValue(varPath);
-        testTemplate = testTemplate.replace(regex, testValue);
+      console.log('✨ Template após normalização:', {
+        length: normalizedTemplate.length,
+        preview: normalizedTemplate.substring(0, 100)
       });
       
-      // Validate JSON structure
+      // Step 3: Validate JSON structure before variable substitution
+      console.log('🧪 Testando estrutura JSON...');
+      
+      // Create a test version with placeholder values
+      let testTemplate = normalizedTemplate;
+      const variablePattern = /\{\{([^}]+)\}\}/g;
+      const matches = [...normalizedTemplate.matchAll(variablePattern)];
+      
+      console.log('🔍 Variáveis encontradas:', matches.map(m => m[1].trim()));
+      
+      // Replace all variables with safe test values for structure validation
+      matches.forEach(match => {
+        const fullMatch = match[0];
+        const varName = match[1].trim();
+        
+        // Use appropriate test value based on variable name
+        let testValue = '"test_string"';
+        if (varName.includes('id') || varName.includes('Id')) {
+          testValue = '"test-uuid-123"';
+        } else if (varName.includes('date') || varName.includes('time')) {
+          testValue = '"2024-01-01T12:00:00Z"';
+        } else if (varName.includes('price') || varName.includes('value') || varName.includes('amount')) {
+          testValue = '99.99';
+        } else if (varName.includes('status')) {
+          testValue = '"active"';
+        }
+        
+        testTemplate = testTemplate.replace(fullMatch, testValue);
+      });
+      
+      console.log('🧪 Template de teste:', testTemplate.substring(0, 150));
+      
       try {
         JSON.parse(testTemplate);
-        console.log('✅ Template JSON válido');
-      } catch (validationError) {
-        console.error('❌ Erro de validação JSON:', validationError);
-        throw new Error(`Template JSON inválido: ${validationError.message}`);
-      }
-      
-      // Step 4: Process with real values
-      let processedTemplate = normalizedTemplate;
-      foundVariables.forEach(varPath => {
-        const escapedVarPath = varPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\{\\{\\s*${escapedVarPath}\\s*\\}\\}`, 'g');
+        console.log('✅ Estrutura JSON válida!');
+      } catch (structureError) {
+        console.error('❌ Estrutura JSON inválida:', structureError);
+        console.error('❌ Template problemático:', testTemplate);
+        
+        // Try to fix common issues automatically
+        let fixedTemplate = testTemplate
+          .replace(/([^"])(true|false|null)([^"])/g, '$1"$2"$3') // Quote booleans/null
+          .replace(/:\s*([0-9]+\.?[0-9]*)\s*([,}])/g, ':"$1"$2'); // Quote numbers
         
         try {
-          // Navigate through nested object path
-          const pathParts = varPath.split('.');
-          let value = variables;
-          
-          for (const part of pathParts) {
-            if (value && typeof value === 'object' && part in value) {
-              value = value[part];
-            } else {
-              console.warn(`⚠️ Variável não encontrada: ${varPath}, usando fallback`);
-              value = getFallbackValue(varPath);
-              break;
-            }
-          }
-          
-          // Convert to JSON-safe value
-          const jsonValue = getJsonSafeValue(value, varPath);
-          processedTemplate = processedTemplate.replace(regex, jsonValue);
-          
-        } catch (error) {
-          console.error(`❌ Erro ao processar ${varPath}:`, error);
-          const fallback = `"fallback_${varPath.split('.').pop()}"`;
-          processedTemplate = processedTemplate.replace(regex, fallback);
+          JSON.parse(fixedTemplate);
+          console.log('✅ Estrutura corrigida automaticamente');
+          normalizedTemplate = normalizedTemplate
+            .replace(/([^"])(true|false|null)([^"])/g, '$1"$2"$3')
+            .replace(/:\s*([0-9]+\.?[0-9]*)\s*([,}])/g, ':"$1"$2');
+        } catch (finalError) {
+          throw new Error(`Template tem estrutura JSON irreparável: ${structureError.message}`);
         }
+      }
+      
+      // Step 4: Variable substitution with real values
+      console.log('🔄 Iniciando substituição de variáveis...');
+      
+      let processedTemplate = normalizedTemplate;
+      
+      matches.forEach((match, index) => {
+        const fullMatch = match[0];
+        const variablePath = match[1].trim();
+        
+        console.log(`🔄 Processando variável ${index + 1}/${matches.length}: ${variablePath}`);
+        
+        let value;
+        
+        // Handle nested object access
+        if (variablePath.includes('.')) {
+          const keys = variablePath.split('.');
+          value = keys.reduce((obj, key) => {
+            return obj && typeof obj === 'object' ? obj[key] : undefined;
+          }, variables);
+        } else {
+          value = variables[variablePath];
+        }
+        
+        // Apply fallbacks for missing values
+        if (value === undefined || value === null) {
+          console.log(`⚠️ Variável ${variablePath} não encontrada, usando valor de teste`);
+          value = getTestValue(variablePath);
+        }
+        
+        // Convert to JSON-safe string
+        const jsonSafeValue = getJsonSafeValue(value, variablePath);
+        console.log(`✅ ${fullMatch} → ${jsonSafeValue}`);
+        
+        processedTemplate = processedTemplate.replace(fullMatch, jsonSafeValue);
       });
       
-      console.log('📤 Template processado:', processedTemplate.substring(0, 200));
+      console.log('🎯 Template final:', {
+        length: processedTemplate.length,
+        preview: processedTemplate.substring(0, 150)
+      });
       
-      // Final validation and parse
-      const finalPayload = JSON.parse(processedTemplate);
-      console.log('✅ Payload gerado com sucesso');
+      // Step 5: Final JSON parsing with detailed error reporting
+      console.log('🚀 Executando parse JSON final...');
       
-      return finalPayload;
+      try {
+        const result = JSON.parse(processedTemplate);
+        console.log('🎉 === TEMPLATE PARSEADO COM SUCESSO ===');
+        return result;
+      } catch (parseError) {
+        console.error('❌ ERRO NO PARSE FINAL:', parseError);
+        console.error('❌ Template que falhou:', processedTemplate);
+        
+        // Try one more time with aggressive cleanup
+        const cleanedTemplate = processedTemplate
+          .replace(/,(\s*[}\]])/g, '$1')  // Remove trailing commas
+          .replace(/\s+/g, ' ')           // Single spaces
+          .replace(/"\s*:\s*"/g, '":"')   // Clean spacing
+          .trim();
+        
+        try {
+          const finalResult = JSON.parse(cleanedTemplate);
+          console.log('✅ Recuperado com limpeza adicional');
+          return finalResult;
+        } catch (finalError) {
+          throw new Error(`Parse JSON falhou definitivamente: ${finalError.message}. Template: ${cleanedTemplate.substring(0, 100)}`);
+        }
+      }
       
     } catch (error) {
       console.error('❌ Erro crítico no processamento:', error);
