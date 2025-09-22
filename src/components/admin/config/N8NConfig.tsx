@@ -80,8 +80,11 @@ export const N8NConfig = () => {
   // Update formData when configs are loaded
   useEffect(() => {
     if (configs.length > 0) {
-      // Get the payload template as string (it's stored as JSON string in the database)
-      const payloadTemplate = getConfig('n8n_chat', 'payload_template', JSON.stringify({
+      console.log('🔧 [N8NConfig] Loading configs:', configs);
+      
+      // Get the payload template as string (try both keys for compatibility)
+      const payloadTemplate = getConfig('n8n', 'chat_payload_template', null) || 
+                              getConfig('n8n_chat', 'payload_template', JSON.stringify({
         event: "ai_chat_message",
         timestamp: "{{timestamp}}",
         session_id: "{{session_id}}",
@@ -94,6 +97,8 @@ export const N8NConfig = () => {
         },
         platform: "alopsi"
       }));
+      
+      console.log('🔧 [N8NConfig] Chat payload template from DB:', payloadTemplate);
       
       setFormData({
         // Configurações originais
@@ -120,25 +125,36 @@ export const N8NConfig = () => {
             patient_email: '{{appointment.email_paciente}}'
           }
         }, null, 2)),
-        // Configurações para chat AI com retry
-        chat_webhook_url: getConfig('n8n_chat', 'webhook_url', ''),
-        chat_enabled: getConfig('n8n_chat', 'enabled', false),
-        chat_timeout_seconds: parseInt(getConfig('n8n_chat', 'timeout_seconds', '30')),
-        chat_fallback_openai: getConfig('n8n_chat', 'fallback_openai', true),
-        chat_max_retries: parseInt(getConfig('n8n_chat', 'max_retries', '3')),
-        chat_retry_delay_ms: parseInt(getConfig('n8n_chat', 'retry_delay_ms', '1000')),
-        chat_retry_backoff_multiplier: parseFloat(getConfig('n8n_chat', 'retry_backoff_multiplier', '2')),
+        // Configurações para chat AI com retry (now using n8n category)
+        chat_webhook_url: getConfig('n8n', 'chat_webhook_url', '') || getConfig('n8n_chat', 'webhook_url', ''),
+        chat_enabled: getConfig('n8n', 'chat_enabled', false) || getConfig('n8n_chat', 'enabled', false),
+        chat_timeout_seconds: parseInt(getConfig('n8n', 'chat_timeout_seconds', '30') || getConfig('n8n_chat', 'timeout_seconds', '30')),
+        chat_fallback_openai: getConfig('n8n', 'chat_fallback_openai', true) && getConfig('n8n_chat', 'fallback_openai', true),
+        chat_max_retries: parseInt(getConfig('n8n', 'chat_max_retries', '3') || getConfig('n8n_chat', 'max_retries', '3')),
+        chat_retry_delay_ms: parseInt(getConfig('n8n', 'chat_retry_delay_ms', '1000') || getConfig('n8n_chat', 'retry_delay_ms', '1000')),
+        chat_retry_backoff_multiplier: parseFloat(getConfig('n8n', 'chat_retry_backoff_multiplier', '2') || getConfig('n8n_chat', 'retry_backoff_multiplier', '2')),
         // Format template nicely for display if it's a JSON string
         chat_payload_template: (() => {
           try {
+            console.log('🔧 [N8NConfig] Processing template for display:', {
+              payloadTemplate,
+              type: typeof payloadTemplate,
+              isObject: typeof payloadTemplate === 'object'
+            });
+            
             // If it's a JSON object, stringify it nicely
-            if (typeof payloadTemplate === 'object') {
-              return JSON.stringify(payloadTemplate, null, 2);
+            if (typeof payloadTemplate === 'object' && payloadTemplate !== null) {
+              const formatted = JSON.stringify(payloadTemplate, null, 2);
+              console.log('🔧 [N8NConfig] Formatted object template:', formatted);
+              return formatted;
             }
             // If it's a string, try to parse and reformat
             const parsed = JSON.parse(payloadTemplate);
-            return JSON.stringify(parsed, null, 2);
-          } catch {
+            const formatted = JSON.stringify(parsed, null, 2);
+            console.log('🔧 [N8NConfig] Formatted string template:', formatted);
+            return formatted;
+          } catch (error) {
+            console.log('🔧 [N8NConfig] Template formatting failed:', error, 'using as-is:', payloadTemplate);
             // If parsing fails, return as-is
             return payloadTemplate;
           }
@@ -262,15 +278,15 @@ export const N8NConfig = () => {
         updateConfig('n8n', 'send_appointment_notifications', formData.send_appointment_notifications),
         updateConfig('n8n', 'booking_payload_template', formData.booking_payload_template),
         updateConfig('n8n', 'payment_payload_template', formData.payment_payload_template),
-        // Configurações para chat AI com retry
-        updateConfig('n8n_chat', 'webhook_url', formData.chat_webhook_url),
-        updateConfig('n8n_chat', 'enabled', formData.chat_enabled),
-        updateConfig('n8n_chat', 'timeout_seconds', formData.chat_timeout_seconds.toString()),
-        updateConfig('n8n_chat', 'fallback_openai', formData.chat_fallback_openai),
-        updateConfig('n8n_chat', 'max_retries', formData.chat_max_retries.toString()),
-        updateConfig('n8n_chat', 'retry_delay_ms', formData.chat_retry_delay_ms.toString()),
-        updateConfig('n8n_chat', 'retry_backoff_multiplier', formData.chat_retry_backoff_multiplier.toString()),
-        updateConfig('n8n_chat', 'payload_template', payloadToSave)
+        // Configurações para chat AI com retry (now saving to n8n category)
+        updateConfig('n8n', 'chat_webhook_url', formData.chat_webhook_url),
+        updateConfig('n8n', 'chat_enabled', formData.chat_enabled),
+        updateConfig('n8n', 'chat_timeout_seconds', formData.chat_timeout_seconds.toString()),
+        updateConfig('n8n', 'chat_fallback_openai', formData.chat_fallback_openai),
+        updateConfig('n8n', 'chat_max_retries', formData.chat_max_retries.toString()),
+        updateConfig('n8n', 'chat_retry_delay_ms', formData.chat_retry_delay_ms.toString()),
+        updateConfig('n8n', 'chat_retry_backoff_multiplier', formData.chat_retry_backoff_multiplier.toString()),
+        updateConfig('n8n', 'chat_payload_template', payloadToSave)
       ]);
       
       toast({
@@ -429,7 +445,8 @@ export const N8NConfig = () => {
       } else if (type === 'chat') {
         url = formData.chat_webhook_url;
         // Use template from database for chat to test exactly what's saved
-        template = getConfig('n8n_chat', 'payload_template', formData.chat_payload_template);
+        template = getConfig('n8n', 'chat_payload_template', null) || 
+                   getConfig('n8n_chat', 'payload_template', formData.chat_payload_template);
       }
       
       if (!url) {
