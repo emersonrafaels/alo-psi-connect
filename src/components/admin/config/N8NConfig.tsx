@@ -392,12 +392,18 @@ export const N8NConfig = () => {
           return '"fallback_value"';
         }
         
-        // For objects and arrays, insert JSON directly (no extra quotes)
+        // Special handling for complex objects that should be inserted as raw JSON
+        if (varName === 'filters' || varName === 'professionals') {
+          // Insert these directly as JSON without extra quotes
+          return JSON.stringify(value);
+        }
+        
+        // For other objects and arrays, also insert as JSON
         if (typeof value === 'object' && value !== null) {
           return JSON.stringify(value);
         }
         
-        // For strings, numbers, booleans - JSON stringify to handle quotes properly
+        // For primitives (strings, numbers, booleans), JSON stringify to handle quotes properly
         return JSON.stringify(value);
       });
       
