@@ -298,6 +298,16 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
       console.log(`⚠️ Model ${model} not in valid list, using ${modelToUse} instead`);
     }
 
+    // Prepare messages with conversation history
+    const messages = [
+      { role: 'system', content: enhancedSystemPrompt },
+      ...conversationHistory.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      })),
+      { role: 'user', content: userMessage }
+    ];
+
     // Prepare API request parameters based on model
     const requestBody: any = {
       model: modelToUse,
@@ -371,16 +381,6 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
     } else {
       requestBody.max_tokens = maxTokens;
     }
-
-    // Prepare messages with conversation history
-    const messages = [
-      { role: 'system', content: enhancedSystemPrompt },
-      ...conversationHistory.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      })),
-      { role: 'user', content: message }
-    ];
 
     // Call OpenAI API with tools
     console.log('🚀 Calling OpenAI API with tools...');

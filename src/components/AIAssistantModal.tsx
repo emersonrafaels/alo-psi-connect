@@ -306,7 +306,7 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col" aria-describedby="ai-assistant-description">
         <DialogHeader className="flex-shrink-0 border-b pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -485,7 +485,7 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
               )}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-2 text-center">
+          <p id="ai-assistant-description" className="text-xs text-muted-foreground mt-2 text-center">
             💡 Dica: Seja específico sobre suas necessidades para receber recomendações mais precisas
           </p>
         </div>

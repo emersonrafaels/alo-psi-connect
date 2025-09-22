@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { useUserProfile } from './useUserProfile';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,74 +16,74 @@ export const useUserType = (): UserTypeInfo => {
   const [professionalId, setProfessionalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const checkProfessionalStatus = async () => {
-      console.log('🔍 [useUserType] Checking professional status...', { 
-        user: !!user, 
-        userId: user?.id,
-        profile: !!profile, 
-        profileId: profile?.id,
-        profileType: profile?.tipo_usuario,
-        userEmail: user?.email || profile?.email
-      });
-      
-      if (!user) {
-        console.log('🔍 [useUserType] No user, setting as non-professional');
-        setIsProfessional(false);
-        setProfessionalId(null);
-        setLoading(false);
-        return;
-      }
+  const checkProfessionalStatus = useCallback(async () => {
+    console.log('🔍 [useUserType] Checking professional status...', { 
+      user: !!user, 
+      userId: user?.id,
+      profile: !!profile, 
+      profileId: profile?.id,
+      profileType: profile?.tipo_usuario,
+      userEmail: user?.email || profile?.email
+    });
+    
+    if (!user) {
+      console.log('🔍 [useUserType] No user, setting as non-professional');
+      setIsProfessional(false);
+      setProfessionalId(null);
+      setLoading(false);
+      return;
+    }
 
-      if (!profile) {
-        console.log('🔍 [useUserType] No profile yet, keeping loading state');
-        return; // Keep loading until profile loads
-      }
+    if (!profile) {
+      console.log('🔍 [useUserType] No profile yet, keeping loading state');
+      return; // Keep loading until profile loads
+    }
 
-      // Quick check: if profile type is not 'profissional', skip database query
-      if (profile.tipo_usuario !== 'profissional') {
-        console.log('🔍 [useUserType] Profile type is not professional:', profile.tipo_usuario);
-        setIsProfessional(false);
-        setProfessionalId(null);
-        setLoading(false);
-        return;
-      }
+    // Quick check: if profile type is not 'profissional', skip database query
+    if (profile.tipo_usuario !== 'profissional') {
+      console.log('🔍 [useUserType] Profile type is not professional:', profile.tipo_usuario);
+      setIsProfessional(false);
+      setProfessionalId(null);
+      setLoading(false);
+      return;
+    }
 
-      try {
-        // Check if user has a professional profile AND it's active
-        const { data: professionalData, error } = await supabase
-          .from('profissionais')
-          .select('id, profile_id, ativo')
-          .eq('profile_id', profile.id)
-          .eq('ativo', true)  // Only get active professionals
-          .maybeSingle();
+    try {
+      // Check if user has a professional profile AND it's active
+      const { data: professionalData, error } = await supabase
+        .from('profissionais')
+        .select('id, profile_id, ativo')
+        .eq('profile_id', profile.id)
+        .eq('ativo', true)  // Only get active professionals
+        .maybeSingle();
 
-        console.log('🔍 [useUserType] Professional query result:', { professionalData, error, profileId: profile.id });
+      console.log('🔍 [useUserType] Professional query result:', { professionalData, error, profileId: profile.id });
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('❌ [useUserType] Error checking professional status:', error);
-          setIsProfessional(false);
-          setProfessionalId(null);
-        } else if (professionalData) {
-          console.log('✅ [useUserType] Active professional found:', professionalData);
-          setIsProfessional(true);
-          setProfessionalId(professionalData.id.toString());
-        } else {
-          console.log('❌ [useUserType] No active professional profile found for user');
-          setIsProfessional(false);
-          setProfessionalId(null);
-        }
-      } catch (error) {
+      if (error && error.code !== 'PGRST116') {
         console.error('❌ [useUserType] Error checking professional status:', error);
         setIsProfessional(false);
         setProfessionalId(null);
-      } finally {
-        setLoading(false);
+      } else if (professionalData) {
+        console.log('✅ [useUserType] Active professional found:', professionalData);
+        setIsProfessional(true);
+        setProfessionalId(professionalData.id.toString());
+      } else {
+        console.log('❌ [useUserType] No active professional profile found for user');
+        setIsProfessional(false);
+        setProfessionalId(null);
       }
-    };
+    } catch (error) {
+      console.error('❌ [useUserType] Error checking professional status:', error);
+      setIsProfessional(false);
+      setProfessionalId(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, profile?.id, profile?.tipo_usuario]);
 
+  useEffect(() => {
     checkProfessionalStatus();
-  }, [user, profile]);
+  }, [checkProfessionalStatus]);
 
   // Force refresh when profile changes due to the data fix
   useEffect(() => {
