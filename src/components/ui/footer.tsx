@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { GlobalCacheButton } from "./global-cache-button";
 import { useNewsletter } from "@/hooks/useNewsletter";
 import { useState } from "react";
 import { Mail, MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, MessageCircle, Heart, MessageCircleIcon } from "lucide-react";
@@ -97,6 +98,9 @@ const Footer = () => {
                     </a>
                   </li>;
             })}
+            <li>
+              <GlobalCacheButton variant="minimal" className="text-sm opacity-80 hover:opacity-100 text-primary-foreground" />
+            </li>
             </ul>
           </div>
 

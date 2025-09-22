@@ -3,6 +3,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase } from "lucide-react"
+import { GlobalCacheButton } from "@/components/ui/global-cache-button"
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
@@ -127,6 +128,11 @@ const Header = () => {
                     </>
                   )}
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <div className="w-full">
+                      <GlobalCacheButton variant="minimal" className="w-full justify-start p-0 h-auto" />
+                    </div>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => signOut()}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Sair
@@ -219,9 +225,12 @@ const Header = () => {
                   </Link>
                 </>
               )}
-              <div className="flex flex-col space-y-2 pt-4 border-t border-primary-foreground/20">
+                <div className="flex flex-col space-y-2 pt-4 border-t border-primary-foreground/20">
                 <div className="flex justify-center pb-2">
                   <ThemeToggle />
+                </div>
+                <div className="flex justify-center pb-2">
+                  <GlobalCacheButton variant="minimal" />
                 </div>
                 {user ? (
                   <Button 

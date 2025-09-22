@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { useGlobalCacheShortcut } from "@/hooks/useGlobalCacheShortcut";
 import WhatsAppFloat from "@/components/ui/whatsapp-float";
 
 // Pages
@@ -64,6 +65,67 @@ const queryClient = new QueryClient({
   },
 });
 
+const AppWithShortcuts = () => {
+  useGlobalCacheShortcut();
+  
+  return (
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/sobre" element={<About />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/profissionais" element={<Professionals />} />
+      <Route path="/profissional/:id" element={<Professional />} />
+      <Route path="/professional/:id" element={<Professional />} />
+      <Route path="/agendar" element={<Schedule />} />
+      <Route path="/agendamento" element={<Appointment />} />
+      <Route path="/agendamento/:token" element={<AppointmentAccess />} />
+      <Route path="/confirmacao-agendamento" element={<BookingConfirmation />} />
+      <Route path="/pagamento-sucesso" element={<PaymentSuccess />} />
+      <Route path="/pagamento-cancelado" element={<PaymentCancelled />} />
+      <Route path="/contato" element={<Contact />} />
+      <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
+      <Route path="/perfil" element={<Profile />} />
+      <Route path="/professional-profile" element={<ProfessionalProfile />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/auth-callback" element={<AuthCallback />} />
+      
+      {/* Redirect old routes to new cadastro routes */}
+      <Route path="/registrar" element={<UserType />} />
+      <Route path="/registrar/paciente" element={<PatientForm />} />
+      <Route path="/registrar/profissional" element={<ProfessionalForm />} />
+      
+      {/* New standardized cadastro routes */}
+      <Route path="/cadastro/tipo-usuario" element={<UserType />} />
+      <Route path="/cadastro/paciente" element={<PatientForm />} />
+      <Route path="/cadastro/profissional" element={<ProfessionalForm />} />
+      
+      {/* Rotas de Agendamentos */}
+      <Route path="/agendamentos" element={<MyAppointments />} />
+      <Route path="/reagendar/:appointmentId" element={<RescheduleAppointment />} />
+      
+      {/* Rotas do Diário Emocional */}
+      <Route path="/diario-emocional" element={<MoodDiary />} />
+      <Route path="/diario-emocional/experiencia" element={<MoodExperience />} />
+      <Route path="/diario-emocional/nova-entrada" element={<MoodEntry />} />
+      <Route path="/diario-emocional/historico" element={<MoodHistory />} />
+      <Route path="/diario-emocional/analises" element={<MoodAnalytics />} />
+      
+      {/* Rotas Admin */}
+      <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+      <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
+      <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+      <Route path="/admin/configuracoes" element={<AdminLayout><AdminConfigurations /></AdminLayout>} />
+      <Route path="/admin/professionals" element={<AdminLayout><AdminProfessionals /></AdminLayout>} />
+      <Route path="/admin/appointments" element={<AdminLayout><AdminAppointments /></AdminLayout>} />
+      <Route path="/admin/financial" element={<AdminLayout><AdminFinancial /></AdminLayout>} />
+      <Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const App: React.FC = () => {
   return (
     <React.StrictMode>
@@ -72,60 +134,7 @@ const App: React.FC = () => {
           <TooltipProvider>
             <BrowserRouter>
               <AuthProvider>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/sobre" element={<About />} />
-                  <Route path="/blog" element={<Blog />} />
-                  <Route path="/profissionais" element={<Professionals />} />
-                  <Route path="/profissional/:id" element={<Professional />} />
-                  <Route path="/professional/:id" element={<Professional />} />
-                  <Route path="/agendar" element={<Schedule />} />
-                  <Route path="/agendamento" element={<Appointment />} />
-                  <Route path="/agendamento/:token" element={<AppointmentAccess />} />
-                  <Route path="/confirmacao-agendamento" element={<BookingConfirmation />} />
-                  <Route path="/pagamento-sucesso" element={<PaymentSuccess />} />
-                  <Route path="/pagamento-cancelado" element={<PaymentCancelled />} />
-                  <Route path="/contato" element={<Contact />} />
-                  <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
-                  <Route path="/perfil" element={<Profile />} />
-                  <Route path="/professional-profile" element={<ProfessionalProfile />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/auth-callback" element={<AuthCallback />} />
-                  
-                  {/* Redirect old routes to new cadastro routes */}
-                  <Route path="/registrar" element={<UserType />} />
-                  <Route path="/registrar/paciente" element={<PatientForm />} />
-                  <Route path="/registrar/profissional" element={<ProfessionalForm />} />
-                  
-                  {/* New standardized cadastro routes */}
-                  <Route path="/cadastro/tipo-usuario" element={<UserType />} />
-                  <Route path="/cadastro/paciente" element={<PatientForm />} />
-                  <Route path="/cadastro/profissional" element={<ProfessionalForm />} />
-                  
-                  {/* Rotas de Agendamentos */}
-                  <Route path="/agendamentos" element={<MyAppointments />} />
-                  <Route path="/reagendar/:appointmentId" element={<RescheduleAppointment />} />
-                  
-                  {/* Rotas do Diário Emocional */}
-                  <Route path="/diario-emocional" element={<MoodDiary />} />
-                  <Route path="/diario-emocional/experiencia" element={<MoodExperience />} />
-                  <Route path="/diario-emocional/nova-entrada" element={<MoodEntry />} />
-                  <Route path="/diario-emocional/historico" element={<MoodHistory />} />
-                  <Route path="/diario-emocional/analises" element={<MoodAnalytics />} />
-                  
-                  {/* Rotas Admin */}
-                  <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-                  <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
-                  <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
-                  <Route path="/admin/configuracoes" element={<AdminLayout><AdminConfigurations /></AdminLayout>} />
-                  <Route path="/admin/professionals" element={<AdminLayout><AdminProfessionals /></AdminLayout>} />
-                  <Route path="/admin/appointments" element={<AdminLayout><AdminAppointments /></AdminLayout>} />
-                  <Route path="/admin/financial" element={<AdminLayout><AdminFinancial /></AdminLayout>} />
-                  <Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />
-                  
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <AppWithShortcuts />
                 <WhatsAppFloat />
               </AuthProvider>
             </BrowserRouter>
