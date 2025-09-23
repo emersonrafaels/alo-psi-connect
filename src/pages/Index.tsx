@@ -302,7 +302,7 @@ const Index = () => {
                     <div className="h-6 bg-muted rounded w-20"></div>
                     <div className="h-6 bg-muted rounded w-18"></div>
                   </div>
-                </div>) : featuredProfessionals.length > 0 ? featuredProfessionals.map(professional => <ProfessionalCard key={professional.id} id={professional.id} name={professional.display_name} title={`${professional.profissao || 'Profissional'} - ${professional.crp_crm || 'CRP/CRM'}`} specialties={formatSpecialties(professional.servicos_raw)} isCompactView />) : <div className="col-span-full text-center py-12">
+                </div>) : featuredProfessionals.length > 0 ? featuredProfessionals.map(professional => <ProfessionalCard key={professional.id} id={professional.id} name={professional.display_name} title={`${professional.profissao || 'Profissional'} - ${professional.crp_crm || 'CRP/CRM'}`} specialties={formatSpecialties(professional.servicos_raw)} consultationPrice={professional.preco_consulta} isCompactView />) : <div className="col-span-full text-center py-12">
                 <p className="text-muted-foreground text-lg">
                   Nenhum profissional disponível no momento
                 </p>
