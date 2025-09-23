@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Bot, Send, User, Loader2, X } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { useAIAssistantConfig } from "@/hooks/useAIAssistantConfig"
 import { useSystemConfig } from "@/hooks/useSystemConfig"
 import { useAuth } from "@/hooks/useAuth"
 import ReactMarkdown from "react-markdown"
@@ -27,18 +28,16 @@ interface AIAssistantModalProps {
 
 export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssistantModalProps) => {
   const navigate = useNavigate();
-  const { getConfig } = useSystemConfig(['n8n_chat', 'ai_assistant']);
+  const { getConfig } = useSystemConfig(['n8n_chat']); // Only for N8N configs
+  const { aiConfig } = useAIAssistantConfig(); // For AI assistant display configs
   const { user } = useAuth();
   const [sessionId] = useState(() => crypto.randomUUID());
-  
-  // Get customizable content from config
-  const initialMessage = getConfig('ai_assistant', 'initial_message', '👋 Olá! Sou seu assistente de saúde mental especializado da AloPsi. Estou aqui para te ajudar a encontrar o profissional ideal para suas consultas online.\n\nComo posso te ajudar hoje?\n\n🔍 Sobre o que você gostaria de conversar:\n• Que tipo de apoio psicológico você está buscando?\n• Alguma especialidade específica (ansiedade, depressão, relacionamentos, etc.)?\n• Prefere Psicólogo(a), Psiquiatra(a) ou Psicoterapeuta(a)?\n\n⏰ Horários e disponibilidade:\n• Qual período prefere? (manhã, tarde ou noite)\n• Que dias da semana funcionam melhor para você?\n\n💰 Investimento:\n• Qual sua faixa de orçamento para as consultas?\n• Busca valores mais acessíveis ou tem flexibilidade?\n\n📱 Todas as consultas são realizadas online - você pode ter sessões de qualquer lugar');
   
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: initialMessage,
+      content: aiConfig.initialMessage,
       timestamp: new Date()
     }
   ])
@@ -317,10 +316,10 @@ export const AIAssistantModal = ({ open, onOpenChange, professionals }: AIAssist
               </Avatar>
               <div>
                 <DialogTitle className="text-xl">
-                  {getConfig('ai_assistant', 'title', 'Assistente de Saúde Mental')}
+                  {aiConfig.title}
                 </DialogTitle>
                 <p className="text-sm text-muted-foreground">
-                  {getConfig('ai_assistant', 'subtitle', 'Powered by IA • Te ajudo a encontrar o profissional ideal')}
+                  {aiConfig.subtitle}
                 </p>
               </div>
             </div>
