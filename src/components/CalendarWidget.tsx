@@ -22,9 +22,10 @@ interface CalendarWidgetProps {
   professionalId: string
   professionalName: string
   price?: string
+  onDateTimeSelect?: (date: Date | null, time: string | null) => void
 }
 
-export const CalendarWidget = ({ sessions, professionalId, professionalName, price }: CalendarWidgetProps) => {
+export const CalendarWidget = ({ sessions, professionalId, professionalName, price, onDateTimeSelect }: CalendarWidgetProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [selectedTime, setSelectedTime] = useState<string>()
   const [availableTimes, setAvailableTimes] = useState<any[]>([])
@@ -233,6 +234,13 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
       setAvailableTimes([])
     }
   }, [selectedDate, professionalId])
+
+  // Notify parent when date/time selection changes
+  useEffect(() => {
+    if (onDateTimeSelect) {
+      onDateTimeSelect(selectedDate || null, selectedTime || null)
+    }
+  }, [selectedDate, selectedTime, onDateTimeSelect])
 
   return (
     <div className="space-y-6 max-w-md mx-auto">

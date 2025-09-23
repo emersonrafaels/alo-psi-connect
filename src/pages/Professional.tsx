@@ -43,6 +43,8 @@ const Professional = () => {
   const [professional, setProfessional] = useState<Professional | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   useEffect(() => {
     if (id) {
       fetchProfessional();
@@ -98,6 +100,23 @@ const Professional = () => {
     const colors = ['bg-gradient-to-br from-primary to-primary/80', 'bg-gradient-to-br from-teal to-teal/80', 'bg-gradient-to-br from-accent to-accent/80', 'bg-gradient-to-br from-secondary to-secondary/80'];
     const index = name.length % colors.length;
     return colors[index];
+  };
+
+  const handleScheduleClick = () => {
+    if (!selectedDate || !selectedTime) {
+      // Scroll to calendar section if no date/time selected
+      const calendarSection = document.getElementById('calendar-section');
+      if (calendarSection) {
+        calendarSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        toast({
+          title: "Selecione data e horário",
+          description: "Por favor, escolha uma data e horário disponível no calendário abaixo.",
+        });
+      }
+    } else {
+      // Navigate to confirmation if date/time selected
+      window.location.href = `/confirmacao-agendamento?professionalId=${professional?.id}&professionalName=${professional?.display_name}&price=${professional?.preco_consulta}&date=${selectedDate.toISOString().split('T')[0]}&time=${selectedTime}`;
+    }
   };
   const parseSpecialties = (raw: string): string[] => {
     if (!raw) return [];
@@ -188,11 +207,9 @@ const Professional = () => {
                   </span>
                 </div>
               </div>
-              <Button size="lg" className="btn-gradient shadow-lg" asChild>
-                <Link to={`/confirmacao-agendamento?professionalId=${professional.id}&professionalName=${professional.display_name}&price=${professional.preco_consulta}`}>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Agendar Consulta
-                </Link>
+              <Button size="lg" className="btn-gradient shadow-lg" onClick={handleScheduleClick}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Agendar Consulta
               </Button>
             </div>
           </div>
@@ -237,7 +254,7 @@ const Professional = () => {
           {/* Sidebar */}
           <aside className="space-y-6">
             {/* Calendar */}
-            <Card className="shadow-elegant border-0 bg-gradient-to-br from-card via-card to-card/95">
+            <Card id="calendar-section" className="shadow-elegant border-0 bg-gradient-to-br from-card via-card to-card/95">
               <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
                 <CardTitle className="text-center flex items-center justify-center gap-2">
                   <Calendar className="h-5 w-5" />
@@ -248,7 +265,16 @@ const Professional = () => {
                 </p>
               </CardHeader>
               <CardContent className="p-6">
-                <CalendarWidget sessions={sessions} professionalId={professional.id.toString()} professionalName={professional.display_name} price={professional.preco_consulta?.toString()} />
+                <CalendarWidget 
+                  sessions={sessions} 
+                  professionalId={professional.id.toString()} 
+                  professionalName={professional.display_name} 
+                  price={professional.preco_consulta?.toString()}
+                  onDateTimeSelect={(date, time) => {
+                    setSelectedDate(date);
+                    setSelectedTime(time);
+                  }}
+                />
               </CardContent>
             </Card>
 
