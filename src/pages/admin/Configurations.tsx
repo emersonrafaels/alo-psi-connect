@@ -5,9 +5,10 @@ import { N8NConfig } from '@/components/admin/config/N8NConfig';
 import { SystemConfig } from '@/components/admin/config/SystemConfig';
 import AudioTranscriptionConfig from '@/components/admin/config/AudioTranscriptionConfig';
 import { AIDataSourcesConfig } from '@/components/admin/config/AIDataSourcesConfig';
+import { FeaturedProfessionalsConfig } from '@/components/admin/config/FeaturedProfessionalsConfig';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { Settings, Bot, Webhook, Cog, Shield, Mic, Database } from 'lucide-react';
+import { Settings, Bot, Webhook, Cog, Shield, Mic, Database, Star } from 'lucide-react';
 
 export default function Configurations() {
   const { hasRole, loading } = useAdminAuth();
@@ -45,7 +46,7 @@ export default function Configurations() {
         </div>
 
         <Tabs defaultValue="ai" className="space-y-6">
-          <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-6' : 'grid-cols-5'}`}>
             <TabsTrigger value="ai" className="flex items-center gap-2">
               <Bot className="h-4 w-4" />
               Assistente IA
@@ -61,6 +62,10 @@ export default function Configurations() {
             <TabsTrigger value="n8n" className="flex items-center gap-2">
               <Webhook className="h-4 w-4" />
               Integrações N8N
+            </TabsTrigger>
+            <TabsTrigger value="featured" className="flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              Profissionais
             </TabsTrigger>
             {isSuperAdmin && (
               <TabsTrigger value="system" className="flex items-center gap-2">
@@ -84,6 +89,10 @@ export default function Configurations() {
 
           <TabsContent value="n8n">
             <N8NConfig />
+          </TabsContent>
+
+          <TabsContent value="featured">
+            <FeaturedProfessionalsConfig />
           </TabsContent>
 
           <TabsContent value="system">
