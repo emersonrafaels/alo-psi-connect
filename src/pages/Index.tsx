@@ -16,6 +16,7 @@ interface FeaturedProfessional {
   crp_crm: string | null;
   servicos_raw: string | null;
   preco_consulta: number | null;
+  foto_perfil_url: string | null;
 }
 const Index = () => {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ const Index = () => {
       const {
         data,
         error
-      } = await supabase.from('profissionais').select('id, display_name, profissao, crp_crm, servicos_raw, preco_consulta').eq('ativo', true).not('servicos_raw', 'is', null).not('preco_consulta', 'is', null).order('display_name').limit(3);
+      } = await supabase.from('profissionais').select('id, display_name, profissao, crp_crm, servicos_raw, preco_consulta, foto_perfil_url').eq('ativo', true).not('servicos_raw', 'is', null).not('preco_consulta', 'is', null).order('display_name').limit(3);
       if (error) throw error;
       setFeaturedProfessionals(data || []);
     } catch (error) {
@@ -302,7 +303,7 @@ const Index = () => {
                     <div className="h-6 bg-muted rounded w-20"></div>
                     <div className="h-6 bg-muted rounded w-18"></div>
                   </div>
-                </div>) : featuredProfessionals.length > 0 ? featuredProfessionals.map(professional => <ProfessionalCard key={professional.id} id={professional.id} name={professional.display_name} title={`${professional.profissao || 'Profissional'} - ${professional.crp_crm || 'CRP/CRM'}`} specialties={formatSpecialties(professional.servicos_raw)} consultationPrice={professional.preco_consulta} isCompactView />) : <div className="col-span-full text-center py-12">
+                </div>) : featuredProfessionals.length > 0 ? featuredProfessionals.map(professional => <ProfessionalCard key={professional.id} id={professional.id} name={professional.display_name} title={`${professional.profissao || 'Profissional'} - ${professional.crp_crm || 'CRP/CRM'}`} image={professional.foto_perfil_url} specialties={formatSpecialties(professional.servicos_raw)} consultationPrice={professional.preco_consulta} isCompactView />) : <div className="col-span-full text-center py-12">
                 <p className="text-muted-foreground text-lg">
                   Nenhum profissional disponível no momento
                 </p>
