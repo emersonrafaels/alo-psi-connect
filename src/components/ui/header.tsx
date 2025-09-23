@@ -128,11 +128,7 @@ const Header = () => {
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <div className="w-full">
-                      <GlobalCacheButton variant="minimal" className="w-full justify-start p-0 h-auto" />
-                    </div>
-                  </DropdownMenuItem>
+                  <GlobalCacheButton variant="minimal" className="w-full justify-start p-0 h-auto" />
                   <DropdownMenuItem onClick={() => signOut()}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Sair
