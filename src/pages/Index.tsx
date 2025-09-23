@@ -52,7 +52,7 @@ const Index = () => {
       const {
         data,
         error
-      } = await supabase.from('profissionais').select('id, display_name, profissao, crp_crm, servicos_raw, preco_consulta').eq('ativo', true).not('servicos_raw', 'is', null).not('preco_consulta', 'is', null).order('display_name').limit(2);
+      } = await supabase.from('profissionais').select('id, display_name, profissao, crp_crm, servicos_raw, preco_consulta').eq('ativo', true).not('servicos_raw', 'is', null).not('preco_consulta', 'is', null).order('display_name').limit(3);
       if (error) throw error;
       setFeaturedProfessionals(data || []);
     } catch (error) {
@@ -275,17 +275,22 @@ const Index = () => {
       </section>
 
       {/* Featured Professionals */}
-      <section className="py-16">
+      <section className="py-20 bg-gradient-to-br from-background to-muted/30">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-12 text-foreground text-center">
-            Profissionais em Destaque
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4 text-foreground">
+              Profissionais em Destaque
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Conheça alguns dos nossos profissionais especializados em atendimento a estudantes universitários
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {loading ?
           // Loading skeleton
           Array.from({
-            length: 2
-          }).map((_, index) => <div key={index} className="bg-card p-6 rounded-lg border animate-pulse">
+            length: 3
+          }).map((_, index) => <div key={index} className="bg-card p-6 rounded-xl border shadow-sm animate-pulse">
                   <div className="h-6 bg-muted rounded mb-3 w-3/4"></div>
                   <div className="h-4 bg-muted rounded mb-2 w-1/2"></div>
                   <div className="space-y-2">
@@ -297,8 +302,8 @@ const Index = () => {
                     <div className="h-6 bg-muted rounded w-20"></div>
                     <div className="h-6 bg-muted rounded w-18"></div>
                   </div>
-                </div>) : featuredProfessionals.length > 0 ? featuredProfessionals.map(professional => <ProfessionalCard key={professional.id} id={professional.id} name={professional.display_name} title={`${professional.profissao || 'Profissional'} - ${professional.crp_crm || 'CRP/CRM'}`} specialties={formatSpecialties(professional.servicos_raw)} isCompactView />) : <div className="col-span-2 text-center py-8">
-                <p className="text-muted-foreground">
+                </div>) : featuredProfessionals.length > 0 ? featuredProfessionals.map(professional => <ProfessionalCard key={professional.id} id={professional.id} name={professional.display_name} title={`${professional.profissao || 'Profissional'} - ${professional.crp_crm || 'CRP/CRM'}`} specialties={formatSpecialties(professional.servicos_raw)} isCompactView />) : <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground text-lg">
                   Nenhum profissional disponível no momento
                 </p>
               </div>}
