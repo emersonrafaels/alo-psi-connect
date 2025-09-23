@@ -53,7 +53,7 @@ const Index = () => {
       const {
         data,
         error
-      } = await supabase.from('profissionais').select('id, display_name, profissao, crp_crm, servicos_raw, preco_consulta, foto_perfil_url').eq('ativo', true).eq('em_destaque', true).not('servicos_raw', 'is', null).not('preco_consulta', 'is', null).order('ordem_destaque', { ascending: true, nullsFirst: false }).order('display_name').limit(3);
+      } = await supabase.from('profissionais').select('id, display_name, profissao, crp_crm, servicos_raw, preco_consulta, foto_perfil_url').eq('ativo', true).eq('em_destaque', true).not('preco_consulta', 'is', null).order('ordem_destaque', { ascending: true, nullsFirst: false }).order('display_name').limit(3);
       if (error) throw error;
       setFeaturedProfessionals(data || []);
     } catch (error) {
