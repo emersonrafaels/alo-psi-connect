@@ -283,7 +283,7 @@ serve(async (req) => {
                           
                            <!-- CTA Button -->
                           <div style="text-align: center; margin: 30px 0;">
-                            <a href="${Deno.env.get('APP_BASE_URL') || 'http://localhost:3000'}/auth?confirm=true&token=${confirmationToken}" 
+                            <a href="${Deno.env.get('APP_BASE_URL') || 'https://alopsi.com.br'}/auth?confirm=true&token=${confirmationToken}" 
                                style="display: inline-block; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);">
                               ✅ Confirmar Email
                             </a>

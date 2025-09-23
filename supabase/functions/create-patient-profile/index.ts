@@ -261,7 +261,7 @@ serve(async (req) => {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                from: 'Alô, Psi! <noreply@alopsi.com>',
+                from: 'Alô, Psi! <noreply@alopsi.com.br>',
                 to: [email],
                 subject: 'Confirme seu email - Alô, Psi!',
                 html: `
@@ -272,7 +272,7 @@ serve(async (req) => {
                       Obrigado por se cadastrar! Para ativar sua conta, clique no link abaixo:
                     </p>
                      <div style="text-align: center; margin: 30px 0;">
-                       <a href="${Deno.env.get('APP_BASE_URL') || 'http://localhost:3000'}/auth?confirm=true&token=${confirmationToken}" 
+                       <a href="${Deno.env.get('APP_BASE_URL') || 'https://alopsi.com.br'}/auth?confirm=true&token=${confirmationToken}" 
                           style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
                          Confirmar Email
                        </a>
