@@ -663,6 +663,7 @@ export type Database = {
           cpf: string | null
           crp_crm: string | null
           display_name: string
+          em_destaque: boolean | null
           email_secundario: string | null
           first_name: string | null
           formacao_normalizada: string[] | null
@@ -673,6 +674,7 @@ export type Database = {
           idiomas_raw: string | null
           last_name: string | null
           linkedin: string | null
+          ordem_destaque: number | null
           pix: string | null
           possui_e_psi: boolean | null
           preco_consulta: number | null
@@ -697,6 +699,7 @@ export type Database = {
           cpf?: string | null
           crp_crm?: string | null
           display_name: string
+          em_destaque?: boolean | null
           email_secundario?: string | null
           first_name?: string | null
           formacao_normalizada?: string[] | null
@@ -707,6 +710,7 @@ export type Database = {
           idiomas_raw?: string | null
           last_name?: string | null
           linkedin?: string | null
+          ordem_destaque?: number | null
           pix?: string | null
           possui_e_psi?: boolean | null
           preco_consulta?: number | null
@@ -731,6 +735,7 @@ export type Database = {
           cpf?: string | null
           crp_crm?: string | null
           display_name?: string
+          em_destaque?: boolean | null
           email_secundario?: string | null
           first_name?: string | null
           formacao_normalizada?: string[] | null
@@ -741,6 +746,7 @@ export type Database = {
           idiomas_raw?: string | null
           last_name?: string | null
           linkedin?: string | null
+          ordem_destaque?: number | null
           pix?: string | null
           possui_e_psi?: boolean | null
           preco_consulta?: number | null
