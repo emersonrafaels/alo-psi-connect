@@ -66,7 +66,7 @@ serve(async (req) => {
         dataSources = dataSourcesResult || [];
       }
     } catch (error) {
-      console.warn('⚠️ Data sources table not available, continuing without additional data:', error.message);
+      console.warn('⚠️ Data sources table not available, continuing without additional data:', error instanceof Error ? error.message : 'Unknown error');
       dataSources = [];
     }
 
@@ -138,7 +138,11 @@ serve(async (req) => {
           const profSchedules = schedulesData.filter(s => s.user_id === prof.user_id);
           
           // Organize schedules by period
-          const schedulesByPeriod = {
+          const schedulesByPeriod: {
+            manhã: Array<{dia: string; inicio: string; fim: string}>;
+            tarde: Array<{dia: string; inicio: string; fim: string}>;
+            noite: Array<{dia: string; inicio: string; fim: string}>;
+          } = {
             manhã: [],
             tarde: [],
             noite: []
@@ -146,7 +150,7 @@ serve(async (req) => {
 
           profSchedules.forEach(schedule => {
             const startHour = parseInt(schedule.start_time.split(':')[0]);
-            let period = 'manhã';
+            let period: 'manhã' | 'tarde' | 'noite' = 'manhã';
             if (startHour >= 12 && startHour < 18) period = 'tarde';
             if (startHour >= 18) period = 'noite';
 
@@ -251,7 +255,7 @@ serve(async (req) => {
 
 === PROFISSIONAIS DISPONÍVEIS NA ALOPSI ===
 
-${professionals.map((prof, index) => `
+${professionals.map((prof: any, index: number) => `
 ${index + 1}. **${prof.display_name}** - ${prof.profissao}
    - ID: ${prof.id} (use para links: /professional/${prof.id})
    - Especialização: ${prof.resumo_profissional || 'Atendimento geral em psicologia'}
@@ -268,9 +272,9 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
    ${prof.disponibilidade?.manhã ? '✅ Manhã' : '❌ Manhã'} | ${prof.disponibilidade?.tarde ? '✅ Tarde' : '❌ Tarde'} | ${prof.disponibilidade?.noite ? '✅ Noite' : '❌ Noite'}
    
    **Horários específicos:**
-   - Manhã: ${prof.horarios_disponiveis?.manhã?.map(h => `${h.dia} ${h.inicio}-${h.fim}`).join(', ') || 'Não disponível'}
-   - Tarde: ${prof.horarios_disponiveis?.tarde?.map(h => `${h.dia} ${h.inicio}-${h.fim}`).join(', ') || 'Não disponível'}
-   - Noite: ${prof.horarios_disponiveis?.noite?.map(h => `${h.dia} ${h.inicio}-${h.fim}`).join(', ') || 'Não disponível'}
+    - Manhã: ${prof.horarios_disponiveis?.manhã?.map((h: any) => `${h.dia} ${h.inicio}-${h.fim}`).join(', ') || 'Não disponível'}
+    - Tarde: ${prof.horarios_disponiveis?.tarde?.map((h: any) => `${h.dia} ${h.inicio}-${h.fim}`).join(', ') || 'Não disponível'}
+    - Noite: ${prof.horarios_disponiveis?.noite?.map((h: any) => `${h.dia} ${h.inicio}-${h.fim}`).join(', ') || 'Não disponível'}
 `).join('')}
 
 === INSTRUÇÕES PARA APRESENTAÇÃO DOS PROFISSIONAIS ===
@@ -301,7 +305,7 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
     // Prepare messages with conversation history
     const messages = [
       { role: 'system', content: enhancedSystemPrompt },
-      ...conversationHistory.map(msg => ({
+      ...conversationHistory.map((msg: any) => ({
         role: msg.role,
         content: msg.content
       })),
@@ -551,11 +555,11 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
 
   } catch (error) {
     console.error('❌ Error in ai-assistant function:', error);
-    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     console.error('❌ Error details:', JSON.stringify(error, null, 2));
     return new Response(JSON.stringify({ 
-      error: error.message,
-      details: error.stack
+      error: error instanceof Error ? error.message : 'Unknown error',
+      details: error instanceof Error ? error.stack : 'No details available'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

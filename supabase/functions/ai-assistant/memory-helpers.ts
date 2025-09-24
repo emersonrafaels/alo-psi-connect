@@ -112,7 +112,7 @@ export async function cleanOldMessages(supabase: any, sessionId: string) {
         .from('ai_chat_messages')
         .delete()
         .eq('session_id', sessionId)
-        .not('id', 'in', `(${messages.map(m => `'${m.id}'`).join(',')})`);
+        .not('id', 'in', `(${messages.map((m: any) => `'${m.id}'`).join(',')})`);
 
       if (error) {
         console.error('❌ Error cleaning old messages:', error);

@@ -134,7 +134,11 @@ serve(async (req) => {
           const profSchedules = schedulesData.filter(s => s.user_id === prof.user_id);
           
           // Organize schedules by day and period
-          const schedulesByPeriod = {
+          const schedulesByPeriod: {
+            manha: Array<{day: string; start_time: string; end_time: string}>;
+            tarde: Array<{day: string; start_time: string; end_time: string}>;
+            noite: Array<{day: string; start_time: string; end_time: string}>;
+          } = {
             manha: [],
             tarde: [],
             noite: []
@@ -142,7 +146,7 @@ serve(async (req) => {
 
           profSchedules.forEach(schedule => {
             const startHour = parseInt(schedule.start_time.split(':')[0]);
-            let period = 'manha';
+            let period: 'manha' | 'tarde' | 'noite' = 'manha';
             if (startHour >= 12 && startHour < 18) period = 'tarde';
             if (startHour >= 18) period = 'noite';
 
@@ -162,7 +166,7 @@ serve(async (req) => {
             profession: prof.profissao,
             summary: prof.resumo_profissional,
             photo: include_photos ? prof.foto_perfil_url : null,
-            gender: prof.profiles?.genero,
+            gender: (prof.profiles as any)?.genero,
             price: prof.preco_consulta,
             price_formatted: prof.preco_consulta ? 
               `R$ ${prof.preco_consulta.toFixed(2)}` : 'A consultar',
@@ -337,7 +341,7 @@ serve(async (req) => {
         // Filter schedules for this day (matching CalendarWidget logic)
         const daySchedules = schedules.filter(schedule => {
           const sessionDay = schedule.day?.toLowerCase().trim();
-          const sessionDayNumber = dayCodeToNumber[sessionDay];
+          const sessionDayNumber = dayCodeToNumber[sessionDay as keyof typeof dayCodeToNumber];
           return sessionDayNumber === currentDayNumber;
         });
 
@@ -442,7 +446,7 @@ serve(async (req) => {
         };
 
         // Generate all available time slots
-        const allTimeSlots = [];
+        const allTimeSlots: Array<{time: string; session_id: any; day: any; period: string}> = [];
         daySchedules.forEach(session => {
           const slots = generateTimeSlots(session.start_time, session.end_time, 50);
           slots.forEach(slot => {
@@ -634,7 +638,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Error in ai-assistant-tool:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -707,7 +711,7 @@ async function getNextAvailableSlots(professionalId: number, schedules: any[], l
     // Filter schedules for this day (matching CalendarWidget logic)
     const daySchedules = schedules.filter(schedule => {
       const sessionDay = schedule.day?.toLowerCase().trim();
-      const sessionDayNumber = dayCodeToNumber[sessionDay];
+      const sessionDayNumber = dayCodeToNumber[sessionDay as keyof typeof dayCodeToNumber];
       return sessionDayNumber === currentDayNumber;
     });
     
