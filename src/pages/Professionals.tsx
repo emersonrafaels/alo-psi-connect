@@ -1065,12 +1065,12 @@ const Professionals = () => {
                               <h3 className="text-xl font-bold text-foreground mb-1 truncate">
                                 {professional.display_name}
                               </h3>
-                              <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2 mb-2">
-                                <Badge variant="outline" className="text-primary border-primary/30 bg-primary/5 font-medium">
+                              <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2 mb-2 dark:text-white/80">
+                                <Badge variant="outline" className="text-primary border-primary/30 bg-primary/5 font-medium dark:text-white/80">
                                   {capitalizeText(professional.profissao)}
                                 </Badge>
                                 {professional.crp_crm && (
-                                  <span className="text-xs text-muted-foreground font-mono">
+                                  <span className="text-xs text-muted-foreground font-mono dark:text-white/80">
                                     {professional.crp_crm}
                                   </span>
                                 )}
@@ -1087,8 +1087,8 @@ const Professionals = () => {
                           {/* Specialties */}
                           {professional.servicos_raw && (
                             <div className="min-w-0 flex-1">
-                              <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2 flex items-center gap-1">
-                                <span className="inline-block w-2 h-2 bg-primary rounded-full"></span>
+                              <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2 flex items-center gap-1 dark:text-white/80">
+                                <span className="inline-block w-2 h-2 bg-primary rounded-full "></span>
                                 Especialidades
                               </p>
                               <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
@@ -1097,7 +1097,7 @@ const Professionals = () => {
                                     <Badge 
                                       key={index} 
                                       variant="secondary" 
-                                      className="text-xs bg-gradient-to-r from-accent/10 to-accent/20 text-accent-foreground border border-accent/30 hover:from-accent/20 hover:to-accent/30 transition-all duration-200 px-2 py-1 font-medium"
+                                      className="text-xs bg-gradient-to-r from-accent/10 to-accent/20 text-accent-foreground dark:text-white/80 border border-accent/30 hover:from-accent/20 hover:to-accent/30 transition-all duration-200 px-2 py-1 font-medium"
                                     >
                                       {servico}
                                     </Badge>
