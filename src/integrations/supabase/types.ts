@@ -384,6 +384,42 @@ export type Database = {
         }
         Relationships: []
       }
+      google_calendar_events: {
+        Row: {
+          created_at: string
+          end_time: string
+          event_id: string
+          id: string
+          is_busy: boolean
+          start_time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          event_id: string
+          id?: string
+          is_busy?: boolean
+          start_time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          event_id?: string
+          id?: string
+          is_busy?: boolean
+          start_time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mood_entries: {
         Row: {
           anxiety_level: number | null

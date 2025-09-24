@@ -25,6 +25,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { GoogleCalendarIntegration } from './GoogleCalendarIntegration';
+import { BusyScheduleDisplay } from './BusyScheduleDisplay';
 import { SpecialtiesSelector } from './SpecialtiesSelector';
 import { ScheduleManager } from './ScheduleManager';
 import { ProfessionalInfoEditor } from './ProfessionalInfoEditor';
@@ -615,7 +616,7 @@ export const ProfessionalProfile: React.FC = () => {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="relative">
+                <CardContent className="relative space-y-6">
                   <GoogleCalendarIntegration
                     isConnected={googleCalendarConnected}
                     onConnectionChange={(connected) => {
@@ -624,6 +625,16 @@ export const ProfessionalProfile: React.FC = () => {
                       }
                     }}
                   />
+                  
+                  {googleCalendarConnected && (
+                    <BusyScheduleDisplay
+                      onSync={() => {
+                        // Trigger sync through GoogleCalendarIntegration
+                        refetchGoogleCalendar();
+                      }}
+                      isLoading={false}
+                    />
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

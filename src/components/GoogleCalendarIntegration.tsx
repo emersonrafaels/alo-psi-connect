@@ -160,16 +160,27 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na sincronização:', error);
+        throw new Error(error.message || 'Erro na sincronização');
+      }
 
+      console.log('Sincronização bem-sucedida:', data);
       toast({
         title: "Sincronização concluída",
-        description: `${data.eventsCount || 0} eventos sincronizados.`,
+        description: data.message || `${data.eventsCount || 0} eventos sincronizados.`,
       });
+
+      // Trigger refresh of busy schedule display
+      if (onConnectionChange) {
+        onConnectionChange(isConnected);
+      }
+
     } catch (error: any) {
+      console.error('Erro na sincronização:', error);
       toast({
         title: "Erro na sincronização",
-        description: error.message,
+        description: error.message || "Erro inesperado durante a sincronização.",
         variant: "destructive",
       });
     } finally {
