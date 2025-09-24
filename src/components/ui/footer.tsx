@@ -113,6 +113,16 @@ const Footer = () => {
                     {link.name}
                   </a>
                 </li>)}
+              <li>
+                <a href="/politica-privacidade" className="text-sm opacity-80 hover:opacity-100 transition-opacity">
+                  Política de Privacidade
+                </a>
+              </li>
+              <li>
+                <a href="/termos-servico" className="text-sm opacity-80 hover:opacity-100 transition-opacity">
+                  Termos de Serviço
+                </a>
+              </li>
             </ul>
           </div>
 

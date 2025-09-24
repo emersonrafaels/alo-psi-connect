@@ -31,6 +31,8 @@ import PatientForm from "./pages/register/PatientForm";
 import ProfessionalForm from "./pages/register/ProfessionalForm";
 import Profile from "./pages/Profile";
 import ProfessionalProfile from "./pages/ProfessionalProfile";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 
 // Appointment management pages
@@ -85,6 +87,8 @@ const AppWithShortcuts = () => {
       <Route path="/pagamento-cancelado" element={<PaymentCancelled />} />
       <Route path="/contato" element={<Contact />} />
       <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
+      <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
+      <Route path="/termos-servico" element={<TermsOfService />} />
       <Route path="/perfil" element={<Profile />} />
       <Route path="/professional-profile" element={<ProfessionalProfile />} />
       <Route path="/auth" element={<Auth />} />
