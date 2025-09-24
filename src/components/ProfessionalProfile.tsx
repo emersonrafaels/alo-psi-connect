@@ -148,6 +148,11 @@ export const ProfessionalProfile: React.FC = () => {
     }
   }, [professionalError, toast]);
 
+  // Memoized callbacks
+  const handleStatusUpdate = useCallback((isActive: boolean) => {
+    updateProfessionalData({ ativo: isActive });
+  }, [updateProfessionalData]);
+
   const handlePhotoUpload = useCallback(async (file: File) => {
     try {
       const photoUrl = await uploadProfilePhoto(file);
@@ -337,9 +342,7 @@ export const ProfessionalProfile: React.FC = () => {
                     {/* Status Toggle */}
                     <ProfessionalStatusToggle 
                       professionalData={professionalData}
-                      onUpdate={useCallback((isActive: boolean) => {
-                        updateProfessionalData({ ativo: isActive });
-                      }, [updateProfessionalData])}
+                      onUpdate={handleStatusUpdate}
                     />
                   </div>
                 </div>
