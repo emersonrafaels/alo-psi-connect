@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +11,7 @@ import { useProfileManager } from '@/hooks/useProfileManager';
 import { useUserType } from '@/hooks/useUserType';
 import { useGoogleCalendarStatus } from '@/hooks/useGoogleCalendarStatus';
 import { useToast } from '@/hooks/use-toast';
+import { useProfessionalData } from '@/hooks/useProfessionalData';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   User, 
@@ -117,50 +118,37 @@ export const ProfessionalProfile: React.FC = () => {
   const { isConnected: googleCalendarConnected, refetch: refetchGoogleCalendar } = useGoogleCalendarStatus();
   const { toast } = useToast();
   
-  const [professionalData, setProfessionalData] = useState<ProfessionalData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Use the optimized professional data hook
+  const { 
+    professionalData, 
+    loading: professionalLoading, 
+    error: professionalError,
+    updateProfessionalData,
+    refreshData: refreshProfessionalData 
+  } = useProfessionalData(profile?.id, isProfessional);
+  
   const [activeTab, setActiveTab] = useState('info');
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // Carregar dados do profissional
-  useEffect(() => {
-    const loadProfessionalData = async () => {
-      if (!profile?.id) return;
+  // Memoize loading state to prevent unnecessary re-renders
+  const loading = useMemo(() => 
+    profileLoading || professionalLoading, 
+    [profileLoading, professionalLoading]
+  );
 
-      try {
-        const { data, error } = await supabase
-          .from('profissionais')
-          .select('*')
-          .eq('profile_id', profile.id)
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error('Erro ao carregar dados do profissional:', error);
-          toast({
-            title: "Erro",
-            description: "Não foi possível carregar os dados profissionais.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        setProfessionalData(data);
-      } catch (error) {
-        console.error('Erro ao carregar dados do profissional:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (isProfessional && profile) {
-      loadProfessionalData();
-    } else {
-      setLoading(false);
+  // Handle professional data errors
+  useMemo(() => {
+    if (professionalError) {
+      toast({
+        title: "Erro",
+        description: professionalError,
+        variant: "destructive",
+      });
     }
-  }, [profile, isProfessional, toast]);
+  }, [professionalError, toast]);
 
-  const handlePhotoUpload = async (file: File) => {
+  const handlePhotoUpload = useCallback(async (file: File) => {
     try {
       const photoUrl = await uploadProfilePhoto(file);
       if (photoUrl && professionalData) {
@@ -172,7 +160,7 @@ export const ProfessionalProfile: React.FC = () => {
 
         if (error) throw error;
 
-        setProfessionalData(prev => prev ? { ...prev, foto_perfil_url: photoUrl } : null);
+        updateProfessionalData({ foto_perfil_url: photoUrl });
         
         toast({
           title: "Foto atualizada",
@@ -187,25 +175,25 @@ export const ProfessionalProfile: React.FC = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [uploadProfilePhoto, professionalData, updateProfessionalData, toast]);
 
-  const getInitials = (name: string) => {
+  const getInitials = useCallback((name: string) => {
     return name
       .split(' ')
       .map(word => word.charAt(0))
       .join('')
       .toUpperCase()
       .slice(0, 2);
-  };
+  }, []);
 
-  const parseSpecialties = (servicos_raw: string | null): string[] => {
+  const parseSpecialties = useCallback((servicos_raw: string | null): string[] => {
     if (!servicos_raw) return [];
     try {
       return JSON.parse(servicos_raw);
     } catch {
       return servicos_raw.split(',').map(s => s.trim()).filter(Boolean);
     }
-  };
+  }, []);
 
   if (!isProfessional) {
     return (
@@ -349,9 +337,9 @@ export const ProfessionalProfile: React.FC = () => {
                     {/* Status Toggle */}
                     <ProfessionalStatusToggle 
                       professionalData={professionalData}
-                      onUpdate={(isActive) => {
-                        setProfessionalData(prev => prev ? { ...prev, ativo: isActive } : null);
-                      }}
+                      onUpdate={useCallback((isActive: boolean) => {
+                        updateProfessionalData({ ativo: isActive });
+                      }, [updateProfessionalData])}
                     />
                   </div>
                 </div>
@@ -465,7 +453,7 @@ export const ProfessionalProfile: React.FC = () => {
                 <div className="relative">
                   <ProfessionalInfoEditor 
                     professionalData={professionalData}
-                    onUpdate={(data) => setProfessionalData(data)}
+                    onUpdate={(data) => updateProfessionalData(data)}
                   />
                 </div>
               </Card>
@@ -492,8 +480,7 @@ export const ProfessionalProfile: React.FC = () => {
                     value={parseSpecialties(professionalData?.servicos_raw)}
                     onChange={(specialties) => {
                       if (professionalData) {
-                        setProfessionalData({
-                          ...professionalData,
+                        updateProfessionalData({
                           servicos_raw: JSON.stringify(specialties)
                         });
                       }
@@ -593,7 +580,7 @@ export const ProfessionalProfile: React.FC = () => {
                   <BankingInfoEditor 
                     professionalData={professionalData}
                     onUpdate={(updatedData) => {
-                      setProfessionalData(prev => prev ? { ...prev, ...updatedData } : null);
+                      updateProfessionalData(updatedData);
                     }}
                   />
                 </div>

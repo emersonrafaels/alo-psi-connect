@@ -128,7 +128,9 @@ const Header = () => {
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <GlobalCacheButton variant="minimal" className="w-full justify-start p-0 h-auto" />
+                  {isAdmin && (
+                    <GlobalCacheButton variant="minimal" className="w-full justify-start p-0 h-auto" />
+                  )}
                   <DropdownMenuItem onClick={() => signOut()}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Sair
@@ -225,9 +227,11 @@ const Header = () => {
                 <div className="flex justify-center pb-2">
                   <ThemeToggle />
                 </div>
-                <div className="flex justify-center pb-2">
-                  <GlobalCacheButton variant="minimal" />
-                </div>
+                {isAdmin && (
+                  <div className="flex justify-center pb-2">
+                    <GlobalCacheButton variant="minimal" />
+                  </div>
+                )}
                 {user ? (
                   <Button 
                     variant="outline" 

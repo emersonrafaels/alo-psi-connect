@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
 import { clearAllCache, clearSpecificCache, getCacheInfo, CacheType, ClearCacheOptions } from '@/utils/configCache';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 interface GlobalCacheButtonProps {
   variant?: 'icon' | 'text' | 'minimal';
@@ -13,12 +14,18 @@ interface GlobalCacheButtonProps {
 }
 
 export const GlobalCacheButton = ({ variant = 'text', size = 'sm', className }: GlobalCacheButtonProps) => {
+  const { isAdmin } = useAdminAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [preserveTheme, setPreserveTheme] = useState(true);
   const [preserveAuth, setPreserveAuth] = useState(true);
   const [selectedTypes, setSelectedTypes] = useState<CacheType[]>(['config']);
   const { toast } = useToast();
+
+  // Hide button for non-admin users
+  if (!isAdmin) {
+    return null;
+  }
 
   const cacheTypeOptions = [
     { value: 'config' as CacheType, label: 'Configurações', description: 'Cache de configurações do sistema e AI' },
