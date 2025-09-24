@@ -49,9 +49,7 @@ const ProfessionalCard = ({
               <h3 className="font-bold text-lg text-foreground mb-1 truncate">{name}</h3>
               <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{title}</p>
               <div className="flex items-center gap-2 mb-3">
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-medium text-foreground">{rating}</span>
+                <div className="flex items-center gap-1"> 
                 </div>
                 {consultationPrice && (
                   <span className="text-sm font-bold text-primary">
