@@ -63,8 +63,8 @@ const handler = async (req: Request): Promise<Response> => {
     const { action, code }: GoogleCalendarAuthRequest = await req.json();
     console.log('Action requested:', action);
 
-    const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/google-calendar-auth`;
     const appBaseUrl = Deno.env.get('APP_BASE_URL') || 'https://alopsi.com.br';
+    const redirectUri = `${appBaseUrl}/functions/v1/google-calendar-auth`;
     console.log('Redirect URI:', redirectUri);
     console.log('App Base URL:', appBaseUrl);
 
