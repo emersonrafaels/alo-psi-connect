@@ -81,11 +81,23 @@ export const useProfessionalData = (profileId?: string, isProfessional?: boolean
     } finally {
       setLoading(false);
     }
-  }, [profileId, isProfessional, cacheKey, toast]);
+  }, [profileId, isProfessional, cacheKey]); // Removed toast from dependencies
 
   // Load data only once or when key dependencies change
   useEffect(() => {
-    loadProfessionalData();
+    let mounted = true;
+    
+    const loadData = async () => {
+      if (mounted) {
+        await loadProfessionalData();
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      mounted = false;
+    };
   }, [loadProfessionalData]);
 
   const updateProfessionalData = useCallback((updates: Partial<ProfessionalData>) => {
