@@ -74,7 +74,7 @@ async function sha256(message: string): Promise<string> {
 async function hmac(key: Uint8Array, message: string): Promise<string> {
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    key,
+    key.buffer as ArrayBuffer,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign']
@@ -96,7 +96,7 @@ async function getSignatureKey(key: string, dateStamp: string, regionName: strin
 async function hmacRaw(key: Uint8Array, message: string): Promise<Uint8Array> {
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    key,
+    key.buffer as ArrayBuffer,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign']
@@ -215,7 +215,7 @@ serve(async (req) => {
     console.error('Error listing S3 files:', error)
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Failed to list files' 
+        error: error instanceof Error ? error.message : 'Failed to list files' 
       }),
       { 
         headers: { 

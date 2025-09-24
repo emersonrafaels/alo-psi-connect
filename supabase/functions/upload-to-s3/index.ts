@@ -102,7 +102,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Upload error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400 
@@ -256,9 +256,10 @@ async function getSignatureKey(
 async function hmacSha256Raw(key: Uint8Array | CryptoKey, message: string): Promise<CryptoKey> {
   const encoder = new TextEncoder()
   const keyData = key instanceof Uint8Array ? key : await crypto.subtle.exportKey('raw', key)
+  const keyBuffer = keyData instanceof Uint8Array ? keyData.buffer as ArrayBuffer : keyData as ArrayBuffer;
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    keyData instanceof Uint8Array ? keyData : new Uint8Array(keyData as ArrayBuffer),
+    keyBuffer,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign']

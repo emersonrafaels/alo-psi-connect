@@ -111,10 +111,10 @@ serve(async (req) => {
           // Extract service names from PHP serialized string
           const matches = professional.servicos_raw.match(/_nome_servico";s:\d+:"([^"]+)"/g);
           if (matches) {
-            rawServices = matches.map(match => {
+            rawServices = matches.map((match: string) => {
               const nameMatch = match.match(/_nome_servico";s:\d+:"([^"]+)"/);
               return nameMatch ? nameMatch[1] : '';
-            }).filter(name => name.length > 0);
+            }).filter((name: string) => name.length > 0);
           }
         }
 
@@ -206,7 +206,7 @@ Exemplo de resposta: Ansiedade, Depressão, Terapia de Casal`;
           id: professional.id,
           name: professional.display_name,
           status: 'error',
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           originalServices: [],
           standardizedServices: null
         });
@@ -236,7 +236,7 @@ Exemplo de resposta: Ansiedade, Depressão, Terapia de Casal`;
     return new Response(JSON.stringify({ 
       success: false,
       error: 'Erro interno do servidor',
-      details: error.message 
+      details: error instanceof Error ? error.message : 'Unknown error' 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

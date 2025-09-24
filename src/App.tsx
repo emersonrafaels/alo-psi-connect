@@ -25,6 +25,7 @@ import Contact from "./pages/Contact";
 import WorkWithUs from "./pages/WorkWithUs";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
+import GoogleCalendarCallback from "./pages/GoogleCalendarCallback";
 import UserType from "./pages/register/UserType";
 import PatientForm from "./pages/register/PatientForm";
 import ProfessionalForm from "./pages/register/ProfessionalForm";
@@ -89,6 +90,7 @@ const AppWithShortcuts = () => {
       <Route path="/auth" element={<Auth />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/auth-callback" element={<AuthCallback />} />
+      <Route path="/google-calendar-callback" element={<GoogleCalendarCallback />} />
       
       {/* Redirect old routes to new cadastro routes */}
       <Route path="/registrar" element={<UserType />} />
