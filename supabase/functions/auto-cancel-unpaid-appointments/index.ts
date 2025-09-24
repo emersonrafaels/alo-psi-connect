@@ -89,7 +89,7 @@ serve(async (req) => {
 
           // Send cancellation email
           try {
-            const professionalName = appointment.profissionais?.display_name || 'Profissional';
+            const professionalName = (appointment.profissionais as any)?.display_name || 'Profissional';
             const appointmentDate = new Date(appointment.data_consulta).toLocaleDateString('pt-BR');
             const appointmentTime = appointment.horario;
 

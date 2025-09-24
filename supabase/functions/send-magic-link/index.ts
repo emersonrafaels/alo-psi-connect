@@ -30,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (type === 'account_creation') {
       // Magic link para criação de conta após pagamento
       const { data, error } = await supabase.auth.admin.generateLink({
-        type: 'signup',
+        type: 'magiclink',
         email: email,
         options: {
           redirectTo: `${supabaseUrl.replace('https://', 'https://').replace('.supabase.co', '')}.vercel.app/auth-callback?type=signup&redirect_to=/profile`

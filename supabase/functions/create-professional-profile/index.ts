@@ -335,8 +335,8 @@ serve(async (req) => {
     console.error('Function error:', error);
     
     // Get more specific error message
-    const errorMessage = error?.message || 'Erro desconhecido';
-    const errorDetails = error?.details || error?.code || 'Sem detalhes adicionais';
+    const errorMessage = (error as any)?.message || 'Erro desconhecido';
+    const errorDetails = (error as any)?.details || (error as any)?.code || 'Sem detalhes adicionais';
     
     console.error('Error details:', errorDetails);
     
