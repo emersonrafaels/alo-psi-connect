@@ -12,7 +12,7 @@ interface UserTypeInfo {
 
 export const useUserType = (): UserTypeInfo => {
   const { user } = useAuth();
-  const { profile } = useUserProfile();
+  const { profile, refetch } = useUserProfile();
   
   // Cache professional status in session storage for each user
   const cacheKey = `professional_status_${user?.id || 'anonymous'}`;
