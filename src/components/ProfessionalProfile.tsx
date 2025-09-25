@@ -265,13 +265,14 @@ export const ProfessionalProfile: React.FC = () => {
             </div>
           </div>
 
-          {/* Modern Profile Header Card */}
+          {/* Enhanced Profile Header Card */}
           <Card className="mb-8 overflow-hidden border-0 shadow-lg bg-card/50 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 pointer-events-none"></div>
             <CardContent className="relative pt-8 pb-6">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                {/* Avatar Section - 3 columns */}
-                <div className="lg:col-span-3 flex flex-col items-center lg:items-start space-y-4">
+              {/* Desktop Layout - Clean Grid */}
+              <div className="hidden lg:grid lg:grid-cols-4 gap-8 items-start">
+                {/* Avatar Section */}
+                <div className="flex flex-col items-center space-y-4">
                   <div className="relative">
                     <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-25 hover:opacity-75 transition duration-300"></div>
                     <div className="relative">
@@ -288,94 +289,240 @@ export const ProfessionalProfile: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Professional Info - 6 columns */}
-                <div className="lg:col-span-6 space-y-6">
-                  {/* Name and Badge */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h2 className="text-3xl font-bold text-foreground">
-                          {professionalData?.display_name || profile?.nome}
-                        </h2>
-                        <Badge 
-                          variant={professionalData?.ativo ? "default" : "secondary"}
-                          className="text-xs font-medium"
-                        >
-                          {professionalData?.ativo ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </div>
-                      {professionalData?.profissao && (
-                        <p className="text-xl text-muted-foreground flex items-center gap-2 mb-4">
-                          <Stethoscope className="h-5 w-5" />
-                          {professionalData.profissao}
-                          {professionalData.crp_crm && (
-                            <>
-                              <span className="w-1 h-1 bg-muted-foreground rounded-full"></span>
-                              <span className="font-mono text-lg">{professionalData.crp_crm}</span>
-                            </>
-                          )}
-                        </p>
-                      )}
+                {/* Professional Info */}
+                <div className="col-span-2 space-y-6">
+                  {/* Name and Profession */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-3xl font-bold text-foreground">
+                        {professionalData?.display_name || profile?.nome}
+                      </h2>
+                      <Badge 
+                        variant={professionalData?.ativo ? "default" : "secondary"}
+                        className="text-xs font-medium"
+                      >
+                        {professionalData?.ativo ? "Ativo" : "Inativo"}
+                      </Badge>
                     </div>
+                    {professionalData?.profissao && (
+                      <p className="text-xl text-muted-foreground flex items-center gap-2">
+                        <Stethoscope className="h-5 w-5" />
+                        {professionalData.profissao}
+                        {professionalData.crp_crm && (
+                          <>
+                            <span className="w-1 h-1 bg-muted-foreground rounded-full"></span>
+                            <span className="font-mono text-lg">{professionalData.crp_crm}</span>
+                          </>
+                        )}
+                      </p>
+                    )}
                   </div>
                   
-                  {/* Professional Stats Grid - Better aligned */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                    <div className="flex flex-wrap items-center gap-3">
-                      {professionalData?.preco_consulta && (
-                        <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full border border-accent/20">
-                          <span className="text-sm font-medium text-accent-foreground">
-                            R$ {professionalData.preco_consulta.toFixed(2)}
-                          </span>
+                  {/* Enhanced Info Cards */}
+                  <div className="flex flex-wrap gap-4">
+                    {professionalData?.preco_consulta && (
+                      <Card className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-accent/20 rounded-full">
+                            <span className="text-lg">💰</span>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Consulta</p>
+                            <p className="text-lg font-bold text-accent-foreground">
+                              R$ {professionalData.preco_consulta.toFixed(2)}
+                            </p>
+                          </div>
                         </div>
-                      )}
-                      {professionalData?.tempo_consulta && (
-                        <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
-                          <Clock className="h-4 w-4 text-primary" />
-                          <span className="text-sm font-medium text-primary">
-                            {professionalData.tempo_consulta} min
-                          </span>
+                      </Card>
+                    )}
+                    {professionalData?.tempo_consulta && (
+                      <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primary/20 rounded-full">
+                            <Clock className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Duração</p>
+                            <p className="text-lg font-bold text-primary">
+                              {professionalData.tempo_consulta} min
+                            </p>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                    
-                    {/* Status Toggle - Right aligned */}
-                    <div className="flex justify-start sm:justify-end">
+                      </Card>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status & Calendar Section */}
+                <div className="space-y-4">
+                  {/* Status Section */}
+                  <Card className="p-4 bg-gradient-to-br from-muted/30 to-background border-muted">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                        <h4 className="text-sm font-medium">Status</h4>
+                      </div>
                       <ProfessionalStatusToggle 
                         professionalData={professionalData}
                         onUpdate={handleStatusUpdate}
                       />
                     </div>
-                  </div>
-                </div>
-
-                {/* Calendar & Description Section - 3 columns with better spacing */}
-                <div className="lg:col-span-3 space-y-4">
+                  </Card>
+                  
                   {/* Calendar Status */}
-                  <div className="flex justify-center lg:justify-end">
-                    <div className="flex items-center gap-3 px-4 py-3 bg-background/80 backdrop-blur-sm rounded-xl border shadow-sm">
-                      <div className={`w-3 h-3 rounded-full ${
-                        googleCalendarConnected 
-                          ? 'bg-green-500 shadow-green-500/50 shadow-lg' 
-                          : 'bg-gray-300'
-                      } ${googleCalendarConnected ? 'animate-pulse' : ''}`} />
-                      <span className="text-sm font-medium">
-                        {googleCalendarConnected ? 'Agenda conectada' : 'Agenda desconectada'}
-                      </span>
+                  <Card className="p-4 bg-gradient-to-br from-muted/30 to-background border-muted">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                        <h4 className="text-sm font-medium">Agenda</h4>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                          googleCalendarConnected 
+                            ? 'bg-green-500 shadow-green-500/50 shadow-lg animate-pulse' 
+                            : 'bg-gray-300'
+                        }`} />
+                        <span className="text-sm font-medium">
+                          {googleCalendarConnected ? 'Conectada' : 'Desconectada'}
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Mobile Layout */}
+              <div className="lg:hidden space-y-6">
+                {/* Avatar and Basic Info */}
+                <div className="text-center space-y-4">
+                  <div className="relative inline-block">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-25"></div>
+                    <div className="relative">
+                      <PhotoUpload
+                        onPhotoSelected={handlePhotoUpload}
+                        onPhotoUrlChange={() => {}}
+                        currentPhotoUrl={professionalData?.foto_perfil_url || profile?.foto_perfil_url || ''}
+                        selectedFile={selectedFile}
+                        compact={true}
+                        size="lg"
+                        className="border-4 border-background shadow-2xl"
+                      />
                     </div>
                   </div>
                   
-                  {/* Professional Description - More space for larger text */}
-                  {professionalData?.resumo_profissional && (
-                    <div className="p-4 bg-muted/30 rounded-lg border min-h-[120px]">
-                      <h4 className="text-sm font-medium text-foreground mb-3">Sobre o profissional</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-3">
+                      <h2 className="text-2xl font-bold text-foreground">
+                        {professionalData?.display_name || profile?.nome}
+                      </h2>
+                      <Badge 
+                        variant={professionalData?.ativo ? "default" : "secondary"}
+                        className="text-xs font-medium"
+                      >
+                        {professionalData?.ativo ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </div>
+                    {professionalData?.profissao && (
+                      <p className="text-lg text-muted-foreground flex items-center justify-center gap-2">
+                        <Stethoscope className="h-4 w-4" />
+                        {professionalData.profissao}
+                        {professionalData.crp_crm && (
+                          <>
+                            <span className="w-1 h-1 bg-muted-foreground rounded-full"></span>
+                            <span className="font-mono">{professionalData.crp_crm}</span>
+                          </>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Info Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {professionalData?.preco_consulta && (
+                    <Card className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-accent/20 rounded-full">
+                          <span className="text-lg">💰</span>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Consulta</p>
+                          <p className="text-lg font-bold text-accent-foreground">
+                            R$ {professionalData.preco_consulta.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+                  {professionalData?.tempo_consulta && (
+                    <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/20 rounded-full">
+                          <Clock className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Duração</p>
+                          <p className="text-lg font-bold text-primary">
+                            {professionalData.tempo_consulta} min
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+                </div>
+
+                {/* Status and Calendar */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Card className="p-4 bg-gradient-to-br from-muted/30 to-background border-muted">
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                        Status do Perfil
+                      </h4>
+                      <ProfessionalStatusToggle 
+                        professionalData={professionalData}
+                        onUpdate={handleStatusUpdate}
+                      />
+                    </div>
+                  </Card>
+                  
+                  <Card className="p-4 bg-gradient-to-br from-muted/30 to-background border-muted">
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                        Status da Agenda
+                      </h4>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                          googleCalendarConnected 
+                            ? 'bg-green-500 shadow-green-500/50 shadow-lg animate-pulse' 
+                            : 'bg-gray-300'
+                        }`} />
+                        <span className="text-sm font-medium">
+                          {googleCalendarConnected ? 'Conectada' : 'Desconectada'}
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Professional Description - Full width */}
+              {professionalData?.resumo_profissional && (
+                <div className="mt-8">
+                  <Card className="p-6 bg-gradient-to-br from-muted/20 to-background border-muted">
+                    <div className="space-y-4">
+                      <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                        Sobre o profissional
+                      </h4>
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {professionalData.resumo_profissional}
                       </p>
                     </div>
-                  )}
+                  </Card>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
