@@ -70,33 +70,62 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
         
         // Setup message listener for popup callback
         const handleMessage = (event: MessageEvent) => {
+          // Verify origin for security
+          if (event.origin !== window.location.origin) {
+            console.warn('Ignorando mensagem de origem não confiável:', event.origin);
+            return;
+          }
+
+          console.log('Mensagem recebida do popup:', event.data);
+
           if (event.data.type === 'GOOGLE_CALENDAR_SUCCESS') {
-            console.log('Google Calendar connected successfully');
+            console.log('Google Calendar conectado com sucesso');
+            
+            // Update state immediately and trigger refetch
             onConnectionChange(true);
+            
             toast({
               title: "Conectado com sucesso!",
               description: "Google Calendar conectado e pronto para sincronização.",
             });
+            
             window.removeEventListener('message', handleMessage);
+            setLoading(false);
           } else if (event.data.type === 'GOOGLE_CALENDAR_ERROR') {
-            console.error('Google Calendar connection error:', event.data.error);
+            console.error('Erro na conexão Google Calendar:', event.data.error);
             toast({
               title: "Erro na conexão",
               description: event.data.error || "Falha na autorização do Google Calendar.",
               variant: "destructive",
             });
+            
             window.removeEventListener('message', handleMessage);
+            setLoading(false);
           }
         };
         
         window.addEventListener('message', handleMessage);
+        
+        // Setup timeout for message handling
+        const timeoutId = setTimeout(() => {
+          console.log('Timeout: popup não respondeu em 5 minutos');
+          window.removeEventListener('message', handleMessage);
+          setLoading(false);
+          toast({
+            title: "Timeout na autorização",
+            description: "A autorização demorou muito. Tente novamente.",
+            variant: "destructive",
+          });
+        }, 5 * 60 * 1000); // 5 minutes
         
         // Abre a URL de autorização em uma nova janela
         const popup = window.open(data.authUrl, 'google-auth', 'width=500,height=600,scrollbars=yes,resizable=yes');
         
         // Check if popup was blocked
         if (!popup) {
+          clearTimeout(timeoutId);
           window.removeEventListener('message', handleMessage);
+          setLoading(false);
           toast({
             title: "Popup bloqueado",
             description: "Desative o bloqueador de popup e tente novamente.",
@@ -115,7 +144,10 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
         const checkClosed = setInterval(() => {
           if (popup.closed) {
             clearInterval(checkClosed);
+            clearTimeout(timeoutId);
             window.removeEventListener('message', handleMessage);
+            setLoading(false);
+            console.log('Popup fechado manualmente pelo usuário');
           }
         }, 1000);
       } else {

@@ -16,7 +16,10 @@ export default function GoogleCalendarCallback() {
       const error = searchParams.get('error');
       const state = searchParams.get('state');
 
+      console.log('Callback iniciado:', { code: !!code, error, hasOpener: !!window.opener });
+
       if (error) {
+        console.error('Erro na autorização Google:', error);
         toast({
           variant: "destructive",
           title: "Erro na autorização",
@@ -25,11 +28,16 @@ export default function GoogleCalendarCallback() {
         
         // Notify parent window if opened in popup
         if (window.opener) {
+          console.log('Enviando erro para janela principal');
           window.opener.postMessage({ 
             type: 'GOOGLE_CALENDAR_ERROR', 
             error: error 
-          }, '*');
-          window.close();
+          }, window.location.origin);
+          
+          // Auto-close popup after sending message
+          setTimeout(() => {
+            window.close();
+          }, 500);
         } else {
           const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/perfil';
           sessionStorage.removeItem('googleCalendarReturnUrl');
@@ -49,6 +57,7 @@ export default function GoogleCalendarCallback() {
 
           if (authError) throw authError;
 
+          console.log('Google Calendar conectado com sucesso!', data);
           toast({
             title: "Google Calendar conectado!",
             description: "Sua conta foi conectada com sucesso.",
@@ -56,11 +65,16 @@ export default function GoogleCalendarCallback() {
 
           // Notify parent window if opened in popup
           if (window.opener) {
+            console.log('Enviando sucesso para janela principal');
             window.opener.postMessage({ 
               type: 'GOOGLE_CALENDAR_SUCCESS', 
               data 
-            }, '*');
-            window.close();
+            }, window.location.origin);
+            
+            // Auto-close popup after sending message
+            setTimeout(() => {
+              window.close();
+            }, 500);
           } else {
             const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/perfil';
             sessionStorage.removeItem('googleCalendarReturnUrl');
@@ -76,11 +90,16 @@ export default function GoogleCalendarCallback() {
 
           // Notify parent window if opened in popup
           if (window.opener) {
+            console.log('Enviando erro de conexão para janela principal');
             window.opener.postMessage({ 
               type: 'GOOGLE_CALENDAR_ERROR', 
               error: 'Connection failed' 
-            }, '*');
-            window.close();
+            }, window.location.origin);
+            
+            // Auto-close popup after sending message
+            setTimeout(() => {
+              window.close();
+            }, 500);
           } else {
             const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/perfil';
             sessionStorage.removeItem('googleCalendarReturnUrl');

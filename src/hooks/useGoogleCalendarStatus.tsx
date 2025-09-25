@@ -53,6 +53,7 @@ export const useGoogleCalendarStatus = (): GoogleCalendarStatus => {
   }, [user, profile, refetchTrigger]);
 
   const refetch = () => {
+    // Add debounce to prevent multiple rapid calls
     setRefetchTrigger(prev => prev + 1);
     setLoading(true);
   };

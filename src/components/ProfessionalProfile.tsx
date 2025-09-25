@@ -767,9 +767,9 @@ export const ProfessionalProfile: React.FC = () => {
                   <GoogleCalendarIntegration
                     isConnected={googleCalendarConnected}
                     onConnectionChange={(connected) => {
-                      if (connected) {
-                        refetchGoogleCalendar();
-                      }
+                      console.log('Google Calendar connection changed:', connected);
+                      // Always refetch to update status, regardless of connection state
+                      refetchGoogleCalendar();
                     }}
                   />
                   
