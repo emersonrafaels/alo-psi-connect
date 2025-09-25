@@ -269,7 +269,7 @@ export const ProfessionalProfile: React.FC = () => {
           <Card className="mb-8 overflow-hidden border-0 shadow-lg bg-card/50 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 pointer-events-none"></div>
             <CardContent className="relative pt-8 pb-6">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 {/* Avatar Section - 3 columns */}
                 <div className="lg:col-span-3 flex flex-col items-center lg:items-start space-y-4">
                   <div className="relative">
@@ -289,14 +289,14 @@ export const ProfessionalProfile: React.FC = () => {
                 </div>
                 
                 {/* Professional Info - 6 columns */}
-                <div className="lg:col-span-6 space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="lg:col-span-6 space-y-6">
+                  {/* Name and Badge */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="flex items-center gap-3 mb-3">
                         <h2 className="text-3xl font-bold text-foreground">
                           {professionalData?.display_name || profile?.nome}
                         </h2>
-                        {/* Status Badge Inline */}
                         <Badge 
                           variant={professionalData?.ativo ? "default" : "secondary"}
                           className="text-xs font-medium"
@@ -305,7 +305,7 @@ export const ProfessionalProfile: React.FC = () => {
                         </Badge>
                       </div>
                       {professionalData?.profissao && (
-                        <p className="text-xl text-muted-foreground flex items-center gap-2 mb-3">
+                        <p className="text-xl text-muted-foreground flex items-center gap-2 mb-4">
                           <Stethoscope className="h-5 w-5" />
                           {professionalData.profissao}
                           {professionalData.crp_crm && (
@@ -319,18 +319,18 @@ export const ProfessionalProfile: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Professional Stats & Status Toggle */}
-                  <div className="flex flex-col sm:flex-row items-start gap-4">
+                  {/* Professional Stats Grid - Better aligned */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                     <div className="flex flex-wrap items-center gap-3">
                       {professionalData?.preco_consulta && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 rounded-full">
+                        <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full border border-accent/20">
                           <span className="text-sm font-medium text-accent-foreground">
                             R$ {professionalData.preco_consulta.toFixed(2)}
                           </span>
                         </div>
                       )}
                       {professionalData?.tempo_consulta && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full">
+                        <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
                           <Clock className="h-4 w-4 text-primary" />
                           <span className="text-sm font-medium text-primary">
                             {professionalData.tempo_consulta} min
@@ -339,30 +339,40 @@ export const ProfessionalProfile: React.FC = () => {
                       )}
                     </div>
                     
-                    {/* Status Toggle */}
-                    <ProfessionalStatusToggle 
-                      professionalData={professionalData}
-                      onUpdate={handleStatusUpdate}
-                    />
+                    {/* Status Toggle - Right aligned */}
+                    <div className="flex justify-start sm:justify-end">
+                      <ProfessionalStatusToggle 
+                        professionalData={professionalData}
+                        onUpdate={handleStatusUpdate}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Calendar Status - 3 columns */}
-                <div className="lg:col-span-3 flex justify-center lg:justify-end">
-                  <div className="flex items-center gap-3 px-4 py-3 bg-background/80 backdrop-blur-sm rounded-xl border shadow-sm">
-                    <div className={`w-3 h-3 rounded-full ${
-                      googleCalendarConnected 
-                        ? 'bg-green-500 shadow-green-500/50 shadow-lg' 
-                        : 'bg-gray-300'
-                    } ${googleCalendarConnected ? 'animate-pulse' : ''}`} />
-                    <span className="text-sm font-medium">
-                      {googleCalendarConnected ? 'Agenda conectada' : 'Agenda desconectada'}
-                    </span>
+                {/* Calendar & Description Section - 3 columns with better spacing */}
+                <div className="lg:col-span-3 space-y-6">
+                  {/* Calendar Status */}
+                  <div className="flex justify-center lg:justify-end">
+                    <div className="flex items-center gap-3 px-4 py-3 bg-background/80 backdrop-blur-sm rounded-xl border shadow-sm">
+                      <div className={`w-3 h-3 rounded-full ${
+                        googleCalendarConnected 
+                          ? 'bg-green-500 shadow-green-500/50 shadow-lg' 
+                          : 'bg-gray-300'
+                      } ${googleCalendarConnected ? 'animate-pulse' : ''}`} />
+                      <span className="text-sm font-medium">
+                        {googleCalendarConnected ? 'Agenda conectada' : 'Agenda desconectada'}
+                      </span>
+                    </div>
                   </div>
+                  
+                  {/* Professional Description - Separated with proper spacing */}
                   {professionalData?.resumo_profissional && (
-                    <p className="text-sm text-muted-foreground text-right max-w-sm line-clamp-2">
-                      {professionalData.resumo_profissional}
-                    </p>
+                    <div className="p-4 bg-muted/30 rounded-lg border">
+                      <h4 className="text-sm font-medium text-foreground mb-2">Sobre o profissional</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                        {professionalData.resumo_profissional}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
