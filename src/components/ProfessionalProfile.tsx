@@ -243,7 +243,7 @@ export const ProfessionalProfile: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate(professionalData?.id ? `/professional/${professionalData.id}` : '/profile')}
               className="flex items-center gap-2 mb-4 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
