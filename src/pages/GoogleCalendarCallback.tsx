@@ -71,9 +71,30 @@ export default function GoogleCalendarCallback() {
           }
 
           console.log('Google Calendar conectado com sucesso!', data);
+          
+          // Extra verification step
+          console.log('🔍 Verificando se tokens foram realmente salvos...');
+          setTimeout(async () => {
+            try {
+              const { data: verifyData } = await supabase
+                .from('profiles')
+                .select('google_calendar_token, google_calendar_scope')
+                .eq('user_id', session.user.id)
+                .single();
+              
+              console.log('🔍 Verificação dos tokens após callback:', {
+                hasToken: !!verifyData?.google_calendar_token,
+                tokenLength: verifyData?.google_calendar_token?.length || 0,
+                scope: verifyData?.google_calendar_scope
+              });
+            } catch (error) {
+              console.error('🔍 Erro na verificação:', error);
+            }
+          }, 1000);
+
           toast({
             title: "Google Calendar conectado!",
-            description: "Sua conta foi conectada com sucesso.",
+            description: data?.message || "Sua conta foi conectada com sucesso.",
           });
 
           // Detecta se está em popup de múltiplas formas

@@ -179,6 +179,13 @@ const handler = async (req: Request): Promise<Response> => {
         console.log('Final detected scope:', detectedScope);
 
         // Save tokens to user profile with detected scope
+        console.log('🔄 Iniciando atualização do banco de dados...', {
+          userId: user.user.id,
+          tokenPresent: !!tokenData.access_token,
+          refreshTokenPresent: !!tokenData.refresh_token,
+          scope: detectedScope
+        });
+
         const { data: updateData, error: updateError } = await supabaseClient
           .from('profiles')
           .update({
@@ -187,17 +194,29 @@ const handler = async (req: Request): Promise<Response> => {
             google_calendar_scope: detectedScope,
           })
           .eq('user_id', user.user.id)
-          .select('id, user_id, google_calendar_token, google_calendar_scope');
+          .select('id, user_id, google_calendar_token, google_calendar_scope, google_calendar_refresh_token');
+
+        console.log('📊 Update response:', {
+          error: updateError,
+          dataReceived: !!updateData,
+          recordsAffected: updateData?.length || 0,
+          firstRecord: updateData?.[0] || null
+        });
 
         if (updateError) {
-          console.error('Error saving Google Calendar tokens:', updateError);
+          console.error('❌ Error saving Google Calendar tokens:', updateError);
           console.error('Update error details:', JSON.stringify(updateError, null, 2));
           throw new Error('Erro ao salvar tokens de acesso: ' + updateError.message);
         }
 
-        console.log('Tokens salvos com sucesso!');
-        console.log('Dados atualizados:', updateData?.length || 0, 'registros afetados');
-        console.log('Token salvo (primeiros 20 chars):', updateData?.[0]?.google_calendar_token?.substring(0, 20));
+        if (!updateData || updateData.length === 0) {
+          console.error('❌ No records were updated - this is unexpected!');
+          throw new Error('Nenhum registro foi atualizado - possível problema de permissão');
+        }
+
+        console.log('✅ Tokens salvos com sucesso!');
+        console.log('📋 Dados atualizados:', updateData?.length || 0, 'registros afetados');
+        console.log('🔑 Token salvo (primeiros 20 chars):', updateData?.[0]?.google_calendar_token?.substring(0, 20));
 
         // Verificar se os tokens foram realmente salvos
         const { data: verifyData, error: verifyError } = await supabaseClient

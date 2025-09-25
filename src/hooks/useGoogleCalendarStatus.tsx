@@ -32,13 +32,19 @@ export const useGoogleCalendarStatus = (): GoogleCalendarStatus => {
         return;
       }
 
+      // Add a small delay to allow database writes to complete
+      if (refetchTrigger > 0) {
+        console.log('[useGoogleCalendarStatus] Waiting for database sync...');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+
       try {
         console.log('[useGoogleCalendarStatus] Fetching tokens from database...');
         
         // Verifica se o perfil tem tokens do Google Calendar salvos
         const { data, error } = await supabase
           .from('profiles')
-          .select('google_calendar_token, google_calendar_refresh_token')
+          .select('google_calendar_token, google_calendar_refresh_token, google_calendar_scope')
           .eq('user_id', user.id)
           .maybeSingle();
 
@@ -47,7 +53,8 @@ export const useGoogleCalendarStatus = (): GoogleCalendarStatus => {
           hasData: !!data,
           hasAccessToken: !!data?.google_calendar_token,
           hasRefreshToken: !!data?.google_calendar_refresh_token,
-          tokenLength: data?.google_calendar_token?.length || 0
+          tokenLength: data?.google_calendar_token?.length || 0,
+          scope: data?.google_calendar_scope || 'none'
         });
 
         if (error) {
