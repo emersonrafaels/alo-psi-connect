@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { useUserProfile } from './useUserProfile';
 import { supabase } from '@/integrations/supabase/client';
+import { useLocalStorage } from './useLocalStorage';
 
 interface UserTypeInfo {
   isProfessional: boolean;
@@ -11,10 +12,54 @@ interface UserTypeInfo {
 
 export const useUserType = (): UserTypeInfo => {
   const { user } = useAuth();
-  const { profile, refetch: refetchProfile } = useUserProfile();
-  const [isProfessional, setIsProfessional] = useState(false);
-  const [professionalId, setProfessionalId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { profile } = useUserProfile();
+  
+  // Cache professional status in session storage for each user
+  const cacheKey = `professional_status_${user?.id || 'anonymous'}`;
+  const [cachedStatus, setCachedStatus] = useLocalStorage<{
+    isProfessional: boolean;
+    professionalId: string | null;
+    profileId: string | null;
+    timestamp: number;
+  } | null>(cacheKey, null);
+
+  const [isProfessional, setIsProfessional] = useState(() => {
+    // Initialize from cache if available and recent (within 30 minutes)
+    if (cachedStatus && profile?.id === cachedStatus.profileId) {
+      const isRecent = Date.now() - cachedStatus.timestamp < 30 * 60 * 1000;
+      return isRecent ? cachedStatus.isProfessional : false;
+    }
+    return false;
+  });
+  
+  const [professionalId, setProfessionalId] = useState<string | null>(() => {
+    if (cachedStatus && profile?.id === cachedStatus.profileId) {
+      const isRecent = Date.now() - cachedStatus.timestamp < 30 * 60 * 1000;
+      return isRecent ? cachedStatus.professionalId : null;
+    }
+    return null;
+  });
+  
+  const [loading, setLoading] = useState(() => {
+    // Don't show loading if we have recent cached data
+    if (cachedStatus && profile?.id === cachedStatus.profileId) {
+      const isRecent = Date.now() - cachedStatus.timestamp < 30 * 60 * 1000;
+      return !isRecent;
+    }
+    return true;
+  });
+
+  // Update cache when status changes
+  const updateCache = useCallback((professional: boolean, profId: string | null) => {
+    if (profile?.id) {
+      setCachedStatus({
+        isProfessional: professional,
+        professionalId: profId,
+        profileId: profile.id,
+        timestamp: Date.now()
+      });
+    }
+  }, [profile?.id, setCachedStatus]);
 
   const checkProfessionalStatus = useCallback(async () => {
     console.log('🔍 [useUserType] Checking professional status...', { 
@@ -23,7 +68,8 @@ export const useUserType = (): UserTypeInfo => {
       profile: !!profile, 
       profileId: profile?.id,
       profileType: profile?.tipo_usuario,
-      userEmail: user?.email || profile?.email
+      userEmail: user?.email || profile?.email,
+      hasCache: !!cachedStatus
     });
     
     if (!user) {
@@ -39,11 +85,24 @@ export const useUserType = (): UserTypeInfo => {
       return; // Keep loading until profile loads
     }
 
+    // Check if we have recent cached data for this profile
+    if (cachedStatus && cachedStatus.profileId === profile.id) {
+      const isRecent = Date.now() - cachedStatus.timestamp < 30 * 60 * 1000; // 30 minutes
+      if (isRecent) {
+        console.log('🚀 [useUserType] Using cached professional status');
+        setIsProfessional(cachedStatus.isProfessional);
+        setProfessionalId(cachedStatus.professionalId);
+        setLoading(false);
+        return;
+      }
+    }
+
     // Quick check: if profile type is not 'profissional', skip database query
     if (profile.tipo_usuario !== 'profissional') {
       console.log('🔍 [useUserType] Profile type is not professional:', profile.tipo_usuario);
       setIsProfessional(false);
       setProfessionalId(null);
+      updateCache(false, null);
       setLoading(false);
       return;
     }
@@ -63,44 +122,55 @@ export const useUserType = (): UserTypeInfo => {
         console.error('❌ [useUserType] Error checking professional status:', error);
         setIsProfessional(false);
         setProfessionalId(null);
+        updateCache(false, null);
       } else if (professionalData) {
         console.log('✅ [useUserType] Active professional found:', professionalData);
+        const profId = professionalData.id.toString();
         setIsProfessional(true);
-        setProfessionalId(professionalData.id.toString());
+        setProfessionalId(profId);
+        updateCache(true, profId);
       } else {
         console.log('❌ [useUserType] No active professional profile found for user');
         setIsProfessional(false);
         setProfessionalId(null);
+        updateCache(false, null);
       }
     } catch (error) {
       console.error('❌ [useUserType] Error checking professional status:', error);
       setIsProfessional(false);
       setProfessionalId(null);
+      updateCache(false, null);
     } finally {
       setLoading(false);
     }
-  }, [user?.id, profile?.id, profile?.tipo_usuario]);
+  }, [user?.id, profile?.id, profile?.tipo_usuario, cachedStatus, updateCache]);
+
+  // Memoize the final result to prevent unnecessary re-renders
+  const result = useMemo(() => ({
+    isProfessional,
+    professionalId,
+    loading
+  }), [isProfessional, professionalId, loading]);
 
   useEffect(() => {
     checkProfessionalStatus();
   }, [checkProfessionalStatus]);
 
-  // Force refresh when profile changes due to the data fix
-  useEffect(() => {
-    if (profile && profile.tipo_usuario === 'profissional' && !isProfessional && !loading) {
-      console.log('🔄 [useUserType] Profile updated to professional, refreshing...');
-      refetchProfile();
-    }
-  }, [profile, isProfessional, loading, refetchProfile]);
-
-  // Reset loading when user changes
+  // Clear cache when user changes
   useEffect(() => {
     if (user) {
-      setLoading(true);
+      // Clear cache for different user
+      const currentCacheKey = `professional_status_${user.id}`;
+      if (cacheKey !== currentCacheKey) {
+        setCachedStatus(null);
+      }
+    } else {
+      // Clear all when no user
+      setCachedStatus(null);
     }
-  }, [user]);
+  }, [user?.id, cacheKey, setCachedStatus]);
 
   console.log('🔍 [useUserType] Final state:', { isProfessional, professionalId, loading, profileType: profile?.tipo_usuario });
 
-  return { isProfessional, professionalId, loading };
+  return result;
 };
