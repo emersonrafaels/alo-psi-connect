@@ -126,15 +126,68 @@ const handler = async (req: Request): Promise<Response> => {
 
         console.log('Profile encontrado:', profileCheck);
 
-        // Save tokens to user profile
+        // Detect scope from token response or request
+        let detectedScope = 'calendar.readonly'; // Default assumption
+        
+        // Test which scope was actually granted by testing API access
+        try {
+          console.log('Testing granted scope by calling Google Calendar API...');
+          
+          // Try calendar.readonly first (events list)
+          const testReadonlyResponse = await fetch(
+            'https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=1',
+            {
+              headers: {
+                'Authorization': `Bearer ${tokenData.access_token}`,
+              },
+            }
+          );
+          
+          if (testReadonlyResponse.ok) {
+            detectedScope = 'calendar.readonly';
+            console.log('✅ Full calendar.readonly scope detected');
+          } else if (testReadonlyResponse.status === 403) {
+            // Try freebusy
+            const testFreeBusyResponse = await fetch(
+              'https://www.googleapis.com/calendar/v3/freeBusy',
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${tokenData.access_token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  timeMin: new Date().toISOString(),
+                  timeMax: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                  items: [{ id: 'primary' }]
+                })
+              }
+            );
+            
+            if (testFreeBusyResponse.ok) {
+              detectedScope = 'calendar.freebusy';
+              console.log('✅ Limited calendar.freebusy scope detected');
+            } else {
+              console.log('❌ Neither scope seems to work, defaulting to readonly');
+            }
+          }
+        } catch (error) {
+          console.error('Error testing scope:', error);
+          console.log('Using default scope due to test error');
+        }
+
+        console.log('Final detected scope:', detectedScope);
+
+        // Save tokens to user profile with detected scope
         const { data: updateData, error: updateError } = await supabaseClient
           .from('profiles')
           .update({
             google_calendar_token: tokenData.access_token,
             google_calendar_refresh_token: tokenData.refresh_token,
+            google_calendar_scope: detectedScope,
           })
           .eq('user_id', user.user.id)
-          .select('id, user_id, google_calendar_token');
+          .select('id, user_id, google_calendar_token, google_calendar_scope');
 
         if (updateError) {
           console.error('Error saving Google Calendar tokens:', updateError);
@@ -149,7 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
         // Verificar se os tokens foram realmente salvos
         const { data: verifyData, error: verifyError } = await supabaseClient
           .from('profiles')
-          .select('google_calendar_token, google_calendar_refresh_token')
+          .select('google_calendar_token, google_calendar_refresh_token, google_calendar_scope')
           .eq('user_id', user.user.id)
           .single();
 
@@ -159,29 +212,42 @@ const handler = async (req: Request): Promise<Response> => {
           console.log('Verificação dos tokens salvos:', {
             hasAccessToken: !!verifyData.google_calendar_token,
             hasRefreshToken: !!verifyData.google_calendar_refresh_token,
-            accessTokenLength: verifyData.google_calendar_token?.length || 0
+            accessTokenLength: verifyData.google_calendar_token?.length || 0,
+            scope: verifyData.google_calendar_scope
           });
         }
+
+        const scopeMessage = detectedScope === 'calendar.readonly' 
+          ? 'Google Calendar conectado com sucesso! (Acesso completo)' 
+          : 'Google Calendar conectado com sucesso! (Acesso básico - apenas períodos ocupados)';
 
         return new Response(
           JSON.stringify({ 
             success: true, 
-            message: 'Google Calendar conectado com sucesso!' 
+            message: scopeMessage,
+            scope: detectedScope
           }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           }
         );
       } else {
-        // Generate authorization URL with expanded scope for calendar sync
-        const scope = 'https://www.googleapis.com/auth/calendar.readonly';
+        // Try to get the preferred scope, default to readonly
+        const preferredScope = 'https://www.googleapis.com/auth/calendar.readonly';
+        const fallbackScope = 'https://www.googleapis.com/auth/calendar.freebusy';
+        
+        // First try with readonly scope
+        const scope = preferredScope;
+        console.log('Generating auth URL with scope:', scope);
+        
         const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
           `client_id=${clientId}&` +
           `redirect_uri=${encodeURIComponent(redirectUri)}&` +
           `response_type=code&` +
           `scope=${encodeURIComponent(scope)}&` +
           `access_type=offline&` +
-          `prompt=consent`;
+          `prompt=consent&` +
+          `state=${encodeURIComponent(JSON.stringify({ preferredScope: scope, fallbackScope }))}`;
 
         return new Response(
           JSON.stringify({ authUrl }),
@@ -197,6 +263,7 @@ const handler = async (req: Request): Promise<Response> => {
         .update({
           google_calendar_token: null,
           google_calendar_refresh_token: null,
+          google_calendar_scope: null,
         })
         .eq('user_id', user.user.id);
 

@@ -1,10 +1,10 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Check, ExternalLink, RefreshCw } from 'lucide-react';
+import { Calendar, Check, ExternalLink, RefreshCw, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,14 +14,53 @@ interface GoogleCalendarIntegrationProps {
   onConnectionChange: (connected: boolean) => void;
 }
 
+interface CalendarScope {
+  scope: string | null;
+  loading: boolean;
+}
+
 export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps> = ({
   isConnected,
   onConnectionChange
 }) => {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [calendarScope, setCalendarScope] = useState<CalendarScope>({ scope: null, loading: true });
   const { toast } = useToast();
   const { user, session } = useAuth();
+
+  // Fetch calendar scope when connection status changes
+  useEffect(() => {
+    const fetchCalendarScope = async () => {
+      if (!user || !isConnected) {
+        setCalendarScope({ scope: null, loading: false });
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('google_calendar_scope')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching calendar scope:', error);
+          setCalendarScope({ scope: null, loading: false });
+        } else {
+          setCalendarScope({ 
+            scope: data?.google_calendar_scope || 'calendar.readonly', 
+            loading: false 
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching calendar scope:', error);
+        setCalendarScope({ scope: null, loading: false });
+      }
+    };
+
+    fetchCalendarScope();
+  }, [user, isConnected]);
 
   const handleConnectCalendar = async () => {
     if (!user || !session) {
@@ -95,6 +134,8 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
             setTimeout(() => {
               console.log('Primeira tentativa de atualização de status...');
               onConnectionChange(true);
+              // Also refresh scope info
+              setCalendarScope(prev => ({ ...prev, loading: true }));
             }, 1000);
             
             // Second attempt after more time for database propagation
@@ -314,7 +355,9 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
           </CardTitle>
           <CardDescription>
             {isConnected 
-              ? "Sua agenda está conectada e sincronizada." 
+              ? (calendarScope.scope === 'calendar.freebusy' 
+                  ? "Sua agenda está conectada (acesso básico - apenas períodos ocupados)." 
+                  : "Sua agenda está conectada e sincronizada (acesso completo).")
               : "Conecte sua agenda para evitar conflitos de agendamento."
             }
           </CardDescription>
@@ -326,14 +369,24 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
               <div className="flex items-center gap-2">
                 <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-300'}`} />
                 <span className="text-sm font-medium">
-                  {isConnected ? 'Conectado' : 'Não conectado'}
+                  {isConnected ? (
+                    calendarScope.scope === 'calendar.freebusy' ? 'Conectado (Básico)' : 'Conectado (Completo)'
+                  ) : 'Não conectado'}
                 </span>
               </div>
               {isConnected && (
-                <Badge variant="secondary" className="text-xs">
-                  <Check className="h-3 w-3 mr-1" />
-                  Ativo
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    <Check className="h-3 w-3 mr-1" />
+                    Ativo
+                  </Badge>
+                  {calendarScope.scope === 'calendar.freebusy' && (
+                    <Badge variant="outline" className="text-xs">
+                      <Info className="h-3 w-3 mr-1" />
+                      Acesso Limitado
+                    </Badge>
+                  )}
+                </div>
               )}
             </div>
 
@@ -379,8 +432,24 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
                   <li>• Seus eventos ocupados são sincronizados automaticamente</li>
                   <li>• Pacientes só veem horários realmente disponíveis</li>
                   <li>• A sincronização ocorre a cada hora</li>
-                  <li>• Apenas eventos privados/ocupados são considerados</li>
+                  {calendarScope.scope === 'calendar.freebusy' ? (
+                    <li>• <strong>Modo básico:</strong> Apenas períodos ocupados (sem detalhes dos eventos)</li>
+                  ) : (
+                    <li>• <strong>Modo completo:</strong> Eventos completos com detalhes</li>
+                  )}
                 </ul>
+                
+                {calendarScope.scope === 'calendar.freebusy' && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-1">Acesso limitado detectado</p>
+                        <p>Sua integração está funcionando em modo básico. Para acesso completo, você pode tentar reconectar sua conta Google.</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

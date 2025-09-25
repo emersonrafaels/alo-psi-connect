@@ -44,10 +44,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Usuário autenticado:', user.user.id);
 
-    // Get user's Google Calendar tokens
+    // Get user's Google Calendar tokens and scope
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('google_calendar_token, google_calendar_refresh_token')
+      .select('google_calendar_token, google_calendar_refresh_token, google_calendar_scope')
       .eq('user_id', user.user.id)
       .single();
 
@@ -58,9 +58,11 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Google Calendar não conectado');
     }
 
-    console.log('Google Calendar token encontrado, buscando eventos...');
+    const userScope = profile.google_calendar_scope || 'calendar.readonly';
+    console.log('Google Calendar token encontrado, scope:', userScope);
+    console.log('Buscando eventos...');
 
-    // Get calendar free/busy for the next 30 days
+    // Get calendar free/busy for the next 30 days (works with both scopes)
     const now = new Date();
     const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
     
@@ -232,18 +234,24 @@ async function handleSyncSuccess(calendarData: any, corsHeaders: any, supabaseCl
     console.error('Erro ao buscar eventos salvos:', fetchError);
   }
 
-  return new Response(
-    JSON.stringify({ 
-      success: true, 
-      eventsCount: busyPeriods.length,
-      savedCount: savedCount,
-      events: savedEvents || [],
-      message: `${savedCount} períodos ocupados sincronizados com sucesso!`
-    }),
-    {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    }
-  );
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        eventsCount: busyPeriods.length,
+        savedCount: savedCount,
+        events: savedEvents || [],
+        scope: userId ? (await supabaseClient
+          .from('profiles')
+          .select('google_calendar_scope')
+          .eq('user_id', userId)
+          .single()
+        ).data?.google_calendar_scope : 'unknown',
+        message: `${savedCount} períodos ocupados sincronizados com sucesso!`
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
 }
 
 serve(handler);
