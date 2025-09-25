@@ -350,7 +350,7 @@ export const ProfessionalProfile: React.FC = () => {
                 </div>
 
                 {/* Calendar & Description Section - 3 columns with better spacing */}
-                <div className="lg:col-span-3 space-y-6">
+                <div className="lg:col-span-3 space-y-4">
                   {/* Calendar Status */}
                   <div className="flex justify-center lg:justify-end">
                     <div className="flex items-center gap-3 px-4 py-3 bg-background/80 backdrop-blur-sm rounded-xl border shadow-sm">
@@ -365,11 +365,11 @@ export const ProfessionalProfile: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Professional Description - Separated with proper spacing */}
+                  {/* Professional Description - More space for larger text */}
                   {professionalData?.resumo_profissional && (
-                    <div className="p-4 bg-muted/30 rounded-lg border">
-                      <h4 className="text-sm font-medium text-foreground mb-2">Sobre o profissional</h4>
-                      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                    <div className="p-4 bg-muted/30 rounded-lg border min-h-[120px]">
+                      <h4 className="text-sm font-medium text-foreground mb-3">Sobre o profissional</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
                         {professionalData.resumo_profissional}
                       </p>
                     </div>
