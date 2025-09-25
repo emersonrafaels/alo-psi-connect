@@ -60,20 +60,23 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Google Calendar token encontrado, buscando eventos...');
 
-    // Get calendar events for the next 30 days
+    // Get calendar free/busy for the next 30 days
     const now = new Date();
     const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
     
     const calendarResponse = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/primary/events?` +
-      `timeMin=${now.toISOString()}&` +
-      `timeMax=${thirtyDaysFromNow.toISOString()}&` +
-      `singleEvents=true&` +
-      `orderBy=startTime`,
+      `https://www.googleapis.com/calendar/v3/freeBusy`,
       {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${profile.google_calendar_token}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          timeMin: now.toISOString(),
+          timeMax: thirtyDaysFromNow.toISOString(),
+          items: [{ id: 'primary' }]
+        })
       }
     );
 
@@ -100,15 +103,18 @@ const handler = async (req: Request): Promise<Response> => {
 
             // Retry the calendar request with new token
             const retryResponse = await fetch(
-              `https://www.googleapis.com/calendar/v3/calendars/primary/events?` +
-              `timeMin=${now.toISOString()}&` +
-              `timeMax=${thirtyDaysFromNow.toISOString()}&` +
-              `singleEvents=true&` +
-              `orderBy=startTime`,
+              `https://www.googleapis.com/calendar/v3/freeBusy`,
               {
+                method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${refreshResponse.access_token}`,
+                  'Content-Type': 'application/json',
                 },
+                body: JSON.stringify({
+                  timeMin: now.toISOString(),
+                  timeMax: thirtyDaysFromNow.toISOString(),
+                  items: [{ id: 'primary' }]
+                })
               }
             );
             
@@ -177,40 +183,38 @@ async function refreshGoogleToken(refreshToken: string) {
 }
 
 async function handleSyncSuccess(calendarData: any, corsHeaders: any, supabaseClient: any, userId: string) {
-  // Filter busy events (not available, not transparent)
-  const busyEvents = calendarData.items?.filter((event: any) => 
-    event.status === 'confirmed' && 
-    event.transparency !== 'transparent' &&
-    event.start?.dateTime && 
-    event.end?.dateTime
-  ) || [];
+  // Extract busy periods from FreeBusy API response
+  const busyPeriods = calendarData.calendars?.primary?.busy || [];
 
-  console.log(`Encontrados ${busyEvents.length} eventos ocupados do Google Calendar`);
+  console.log(`Encontrados ${busyPeriods.length} períodos ocupados do Google Calendar`);
 
-  // Save events to database
+  // Save busy periods to database
   let savedCount = 0;
-  for (const event of busyEvents) {
+  for (const busyPeriod of busyPeriods) {
     try {
+      // Generate a unique ID based on start/end time for FreeBusy periods
+      const eventId = `freebusy_${new Date(busyPeriod.start).getTime()}_${new Date(busyPeriod.end).getTime()}`;
+      
       const { error } = await supabaseClient
         .from('google_calendar_events')
         .upsert({
           user_id: userId,
-          event_id: event.id,
-          title: event.summary || 'Evento sem título',
-          start_time: event.start.dateTime,
-          end_time: event.end.dateTime,
+          event_id: eventId,
+          title: 'Ocupado',
+          start_time: busyPeriod.start,
+          end_time: busyPeriod.end,
           is_busy: true,
         }, {
           onConflict: 'user_id,event_id'
         });
 
       if (error) {
-        console.error('Erro ao salvar evento:', event.id, error);
+        console.error('Erro ao salvar período ocupado:', eventId, error);
       } else {
         savedCount++;
       }
     } catch (error) {
-      console.error('Erro ao processar evento:', event.id, error);
+      console.error('Erro ao processar período ocupado:', busyPeriod, error);
     }
   }
 
@@ -231,10 +235,10 @@ async function handleSyncSuccess(calendarData: any, corsHeaders: any, supabaseCl
   return new Response(
     JSON.stringify({ 
       success: true, 
-      eventsCount: busyEvents.length,
+      eventsCount: busyPeriods.length,
       savedCount: savedCount,
       events: savedEvents || [],
-      message: `${savedCount} eventos sincronizados e salvos com sucesso!`
+      message: `${savedCount} períodos ocupados sincronizados com sucesso!`
     }),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
