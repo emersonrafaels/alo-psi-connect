@@ -91,11 +91,23 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
               popup.close();
             }
             
-            // Force immediate status refresh with delay
+            // Force immediate status refresh with multiple attempts
             setTimeout(() => {
-              console.log('Atualizando status da conexão...');
+              console.log('Primeira tentativa de atualização de status...');
               onConnectionChange(true);
             }, 1000);
+            
+            // Second attempt after more time for database propagation
+            setTimeout(() => {
+              console.log('Segunda tentativa de atualização de status...');
+              onConnectionChange(true);
+            }, 3000);
+            
+            // Third attempt to ensure status is updated
+            setTimeout(() => {
+              console.log('Terceira tentativa de atualização de status...');
+              onConnectionChange(true);
+            }, 5000);
             
             toast({
               title: "Conectado com sucesso!",

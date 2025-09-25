@@ -18,13 +18,23 @@ export const useGoogleCalendarStatus = (): GoogleCalendarStatus => {
 
   useEffect(() => {
     const checkGoogleCalendarStatus = async () => {
+      console.log('[useGoogleCalendarStatus] Checking status...', {
+        hasUser: !!user,
+        hasProfile: !!profile,
+        userId: user?.id,
+        refetchTrigger
+      });
+      
       if (!user || !profile) {
+        console.log('[useGoogleCalendarStatus] No user or profile, setting disconnected');
         setIsConnected(false);
         setLoading(false);
         return;
       }
 
       try {
+        console.log('[useGoogleCalendarStatus] Fetching tokens from database...');
+        
         // Verifica se o perfil tem tokens do Google Calendar salvos
         const { data, error } = await supabase
           .from('profiles')
@@ -32,17 +42,28 @@ export const useGoogleCalendarStatus = (): GoogleCalendarStatus => {
           .eq('user_id', user.id)
           .maybeSingle();
 
+        console.log('[useGoogleCalendarStatus] Database response:', {
+          error,
+          hasData: !!data,
+          hasAccessToken: !!data?.google_calendar_token,
+          hasRefreshToken: !!data?.google_calendar_refresh_token,
+          tokenLength: data?.google_calendar_token?.length || 0
+        });
+
         if (error) {
-          console.error('Error checking Google Calendar status:', error);
+          console.error('[useGoogleCalendarStatus] Error checking status:', error);
           setIsConnected(false);
         } else if (data) {
           // Considera conectado se tem pelo menos o access token
-          setIsConnected(!!data.google_calendar_token);
+          const connected = !!data.google_calendar_token;
+          console.log('[useGoogleCalendarStatus] Setting connected status:', connected);
+          setIsConnected(connected);
         } else {
+          console.log('[useGoogleCalendarStatus] No data found, setting disconnected');
           setIsConnected(false);
         }
       } catch (error) {
-        console.error('Error checking Google Calendar status:', error);
+        console.error('[useGoogleCalendarStatus] Exception checking status:', error);
         setIsConnected(false);
       } finally {
         setLoading(false);
@@ -53,11 +74,10 @@ export const useGoogleCalendarStatus = (): GoogleCalendarStatus => {
   }, [user, profile, refetchTrigger]);
 
   const refetch = () => {
-    // Add debounce to prevent multiple rapid calls
-    setTimeout(() => {
-      setRefetchTrigger(prev => prev + 1);
-      setLoading(true);
-    }, 2000); // 2 segundos de delay para garantir que tokens foram salvos
+    console.log('[useGoogleCalendarStatus] Refetch solicitado, invalidando cache...');
+    setIsConnected(false);
+    setLoading(true);
+    setRefetchTrigger(prev => prev + 1);
   };
 
   return { isConnected, loading, refetch };

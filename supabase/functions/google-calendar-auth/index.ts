@@ -112,7 +112,21 @@ const handler = async (req: Request): Promise<Response> => {
 
         console.log('Salvando tokens no banco de dados para usuário:', user.user.id);
 
-        // Save tokens to user profile or professional table
+        // Verificar se o usuário existe na tabela profiles
+        const { data: profileCheck, error: profileCheckError } = await supabaseClient
+          .from('profiles')
+          .select('id, user_id')
+          .eq('user_id', user.user.id)
+          .single();
+
+        if (profileCheckError) {
+          console.error('Error checking profile:', profileCheckError);
+          throw new Error('Usuário não encontrado no sistema: ' + profileCheckError.message);
+        }
+
+        console.log('Profile encontrado:', profileCheck);
+
+        // Save tokens to user profile
         const { data: updateData, error: updateError } = await supabaseClient
           .from('profiles')
           .update({
@@ -120,7 +134,7 @@ const handler = async (req: Request): Promise<Response> => {
             google_calendar_refresh_token: tokenData.refresh_token,
           })
           .eq('user_id', user.user.id)
-          .select();
+          .select('id, user_id, google_calendar_token');
 
         if (updateError) {
           console.error('Error saving Google Calendar tokens:', updateError);
@@ -130,6 +144,24 @@ const handler = async (req: Request): Promise<Response> => {
 
         console.log('Tokens salvos com sucesso!');
         console.log('Dados atualizados:', updateData?.length || 0, 'registros afetados');
+        console.log('Token salvo (primeiros 20 chars):', updateData?.[0]?.google_calendar_token?.substring(0, 20));
+
+        // Verificar se os tokens foram realmente salvos
+        const { data: verifyData, error: verifyError } = await supabaseClient
+          .from('profiles')
+          .select('google_calendar_token, google_calendar_refresh_token')
+          .eq('user_id', user.user.id)
+          .single();
+
+        if (verifyError) {
+          console.error('Error verifying tokens:', verifyError);
+        } else {
+          console.log('Verificação dos tokens salvos:', {
+            hasAccessToken: !!verifyData.google_calendar_token,
+            hasRefreshToken: !!verifyData.google_calendar_refresh_token,
+            accessTokenLength: verifyData.google_calendar_token?.length || 0
+          });
+        }
 
         return new Response(
           JSON.stringify({ 

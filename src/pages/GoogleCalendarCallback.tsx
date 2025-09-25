@@ -48,6 +48,9 @@ export default function GoogleCalendarCallback() {
 
       if (code && session) {
         try {
+          console.log('Chamando edge function para trocar code por tokens...');
+          console.log('Authorization code:', code?.substring(0, 10) + '...');
+          
           const { data, error: authError } = await supabase.functions.invoke('google-calendar-auth', {
             body: { action: 'connect', code },
             headers: {
@@ -55,7 +58,17 @@ export default function GoogleCalendarCallback() {
             },
           });
 
-          if (authError) throw authError;
+          console.log('Response da edge function:', { data, error: authError });
+
+          if (authError) {
+            console.error('Erro da edge function:', authError);
+            throw authError;
+          }
+
+          if (data?.error) {
+            console.error('Erro retornado pela função:', data.error);
+            throw new Error(data.error);
+          }
 
           console.log('Google Calendar conectado com sucesso!', data);
           toast({
