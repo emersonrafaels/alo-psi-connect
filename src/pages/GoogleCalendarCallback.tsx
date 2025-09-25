@@ -2,11 +2,13 @@ import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function GoogleCalendarCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { session } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -24,9 +26,9 @@ export default function GoogleCalendarCallback() {
         // Notify parent window if opened in popup
         if (window.opener) {
           window.opener.postMessage({ 
-            type: 'google-calendar-error', 
+            type: 'GOOGLE_CALENDAR_ERROR', 
             error: error 
-          }, window.location.origin);
+          }, '*');
           window.close();
         } else {
           navigate('/profile');
@@ -34,10 +36,13 @@ export default function GoogleCalendarCallback() {
         return;
       }
 
-      if (code) {
+      if (code && session) {
         try {
           const { data, error: authError } = await supabase.functions.invoke('google-calendar-auth', {
-            body: { action: 'connect', code }
+            body: { action: 'connect', code },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
           });
 
           if (authError) throw authError;
@@ -50,9 +55,9 @@ export default function GoogleCalendarCallback() {
           // Notify parent window if opened in popup
           if (window.opener) {
             window.opener.postMessage({ 
-              type: 'google-calendar-success', 
+              type: 'GOOGLE_CALENDAR_SUCCESS', 
               data 
-            }, window.location.origin);
+            }, '*');
             window.close();
           } else {
             navigate('/profile');
@@ -68,9 +73,9 @@ export default function GoogleCalendarCallback() {
           // Notify parent window if opened in popup
           if (window.opener) {
             window.opener.postMessage({ 
-              type: 'google-calendar-error', 
+              type: 'GOOGLE_CALENDAR_ERROR', 
               error: 'Connection failed' 
-            }, window.location.origin);
+            }, '*');
             window.close();
           } else {
             navigate('/profile');

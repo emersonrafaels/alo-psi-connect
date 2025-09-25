@@ -774,13 +774,7 @@ export const ProfessionalProfile: React.FC = () => {
                   />
                   
                   {googleCalendarConnected && (
-                    <BusyScheduleDisplay
-                      onSync={() => {
-                        // Trigger sync through GoogleCalendarIntegration
-                        refetchGoogleCalendar();
-                      }}
-                      isLoading={false}
-                    />
+                    <BusyScheduleDisplay />
                   )}
                 </CardContent>
               </Card>

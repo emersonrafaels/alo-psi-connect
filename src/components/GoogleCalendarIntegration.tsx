@@ -64,14 +64,57 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
 
       if (data?.authUrl) {
         console.log('Opening Google auth URL:', data.authUrl);
-        // Abre a URL de autorização em uma nova janela
-        window.open(data.authUrl, 'google-auth', 'width=500,height=600');
         
-        // Aguarda a autorização (isso seria melhorado com postMessage)
+        // Setup message listener for popup callback
+        const handleMessage = (event: MessageEvent) => {
+          if (event.data.type === 'GOOGLE_CALENDAR_SUCCESS') {
+            console.log('Google Calendar connected successfully');
+            onConnectionChange(true);
+            toast({
+              title: "Conectado com sucesso!",
+              description: "Google Calendar conectado e pronto para sincronização.",
+            });
+            window.removeEventListener('message', handleMessage);
+          } else if (event.data.type === 'GOOGLE_CALENDAR_ERROR') {
+            console.error('Google Calendar connection error:', event.data.error);
+            toast({
+              title: "Erro na conexão",
+              description: event.data.error || "Falha na autorização do Google Calendar.",
+              variant: "destructive",
+            });
+            window.removeEventListener('message', handleMessage);
+          }
+        };
+        
+        window.addEventListener('message', handleMessage);
+        
+        // Abre a URL de autorização em uma nova janela
+        const popup = window.open(data.authUrl, 'google-auth', 'width=500,height=600,scrollbars=yes,resizable=yes');
+        
+        // Check if popup was blocked
+        if (!popup) {
+          window.removeEventListener('message', handleMessage);
+          toast({
+            title: "Popup bloqueado",
+            description: "Desative o bloqueador de popup e tente novamente.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Aguarda a autorização
         toast({
           title: "Redirecionando para o Google",
-          description: "Complete a autorização na janela que se abriu. Se for bloqueado, verifique as configurações do Google Cloud Console.",
+          description: "Complete a autorização na janela que se abriu.",
         });
+        
+        // Check if popup was closed manually
+        const checkClosed = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(checkClosed);
+            window.removeEventListener('message', handleMessage);
+          }
+        }, 1000);
       } else {
         console.error('No authUrl received:', data);
         throw new Error('URL de autorização não recebida');
@@ -125,7 +168,9 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
 
       if (error) throw error;
 
+      // Update state immediately
       onConnectionChange(false);
+      
       toast({
         title: "Desconectado com sucesso",
         description: "Sua agenda do Google Calendar foi desconectada.",
@@ -171,7 +216,7 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
         description: data.message || `${data.eventsCount || 0} eventos sincronizados.`,
       });
 
-      // Trigger refresh of busy schedule display
+      // Trigger refresh of components that depend on calendar data
       if (onConnectionChange) {
         onConnectionChange(isConnected);
       }

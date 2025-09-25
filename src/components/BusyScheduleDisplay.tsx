@@ -20,11 +20,10 @@ interface GoogleCalendarEvent {
 }
 
 interface BusyScheduleDisplayProps {
-  onSync?: () => void;
-  isLoading?: boolean;
+  onRefresh?: () => void;
 }
 
-export const BusyScheduleDisplay = ({ onSync, isLoading = false }: BusyScheduleDisplayProps) => {
+export const BusyScheduleDisplay = ({ onRefresh }: BusyScheduleDisplayProps) => {
   const { user } = useAuth();
   const [events, setEvents] = useState<GoogleCalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +60,13 @@ export const BusyScheduleDisplay = ({ onSync, isLoading = false }: BusyScheduleD
     fetchEvents();
   }, [user]);
 
+  // Refresh when parent requests
+  useEffect(() => {
+    if (onRefresh) {
+      fetchEvents();
+    }
+  }, [onRefresh]);
+
   const formatEventDate = (dateString: string) => {
     const date = parseISO(dateString);
     
@@ -80,15 +86,6 @@ export const BusyScheduleDisplay = ({ onSync, isLoading = false }: BusyScheduleD
     return `${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`;
   };
 
-  const handleSync = () => {
-    if (onSync) {
-      onSync();
-    }
-    // Refresh events after sync
-    setTimeout(() => {
-      fetchEvents();
-    }, 2000);
-  };
 
   if (loading && events.length === 0) {
     return (
@@ -117,16 +114,6 @@ export const BusyScheduleDisplay = ({ onSync, isLoading = false }: BusyScheduleD
             <Calendar className="h-5 w-5" />
             Horários Ocupados
           </CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSync}
-            disabled={isLoading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Sincronizar
-          </Button>
         </div>
         {lastSync && (
           <p className="text-sm text-muted-foreground">

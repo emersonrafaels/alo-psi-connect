@@ -52,7 +52,10 @@ export const useGoogleCalendarStatus = (): GoogleCalendarStatus => {
     checkGoogleCalendarStatus();
   }, [user, profile, refetchTrigger]);
 
-  const refetch = () => setRefetchTrigger(prev => prev + 1);
+  const refetch = () => {
+    setRefetchTrigger(prev => prev + 1);
+    setLoading(true);
+  };
 
   return { isConnected, loading, refetch };
 };

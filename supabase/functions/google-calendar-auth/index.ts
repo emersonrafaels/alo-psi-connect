@@ -118,8 +118,8 @@ const handler = async (req: Request): Promise<Response> => {
           }
         );
       } else {
-        // Generate authorization URL
-        const scope = 'https://www.googleapis.com/auth/calendar.freebusy';
+        // Generate authorization URL with expanded scope for calendar sync
+        const scope = 'https://www.googleapis.com/auth/calendar.readonly';
         const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
           `client_id=${clientId}&` +
           `redirect_uri=${encodeURIComponent(redirectUri)}&` +
