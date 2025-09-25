@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
@@ -22,18 +23,40 @@ export const ProfessionalStatusToggle: React.FC<ProfessionalStatusToggleProps> =
 }) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { session, user } = useAuth();
 
   const handleToggle = async (checked: boolean) => {
     if (!professionalData) return;
 
+    // Verificar se temos uma sessão válida
+    if (!session || !user) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Sua sessão expirou. Por favor, faça login novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
+      // Tentar refresh da sessão se necessário
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!currentSession) {
+        throw new Error("Sessão não encontrada. Por favor, faça login novamente.");
+      }
+
       const { error } = await supabase
         .from('profissionais')
         .update({ ativo: checked })
         .eq('id', professionalData.id);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('row-level security')) {
+          throw new Error("Você não tem permissão para alterar este perfil. Verifique se está logado corretamente.");
+        }
+        throw error;
+      }
 
       onUpdate(checked);
       
@@ -45,6 +68,7 @@ export const ProfessionalStatusToggle: React.FC<ProfessionalStatusToggleProps> =
         variant: checked ? "default" : "destructive",
       });
     } catch (error: any) {
+      console.error('Erro ao atualizar status:', error);
       toast({
         title: "Erro ao atualizar status",
         description: error.message || "Não foi possível atualizar o status do perfil.",
