@@ -31,7 +31,9 @@ export default function GoogleCalendarCallback() {
           }, '*');
           window.close();
         } else {
-          navigate('/profile');
+          const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/perfil';
+          sessionStorage.removeItem('googleCalendarReturnUrl');
+          navigate(returnUrl);
         }
         return;
       }
@@ -60,7 +62,9 @@ export default function GoogleCalendarCallback() {
             }, '*');
             window.close();
           } else {
-            navigate('/profile');
+            const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/perfil';
+            sessionStorage.removeItem('googleCalendarReturnUrl');
+            navigate(returnUrl);
           }
         } catch (error) {
           console.error('Erro ao conectar Google Calendar:', error);
@@ -78,12 +82,16 @@ export default function GoogleCalendarCallback() {
             }, '*');
             window.close();
           } else {
-            navigate('/profile');
+            const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/perfil';
+            sessionStorage.removeItem('googleCalendarReturnUrl');
+            navigate(returnUrl);
           }
         }
       } else {
-        // No code parameter, redirect to profile
-        navigate('/profile');
+        // No code parameter, redirect to return URL
+        const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/perfil';
+        sessionStorage.removeItem('googleCalendarReturnUrl');
+        navigate(returnUrl);
       }
     };
 

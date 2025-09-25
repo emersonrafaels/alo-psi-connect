@@ -65,6 +65,9 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
       if (data?.authUrl) {
         console.log('Opening Google auth URL:', data.authUrl);
         
+        // Save current URL for return redirect
+        sessionStorage.setItem('googleCalendarReturnUrl', window.location.pathname);
+        
         // Setup message listener for popup callback
         const handleMessage = (event: MessageEvent) => {
           if (event.data.type === 'GOOGLE_CALENDAR_SUCCESS') {
