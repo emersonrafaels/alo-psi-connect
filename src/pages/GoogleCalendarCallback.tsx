@@ -63,20 +63,74 @@ export default function GoogleCalendarCallback() {
             description: "Sua conta foi conectada com sucesso.",
           });
 
-          // Notify parent window if opened in popup
-          if (window.opener) {
+          // Detecta se está em popup de múltiplas formas
+          const isPopup = !!(window.opener || window.parent !== window || window.name === 'google-auth');
+          console.log('Detectado como popup:', isPopup);
+          console.log('window.opener existe:', !!window.opener);
+          console.log('window.parent !== window:', window.parent !== window);
+          console.log('window.name:', window.name);
+
+          if (isPopup) {
             console.log('Enviando sucesso para janela principal');
-            window.opener.postMessage({ 
-              type: 'GOOGLE_CALENDAR_SUCCESS', 
-              data 
-            }, window.location.origin);
+            const targetOrigin = window.location.origin;
             
-            // Auto-close popup after sending message
+            // Tenta enviar para opener primeiro
+            if (window.opener) {
+              try {
+                window.opener.postMessage({ 
+                  type: 'GOOGLE_CALENDAR_SUCCESS', 
+                  data 
+                }, targetOrigin);
+                console.log('Mensagem enviada via window.opener');
+              } catch (error) {
+                console.error('Erro ao enviar mensagem via opener:', error);
+              }
+            }
+            
+            // Também tenta enviar para parent como fallback
+            if (window.parent && window.parent !== window) {
+              try {
+                window.parent.postMessage({ 
+                  type: 'GOOGLE_CALENDAR_SUCCESS', 
+                  data 
+                }, targetOrigin);
+                console.log('Mensagem enviada via window.parent');
+              } catch (error) {
+                console.error('Erro ao enviar mensagem via parent:', error);
+              }
+            }
+            
+            // Múltiplas tentativas de fechar a popup
             setTimeout(() => {
-              window.close();
-            }, 500);
+              console.log('Tentativa 1: Fechando popup...');
+              try {
+                window.close();
+              } catch (error) {
+                console.error('Erro ao fechar popup (tentativa 1):', error);
+              }
+            }, 1000);
+            
+            setTimeout(() => {
+              console.log('Tentativa 2: Fechando popup...');
+              try {
+                if (window.opener) {
+                  window.opener.focus();
+                }
+                window.close();
+              } catch (error) {
+                console.error('Erro ao fechar popup (tentativa 2):', error);
+              }
+            }, 2000);
+            
+            // Fallback final - redireciona se popup não fechar
+            setTimeout(() => {
+              console.log('Popup não fechou, redirecionando...');
+              const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/professional-profile';
+              sessionStorage.removeItem('googleCalendarReturnUrl');
+              navigate(returnUrl);
+            }, 4000);
           } else {
-            const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/perfil';
+            const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/professional-profile';
             sessionStorage.removeItem('googleCalendarReturnUrl');
             navigate(returnUrl);
           }

@@ -68,30 +68,46 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
         // Save current URL for return redirect
         sessionStorage.setItem('googleCalendarReturnUrl', window.location.pathname);
         
-        // Setup message listener for popup callback
+        // Setup message listener for popup callback with timeout
+        let popup: Window | null = null;
+        let timeoutId: NodeJS.Timeout;
+        let checkClosed: NodeJS.Timeout;
+        
         const handleMessage = (event: MessageEvent) => {
-          // Verify origin for security
+          console.log('Mensagem recebida:', event);
+          console.log('Event origin:', event.origin);
+          console.log('Window origin:', window.location.origin);
+          
           if (event.origin !== window.location.origin) {
-            console.warn('Ignorando mensagem de origem não confiável:', event.origin);
+            console.log('Origem inválida, ignorando mensagem');
             return;
           }
 
-          console.log('Mensagem recebida do popup:', event.data);
-
-          if (event.data.type === 'GOOGLE_CALENDAR_SUCCESS') {
-            console.log('Google Calendar conectado com sucesso');
+          if (event.data?.type === 'GOOGLE_CALENDAR_SUCCESS') {
+            console.log('Google Calendar conectado via popup!');
             
-            // Update state immediately and trigger refetch
-            onConnectionChange(true);
+            // Close popup if it's still open
+            if (popup && !popup.closed) {
+              popup.close();
+            }
+            
+            // Force immediate status refresh with delay
+            setTimeout(() => {
+              console.log('Atualizando status da conexão...');
+              onConnectionChange(true);
+            }, 1000);
             
             toast({
               title: "Conectado com sucesso!",
               description: "Google Calendar conectado e pronto para sincronização.",
             });
             
+            // Cleanup
             window.removeEventListener('message', handleMessage);
+            if (timeoutId) clearTimeout(timeoutId);
+            if (checkClosed) clearInterval(checkClosed);
             setLoading(false);
-          } else if (event.data.type === 'GOOGLE_CALENDAR_ERROR') {
+          } else if (event.data?.type === 'GOOGLE_CALENDAR_ERROR') {
             console.error('Erro na conexão Google Calendar:', event.data.error);
             toast({
               title: "Erro na conexão",
@@ -99,27 +115,34 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
               variant: "destructive",
             });
             
+            // Cleanup
             window.removeEventListener('message', handleMessage);
+            if (timeoutId) clearTimeout(timeoutId);
+            if (checkClosed) clearInterval(checkClosed);
             setLoading(false);
           }
         };
         
+        // Add message listener
         window.addEventListener('message', handleMessage);
-        
-        // Setup timeout for message handling
-        const timeoutId = setTimeout(() => {
-          console.log('Timeout: popup não respondeu em 5 minutos');
-          window.removeEventListener('message', handleMessage);
+
+        // Timeout para popup (5 minutos)
+        timeoutId = setTimeout(() => {
+          console.log('Timeout da conexão Google Calendar');
+          if (popup && !popup.closed) {
+            popup.close();
+          }
           setLoading(false);
+          window.removeEventListener('message', handleMessage);
           toast({
             title: "Timeout na autorização",
             description: "A autorização demorou muito. Tente novamente.",
             variant: "destructive",
           });
-        }, 5 * 60 * 1000); // 5 minutes
+        }, 300000); // 5 minutos
         
         // Abre a URL de autorização em uma nova janela
-        const popup = window.open(data.authUrl, 'google-auth', 'width=500,height=600,scrollbars=yes,resizable=yes');
+        popup = window.open(data.authUrl, 'google-auth', 'width=500,height=600,scrollbars=yes,resizable=yes');
         
         // Check if popup was blocked
         if (!popup) {
@@ -140,14 +163,14 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
           description: "Complete a autorização na janela que se abriu.",
         });
         
-        // Check if popup was closed manually
-        const checkClosed = setInterval(() => {
-          if (popup.closed) {
+        // Check if popup is closed manually
+        checkClosed = setInterval(() => {
+          if (popup && popup.closed) {
+            console.log('Popup foi fechada manualmente');
+            setLoading(false);
+            window.removeEventListener('message', handleMessage);
             clearInterval(checkClosed);
             clearTimeout(timeoutId);
-            window.removeEventListener('message', handleMessage);
-            setLoading(false);
-            console.log('Popup fechado manualmente pelo usuário');
           }
         }, 1000);
       } else {

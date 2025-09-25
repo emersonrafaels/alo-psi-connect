@@ -70,6 +70,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (action === 'connect') {
       if (code) {
+        console.log('Iniciando troca do authorization code por access token...');
+        console.log('Authorization code recebido:', code.substring(0, 10) + '...');
+        
         // Exchange authorization code for access token
         const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
           method: 'POST',
@@ -85,28 +88,48 @@ const handler = async (req: Request): Promise<Response> => {
           }),
         });
 
+        console.log('Token response status:', tokenResponse.status);
+
         if (!tokenResponse.ok) {
           const errorText = await tokenResponse.text();
           console.error('Token exchange failed:', errorText);
+          console.error('Response status:', tokenResponse.status);
+          console.error('Response headers:', Object.fromEntries(tokenResponse.headers));
           throw new Error(`Erro ao obter token de acesso: ${tokenResponse.status} - ${errorText}`);
         }
 
         const tokenData = await tokenResponse.json();
-        console.log('Token exchange successful:', !!tokenData.access_token);
+        console.log('Token exchange successful!');
+        console.log('Access token presente:', !!tokenData.access_token);
+        console.log('Refresh token presente:', !!tokenData.refresh_token);
+        console.log('Token type:', tokenData.token_type);
+        console.log('Expires in:', tokenData.expires_in);
+
+        if (!tokenData.access_token) {
+          console.error('Nenhum access token retornado pelo Google');
+          throw new Error('Google não retornou access token');
+        }
+
+        console.log('Salvando tokens no banco de dados para usuário:', user.user.id);
 
         // Save tokens to user profile or professional table
-        const { error: updateError } = await supabaseClient
+        const { data: updateData, error: updateError } = await supabaseClient
           .from('profiles')
           .update({
             google_calendar_token: tokenData.access_token,
             google_calendar_refresh_token: tokenData.refresh_token,
           })
-          .eq('user_id', user.user.id);
+          .eq('user_id', user.user.id)
+          .select();
 
         if (updateError) {
           console.error('Error saving Google Calendar tokens:', updateError);
-          throw new Error('Erro ao salvar tokens de acesso');
+          console.error('Update error details:', JSON.stringify(updateError, null, 2));
+          throw new Error('Erro ao salvar tokens de acesso: ' + updateError.message);
         }
+
+        console.log('Tokens salvos com sucesso!');
+        console.log('Dados atualizados:', updateData?.length || 0, 'registros afetados');
 
         return new Response(
           JSON.stringify({ 
