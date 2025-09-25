@@ -100,35 +100,17 @@ export default function GoogleCalendarCallback() {
               }
             }
             
-            // Múltiplas tentativas de fechar a popup
+            // Fechar popup com delay simples
             setTimeout(() => {
-              console.log('Tentativa 1: Fechando popup...');
               try {
                 window.close();
               } catch (error) {
-                console.error('Erro ao fechar popup (tentativa 1):', error);
+                console.log('Could not close popup, redirecting...');
+                const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/professional-profile';
+                sessionStorage.removeItem('googleCalendarReturnUrl');
+                navigate(returnUrl);
               }
             }, 1000);
-            
-            setTimeout(() => {
-              console.log('Tentativa 2: Fechando popup...');
-              try {
-                if (window.opener) {
-                  window.opener.focus();
-                }
-                window.close();
-              } catch (error) {
-                console.error('Erro ao fechar popup (tentativa 2):', error);
-              }
-            }, 2000);
-            
-            // Fallback final - redireciona se popup não fechar
-            setTimeout(() => {
-              console.log('Popup não fechou, redirecionando...');
-              const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/professional-profile';
-              sessionStorage.removeItem('googleCalendarReturnUrl');
-              navigate(returnUrl);
-            }, 4000);
           } else {
             const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/professional-profile';
             sessionStorage.removeItem('googleCalendarReturnUrl');

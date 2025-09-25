@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { useUserProfile } from './useUserProfile';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +12,9 @@ interface UserTypeInfo {
 
 export const useUserType = (): UserTypeInfo => {
   const { user } = useAuth();
-  const { profile, refetch } = useUserProfile();
+  const { profile } = useUserProfile();
+  const executingRef = useRef(false);
+  const debounceRef = useRef<NodeJS.Timeout>();
   
   // Cache professional status in session storage for each user
   const cacheKey = `professional_status_${user?.id || 'anonymous'}`;
@@ -62,18 +64,10 @@ export const useUserType = (): UserTypeInfo => {
   }, [profile?.id, setCachedStatus]);
 
   const checkProfessionalStatus = useCallback(async () => {
-    console.log('🔍 [useUserType] Checking professional status...', { 
-      user: !!user, 
-      userId: user?.id,
-      profile: !!profile, 
-      profileId: profile?.id,
-      profileType: profile?.tipo_usuario,
-      userEmail: user?.email || profile?.email,
-      hasCache: !!cachedStatus
-    });
+    // Prevenir execução simultânea
+    if (executingRef.current) return;
     
     if (!user) {
-      console.log('🔍 [useUserType] No user, setting as non-professional');
       setIsProfessional(false);
       setProfessionalId(null);
       setLoading(false);
@@ -81,7 +75,7 @@ export const useUserType = (): UserTypeInfo => {
     }
 
     if (!profile) {
-      console.log('🔍 [useUserType] No profile yet, keeping loading state');
+      setLoading(true);
       return; // Keep loading until profile loads
     }
 
@@ -89,7 +83,6 @@ export const useUserType = (): UserTypeInfo => {
     if (cachedStatus && cachedStatus.profileId === profile.id) {
       const isRecent = Date.now() - cachedStatus.timestamp < 30 * 60 * 1000; // 30 minutes
       if (isRecent) {
-        console.log('🚀 [useUserType] Using cached professional status');
         setIsProfessional(cachedStatus.isProfessional);
         setProfessionalId(cachedStatus.professionalId);
         setLoading(false);
@@ -99,13 +92,14 @@ export const useUserType = (): UserTypeInfo => {
 
     // Quick check: if profile type is not 'profissional', skip database query
     if (profile.tipo_usuario !== 'profissional') {
-      console.log('🔍 [useUserType] Profile type is not professional:', profile.tipo_usuario);
       setIsProfessional(false);
       setProfessionalId(null);
       updateCache(false, null);
       setLoading(false);
       return;
     }
+
+    executingRef.current = true;
 
     try {
       // Check if user has a professional profile AND it's active
@@ -116,21 +110,17 @@ export const useUserType = (): UserTypeInfo => {
         .eq('ativo', true)  // Only get active professionals
         .maybeSingle();
 
-      console.log('🔍 [useUserType] Professional query result:', { professionalData, error, profileId: profile.id });
-
       if (error && error.code !== 'PGRST116') {
         console.error('❌ [useUserType] Error checking professional status:', error);
         setIsProfessional(false);
         setProfessionalId(null);
         updateCache(false, null);
       } else if (professionalData) {
-        console.log('✅ [useUserType] Active professional found:', professionalData);
         const profId = professionalData.id.toString();
         setIsProfessional(true);
         setProfessionalId(profId);
         updateCache(true, profId);
       } else {
-        console.log('❌ [useUserType] No active professional profile found for user');
         setIsProfessional(false);
         setProfessionalId(null);
         updateCache(false, null);
@@ -142,6 +132,7 @@ export const useUserType = (): UserTypeInfo => {
       updateCache(false, null);
     } finally {
       setLoading(false);
+      executingRef.current = false;
     }
   }, [user?.id, profile?.id, profile?.tipo_usuario, cachedStatus, updateCache]);
 
@@ -152,8 +143,21 @@ export const useUserType = (): UserTypeInfo => {
     loading
   }), [isProfessional, professionalId, loading]);
 
+  // Effect com debounce para verificar status
   useEffect(() => {
-    checkProfessionalStatus();
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    debounceRef.current = setTimeout(() => {
+      checkProfessionalStatus();
+    }, 100);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
   }, [checkProfessionalStatus]);
 
   // Clear cache when user changes
@@ -169,8 +173,6 @@ export const useUserType = (): UserTypeInfo => {
       setCachedStatus(null);
     }
   }, [user?.id, cacheKey, setCachedStatus]);
-
-  console.log('🔍 [useUserType] Final state:', { isProfessional, professionalId, loading, profileType: profile?.tipo_usuario });
 
   return result;
 };

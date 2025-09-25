@@ -163,16 +163,8 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
           description: "Complete a autorização na janela que se abriu.",
         });
         
-        // Check if popup is closed manually
-        checkClosed = setInterval(() => {
-          if (popup && popup.closed) {
-            console.log('Popup foi fechada manualmente');
-            setLoading(false);
-            window.removeEventListener('message', handleMessage);
-            clearInterval(checkClosed);
-            clearTimeout(timeoutId);
-          }
-        }, 1000);
+        // Não verificar popup.closed devido ao Cross-Origin-Opener-Policy
+        // Confiar apenas no postMessage e timeout
       } else {
         console.error('No authUrl received:', data);
         throw new Error('URL de autorização não recebida');

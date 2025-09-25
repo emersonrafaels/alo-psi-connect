@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -7,19 +7,29 @@ export const useUserProfile = () => {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
+  const executingRef = useRef(false);
+  const debounceRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) {
-        console.log('useUserProfile: No user found');
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
+    // Guard para prevenir execução simultânea
+    if (executingRef.current) return;
 
-      console.log('useUserProfile: Fetching profile for user:', user.id, 'email:', user.email);
+    // Debounce para evitar múltiplas chamadas
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      if (executingRef.current) return;
+      executingRef.current = true;
 
       try {
+        if (!user) {
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
@@ -31,12 +41,8 @@ export const useUserProfile = () => {
           throw error;
         }
 
-        console.log('useUserProfile: Profile data fetched:', data);
-
         // Se há perfil, verificar se é profissional e buscar foto adicional
         if (data && data.tipo_usuario === 'profissional') {
-          console.log('useUserProfile: User is professional, fetching photo from profissionais table');
-          
           const { data: professionalData } = await supabase
             .from('profissionais')
             .select('foto_perfil_url')
@@ -46,7 +52,6 @@ export const useUserProfile = () => {
           if (professionalData?.foto_perfil_url && !data.foto_perfil_url) {
             // Se há foto no profissionais mas não no profiles, usar a do profissionais
             data.foto_perfil_url = professionalData.foto_perfil_url;
-            console.log('useUserProfile: Using photo from profissionais table:', professionalData.foto_perfil_url);
           }
         }
 
@@ -54,18 +59,22 @@ export const useUserProfile = () => {
 
         // Se não há perfil, criar um automaticamente
         if (!data && user.email) {
-          console.log('useUserProfile: No profile found, creating new profile');
           await createInitialProfile(user);
         }
       } catch (error) {
         console.error('useUserProfile: Error in fetchProfile:', error);
       } finally {
         setLoading(false);
+        executingRef.current = false;
+      }
+    }, 150);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
       }
     };
-
-    fetchProfile();
-  }, [user, refetchTrigger]);
+  }, [user?.id, refetchTrigger]);
 
   const createInitialProfile = async (user: any) => {
     try {

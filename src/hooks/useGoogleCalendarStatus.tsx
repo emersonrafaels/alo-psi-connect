@@ -55,10 +55,9 @@ export const useGoogleCalendarStatus = (): GoogleCalendarStatus => {
   const refetch = () => {
     // Add debounce to prevent multiple rapid calls
     setTimeout(() => {
-      console.log('Refetch Google Calendar status triggered');
       setRefetchTrigger(prev => prev + 1);
       setLoading(true);
-    }, 1000); // 1 segundo de delay para garantir que tokens foram salvos
+    }, 2000); // 2 segundos de delay para garantir que tokens foram salvos
   };
 
   return { isConnected, loading, refetch };
