@@ -110,6 +110,21 @@ Deno.serve(async (req) => {
     // 3. Delete related data in order (most dependent first)
     console.log('Deleting related data...');
 
+    // Delete mood factors first (depends on mood_entries)
+    console.log('Deleting mood factors...');
+    const { data: moodEntryIds } = await supabase
+      .from('mood_entries')
+      .select('id')
+      .eq('user_id', userId);
+    
+    if (moodEntryIds?.length) {
+      await supabase.from('mood_factors').delete().in('mood_entry_id', moodEntryIds.map(entry => entry.id));
+    }
+
+    // Delete mood entries (has foreign key to auth.users)
+    console.log('Deleting mood entries...');
+    await supabase.from('mood_entries').delete().eq('user_id', userId);
+
     // Delete AI insights history (has foreign key to auth.users)
     console.log('Deleting AI insights history...');
     await supabase.from('ai_insights_history').delete().eq('user_id', userId);
