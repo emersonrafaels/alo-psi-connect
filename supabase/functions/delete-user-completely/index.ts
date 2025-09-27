@@ -110,10 +110,20 @@ Deno.serve(async (req) => {
     // 3. Delete related data in order (most dependent first)
     console.log('Deleting related data...');
 
+    // Delete AI insights history (has foreign key to auth.users)
+    console.log('Deleting AI insights history...');
+    await supabase.from('ai_insights_history').delete().eq('user_id', userId);
+    
+    // Delete AI insights usage
+    console.log('Deleting AI insights usage...');
+    await supabase.from('ai_insights_usage').delete().eq('user_id', userId);
+
     // Delete booking tracking
+    console.log('Deleting booking tracking...');
     await supabase.from('user_booking_tracking').delete().eq('user_id', userId);
     
     // Delete comments
+    console.log('Deleting comments...');
     await supabase.from('comments').delete().eq('user_id', userId);
     
     // Cancel appointments (don't delete for history)
