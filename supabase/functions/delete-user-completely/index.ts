@@ -112,74 +112,74 @@ Deno.serve(async (req) => {
 
     // Delete mood factors first (depends on mood_entries)
     console.log('Deleting mood factors...');
-    const { data: moodEntryIds } = await supabase
+    const { data: moodEntryIds } = await supabaseAdmin
       .from('mood_entries')
       .select('id')
       .eq('user_id', userId);
     
     if (moodEntryIds?.length) {
-      await supabase.from('mood_factors').delete().in('mood_entry_id', moodEntryIds.map(entry => entry.id));
+      await supabaseAdmin.from('mood_factors').delete().in('mood_entry_id', moodEntryIds.map(entry => entry.id));
     }
 
     // Delete mood entries (has foreign key to auth.users)
     console.log('Deleting mood entries...');
-    await supabase.from('mood_entries').delete().eq('user_id', userId);
+    await supabaseAdmin.from('mood_entries').delete().eq('user_id', userId);
 
     // Delete AI insights history (has foreign key to auth.users)
     console.log('Deleting AI insights history...');
-    await supabase.from('ai_insights_history').delete().eq('user_id', userId);
+    await supabaseAdmin.from('ai_insights_history').delete().eq('user_id', userId);
     
     // Delete AI insights usage
     console.log('Deleting AI insights usage...');
-    await supabase.from('ai_insights_usage').delete().eq('user_id', userId);
+    await supabaseAdmin.from('ai_insights_usage').delete().eq('user_id', userId);
 
     // Delete booking tracking
     console.log('Deleting booking tracking...');
-    await supabase.from('user_booking_tracking').delete().eq('user_id', userId);
+    await supabaseAdmin.from('user_booking_tracking').delete().eq('user_id', userId);
     
     // Delete comments
     console.log('Deleting comments...');
-    await supabase.from('comments').delete().eq('user_id', userId);
+    await supabaseAdmin.from('comments').delete().eq('user_id', userId);
     
     // Cancel appointments (don't delete for history)
-    await supabase
+    await supabaseAdmin
       .from('agendamentos')
       .update({ status: 'cancelado' })
       .eq('user_id', userId);
     
     // Delete patient info
-    const { data: patientData } = await supabase
+    const { data: patientData } = await supabaseAdmin
       .from('pacientes')
       .select('id')
       .eq('profile_id', profile.id);
     
     if (patientData?.length) {
-      await supabase.from('pacientes').delete().eq('profile_id', profile.id);
+      await supabaseAdmin.from('pacientes').delete().eq('profile_id', profile.id);
     }
     
     // Delete professional info and sessions
-    const { data: professionalData } = await supabase
+    const { data: professionalData } = await supabaseAdmin
       .from('profissionais')
       .select('user_id')
       .eq('profile_id', profile.id);
     
     if (professionalData?.length) {
       const professionalUserId = professionalData[0].user_id;
-      await supabase.from('profissionais_sessoes').delete().eq('user_id', professionalUserId);
-      await supabase.from('profissionais').delete().eq('profile_id', profile.id);
+      await supabaseAdmin.from('profissionais_sessoes').delete().eq('user_id', professionalUserId);
+      await supabaseAdmin.from('profissionais').delete().eq('profile_id', profile.id);
     }
     
     // Delete user roles
-    await supabase.from('user_roles').delete().eq('user_id', userId);
+    await supabaseAdmin.from('user_roles').delete().eq('user_id', userId);
     
     // Delete password reset tokens
-    await supabase.from('password_reset_tokens').delete().eq('user_id', userId);
+    await supabaseAdmin.from('password_reset_tokens').delete().eq('user_id', userId);
     
     // Delete agendamento tokens
-    await supabase.from('agendamento_tokens').delete().eq('email', profile.email);
+    await supabaseAdmin.from('agendamento_tokens').delete().eq('email', profile.email);
 
     // 4. Delete profile
-    const { error: profileDeleteError } = await supabase
+    const { error: profileDeleteError } = await supabaseAdmin
       .from('profiles')
       .delete()
       .eq('user_id', userId);
