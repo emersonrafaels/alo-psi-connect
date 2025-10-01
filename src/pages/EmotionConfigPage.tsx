@@ -109,7 +109,7 @@ const EmotionConfigPage = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/mood-diary')}
+            onClick={() => navigate('/diario-emocional')}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
