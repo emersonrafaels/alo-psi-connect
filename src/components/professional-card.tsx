@@ -32,59 +32,71 @@ const ProfessionalCard = ({
     navigate(`/professional/${id}`)
   }
   if (isCompactView) {
-    return (
-      <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
-        <CardContent className="p-6">
-          <div className="flex items-start space-x-4">
-            <div className="relative">
-              <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
-                <AvatarImage src={image} alt={name} className="object-cover" />
-                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20 text-foreground">
-                  <User className="w-8 h-8" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white"></div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-lg text-foreground mb-1 truncate">{name}</h3>
-              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{title}</p>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="flex items-center gap-1"> 
-                </div>
-                {consultationPrice && (
-                  <span className="text-sm font-bold text-primary">
-                    R$ {consultationPrice}
-                  </span>
-                )}
-              </div>
-              {specialties.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {specialties.slice(0, 2).map((specialty, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20">
-                      {specialty}
-                    </Badge>
-                  ))}
-                  {specialties.length > 2 && (
-                    <Badge variant="outline" className="text-xs px-2 py-1">
-                      +{specialties.length - 2}
-                    </Badge>
-                  )}
-                </div>
+  return (
+    <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+      <CardContent className="p-6">
+        <div className="flex items-start space-x-4">
+          <div className="relative">
+            <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
+              <AvatarImage src={image} alt={name} className="object-cover" />
+              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20 text-foreground">
+                <User className="w-8 h-8" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white"></div>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-lg text-foreground mb-1 truncate">{name}</h3>
+            <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{title}</p>
+
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-1" />
+              {consultationPrice && (
+                <span className="text-sm font-bold text-primary dark:text-white">
+                  R$ {consultationPrice}
+                </span>
               )}
             </div>
+
+            {specialties.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-3">
+                {specialties.slice(0, 2).map((specialty, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="text-xs px-2 py-1 bg-primary/10 text-primary dark:text-white border-primary/20 dark:border-white/20"
+                  >
+                    {specialty}
+                  </Badge>
+                ))}
+
+                {specialties.length > 2 && (
+                  <Badge
+                    variant="outline"
+                    className="text-xs px-2 py-1 text-foreground dark:text-white border-border dark:border-white/30"
+                  >
+                    +{specialties.length - 2}
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
-          <Button 
-            variant="default" 
-            size="sm" 
-            className="w-full mt-4 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md group-hover:shadow-lg transition-all duration-300" 
-            onClick={handleViewProfile}
-          >
-            Ver Perfil Completo
-          </Button>
-        </CardContent>
-      </Card>
-    )
-  }
+        </div>
+
+        <Button
+          variant="default"
+          size="sm"
+          className="w-full mt-4 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md group-hover:shadow-lg transition-all duration-300"
+          onClick={handleViewProfile}
+        >
+          Ver Perfil Completo
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-card to-card/50 backdrop-blur-sm overflow-hidden">
