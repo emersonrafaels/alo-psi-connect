@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, GripVertical, Settings2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, GripVertical, Settings2, Sparkles, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -18,6 +18,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const EmotionConfigPage = () => {
   const navigate = useNavigate();
@@ -26,7 +29,9 @@ const EmotionConfigPage = () => {
     activeConfigs,
     availableEmotions,
     loading,
+    currentTemplate,
     addEmotion,
+    addCustomEmotion,
     removeEmotion,
     toggleEmotion,
     applyTemplate,
@@ -34,6 +39,8 @@ const EmotionConfigPage = () => {
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [previewValues, setPreviewValues] = useState<Record<string, number>>({});
+  const [customEmotionName, setCustomEmotionName] = useState('');
+  const [customScale, setCustomScale] = useState<{ min: number; max: number }>({ min: 1, max: 10 });
 
   const handleAddEmotion = async (emotionType: string) => {
     try {
@@ -72,14 +79,57 @@ const EmotionConfigPage = () => {
     }
   };
 
+  const handleAddCustomEmotion = async () => {
+    if (!customEmotionName.trim()) {
+      toast.error('Digite um nome para a emoção');
+      return;
+    }
+
+    if (customEmotionName.length > 30) {
+      toast.error('Nome muito longo (máximo 30 caracteres)');
+      return;
+    }
+
+    try {
+      // Generate basic emoji set and color scheme
+      const emojiSet: Record<string, string> = {};
+      const colorScheme: Record<string, string> = {};
+      
+      for (let i = customScale.min; i <= customScale.max; i++) {
+        emojiSet[i.toString()] = i <= Math.floor((customScale.max + customScale.min) / 2) ? '😔' : '😊';
+        colorScheme[i.toString()] = i <= Math.floor((customScale.max + customScale.min) / 2) ? '#ef4444' : '#22c55e';
+      }
+
+      await addCustomEmotion(customEmotionName, customScale.min, customScale.max, emojiSet, colorScheme);
+      toast.success('Emoção personalizada criada!');
+      setCustomEmotionName('');
+      setCustomScale({ min: 1, max: 10 });
+      setAddDialogOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao criar emoção personalizada');
+    }
+  };
+
   const getCategoryLabel = (category: string) => {
     const labels: Record<string, string> = {
       basic: 'Básico',
       advanced: 'Avançado',
       wellbeing: 'Bem-estar',
-      professional: 'Profissional',
+      professional: 'Completo',
+      custom: 'Personalizado',
     };
     return labels[category] || category;
+  };
+
+  const getTemplateDescription = (template: string) => {
+    const descriptions: Record<string, string> = {
+      basic: '3 emoções essenciais para começar',
+      advanced: '6 emoções para análise mais profunda',
+      wellbeing: '6 emoções focadas em bem-estar',
+      professional: '12 emoções para análise completa',
+      custom: 'Configuração personalizada por você',
+    };
+    return descriptions[template] || '';
   };
 
   const getCategoryColor = (category: string) => {
@@ -118,6 +168,33 @@ const EmotionConfigPage = () => {
             <p className="text-muted-foreground">Personalize quais emoções você deseja acompanhar</p>
           </div>
         </div>
+
+        {/* Current Template Indicator */}
+        {currentTemplate && (
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <Sparkles className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-medium text-muted-foreground">Template Atual:</span>
+                    <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
+                      {getCategoryLabel(currentTemplate)}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {getTemplateDescription(currentTemplate)}
+                  </p>
+                </div>
+                {currentTemplate !== 'custom' && (
+                  <Check className="h-5 w-5 text-primary" />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Templates */}
         <Card className="mb-6">
@@ -181,15 +258,22 @@ const EmotionConfigPage = () => {
                   Adicionar
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Adicionar Emoção</DialogTitle>
                   <DialogDescription>
-                    Escolha uma emoção para adicionar ao seu diário
+                    Escolha uma emoção predefinida ou crie uma personalizada
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                  {availableEmotions.map((emotion) => {
+                
+                <Tabs defaultValue="predefined" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="predefined">Emoções Predefinidas</TabsTrigger>
+                    <TabsTrigger value="custom">Criar Personalizada</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="predefined" className="space-y-4 mt-4">
+                    {availableEmotions.map((emotion) => {
                     const previewValue = previewValues[emotion.emotion_type] || Math.floor((emotion.default_scale_min + emotion.default_scale_max) / 2);
                     
                     return (
@@ -235,12 +319,83 @@ const EmotionConfigPage = () => {
                       </Card>
                     );
                   })}
-                  {availableEmotions.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">
-                      Todas as emoções disponíveis já foram adicionadas!
-                    </p>
-                  )}
-                </div>
+                    {availableEmotions.length === 0 && (
+                      <p className="text-center text-muted-foreground py-8">
+                        Todas as emoções predefinidas já foram adicionadas!
+                      </p>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="custom" className="space-y-4 mt-4">
+                    <Card className="p-6">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="emotion-name">Nome da Emoção</Label>
+                          <Input
+                            id="emotion-name"
+                            placeholder="Ex: Criatividade, Foco, Relaxamento..."
+                            value={customEmotionName}
+                            onChange={(e) => setCustomEmotionName(e.target.value)}
+                            maxLength={30}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            {customEmotionName.length}/30 caracteres
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="scale-min">Valor Mínimo</Label>
+                            <Input
+                              id="scale-min"
+                              type="number"
+                              min={0}
+                              max={9}
+                              value={customScale.min}
+                              onChange={(e) => setCustomScale({ ...customScale, min: parseInt(e.target.value) || 1 })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="scale-max">Valor Máximo</Label>
+                            <Input
+                              id="scale-max"
+                              type="number"
+                              min={2}
+                              max={10}
+                              value={customScale.max}
+                              onChange={(e) => setCustomScale({ ...customScale, max: parseInt(e.target.value) || 10 })}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="bg-muted/50 rounded-lg p-4">
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Preview da escala: {customScale.min} a {customScale.max}
+                          </p>
+                          <div className="flex gap-2">
+                            {Array.from({ length: customScale.max - customScale.min + 1 }, (_, i) => (
+                              <div
+                                key={i}
+                                className="flex-1 h-8 rounded bg-primary/20 flex items-center justify-center text-xs font-medium"
+                              >
+                                {customScale.min + i}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <Button
+                          onClick={handleAddCustomEmotion}
+                          className="w-full"
+                          disabled={!customEmotionName.trim()}
+                        >
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Criar Emoção Personalizada
+                        </Button>
+                      </div>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </DialogContent>
             </Dialog>
           </CardHeader>

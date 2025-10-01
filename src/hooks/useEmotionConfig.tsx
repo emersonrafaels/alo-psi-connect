@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -42,6 +42,27 @@ export const useEmotionConfig = () => {
   const [defaultTypes, setDefaultTypes] = useState<DefaultEmotionType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentTemplate, setCurrentTemplate] = useState<'basic' | 'advanced' | 'wellbeing' | 'professional' | 'custom' | null>(null);
+
+  // Template detection
+  const detectCurrentTemplate = useCallback((configs: EmotionConfig[]) => {
+    const activeEmotions = configs.filter(c => c.is_enabled).map(c => c.emotion_type).sort();
+    
+    const templates = {
+      basic: ['mood', 'anxiety', 'energy'].sort(),
+      advanced: ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus'].sort(),
+      wellbeing: ['mood', 'energy', 'sleep_quality', 'gratitude', 'social_connection', 'physical_activity'].sort(),
+      professional: ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus', 'sleep_quality', 'gratitude', 'social_connection', 'physical_activity', 'productivity', 'creativity'].sort(),
+    };
+
+    for (const [name, emotions] of Object.entries(templates)) {
+      if (JSON.stringify(activeEmotions) === JSON.stringify(emotions)) {
+        return name as 'basic' | 'advanced' | 'wellbeing' | 'professional';
+      }
+    }
+    
+    return 'custom' as const;
+  }, []);
 
   // Fetch default emotion types
   const fetchDefaultTypes = async () => {
@@ -76,7 +97,9 @@ export const useEmotionConfig = () => {
         .order('order_position', { ascending: true });
 
       if (error) throw error;
-      setUserConfigs((data || []) as unknown as EmotionConfig[]);
+      const configs = (data || []) as unknown as EmotionConfig[];
+      setUserConfigs(configs);
+      setCurrentTemplate(detectCurrentTemplate(configs));
     } catch (err) {
       console.error('Error fetching user emotion configs:', err);
       setError('Erro ao carregar suas configurações de emoções');
@@ -145,6 +168,55 @@ export const useEmotionConfig = () => {
       await fetchUserConfigs();
     } catch (err) {
       console.error('Error adding emotion:', err);
+      throw err;
+    }
+  };
+
+  // Add custom emotion
+  const addCustomEmotion = async (
+    displayName: string,
+    scaleMin: number,
+    scaleMax: number,
+    emojiSet: Record<string, string>,
+    colorScheme: Record<string, string>
+  ) => {
+    if (!user) return;
+
+    try {
+      const emotionType = `custom_${displayName.toLowerCase().replace(/\s+/g, '_')}`;
+      
+      // Check if emotion already exists
+      const exists = userConfigs.some(c => c.emotion_type === emotionType);
+      if (exists) throw new Error('Uma emoção com esse nome já existe');
+
+      const maxPosition = Math.max(...userConfigs.map(c => c.order_position), -1);
+
+      // Convert flat color scheme to required format
+      const formattedColorScheme = {
+        low: colorScheme[scaleMin.toString()],
+        mid: colorScheme[Math.floor((scaleMax + scaleMin) / 2).toString()],
+        high: colorScheme[scaleMax.toString()],
+      };
+
+      const { error } = await supabase
+        .from('emotion_configurations')
+        .insert({
+          user_id: user.id,
+          emotion_type: emotionType,
+          display_name: displayName,
+          description: `Emoção personalizada: ${displayName}`,
+          scale_min: scaleMin,
+          scale_max: scaleMax,
+          emoji_set: emojiSet,
+          color_scheme: formattedColorScheme,
+          is_enabled: true,
+          order_position: maxPosition + 1,
+        });
+
+      if (error) throw error;
+      await fetchUserConfigs();
+    } catch (err) {
+      console.error('Error adding custom emotion:', err);
       throw err;
     }
   };
@@ -288,7 +360,9 @@ export const useEmotionConfig = () => {
     availableEmotions,
     loading,
     error,
+    currentTemplate,
     addEmotion,
+    addCustomEmotion,
     removeEmotion,
     updateEmotion,
     toggleEmotion,
