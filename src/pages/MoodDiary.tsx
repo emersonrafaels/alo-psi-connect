@@ -7,7 +7,7 @@ import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Calendar, Plus, TrendingUp, Heart, BarChart3, Share2, Mail, Download } from 'lucide-react';
+import { Calendar, Plus, TrendingUp, Heart, BarChart3, Share2, Mail, Download, Settings } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { generateWhatsAppMessage, shareWhatsApp, shareTelegram, shareEmail, copyToClipboard } from '@/utils/shareHelpers';
 import { useShareConfig } from '@/hooks/useShareConfig';
@@ -280,6 +280,14 @@ const MoodDiary = () => {
                   >
                     <BarChart3 className="h-4 w-4" />
                     Ver Análises
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate('/diario-emocional/configurar')}
+                    className="flex items-center gap-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Configurar Emoções
                   </Button>
                 </div>
                 

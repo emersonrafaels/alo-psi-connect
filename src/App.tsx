@@ -45,6 +45,7 @@ import MoodExperience from "./pages/MoodExperience";
 import MoodEntry from "./pages/MoodEntry";
 import MoodHistory from "./pages/MoodHistory";
 import MoodAnalytics from "./pages/MoodAnalytics";
+import EmotionConfigPage from "./pages/EmotionConfigPage";
 
 // Admin pages
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -116,6 +117,7 @@ const AppWithShortcuts = () => {
       <Route path="/diario-emocional/nova-entrada" element={<MoodEntry />} />
       <Route path="/diario-emocional/historico" element={<MoodHistory />} />
       <Route path="/diario-emocional/analises" element={<MoodAnalytics />} />
+      <Route path="/diario-emocional/configurar" element={<EmotionConfigPage />} />
       
       {/* Rotas Admin */}
       <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
