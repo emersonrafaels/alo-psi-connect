@@ -315,6 +315,48 @@ export type Database = {
         }
         Relationships: []
       }
+      default_emotion_types: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          default_color_scheme: Json | null
+          default_emoji_set: Json | null
+          default_scale_max: number | null
+          default_scale_min: number | null
+          description: string | null
+          display_name: string
+          emotion_type: string
+          id: string
+          is_active: boolean | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          default_color_scheme?: Json | null
+          default_emoji_set?: Json | null
+          default_scale_max?: number | null
+          default_scale_min?: number | null
+          description?: string | null
+          display_name: string
+          emotion_type: string
+          id?: string
+          is_active?: boolean | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          default_color_scheme?: Json | null
+          default_emoji_set?: Json | null
+          default_scale_max?: number | null
+          default_scale_min?: number | null
+          description?: string | null
+          display_name?: string
+          emotion_type?: string
+          id?: string
+          is_active?: boolean | null
+        }
+        Relationships: []
+      }
       deleted_users: {
         Row: {
           deleted_at: string
@@ -384,6 +426,54 @@ export type Database = {
         }
         Relationships: []
       }
+      emotion_configurations: {
+        Row: {
+          color_scheme: Json | null
+          created_at: string | null
+          description: string | null
+          display_name: string
+          emoji_set: Json | null
+          emotion_type: string
+          id: string
+          is_enabled: boolean | null
+          order_position: number | null
+          scale_max: number | null
+          scale_min: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          color_scheme?: Json | null
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          emoji_set?: Json | null
+          emotion_type: string
+          id?: string
+          is_enabled?: boolean | null
+          order_position?: number | null
+          scale_max?: number | null
+          scale_min?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          color_scheme?: Json | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          emoji_set?: Json | null
+          emotion_type?: string
+          id?: string
+          is_enabled?: boolean | null
+          order_position?: number | null
+          scale_max?: number | null
+          scale_min?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       google_calendar_events: {
         Row: {
           created_at: string
@@ -426,6 +516,7 @@ export type Database = {
           audio_url: string | null
           created_at: string | null
           date: string
+          emotion_values: Json | null
           energy_level: number | null
           id: string
           journal_text: string | null
@@ -442,6 +533,7 @@ export type Database = {
           audio_url?: string | null
           created_at?: string | null
           date: string
+          emotion_values?: Json | null
           energy_level?: number | null
           id?: string
           journal_text?: string | null
@@ -458,6 +550,7 @@ export type Database = {
           audio_url?: string | null
           created_at?: string | null
           date?: string
+          emotion_values?: Json | null
           energy_level?: number | null
           id?: string
           journal_text?: string | null
