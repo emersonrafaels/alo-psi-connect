@@ -298,12 +298,18 @@ export const useEmotionConfig = () => {
       .delete()
       .eq('user_id', user.id);
 
-    // Get emotions for this category
+    // Define exact emotions for each template
+    const templateEmotions: Record<string, string[]> = {
+      basic: ['mood', 'anxiety', 'energy'],
+      advanced: ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus'],
+      wellbeing: ['mood', 'energy', 'sleep_quality', 'gratitude', 'social_connection', 'physical_activity'],
+      professional: ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus', 'sleep_quality', 'gratitude', 'social_connection', 'physical_activity', 'productivity', 'creativity'],
+    };
+
+    // Get emotions for this template
+    const emotionTypesForTemplate = templateEmotions[category];
     const emotionsForCategory = defaultTypes.filter(type => 
-      category === 'basic' ? type.category === 'basic' :
-      category === 'advanced' ? ['basic', 'advanced'].includes(type.category) :
-      category === 'wellbeing' ? ['basic', 'wellbeing'].includes(type.category) :
-      true // professional includes all
+      emotionTypesForTemplate.includes(type.emotion_type)
     );
 
     const configs = emotionsForCategory.map((emotion, index) => ({
