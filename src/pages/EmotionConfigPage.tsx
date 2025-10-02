@@ -125,7 +125,7 @@ const EmotionConfigPage = () => {
     const descriptions: Record<string, string> = {
       basic: '3 emoções essenciais para começar',
       advanced: '6 emoções para análise mais profunda',
-      wellbeing: '6 emoções focadas em bem-estar',
+      wellbeing: '5 emoções focadas em bem-estar',
       professional: '12 emoções para análise completa',
       custom: 'Configuração personalizada por você',
     };
@@ -255,7 +255,7 @@ const EmotionConfigPage = () => {
                 <Settings2 className="h-5 w-5 mb-2" />
               )}
               <span className="font-medium">Bem-estar</span>
-              <span className="text-xs text-muted-foreground">6 emoções</span>
+              <span className="text-xs text-muted-foreground">5 emoções</span>
             </Button>
             <Button
               variant={currentTemplate === 'professional' ? 'default' : 'outline'}
@@ -282,9 +282,19 @@ const EmotionConfigPage = () => {
         <Card className="mb-6">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Suas Emoções</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                Suas Emoções
+                <Badge variant="secondary">
+                  {activeConfigs.length} {activeConfigs.length === 1 ? 'ativa' : 'ativas'}
+                </Badge>
+              </CardTitle>
               <CardDescription>
-                {activeConfigs.length} {activeConfigs.length === 1 ? 'emoção ativa' : 'emoções ativas'}
+                {currentTemplate && currentTemplate !== 'custom' && (
+                  <>Template: {getCategoryLabel(currentTemplate)}</>
+                )}
+                {currentTemplate === 'custom' && (
+                  <>Configuração personalizada</>
+                )}
               </CardDescription>
             </div>
             <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>

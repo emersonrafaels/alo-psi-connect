@@ -51,8 +51,8 @@ export const useEmotionConfig = () => {
     const templates = {
       basic: ['mood', 'anxiety', 'energy'].sort(),
       advanced: ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus'].sort(),
-      wellbeing: ['mood', 'energy', 'sleep_quality', 'gratitude', 'social_connection', 'physical_activity'].sort(),
-      professional: ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus', 'sleep_quality', 'gratitude', 'social_connection', 'physical_activity', 'productivity', 'creativity'].sort(),
+      wellbeing: ['mood', 'energy', 'gratitude', 'confidence', 'hope'].sort(),
+      professional: ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus', 'gratitude', 'confidence', 'hope', 'creativity', 'productivity', 'satisfaction'].sort(),
     };
 
     for (const [name, emotions] of Object.entries(templates)) {
@@ -302,8 +302,8 @@ export const useEmotionConfig = () => {
     const templateEmotions: Record<string, string[]> = {
       basic: ['mood', 'anxiety', 'energy'],
       advanced: ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus'],
-      wellbeing: ['mood', 'energy', 'sleep_quality', 'gratitude', 'social_connection', 'physical_activity'],
-      professional: ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus', 'sleep_quality', 'gratitude', 'social_connection', 'physical_activity', 'productivity', 'creativity'],
+      wellbeing: ['mood', 'energy', 'gratitude', 'confidence', 'hope'],
+      professional: ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus', 'gratitude', 'confidence', 'hope', 'creativity', 'productivity', 'satisfaction'],
     };
 
     // Get emotions for this template
