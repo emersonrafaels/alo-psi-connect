@@ -204,37 +204,57 @@ const EmotionConfigPage = () => {
           </CardHeader>
           <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Button
-              variant="outline"
-              className="h-auto flex-col py-4"
+              variant={currentTemplate === 'basic' ? 'default' : 'outline'}
+              className="h-auto flex-col py-4 relative"
               onClick={() => handleApplyTemplate('basic')}
             >
+              {currentTemplate === 'basic' && (
+                <div className="absolute -top-2 -right-2 h-6 w-6 bg-primary rounded-full flex items-center justify-center">
+                  <Check className="h-4 w-4 text-primary-foreground" />
+                </div>
+              )}
               <Settings2 className="h-5 w-5 mb-2" />
               <span className="font-medium">Básico</span>
               <span className="text-xs text-muted-foreground">3 emoções</span>
             </Button>
             <Button
-              variant="outline"
-              className="h-auto flex-col py-4"
+              variant={currentTemplate === 'advanced' ? 'default' : 'outline'}
+              className="h-auto flex-col py-4 relative"
               onClick={() => handleApplyTemplate('advanced')}
             >
+              {currentTemplate === 'advanced' && (
+                <div className="absolute -top-2 -right-2 h-6 w-6 bg-primary rounded-full flex items-center justify-center">
+                  <Check className="h-4 w-4 text-primary-foreground" />
+                </div>
+              )}
               <Settings2 className="h-5 w-5 mb-2" />
               <span className="font-medium">Avançado</span>
               <span className="text-xs text-muted-foreground">6 emoções</span>
             </Button>
             <Button
-              variant="outline"
-              className="h-auto flex-col py-4"
+              variant={currentTemplate === 'wellbeing' ? 'default' : 'outline'}
+              className="h-auto flex-col py-4 relative"
               onClick={() => handleApplyTemplate('wellbeing')}
             >
+              {currentTemplate === 'wellbeing' && (
+                <div className="absolute -top-2 -right-2 h-6 w-6 bg-primary rounded-full flex items-center justify-center">
+                  <Check className="h-4 w-4 text-primary-foreground" />
+                </div>
+              )}
               <Settings2 className="h-5 w-5 mb-2" />
               <span className="font-medium">Bem-estar</span>
               <span className="text-xs text-muted-foreground">6 emoções</span>
             </Button>
             <Button
-              variant="outline"
-              className="h-auto flex-col py-4"
+              variant={currentTemplate === 'professional' ? 'default' : 'outline'}
+              className="h-auto flex-col py-4 relative"
               onClick={() => handleApplyTemplate('professional')}
             >
+              {currentTemplate === 'professional' && (
+                <div className="absolute -top-2 -right-2 h-6 w-6 bg-primary rounded-full flex items-center justify-center">
+                  <Check className="h-4 w-4 text-primary-foreground" />
+                </div>
+              )}
               <Settings2 className="h-5 w-5 mb-2" />
               <span className="font-medium">Completo</span>
               <span className="text-xs text-muted-foreground">12 emoções</span>
