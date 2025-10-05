@@ -18,6 +18,7 @@ export interface MoodEntry {
   journal_text?: string;
   audio_url?: string;
   tags?: string[];
+  emotion_values?: Record<string, number>; // Dynamic emotion values
   created_at: string;
   updated_at: string;
 }
@@ -57,7 +58,7 @@ export const useMoodEntries = () => {
         .order('date', { ascending: false });
 
       if (error) throw error;
-      setEntries(data || []);
+      setEntries((data || []) as MoodEntry[]);
     } catch (error) {
       console.error('Error fetching mood entries:', error);
       toast({
@@ -177,7 +178,7 @@ export const useMoodEntries = () => {
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return data as MoodEntry | null;
     } catch (error) {
       console.error('Error checking existing entry:', error);
       return null;
@@ -198,7 +199,7 @@ export const useMoodEntries = () => {
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return data as MoodEntry | null;
     } catch (error) {
       console.error('Error fetching entry by ID:', error);
       return null;

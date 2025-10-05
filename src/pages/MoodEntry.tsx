@@ -5,6 +5,8 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoodEntries, type MoodEntry } from '@/hooks/useMoodEntries';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { useEmotionConfig } from '@/hooks/useEmotionConfig';
+import { DynamicEmotionSlider } from '@/components/DynamicEmotionSlider';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -17,7 +19,7 @@ import { SleepSlider } from '@/components/ui/sleep-slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Save, Heart, Edit, AlertCircle, Download, Share, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Save, Heart, Edit, AlertCircle, Download, Share, Clock, CheckCircle, XCircle, Settings2 } from 'lucide-react';
 import { AudioRecorder } from '@/components/ui/audio-recorder';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -31,15 +33,14 @@ const MoodEntry = () => {
   const { profile, loading } = useUserProfile();
   const { getEntryByDate, getEntryById, createOrUpdateEntry } = useMoodEntries();
   const { toast } = useToast();
+  const { activeConfigs, loading: configsLoading } = useEmotionConfig();
 
   const editDate = searchParams.get('date');
   const [selectedTab, setSelectedTab] = useState('texto');
   
   const [formData, setFormData] = useState({
-    date: getTodayLocalDateString(), // Always start with today, will be updated by useEffect
-    mood_score: [5],
-    energy_level: [3],
-    anxiety_level: [3],
+    date: getTodayLocalDateString(),
+    emotion_values: {} as Record<string, number>,
     sleep_hours: '',
     sleep_quality: [3],
     journal_text: '',
@@ -64,19 +65,19 @@ const MoodEntry = () => {
     try {
       const entryData = {
         date: normalizeDateForStorage(data.date),
-        mood_score: data.mood_score[0],
-        energy_level: data.energy_level[0],
-        anxiety_level: data.anxiety_level[0],
+        mood_score: data.emotion_values['mood'] || 5,
+        energy_level: data.emotion_values['energy'] || 3,
+        anxiety_level: data.emotion_values['anxiety'] || 3,
         sleep_hours: data.sleep_hours ? parseFloat(data.sleep_hours) : undefined,
         sleep_quality: data.sleep_quality[0],
         journal_text: data.journal_text || undefined,
         audio_url: data.audio_url || undefined,
         tags: data.tags.length > 0 ? data.tags : undefined,
+        emotion_values: data.emotion_values,
       };
 
       const result = await createOrUpdateEntry(entryData);
       if (result) {
-        // Limpar rascunho local após salvamento bem-sucedido
         clearLocalDraft();
         return result;
       }
@@ -109,11 +110,15 @@ const MoodEntry = () => {
       
       if (existingEntry) {
         // Load existing data into form
+        const emotionValues = existingEntry.emotion_values || {
+          mood: existingEntry.mood_score,
+          energy: existingEntry.energy_level,
+          anxiety: existingEntry.anxiety_level,
+        };
+        
         setFormData({
           date: existingEntry.date,
-          mood_score: [existingEntry.mood_score],
-          energy_level: [existingEntry.energy_level],
-          anxiety_level: [existingEntry.anxiety_level],
+          emotion_values: emotionValues,
           sleep_hours: existingEntry.sleep_hours?.toString() || '',
           sleep_quality: [existingEntry.sleep_quality || 3],
           journal_text: existingEntry.journal_text || '',
@@ -123,12 +128,15 @@ const MoodEntry = () => {
         setCurrentEntry(existingEntry);
         setIsEditMode(true);
       } else {
-        // Reset form for new entry
+        // Reset form for new entry - initialize with default values for active emotions
+        const initialEmotionValues: Record<string, number> = {};
+        activeConfigs.forEach(config => {
+          initialEmotionValues[config.emotion_type] = Math.floor((config.scale_min + config.scale_max) / 2);
+        });
+        
         setFormData({
           date: date,
-          mood_score: [5],
-          energy_level: [3],
-          anxiety_level: [3],
+          emotion_values: initialEmotionValues,
           sleep_hours: '',
           sleep_quality: [3],
           journal_text: '',
@@ -155,11 +163,15 @@ const MoodEntry = () => {
       
       if (existingEntry) {
         // Load existing data into form
+        const emotionValues = existingEntry.emotion_values || {
+          mood: existingEntry.mood_score,
+          energy: existingEntry.energy_level,
+          anxiety: existingEntry.anxiety_level,
+        };
+        
         setFormData({
           date: existingEntry.date,
-          mood_score: [existingEntry.mood_score],
-          energy_level: [existingEntry.energy_level],
-          anxiety_level: [existingEntry.anxiety_level],
+          emotion_values: emotionValues,
           sleep_hours: existingEntry.sleep_hours?.toString() || '',
           sleep_quality: [existingEntry.sleep_quality || 3],
           journal_text: existingEntry.journal_text || '',
@@ -292,11 +304,11 @@ const MoodEntry = () => {
       
       // Converter formData para o formato DemoMoodEntry
       const moodEntry = {
-        id: `temp-${Date.now()}`, // ID temporário para a entrada
+        id: `temp-${Date.now()}`,
         date: formData.date,
-        mood_score: formData.mood_score[0],
-        energy_level: formData.energy_level[0],
-        anxiety_level: formData.anxiety_level[0],
+        mood_score: formData.emotion_values['mood'] || 5,
+        energy_level: formData.emotion_values['energy'] || 3,
+        anxiety_level: formData.emotion_values['anxiety'] || 3,
         sleep_hours: formData.sleep_hours && !isNaN(parseInt(formData.sleep_hours)) ? parseInt(formData.sleep_hours) : undefined,
         sleep_quality: formData.sleep_quality[0],
         journal_text: formData.journal_text || undefined,
@@ -329,12 +341,20 @@ const MoodEntry = () => {
 
   const shareWhatsApp = () => {
     const date = parseISODateLocal(formData.date).toLocaleDateString('pt-BR');
-    const moodEmoji = ['😢', '😞', '😐', '😊', '😃', '🤩', '😍', '🥰', '😁', '🌟'][formData.mood_score[0] - 1] || '😊';
+    const moodValue = formData.emotion_values['mood'] || 5;
+    const moodEmoji = ['😢', '😞', '😐', '😊', '😃', '🤩', '😍', '🥰', '😁', '🌟'][moodValue - 1] || '😊';
     
     let message = `*Meu Diário Emocional - ${date}* ${moodEmoji}\n\n`;
-    message += `💭 Humor: ${formData.mood_score[0]}/10\n`;
-    message += `⚡ Energia: ${formData.energy_level[0]}/5\n`;
-    message += `😰 Ansiedade: ${formData.anxiety_level[0]}/5\n`;
+    
+    // Add dynamic emotions
+    activeConfigs.forEach(config => {
+      const value = formData.emotion_values[config.emotion_type];
+      if (value !== undefined) {
+        const emoji = config.emoji_set[value.toString()] || '';
+        message += `${emoji} ${config.display_name}: ${value}/${config.scale_max}\n`;
+      }
+    });
+    
     message += `💤 Qualidade do Sono: ${formData.sleep_quality[0]}/5\n`;
     
     if (formData.sleep_hours) {
@@ -359,13 +379,13 @@ const MoodEntry = () => {
     return null; // Will redirect
   }
 
-  if (loading || !profile) {
+  if (loading || !profile || configsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
           <p className="text-gray-600">
-            {loading ? 'Carregando perfil...' : 'Preparando entrada de humor...'}
+            {loading ? 'Carregando perfil...' : configsLoading ? 'Carregando configurações...' : 'Preparando entrada de humor...'}
           </p>
         </div>
       </div>
@@ -489,32 +509,43 @@ const MoodEntry = () => {
                 )}
               </div>
 
-              {/* Mood Score */}
-              <div className="space-y-2">
-                <Label>Humor</Label>
-                <MoodSlider
-                  value={formData.mood_score}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, mood_score: value }))}
-                />
-              </div>
-
-              {/* Energy Level */}
-              <div className="space-y-2">
-                <Label>Nível de Energia</Label>
-                <EnergySlider
-                  value={formData.energy_level}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, energy_level: value }))}
-                />
-              </div>
-
-              {/* Anxiety Level */}
-              <div className="space-y-2">
-                <Label>Nível de Ansiedade</Label>
-                <AnxietySlider
-                  value={formData.anxiety_level}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, anxiety_level: value }))}
-                />
-              </div>
+              {/* Dynamic Emotions */}
+              {activeConfigs.length === 0 ? (
+                <div className="p-6 border border-dashed rounded-lg text-center">
+                  <p className="text-muted-foreground mb-4">
+                    Você ainda não configurou nenhuma emoção para acompanhar.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/diario-emocional/configurar')}
+                  >
+                    <Settings2 className="h-4 w-4 mr-2" />
+                    Configurar Emoções
+                  </Button>
+                </div>
+              ) : (
+                activeConfigs.map((config) => {
+                  const currentValue = formData.emotion_values[config.emotion_type] ?? Math.floor((config.scale_min + config.scale_max) / 2);
+                  return (
+                    <div key={config.emotion_type} className="space-y-2">
+                      <Label>{config.display_name}</Label>
+                      <DynamicEmotionSlider
+                        emotionConfig={config}
+                        value={[currentValue]}
+                        onValueChange={(value: number[]) =>
+                          setFormData(prev => ({
+                            ...prev,
+                            emotion_values: {
+                              ...prev.emotion_values,
+                              [config.emotion_type]: value[0],
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                  );
+                })
+              )}
 
               {/* Sleep */}
               <div className="grid grid-cols-2 gap-4">
@@ -630,7 +661,7 @@ const MoodEntry = () => {
               </div>
 
               {/* Export and Share */}
-              {(isEditMode || formData.mood_score[0] || formData.journal_text) && (
+              {(isEditMode || Object.keys(formData.emotion_values).length > 0 || formData.journal_text) && (
                 <div className="flex gap-3 pt-2 border-t">
                   <Button 
                     variant="outline" 

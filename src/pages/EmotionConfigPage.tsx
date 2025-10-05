@@ -41,6 +41,7 @@ const EmotionConfigPage = () => {
   const [previewValues, setPreviewValues] = useState<Record<string, number>>({});
   const [customEmotionName, setCustomEmotionName] = useState('');
   const [customScale, setCustomScale] = useState<{ min: number; max: number }>({ min: 1, max: 10 });
+  const [applyingTemplate, setApplyingTemplate] = useState<string | null>(null);
 
   const handleAddEmotion = async (emotionType: string) => {
     try {
@@ -71,11 +72,14 @@ const EmotionConfigPage = () => {
   };
 
   const handleApplyTemplate = async (category: 'basic' | 'advanced' | 'wellbeing' | 'professional') => {
+    setApplyingTemplate(category);
     try {
       await applyTemplate(category);
       toast.success('Template aplicado com sucesso!');
     } catch (error) {
       toast.error('Erro ao aplicar template');
+    } finally {
+      setApplyingTemplate(null);
     }
   };
 
@@ -207,73 +211,113 @@ const EmotionConfigPage = () => {
               variant={currentTemplate === 'basic' ? 'default' : 'outline'}
               className="h-auto flex-col py-4 relative"
               onClick={() => handleApplyTemplate('basic')}
+              disabled={applyingTemplate !== null}
             >
-              {currentTemplate === 'basic' ? (
-                <>
-                  <div className="absolute -top-2 -right-2 h-7 w-7 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-md">
-                    <Check className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                  <Check className="h-5 w-5 mb-2" />
-                </>
+              {applyingTemplate === 'basic' ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <span className="font-semibold text-sm">Aplicando...</span>
+                </div>
               ) : (
-                <Settings2 className="h-5 w-5 mb-2" />
+                <>
+                  {currentTemplate === 'basic' ? (
+                    <>
+                      <div className="absolute -top-2 -right-2 h-7 w-7 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-md">
+                        <Check className="h-4 w-4 text-primary-foreground" />
+                      </div>
+                      <Check className="h-5 w-5 mb-2" />
+                    </>
+                  ) : (
+                    <Settings2 className="h-5 w-5 mb-2" />
+                  )}
+                  <span className="font-medium">Básico</span>
+                  <span className="text-xs text-muted-foreground">3 emoções</span>
+                </>
               )}
-              <span className="font-medium">Básico</span>
-              <span className="text-xs text-muted-foreground">3 emoções</span>
             </Button>
             <Button
               variant={currentTemplate === 'advanced' ? 'default' : 'outline'}
               className="h-auto flex-col py-4 relative"
               onClick={() => handleApplyTemplate('advanced')}
+              disabled={applyingTemplate !== null}
             >
-              {currentTemplate === 'advanced' ? (
-                <>
-                  <div className="absolute -top-2 -right-2 h-7 w-7 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-md">
-                    <Check className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                  <Check className="h-5 w-5 mb-2" />
-                </>
+              {applyingTemplate === 'advanced' ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <span className="font-semibold text-sm">Aplicando...</span>
+                </div>
               ) : (
-                <Settings2 className="h-5 w-5 mb-2" />
+                <>
+                  {currentTemplate === 'advanced' ? (
+                    <>
+                      <div className="absolute -top-2 -right-2 h-7 w-7 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-md">
+                        <Check className="h-4 w-4 text-primary-foreground" />
+                      </div>
+                      <Check className="h-5 w-5 mb-2" />
+                    </>
+                  ) : (
+                    <Settings2 className="h-5 w-5 mb-2" />
+                  )}
+                  <span className="font-medium">Avançado</span>
+                  <span className="text-xs text-muted-foreground">6 emoções</span>
+                </>
               )}
-              <span className="font-medium">Avançado</span>
-              <span className="text-xs text-muted-foreground">6 emoções</span>
             </Button>
             <Button
               variant={currentTemplate === 'wellbeing' ? 'default' : 'outline'}
               className="h-auto flex-col py-4 relative"
               onClick={() => handleApplyTemplate('wellbeing')}
+              disabled={applyingTemplate !== null}
             >
-              {currentTemplate === 'wellbeing' ? (
-                <>
-                  <div className="absolute -top-2 -right-2 h-7 w-7 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-md">
-                    <Check className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                  <Check className="h-5 w-5 mb-2" />
-                </>
+              {applyingTemplate === 'wellbeing' ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <span className="font-semibold text-sm">Aplicando...</span>
+                </div>
               ) : (
-                <Settings2 className="h-5 w-5 mb-2" />
+                <>
+                  {currentTemplate === 'wellbeing' ? (
+                    <>
+                      <div className="absolute -top-2 -right-2 h-7 w-7 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-md">
+                        <Check className="h-4 w-4 text-primary-foreground" />
+                      </div>
+                      <Check className="h-5 w-5 mb-2" />
+                    </>
+                  ) : (
+                    <Settings2 className="h-5 w-5 mb-2" />
+                  )}
+                  <span className="font-medium">Bem-estar</span>
+                  <span className="text-xs text-muted-foreground">5 emoções</span>
+                </>
               )}
-              <span className="font-medium">Bem-estar</span>
-              <span className="text-xs text-muted-foreground">5 emoções</span>
             </Button>
             <Button
               variant={currentTemplate === 'professional' ? 'default' : 'outline'}
               className="h-auto flex-col py-4 relative"
               onClick={() => handleApplyTemplate('professional')}
+              disabled={applyingTemplate !== null}
             >
-              {currentTemplate === 'professional' ? (
-                <>
-                  <div className="absolute -top-2 -right-2 h-7 w-7 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-md">
-                    <Check className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                  <Check className="h-5 w-5 mb-2" />
-                </>
+              {applyingTemplate === 'professional' ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <span className="font-semibold text-sm">Aplicando...</span>
+                </div>
               ) : (
-                <Settings2 className="h-5 w-5 mb-2" />
+                <>
+                  {currentTemplate === 'professional' ? (
+                    <>
+                      <div className="absolute -top-2 -right-2 h-7 w-7 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-md">
+                        <Check className="h-4 w-4 text-primary-foreground" />
+                      </div>
+                      <Check className="h-5 w-5 mb-2" />
+                    </>
+                  ) : (
+                    <Settings2 className="h-5 w-5 mb-2" />
+                  )}
+                  <span className="font-medium">Completo</span>
+                  <span className="text-xs text-muted-foreground">12 emoções</span>
+                </>
               )}
-              <span className="font-medium">Completo</span>
-              <span className="text-xs text-muted-foreground">12 emoções</span>
             </Button>
           </CardContent>
         </Card>
@@ -330,25 +374,77 @@ const EmotionConfigPage = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="scale-min">Valor Mínimo</Label>
-                      <Input
-                        id="scale-min"
-                        type="number"
-                        min={0}
-                        max={9}
-                        value={customScale.min}
-                        onChange={(e) => setCustomScale({ ...customScale, min: parseInt(e.target.value) || 1 })}
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          id="scale-min"
+                          type="text"
+                          inputMode="numeric"
+                          value={customScale.min}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '');
+                            const num = val ? parseInt(val) : 1;
+                            setCustomScale(prev => ({ ...prev, min: Math.min(num, prev.max - 1) }));
+                          }}
+                          onBlur={(e) => {
+                            const num = parseInt(e.target.value) || 1;
+                            setCustomScale(prev => ({ ...prev, min: Math.max(1, Math.min(num, prev.max - 1)) }));
+                          }}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setCustomScale(prev => ({ ...prev, min: Math.max(1, prev.min - 1) }))}
+                        >
+                          -
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setCustomScale(prev => ({ ...prev, min: Math.min(prev.max - 1, prev.min + 1) }))}
+                        >
+                          +
+                        </Button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="scale-max">Valor Máximo</Label>
-                      <Input
-                        id="scale-max"
-                        type="number"
-                        min={2}
-                        max={10}
-                        value={customScale.max}
-                        onChange={(e) => setCustomScale({ ...customScale, max: parseInt(e.target.value) || 10 })}
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          id="scale-max"
+                          type="text"
+                          inputMode="numeric"
+                          value={customScale.max}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '');
+                            const num = val ? parseInt(val) : 10;
+                            setCustomScale(prev => ({ ...prev, max: Math.max(num, prev.min + 1) }));
+                          }}
+                          onBlur={(e) => {
+                            const num = parseInt(e.target.value) || 10;
+                            setCustomScale(prev => ({ ...prev, max: Math.min(20, Math.max(prev.min + 1, num)) }));
+                          }}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setCustomScale(prev => ({ ...prev, max: Math.max(prev.min + 1, prev.max - 1) }))}
+                        >
+                          -
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setCustomScale(prev => ({ ...prev, max: Math.min(20, prev.max + 1) }))}
+                        >
+                          +
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
