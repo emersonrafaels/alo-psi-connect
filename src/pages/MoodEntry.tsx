@@ -572,13 +572,56 @@ const MoodEntry = () => {
               </div>
 
               {/* Tags */}
-              <div className="space-y-2">
-                <Label>Tags (opcional)</Label>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-base font-semibold">
+                      🏷️ Etiquetas para organizar
+                    </Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Use etiquetas para organizar e encontrar suas entradas mais facilmente. 
+                    Marque momentos importantes como: trabalho estressante, dia em família, exercício físico, etc.
+                  </p>
+                </div>
+
+                {/* Quick Tag Suggestions */}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">Sugestões rápidas:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['Trabalho', 'Família', 'Exercício', 'Amigos', 'Estudo', 'Lazer'].map((suggestion) => (
+                      <Button
+                        key={suggestion}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (!formData.tags.includes(suggestion)) {
+                            setFormData(prev => ({
+                              ...prev,
+                              tags: [...prev.tags, suggestion]
+                            }));
+                            toast({
+                              title: "Etiqueta adicionada",
+                              description: `"${suggestion}" foi adicionado às suas etiquetas`,
+                            });
+                          }
+                        }}
+                        disabled={formData.tags.includes(suggestion)}
+                        className="text-xs"
+                      >
+                        {suggestion}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tag Input */}
                 <div className="flex gap-2">
                   <Input
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="Ex: trabalho, exercício, família"
+                    placeholder="Digite uma categoria personalizada (ex: terapia, meditação...)"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -590,13 +633,24 @@ const MoodEntry = () => {
                     Adicionar
                   </Button>
                 </div>
+
+                {/* Display Tags */}
                 {formData.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {formData.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => removeTag(tag)}>
-                        {tag} ×
-                      </Badge>
-                    ))}
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">Suas etiquetas (clique para remover):</p>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.tags.map((tag) => (
+                        <Badge 
+                          key={tag} 
+                          variant="secondary" 
+                          className="cursor-pointer hover:bg-destructive/20 hover:border-destructive transition-all duration-200 animate-scale-in px-3 py-1.5" 
+                          onClick={() => removeTag(tag)}
+                          title="Clique para remover esta etiqueta"
+                        >
+                          {tag} ×
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
