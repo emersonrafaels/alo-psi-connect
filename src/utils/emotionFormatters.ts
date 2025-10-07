@@ -157,6 +157,28 @@ export const formatAverage = (values: (number | null | undefined)[]): string => 
 };
 
 /**
+ * Get color class for an emotion value based on scale
+ */
+export const getEmotionColor = (value: number, scale: number = 10): string => {
+  const percentage = (value / scale) * 100;
+  if (percentage >= 80) return 'bg-emerald-500';
+  if (percentage >= 60) return 'bg-yellow-500';
+  if (percentage >= 40) return 'bg-orange-500';
+  return 'bg-red-500';
+};
+
+/**
+ * Get label for an emotion value based on scale
+ */
+export const getEmotionLabel = (value: number, scale: number = 10): string => {
+  const percentage = (value / scale) * 100;
+  if (percentage >= 80) return 'Excelente';
+  if (percentage >= 60) return 'Bom';
+  if (percentage >= 40) return 'Regular';
+  return 'Ruim';
+};
+
+/**
  * Obtém todas as emoções disponíveis em uma entrada
  */
 export const getAllEmotions = (

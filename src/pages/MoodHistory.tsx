@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
+import { useEmotionConfig } from '@/hooks/useEmotionConfig';
 import { parseISODateLocal } from '@/lib/utils';
+import { getAllEmotions, getEmotionColor, getEmotionLabel, formatValue } from '@/utils/emotionFormatters';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -16,6 +18,7 @@ const MoodHistory = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { entries, loading, deleteEntry } = useMoodEntries();
+  const { userConfigs } = useEmotionConfig();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
 
@@ -51,18 +54,11 @@ const MoodHistory = () => {
     await deleteEntry(entryId);
   };
 
-  const getMoodColor = (score: number) => {
-    if (score >= 8) return 'bg-green-500';
-    if (score >= 6) return 'bg-yellow-500';
-    if (score >= 4) return 'bg-orange-500';
-    return 'bg-red-500';
-  };
-
-  const getMoodLabel = (score: number) => {
-    if (score >= 8) return 'Excelente';
-    if (score >= 6) return 'Bom';
-    if (score >= 4) return 'Regular';
-    return 'Ruim';
+  const getPrimaryEmotion = (entry: any) => {
+    const emotions = getAllEmotions(entry, userConfigs);
+    // Try to find mood first, otherwise use first emotion
+    const moodEmotion = emotions.find(e => e.key === 'mood');
+    return moodEmotion || emotions[0];
   };
 
   const formatDate = (dateString: string) => {
@@ -117,7 +113,7 @@ const MoodHistory = () => {
             <div className="flex-1">
               <h1 className="text-2xl font-bold">Histórico do Diário</h1>
               <p className="text-muted-foreground">
-                {entries.length} entradas registradas
+                {entries.length} entrada{entries.length !== 1 ? 's' : ''} registrada{entries.length !== 1 ? 's' : ''}
               </p>
             </div>
             <Button 
@@ -199,13 +195,25 @@ const MoodHistory = () => {
                               {/* Entry Header */}
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                  <div className={`w-4 h-4 rounded-full ${getMoodColor(entry.mood_score)}`} />
-                                  <div>
-                                    <h4 className="font-medium">{formatDate(entry.date)}</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                      Humor: {entry.mood_score}/10 ({getMoodLabel(entry.mood_score)})
-                                    </p>
-                                  </div>
+                                  {(() => {
+                                    const primary = getPrimaryEmotion(entry);
+                                    const scale = userConfigs.find(c => c.emotion_type === primary?.key)?.scale_max || 10;
+                                    return primary ? (
+                                      <>
+                                        <div className={`w-4 h-4 rounded-full ${getEmotionColor(primary.value, scale)}`} />
+                                        <div>
+                                          <h4 className="font-medium">{formatDate(entry.date)}</h4>
+                                          <p className="text-sm text-muted-foreground">
+                                            {primary.emoji} {primary.name}: {formatValue(primary.value)}/{scale} ({getEmotionLabel(primary.value, scale)})
+                                          </p>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <div>
+                                        <h4 className="font-medium">{formatDate(entry.date)}</h4>
+                                      </div>
+                                    );
+                                  })()}
                                 </div>
                                 <div className="flex gap-2">
                                   <Button
@@ -239,29 +247,48 @@ const MoodHistory = () => {
                                 </div>
                               </div>
 
-                              {/* Entry Details */}
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                <div>
-                                  <span className="text-muted-foreground">Energia:</span>
-                                  <span className="ml-1 font-medium">{entry.energy_level}/5</span>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground">Ansiedade:</span>
-                                  <span className="ml-1 font-medium">{entry.anxiety_level}/5</span>
-                                </div>
-                                {entry.sleep_hours && (
-                                  <div>
-                                    <span className="text-muted-foreground">Sono:</span>
-                                    <span className="ml-1 font-medium">{entry.sleep_hours}h</span>
+                              {/* Entry Details - Dynamic Emotions */}
+                              {(() => {
+                                const emotions = getAllEmotions(entry, userConfigs);
+                                const displayEmotions = emotions.filter(e => e.value > 0);
+                                
+                                if (displayEmotions.length === 0) return null;
+                                
+                                return (
+                                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-sm">
+                                    {displayEmotions.map((emotion) => {
+                                      const scale = userConfigs.find(c => c.emotion_type === emotion.key)?.scale_max || 10;
+                                      return (
+                                        <div key={emotion.key} className="flex items-center gap-2">
+                                          <span className="text-lg">{emotion.emoji}</span>
+                                          <div>
+                                            <div className="text-muted-foreground text-xs">{emotion.name}</div>
+                                            <div className="font-medium">{formatValue(emotion.value)}/{scale}</div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
-                                )}
-                                {entry.sleep_quality && (
-                                  <div>
-                                    <span className="text-muted-foreground">Qualidade:</span>
-                                    <span className="ml-1 font-medium">{entry.sleep_quality}/5</span>
-                                  </div>
-                                )}
-                              </div>
+                                );
+                              })()}
+
+                              {/* Sleep Info */}
+                              {(entry.sleep_hours || entry.sleep_quality) && (
+                                <div className="flex gap-4 text-sm border-t pt-3">
+                                  {entry.sleep_hours && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-muted-foreground">😴 Sono:</span>
+                                      <span className="font-medium">{entry.sleep_hours}h</span>
+                                    </div>
+                                  )}
+                                  {entry.sleep_quality && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-muted-foreground">⭐ Qualidade:</span>
+                                      <span className="font-medium">{entry.sleep_quality}/5</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
 
                               {/* Tags */}
                               {entry.tags && entry.tags.length > 0 && (
