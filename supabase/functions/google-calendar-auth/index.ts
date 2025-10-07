@@ -251,12 +251,8 @@ const handler = async (req: Request): Promise<Response> => {
           }
         );
       } else {
-        // Try to get the preferred scope, default to readonly
-        const preferredScope = 'https://www.googleapis.com/auth/calendar.readonly';
-        const fallbackScope = 'https://www.googleapis.com/auth/calendar.freebusy';
-        
-        // First try with readonly scope
-        const scope = preferredScope;
+        // Using only freebusy scope for privacy
+        const scope = 'https://www.googleapis.com/auth/calendar.freebusy';
         console.log('Generating auth URL with scope:', scope);
         
         const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -265,8 +261,7 @@ const handler = async (req: Request): Promise<Response> => {
           `response_type=code&` +
           `scope=${encodeURIComponent(scope)}&` +
           `access_type=offline&` +
-          `prompt=consent&` +
-          `state=${encodeURIComponent(JSON.stringify({ preferredScope: scope, fallbackScope }))}`;
+          `prompt=consent`;
 
         return new Response(
           JSON.stringify({ authUrl }),
