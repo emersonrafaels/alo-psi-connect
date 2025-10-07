@@ -14,6 +14,7 @@ import { useShareConfig } from '@/hooks/useShareConfig';
 import { generateProfessionalPDF, downloadPDF } from '@/utils/pdfGenerator';
 import { useToast } from '@/hooks/use-toast';
 import { getTodayLocalDateString, parseISODateLocal } from '@/lib/utils';
+import { calculateAverage, formatAverage } from '@/utils/emotionFormatters';
 
 const MoodDiary = () => {
   const navigate = useNavigate();
@@ -44,9 +45,9 @@ const MoodDiary = () => {
 
     const stats = {
       totalEntries: entries.length,
-      avgMood: entries.length > 0 ? entries.reduce((sum, e) => sum + (e.mood_score ?? 0), 0) / entries.length : 0,
-      avgEnergy: entries.length > 0 ? entries.reduce((sum, e) => sum + (e.energy_level ?? 0), 0) / entries.length : 0,
-      avgAnxiety: entries.length > 0 ? entries.reduce((sum, e) => sum + (e.anxiety_level ?? 0), 0) / entries.length : 0,
+      avgMood: calculateAverage(entries.map(e => e.mood_score)),
+      avgEnergy: calculateAverage(entries.map(e => e.energy_level)),
+      avgAnxiety: calculateAverage(entries.map(e => e.anxiety_level)),
     };
 
     const shareConfig = getShareConfig();
@@ -94,9 +95,9 @@ const MoodDiary = () => {
     const recentEntry = entries[0];
     const stats = {
       totalEntries: entries.length,
-      avgMood: entries.reduce((sum, e) => sum + (e.mood_score ?? 0), 0) / entries.length,
-      avgEnergy: entries.reduce((sum, e) => sum + (e.energy_level ?? 0), 0) / entries.length,
-      avgAnxiety: entries.reduce((sum, e) => sum + (e.anxiety_level ?? 0), 0) / entries.length,
+      avgMood: calculateAverage(entries.map(e => e.mood_score)),
+      avgEnergy: calculateAverage(entries.map(e => e.energy_level)),
+      avgAnxiety: calculateAverage(entries.map(e => e.anxiety_level)),
     };
 
     try {
@@ -144,9 +145,7 @@ const MoodDiary = () => {
   const todayEntry = entries.find(entry => entry.date === today);
   
   const recentEntries = entries.slice(0, 7);
-  const avgMood = recentEntries.length > 0 
-    ? recentEntries.reduce((sum, entry) => sum + entry.mood_score, 0) / recentEntries.length 
-    : 0;
+  const avgMood = calculateAverage(recentEntries.map(entry => entry.mood_score));
 
   return (
     <div className="min-h-screen bg-background">

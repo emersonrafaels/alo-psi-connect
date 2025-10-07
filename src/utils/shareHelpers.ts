@@ -1,4 +1,5 @@
 import { DemoMoodEntry } from '@/hooks/useMoodExperience';
+import { getAllEmotions, formatValue } from './emotionFormatters';
 
 interface ShareConfig {
   shareTitle: string;
@@ -42,11 +43,15 @@ export const generateWhatsAppMessage = (entry: DemoMoodEntry, stats?: any, confi
   
   let message = replaceVariables(shareConfig.shareTitle, variables) + '\n\n';
   
-  // Métricas principais
-  message += `${shareConfig.metricsTitle}\n`;
-  message += `😊 Humor: ${entry.mood_score}/10\n`;
-  message += `⚡ Energia: ${entry.energy_level}/5\n`;
-  message += `😰 Ansiedade: ${entry.anxiety_level}/5\n\n`;
+  // Métricas principais - busca emoções dinâmicas
+  const emotions = getAllEmotions(entry);
+  if (emotions.length > 0) {
+    message += `${shareConfig.metricsTitle}\n`;
+    emotions.forEach(emotion => {
+      message += `${emotion.emoji} ${emotion.name}: ${formatValue(emotion.value)}\n`;
+    });
+    message += '\n';
+  }
   
   // Informações do sono
   if (entry.sleep_hours || entry.sleep_quality) {
@@ -76,10 +81,17 @@ export const generateWhatsAppMessage = (entry: DemoMoodEntry, stats?: any, confi
   // Estatísticas gerais (se disponível)
   if (stats) {
     message += `${shareConfig.statsTitle}\n`;
-    message += `📊 ${stats.totalEntries} entradas registradas\n`;
-    message += `😊 Humor médio: ${stats.avgMood}/10\n`;
-    message += `⚡ Energia média: ${stats.avgEnergy}/5\n`;
-    message += `😰 Ansiedade média: ${stats.avgAnxiety}/5\n\n`;
+    message += `📊 ${stats.totalEntries} ${stats.totalEntries === 1 ? 'entrada registrada' : 'entradas registradas'}\n`;
+    if (stats.avgMood !== undefined && stats.avgMood > 0) {
+      message += `😊 Humor médio: ${formatValue(stats.avgMood)}\n`;
+    }
+    if (stats.avgEnergy !== undefined && stats.avgEnergy > 0) {
+      message += `⚡ Energia média: ${formatValue(stats.avgEnergy)}\n`;
+    }
+    if (stats.avgAnxiety !== undefined && stats.avgAnxiety > 0) {
+      message += `😰 Ansiedade média: ${formatValue(stats.avgAnxiety)}\n`;
+    }
+    message += '\n';
   }
   
   message += replaceVariables(shareConfig.shareFooter, variables);
@@ -113,11 +125,15 @@ export const generateEmailMessage = (entry: DemoMoodEntry, stats?: any, config?:
   
   let message = replaceVariables(shareConfig.shareTitle, variables) + '\n\n';
   
-  // Métricas principais
-  message += `${shareConfig.metricsTitle}\n`;
-  message += `😊 Humor: ${entry.mood_score}/10\n`;
-  message += `⚡ Energia: ${entry.energy_level}/5\n`;
-  message += `😰 Ansiedade: ${entry.anxiety_level}/5\n\n`;
+  // Métricas principais - busca emoções dinâmicas
+  const emotions = getAllEmotions(entry);
+  if (emotions.length > 0) {
+    message += `${shareConfig.metricsTitle}\n`;
+    emotions.forEach(emotion => {
+      message += `${emotion.emoji} ${emotion.name}: ${formatValue(emotion.value)}\n`;
+    });
+    message += '\n';
+  }
   
   // Informações do sono
   if (entry.sleep_hours || entry.sleep_quality) {
@@ -144,10 +160,17 @@ export const generateEmailMessage = (entry: DemoMoodEntry, stats?: any, config?:
   // Estatísticas gerais (se disponível)
   if (stats) {
     message += `${shareConfig.statsTitle}\n`;
-    message += `📊 ${stats.totalEntries} entradas registradas\n`;
-    message += `😊 Humor médio: ${stats.avgMood}/10\n`;
-    message += `⚡ Energia média: ${stats.avgEnergy}/5\n`;
-    message += `😰 Ansiedade média: ${stats.avgAnxiety}/5\n\n`;
+    message += `📊 ${stats.totalEntries} ${stats.totalEntries === 1 ? 'entrada registrada' : 'entradas registradas'}\n`;
+    if (stats.avgMood !== undefined && stats.avgMood > 0) {
+      message += `😊 Humor médio: ${formatValue(stats.avgMood)}\n`;
+    }
+    if (stats.avgEnergy !== undefined && stats.avgEnergy > 0) {
+      message += `⚡ Energia média: ${formatValue(stats.avgEnergy)}\n`;
+    }
+    if (stats.avgAnxiety !== undefined && stats.avgAnxiety > 0) {
+      message += `😰 Ansiedade média: ${formatValue(stats.avgAnxiety)}\n`;
+    }
+    message += '\n';
   }
   
   message += replaceVariables(shareConfig.shareFooter, variables);
@@ -181,11 +204,15 @@ export const generateTelegramMessage = (entry: DemoMoodEntry, stats?: any, confi
   
   let message = replaceVariables(shareConfig.shareTitle, variables) + '\n\n';
   
-  // Métricas principais
-  message += `${shareConfig.metricsTitle}\n`;
-  message += `😊 Humor: ${entry.mood_score}/10\n`;
-  message += `⚡ Energia: ${entry.energy_level}/5\n`;
-  message += `😰 Ansiedade: ${entry.anxiety_level}/5\n\n`;
+  // Métricas principais - busca emoções dinâmicas
+  const emotions = getAllEmotions(entry);
+  if (emotions.length > 0) {
+    message += `${shareConfig.metricsTitle}\n`;
+    emotions.forEach(emotion => {
+      message += `${emotion.emoji} ${emotion.name}: ${formatValue(emotion.value)}\n`;
+    });
+    message += '\n';
+  }
   
   // Informações do sono
   if (entry.sleep_hours || entry.sleep_quality) {
@@ -215,10 +242,17 @@ export const generateTelegramMessage = (entry: DemoMoodEntry, stats?: any, confi
   // Estatísticas gerais (se disponível)
   if (stats) {
     message += `${shareConfig.statsTitle}\n`;
-    message += `📊 ${stats.totalEntries} entradas registradas\n`;
-    message += `😊 Humor médio: ${stats.avgMood}/10\n`;
-    message += `⚡ Energia média: ${stats.avgEnergy}/5\n`;
-    message += `😰 Ansiedade média: ${stats.avgAnxiety}/5\n\n`;
+    message += `📊 ${stats.totalEntries} ${stats.totalEntries === 1 ? 'entrada registrada' : 'entradas registradas'}\n`;
+    if (stats.avgMood !== undefined && stats.avgMood > 0) {
+      message += `😊 Humor médio: ${formatValue(stats.avgMood)}\n`;
+    }
+    if (stats.avgEnergy !== undefined && stats.avgEnergy > 0) {
+      message += `⚡ Energia média: ${formatValue(stats.avgEnergy)}\n`;
+    }
+    if (stats.avgAnxiety !== undefined && stats.avgAnxiety > 0) {
+      message += `😰 Ansiedade média: ${formatValue(stats.avgAnxiety)}\n`;
+    }
+    message += '\n';
   }
   
   message += replaceVariables(shareConfig.shareFooter, variables);

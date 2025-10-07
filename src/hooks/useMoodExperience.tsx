@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGuestConfig } from './useGuestConfig';
+import { calculateAverage } from '@/utils/emotionFormatters';
 
 export interface DemoMoodEntry {
   id: string;

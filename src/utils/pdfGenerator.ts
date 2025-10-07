@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { DemoMoodEntry } from '@/hooks/useMoodExperience';
 import { getTodayLocalDateString, parseISODateLocal } from '@/lib/utils';
+import { getAllEmotions, formatValue } from './emotionFormatters';
 
 interface PDFConfig {
   includeLogo?: boolean;
@@ -64,33 +65,40 @@ export const generateProfessionalPDF = (
     pdf.text(`Data: ${parseISODateLocal(entry.date).toLocaleDateString('pt-BR')}`, 20, yPosition);
     yPosition += 15;
 
-    // Métricas principais
+    // Métricas emocionais - dinâmicas
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(0, 0, 0);
     pdf.text('Métricas Emocionais', 20, yPosition);
     yPosition += 10;
 
-    const metrics = [
-      { label: 'Humor', value: entry.mood_score, max: 10, color: [34, 197, 94] as [number, number, number] },
-      { label: 'Energia', value: entry.energy_level, max: 5, color: [251, 191, 36] as [number, number, number] },
-      { label: 'Ansiedade', value: entry.anxiety_level, max: 5, color: [239, 68, 68] as [number, number, number] }
-    ];
+    const emotions = getAllEmotions(entry);
+    const emotionColors: Record<string, [number, number, number]> = {
+      mood: [34, 197, 94],
+      humor: [34, 197, 94],
+      energy: [251, 191, 36],
+      energia: [251, 191, 36],
+      anxiety: [239, 68, 68],
+      ansiedade: [239, 68, 68],
+      default: [100, 116, 139]
+    };
 
-    metrics.forEach((metric, index) => {
+    emotions.forEach((emotion) => {
       const barWidth = 120;
       const barHeight = 8;
-      const percentage = (metric.value / metric.max) * 100;
+      const maxScale = 10; // Assume escala máxima de 10 para o gráfico
+      const percentage = (emotion.value / maxScale) * 100;
       
       pdf.setFontSize(11);
       pdf.setFont('helvetica', 'normal');
-      pdf.text(`${metric.label}: ${metric.value}/${metric.max}`, 20, yPosition);
+      pdf.text(`${emotion.name}: ${formatValue(emotion.value)}`, 20, yPosition);
       
       // Barra de progresso
       pdf.setFillColor(230, 230, 230);
       pdf.rect(85, yPosition - 5, barWidth, barHeight, 'F');
       
-      pdf.setFillColor(metric.color[0], metric.color[1], metric.color[2]);
+      const color = emotionColors[emotion.key.toLowerCase()] || emotionColors.default;
+      pdf.setFillColor(color[0], color[1], color[2]);
       pdf.rect(85, yPosition - 5, (barWidth * percentage) / 100, barHeight, 'F');
       
       yPosition += 15;
@@ -168,12 +176,19 @@ export const generateProfessionalPDF = (
     pdf.text('Estatísticas Gerais', 20, yPosition);
     yPosition += 15;
 
-    const statsData = [
-      { label: 'Total de entradas', value: stats.totalEntries },
-      { label: 'Humor médio', value: `${stats.avgMood}/10` },
-      { label: 'Energia média', value: `${stats.avgEnergy}/5` },
-      { label: 'Ansiedade média', value: `${stats.avgAnxiety}/5` }
+    const statsData: Array<{ label: string; value: string }> = [
+      { label: 'Total de entradas', value: `${stats.totalEntries}` }
     ];
+
+    if (stats.avgMood !== undefined && stats.avgMood > 0) {
+      statsData.push({ label: 'Humor médio', value: formatValue(stats.avgMood) });
+    }
+    if (stats.avgEnergy !== undefined && stats.avgEnergy > 0) {
+      statsData.push({ label: 'Energia média', value: formatValue(stats.avgEnergy) });
+    }
+    if (stats.avgAnxiety !== undefined && stats.avgAnxiety > 0) {
+      statsData.push({ label: 'Ansiedade média', value: formatValue(stats.avgAnxiety) });
+    }
 
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'normal');
