@@ -383,29 +383,17 @@ export const UnavailabilityManager = ({ professionalId, professionalName }: Unav
               {/* Blocking Mode Selection */}
               <div>
                 <Label>Tipo de Bloqueio</Label>
-                <Select value={blockingMode} onValueChange={(value: 'single' | 'period' | 'recurring') => setBlockingMode(value)}>
+                <Select value={blockingMode} onValueChange={(value: 'single' | 'period' | 'recurring') => {
+                  console.log('Tipo de bloqueio selecionado:', value);
+                  setBlockingMode(value);
+                }}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="single">
-                      <div className="flex items-center gap-2">
-                        <CalendarDays className="h-4 w-4" />
-                        Data específica
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="period">
-                      <div className="flex items-center gap-2">
-                        <CalendarRange className="h-4 w-4" />
-                        Período (várias datas)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="recurring">
-                      <div className="flex items-center gap-2">
-                        <Repeat className="h-4 w-4" />
-                        Recorrente
-                      </div>
-                    </SelectItem>
+                    <SelectItem value="single">Data específica</SelectItem>
+                    <SelectItem value="period">Período (várias datas)</SelectItem>
+                    <SelectItem value="recurring">Recorrente</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
