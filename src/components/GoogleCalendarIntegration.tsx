@@ -123,32 +123,51 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
           }
 
           if (event.data?.type === 'GOOGLE_CALENDAR_SUCCESS') {
-            console.log('Google Calendar conectado via popup!');
+            console.log('✅ Google Calendar conectado via popup!', {
+              tokenVerified: event.data.tokenVerified
+            });
             
             // Close popup if it's still open
             if (popup && !popup.closed) {
+              console.log('🚪 Fechando popup do callback...');
               popup.close();
             }
             
-            // Force immediate status refresh with multiple attempts
-            setTimeout(() => {
-              console.log('Primeira tentativa de atualização de status...');
-              onConnectionChange(true);
-              // Also refresh scope info
-              setCalendarScope(prev => ({ ...prev, loading: true }));
-            }, 1000);
+            // Verify token was actually saved
+            const verifyAndUpdate = async () => {
+              try {
+                console.log('🔍 Verificando tokens no banco de dados...');
+                const { data: profileData, error } = await supabase
+                  .from('profiles')
+                  .select('google_calendar_token, google_calendar_scope')
+                  .eq('user_id', user!.id)
+                  .single();
+                
+                console.log('🔍 Resultado da verificação:', {
+                  hasToken: !!profileData?.google_calendar_token,
+                  scope: profileData?.google_calendar_scope,
+                  error
+                });
+                
+                if (profileData?.google_calendar_token) {
+                  console.log('✅ Tokens confirmados no banco, atualizando UI...');
+                  onConnectionChange(true);
+                  setCalendarScope({ 
+                    scope: profileData.google_calendar_scope || 'calendar.freebusy',
+                    loading: false 
+                  });
+                } else {
+                  console.warn('⚠️ Tokens não encontrados após callback');
+                }
+              } catch (error) {
+                console.error('❌ Erro ao verificar tokens:', error);
+              }
+            };
             
-            // Second attempt after more time for database propagation
-            setTimeout(() => {
-              console.log('Segunda tentativa de atualização de status...');
-              onConnectionChange(true);
-            }, 3000);
-            
-            // Third attempt to ensure status is updated
-            setTimeout(() => {
-              console.log('Terceira tentativa de atualização de status...');
-              onConnectionChange(true);
-            }, 5000);
+            // Multiple verification attempts
+            setTimeout(verifyAndUpdate, 500);
+            setTimeout(verifyAndUpdate, 2000);
+            setTimeout(verifyAndUpdate, 4000);
             
             toast({
               title: "Conectado com sucesso!",

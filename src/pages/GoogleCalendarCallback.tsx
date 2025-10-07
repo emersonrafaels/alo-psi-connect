@@ -16,7 +16,16 @@ export default function GoogleCalendarCallback() {
       const error = searchParams.get('error');
       const state = searchParams.get('state');
 
-      console.log('Callback iniciado:', { code: !!code, error, hasOpener: !!window.opener });
+      // Detect if we're in a popup more reliably
+      const isPopup = window.name === 'google-auth' || !!window.opener;
+      console.log('🔍 Callback iniciado:', { 
+        code: !!code, 
+        error, 
+        isPopup,
+        windowName: window.name,
+        hasOpener: !!window.opener,
+        hasSession: !!session 
+      });
 
       if (error) {
         console.error('Erro na autorização Google:', error);
@@ -46,15 +55,46 @@ export default function GoogleCalendarCallback() {
         return;
       }
 
-      if (code && session) {
+      if (code) {
+        // Wait for session if not available yet (max 5 seconds)
+        let currentSession = session;
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        while (!currentSession && attempts < maxAttempts) {
+          console.log(`⏳ Aguardando sessão... tentativa ${attempts + 1}/${maxAttempts}`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const { data } = await supabase.auth.getSession();
+          currentSession = data.session;
+          attempts++;
+        }
+
+        if (!currentSession) {
+          console.error('❌ Sessão não disponível após timeout');
+          toast({
+            variant: "destructive",
+            title: "Erro de sessão",
+            description: "Não foi possível obter a sessão. Faça login novamente.",
+          });
+          
+          if (isPopup) {
+            setTimeout(() => window.close(), 1000);
+          } else {
+            navigate('/auth');
+          }
+          return;
+        }
+
+        console.log('✅ Sessão obtida, user_id:', currentSession.user.id);
+
         try {
-          console.log('Chamando edge function para trocar code por tokens...');
+          console.log('🔄 Chamando edge function para trocar code por tokens...');
           console.log('Authorization code:', code?.substring(0, 10) + '...');
           
           const { data, error: authError } = await supabase.functions.invoke('google-calendar-auth', {
             body: { action: 'connect', code },
             headers: {
-              Authorization: `Bearer ${session.access_token}`,
+              Authorization: `Bearer ${currentSession.access_token}`,
             },
           });
 
@@ -70,81 +110,96 @@ export default function GoogleCalendarCallback() {
             throw new Error(data.error);
           }
 
-          console.log('Google Calendar conectado com sucesso!', data);
+          console.log('✅ Google Calendar conectado com sucesso!', data);
           
-          // Extra verification step
-          console.log('🔍 Verificando se tokens foram realmente salvos...');
-          setTimeout(async () => {
-            try {
-              const { data: verifyData } = await supabase
-                .from('profiles')
-                .select('google_calendar_token, google_calendar_scope')
-                .eq('user_id', session.user.id)
-                .single();
-              
-              console.log('🔍 Verificação dos tokens após callback:', {
-                hasToken: !!verifyData?.google_calendar_token,
-                tokenLength: verifyData?.google_calendar_token?.length || 0,
-                scope: verifyData?.google_calendar_scope
-              });
-            } catch (error) {
-              console.error('🔍 Erro na verificação:', error);
+          // Verify tokens were saved
+          console.log('🔍 Verificando se tokens foram salvos no banco...');
+          const { data: verifyData, error: verifyError } = await supabase
+            .from('profiles')
+            .select('google_calendar_token, google_calendar_scope')
+            .eq('user_id', currentSession.user.id)
+            .single();
+          
+          console.log('🔍 Verificação dos tokens:', {
+            hasToken: !!verifyData?.google_calendar_token,
+            tokenLength: verifyData?.google_calendar_token?.length || 0,
+            scope: verifyData?.google_calendar_scope,
+            error: verifyError
+          });
+
+          // Send success message BEFORE showing toast or closing popup
+          if (isPopup) {
+            const targetOrigin = window.location.origin;
+            const successMessage = { 
+              type: 'GOOGLE_CALENDAR_SUCCESS', 
+              data,
+              tokenVerified: !!verifyData?.google_calendar_token
+            };
+            
+            console.log('📤 Enviando mensagem de sucesso para janela principal...');
+            
+            // Send to opener
+            if (window.opener && !window.opener.closed) {
+              try {
+                window.opener.postMessage(successMessage, targetOrigin);
+                console.log('✅ Mensagem enviada via window.opener');
+              } catch (error) {
+                console.error('❌ Erro ao enviar via opener:', error);
+              }
             }
-          }, 1000);
+            
+            // Send to parent as fallback
+            if (window.parent && window.parent !== window) {
+              try {
+                window.parent.postMessage(successMessage, targetOrigin);
+                console.log('✅ Mensagem enviada via window.parent');
+              } catch (error) {
+                console.error('❌ Erro ao enviar via parent:', error);
+              }
+            }
+          }
 
           toast({
             title: "Google Calendar conectado!",
             description: data?.message || "Sua conta foi conectada com sucesso.",
           });
 
-          // Detecta se está em popup de múltiplas formas
-          const isPopup = !!(window.opener || window.parent !== window || window.name === 'google-auth');
-          console.log('Detectado como popup:', isPopup);
-          console.log('window.opener existe:', !!window.opener);
-          console.log('window.parent !== window:', window.parent !== window);
-          console.log('window.name:', window.name);
-
           if (isPopup) {
-            console.log('Enviando sucesso para janela principal');
-            const targetOrigin = window.location.origin;
+            console.log('🚪 Tentando fechar popup...');
             
-            // Tenta enviar para opener primeiro
-            if (window.opener) {
+            // Multiple close attempts
+            const closePopup = () => {
               try {
-                window.opener.postMessage({ 
-                  type: 'GOOGLE_CALENDAR_SUCCESS', 
-                  data 
-                }, targetOrigin);
-                console.log('Mensagem enviada via window.opener');
-              } catch (error) {
-                console.error('Erro ao enviar mensagem via opener:', error);
-              }
-            }
-            
-            // Também tenta enviar para parent como fallback
-            if (window.parent && window.parent !== window) {
-              try {
-                window.parent.postMessage({ 
-                  type: 'GOOGLE_CALENDAR_SUCCESS', 
-                  data 
-                }, targetOrigin);
-                console.log('Mensagem enviada via window.parent');
-              } catch (error) {
-                console.error('Erro ao enviar mensagem via parent:', error);
-              }
-            }
-            
-            // Fechar popup com delay simples
-            setTimeout(() => {
-              try {
+                console.log('Tentativa de fechar popup...');
                 window.close();
+                
+                // Check if still open after 100ms
+                setTimeout(() => {
+                  if (!window.closed) {
+                    console.log('⚠️ Popup ainda aberto, tentando novamente...');
+                    window.close();
+                  }
+                }, 100);
               } catch (error) {
-                console.log('Could not close popup, redirecting...');
+                console.error('❌ Erro ao fechar popup:', error);
+              }
+            };
+            
+            // First attempt immediately after message
+            setTimeout(closePopup, 300);
+            
+            // Second attempt as backup
+            setTimeout(closePopup, 1000);
+            
+            // Final fallback: redirect if still open
+            setTimeout(() => {
+              if (!window.closed) {
+                console.log('⚠️ Não foi possível fechar popup, redirecionando...');
                 const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/professional-profile';
                 sessionStorage.removeItem('googleCalendarReturnUrl');
                 navigate(returnUrl);
               }
-            }, 1000);
+            }, 2000);
           } else {
             const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/professional-profile';
             sessionStorage.removeItem('googleCalendarReturnUrl');
@@ -176,8 +231,9 @@ export default function GoogleCalendarCallback() {
             navigate(returnUrl);
           }
         }
-      } else {
-        // No code parameter, redirect to return URL
+      } else if (!error) {
+        // No code and no error, just redirect
+        console.log('⚠️ Nenhum code ou error encontrado, redirecionando...');
         const returnUrl = sessionStorage.getItem('googleCalendarReturnUrl') || '/perfil';
         sessionStorage.removeItem('googleCalendarReturnUrl');
         navigate(returnUrl);
@@ -185,7 +241,7 @@ export default function GoogleCalendarCallback() {
     };
 
     handleCallback();
-  }, [searchParams, navigate, toast]);
+  }, [searchParams, navigate, toast, session]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
