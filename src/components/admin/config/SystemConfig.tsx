@@ -9,8 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
+import { useGoogleCalendarConfig } from '@/hooks/useGoogleCalendarConfig';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Settings, Mail, CreditCard, Clock, TrendingUp, Users, Database, Shield, AlertTriangle, Image, ToggleLeft, Share2, Brain, Heart } from 'lucide-react';
+import { Save, Settings, Mail, CreditCard, Clock, TrendingUp, Users, Database, Shield, AlertTriangle, Image, ToggleLeft, Share2, Brain, Heart, Calendar, RefreshCw } from 'lucide-react';
 import { MetricsCard } from './MetricsCard';
 import { UsageChart } from './UsageChart';
 import { ConfigDataTable } from './ConfigDataTable';
@@ -18,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const SystemConfig = () => {
   const { getConfig, updateConfig, loading, hasPermission, configs, getConfigsByCategory } = useSystemConfig(['system', 'homepage', 'diary_sharing']);
+  const { config: gcConfig, loading: gcLoading, syncing, updateConfig: updateGCConfig, forceSync } = useGoogleCalendarConfig();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [guestLimit, setGuestLimit] = useState('3');
@@ -275,9 +277,10 @@ export const SystemConfig = () => {
       )}
 
       <Tabs defaultValue="config" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="config">Sistema</TabsTrigger>
           <TabsTrigger value="diary">Diário Emocional</TabsTrigger>
+          <TabsTrigger value="google_calendar">Google Calendar</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="financial">Financeiro</TabsTrigger>
           <TabsTrigger value="security">Segurança</TabsTrigger>
@@ -543,6 +546,99 @@ export const SystemConfig = () => {
               {saving ? 'Salvando...' : 'Salvar Todas as Configurações'}
             </Button>
           </div>
+        </TabsContent>
+
+        <TabsContent value="google_calendar" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Sincronização Google Calendar
+              </CardTitle>
+              <CardDescription>
+                Configure a sincronização automática de eventos do Google Calendar dos profissionais
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {gcLoading ? (
+                <div className="text-center py-4">Carregando configurações...</div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Sincronização Automática</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Ativar sincronização periódica de todos os profissionais conectados
+                      </p>
+                    </div>
+                    <Switch
+                      checked={gcConfig.autoSyncEnabled}
+                      onCheckedChange={(checked) => updateGCConfig('auto_sync_enabled', checked)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="sync_interval">
+                      Intervalo de Sincronização (minutos)
+                    </Label>
+                    <Input
+                      id="sync_interval"
+                      type="number"
+                      value={gcConfig.syncIntervalMinutes}
+                      onChange={(e) => updateGCConfig('sync_interval_minutes', parseInt(e.target.value))}
+                      min={5}
+                      max={1440}
+                      step={5}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Recomendado: 15-30 minutos
+                    </p>
+                    <Badge variant={gcConfig.syncIntervalMinutes <= 15 ? "default" : "secondary"}>
+                      {gcConfig.syncIntervalMinutes <= 15 ? "Alta frequência" : "Frequência normal"}
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Estatísticas</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <MetricsCard
+                        title="Última Sincronização"
+                        value={gcConfig.lastSyncTimestamp 
+                          ? new Date(gcConfig.lastSyncTimestamp).toLocaleString('pt-BR')
+                          : 'Nunca'}
+                        description="horário da última execução"
+                        icon={Clock}
+                      />
+                      <MetricsCard
+                        title="Profissionais Sincronizados"
+                        value={gcConfig.statistics?.success_count || 0}
+                        description={`de ${gcConfig.statistics?.total_profiles || 0} totais`}
+                        icon={Users}
+                      />
+                    </div>
+                    {gcConfig.statistics?.error_count > 0 && (
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          {gcConfig.statistics.error_count} erro(s) na última sincronização
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+
+                  <Button
+                    onClick={forceSync}
+                    disabled={syncing}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                    {syncing ? 'Sincronizando...' : 'Forçar Sincronização Agora'}
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="diary" className="space-y-6">

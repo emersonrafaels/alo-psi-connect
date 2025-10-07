@@ -1133,6 +1133,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      invoke_google_calendar_sync: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       is_admin: {
         Args: { _user_id: string }
         Returns: boolean

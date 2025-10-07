@@ -74,6 +74,9 @@ verify_jwt = true
 [functions.google-calendar-sync]
 verify_jwt = true
 
+[functions.google-calendar-cron]
+verify_jwt = false
+
 [functions.send-password-reset]
 verify_jwt = false
 
