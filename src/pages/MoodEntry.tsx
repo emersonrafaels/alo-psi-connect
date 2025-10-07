@@ -58,45 +58,70 @@ const MoodEntry = () => {
   // Persistência local DESABILITADA - comportamento estático
   const [localDraft, setLocalDraft, clearLocalDraft] = [null, () => {}, () => {}];
 
-  // Função para auto-save
-  const autoSaveEntry = useCallback(async (data: any) => {
-    if (!user || !profile || !data.date) return;
+  // Função de salvamento manual direto
+  const saveEntry = useCallback(async (data: typeof formData) => {
+    if (!user || !profile || !data.date) {
+      console.error('❌ Save failed: Missing required data', { 
+        hasUser: !!user, 
+        hasProfile: !!profile, 
+        hasDate: !!data.date 
+      });
+      throw new Error('Dados insuficientes para salvar');
+    }
+    
+    console.log('💾 Saving entry...', {
+      date: data.date,
+      emotionValues: data.emotion_values,
+      tags: data.tags,
+      hasJournal: !!data.journal_text,
+      hasAudio: !!data.audio_url
+    });
     
     try {
       const entryData = {
         date: normalizeDateForStorage(data.date),
-        mood_score: data.emotion_values['mood'] || 5,
-        energy_level: data.emotion_values['energy'] || 3,
-        anxiety_level: data.emotion_values['anxiety'] || 3,
+        // Manter compatibilidade retroativa com campos antigos
+        mood_score: data.emotion_values['mood'] || undefined,
+        energy_level: data.emotion_values['energy'] || undefined,
+        anxiety_level: data.emotion_values['anxiety'] || undefined,
+        // Dados principais
         sleep_hours: data.sleep_hours ? parseFloat(data.sleep_hours) : undefined,
         sleep_quality: data.sleep_quality[0],
         journal_text: data.journal_text || undefined,
         audio_url: data.audio_url || undefined,
         tags: data.tags.length > 0 ? data.tags : undefined,
+        // Salvar todas as emoções dinâmicas
         emotion_values: data.emotion_values,
       };
 
+      console.log('📤 Sending to database:', entryData);
+
       const result = await createOrUpdateEntry(entryData);
+      
       if (result) {
+        console.log('✅ Entry saved successfully:', result);
         clearLocalDraft();
         return result;
+      } else {
+        console.error('❌ Save returned no result');
+        throw new Error('Falha ao salvar entrada');
       }
     } catch (error) {
-      console.error('Auto-save failed:', error);
+      console.error('❌ Save error:', error);
       throw error;
     }
   }, [user, profile, createOrUpdateEntry, clearLocalDraft]);
 
-  // Auto-save hook (DISABLED - only manual save)
-  const { isSaving: isAutoSaving, saveStatus, forceSave } = useAutoSave(formData, {
-    enabled: false, // DISABLED - formulário estático
+  // Auto-save hook ainda disponível para futuro uso, mas desabilitado
+  const { isSaving: isAutoSaving, saveStatus } = useAutoSave(formData, {
+    enabled: false, // DISABLED
     delay: 3000,
-    onSave: autoSaveEntry,
+    onSave: saveEntry,
     onSuccess: () => {
-      console.log('Manual save successful');
+      console.log('Auto-save successful');
     },
     onError: (error) => {
-      console.error('Save error:', error);
+      console.error('Auto-save error:', error);
     }
   });
 
@@ -239,26 +264,47 @@ const MoodEntry = () => {
   // COMPORTAMENTO ESTÁTICO - Sem recarregamento por mudança de data
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      console.error('❌ Cannot save: No user logged in');
+      return;
+    }
 
+    console.log('🚀 Handle submit initiated');
+    
     setSaving(true);
+    
+    // Mostrar feedback visual imediato
+    toast({
+      title: "Salvando...",
+      description: "Aguarde enquanto salvamos sua entrada.",
+    });
+    
     try {
-      await forceSave(); // Forçar auto-save imediato
+      console.log('📝 Current form data:', formData);
+      
+      // Salvamento direto sem depender do auto-save
+      const result = await saveEntry(formData);
+      
+      console.log('✅ Save completed successfully:', result);
       
       toast({
-        title: "Sucesso",
+        title: "✅ Sucesso",
         description: "Entrada salva com sucesso!",
       });
       
       // Limpar rascunho local após salvamento manual bem-sucedido
       clearLocalDraft();
       
-      navigate('/diario-emocional');
+      // Pequeno delay para garantir que o usuário veja a confirmação
+      setTimeout(() => {
+        navigate('/diario-emocional');
+      }, 500);
+      
     } catch (error) {
-      console.error('Error saving entry:', error);
+      console.error('❌ Error saving entry:', error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar entrada. Tente novamente.",
+        description: error instanceof Error ? error.message : "Erro ao salvar entrada. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -684,10 +730,7 @@ const MoodEntry = () => {
                         setFormData(prev => ({ ...prev, journal_text: reflection }));
                         setSelectedTab('texto');
                         
-                        // Auto-save after transcription
-                        setTimeout(() => {
-                          forceSave();
-                        }, 1000);
+                        console.log('🎤 Transcription completed, text updated');
                       }}
                       className="w-full"
                     />
