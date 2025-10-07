@@ -1,17 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
 
 export default function GoogleCalendarCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { session } = useAuth();
+  const processingRef = useRef(false);
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Verificar se já estamos processando
+      if (processingRef.current) {
+        console.log('⚠️ Callback já está sendo processado, ignorando execução duplicada...');
+        return;
+      }
+
       const code = searchParams.get('code');
       const error = searchParams.get('error');
       const state = searchParams.get('state');
@@ -23,8 +28,7 @@ export default function GoogleCalendarCallback() {
         error, 
         isPopup,
         windowName: window.name,
-        hasOpener: !!window.opener,
-        hasSession: !!session 
+        hasOpener: !!window.opener
       });
 
       if (error) {
@@ -56,8 +60,12 @@ export default function GoogleCalendarCallback() {
       }
 
       if (code) {
+        // Marcar como processando IMEDIATAMENTE
+        processingRef.current = true;
+        console.log('🔑 Authorization code recebido, marcando como processando...');
+        
         // Wait for session if not available yet (max 5 seconds)
-        let currentSession = session;
+        let currentSession = null;
         let attempts = 0;
         const maxAttempts = 10;
         
@@ -71,6 +79,7 @@ export default function GoogleCalendarCallback() {
 
         if (!currentSession) {
           console.error('❌ Sessão não disponível após timeout');
+          processingRef.current = false; // Resetar flag
           toast({
             variant: "destructive",
             title: "Erro de sessão",
@@ -102,11 +111,38 @@ export default function GoogleCalendarCallback() {
 
           if (authError) {
             console.error('Erro da edge function:', authError);
+            processingRef.current = false; // Resetar flag
+            
+            // Verificar se é o erro específico invalid_grant
+            const errorMessage = authError.message || '';
+            if (errorMessage.includes('invalid_grant') || errorMessage.includes('Bad Request')) {
+              toast({
+                variant: "destructive",
+                title: "Código de autorização expirado",
+                description: "O código expirou ou já foi usado. Por favor, tente conectar novamente.",
+              });
+            } else {
+              toast({
+                variant: "destructive",
+                title: "Erro na conexão",
+                description: errorMessage || "Não foi possível conectar com o Google Calendar.",
+              });
+            }
+            
+            if (isPopup) {
+              window.opener?.postMessage({ 
+                type: 'GOOGLE_CALENDAR_ERROR', 
+                error: errorMessage 
+              }, window.location.origin);
+              setTimeout(() => window.close(), 1000);
+            }
+            
             throw authError;
           }
 
           if (data?.error) {
             console.error('Erro retornado pela função:', data.error);
+            processingRef.current = false; // Resetar flag
             throw new Error(data.error);
           }
 
@@ -207,12 +243,8 @@ export default function GoogleCalendarCallback() {
           }
         } catch (error) {
           console.error('Erro ao conectar Google Calendar:', error);
-          toast({
-            variant: "destructive",
-            title: "Erro na conexão",
-            description: "Não foi possível conectar com o Google Calendar.",
-          });
-
+          processingRef.current = false; // Resetar flag em qualquer erro
+          
           // Notify parent window if opened in popup
           if (window.opener) {
             console.log('Enviando erro de conexão para janela principal');
@@ -241,7 +273,10 @@ export default function GoogleCalendarCallback() {
     };
 
     handleCallback();
-  }, [searchParams, navigate, toast, session]);
+    // Removemos 'session' das dependências para evitar execuções duplicadas
+    // O useEffect só deve executar uma vez quando o componente monta
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
