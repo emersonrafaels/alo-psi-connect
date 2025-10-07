@@ -3,24 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
+import { useEmotionConfig } from '@/hooks/useEmotionConfig';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Calendar, Plus, TrendingUp, Heart, BarChart3, Share2, Mail, Download, Settings } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { generateWhatsAppMessage, shareWhatsApp, shareTelegram, shareEmail, copyToClipboard } from '@/utils/shareHelpers';
+import { shareWhatsApp, shareTelegram, shareEmail, copyToClipboard } from '@/utils/shareHelpers';
 import { useShareConfig } from '@/hooks/useShareConfig';
 import { generateProfessionalPDF, downloadPDF } from '@/utils/pdfGenerator';
 import { useToast } from '@/hooks/use-toast';
 import { getTodayLocalDateString, parseISODateLocal } from '@/lib/utils';
-import { calculateAverage, formatAverage } from '@/utils/emotionFormatters';
+import { calculateAverage } from '@/utils/emotionFormatters';
 
 const MoodDiary = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { profile } = useUserProfile();
   const { entries, loading: entriesLoading } = useMoodEntries();
+  const { userConfigs } = useEmotionConfig();
   const { toast } = useToast();
   const { getShareConfig } = useShareConfig();
 
@@ -51,20 +53,21 @@ const MoodDiary = () => {
     };
 
     const shareConfig = getShareConfig();
+    const emotionConfigs = userConfigs.map(c => ({ emotion_type: c.emotion_type, display_name: c.display_name }));
 
     try {
       switch (platform) {
         case 'whatsapp':
-          shareWhatsApp(shareData, stats, shareConfig);
+          shareWhatsApp(shareData, stats, shareConfig, emotionConfigs);
           break;
         case 'telegram':
-          shareTelegram(shareData, stats, shareConfig);
+          shareTelegram(shareData, stats, shareConfig, emotionConfigs);
           break;
         case 'email':
-          shareEmail(shareData, stats, shareConfig);
+          shareEmail(shareData, stats, shareConfig, emotionConfigs);
           break;
         case 'copy':
-          const success = await copyToClipboard(shareData, stats, shareConfig);
+          const success = await copyToClipboard(shareData, stats, shareConfig, emotionConfigs);
           if (success) {
             toast({
               title: "Copiado!",
@@ -100,12 +103,14 @@ const MoodDiary = () => {
       avgAnxiety: calculateAverage(entries.map(e => e.anxiety_level)),
     };
 
+    const emotionConfigs = userConfigs.map(c => ({ emotion_type: c.emotion_type, display_name: c.display_name }));
+
     try {
       const pdf = generateProfessionalPDF(recentEntry as any, stats, {
         includeLogo: true, 
         includeStats: true, 
         includeGraphs: false 
-      });
+      }, emotionConfigs);
       downloadPDF(pdf, 'diario-emocional');
       
       toast({

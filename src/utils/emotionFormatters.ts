@@ -53,6 +53,27 @@ export const formatEmotionValue = (
 };
 
 /**
+ * Mapeamento padrão de nomes de emoções em português
+ */
+export const DEFAULT_EMOTION_NAMES: Record<string, string> = {
+  mood: 'Humor',
+  energy: 'Energia',
+  anxiety: 'Ansiedade',
+  stress: 'Estresse',
+  motivation: 'Motivação',
+  focus: 'Foco',
+  gratitude: 'Gratidão',
+  confidence: 'Confiança',
+  hope: 'Esperança',
+  creativity: 'Criatividade',
+  productivity: 'Produtividade',
+  satisfaction: 'Satisfação',
+  sleep_quality: 'Qualidade do Sono',
+  social_connection: 'Conexão Social',
+  physical_health: 'Saúde Física',
+};
+
+/**
  * Obtém emojis padrão para tipos de emoção conhecidos
  */
 export const getDefaultEmoji = (emotionType: string): string => {
@@ -67,9 +88,55 @@ export const getDefaultEmoji = (emotionType: string): string => {
     estresse: '😓',
     sleep_quality: '⭐',
     qualidade_sono: '⭐',
+    motivation: '🎯',
+    focus: '🎯',
+    foco: '🎯',
+    gratitude: '🙏',
+    gratidao: '🙏',
+    confidence: '💪',
+    confianca: '💪',
+    hope: '✨',
+    esperanca: '✨',
+    creativity: '🎨',
+    criatividade: '🎨',
+    productivity: '📈',
+    produtividade: '📈',
+    satisfaction: '😌',
+    satisfacao: '😌',
   };
 
   return emojiMap[emotionType.toLowerCase()] || '💭';
+};
+
+/**
+ * Obtém o nome de exibição de uma emoção
+ * Prioriza display_name das configurações do usuário, depois fallback para nomes padrão
+ */
+export const getEmotionDisplayName = (
+  emotionType: string,
+  userConfigs?: Array<{ emotion_type: string; display_name?: string }>
+): string => {
+  // Remove prefixo "custom_" se existir
+  const cleanType = emotionType.replace(/^custom_/, '');
+  
+  // Busca nas configurações do usuário
+  if (userConfigs) {
+    const config = userConfigs.find(c => c.emotion_type === emotionType);
+    if (config?.display_name) {
+      return config.display_name;
+    }
+  }
+  
+  // Fallback para nomes padrão
+  if (DEFAULT_EMOTION_NAMES[cleanType]) {
+    return DEFAULT_EMOTION_NAMES[cleanType];
+  }
+  
+  // Último fallback: capitaliza e remove underscores
+  return cleanType
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 };
 
 /**
@@ -92,7 +159,10 @@ export const formatAverage = (values: (number | null | undefined)[]): string => 
 /**
  * Obtém todas as emoções disponíveis em uma entrada
  */
-export const getAllEmotions = (entry: EmotionEntry): Array<{ key: string; value: number; emoji: string; name: string }> => {
+export const getAllEmotions = (
+  entry: EmotionEntry,
+  userConfigs?: Array<{ emotion_type: string; display_name?: string }>
+): Array<{ key: string; value: number; emoji: string; name: string }> => {
   const emotions: Array<{ key: string; value: number; emoji: string; name: string }> = [];
 
   // Busca em emotion_values (dinâmico)
@@ -104,7 +174,7 @@ export const getAllEmotions = (entry: EmotionEntry): Array<{ key: string; value:
           key,
           value: Number(value),
           emoji: getDefaultEmoji(key),
-          name: key.charAt(0).toUpperCase() + key.slice(1)
+          name: getEmotionDisplayName(key, userConfigs)
         });
       }
     });

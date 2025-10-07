@@ -1,6 +1,11 @@
 import { DemoMoodEntry } from '@/hooks/useMoodExperience';
 import { getAllEmotions, formatValue } from './emotionFormatters';
 
+export interface UserEmotionConfig {
+  emotion_type: string;
+  display_name?: string;
+}
+
 interface ShareConfig {
   shareTitle: string;
   shareFooter: string;
@@ -17,7 +22,7 @@ const replaceVariables = (template: string, variables: Record<string, string>): 
   return template.replace(/\{(\w+)\}/g, (match, key) => variables[key] || match);
 };
 
-export const generateWhatsAppMessage = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig) => {
+export const generateWhatsAppMessage = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig, userConfigs?: UserEmotionConfig[]) => {
   const date = new Date(entry.date).toLocaleDateString('pt-BR');
   
   // Usar configurações padrão se não fornecidas
@@ -44,7 +49,7 @@ export const generateWhatsAppMessage = (entry: DemoMoodEntry, stats?: any, confi
   let message = replaceVariables(shareConfig.shareTitle, variables) + '\n\n';
   
   // Métricas principais - busca emoções dinâmicas
-  const emotions = getAllEmotions(entry);
+  const emotions = getAllEmotions(entry, userConfigs);
   if (emotions.length > 0) {
     message += `${shareConfig.metricsTitle}\n`;
     emotions.forEach(emotion => {
@@ -99,7 +104,7 @@ export const generateWhatsAppMessage = (entry: DemoMoodEntry, stats?: any, confi
   return message;
 };
 
-export const generateEmailMessage = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig) => {
+export const generateEmailMessage = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig, userConfigs?: UserEmotionConfig[]) => {
   const date = new Date(entry.date).toLocaleDateString('pt-BR');
   
   // Configurações padrão para email (sem asteriscos)
@@ -126,7 +131,7 @@ export const generateEmailMessage = (entry: DemoMoodEntry, stats?: any, config?:
   let message = replaceVariables(shareConfig.shareTitle, variables) + '\n\n';
   
   // Métricas principais - busca emoções dinâmicas
-  const emotions = getAllEmotions(entry);
+  const emotions = getAllEmotions(entry, userConfigs);
   if (emotions.length > 0) {
     message += `${shareConfig.metricsTitle}\n`;
     emotions.forEach(emotion => {
@@ -178,7 +183,7 @@ export const generateEmailMessage = (entry: DemoMoodEntry, stats?: any, config?:
   return message;
 };
 
-export const generateTelegramMessage = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig) => {
+export const generateTelegramMessage = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig, userConfigs?: UserEmotionConfig[]) => {
   const date = new Date(entry.date).toLocaleDateString('pt-BR');
   
   // Configurações padrão para Telegram (com markdown)
@@ -205,7 +210,7 @@ export const generateTelegramMessage = (entry: DemoMoodEntry, stats?: any, confi
   let message = replaceVariables(shareConfig.shareTitle, variables) + '\n\n';
   
   // Métricas principais - busca emoções dinâmicas
-  const emotions = getAllEmotions(entry);
+  const emotions = getAllEmotions(entry, userConfigs);
   if (emotions.length > 0) {
     message += `${shareConfig.metricsTitle}\n`;
     emotions.forEach(emotion => {
@@ -260,22 +265,22 @@ export const generateTelegramMessage = (entry: DemoMoodEntry, stats?: any, confi
   return message;
 };
 
-export const shareWhatsApp = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig) => {
-  const message = generateWhatsAppMessage(entry, stats, config);
+export const shareWhatsApp = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig, userConfigs?: UserEmotionConfig[]) => {
+  const message = generateWhatsAppMessage(entry, stats, config, userConfigs);
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
   window.open(whatsappUrl, '_blank');
 };
 
-export const shareTelegram = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig) => {
-  const message = generateTelegramMessage(entry, stats, config);
+export const shareTelegram = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig, userConfigs?: UserEmotionConfig[]) => {
+  const message = generateTelegramMessage(entry, stats, config, userConfigs);
   const encodedMessage = encodeURIComponent(message);
   const telegramUrl = `https://t.me/share/url?text=${encodedMessage}`;
   window.open(telegramUrl, '_blank');
 };
 
-export const shareEmail = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig) => {
-  const message = generateEmailMessage(entry, stats, config);
+export const shareEmail = (entry: DemoMoodEntry, stats?: any, config?: ShareConfig, userConfigs?: UserEmotionConfig[]) => {
+  const message = generateEmailMessage(entry, stats, config, userConfigs);
   const subject = `Meu Diário Emocional - ${new Date(entry.date).toLocaleDateString('pt-BR')}`;
   const encodedSubject = encodeURIComponent(subject);
   const encodedBody = encodeURIComponent(message);
@@ -283,8 +288,8 @@ export const shareEmail = (entry: DemoMoodEntry, stats?: any, config?: ShareConf
   window.open(emailUrl);
 };
 
-export const copyToClipboard = async (entry: DemoMoodEntry, stats?: any, config?: ShareConfig): Promise<boolean> => {
-  const text = generateEmailMessage(entry, stats, config);
+export const copyToClipboard = async (entry: DemoMoodEntry, stats?: any, config?: ShareConfig, userConfigs?: UserEmotionConfig[]): Promise<boolean> => {
+  const text = generateEmailMessage(entry, stats, config, userConfigs);
   return copyTextToClipboard(text);
 };
 

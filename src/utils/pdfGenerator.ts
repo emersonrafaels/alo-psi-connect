@@ -3,6 +3,11 @@ import { DemoMoodEntry } from '@/hooks/useMoodExperience';
 import { getTodayLocalDateString, parseISODateLocal } from '@/lib/utils';
 import { getAllEmotions, formatValue } from './emotionFormatters';
 
+export interface UserEmotionConfig {
+  emotion_type: string;
+  display_name?: string;
+}
+
 interface PDFConfig {
   includeLogo?: boolean;
   includeStats?: boolean;
@@ -12,7 +17,8 @@ interface PDFConfig {
 export const generateProfessionalPDF = (
   entry: DemoMoodEntry | null,
   stats?: any,
-  config: PDFConfig = {}
+  config: PDFConfig = {},
+  userConfigs?: UserEmotionConfig[]
 ) => {
   const pdf = new jsPDF();
   const { includeLogo = true, includeStats = true, includeGraphs = false } = config;
@@ -72,7 +78,7 @@ export const generateProfessionalPDF = (
     pdf.text('Métricas Emocionais', 20, yPosition);
     yPosition += 10;
 
-    const emotions = getAllEmotions(entry);
+    const emotions = getAllEmotions(entry, userConfigs);
     const emotionColors: Record<string, [number, number, number]> = {
       mood: [34, 197, 94],
       humor: [34, 197, 94],
