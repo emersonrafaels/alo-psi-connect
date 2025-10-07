@@ -86,7 +86,7 @@ const TermsOfService = () => {
                   <div>
                     <h3 className="font-medium mb-2">Cancelamentos</h3>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-4">
-                      <li>Cancelamento gratuito até 24h antes da consulta</li>
+                      <li>Cancelamento gratuito com até 24h de antecedência</li>
                       <li>Cancelamentos tardios podem incorrer em taxas</li>
                       <li>Faltas não justificadas podem resultar em cobrança integral</li>
                     </ul>
