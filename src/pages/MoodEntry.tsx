@@ -80,16 +80,16 @@ const MoodEntry = () => {
     try {
       const entryData = {
         date: normalizeDateForStorage(data.date),
-        // Manter compatibilidade retroativa com campos antigos
-        mood_score: data.emotion_values['mood'] || undefined,
-        energy_level: data.emotion_values['energy'] || undefined,
-        anxiety_level: data.emotion_values['anxiety'] || undefined,
-        // Dados principais
-        sleep_hours: data.sleep_hours ? parseFloat(data.sleep_hours) : undefined,
-        sleep_quality: data.sleep_quality[0],
-        journal_text: data.journal_text || undefined,
-        audio_url: data.audio_url || undefined,
-        tags: data.tags.length > 0 ? data.tags : undefined,
+        // Manter compatibilidade retroativa com campos antigos - usar null em vez de undefined
+        mood_score: data.emotion_values['mood'] ?? null,
+        energy_level: data.emotion_values['energy'] ?? null,
+        anxiety_level: data.emotion_values['anxiety'] ?? null,
+        // Dados principais - usar null em vez de undefined
+        sleep_hours: data.sleep_hours ? parseFloat(data.sleep_hours) : null,
+        sleep_quality: data.sleep_quality[0] ?? null,
+        journal_text: data.journal_text || null,
+        audio_url: data.audio_url || null,
+        tags: data.tags && data.tags.length > 0 ? data.tags : null,
         // Salvar todas as emoções dinâmicas
         emotion_values: data.emotion_values,
       };

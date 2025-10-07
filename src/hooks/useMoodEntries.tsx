@@ -10,14 +10,14 @@ export interface MoodEntry {
   user_id: string;
   profile_id: string;
   date: string;
-  mood_score: number;
-  energy_level: number;
-  anxiety_level: number;
-  sleep_hours?: number;
-  sleep_quality?: number;
-  journal_text?: string;
-  audio_url?: string;
-  tags?: string[];
+  mood_score?: number | null;
+  energy_level?: number | null;
+  anxiety_level?: number | null;
+  sleep_hours?: number | null;
+  sleep_quality?: number | null;
+  journal_text?: string | null;
+  audio_url?: string | null;
+  tags?: string[] | null;
   emotion_values?: Record<string, number>; // Dynamic emotion values
   created_at: string;
   updated_at: string;
@@ -219,7 +219,27 @@ export const useMoodEntries = () => {
     try {
       // Normalize the date to prevent timezone issues
       const normalizedDate = normalizeDateForStorage(entryData.date);
-      const normalizedEntryData = { ...entryData, date: normalizedDate };
+      
+      // Clean undefined values - convert to null or remove them
+      const cleanData = Object.entries(entryData).reduce((acc, [key, value]) => {
+        if (value === undefined) {
+          // For nullable fields, use null instead of undefined
+          if (['mood_score', 'energy_level', 'anxiety_level', 'sleep_hours', 'sleep_quality', 'journal_text', 'audio_url', 'tags'].includes(key)) {
+            acc[key] = null;
+          }
+          // Skip undefined values for other fields
+        } else if (value === '' && ['journal_text', 'audio_url'].includes(key)) {
+          // Convert empty strings to null for text fields
+          acc[key] = null;
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as any);
+
+      const normalizedEntryData = { ...cleanData, date: normalizedDate };
+      
+      console.log('🧹 Cleaned entry data:', normalizedEntryData);
       
       // Check if entry already exists for this date
       const existingEntry = await getEntryByDate(normalizedDate);
@@ -233,9 +253,17 @@ export const useMoodEntries = () => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Supabase update error:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+          throw new Error(`Erro ao atualizar entrada: ${error.message}`);
+        }
 
-        console.log('Entry updated successfully');
+        console.log('✅ Entry updated successfully:', existingEntry.id);
 
         fetchEntries();
         return data;
@@ -251,7 +279,17 @@ export const useMoodEntries = () => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Supabase insert error:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+          throw new Error(`Erro ao criar entrada: ${error.message}`);
+        }
+
+        console.log('✅ Entry created successfully:', data.id);
 
         toast({
           title: "Sucesso",
@@ -262,10 +300,10 @@ export const useMoodEntries = () => {
         return data;
       }
     } catch (error) {
-      console.error('Error saving mood entry:', error);
+      console.error('💥 Error in createOrUpdateEntry:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar a entrada do diário.",
+        description: error instanceof Error ? error.message : "Não foi possível salvar a entrada do diário.",
         variant: "destructive",
       });
       return null;

@@ -44,9 +44,9 @@ const MoodDiary = () => {
 
     const stats = {
       totalEntries: entries.length,
-      avgMood: entries.length > 0 ? entries.reduce((sum, e) => sum + e.mood_score, 0) / entries.length : 0,
-      avgEnergy: entries.length > 0 ? entries.reduce((sum, e) => sum + e.energy_level, 0) / entries.length : 0,
-      avgAnxiety: entries.length > 0 ? entries.reduce((sum, e) => sum + e.anxiety_level, 0) / entries.length : 0,
+      avgMood: entries.length > 0 ? entries.reduce((sum, e) => sum + (e.mood_score ?? 0), 0) / entries.length : 0,
+      avgEnergy: entries.length > 0 ? entries.reduce((sum, e) => sum + (e.energy_level ?? 0), 0) / entries.length : 0,
+      avgAnxiety: entries.length > 0 ? entries.reduce((sum, e) => sum + (e.anxiety_level ?? 0), 0) / entries.length : 0,
     };
 
     const shareConfig = getShareConfig();
@@ -94,13 +94,13 @@ const MoodDiary = () => {
     const recentEntry = entries[0];
     const stats = {
       totalEntries: entries.length,
-      avgMood: entries.reduce((sum, e) => sum + e.mood_score, 0) / entries.length,
-      avgEnergy: entries.reduce((sum, e) => sum + e.energy_level, 0) / entries.length,
-      avgAnxiety: entries.reduce((sum, e) => sum + e.anxiety_level, 0) / entries.length,
+      avgMood: entries.reduce((sum, e) => sum + (e.mood_score ?? 0), 0) / entries.length,
+      avgEnergy: entries.reduce((sum, e) => sum + (e.energy_level ?? 0), 0) / entries.length,
+      avgAnxiety: entries.reduce((sum, e) => sum + (e.anxiety_level ?? 0), 0) / entries.length,
     };
 
     try {
-      const pdf = generateProfessionalPDF(recentEntry, stats, { 
+      const pdf = generateProfessionalPDF(recentEntry as any, stats, {
         includeLogo: true, 
         includeStats: true, 
         includeGraphs: false 
