@@ -138,6 +138,32 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
       .eq('professional_id', professionalIdNumber)
       .eq('date', dateString)
     
+    // Get professional's user_id to fetch Google Calendar events
+    const { data: professionalData } = await supabase
+      .from('profissionais')
+      .select('profile_id, profiles!inner(user_id)')
+      .eq('id', professionalIdNumber)
+      .single()
+    
+    // Fetch Google Calendar busy events for this date
+    let googleCalendarEvents: any[] = []
+    if (professionalData?.profiles?.user_id) {
+      const startOfDayUTC = new Date(date)
+      startOfDayUTC.setHours(0, 0, 0, 0)
+      const endOfDayUTC = new Date(date)
+      endOfDayUTC.setHours(23, 59, 59, 999)
+      
+      const { data: calendarData } = await supabase
+        .from('google_calendar_events')
+        .select('*')
+        .eq('user_id', professionalData.profiles.user_id)
+        .gte('start_time', startOfDayUTC.toISOString())
+        .lte('start_time', endOfDayUTC.toISOString())
+        .eq('is_busy', true)
+      
+      googleCalendarEvents = calendarData || []
+    }
+    
     // Check if the entire day is blocked
     const isDayBlocked = unavailabilityRecords?.some(record => record.all_day)
     if (isDayBlocked) {
@@ -156,7 +182,7 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
         end: record.end_time
       }))
     
-    // Helper function to check if a time slot is blocked
+    // Helper function to check if a time slot is blocked by manual unavailability
     const isTimeBlocked = (timeSlot: string) => {
       return blockedTimeRanges.some(range => {
         const slotTime = new Date(`2000-01-01T${timeSlot}:00`)
@@ -172,14 +198,34 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
                (slotTime < startTime && slotEndTime > endTime)
       })
     }
+    
+    // Helper function to check if a time slot is blocked by Google Calendar
+    const isTimeBlockedByGoogleCalendar = (timeSlot: string) => {
+      return googleCalendarEvents.some(event => {
+        // Create slot time in local timezone
+        const [hours, minutes] = timeSlot.split(':').map(Number)
+        const slotTime = new Date(date)
+        slotTime.setHours(hours, minutes, 0, 0)
+        const slotEndTime = new Date(slotTime.getTime() + 50 * 60 * 1000) // 50 min consultation
+        
+        // Parse Google Calendar event times (they are in UTC)
+        const eventStart = new Date(event.start_time)
+        const eventEnd = new Date(event.end_time)
+        
+        // Check if there's any overlap between the consultation slot and the calendar event
+        return (slotTime >= eventStart && slotTime < eventEnd) || 
+               (slotEndTime > eventStart && slotEndTime <= eventEnd) ||
+               (slotTime < eventStart && slotEndTime > eventEnd)
+      })
+    }
 
     // Generate time slots for each session range
     const allTimeSlots = []
     daysSessions.forEach(session => {
       const slots = generateTimeSlots(session.start_time, session.end_time, 50)
       slots.forEach(slot => {
-        // Only add if not occupied and not blocked
-        if (!occupiedTimes.has(slot) && !isTimeBlocked(slot)) {
+        // Only add if not occupied, not blocked manually, and not blocked by Google Calendar
+        if (!occupiedTimes.has(slot) && !isTimeBlocked(slot) && !isTimeBlockedByGoogleCalendar(slot)) {
           allTimeSlots.push({
             id: `${session.id}-${slot}`,
             day: session.day,
