@@ -11,6 +11,11 @@ import { TagSelector } from './TagSelector';
 import { useBlogPostManager } from '@/hooks/useBlogPostManager';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
+import { AutoSaveIndicator } from './AutoSaveIndicator';
+import { RecoverDraftModal } from './RecoverDraftModal';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import { useLocalDraft } from '@/hooks/useLocalDraft';
+import { useToast } from '@/hooks/use-toast';
 
 const postSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -39,17 +44,32 @@ interface BlogPostEditorProps {
 
 export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { createPost, updatePost } = useBlogPostManager();
   const [featuredImage, setFeaturedImage] = useState(post?.featured_image_url || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(
     post?.tags?.map(t => t.id) || []
   );
 
+  // Local draft management
+  const {
+    draft,
+    saveDraft,
+    clearDraft,
+    showRecoveryModal,
+    acceptRecovery,
+    rejectRecovery
+  } = useLocalDraft({
+    postId: post?.id,
+    enabled: true
+  });
+
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<PostFormData>({
     resolver: zodResolver(postSchema),
@@ -63,7 +83,85 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
     },
   });
 
+  // Recuperar rascunho se aceito
+  useEffect(() => {
+    if (draft && !showRecoveryModal && !post) {
+      reset({
+        title: draft.title,
+        slug: draft.slug,
+        excerpt: draft.excerpt,
+        content: draft.content,
+        status: draft.status,
+        read_time_minutes: draft.read_time_minutes
+      });
+      if (draft.featured_image_url) {
+        setFeaturedImage(draft.featured_image_url);
+      }
+      if (draft.tags) {
+        setSelectedTags(draft.tags);
+      }
+    }
+  }, [draft, showRecoveryModal, post, reset]);
+
   const title = watch('title');
+  const allFormData = watch();
+
+  // Auto-save to database (debounced)
+  const autoSaveHandler = async (data: typeof allFormData) => {
+    if (!data.title || !data.content) return; // Não salvar se vazio
+    
+    const postData = {
+      title: data.title,
+      slug: data.slug,
+      excerpt: data.excerpt,
+      content: data.content,
+      status: 'draft' as const, // Sempre salvar como draft no auto-save
+      read_time_minutes: data.read_time_minutes,
+      featured_image_url: featuredImage || undefined,
+      tags: selectedTags,
+    };
+
+    if (post) {
+      await updatePost.mutateAsync({ ...postData, id: post.id });
+    } else {
+      // Para posts novos, só cria no banco quando o usuário clicar em salvar
+      // Auto-save vai apenas para localStorage
+      return;
+    }
+  };
+
+  const { saveStatus, lastSaved } = useAutoSave(allFormData, {
+    delay: 3000,
+    enabled: !!post, // Só auto-save no banco para posts existentes
+    onSave: autoSaveHandler,
+    onSuccess: () => {
+      console.log('Auto-save successful');
+    },
+    onError: (error) => {
+      console.error('Auto-save error:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar automaticamente. Seus dados estão seguros no navegador.',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  // Auto-save to localStorage (immediate, sem debounce)
+  useEffect(() => {
+    if (allFormData.title || allFormData.content) {
+      saveDraft({
+        title: allFormData.title,
+        slug: allFormData.slug,
+        excerpt: allFormData.excerpt,
+        content: allFormData.content,
+        status: allFormData.status,
+        read_time_minutes: allFormData.read_time_minutes,
+        featured_image_url: featuredImage,
+        tags: selectedTags
+      });
+    }
+  }, [allFormData, featuredImage, selectedTags, saveDraft]);
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -91,16 +189,42 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
     };
 
     if (post) {
-      updatePost.mutate({ ...postData, id: post.id });
+      updatePost.mutate(
+        { ...postData, id: post.id },
+        {
+          onSuccess: () => {
+            clearDraft(); // Limpar rascunho após salvar com sucesso
+          }
+        }
+      );
     } else {
-      createPost.mutate(postData);
+      createPost.mutate(postData, {
+        onSuccess: () => {
+          clearDraft(); // Limpar rascunho após criar com sucesso
+        }
+      });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div>
-        <Label htmlFor="title">Título</Label>
+    <>
+      <RecoverDraftModal
+        open={showRecoveryModal}
+        draftTimestamp={draft?.timestamp}
+        onRecover={acceptRecovery}
+        onDiscard={rejectRecovery}
+      />
+      
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">
+            {post ? 'Editando Post' : 'Novo Post'}
+          </h2>
+          <AutoSaveIndicator status={saveStatus} lastSaved={lastSaved} />
+        </div>
+
+        <div>
+          <Label htmlFor="title">Título</Label>
         <Input
           id="title"
           {...register('title')}
@@ -203,6 +327,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
           Cancelar
         </Button>
       </div>
-    </form>
+      </form>
+    </>
   );
 };
