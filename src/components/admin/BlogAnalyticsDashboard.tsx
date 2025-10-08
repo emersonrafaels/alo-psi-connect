@@ -73,24 +73,28 @@ export const BlogAnalyticsDashboard = ({ dateRange = 30, authorId }: BlogAnalyti
           value={summary?.totalPosts || 0}
           description="Posts publicados"
           icon={BarChart3}
+          trend={summary?.trends?.totalPosts}
         />
         <MetricsCard
           title="Visualizações"
           value={summary?.totalViews.toLocaleString() || 0}
           description={`Últimos ${dateRange} dias`}
           icon={Eye}
+          trend={summary?.trends?.totalViews}
         />
         <MetricsCard
           title="Visitantes Únicos"
           value={summary?.totalUniqueVisitors.toLocaleString() || 0}
           description={`Últimos ${dateRange} dias`}
           icon={Users}
+          trend={summary?.trends?.totalUniqueVisitors}
         />
         <MetricsCard
           title="Tempo Médio"
           value={`${Math.floor((summary?.avgTimeSpent || 0) / 60)}min`}
           description="Tempo de leitura"
           icon={Clock}
+          trend={summary?.trends?.avgTimeSpent}
         />
       </div>
 
@@ -100,24 +104,28 @@ export const BlogAnalyticsDashboard = ({ dateRange = 30, authorId }: BlogAnalyti
           value={`${summary?.avgCompletionRate || 0}%`}
           description="Leitura completa"
           icon={CheckCircle2}
+          trend={summary?.trends?.avgCompletionRate}
         />
         <MetricsCard
           title="Comentários"
           value={summary?.totalComments || 0}
           description="Total de comentários"
           icon={MessageCircle}
+          trend={summary?.trends?.totalComments}
         />
         <MetricsCard
           title="Avaliações"
           value={summary?.totalRatings || 0}
           description="Total de ratings"
           icon={Star}
+          trend={summary?.trends?.totalRatings}
         />
         <MetricsCard
           title="Rating Médio"
           value={summary?.avgRating.toFixed(1) || '0.0'}
           description="De 5 estrelas"
           icon={Star}
+          trend={summary?.trends?.avgRating}
         />
       </div>
 

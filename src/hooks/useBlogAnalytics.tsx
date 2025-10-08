@@ -12,6 +12,16 @@ export interface BlogAnalyticsSummary {
   totalRatings: number;
   avgRating: number;
   isRealTime?: boolean;
+  trends?: {
+    totalPosts?: number;
+    totalViews?: number;
+    totalUniqueVisitors?: number;
+    avgTimeSpent?: number;
+    avgCompletionRate?: number;
+    totalComments?: number;
+    totalRatings?: number;
+    avgRating?: number;
+  };
 }
 
 export interface PostAnalytics {
@@ -36,11 +46,21 @@ export interface DailyAnalytics {
   completionRate: number;
 }
 
+// Helper function to calculate trend percentage
+const calculateTrend = (current: number, previous: number): number => {
+  if (previous === 0) return current > 0 ? 100 : 0;
+  return Math.round(((current - previous) / previous) * 100);
+};
+
 export const useBlogAnalyticsSummary = (dateRange: number = 30, authorId?: string) => {
   return useQuery({
     queryKey: ['blog-analytics-summary', dateRange, authorId],
     queryFn: async () => {
       const startDate = format(subDays(startOfDay(new Date()), dateRange), 'yyyy-MM-dd');
+      
+      // Calculate previous period dates
+      const prevEndDate = format(subDays(startOfDay(new Date()), dateRange + 1), 'yyyy-MM-dd');
+      const prevStartDate = format(subDays(startOfDay(new Date()), dateRange * 2), 'yyyy-MM-dd');
 
       // Se authorId fornecido, buscar apenas posts deste autor
       let postsQuery = supabase
@@ -82,6 +102,19 @@ export const useBlogAnalyticsSummary = (dateRange: number = 30, authorId?: strin
       const { data: dailyData, error: dailyError } = await dailyQuery;
 
       if (dailyError) throw dailyError;
+
+      // Fetch previous period data for trend calculation
+      let prevDailyQuery = supabase
+        .from('blog_analytics_daily')
+        .select('*')
+        .gte('date', prevStartDate)
+        .lte('date', prevEndDate);
+
+      if (postIds.length > 0) {
+        prevDailyQuery = prevDailyQuery.in('post_id', postIds);
+      }
+
+      const { data: prevDailyData } = await prevDailyQuery;
 
       // FALLBACK: Se blog_analytics_daily estiver vazio, calcular em tempo real
       if (!dailyData || dailyData.length === 0) {
@@ -220,6 +253,69 @@ export const useBlogAnalyticsSummary = (dateRange: number = 30, authorId?: strin
         ? ratingsData.reduce((sum, r) => sum + r.rating, 0) / ratingsData.length
         : 0;
 
+      // Calculate previous period metrics
+      let prevTrends: BlogAnalyticsSummary['trends'] | undefined;
+      
+      if (prevDailyData && prevDailyData.length > 0) {
+        const prevTotalViews = prevDailyData.reduce((sum, day) => sum + day.views_count, 0);
+        const prevTotalUniqueVisitors = prevDailyData.reduce((sum, day) => sum + day.unique_visitors, 0);
+        const prevAvgTimeSpent = prevDailyData.length
+          ? prevDailyData.reduce((sum, day) => sum + parseFloat(String(day.avg_time_spent || 0)), 0) / prevDailyData.length
+          : 0;
+        const prevAvgCompletionRate = prevDailyData.length
+          ? prevDailyData.reduce((sum, day) => sum + parseFloat(String(day.completion_rate || 0)), 0) / prevDailyData.length
+          : 0;
+
+        // For comments/ratings, we need to query the previous period
+        let prevCommentsQuery = supabase
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', prevStartDate)
+          .lte('created_at', prevEndDate);
+
+        let prevRatingsQuery = supabase
+          .from('blog_post_ratings')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', prevStartDate)
+          .lte('created_at', prevEndDate);
+
+        let prevRatingsDataQuery = supabase
+          .from('blog_post_ratings')
+          .select('rating')
+          .gte('created_at', prevStartDate)
+          .lte('created_at', prevEndDate);
+
+        if (postIds.length > 0) {
+          prevCommentsQuery = prevCommentsQuery.in('post_id', postIds);
+          prevRatingsQuery = prevRatingsQuery.in('post_id', postIds);
+          prevRatingsDataQuery = prevRatingsDataQuery.in('post_id', postIds);
+        }
+
+        const { count: prevTotalComments } = await prevCommentsQuery;
+        const { count: prevTotalRatings } = await prevRatingsQuery;
+        const { data: prevRatingsData } = await prevRatingsDataQuery;
+
+        const prevAvgRating = prevRatingsData?.length
+          ? prevRatingsData.reduce((sum, r) => sum + r.rating, 0) / prevRatingsData.length
+          : 0;
+
+        prevTrends = {
+          totalViews: calculateTrend(totalViews, prevTotalViews),
+          totalUniqueVisitors: calculateTrend(totalUniqueVisitors, prevTotalUniqueVisitors),
+          avgTimeSpent: calculateTrend(Math.round(avgTimeSpent), Math.round(prevAvgTimeSpent)),
+          avgCompletionRate: calculateTrend(
+            Math.round(avgCompletionRate * 100) / 100,
+            Math.round(prevAvgCompletionRate * 100) / 100
+          ),
+          totalComments: calculateTrend(totalComments || 0, prevTotalComments || 0),
+          totalRatings: calculateTrend(totalRatings || 0, prevTotalRatings || 0),
+          avgRating: calculateTrend(
+            Math.round(avgRating * 100) / 100,
+            Math.round(prevAvgRating * 100) / 100
+          ),
+        };
+      }
+
       return {
         totalPosts: totalPosts || 0,
         totalViews,
@@ -229,6 +325,7 @@ export const useBlogAnalyticsSummary = (dateRange: number = 30, authorId?: strin
         totalComments: totalComments || 0,
         totalRatings: totalRatings || 0,
         avgRating: Math.round(avgRating * 100) / 100,
+        trends: prevTrends,
       } as BlogAnalyticsSummary;
     },
   });
