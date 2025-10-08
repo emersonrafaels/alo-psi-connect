@@ -169,7 +169,7 @@ const MoodAnalytics = () => {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Humor Médio</CardTitle>
-                    <Heart className="h-4 w-4 text-primary" />
+                    <Heart className="h-4 w-4 text-primary dark:text-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{averages.mood}/10</div>
@@ -182,7 +182,7 @@ const MoodAnalytics = () => {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Energia Média</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-secondary" />
+                    <TrendingUp className="h-4 w-4 text-secondary dark:text-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{averages.energy}/5</div>
@@ -195,7 +195,7 @@ const MoodAnalytics = () => {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Ansiedade Média</CardTitle>
-                    <BarChart3 className="h-4 w-4 text-orange-500" />
+                    <BarChart3 className="h-4 w-4 text-orange-500 dark:text-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{averages.anxiety}/5</div>
@@ -208,7 +208,7 @@ const MoodAnalytics = () => {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total de Entradas</CardTitle>
-                    <Calendar className="h-4 w-4 text-accent" />
+                    <Calendar className="h-4 w-4 text-accent dark:text-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{entries.length}</div>
