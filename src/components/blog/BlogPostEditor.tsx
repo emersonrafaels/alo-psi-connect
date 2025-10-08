@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MarkdownPreview } from './MarkdownPreview';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { FileEdit, Eye, Columns } from 'lucide-react';
+import { FileEdit, Eye, Columns, ExternalLink } from 'lucide-react';
 import { MarkdownToolbar } from './MarkdownToolbar';
 import { EditorMetrics } from './EditorMetrics';
 import { MarkdownCheatSheet } from './MarkdownCheatSheet';
@@ -257,6 +257,18 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
             <h2 className="text-lg font-semibold">
               {post ? 'Editando Post' : 'Novo Post'}
             </h2>
+            {post && post.status === 'published' && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(`/blog/${post.slug}`, '_blank')}
+                title="Ver post no blog"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Ver no Blog
+              </Button>
+            )}
             <MarkdownCheatSheet />
             <PostTemplates onSelectTemplate={handleTemplateSelect} />
           </div>
