@@ -52,9 +52,14 @@ const calculateTrend = (current: number, previous: number): number => {
   return Math.round(((current - previous) / previous) * 100);
 };
 
-export const useBlogAnalyticsSummary = (dateRange: number = 30, authorId?: string) => {
+export const useBlogAnalyticsSummary = (
+  dateRange: number = 30, 
+  authorId?: string,
+  tagSlug?: string,
+  featuredStatus: 'all' | 'featured' | 'normal' = 'all'
+) => {
   return useQuery({
-    queryKey: ['blog-analytics-summary', dateRange, authorId],
+    queryKey: ['blog-analytics-summary', dateRange, authorId, tagSlug, featuredStatus],
     queryFn: async () => {
       const startDate = format(subDays(startOfDay(new Date()), dateRange), 'yyyy-MM-dd');
       
@@ -62,20 +67,41 @@ export const useBlogAnalyticsSummary = (dateRange: number = 30, authorId?: strin
       const prevEndDate = format(subDays(startOfDay(new Date()), dateRange + 1), 'yyyy-MM-dd');
       const prevStartDate = format(subDays(startOfDay(new Date()), dateRange * 2), 'yyyy-MM-dd');
 
-      // Se authorId fornecido, buscar apenas posts deste autor
+      // Build post query with filters
       let postsQuery = supabase
         .from('blog_posts')
-        .select('id')
+        .select('id, blog_post_tags(tag_id)')
         .eq('status', 'published');
 
       if (authorId) {
         postsQuery = postsQuery.eq('author_id', authorId);
       }
 
+      if (featuredStatus === 'featured') {
+        postsQuery = postsQuery.eq('is_featured', true);
+      } else if (featuredStatus === 'normal') {
+        postsQuery = postsQuery.eq('is_featured', false);
+      }
+
       const { data: authorPosts, error: authorPostsError } = await postsQuery;
       if (authorPostsError) throw authorPostsError;
 
-      const postIds = authorPosts?.map(p => p.id) || [];
+      // Filter by tag if provided
+      let postIds = authorPosts?.map(p => p.id) || [];
+      
+      if (tagSlug && authorPosts) {
+        const { data: tag } = await supabase
+          .from('blog_tags')
+          .select('id')
+          .eq('slug', tagSlug)
+          .single();
+        
+        if (tag) {
+          postIds = authorPosts
+            .filter((p: any) => p.blog_post_tags?.some((t: any) => t.tag_id === tag.id))
+            .map(p => p.id);
+        }
+      }
 
       // Buscar analytics apenas dos posts filtrados
       let dailyQuery = supabase
@@ -331,22 +357,54 @@ export const useBlogAnalyticsSummary = (dateRange: number = 30, authorId?: strin
   });
 };
 
-export const usePostAnalytics = (dateRange: number = 30, limit: number = 10, authorId?: string) => {
+export const usePostAnalytics = (
+  dateRange: number = 30, 
+  limit: number = 10, 
+  authorId?: string,
+  tagSlug?: string,
+  featuredStatus: 'all' | 'featured' | 'normal' = 'all'
+) => {
   return useQuery({
-    queryKey: ['post-analytics', dateRange, limit, authorId],
+    queryKey: ['post-analytics', dateRange, limit, authorId, tagSlug, featuredStatus],
     queryFn: async () => {
       const startDate = format(subDays(startOfDay(new Date()), dateRange), 'yyyy-MM-dd');
 
-      // Buscar posts do autor se filtrado
-      let postsFilter: string[] | undefined;
+      // Build post query with filters
+      let postsFilterQuery = supabase
+        .from('blog_posts')
+        .select('id, blog_post_tags(tag_id)')
+        .eq('status', 'published');
+        
       if (authorId) {
-        const { data: authorPosts } = await supabase
-          .from('blog_posts')
-          .select('id')
-          .eq('author_id', authorId);
-        postsFilter = authorPosts?.map(p => p.id) || [];
-        if (postsFilter.length === 0) return [];
+        postsFilterQuery = postsFilterQuery.eq('author_id', authorId);
       }
+
+      if (featuredStatus === 'featured') {
+        postsFilterQuery = postsFilterQuery.eq('is_featured', true);
+      } else if (featuredStatus === 'normal') {
+        postsFilterQuery = postsFilterQuery.eq('is_featured', false);
+      }
+
+      const { data: authorPosts } = await postsFilterQuery;
+      
+      let postsFilter = authorPosts?.map(p => p.id) || [];
+      
+      // Filter by tag if provided
+      if (tagSlug && authorPosts) {
+        const { data: tag } = await supabase
+          .from('blog_tags')
+          .select('id')
+          .eq('slug', tagSlug)
+          .single();
+        
+        if (tag) {
+          postsFilter = authorPosts
+            .filter((p: any) => p.blog_post_tags?.some((t: any) => t.tag_id === tag.id))
+            .map(p => p.id);
+        }
+      }
+      
+      if (postsFilter.length === 0) return [];
 
       let dailyQuery = supabase
         .from('blog_analytics_daily')
@@ -418,22 +476,53 @@ export const usePostAnalytics = (dateRange: number = 30, limit: number = 10, aut
   });
 };
 
-export const useDailyAnalytics = (dateRange: number = 30, authorId?: string) => {
+export const useDailyAnalytics = (
+  dateRange: number = 30, 
+  authorId?: string,
+  tagSlug?: string,
+  featuredStatus: 'all' | 'featured' | 'normal' = 'all'
+) => {
   return useQuery({
-    queryKey: ['daily-analytics', dateRange, authorId],
+    queryKey: ['daily-analytics', dateRange, authorId, tagSlug, featuredStatus],
     queryFn: async () => {
       const startDate = format(subDays(startOfDay(new Date()), dateRange), 'yyyy-MM-dd');
 
-      // Buscar posts do autor se filtrado
-      let postsFilter: string[] | undefined;
+      // Build post query with filters
+      let postsFilterQuery = supabase
+        .from('blog_posts')
+        .select('id, blog_post_tags(tag_id)')
+        .eq('status', 'published');
+        
       if (authorId) {
-        const { data: authorPosts } = await supabase
-          .from('blog_posts')
-          .select('id')
-          .eq('author_id', authorId);
-        postsFilter = authorPosts?.map(p => p.id) || [];
-        if (postsFilter.length === 0) return [];
+        postsFilterQuery = postsFilterQuery.eq('author_id', authorId);
       }
+
+      if (featuredStatus === 'featured') {
+        postsFilterQuery = postsFilterQuery.eq('is_featured', true);
+      } else if (featuredStatus === 'normal') {
+        postsFilterQuery = postsFilterQuery.eq('is_featured', false);
+      }
+
+      const { data: authorPosts } = await postsFilterQuery;
+      
+      let postsFilter = authorPosts?.map(p => p.id) || [];
+      
+      // Filter by tag if provided
+      if (tagSlug && authorPosts) {
+        const { data: tag } = await supabase
+          .from('blog_tags')
+          .select('id')
+          .eq('slug', tagSlug)
+          .single();
+        
+        if (tag) {
+          postsFilter = authorPosts
+            .filter((p: any) => p.blog_post_tags?.some((t: any) => t.tag_id === tag.id))
+            .map(p => p.id);
+        }
+      }
+      
+      if (postsFilter.length === 0) return [];
 
       let dailyQuery = supabase
         .from('blog_analytics_daily')

@@ -11,13 +11,20 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface BlogAnalyticsDashboardProps {
   dateRange?: number;
-  authorId?: string; // Se fornecido, filtra apenas posts deste autor
+  authorId?: string;
+  tagSlug?: string;
+  featuredStatus?: 'all' | 'featured' | 'normal';
 }
 
-export const BlogAnalyticsDashboard = ({ dateRange = 30, authorId }: BlogAnalyticsDashboardProps) => {
-  const { data: summary, isLoading: loadingSummary } = useBlogAnalyticsSummary(dateRange, authorId);
-  const { data: dailyData, isLoading: loadingDaily } = useDailyAnalytics(dateRange, authorId);
-  const { data: topPosts, isLoading: loadingPosts } = usePostAnalytics(dateRange, 10, authorId);
+export const BlogAnalyticsDashboard = ({ 
+  dateRange = 30, 
+  authorId,
+  tagSlug,
+  featuredStatus = 'all'
+}: BlogAnalyticsDashboardProps) => {
+  const { data: summary, isLoading: loadingSummary } = useBlogAnalyticsSummary(dateRange, authorId, tagSlug, featuredStatus);
+  const { data: dailyData, isLoading: loadingDaily } = useDailyAnalytics(dateRange, authorId, tagSlug, featuredStatus);
+  const { data: topPosts, isLoading: loadingPosts } = usePostAnalytics(dateRange, 10, authorId, tagSlug, featuredStatus);
 
   if (loadingSummary || loadingDaily || loadingPosts) {
     return (
