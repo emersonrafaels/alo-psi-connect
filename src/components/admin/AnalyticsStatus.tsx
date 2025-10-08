@@ -1,26 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Clock, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useAnalyticsLastUpdate } from '@/hooks/useAnalyticsLastUpdate';
 
 export const AnalyticsStatus = () => {
-  const { data: lastAggregation, isLoading } = useQuery({
-    queryKey: ['analytics-status'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('blog_analytics_daily')
-        .select('created_at')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      return data;
-    },
-  });
+  const { data: lastAggregation, isLoading } = useAnalyticsLastUpdate();
 
   if (isLoading) {
     return (
