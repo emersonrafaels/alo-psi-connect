@@ -25,6 +25,7 @@ import { EditorMetrics } from './EditorMetrics';
 import { MarkdownCheatSheet } from './MarkdownCheatSheet';
 import { PostTemplates } from './PostTemplates';
 import { useMarkdownToolbar } from '@/hooks/useMarkdownToolbar';
+import { supabase } from '@/integrations/supabase/client';
 
 const postSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -67,6 +68,8 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
     post?.tags?.map(t => t.id) || []
   );
   const [viewMode, setViewMode] = useState<'editor' | 'preview' | 'split'>('editor');
+  const [slugExists, setSlugExists] = useState(false);
+  const [checkingSlug, setCheckingSlug] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { applyFormatting, handleKeyDown } = useMarkdownToolbar(textareaRef);
 
@@ -125,9 +128,28 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   }, [draft, showRecoveryModal, post, reset]);
 
   const title = watch('title');
+  const slug = watch('slug');
   const content = watch('content');
   const excerpt = watch('excerpt');
   const allFormData = watch();
+
+  // Verificar slug único
+  const checkSlug = async (slugToCheck: string) => {
+    if (!slugToCheck || (post && slugToCheck === post.slug)) {
+      setSlugExists(false);
+      return;
+    }
+
+    setCheckingSlug(true);
+    const { data } = await supabase
+      .from('blog_posts')
+      .select('id')
+      .eq('slug', slugToCheck)
+      .maybeSingle();
+
+    setSlugExists(!!data);
+    setCheckingSlug(false);
+  };
 
   const handleTemplateSelect = (templateContent: string) => {
     setValue('content', templateContent);
@@ -291,12 +313,24 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
         </div>
 
         <div>
-          <Label htmlFor="slug">Slug</Label>
+          <Label htmlFor="slug">Slug (URL)</Label>
           <Input
             id="slug"
             {...register('slug')}
             placeholder="url-do-post"
+            onBlur={(e) => checkSlug(e.target.value)}
+            className={slugExists ? 'border-destructive' : ''}
           />
+          {slugExists && (
+            <p className="text-sm text-destructive mt-1">
+              ⚠️ Este slug já está em uso. Por favor, escolha outro.
+            </p>
+          )}
+          {checkingSlug && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Verificando disponibilidade...
+            </p>
+          )}
           {errors.slug && (
             <p className="text-sm text-destructive mt-1">{errors.slug.message}</p>
           )}

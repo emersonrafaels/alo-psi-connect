@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, Eye, User } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Eye, Home } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
@@ -16,6 +16,14 @@ import { CommentForm } from '@/components/CommentForm';
 import { CommentsList } from '@/components/CommentsList';
 import { useBlogPost } from '@/hooks/useBlogPost';
 import { useBlogPosts } from '@/hooks/useBlogPosts';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
@@ -74,12 +82,27 @@ export default function BlogPost() {
       <Header />
       <main className="flex-1">
         <article className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
-          <Button variant="ghost" asChild className="mb-6">
-            <Link to="/blog">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar ao Blog
-            </Link>
-          </Button>
+          <Breadcrumb className="mb-6">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">
+                    <Home className="h-4 w-4" />
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/blog">Blog</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{post.title}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
 
           {post.featured_image_url && (
             <div className="aspect-video rounded-lg overflow-hidden mb-8">

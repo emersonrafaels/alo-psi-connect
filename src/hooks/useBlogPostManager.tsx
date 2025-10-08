@@ -29,6 +29,17 @@ export const useBlogPostManager = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Não autenticado');
 
+      // Validar slug único
+      const { data: existingPost } = await supabase
+        .from('blog_posts')
+        .select('id')
+        .eq('slug', data.slug)
+        .maybeSingle();
+
+      if (existingPost) {
+        throw new Error('Já existe um post com este slug. Por favor, escolha outro.');
+      }
+
       const { data: post, error } = await supabase
         .from('blog_posts')
         .insert({
@@ -81,6 +92,18 @@ export const useBlogPostManager = () => {
 
   const updatePost = useMutation({
     mutationFn: async (data: UpdatePostData) => {
+      // Validar slug único (exceto o próprio post)
+      const { data: existingPost } = await supabase
+        .from('blog_posts')
+        .select('id')
+        .eq('slug', data.slug)
+        .neq('id', data.id)
+        .maybeSingle();
+
+      if (existingPost) {
+        throw new Error('Já existe outro post com este slug. Por favor, escolha outro.');
+      }
+
       const { error } = await supabase
         .from('blog_posts')
         .update({

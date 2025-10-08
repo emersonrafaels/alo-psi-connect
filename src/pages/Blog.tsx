@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
 import { Button } from "@/components/ui/button";
@@ -108,7 +109,11 @@ const Blog = () => {
                   ))
                 ) : (
                   posts.slice(0, 3).map((post) => (
-                    <div key={post.id} className="flex space-x-3 cursor-pointer hover:opacity-80">
+                    <Link 
+                      key={post.id} 
+                      to={`/blog/${post.slug}`}
+                      className="flex space-x-3 hover:bg-accent/50 p-2 -mx-2 rounded-lg transition-colors"
+                    >
                       {post.featured_image_url ? (
                         <div className="w-16 h-16 rounded flex-shrink-0 overflow-hidden">
                           <img 
@@ -132,7 +137,7 @@ const Blog = () => {
                           </p>
                         )}
                       </div>
-                    </div>
+                    </Link>
                   ))
                 )}
               </CardContent>
