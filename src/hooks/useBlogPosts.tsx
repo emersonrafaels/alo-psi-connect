@@ -20,8 +20,14 @@ export interface BlogPost {
   allow_ratings?: boolean;
   average_rating?: number;
   ratings_count?: number;
+  is_featured?: boolean;
+  featured_order?: number | null;
+  editorial_badge?: string | null;
+  badge_expires_at?: string | null;
   author?: {
+    id?: string;
     nome: string;
+    email?: string;
     foto_perfil_url: string | null;
   };
   tags?: Array<{
