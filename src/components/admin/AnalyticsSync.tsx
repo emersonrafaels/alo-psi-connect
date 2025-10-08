@@ -3,10 +3,12 @@ import { RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const AnalyticsSync = () => {
   const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleSync = async () => {
     setSyncing(true);
@@ -20,10 +22,12 @@ export const AnalyticsSync = () => {
         description: `Analytics agregados com sucesso. ${data?.processed_posts || 0} posts processados.`,
       });
 
-      // Aguardar um pouco e recarregar a página para ver os novos dados
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      // Invalidar queries para refazer fetch dos dados
+      queryClient.invalidateQueries({ queryKey: ['blogAnalyticsSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['blogDailyAnalytics'] });
+      queryClient.invalidateQueries({ queryKey: ['blogPostAnalytics'] });
+      queryClient.invalidateQueries({ queryKey: ['curationStats'] });
+      queryClient.invalidateQueries({ queryKey: ['analyticsLastUpdate'] });
     } catch (error) {
       console.error('Erro ao sincronizar analytics:', error);
       toast({
