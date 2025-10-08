@@ -2,11 +2,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MetricsCard } from './config/MetricsCard';
 import { UsageChart } from './config/UsageChart';
 import { useBlogAnalyticsSummary, useDailyAnalytics, usePostAnalytics } from '@/hooks/useBlogAnalytics';
-import { BarChart3, Eye, Users, Clock, CheckCircle2, MessageCircle, Star, TrendingUp } from 'lucide-react';
+import { BarChart3, Eye, Users, Clock, CheckCircle2, MessageCircle, Star, TrendingUp, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AnalyticsSync } from './AnalyticsSync';
 import { AnalyticsStatus } from './AnalyticsStatus';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface BlogAnalyticsDashboardProps {
   dateRange?: number;
@@ -54,6 +55,16 @@ export const BlogAnalyticsDashboard = ({ dateRange = 30, authorId }: BlogAnalyti
 
       {/* Status da agregação */}
       <AnalyticsStatus />
+
+      {/* Alerta quando não há dados */}
+      {!summary?.isRealTime && summary?.totalViews === 0 && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Ainda não há visualizações registradas para este período. Os dados serão agregados automaticamente às 00:05 UTC diariamente, ou você pode sincronizar manualmente usando o botão acima.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Métricas principais */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -143,8 +154,15 @@ export const BlogAnalyticsDashboard = ({ dateRange = 30, authorId }: BlogAnalyti
           <CardDescription>Últimos {dateRange} dias</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {topPosts?.map((post, index) => (
+          {!topPosts || topPosts.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Eye className="h-12 w-12 mx-auto mb-3 opacity-20" />
+              <p>Nenhum post foi visualizado neste período</p>
+              <p className="text-sm mt-1">Aguarde até que os posts sejam visualizados e agregados</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {topPosts.map((post, index) => (
               <div key={post.postId} className="flex items-center gap-4 pb-4 border-b last:border-0">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold">
                   {index + 1}
@@ -187,7 +205,8 @@ export const BlogAnalyticsDashboard = ({ dateRange = 30, authorId }: BlogAnalyti
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
