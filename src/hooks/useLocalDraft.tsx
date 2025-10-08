@@ -30,12 +30,36 @@ export const useLocalDraft = (options: UseLocalDraftOptions = {}) => {
   const [hasCheckedForDraft, setHasCheckedForDraft] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
 
+  // Helper para verificar se o rascunho tem conteúdo significativo
+  const hasSignificantContent = (draftData: DraftData | null): boolean => {
+    if (!draftData) return false;
+    
+    const titleLength = (draftData.title || '').trim().length;
+    const contentLength = (draftData.content || '').trim().length;
+    const hasImage = !!draftData.featured_image_url;
+    const hasTags = (draftData.tags || []).length > 0;
+    
+    // Considerar significativo se:
+    // - Título tem mais de 3 caracteres OU
+    // - Conteúdo tem mais de 10 caracteres OU
+    // - Tem imagem destacada OU
+    // - Tem tags selecionadas
+    return titleLength > 3 || contentLength > 10 || hasImage || hasTags;
+  };
+
   // Verificar se existe rascunho ao montar
   useEffect(() => {
     if (enabled && !hasCheckedForDraft) {
       setHasCheckedForDraft(true);
       
       if (draft && draft.timestamp) {
+        // Verificar se o rascunho tem conteúdo significativo
+        if (!hasSignificantContent(draft)) {
+          // Remover rascunho vazio silenciosamente
+          removeDraft();
+          return;
+        }
+        
         // Verificar se o rascunho não é muito antigo (7 dias)
         const draftAge = Date.now() - draft.timestamp;
         const sevenDays = 7 * 24 * 60 * 60 * 1000;

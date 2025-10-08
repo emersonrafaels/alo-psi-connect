@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -78,6 +78,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const [viewMode, setViewMode] = useState<'editor' | 'preview' | 'split'>('editor');
   const [slugExists, setSlugExists] = useState(false);
   const [checkingSlug, setCheckingSlug] = useState(false);
+  const [userStartedEditing, setUserStartedEditing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { applyFormatting, handleKeyDown } = useMarkdownToolbar(textareaRef);
   
@@ -216,6 +217,23 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
     }
   });
 
+  // Helper para verificar se o conteúdo é significativo
+  const hasSignificantContent = useCallback(() => {
+    const titleLength = (allFormData.title || '').trim().length;
+    const contentLength = (allFormData.content || '').trim().length;
+    const hasImage = !!featuredImage;
+    const hasTags = selectedTags.length > 0;
+    
+    return titleLength > 3 || contentLength > 10 || hasImage || hasTags;
+  }, [allFormData.title, allFormData.content, featuredImage, selectedTags]);
+
+  // Marcar que o usuário começou a editar quando houver mudanças reais
+  useEffect(() => {
+    if (!userStartedEditing && hasSignificantContent()) {
+      setUserStartedEditing(true);
+    }
+  }, [userStartedEditing, hasSignificantContent]);
+
   // Memoizar dados do draft para evitar re-criação
   const draftData = useMemo(() => ({
     title: allFormData.title,
@@ -229,12 +247,12 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   }), [allFormData.title, allFormData.slug, allFormData.excerpt, allFormData.content, 
        allFormData.status, allFormData.read_time_minutes, featuredImage, selectedTags]);
 
-  // Auto-save to localStorage (com debounce interno)
+  // Auto-save to localStorage apenas se usuário começou a editar E tem conteúdo significativo
   useEffect(() => {
-    if (draftData.title || draftData.content) {
+    if (userStartedEditing && hasSignificantContent()) {
       saveDraft(draftData);
     }
-  }, [draftData, saveDraft]);
+  }, [draftData, saveDraft, userStartedEditing, hasSignificantContent]);
 
   // Auto-generate slug from title
   useEffect(() => {
