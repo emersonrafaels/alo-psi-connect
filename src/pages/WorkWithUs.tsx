@@ -267,14 +267,19 @@ const WorkWithUs = () => {
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2 text-foreground dark:text-gray-200">
                           Conte-nos sobre sua visão do cuidado em saúde mental
                         </label>
-                        <textarea 
+                        <textarea
                           placeholder="Como você enxerga o cuidado além dos rótulos? Qual sua experiência em criar conexões genuínas com pacientes?"
                           rows={4}
-                          className="w-full p-3 border-2 border-input rounded-md resize-none focus:border-primary/50 transition-colors"
-                        />
+                          className="
+                          w-full p-3 rounded-md border-2 border-input resize-none
+                          bg-white text-gray-800 placeholder:text-gray-400
+                          dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500
+                          focus:border-primary/50 transition-colors
+                          "
+                          />
                       </div>
                       
                       <div>
