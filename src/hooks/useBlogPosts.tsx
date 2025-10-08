@@ -62,11 +62,7 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
       }
 
       if (options.searchTerm) {
-        query = query.or(`title.ilike.%${options.searchTerm}%,content.ilike.%${options.searchTerm}%`);
-      }
-
-      if (options.tagSlug) {
-        query = query.contains('tags', [{ slug: options.tagSlug }]);
+        query = query.or(`title.ilike.%${options.searchTerm}%,content.ilike.%${options.searchTerm}%,excerpt.ilike.%${options.searchTerm}%`);
       }
 
       query = query.order('published_at', { ascending: false, nullsFirst: false });
@@ -84,7 +80,15 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
       if (error) throw error;
 
       // Fetch authors for all posts
-      const posts = data || [];
+      let posts = data || [];
+      
+      // Filter by tag client-side if needed
+      if (options.tagSlug) {
+        posts = posts.filter(post => 
+          post.tags?.some((tagRelation: any) => tagRelation.tag?.slug === options.tagSlug)
+        );
+      }
+      
       const authorIds = [...new Set(posts.map(p => p.author_id))];
       
       const { data: authorsData } = await supabase
