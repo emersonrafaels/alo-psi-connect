@@ -81,20 +81,20 @@ const WorkWithUs = () => {
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-8 text-foreground">
-              Nossa Missão: Cuidar da Pessoa, Não do Diagnóstico
-            </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-              Na AloPsi, acreditamos que cada pessoa que busca ajuda é muito mais do que qualquer rótulo ou diagnóstico. 
-              Somos profissionais que escolheram ver além - que enxergam potencial onde outros veem limitações, 
-              que escutam histórias onde outros veem sintomas.
-            </p>
-            <div className="bg-background/80 backdrop-blur-sm p-8 rounded-xl border-2 border-primary/20">
-              <p className="text-xl font-medium text-primary italic">
-                "Não somos apenas uma plataforma de saúde mental. Somos um movimento de profissionais comprometidos 
-                em devolver a dignidade e a esperança para quem mais precisa."
-              </p>
-            </div>
+        <h2 className="text-3xl lg:text-4xl font-bold mb-8 text-foreground">
+          Nossa Missão: Cuidar da Pessoa, Não do Diagnóstico
+        </h2>
+        <p className="text-lg text-muted-foreground leading-relaxed mb-8">
+          Na AloPsi, acreditamos que cada pessoa que busca ajuda é muito mais do que qualquer rótulo ou diagnóstico.
+          Somos profissionais que escolheram ver além - que enxergam potencial onde outros veem limitações,
+          que escutam histórias onde outros veem sintomas.
+        </p>
+        <div className="bg-background/80 backdrop-blur-sm p-8 rounded-xl border-2 border-primary/20">
+          <p className="text-xl font-medium italic text-gray-800 dark:text-white">
+            "Não somos apenas uma plataforma de saúde mental. Somos um movimento de profissionais comprometidos
+            em devolver a dignidade e a esperança para quem mais precisa."
+          </p>
+        </div>
           </div>
         </div>
       </section>
