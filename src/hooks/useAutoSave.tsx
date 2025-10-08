@@ -62,10 +62,36 @@ export const useAutoSave = <T,>(
     }
   }, [data, onSave, onSuccess, onError]);
 
+  // Shallow comparison helper
+  const hasDataChanged = useCallback((newData: any, oldData: any): boolean => {
+    if (newData === oldData) return false;
+    if (!newData || !oldData) return true;
+    if (typeof newData !== 'object' || typeof oldData !== 'object') return newData !== oldData;
+    
+    const newKeys = Object.keys(newData);
+    const oldKeys = Object.keys(oldData);
+    
+    if (newKeys.length !== oldKeys.length) return true;
+    
+    return newKeys.some(key => {
+      const newVal = newData[key];
+      const oldVal = oldData[key];
+      
+      // Para arrays, comparar length e primeiro/último elemento (otimização)
+      if (Array.isArray(newVal) && Array.isArray(oldVal)) {
+        return newVal.length !== oldVal.length || 
+               newVal[0] !== oldVal[0] || 
+               newVal[newVal.length - 1] !== oldVal[newVal.length - 1];
+      }
+      
+      return newVal !== oldVal;
+    });
+  }, []);
+
   // Debounced save effect
   useEffect(() => {
-    // Verificar se os dados mudaram
-    const hasChanged = JSON.stringify(data) !== JSON.stringify(lastDataRef.current);
+    // Verificar se os dados mudaram usando shallow comparison
+    const hasChanged = hasDataChanged(data, lastDataRef.current);
     
     if (hasChanged) {
       hasUnsavedChanges.current = true;
@@ -89,7 +115,7 @@ export const useAutoSave = <T,>(
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [data, enabled, delay, performSave]);
+  }, [data, enabled, delay, performSave, hasDataChanged]);
 
   // Função para forçar salvamento imediato
   const forceSave = useCallback(async () => {

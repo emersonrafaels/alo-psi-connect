@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 
 interface DraftData {
@@ -50,15 +50,35 @@ export const useLocalDraft = (options: UseLocalDraftOptions = {}) => {
     }
   }, [draft, enabled, hasCheckedForDraft, removeDraft]);
 
-  // Salvar rascunho
+  // Debounce ref para salvar rascunho
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Salvar rascunho com debounce
   const saveDraft = useCallback((data: Omit<DraftData, 'timestamp'>) => {
     if (!enabled) return;
     
-    setDraft({
-      ...data,
-      timestamp: Date.now()
-    });
+    // Limpar timeout anterior
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Agendar salvamento após 500ms
+    saveTimeoutRef.current = setTimeout(() => {
+      setDraft({
+        ...data,
+        timestamp: Date.now()
+      });
+    }, 500);
   }, [enabled, setDraft]);
+
+  // Cleanup do timeout
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Limpar rascunho
   const clearDraft = useCallback(() => {

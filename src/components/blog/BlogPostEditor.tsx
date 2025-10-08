@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -216,21 +216,25 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
     }
   });
 
-  // Auto-save to localStorage (immediate, sem debounce)
+  // Memoizar dados do draft para evitar re-criação
+  const draftData = useMemo(() => ({
+    title: allFormData.title,
+    slug: allFormData.slug,
+    excerpt: allFormData.excerpt,
+    content: allFormData.content,
+    status: allFormData.status,
+    read_time_minutes: allFormData.read_time_minutes,
+    featured_image_url: featuredImage,
+    tags: selectedTags
+  }), [allFormData.title, allFormData.slug, allFormData.excerpt, allFormData.content, 
+       allFormData.status, allFormData.read_time_minutes, featuredImage, selectedTags]);
+
+  // Auto-save to localStorage (com debounce interno)
   useEffect(() => {
-    if (allFormData.title || allFormData.content) {
-      saveDraft({
-        title: allFormData.title,
-        slug: allFormData.slug,
-        excerpt: allFormData.excerpt,
-        content: allFormData.content,
-        status: allFormData.status,
-        read_time_minutes: allFormData.read_time_minutes,
-        featured_image_url: featuredImage,
-        tags: selectedTags
-      });
+    if (draftData.title || draftData.content) {
+      saveDraft(draftData);
     }
-  }, [allFormData, featuredImage, selectedTags, saveDraft]);
+  }, [draftData, saveDraft]);
 
   // Auto-generate slug from title
   useEffect(() => {
