@@ -23,16 +23,24 @@ interface ShareButtonsProps {
 
 export const ShareButtons = ({ url, title, description }: ShareButtonsProps) => {
   const { toast } = useToast();
-  const encodedUrl = encodeURIComponent(url);
-  const encodedTitle = encodeURIComponent(title);
-  const encodedDescription = encodeURIComponent(description || '');
+  
+  const formatShareMessage = (platform: 'whatsapp' | 'linkedin' | 'email' | 'twitter') => {
+    const baseMessage = {
+      whatsapp: `📚 *${title}*\n\n${description ? `${description}\n\n` : ''}Leia o artigo completo:\n${url}\n\n💡 Compartilhe conhecimento sobre saúde mental!`,
+      linkedin: `${title}\n\n${description || ''}\n\nLeia mais em: ${url}\n\n#SaúdeMental #BemEstar #Psicologia #AlôPsi`,
+      email: `Olá!\n\nEncontrei este artigo interessante que pode te interessar:\n\n${title}\n\n${description ? `${description}\n\n` : ''}Leia o artigo completo em:\n${url}\n\n--\nCompartilhado via Alô, Psi! - Sua plataforma de saúde mental`,
+      twitter: `📖 ${title}\n\n${url}\n\n#SaúdeMental #BemEstar`
+    };
+    return encodeURIComponent(baseMessage[platform]);
+  };
 
   const copyToClipboard = async () => {
+    const message = `${title}\n\n${description || ''}\n\nLeia mais em: ${url}`;
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(message);
       toast({
         title: "Link copiado!",
-        description: "O link foi copiado para a área de transferência."
+        description: "O conteúdo foi copiado para a área de transferência."
       });
     } catch (error) {
       toast({
@@ -47,31 +55,31 @@ export const ShareButtons = ({ url, title, description }: ShareButtonsProps) => 
     {
       name: 'Facebook',
       icon: Facebook,
-      url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
       color: 'hover:text-blue-600'
     },
     {
       name: 'Twitter',
       icon: Twitter,
-      url: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+      url: `https://twitter.com/intent/tweet?text=${formatShareMessage('twitter')}`,
       color: 'hover:text-sky-500'
     },
     {
       name: 'LinkedIn',
       icon: Linkedin,
-      url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+      url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
       color: 'hover:text-blue-700'
     },
     {
       name: 'WhatsApp',
       icon: MessageCircle,
-      url: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
+      url: `https://wa.me/?text=${formatShareMessage('whatsapp')}`,
       color: 'hover:text-green-600'
     },
     {
       name: 'Email',
       icon: Mail,
-      url: `mailto:?subject=${encodedTitle}&body=${encodedDescription}%0A%0A${encodedUrl}`,
+      url: `mailto:?subject=${encodeURIComponent(title)}&body=${formatShareMessage('email')}`,
       color: 'hover:text-gray-600'
     }
   ];
