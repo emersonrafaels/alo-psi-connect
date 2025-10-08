@@ -4,7 +4,7 @@ import { useBlogPostManager } from '@/hooks/useBlogPostManager';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PostStatusBadge } from './PostStatusBadge';
-import { Pencil, Trash2, Eye, Plus, ExternalLink } from 'lucide-react';
+import { Pencil, Trash2, Eye, Plus, ExternalLink, BarChart3 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -95,6 +95,14 @@ export const BlogPostsList = () => {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/admin/post-analytics/${post.id}`)}
+                      title="Ver analytics do post"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                    </Button>
                     {post.status === 'published' && (
                       <Button
                         variant="outline"
