@@ -12,6 +12,9 @@ import { useUserProfile } from "@/hooks/useUserProfile"
 import { useAdminAuth } from "@/hooks/useAdminAuth"
 import { useUserType } from "@/hooks/useUserType"
 import { useAuthorRole } from "@/hooks/useAuthorRole"
+import { useTenant } from "@/hooks/useTenant"
+import { TenantBranding } from "@/components/TenantBranding"
+import { buildTenantPath } from "@/utils/tenantHelpers"
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -22,15 +25,18 @@ const Header = () => {
   const { isAdmin } = useAdminAuth()
   const { isProfessional } = useUserType()
   const { isAuthor } = useAuthorRole()
+  const { tenant } = useTenant()
+
+  const tenantSlug = tenant?.slug || 'alopsi'
 
   const navigation = [
-    { name: "Home", href: "/" },
-    { name: "Sobre", href: "/sobre" },
-    { name: "Profissionais", href: "/profissionais" },
-    { name: "Diário Emocional", href: loading ? "/diario-emocional/experiencia" : (user ? "/diario-emocional" : "/diario-emocional/experiencia") },
-    { name: "Blog", href: "/blog" },
-    { name: "Trabalhe Conosco", href: "/trabalhe-conosco" },
-    { name: "Contato", href: "/contato" },
+    { name: "Home", href: buildTenantPath(tenantSlug, '/') },
+    { name: "Sobre", href: buildTenantPath(tenantSlug, '/sobre') },
+    { name: "Profissionais", href: buildTenantPath(tenantSlug, '/profissionais') },
+    { name: "Diário Emocional", href: buildTenantPath(tenantSlug, loading ? '/diario-emocional/experiencia' : (user ? '/diario-emocional' : '/diario-emocional/experiencia')) },
+    { name: "Blog", href: buildTenantPath(tenantSlug, '/blog') },
+    { name: "Trabalhe Conosco", href: buildTenantPath(tenantSlug, '/trabalhe-conosco') },
+    { name: "Contato", href: buildTenantPath(tenantSlug, '/contato') },
   ]
 
   const isActive = (path: string) => location.pathname === path
@@ -49,12 +55,7 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-              <span className="text-accent-foreground font-bold text-sm">AP</span>
-            </div>
-            <span className="text-xl font-bold">Alô, Psi!</span>
-          </Link>
+          <TenantBranding />
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
@@ -159,7 +160,7 @@ const Header = () => {
                   dark:hover:text-[#0B2B4C]
                   dark:border-transparent
                   "
-                  onClick={() => navigate('/cadastro/tipo-usuario')}
+                  onClick={() => navigate(buildTenantPath(tenantSlug, '/cadastro/tipo-usuario'))}
                 >
                   Cadastrar
                 </Button>
@@ -284,7 +285,7 @@ const Header = () => {
       hover:bg-[hsl(var(--accent))]
       hover:text-[hsl(var(--accent-foreground))]
     "
-    onClick={() => navigate('/cadastro/tipo-usuario')}
+    onClick={() => navigate(buildTenantPath(tenantSlug, '/cadastro/tipo-usuario'))}
   >
     Cadastrar
   </Button>

@@ -1,5 +1,7 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCallback } from 'react';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 export interface SearchFilters {
   especialidades: string[];
@@ -10,6 +12,7 @@ export interface SearchFilters {
 export const useSearchFilters = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { tenant } = useTenant();
 
   // Função para obter filtros da URL
   const getFiltersFromURL = useCallback((): SearchFilters => {
@@ -41,13 +44,15 @@ export const useSearchFilters = () => {
     }
 
     const query = params.toString();
-    navigate(`/profissionais${query ? `?${query}` : ''}`);
-  }, [navigate]);
+    const basePath = buildTenantPath(tenant?.slug || 'alopsi', '/profissionais');
+    navigate(`${basePath}${query ? `?${query}` : ''}`);
+  }, [navigate, tenant]);
 
   // Função para limpar filtros
   const clearFilters = useCallback(() => {
-    navigate('/profissionais');
-  }, [navigate]);
+    const basePath = buildTenantPath(tenant?.slug || 'alopsi', '/profissionais');
+    navigate(basePath);
+  }, [navigate, tenant]);
 
   return {
     getFiltersFromURL,

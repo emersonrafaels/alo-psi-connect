@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { TenantProvider } from "@/contexts/TenantContext";
 import { useGlobalCacheShortcut } from "@/hooks/useGlobalCacheShortcut";
 import WhatsAppFloat from "@/components/ui/whatsapp-float";
 
@@ -125,6 +126,30 @@ const AppWithShortcuts = () => {
       <Route path="/diario-emocional/analises" element={<MoodAnalytics />} />
       <Route path="/diario-emocional/configurar" element={<EmotionConfigPage />} />
       
+      {/* Rotas Medcos (duplicadas com prefixo /medcos) */}
+      <Route path="/medcos" element={<Index />} />
+      <Route path="/medcos/sobre" element={<About />} />
+      <Route path="/medcos/blog" element={<Blog />} />
+      <Route path="/medcos/blog/:slug" element={<BlogPost />} />
+      <Route path="/medcos/profissionais" element={<Professionals />} />
+      <Route path="/medcos/profissional/:id" element={<Professional />} />
+      <Route path="/medcos/agendar" element={<Schedule />} />
+      <Route path="/medcos/agendamento" element={<Appointment />} />
+      <Route path="/medcos/contato" element={<Contact />} />
+      <Route path="/medcos/trabalhe-conosco" element={<WorkWithUs />} />
+      
+      {/* Rotas de cadastro Medcos */}
+      <Route path="/medcos/cadastro/tipo-usuario" element={<UserType />} />
+      <Route path="/medcos/cadastro/paciente" element={<PatientForm />} />
+      <Route path="/medcos/cadastro/profissional" element={<ProfessionalForm />} />
+      
+      {/* Rotas de diário emocional Medcos */}
+      <Route path="/medcos/diario-emocional" element={<MoodDiary />} />
+      <Route path="/medcos/diario-emocional/experiencia" element={<MoodExperience />} />
+      <Route path="/medcos/diario-emocional/nova-entrada" element={<MoodEntry />} />
+      <Route path="/medcos/diario-emocional/historico" element={<MoodHistory />} />
+      <Route path="/medcos/diario-emocional/analises" element={<MoodAnalytics />} />
+      
       {/* Rotas Admin */}
       <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
       <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
@@ -151,10 +176,12 @@ const App: React.FC = () => {
         <ThemeProvider defaultTheme="light" storageKey="alopsi-theme">
           <TooltipProvider>
             <BrowserRouter>
-              <AuthProvider>
-                <AppWithShortcuts />
-                <WhatsAppFloat />
-              </AuthProvider>
+              <TenantProvider>
+                <AuthProvider>
+                  <AppWithShortcuts />
+                  <WhatsAppFloat />
+                </AuthProvider>
+              </TenantProvider>
             </BrowserRouter>
             <Toaster />
             <Sonner />
