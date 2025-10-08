@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -9,12 +9,8 @@ export const useSavedPosts = (postId: string) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    checkIfSaved();
-  }, [postId, user]);
-
-  const checkIfSaved = async () => {
-    if (!user) {
+  const checkIfSaved = useCallback(async () => {
+    if (!user || !postId) {
       setIsLoading(false);
       return;
     }
@@ -34,7 +30,11 @@ export const useSavedPosts = (postId: string) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, postId]);
+
+  useEffect(() => {
+    checkIfSaved();
+  }, [checkIfSaved]);
 
   const toggleSave = async () => {
     if (!user) {
