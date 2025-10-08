@@ -14,7 +14,7 @@ interface GlobalCacheButtonProps {
 }
 
 export const GlobalCacheButton = ({ variant = 'text', size = 'sm', className }: GlobalCacheButtonProps) => {
-  const { isAdmin } = useAdminAuth();
+  const { hasRole } = useAdminAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [preserveTheme, setPreserveTheme] = useState(true);
@@ -22,8 +22,8 @@ export const GlobalCacheButton = ({ variant = 'text', size = 'sm', className }: 
   const [selectedTypes, setSelectedTypes] = useState<CacheType[]>(['config']);
   const { toast } = useToast();
 
-  // Hide button for non-admin users
-  if (!isAdmin) {
+  // Only show for super admins
+  if (!hasRole('super_admin')) {
     return null;
   }
 
