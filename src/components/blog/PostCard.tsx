@@ -19,6 +19,7 @@ export const PostCard = ({ post }: PostCardProps) => {
             <img
               src={post.featured_image_url}
               alt={post.title}
+              loading="lazy"
               className="w-full h-full object-cover transition-transform hover:scale-105"
             />
           </div>

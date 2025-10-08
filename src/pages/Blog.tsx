@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
@@ -15,8 +15,22 @@ import { useBlogTags } from "@/hooks/useBlogTags";
 const Blog = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+
+  // SEO: Set meta tags for blog page
+  useEffect(() => {
+    document.title = 'Blog | Alô, Psi! - Saúde Mental';
+    
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Artigos, dicas e reflexões sobre saúde mental, ansiedade, depressão e bem-estar emocional.');
+    }
+    
+    return () => {
+      document.title = 'Alô, Psi! - Plataforma de Saúde Mental';
+    };
+  }, []);
   
-  const { data: posts = [], isLoading } = useBlogPosts({ 
+  const { data: posts = [], isLoading } = useBlogPosts({
     status: 'published',
     searchTerm: searchTerm || undefined,
     tagSlug: selectedTag || undefined 
@@ -119,6 +133,7 @@ const Blog = () => {
                           <img 
                             src={post.featured_image_url} 
                             alt={post.title}
+                            loading="lazy"
                             className="w-full h-full object-cover"
                           />
                         </div>

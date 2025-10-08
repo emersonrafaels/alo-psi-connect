@@ -40,6 +40,118 @@ export default function BlogPost() {
     }
   }, [slug, post?.id]);
 
+  // SEO: Dynamic meta tags and Schema.org
+  useEffect(() => {
+    if (post) {
+      // Page title
+      document.title = `${post.title} | Alô, Psi! Blog`;
+      
+      // Meta description
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription) {
+        metaDescription.setAttribute('content', post.excerpt || post.content.substring(0, 160));
+      }
+      
+      // Open Graph tags
+      const setOrCreateMeta = (property: string, content: string, isProperty = true) => {
+        const selector = isProperty ? `meta[property="${property}"]` : `meta[name="${property}"]`;
+        let meta = document.querySelector(selector);
+        if (!meta) {
+          meta = document.createElement('meta');
+          if (isProperty) {
+            meta.setAttribute('property', property);
+          } else {
+            meta.setAttribute('name', property);
+          }
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', content);
+      };
+      
+      setOrCreateMeta('og:title', post.title);
+      setOrCreateMeta('og:description', post.excerpt || post.content.substring(0, 160));
+      setOrCreateMeta('og:type', 'article');
+      setOrCreateMeta('og:url', window.location.href);
+      if (post.featured_image_url) {
+        setOrCreateMeta('og:image', post.featured_image_url);
+      }
+      
+      // Twitter Card
+      setOrCreateMeta('twitter:card', 'summary_large_image', false);
+      setOrCreateMeta('twitter:title', post.title, false);
+      setOrCreateMeta('twitter:description', post.excerpt || post.content.substring(0, 160), false);
+      if (post.featured_image_url) {
+        setOrCreateMeta('twitter:image', post.featured_image_url, false);
+      }
+      
+      // Schema.org JSON-LD
+      const schema = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": post.title,
+        "description": post.excerpt || post.content.substring(0, 160),
+        "image": post.featured_image_url || "",
+        "author": {
+          "@type": "Person",
+          "name": post.author.nome,
+          ...(post.author.foto_perfil_url && { "image": post.author.foto_perfil_url })
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Alô, Psi!",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://lovable.dev/opengraph-image-p98pqg.png"
+          }
+        },
+        "datePublished": post.published_at || post.created_at,
+        "dateModified": post.updated_at,
+        ...(post.read_time_minutes && { "timeRequired": `PT${post.read_time_minutes}M` }),
+        "url": window.location.href,
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": window.location.href
+        },
+        ...(post.tags && post.tags.length > 0 && {
+          "keywords": post.tags.map(t => t.name).join(', ')
+        }),
+        ...(post.average_rating && post.ratings_count && {
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": post.average_rating,
+            "reviewCount": post.ratings_count,
+            "bestRating": "5",
+            "worstRating": "1"
+          }
+        }),
+        ...(post.comments_count && {
+          "commentCount": post.comments_count
+        })
+      };
+      
+      // Remove old schema if exists
+      const existingSchema = document.getElementById('blog-post-schema');
+      if (existingSchema) {
+        existingSchema.remove();
+      }
+      
+      // Add new schema
+      const script = document.createElement('script');
+      script.id = 'blog-post-schema';
+      script.type = 'application/ld+json';
+      script.text = JSON.stringify(schema);
+      document.head.appendChild(script);
+    }
+    
+    return () => {
+      const existingSchema = document.getElementById('blog-post-schema');
+      if (existingSchema) {
+        existingSchema.remove();
+      }
+      document.title = 'Alô, Psi! - Plataforma de Saúde Mental';
+    };
+  }, [post]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -109,6 +221,7 @@ export default function BlogPost() {
               <img
                 src={post.featured_image_url}
                 alt={post.title}
+                loading="eager"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -171,7 +284,19 @@ export default function BlogPost() {
                           prose-code:text-primary prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded
                           prose-pre:bg-muted prose-pre:border prose-pre:border-border
                           prose-img:rounded-xl prose-img:shadow-lg prose-img:my-8">
-            <ReactMarkdown>{post.content}</ReactMarkdown>
+            <ReactMarkdown
+              components={{
+                img: ({ node, ...props }) => (
+                  <img 
+                    {...props} 
+                    loading="lazy"
+                    className="rounded-xl shadow-lg my-8"
+                  />
+                )
+              }}
+            >
+              {post.content}
+            </ReactMarkdown>
           </div>
 
           <div className="mt-12 pt-8 border-t">
