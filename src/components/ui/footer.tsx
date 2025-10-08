@@ -156,14 +156,15 @@ const Footer = () => {
           </div>
 
           {/* Redes Sociais */}
-          <div className="lg:col-span-1">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          {/* ta escondida */}
+          <div className="lg:col-span-1 hidden ">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 md:flex ">
               <Instagram className="w-5 h-5" />
               <a href="https://www.instagram.com/medcos_br/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
                 Siga-nos
               </a>
             </h3>
-            <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="grid grid-cols-3 gap-2 mb-4 md:grid">
               {Array.from({
               length: 6
             }).map((_, index) => <a key={index} href="https://www.instagram.com/medcos_br/" target="_blank" rel="noopener noreferrer" className="aspect-square bg-teal rounded-md hover:opacity-80 transition-opacity cursor-pointer" />)}
