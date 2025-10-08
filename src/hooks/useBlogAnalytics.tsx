@@ -11,6 +11,7 @@ export interface BlogAnalyticsSummary {
   totalComments: number;
   totalRatings: number;
   avgRating: number;
+  isRealTime?: boolean;
 }
 
 export interface PostAnalytics {
@@ -81,6 +82,79 @@ export const useBlogAnalyticsSummary = (dateRange: number = 30, authorId?: strin
       const { data: dailyData, error: dailyError } = await dailyQuery;
 
       if (dailyError) throw dailyError;
+
+      // FALLBACK: Se blog_analytics_daily estiver vazio, calcular em tempo real
+      if (!dailyData || dailyData.length === 0) {
+        console.log('[Analytics] Usando dados em tempo real - blog_analytics_daily vazio');
+        
+        let trackingQuery = supabase
+          .from('blog_post_views_tracking')
+          .select('*')
+          .gte('viewed_at', startDate);
+
+        if (postIds.length > 0) {
+          trackingQuery = trackingQuery.in('post_id', postIds);
+        }
+
+        const { data: trackingData } = await trackingQuery;
+
+        if (trackingData && trackingData.length > 0) {
+          const uniqueVisitors = new Set(trackingData.map(t => t.session_id)).size;
+          const totalTimeSpent = trackingData.reduce((sum, t) => sum + (t.time_spent || 0), 0);
+          const completedCount = trackingData.filter(t => t.completed_reading).length;
+
+          // Buscar total de posts
+          let totalPostsQuery = supabase
+            .from('blog_posts')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'published');
+
+          if (authorId) {
+            totalPostsQuery = totalPostsQuery.eq('author_id', authorId);
+          }
+
+          const { count: totalPosts } = await totalPostsQuery;
+
+          // Buscar comentários e ratings
+          let commentsQuery = supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true });
+
+          let ratingsQuery = supabase
+            .from('blog_post_ratings')
+            .select('*', { count: 'exact', head: true });
+
+          let ratingsDataQuery = supabase
+            .from('blog_post_ratings')
+            .select('rating');
+
+          if (postIds.length > 0) {
+            commentsQuery = commentsQuery.in('post_id', postIds);
+            ratingsQuery = ratingsQuery.in('post_id', postIds);
+            ratingsDataQuery = ratingsDataQuery.in('post_id', postIds);
+          }
+
+          const { count: totalComments } = await commentsQuery;
+          const { count: totalRatings } = await ratingsQuery;
+          const { data: ratingsData } = await ratingsDataQuery;
+
+          const avgRating = ratingsData?.length
+            ? ratingsData.reduce((sum, r) => sum + r.rating, 0) / ratingsData.length
+            : 0;
+
+          return {
+            totalPosts: totalPosts || 0,
+            totalViews: trackingData.length,
+            totalUniqueVisitors: uniqueVisitors,
+            avgTimeSpent: Math.round(totalTimeSpent / trackingData.length),
+            avgCompletionRate: Math.round((completedCount / trackingData.length) * 100 * 100) / 100,
+            totalComments: totalComments || 0,
+            totalRatings: totalRatings || 0,
+            avgRating: Math.round(avgRating * 100) / 100,
+            isRealTime: true, // Flag para indicar que está usando dados em tempo real
+          } as BlogAnalyticsSummary & { isRealTime?: boolean };
+        }
+      }
 
       // Buscar total de posts publicados (filtrados por autor se necessário)
       let totalPostsQuery = supabase

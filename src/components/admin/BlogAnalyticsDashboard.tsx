@@ -4,6 +4,9 @@ import { UsageChart } from './config/UsageChart';
 import { useBlogAnalyticsSummary, useDailyAnalytics, usePostAnalytics } from '@/hooks/useBlogAnalytics';
 import { BarChart3, Eye, Users, Clock, CheckCircle2, MessageCircle, Star, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { AnalyticsSync } from './AnalyticsSync';
+import { AnalyticsStatus } from './AnalyticsStatus';
+import { Badge } from '@/components/ui/badge';
 
 interface BlogAnalyticsDashboardProps {
   dateRange?: number;
@@ -36,6 +39,22 @@ export const BlogAnalyticsDashboard = ({ dateRange = 30, authorId }: BlogAnalyti
 
   return (
     <div className="space-y-6">
+      {/* Header com botão de sincronização */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold">Analytics do Blog</h2>
+          {summary?.isRealTime && (
+            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+              Dados em tempo real
+            </Badge>
+          )}
+        </div>
+        <AnalyticsSync />
+      </div>
+
+      {/* Status da agregação */}
+      <AnalyticsStatus />
+
       {/* Métricas principais */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricsCard

@@ -103,3 +103,6 @@ verify_jwt = false
 
 [functions.transcribe-audio]
 verify_jwt = false
+
+[functions.aggregate-blog-analytics]
+verify_jwt = false
