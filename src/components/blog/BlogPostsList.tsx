@@ -1,0 +1,145 @@
+import { useState } from 'react';
+import { useBlogPosts } from '@/hooks/useBlogPosts';
+import { useBlogPostManager } from '@/hooks/useBlogPostManager';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { PostStatusBadge } from './PostStatusBadge';
+import { Pencil, Trash2, Eye, Plus } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+export const BlogPostsList = () => {
+  const navigate = useNavigate();
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'published' | 'draft' | 'all'>('all');
+  
+  const { data: posts, isLoading } = useBlogPosts({
+    status: statusFilter === 'all' ? undefined : statusFilter
+  });
+  const { deletePost, publishPost } = useBlogPostManager();
+
+  const handleDelete = () => {
+    if (deletePostId) {
+      deletePost.mutate(deletePostId);
+      setDeletePostId(null);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="p-8">Carregando...</div>;
+  }
+
+  return (
+    <div className="p-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Gerenciar Posts</h1>
+        <Button onClick={() => navigate('/admin/blog/new')}>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Post
+        </Button>
+      </div>
+
+      <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)} className="mb-6">
+        <TabsList>
+          <TabsTrigger value="all">Todos</TabsTrigger>
+          <TabsTrigger value="published">Publicados</TabsTrigger>
+          <TabsTrigger value="draft">Rascunhos</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Título</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Visualizações</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {posts?.map((post) => (
+              <TableRow key={post.id}>
+                <TableCell className="font-medium">{post.title}</TableCell>
+                <TableCell>
+                  <PostStatusBadge status={post.status} />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    {post.views_count || 0}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {post.published_at 
+                    ? new Date(post.published_at).toLocaleDateString('pt-BR')
+                    : '-'}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/admin/blog/edit/${post.id}`)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    {post.status === 'draft' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => publishPost.mutate(post.id)}
+                      >
+                        Publicar
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDeletePostId(post.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <AlertDialog open={!!deletePostId} onOpenChange={() => setDeletePostId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este post? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};

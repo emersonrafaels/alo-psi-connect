@@ -7,7 +7,8 @@ import {
   DollarSign,
   Settings,
   Shield,
-  Home
+  Home,
+  FileText
 } from 'lucide-react';
 import {
   Sidebar,
@@ -71,6 +72,12 @@ const adminMenuItems = [
     url: '/admin/roles',
     icon: Shield,
     requiredRole: 'super_admin'
+  },
+  {
+    title: 'Blog',
+    url: '/admin/blog',
+    icon: FileText,
+    requiredRole: null
   }
 ];
 
