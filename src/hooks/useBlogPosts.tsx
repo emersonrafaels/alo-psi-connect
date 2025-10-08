@@ -15,6 +15,11 @@ export interface BlogPost {
   views_count: number;
   created_at: string;
   updated_at: string;
+  allow_comments?: boolean;
+  comments_count?: number;
+  allow_ratings?: boolean;
+  average_rating?: number;
+  ratings_count?: number;
   author?: {
     nome: string;
     foto_perfil_url: string | null;

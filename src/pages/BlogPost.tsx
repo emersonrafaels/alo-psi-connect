@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AuthorBadge } from '@/components/blog/AuthorBadge';
 import { PostCard } from '@/components/blog/PostCard';
+import { PostRating } from '@/components/blog/PostRating';
 import { CommentForm } from '@/components/CommentForm';
 import { CommentsList } from '@/components/CommentsList';
 import { useBlogPost } from '@/hooks/useBlogPost';
@@ -123,6 +124,13 @@ export default function BlogPost() {
             </div>
           </div>
 
+          <PostRating
+            postId={post.id}
+            allowRatings={post.allow_ratings ?? true}
+            averageRating={post.average_rating || 0}
+            ratingsCount={post.ratings_count || 0}
+          />
+
           <div className="prose prose-lg dark:prose-invert max-w-none">
             <ReactMarkdown>{post.content}</ReactMarkdown>
           </div>
@@ -138,11 +146,21 @@ export default function BlogPost() {
             </div>
           )}
 
-          <div className="mt-16 pt-8 border-t">
-            <h2 className="text-2xl font-bold mb-6">Comentários</h2>
-            <CommentForm postId={post.id} onCommentAdded={() => {}} />
-            <CommentsList postId={post.id} refreshTrigger={0} />
-          </div>
+          {post.allow_comments ? (
+            <div className="mt-16 pt-8 border-t">
+              <h2 className="text-2xl font-bold mb-6">
+                Comentários {post.comments_count ? `(${post.comments_count})` : ''}
+              </h2>
+              <CommentForm postId={post.id} onCommentAdded={() => {}} />
+              <CommentsList postId={post.id} refreshTrigger={0} />
+            </div>
+          ) : (
+            <div className="mt-16 pt-8 border-t text-center">
+              <p className="text-muted-foreground">
+                Os comentários estão desabilitados para este post.
+              </p>
+            </div>
+          )}
         </article>
       </main>
       <Footer />

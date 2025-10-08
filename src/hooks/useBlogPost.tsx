@@ -19,6 +19,7 @@ export const useBlogPost = (slug: string | undefined) => {
           )
         `)
         .eq('slug', slug)
+        .eq('status', 'published')
         .maybeSingle();
 
       if (error) throw error;

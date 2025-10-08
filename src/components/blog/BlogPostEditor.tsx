@@ -33,6 +33,8 @@ const postSchema = z.object({
   content: z.string().min(1, 'Conteúdo é obrigatório'),
   status: z.enum(['draft', 'published']),
   read_time_minutes: z.number().optional(),
+  allow_comments: z.boolean().optional(),
+  allow_ratings: z.boolean().optional(),
 });
 
 type PostFormData = z.infer<typeof postSchema>;
@@ -48,6 +50,11 @@ interface BlogPostEditorProps {
     status: 'draft' | 'published';
     read_time_minutes?: number;
     tags?: Array<{ id: string; name: string; slug: string }>;
+    allow_comments?: boolean;
+    allow_ratings?: boolean;
+    comments_count?: number;
+    average_rating?: number;
+    ratings_count?: number;
   };
 }
 
@@ -92,6 +99,8 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
       content: post?.content || '',
       status: post?.status || 'draft',
       read_time_minutes: post?.read_time_minutes || undefined,
+      allow_comments: post?.allow_comments ?? true,
+      allow_ratings: post?.allow_ratings ?? true,
     },
   });
 
@@ -211,6 +220,8 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
       read_time_minutes: data.read_time_minutes,
       featured_image_url: featuredImage || undefined,
       tags: selectedTags,
+      allow_comments: data.allow_comments,
+      allow_ratings: data.allow_ratings,
     };
 
     if (post) {
@@ -418,6 +429,40 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
             type="number"
             {...register('read_time_minutes', { valueAsNumber: true })}
             placeholder="5"
+          />
+        </div>
+      </div>
+
+      <div className="border-t pt-4 space-y-4">
+        <h3 className="font-semibold">Configurações de Interação</h3>
+        
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="allow_comments">Permitir comentários</Label>
+            <p className="text-sm text-muted-foreground">
+              {post?.comments_count ? `${post.comments_count} comentário${post.comments_count > 1 ? 's' : ''} atualmente` : 'Permitir que leitores comentem'}
+            </p>
+          </div>
+          <input
+            id="allow_comments"
+            type="checkbox"
+            {...register('allow_comments')}
+            className="h-5 w-5 rounded border-gray-300"
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="allow_ratings">Permitir avaliações</Label>
+            <p className="text-sm text-muted-foreground">
+              {post?.ratings_count ? `⭐ ${post.average_rating?.toFixed(1)} (${post.ratings_count} avaliações)` : 'Permitir que leitores avaliem'}
+            </p>
+          </div>
+          <input
+            id="allow_ratings"
+            type="checkbox"
+            {...register('allow_ratings')}
+            className="h-5 w-5 rounded border-gray-300"
           />
         </div>
       </div>

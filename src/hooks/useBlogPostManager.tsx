@@ -12,6 +12,8 @@ interface CreatePostData {
   status: 'draft' | 'published';
   read_time_minutes?: number;
   tags?: string[];
+  allow_comments?: boolean;
+  allow_ratings?: boolean;
 }
 
 interface UpdatePostData extends CreatePostData {
@@ -38,7 +40,9 @@ export const useBlogPostManager = () => {
           status: data.status,
           read_time_minutes: data.read_time_minutes,
           author_id: user.id,
-          published_at: data.status === 'published' ? new Date().toISOString() : null
+          published_at: data.status === 'published' ? new Date().toISOString() : null,
+          allow_comments: data.allow_comments ?? true,
+          allow_ratings: data.allow_ratings ?? true
         })
         .select()
         .single();
@@ -87,7 +91,9 @@ export const useBlogPostManager = () => {
           featured_image_url: data.featured_image_url,
           status: data.status,
           read_time_minutes: data.read_time_minutes,
-          published_at: data.status === 'published' ? new Date().toISOString() : null
+          published_at: data.status === 'published' ? new Date().toISOString() : null,
+          allow_comments: data.allow_comments ?? true,
+          allow_ratings: data.allow_ratings ?? true
         })
         .eq('id', data.id);
 

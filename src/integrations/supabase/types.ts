@@ -282,6 +282,44 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_post_ratings: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string
+          rating: number
+          session_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id: string
+          rating: number
+          session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          rating?: number
+          session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_ratings_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_post_tags: {
         Row: {
           post_id: string
@@ -314,13 +352,18 @@ export type Database = {
       }
       blog_posts: {
         Row: {
+          allow_comments: boolean | null
+          allow_ratings: boolean | null
           author_id: string
+          average_rating: number | null
+          comments_count: number | null
           content: string
           created_at: string | null
           excerpt: string | null
           featured_image_url: string | null
           id: string
           published_at: string | null
+          ratings_count: number | null
           read_time_minutes: number | null
           slug: string
           status: string
@@ -329,13 +372,18 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
+          allow_comments?: boolean | null
+          allow_ratings?: boolean | null
           author_id: string
+          average_rating?: number | null
+          comments_count?: number | null
           content: string
           created_at?: string | null
           excerpt?: string | null
           featured_image_url?: string | null
           id?: string
           published_at?: string | null
+          ratings_count?: number | null
           read_time_minutes?: number | null
           slug: string
           status?: string
@@ -344,13 +392,18 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
+          allow_comments?: boolean | null
+          allow_ratings?: boolean | null
           author_id?: string
+          average_rating?: number | null
+          comments_count?: number | null
           content?: string
           created_at?: string | null
           excerpt?: string | null
           featured_image_url?: string | null
           id?: string
           published_at?: string | null
+          ratings_count?: number | null
           read_time_minutes?: number | null
           slug?: string
           status?: string
