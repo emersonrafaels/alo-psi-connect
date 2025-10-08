@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BlogPostsList } from '@/components/blog/BlogPostsList';
 import { BlogAnalyticsDashboard } from '@/components/admin/BlogAnalyticsDashboard';
 import { AnalyticsFilters } from '@/components/admin/AnalyticsFilters';
+import { AuthorAnalytics } from '@/components/admin/AuthorAnalytics';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,10 @@ import { useCurationPosts, CurationFilters as FilterType } from '@/hooks/useCura
 
 const BlogManagement = () => {
   const [dateRange, setDateRange] = useState(30);
+  const [selectedTag, setSelectedTag] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'featured' | 'normal'>('all');
+  const [selectedAuthor, setSelectedAuthor] = useState<string>('all');
+  
   const { user } = useAuth();
   const { hasRole } = useAdminAuth();
   const isAdmin = hasRole('admin' as any);
@@ -74,12 +79,40 @@ const BlogManagement = () => {
             <div>
               <h3 className="text-2xl font-bold tracking-tight">Analytics</h3>
               <p className="text-muted-foreground">
-                Análises detalhadas dos seus posts
+                Análises detalhadas e comparativas dos posts do blog
               </p>
             </div>
-            <AnalyticsFilters dateRange={dateRange} onDateRangeChange={setDateRange} />
+            <AnalyticsFilters 
+              dateRange={dateRange} 
+              onDateRangeChange={setDateRange}
+              selectedTag={selectedTag}
+              onTagChange={setSelectedTag}
+              selectedStatus={selectedStatus}
+              onStatusChange={setSelectedStatus}
+              selectedAuthor={selectedAuthor}
+              onAuthorChange={setSelectedAuthor}
+            />
           </div>
-          <BlogAnalyticsDashboard dateRange={dateRange} authorId={user?.id} />
+
+          <Tabs defaultValue="overview" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+              <TabsTrigger value="authors">Por Autor</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-4">
+              <BlogAnalyticsDashboard 
+                dateRange={dateRange} 
+                authorId={selectedAuthor !== 'all' ? selectedAuthor : undefined}
+                tagSlug={selectedTag !== 'all' ? selectedTag : undefined}
+                featuredStatus={selectedStatus}
+              />
+            </TabsContent>
+
+            <TabsContent value="authors" className="space-y-4">
+              <AuthorAnalytics dateRange={dateRange} />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         {isAdmin && (
