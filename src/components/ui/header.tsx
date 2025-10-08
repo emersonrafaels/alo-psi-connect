@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useUserProfile } from "@/hooks/useUserProfile"
 import { useAdminAuth } from "@/hooks/useAdminAuth"
 import { useUserType } from "@/hooks/useUserType"
+import { useAuthorRole } from "@/hooks/useAuthorRole"
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -20,6 +21,7 @@ const Header = () => {
   const { profile } = useUserProfile()
   const { isAdmin } = useAdminAuth()
   const { isProfessional } = useUserType()
+  const { isAuthor } = useAuthorRole()
 
   const navigation = [
     { name: "Home", href: "/" },
@@ -118,6 +120,12 @@ const Header = () => {
                     <Settings className="h-4 w-4 mr-2" />
                     Meu Perfil
                   </DropdownMenuItem>
+                  {isAuthor && (
+                    <DropdownMenuItem onClick={() => navigate('/admin/blog')}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Gerenciar Blog
+                    </DropdownMenuItem>
+                  )}
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator />
@@ -221,6 +229,26 @@ const Header = () => {
                     <Settings className="h-4 w-4" />
                     Meu Perfil
                   </Link>
+                  {isAuthor && (
+                    <Link
+                      to="/admin/blog"
+                      className="text-sm hover:text-accent transition-colors flex items-center gap-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <FileText className="h-4 w-4" />
+                      Gerenciar Blog
+                    </Link>
+                  )}
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="text-sm hover:text-accent transition-colors flex items-center gap-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Shield className="h-4 w-4" />
+                      Acessar Admin
+                    </Link>
+                  )}
                 </>
               )}
                 <div className="flex flex-col space-y-2 pt-4 border-t border-primary-foreground/20">

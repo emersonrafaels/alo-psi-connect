@@ -13,6 +13,7 @@ import WhatsAppFloat from "@/components/ui/whatsapp-float";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import Professional from "./pages/Professional";
 import Professionals from "./pages/Professionals";
 import Schedule from "./pages/Schedule";
@@ -49,6 +50,7 @@ import EmotionConfigPage from "./pages/EmotionConfigPage";
 
 // Admin pages
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { BlogLayout } from "@/components/blog/BlogLayout";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminAnalytics from "@/pages/admin/Analytics";
 import AdminUsers from "@/pages/admin/Users";
@@ -57,6 +59,9 @@ import AdminProfessionals from "@/pages/admin/Professionals";
 import AdminAppointments from "@/pages/admin/Appointments";
 import AdminFinancial from "@/pages/admin/Financial";
 import AdminRoles from "@/pages/admin/Roles";
+import BlogManagement from "@/pages/admin/BlogManagement";
+import BlogEditor from "@/pages/admin/BlogEditor";
+import PostAnalytics from "@/pages/admin/PostAnalytics";
 
 import "./App.css";
 
@@ -76,7 +81,8 @@ const AppWithShortcuts = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/sobre" element={<About />} />
-      <Route path="/blog" element={<Blog />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/profissionais" element={<Professionals />} />
       <Route path="/profissional/:id" element={<Professional />} />
       <Route path="/professional/:id" element={<Professional />} />
@@ -128,6 +134,10 @@ const AppWithShortcuts = () => {
       <Route path="/admin/appointments" element={<AdminLayout><AdminAppointments /></AdminLayout>} />
       <Route path="/admin/financial" element={<AdminLayout><AdminFinancial /></AdminLayout>} />
       <Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />
+      <Route path="/admin/blog" element={<BlogLayout><BlogManagement /></BlogLayout>} />
+      <Route path="/admin/post-analytics/:postId" element={<BlogLayout><PostAnalytics /></BlogLayout>} />
+      <Route path="/admin/blog/new" element={<BlogEditor />} />
+      <Route path="/admin/blog/edit/:id" element={<BlogEditor />} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

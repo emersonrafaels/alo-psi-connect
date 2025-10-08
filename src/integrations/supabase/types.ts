@@ -282,6 +282,329 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_analytics_daily: {
+        Row: {
+          avg_time_spent: number | null
+          completion_rate: number | null
+          created_at: string
+          date: string
+          id: string
+          post_id: string
+          unique_visitors: number | null
+          updated_at: string
+          views_count: number | null
+        }
+        Insert: {
+          avg_time_spent?: number | null
+          completion_rate?: number | null
+          created_at?: string
+          date: string
+          id?: string
+          post_id: string
+          unique_visitors?: number | null
+          updated_at?: string
+          views_count?: number | null
+        }
+        Update: {
+          avg_time_spent?: number | null
+          completion_rate?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          post_id?: string
+          unique_visitors?: number | null
+          updated_at?: string
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_analytics_daily_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_post_ratings: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string
+          rating: number
+          session_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id: string
+          rating: number
+          session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          rating?: number
+          session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_ratings_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_post_tags: {
+        Row: {
+          post_id: string
+          tag_id: string
+        }
+        Insert: {
+          post_id: string
+          tag_id: string
+        }
+        Update: {
+          post_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_tags_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_post_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "blog_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_post_views_tracking: {
+        Row: {
+          completed_reading: boolean | null
+          created_at: string
+          device_type: string | null
+          id: string
+          post_id: string
+          referrer: string | null
+          session_id: string
+          time_spent: number | null
+          user_id: string | null
+          viewed_at: string
+        }
+        Insert: {
+          completed_reading?: boolean | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          post_id: string
+          referrer?: string | null
+          session_id: string
+          time_spent?: number | null
+          user_id?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          completed_reading?: boolean | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          post_id?: string
+          referrer?: string | null
+          session_id?: string
+          time_spent?: number | null
+          user_id?: string | null
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_views_tracking_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_posts: {
+        Row: {
+          allow_comments: boolean | null
+          allow_ratings: boolean | null
+          author_id: string
+          average_rating: number | null
+          badge_expires_at: string | null
+          comments_count: number | null
+          content: string
+          created_at: string | null
+          editorial_badge: Database["public"]["Enums"]["editorial_badge"] | null
+          excerpt: string | null
+          featured_image_url: string | null
+          featured_order: number | null
+          id: string
+          is_featured: boolean | null
+          published_at: string | null
+          ratings_count: number | null
+          read_time_minutes: number | null
+          slug: string
+          status: string
+          title: string
+          updated_at: string | null
+          views_count: number | null
+        }
+        Insert: {
+          allow_comments?: boolean | null
+          allow_ratings?: boolean | null
+          author_id: string
+          average_rating?: number | null
+          badge_expires_at?: string | null
+          comments_count?: number | null
+          content: string
+          created_at?: string | null
+          editorial_badge?:
+            | Database["public"]["Enums"]["editorial_badge"]
+            | null
+          excerpt?: string | null
+          featured_image_url?: string | null
+          featured_order?: number | null
+          id?: string
+          is_featured?: boolean | null
+          published_at?: string | null
+          ratings_count?: number | null
+          read_time_minutes?: number | null
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          allow_comments?: boolean | null
+          allow_ratings?: boolean | null
+          author_id?: string
+          average_rating?: number | null
+          badge_expires_at?: string | null
+          comments_count?: number | null
+          content?: string
+          created_at?: string | null
+          editorial_badge?:
+            | Database["public"]["Enums"]["editorial_badge"]
+            | null
+          excerpt?: string | null
+          featured_image_url?: string | null
+          featured_order?: number | null
+          id?: string
+          is_featured?: boolean | null
+          published_at?: string | null
+          ratings_count?: number | null
+          read_time_minutes?: number | null
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Relationships: []
+      }
+      blog_saved_posts: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_saved_posts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string | null
+          id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string | null
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string | null
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           author_email: string
@@ -289,7 +612,11 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          likes_count: number | null
+          parent_comment_id: string | null
           post_id: string
+          reported_count: number | null
+          status: string | null
           updated_at: string
           user_id: string
         }
@@ -299,7 +626,11 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          likes_count?: number | null
+          parent_comment_id?: string | null
           post_id: string
+          reported_count?: number | null
+          status?: string | null
           updated_at?: string
           user_id: string
         }
@@ -309,11 +640,23 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          likes_count?: number | null
+          parent_comment_id?: string | null
           post_id?: string
+          reported_count?: number | null
+          status?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       default_emotion_types: {
         Row: {
@@ -1133,6 +1476,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_post_views: {
+        Args: { post_slug: string }
+        Returns: undefined
+      }
+      invoke_blog_analytics_aggregation: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       invoke_google_calendar_sync: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1151,7 +1502,18 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "super_admin" | "moderator"
+      app_role:
+        | "admin"
+        | "super_admin"
+        | "moderator"
+        | "author"
+        | "super_author"
+      editorial_badge:
+        | "editors_pick"
+        | "trending"
+        | "must_read"
+        | "community_favorite"
+        | "staff_pick"
       payment_status: "pending_payment" | "paid" | "failed"
     }
     CompositeTypes: {
@@ -1280,7 +1642,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "super_admin", "moderator"],
+      app_role: ["admin", "super_admin", "moderator", "author", "super_author"],
+      editorial_badge: [
+        "editors_pick",
+        "trending",
+        "must_read",
+        "community_favorite",
+        "staff_pick",
+      ],
       payment_status: ["pending_payment", "paid", "failed"],
     },
   },

@@ -39,7 +39,11 @@ export const useAdminAuth = (): AdminAuthData => {
         } else {
           const userRoles = data?.map(item => item.role as UserRole) || [];
           setRoles(userRoles);
-          setIsAdmin(userRoles.length > 0);
+          // Only set isAdmin if user has actual admin roles
+          const adminRoles = userRoles.filter(r => 
+            r === 'admin' || r === 'super_admin' || r === 'moderator'
+          );
+          setIsAdmin(adminRoles.length > 0);
         }
       } catch (error) {
         console.error('Error checking admin roles:', error);

@@ -7,7 +7,9 @@ import {
   DollarSign,
   Settings,
   Shield,
-  Home
+  Home,
+  FileText,
+  Star
 } from 'lucide-react';
 import {
   Sidebar,
@@ -28,49 +30,55 @@ const adminMenuItems = [
     title: 'Dashboard',
     url: '/admin',
     icon: Home,
-    requiredRole: null
+    requiredRole: 'admin' as const // Apenas admins/super_admins
   },
   {
     title: 'Analytics',
     url: '/admin/analytics',
     icon: BarChart3,
-    requiredRole: null
+    requiredRole: 'admin' as const // Apenas admins (analytics gerais da plataforma)
   },
   {
     title: 'Usuários',
     url: '/admin/users',
     icon: Users,
-    requiredRole: null
+    requiredRole: 'admin' as const // Apenas admins/super_admins
   },
   {
     title: 'Profissionais',
     url: '/admin/professionals',
     icon: UserCheck,
-    requiredRole: null
+    requiredRole: 'admin' as const // Apenas admins/super_admins
   },
   {
     title: 'Agendamentos',
     url: '/admin/appointments',
     icon: Calendar,
-    requiredRole: null
+    requiredRole: 'admin' as const // Apenas admins/super_admins
   },
   {
     title: 'Financeiro',
     url: '/admin/financial',
     icon: DollarSign,
-    requiredRole: 'admin'
+    requiredRole: 'admin' as const
   },
   {
     title: 'Configurações',
     url: '/admin/configuracoes',
     icon: Settings,
-    requiredRole: 'admin'
+    requiredRole: 'admin' as const
   },
   {
     title: 'Roles',
     url: '/admin/roles',
     icon: Shield,
-    requiredRole: 'super_admin'
+    requiredRole: 'super_admin' as const
+  },
+  {
+    title: 'Blog',
+    url: '/admin/blog',
+    icon: FileText,
+    requiredRole: null // Autores e admins podem ver
   }
 ];
 
