@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, Eye, Home } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Eye, Home, Bookmark } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
@@ -16,6 +16,8 @@ import { CommentForm } from '@/components/CommentForm';
 import { CommentsList } from '@/components/CommentsList';
 import { useBlogPost } from '@/hooks/useBlogPost';
 import { useBlogPosts } from '@/hooks/useBlogPosts';
+import { ShareButtons } from '@/components/blog/ShareButtons';
+import { useSavedPosts } from '@/hooks/useSavedPosts';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -33,6 +35,7 @@ export default function BlogPost() {
     limit: 3,
     tagSlug: post?.tags?.[0]?.slug 
   });
+  const { isSaved, toggleSave } = useSavedPosts(post?.id || '');
 
   useEffect(() => {
     if (slug && post) {
@@ -194,27 +197,48 @@ export default function BlogPost() {
       <Header />
       <main className="flex-1">
         <article className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
-          <Breadcrumb className="mb-6">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/">
-                    <Home className="h-4 w-4" />
-                  </Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/blog">Blog</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{post.title}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <div className="flex items-center justify-between mb-6">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">
+                      <Home className="h-4 w-4" />
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/blog">Blog</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{post.title}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+            
+            <div className="flex items-center gap-2">
+              <ShareButtons 
+                url={window.location.href}
+                title={post.title}
+                description={post.excerpt || ''}
+              />
+              {post.id && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleSave}
+                  className="gap-2"
+                >
+                  <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
+                  {isSaved ? 'Salvo' : 'Salvar'}
+                </Button>
+              )}
+            </div>
+          </div>
 
           {post.featured_image_url && (
             <div className="aspect-video rounded-lg overflow-hidden mb-8">

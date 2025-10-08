@@ -1,12 +1,8 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { Edit2, Trash2, Calendar } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { CommentThread } from '@/components/blog/CommentThread';
 
 interface Comment {
   id: string;
@@ -16,6 +12,10 @@ interface Comment {
   user_id: string;
   created_at: string;
   updated_at: string;
+  likes_count: number;
+  parent_comment_id?: string;
+  reported_count: number;
+  replies?: Comment[];
 }
 
 interface CommentsListProps {
@@ -26,11 +26,12 @@ interface CommentsListProps {
 export const CommentsList = ({ postId, refreshTrigger }: CommentsListProps) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState("");
-  const [isUpdating, setIsUpdating] = useState(false);
-  const { toast } = useToast();
+  const [editingComment, setEditingComment] = useState<Comment | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState('');
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const fetchComments = async () => {
     try {
@@ -38,17 +39,34 @@ export const CommentsList = ({ postId, refreshTrigger }: CommentsListProps) => {
         .from('comments')
         .select('*')
         .eq('post_id', postId)
+        .eq('status', 'approved')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setComments(data || []);
+      
+      // Organize comments in a tree structure
+      const commentsMap = new Map<string, Comment>();
+      const rootComments: Comment[] = [];
+      
+      (data || []).forEach(comment => {
+        commentsMap.set(comment.id, { ...comment, replies: [] });
+      });
+      
+      commentsMap.forEach(comment => {
+        if (comment.parent_comment_id) {
+          const parent = commentsMap.get(comment.parent_comment_id);
+          if (parent) {
+            parent.replies = parent.replies || [];
+            parent.replies.push(comment);
+          }
+        } else {
+          rootComments.push(comment);
+        }
+      });
+      
+      setComments(rootComments);
     } catch (error) {
       console.error('Error fetching comments:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar comentários.",
-        variant: "destructive"
-      });
     } finally {
       setLoading(false);
     }
@@ -59,17 +77,27 @@ export const CommentsList = ({ postId, refreshTrigger }: CommentsListProps) => {
   }, [postId, refreshTrigger]);
 
   const handleEdit = (comment: Comment) => {
-    setEditingId(comment.id);
+    setEditingComment(comment);
     setEditContent(comment.content);
   };
 
   const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditContent("");
+    setEditingComment(null);
+    setEditContent('');
+  };
+  
+  const handleReply = (parentId: string) => {
+    setReplyingTo(parentId);
+    setReplyContent('');
+  };
+  
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+    setReplyContent('');
   };
 
-  const handleUpdateComment = async (commentId: string) => {
-    if (!editContent.trim()) {
+  const handleUpdateComment = async () => {
+    if (!editContent.trim() || !editingComment) {
       toast({
         title: "Erro",
         description: "O comentário não pode estar vazio.",
@@ -78,29 +106,24 @@ export const CommentsList = ({ postId, refreshTrigger }: CommentsListProps) => {
       return;
     }
 
-    setIsUpdating(true);
-
     try {
       const { error } = await supabase
         .from('comments')
-        .update({ content: editContent.trim() })
-        .eq('id', commentId);
+        .update({ 
+          content: editContent,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingComment.id);
 
       if (error) throw error;
 
-      setComments(comments.map(comment => 
-        comment.id === commentId 
-          ? { ...comment, content: editContent.trim(), updated_at: new Date().toISOString() }
-          : comment
-      ));
-
-      setEditingId(null);
-      setEditContent("");
-      
       toast({
         title: "Sucesso",
-        description: "Comentário atualizado com sucesso!"
+        description: "Comentário atualizado com sucesso."
       });
+
+      handleCancelEdit();
+      fetchComments();
     } catch (error) {
       console.error('Error updating comment:', error);
       toast({
@@ -108,13 +131,59 @@ export const CommentsList = ({ postId, refreshTrigger }: CommentsListProps) => {
         description: "Erro ao atualizar comentário.",
         variant: "destructive"
       });
-    } finally {
-      setIsUpdating(false);
+    }
+  };
+  
+  const handleSubmitReply = async () => {
+    if (!replyContent.trim() || !replyingTo || !user) {
+      toast({
+        title: "Erro",
+        description: "Erro ao enviar resposta.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('nome, email')
+        .eq('user_id', user.id)
+        .single();
+
+      const { error } = await supabase
+        .from('comments')
+        .insert({
+          post_id: postId,
+          content: replyContent,
+          user_id: user.id,
+          author_name: profile?.nome || user.email || 'Usuário',
+          author_email: profile?.email || user.email || '',
+          parent_comment_id: replyingTo,
+          status: 'approved'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Resposta enviada com sucesso."
+      });
+
+      handleCancelReply();
+      fetchComments();
+    } catch (error) {
+      console.error('Error submitting reply:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao enviar resposta.",
+        variant: "destructive"
+      });
     }
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm("Tem certeza que deseja excluir este comentário?")) {
+    if (!confirm('Tem certeza que deseja excluir este comentário?')) {
       return;
     }
 
@@ -126,12 +195,12 @@ export const CommentsList = ({ postId, refreshTrigger }: CommentsListProps) => {
 
       if (error) throw error;
 
-      setComments(comments.filter(comment => comment.id !== commentId));
-      
       toast({
         title: "Sucesso",
-        description: "Comentário excluído com sucesso!"
+        description: "Comentário excluído com sucesso."
       });
+
+      fetchComments();
     } catch (error) {
       console.error('Error deleting comment:', error);
       toast({
@@ -142,26 +211,20 @@ export const CommentsList = ({ postId, refreshTrigger }: CommentsListProps) => {
     }
   };
 
-  const canEditComment = (comment: Comment) => {
-    return user && user.id === comment.user_id;
-  };
-
   if (loading) {
     return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Comentários</h3>
-        <div className="text-center py-8">
-          <div className="skeleton-modern h-20 rounded-lg mb-4"></div>
-          <div className="skeleton-modern h-20 rounded-lg mb-4"></div>
-          <div className="skeleton-modern h-20 rounded-lg"></div>
+      <div className="space-y-4 mt-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-24 bg-muted rounded-lg"></div>
+          <div className="h-24 bg-muted rounded-lg"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold flex items-center gap-2">
+    <div className="space-y-6 mt-8">
+      <h3 className="text-lg font-semibold">
         Comentários ({comments.length})
       </h3>
 
@@ -172,77 +235,64 @@ export const CommentsList = ({ postId, refreshTrigger }: CommentsListProps) => {
       ) : (
         <div className="space-y-4">
           {comments.map((comment) => (
-            <div key={comment.id} className="bg-card/30 p-4 rounded-lg border border-border/30">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-gradient-primary flex items-center justify-center text-white text-sm font-semibold">
-                    {comment.author_name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">{comment.author_name}</p>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      {format(new Date(comment.created_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
-                      {comment.updated_at !== comment.created_at && (
-                        <span className="ml-1">(editado)</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {canEditComment(comment) && (
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(comment)}
-                      className="h-8 w-8 p-0 hover:bg-primary/10"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteComment(comment.id)}
-                      className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {editingId === comment.id ? (
-                <div className="space-y-3">
-                  <Textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    className="min-h-[80px] resize-none"
-                    disabled={isUpdating}
+            <div key={comment.id}>
+              <CommentThread
+                comment={comment}
+                replies={comment.replies || []}
+                onReply={handleReply}
+                onEdit={handleEdit}
+                onDelete={handleDeleteComment}
+              />
+              
+              {replyingTo === comment.id && (
+                <div className="ml-8 mt-4 bg-card/20 p-4 rounded-lg border border-border/30">
+                  <p className="text-sm font-medium mb-2">Respondendo a {comment.author_name}</p>
+                  <textarea
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    className="w-full min-h-[100px] p-3 rounded-md border bg-background resize-none"
+                    placeholder="Escreva sua resposta..."
                   />
-                  <div className="flex gap-2 justify-end">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCancelEdit}
-                      disabled={isUpdating}
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={handleSubmitReply}
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90"
+                    >
+                      Enviar
+                    </button>
+                    <button
+                      onClick={handleCancelReply}
+                      className="px-4 py-2 border rounded-md text-sm font-medium hover:bg-accent"
                     >
                       Cancelar
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => handleUpdateComment(comment.id)}
-                      disabled={isUpdating || !editContent.trim()}
-                      className="btn-gradient"
-                    >
-                      {isUpdating ? "Salvando..." : "Salvar"}
-                    </Button>
+                    </button>
                   </div>
                 </div>
-              ) : (
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {comment.content}
-                </p>
+              )}
+              
+              {editingComment?.id === comment.id && (
+                <div className="ml-8 mt-4 bg-card/20 p-4 rounded-lg border border-border/30">
+                  <p className="text-sm font-medium mb-2">Editando comentário</p>
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full min-h-[100px] p-3 rounded-md border bg-background resize-none"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={handleUpdateComment}
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90"
+                    >
+                      Salvar
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="px-4 py-2 border rounded-md text-sm font-medium hover:bg-accent"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           ))}

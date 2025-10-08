@@ -413,6 +413,38 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_saved_posts: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_saved_posts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_tags: {
         Row: {
           created_at: string | null
@@ -434,6 +466,38 @@ export type Database = {
         }
         Relationships: []
       }
+      comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string | null
+          id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string | null
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string | null
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           author_email: string
@@ -441,7 +505,11 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          likes_count: number | null
+          parent_comment_id: string | null
           post_id: string
+          reported_count: number | null
+          status: string | null
           updated_at: string
           user_id: string
         }
@@ -451,7 +519,11 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          likes_count?: number | null
+          parent_comment_id?: string | null
           post_id: string
+          reported_count?: number | null
+          status?: string | null
           updated_at?: string
           user_id: string
         }
@@ -461,11 +533,23 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          likes_count?: number | null
+          parent_comment_id?: string | null
           post_id?: string
+          reported_count?: number | null
+          status?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       default_emotion_types: {
         Row: {
