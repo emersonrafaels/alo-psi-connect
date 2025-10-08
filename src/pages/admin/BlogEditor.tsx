@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { BlogLayout } from '@/components/blog/BlogLayout';
 import { BlogPostEditor } from '@/components/blog/BlogPostEditor';
 import { useBlogPost } from '@/hooks/useBlogPost';
 
@@ -8,7 +8,7 @@ const BlogEditor = () => {
   const { data: post, isLoading } = useBlogPost(id);
 
   return (
-    <AdminLayout>
+    <BlogLayout>
       <div className="p-8">
         <h1 className="text-3xl font-bold mb-6">
           {id ? 'Editar Post' : 'Novo Post'}
@@ -35,7 +35,7 @@ const BlogEditor = () => {
           <BlogPostEditor />
         )}
       </div>
-    </AdminLayout>
+    </BlogLayout>
   );
 };
 
