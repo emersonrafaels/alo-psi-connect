@@ -43,16 +43,35 @@ export const AuthorAnalytics = ({ dateRange }: AuthorAnalyticsProps) => {
             author_id,
             comments_count,
             ratings_count,
-            average_rating,
-            author:profiles!blog_posts_author_id_fkey(
-              nome,
-              foto_perfil_url
-            )
+            average_rating
           )
         `)
         .gte('date', startDate);
 
       if (error) throw error;
+
+      // Collect unique author IDs
+      const authorIds = new Set<string>();
+      analyticsData?.forEach((day: any) => {
+        if (day.post?.author_id) {
+          authorIds.add(day.post.author_id);
+        }
+      });
+
+      // Fetch author profiles
+      const { data: authorsData } = await supabase
+        .from('profiles')
+        .select('user_id, nome, foto_perfil_url')
+        .in('user_id', Array.from(authorIds));
+
+      // Create author lookup map
+      const authorLookup = new Map();
+      authorsData?.forEach(author => {
+        authorLookup.set(author.user_id, {
+          nome: author.nome,
+          foto_perfil_url: author.foto_perfil_url
+        });
+      });
 
       // Group by author
       const authorMap = new Map<string, AuthorMetrics>();
@@ -61,8 +80,9 @@ export const AuthorAnalytics = ({ dateRange }: AuthorAnalyticsProps) => {
         if (!day.post?.author_id) return;
 
         const authorId = day.post.author_id;
-        const authorName = day.post.author?.nome || 'Autor Desconhecido';
-        const authorPhoto = day.post.author?.foto_perfil_url;
+        const authorInfo = authorLookup.get(authorId);
+        const authorName = authorInfo?.nome || 'Autor Desconhecido';
+        const authorPhoto = authorInfo?.foto_perfil_url;
 
         if (!authorMap.has(authorId)) {
           authorMap.set(authorId, {
