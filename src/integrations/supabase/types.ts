@@ -1480,6 +1480,10 @@ export type Database = {
         Args: { post_slug: string }
         Returns: undefined
       }
+      invoke_blog_analytics_aggregation: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       invoke_google_calendar_sync: {
         Args: Record<PropertyKey, never>
         Returns: undefined
