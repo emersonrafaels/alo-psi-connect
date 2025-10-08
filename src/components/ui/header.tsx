@@ -246,30 +246,35 @@ const Header = () => {
                     Sair
                   </Button>
                 ) : (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
-                      onClick={() => {
-                        navigate('/cadastro/tipo-usuario');
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      Cadastrar
-                    </Button>
-                    <Button 
-                      variant="default" 
-                      size="sm" 
-                      className="bg-accent text-accent-foreground hover:bg-accent/90"
-                      onClick={() => {
-                        navigate('/auth');
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      Entrar
-                    </Button>
-                  </>
+                 <>
+  <Button
+    variant="outline"
+    size="sm"
+    className="
+      border-[hsl(var(--accent))]
+      text-[hsl(var(--accent))]
+      hover:bg-[hsl(var(--accent))]
+      hover:text-[hsl(var(--accent-foreground))]
+    "
+    onClick={() => navigate('/cadastro/tipo-usuario')}
+  >
+    Cadastrar
+  </Button>
+
+  <Button
+    variant="default"
+    size="sm"
+    className="
+      bg-[hsl(var(--accent))]
+      text-[hsl(var(--accent-foreground))]
+      hover:bg-[hsl(var(--accent)/0.9)]
+    "
+    onClick={() => navigate('/auth')}
+  >
+    Entrar
+  </Button>
+</>
+
                 )}
               </div>
             </nav>

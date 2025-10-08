@@ -109,9 +109,12 @@ const WorkWithUs = () => {
               return (
                 <Card key={index} className="text-center hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30">
                   <CardHeader>
-                    <div className="w-20 h-20 bg-gradient-primary rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <Icon className="text-white" size={32} />
-                    </div>
+<div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center 
+  bg-gradient-to-r from-blue-100 to-blue-300 dark:from-blue-500 dark:to-blue-700">
+  <Icon className="w-10 h-10 text-gray-800 dark:text-white" />
+</div>
+
+
                     <CardTitle className="text-xl">{value.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
