@@ -18,6 +18,7 @@ import { useBlogPost } from '@/hooks/useBlogPost';
 import { useBlogPosts } from '@/hooks/useBlogPosts';
 import { ShareButtons } from '@/components/blog/ShareButtons';
 import { useSavedPosts } from '@/hooks/useSavedPosts';
+import { usePostViewTracking } from '@/hooks/usePostViewTracking';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -36,6 +37,9 @@ export default function BlogPost() {
     tagSlug: post?.tags?.[0]?.slug 
   });
   const { isSaved, toggleSave } = useSavedPosts(post?.id || '');
+  
+  // Track post view analytics
+  usePostViewTracking(post?.id || '');
 
   useEffect(() => {
     if (slug && post) {
