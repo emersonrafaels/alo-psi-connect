@@ -7,12 +7,13 @@ import { Link } from 'react-router-dom';
 
 interface BlogAnalyticsDashboardProps {
   dateRange?: number;
+  authorId?: string; // Se fornecido, filtra apenas posts deste autor
 }
 
-export const BlogAnalyticsDashboard = ({ dateRange = 30 }: BlogAnalyticsDashboardProps) => {
-  const { data: summary, isLoading: loadingSummary } = useBlogAnalyticsSummary(dateRange);
-  const { data: dailyData, isLoading: loadingDaily } = useDailyAnalytics(dateRange);
-  const { data: topPosts, isLoading: loadingPosts } = usePostAnalytics(dateRange, 10);
+export const BlogAnalyticsDashboard = ({ dateRange = 30, authorId }: BlogAnalyticsDashboardProps) => {
+  const { data: summary, isLoading: loadingSummary } = useBlogAnalyticsSummary(dateRange, authorId);
+  const { data: dailyData, isLoading: loadingDaily } = useDailyAnalytics(dateRange, authorId);
+  const { data: topPosts, isLoading: loadingPosts } = usePostAnalytics(dateRange, 10, authorId);
 
   if (loadingSummary || loadingDaily || loadingPosts) {
     return (

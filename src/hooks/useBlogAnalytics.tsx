@@ -35,25 +35,64 @@ export interface DailyAnalytics {
   completionRate: number;
 }
 
-export const useBlogAnalyticsSummary = (dateRange: number = 30) => {
+export const useBlogAnalyticsSummary = (dateRange: number = 30, authorId?: string) => {
   return useQuery({
-    queryKey: ['blog-analytics-summary', dateRange],
+    queryKey: ['blog-analytics-summary', dateRange, authorId],
     queryFn: async () => {
       const startDate = format(subDays(startOfDay(new Date()), dateRange), 'yyyy-MM-dd');
 
-      // Buscar analytics diários
-      const { data: dailyData, error: dailyError } = await supabase
+      // Se authorId fornecido, buscar apenas posts deste autor
+      let postsQuery = supabase
+        .from('blog_posts')
+        .select('id')
+        .eq('status', 'published');
+
+      if (authorId) {
+        postsQuery = postsQuery.eq('author_id', authorId);
+      }
+
+      const { data: authorPosts, error: authorPostsError } = await postsQuery;
+      if (authorPostsError) throw authorPostsError;
+
+      const postIds = authorPosts?.map(p => p.id) || [];
+
+      // Buscar analytics apenas dos posts filtrados
+      let dailyQuery = supabase
         .from('blog_analytics_daily')
         .select('*')
         .gte('date', startDate);
 
+      if (postIds.length > 0) {
+        dailyQuery = dailyQuery.in('post_id', postIds);
+      } else if (authorId) {
+        // Se é author mas não tem posts, retornar vazio
+        return {
+          totalPosts: 0,
+          totalViews: 0,
+          totalUniqueVisitors: 0,
+          avgTimeSpent: 0,
+          avgCompletionRate: 0,
+          totalComments: 0,
+          totalRatings: 0,
+          avgRating: 0,
+        };
+      }
+
+      const { data: dailyData, error: dailyError } = await dailyQuery;
+
       if (dailyError) throw dailyError;
 
-      // Buscar total de posts publicados
-      const { count: totalPosts, error: postsError } = await supabase
+      // Buscar total de posts publicados (filtrados por autor se necessário)
+      let totalPostsQuery = supabase
         .from('blog_posts')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'published');
+
+      if (authorId) {
+        totalPostsQuery = totalPostsQuery.eq('author_id', authorId);
+      }
+
+      const { count: totalPosts, error: postsError } = await totalPostsQuery;
 
       if (postsError) throw postsError;
 
@@ -67,18 +106,28 @@ export const useBlogAnalyticsSummary = (dateRange: number = 30) => {
         ? dailyData.reduce((sum, day) => sum + parseFloat(String(day.completion_rate || 0)), 0) / dailyData.length
         : 0;
 
-      // Buscar total de comentários e ratings
-      const { count: totalComments } = await supabase
+      // Buscar total de comentários e ratings (apenas dos posts do autor se filtrado)
+      let commentsQuery = supabase
         .from('comments')
         .select('*', { count: 'exact', head: true });
 
-      const { count: totalRatings } = await supabase
+      let ratingsQuery = supabase
         .from('blog_post_ratings')
         .select('*', { count: 'exact', head: true });
 
-      const { data: ratingsData } = await supabase
+      let ratingsDataQuery = supabase
         .from('blog_post_ratings')
         .select('rating');
+
+      if (postIds.length > 0) {
+        commentsQuery = commentsQuery.in('post_id', postIds);
+        ratingsQuery = ratingsQuery.in('post_id', postIds);
+        ratingsDataQuery = ratingsDataQuery.in('post_id', postIds);
+      }
+
+      const { count: totalComments } = await commentsQuery;
+      const { count: totalRatings } = await ratingsQuery;
+      const { data: ratingsData } = await ratingsDataQuery;
 
       const avgRating = ratingsData?.length
         ? ratingsData.reduce((sum, r) => sum + r.rating, 0) / ratingsData.length
@@ -98,13 +147,24 @@ export const useBlogAnalyticsSummary = (dateRange: number = 30) => {
   });
 };
 
-export const usePostAnalytics = (dateRange: number = 30, limit: number = 10) => {
+export const usePostAnalytics = (dateRange: number = 30, limit: number = 10, authorId?: string) => {
   return useQuery({
-    queryKey: ['post-analytics', dateRange, limit],
+    queryKey: ['post-analytics', dateRange, limit, authorId],
     queryFn: async () => {
       const startDate = format(subDays(startOfDay(new Date()), dateRange), 'yyyy-MM-dd');
 
-      const { data: dailyData, error } = await supabase
+      // Buscar posts do autor se filtrado
+      let postsFilter: string[] | undefined;
+      if (authorId) {
+        const { data: authorPosts } = await supabase
+          .from('blog_posts')
+          .select('id')
+          .eq('author_id', authorId);
+        postsFilter = authorPosts?.map(p => p.id) || [];
+        if (postsFilter.length === 0) return [];
+      }
+
+      let dailyQuery = supabase
         .from('blog_analytics_daily')
         .select(`
           post_id,
@@ -115,6 +175,12 @@ export const usePostAnalytics = (dateRange: number = 30, limit: number = 10) => 
           date
         `)
         .gte('date', startDate);
+
+      if (postsFilter) {
+        dailyQuery = dailyQuery.in('post_id', postsFilter);
+      }
+
+      const { data: dailyData, error } = await dailyQuery;
 
       if (error) throw error;
 
@@ -168,17 +234,34 @@ export const usePostAnalytics = (dateRange: number = 30, limit: number = 10) => 
   });
 };
 
-export const useDailyAnalytics = (dateRange: number = 30) => {
+export const useDailyAnalytics = (dateRange: number = 30, authorId?: string) => {
   return useQuery({
-    queryKey: ['daily-analytics', dateRange],
+    queryKey: ['daily-analytics', dateRange, authorId],
     queryFn: async () => {
       const startDate = format(subDays(startOfDay(new Date()), dateRange), 'yyyy-MM-dd');
 
-      const { data, error } = await supabase
+      // Buscar posts do autor se filtrado
+      let postsFilter: string[] | undefined;
+      if (authorId) {
+        const { data: authorPosts } = await supabase
+          .from('blog_posts')
+          .select('id')
+          .eq('author_id', authorId);
+        postsFilter = authorPosts?.map(p => p.id) || [];
+        if (postsFilter.length === 0) return [];
+      }
+
+      let dailyQuery = supabase
         .from('blog_analytics_daily')
         .select('*')
         .gte('date', startDate)
         .order('date', { ascending: true });
+
+      if (postsFilter) {
+        dailyQuery = dailyQuery.in('post_id', postsFilter);
+      }
+
+      const { data, error } = await dailyQuery;
 
       if (error) throw error;
 

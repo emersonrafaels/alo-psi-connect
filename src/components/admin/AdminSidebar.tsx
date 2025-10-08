@@ -35,7 +35,13 @@ const adminMenuItems = [
     title: 'Analytics',
     url: '/admin/analytics',
     icon: BarChart3,
-    requiredRole: null // Todos podem ver
+    requiredRole: 'admin' as const // Apenas admins (analytics gerais da plataforma)
+  },
+  {
+    title: 'Blog Analytics',
+    url: '/admin/blog-analytics',
+    icon: BarChart3,
+    requiredRole: null // Autores podem ver analytics dos próprios posts
   },
   {
     title: 'Usuários',
