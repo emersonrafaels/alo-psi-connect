@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,6 +20,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MarkdownPreview } from './MarkdownPreview';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { FileEdit, Eye, Columns } from 'lucide-react';
+import { MarkdownToolbar } from './MarkdownToolbar';
+import { EditorMetrics } from './EditorMetrics';
+import { MarkdownCheatSheet } from './MarkdownCheatSheet';
+import { PostTemplates } from './PostTemplates';
+import { useMarkdownToolbar } from '@/hooks/useMarkdownToolbar';
 
 const postSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -55,6 +60,8 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
     post?.tags?.map(t => t.id) || []
   );
   const [viewMode, setViewMode] = useState<'editor' | 'preview' | 'split'>('editor');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { applyFormatting, handleKeyDown } = useMarkdownToolbar(textareaRef);
 
   // Local draft management
   const {
@@ -112,6 +119,17 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const content = watch('content');
   const excerpt = watch('excerpt');
   const allFormData = watch();
+
+  const handleTemplateSelect = (templateContent: string) => {
+    setValue('content', templateContent);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+    toast({
+      title: 'Template aplicado',
+      description: 'O template foi inserido no editor. Personalize conforme necessário.',
+    });
+  };
 
   // Auto-save to database (debounced)
   const autoSaveHandler = async (data: typeof allFormData) => {
@@ -224,11 +242,18 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">
-            {post ? 'Editando Post' : 'Novo Post'}
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold">
+              {post ? 'Editando Post' : 'Novo Post'}
+            </h2>
+            <MarkdownCheatSheet />
+            <PostTemplates onSelectTemplate={handleTemplateSelect} />
+          </div>
           <AutoSaveIndicator status={saveStatus} lastSaved={lastSaved} />
         </div>
+
+        {/* Editor Metrics */}
+        <EditorMetrics title={title} excerpt={excerpt || ''} content={content} />
 
         <div>
           <Label htmlFor="title">Título</Label>
@@ -284,13 +309,18 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
             </TabsList>
 
             <TabsContent value="editor" className="mt-0">
-              <Textarea
-                id="content"
-                {...register('content')}
-                placeholder="Escreva o conteúdo em Markdown..."
-                rows={20}
-                className="font-mono"
-              />
+              <div className="border rounded-lg overflow-hidden">
+                <MarkdownToolbar onAction={applyFormatting} />
+                <Textarea
+                  ref={textareaRef}
+                  id="content"
+                  {...register('content')}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Escreva o conteúdo em Markdown..."
+                  rows={20}
+                  className="font-mono border-0 rounded-none focus-visible:ring-0"
+                />
+              </div>
               {errors.content && (
                 <p className="text-sm text-destructive mt-1">{errors.content.message}</p>
               )}
@@ -308,13 +338,18 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
             <TabsContent value="split" className="mt-0">
               <ResizablePanelGroup direction="horizontal" className="min-h-[600px] rounded-lg border">
                 <ResizablePanel defaultSize={50} minSize={30}>
-                  <div className="h-full p-4">
-                    <Label className="mb-2 block">Editor</Label>
-                    <Textarea
-                      {...register('content')}
-                      placeholder="Escreva o conteúdo em Markdown..."
-                      className="font-mono h-[calc(100%-2rem)] resize-none"
-                    />
+                  <div className="h-full flex flex-col">
+                    <Label className="p-4 pb-0 block">Editor</Label>
+                    <div className="flex-1 overflow-hidden flex flex-col">
+                      <MarkdownToolbar onAction={applyFormatting} />
+                      <Textarea
+                        ref={textareaRef}
+                        {...register('content')}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Escreva o conteúdo em Markdown..."
+                        className="font-mono flex-1 resize-none border-0 rounded-none focus-visible:ring-0"
+                      />
+                    </div>
                   </div>
                 </ResizablePanel>
                 
