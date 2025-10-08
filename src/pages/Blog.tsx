@@ -80,7 +80,7 @@ const Blog = () => {
             {/* Search */}
             <Card>
               <CardHeader>
-                <CardTitle>Search</CardTitle>
+                <CardTitle>Busca</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="relative">
