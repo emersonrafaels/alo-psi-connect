@@ -447,12 +447,16 @@ export type Database = {
           allow_ratings: boolean | null
           author_id: string
           average_rating: number | null
+          badge_expires_at: string | null
           comments_count: number | null
           content: string
           created_at: string | null
+          editorial_badge: Database["public"]["Enums"]["editorial_badge"] | null
           excerpt: string | null
           featured_image_url: string | null
+          featured_order: number | null
           id: string
+          is_featured: boolean | null
           published_at: string | null
           ratings_count: number | null
           read_time_minutes: number | null
@@ -467,12 +471,18 @@ export type Database = {
           allow_ratings?: boolean | null
           author_id: string
           average_rating?: number | null
+          badge_expires_at?: string | null
           comments_count?: number | null
           content: string
           created_at?: string | null
+          editorial_badge?:
+            | Database["public"]["Enums"]["editorial_badge"]
+            | null
           excerpt?: string | null
           featured_image_url?: string | null
+          featured_order?: number | null
           id?: string
+          is_featured?: boolean | null
           published_at?: string | null
           ratings_count?: number | null
           read_time_minutes?: number | null
@@ -487,12 +497,18 @@ export type Database = {
           allow_ratings?: boolean | null
           author_id?: string
           average_rating?: number | null
+          badge_expires_at?: string | null
           comments_count?: number | null
           content?: string
           created_at?: string | null
+          editorial_badge?:
+            | Database["public"]["Enums"]["editorial_badge"]
+            | null
           excerpt?: string | null
           featured_image_url?: string | null
+          featured_order?: number | null
           id?: string
+          is_featured?: boolean | null
           published_at?: string | null
           ratings_count?: number | null
           read_time_minutes?: number | null
@@ -1488,6 +1504,12 @@ export type Database = {
         | "moderator"
         | "author"
         | "super_author"
+      editorial_badge:
+        | "editors_pick"
+        | "trending"
+        | "must_read"
+        | "community_favorite"
+        | "staff_pick"
       payment_status: "pending_payment" | "paid" | "failed"
     }
     CompositeTypes: {
@@ -1617,6 +1639,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "super_admin", "moderator", "author", "super_author"],
+      editorial_badge: [
+        "editors_pick",
+        "trending",
+        "must_read",
+        "community_favorite",
+        "staff_pick",
+      ],
       payment_status: ["pending_payment", "paid", "failed"],
     },
   },

@@ -8,7 +8,8 @@ import {
   Settings,
   Shield,
   Home,
-  FileText
+  FileText,
+  Star
 } from 'lucide-react';
 import {
   Sidebar,
@@ -84,6 +85,12 @@ const adminMenuItems = [
     url: '/admin/blog',
     icon: FileText,
     requiredRole: null // Autores e admins podem ver
+  },
+  {
+    title: 'Curadoria',
+    url: '/admin/blog/curation',
+    icon: Star,
+    requiredRole: 'admin' as const
   }
 ];
 

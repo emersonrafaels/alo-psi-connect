@@ -63,6 +63,7 @@ import BlogManagement from "@/pages/admin/BlogManagement";
 import BlogEditor from "@/pages/admin/BlogEditor";
 import BlogAnalytics from "@/pages/admin/BlogAnalytics";
 import PostAnalytics from "@/pages/admin/PostAnalytics";
+import BlogCuration from "@/pages/admin/BlogCuration";
 
 import "./App.css";
 
@@ -140,6 +141,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/post-analytics/:postId" element={<BlogLayout><PostAnalytics /></BlogLayout>} />
       <Route path="/admin/blog/new" element={<BlogEditor />} />
       <Route path="/admin/blog/edit/:id" element={<BlogEditor />} />
+      <Route path="/admin/blog/curation" element={<BlogCuration />} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

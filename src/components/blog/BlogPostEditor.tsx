@@ -26,6 +26,10 @@ import { MarkdownCheatSheet } from './MarkdownCheatSheet';
 import { PostTemplates } from './PostTemplates';
 import { useMarkdownToolbar } from '@/hooks/useMarkdownToolbar';
 import { supabase } from '@/integrations/supabase/client';
+import { useSuperAuthorRole } from '@/hooks/useSuperAuthorRole';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Star } from 'lucide-react';
 
 const postSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -56,6 +60,9 @@ interface BlogPostEditorProps {
     comments_count?: number;
     average_rating?: number;
     ratings_count?: number;
+    is_featured?: boolean;
+    featured_order?: number;
+    editorial_badge?: string;
   };
 }
 
@@ -63,6 +70,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { createPost, updatePost } = useBlogPostManager();
+  const { isSuperAuthor } = useSuperAuthorRole();
   const [featuredImage, setFeaturedImage] = useState(post?.featured_image_url || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(
     post?.tags?.map(t => t.id) || []
@@ -72,6 +80,11 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const [checkingSlug, setCheckingSlug] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { applyFormatting, handleKeyDown } = useMarkdownToolbar(textareaRef);
+  
+  // Curation fields (only for super_author/admin)
+  const [isFeatured, setIsFeatured] = useState(post?.is_featured || false);
+  const [featuredOrder, setFeaturedOrder] = useState(post?.featured_order?.toString() || '');
+  const [editorialBadge, setEditorialBadge] = useState(post?.editorial_badge || 'none');
 
   // Local draft management
   const {
@@ -244,7 +257,10 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
       tags: selectedTags,
       allow_comments: data.allow_comments,
       allow_ratings: data.allow_ratings,
-    };
+      is_featured: isSuperAuthor ? isFeatured : undefined,
+      featured_order: isSuperAuthor && isFeatured && featuredOrder ? parseInt(featuredOrder) : undefined,
+      editorial_badge: isSuperAuthor && editorialBadge !== 'none' ? editorialBadge : undefined,
+    } as any;
 
     if (post) {
       updatePost.mutate(
@@ -512,6 +528,76 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
           />
         </div>
       </div>
+
+      {/* Curation Section - Only for Super Author/Admin */}
+      {isSuperAuthor && (
+        <Card className="border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-primary" />
+              Configurações de Curadoria
+            </CardTitle>
+            <CardDescription>
+              Controles avançados para destacar e categorizar este post
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Featured Post */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="is_featured">Post em Destaque</Label>
+                <p className="text-sm text-muted-foreground">
+                  Destacar este post na página principal
+                </p>
+              </div>
+              <Switch
+                id="is_featured"
+                checked={isFeatured}
+                onCheckedChange={setIsFeatured}
+              />
+            </div>
+
+            {/* Featured Order */}
+            {isFeatured && (
+              <div>
+                <Label htmlFor="featured_order">Ordem do Destaque</Label>
+                <Input
+                  id="featured_order"
+                  type="number"
+                  min="1"
+                  value={featuredOrder}
+                  onChange={(e) => setFeaturedOrder(e.target.value)}
+                  placeholder="1"
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Posts com ordem menor aparecem primeiro (1, 2, 3...)
+                </p>
+              </div>
+            )}
+
+            {/* Editorial Badge */}
+            <div>
+              <Label htmlFor="editorial_badge">Badge Editorial</Label>
+              <Select value={editorialBadge} onValueChange={setEditorialBadge}>
+                <SelectTrigger id="editorial_badge">
+                  <SelectValue placeholder="Selecione um badge" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  <SelectItem value="editors_pick">⭐ Escolha do Editor</SelectItem>
+                  <SelectItem value="trending">🔥 Em Alta</SelectItem>
+                  <SelectItem value="must_read">📚 Leitura Obrigatória</SelectItem>
+                  <SelectItem value="community_favorite">❤️ Favorito da Comunidade</SelectItem>
+                  <SelectItem value="staff_pick">✨ Escolha da Equipe</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground mt-1">
+                Badge especial que aparecerá no card do post
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex gap-4">
         <Button type="submit" disabled={createPost.isPending || updatePost.isPending}>

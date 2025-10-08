@@ -4,7 +4,9 @@ import { useBlogPostManager } from '@/hooks/useBlogPostManager';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PostStatusBadge } from './PostStatusBadge';
-import { Pencil, Trash2, Eye, Plus, ExternalLink, BarChart3 } from 'lucide-react';
+import { EditorialBadge } from './EditorialBadge';
+import { Pencil, Trash2, Eye, Plus, ExternalLink, BarChart3, Star } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -70,6 +72,7 @@ export const BlogPostsList = () => {
             <TableRow>
               <TableHead>Título</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Curadoria</TableHead>
               <TableHead>Visualizações</TableHead>
               <TableHead>Data</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -81,6 +84,19 @@ export const BlogPostsList = () => {
                 <TableCell className="font-medium">{post.title}</TableCell>
                 <TableCell>
                   <PostStatusBadge status={post.status} />
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1 flex-wrap">
+                    {(post as any).is_featured && (
+                      <Badge variant="outline" className="gap-1">
+                        <Star className="h-3 w-3" />
+                        Destaque #{(post as any).featured_order || '?'}
+                      </Badge>
+                    )}
+                    {(post as any).editorial_badge && (
+                      <EditorialBadge badge={(post as any).editorial_badge} />
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
