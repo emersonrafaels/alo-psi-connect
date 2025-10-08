@@ -13,13 +13,18 @@ export const AnalyticsSync = () => {
   const handleSync = async () => {
     setSyncing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('aggregate-blog-analytics');
+      const { data, error } = await supabase.functions.invoke('aggregate-blog-analytics', {
+        body: { mode: 'full', include_today: true }
+      });
       
       if (error) throw error;
 
+      const daysText = data?.processed_days === 1 ? 'dia' : 'dias';
+      const postsText = data?.processed_posts === 1 ? 'post' : 'posts';
+      
       toast({
         title: 'Sincronização concluída',
-        description: `Analytics agregados com sucesso. ${data?.processed_posts || 0} posts processados.`,
+        description: `Processados ${data?.processed_days || 0} ${daysText}, ${data?.processed_posts || 0} ${postsText}, ${data?.total_views || 0} visualizações.`,
       });
 
       // Invalidar queries para refazer fetch dos dados
