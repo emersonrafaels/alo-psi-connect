@@ -42,6 +42,17 @@ export const useFirstLoginDetection = (): FirstLoginState => {
         setIsProfessional(userIsProfessional);
 
         if (userIsProfessional) {
+          // Verifica se já tem Google Calendar conectado
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('google_calendar_token')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          const hasGoogleCalendar = !!profile?.google_calendar_token;
+          
+          console.log('🔍 [useFirstLoginDetection] Professional user - Google Calendar status:', hasGoogleCalendar);
+          
           // Para profissionais, verifica se ainda não viu o modal de boas-vindas
           const loginKey = `google_calendar_welcome_shown_${user.id}`;
           const hasSeenWelcome = localStorage.getItem(loginKey);
@@ -49,8 +60,8 @@ export const useFirstLoginDetection = (): FirstLoginState => {
           console.log('🔍 [useFirstLoginDetection] Professional user - localStorage key:', loginKey);
           console.log('🔍 [useFirstLoginDetection] Has seen welcome before:', hasSeenWelcome);
           
-          // Se não viu o welcome e é profissional, é primeiro login
-          const isFirst = !hasSeenWelcome;
+          // Só é primeiro login se não viu o welcome E não tem Google Calendar conectado
+          const isFirst = !hasSeenWelcome && !hasGoogleCalendar;
           setIsFirstLogin(isFirst);
           
           console.log('🔍 [useFirstLoginDetection] Final result - isFirstLogin:', isFirst, 'isProfessional:', userIsProfessional);
