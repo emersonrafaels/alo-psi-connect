@@ -50,6 +50,7 @@ import EmotionConfigPage from "./pages/EmotionConfigPage";
 
 // Admin pages
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { BlogLayout } from "@/components/blog/BlogLayout";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminAnalytics from "@/pages/admin/Analytics";
 import AdminUsers from "@/pages/admin/Users";
@@ -132,7 +133,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/appointments" element={<AdminLayout><AdminAppointments /></AdminLayout>} />
       <Route path="/admin/financial" element={<AdminLayout><AdminFinancial /></AdminLayout>} />
       <Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />
-      <Route path="/admin/blog" element={<AdminLayout><BlogManagement /></AdminLayout>} />
+      <Route path="/admin/blog" element={<BlogLayout><BlogManagement /></BlogLayout>} />
       <Route path="/admin/blog/new" element={<BlogEditor />} />
       <Route path="/admin/blog/edit/:id" element={<BlogEditor />} />
       
