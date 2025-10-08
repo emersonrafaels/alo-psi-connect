@@ -16,6 +16,10 @@ import { RecoverDraftModal } from './RecoverDraftModal';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useLocalDraft } from '@/hooks/useLocalDraft';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MarkdownPreview } from './MarkdownPreview';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { FileEdit, Eye, Columns } from 'lucide-react';
 
 const postSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -50,6 +54,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const [selectedTags, setSelectedTags] = useState<string[]>(
     post?.tags?.map(t => t.id) || []
   );
+  const [viewMode, setViewMode] = useState<'editor' | 'preview' | 'split'>('editor');
 
   // Local draft management
   const {
@@ -104,6 +109,8 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   }, [draft, showRecoveryModal, post, reset]);
 
   const title = watch('title');
+  const content = watch('content');
+  const excerpt = watch('excerpt');
   const allFormData = watch();
 
   // Auto-save to database (debounced)
@@ -225,51 +232,112 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
 
         <div>
           <Label htmlFor="title">Título</Label>
-        <Input
-          id="title"
-          {...register('title')}
-          placeholder="Digite o título do post"
-        />
-        {errors.title && (
-          <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
-        )}
-      </div>
+          <Input
+            id="title"
+            {...register('title')}
+            placeholder="Digite o título do post"
+          />
+          {errors.title && (
+            <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
+          )}
+        </div>
 
-      <div>
-        <Label htmlFor="slug">Slug</Label>
-        <Input
-          id="slug"
-          {...register('slug')}
-          placeholder="url-do-post"
-        />
-        {errors.slug && (
-          <p className="text-sm text-destructive mt-1">{errors.slug.message}</p>
-        )}
-      </div>
+        <div>
+          <Label htmlFor="slug">Slug</Label>
+          <Input
+            id="slug"
+            {...register('slug')}
+            placeholder="url-do-post"
+          />
+          {errors.slug && (
+            <p className="text-sm text-destructive mt-1">{errors.slug.message}</p>
+          )}
+        </div>
 
-      <div>
-        <Label htmlFor="excerpt">Resumo</Label>
-        <Textarea
-          id="excerpt"
-          {...register('excerpt')}
-          placeholder="Breve descrição do post"
-          rows={3}
-        />
-      </div>
+        <div>
+          <Label htmlFor="excerpt">Resumo</Label>
+          <Textarea
+            id="excerpt"
+            {...register('excerpt')}
+            placeholder="Breve descrição do post"
+            rows={3}
+          />
+        </div>
 
-      <div>
-        <Label htmlFor="content">Conteúdo (Markdown)</Label>
-        <Textarea
-          id="content"
-          {...register('content')}
-          placeholder="Escreva o conteúdo em Markdown..."
-          rows={15}
-          className="font-mono"
-        />
-        {errors.content && (
-          <p className="text-sm text-destructive mt-1">{errors.content.message}</p>
-        )}
-      </div>
+        <div>
+          <Label htmlFor="content">Conteúdo (Markdown)</Label>
+          
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as typeof viewMode)} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsTrigger value="editor" className="flex items-center gap-2">
+                <FileEdit className="h-4 w-4" />
+                Editor
+              </TabsTrigger>
+              <TabsTrigger value="preview" className="flex items-center gap-2">
+                <Eye className="h-4 w-4" />
+                Preview
+              </TabsTrigger>
+              <TabsTrigger value="split" className="flex items-center gap-2">
+                <Columns className="h-4 w-4" />
+                Split
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="editor" className="mt-0">
+              <Textarea
+                id="content"
+                {...register('content')}
+                placeholder="Escreva o conteúdo em Markdown..."
+                rows={20}
+                className="font-mono"
+              />
+              {errors.content && (
+                <p className="text-sm text-destructive mt-1">{errors.content.message}</p>
+              )}
+            </TabsContent>
+
+            <TabsContent value="preview" className="mt-0">
+              <MarkdownPreview 
+                content={content}
+                title={title}
+                excerpt={excerpt}
+                featuredImage={featuredImage}
+              />
+            </TabsContent>
+
+            <TabsContent value="split" className="mt-0">
+              <ResizablePanelGroup direction="horizontal" className="min-h-[600px] rounded-lg border">
+                <ResizablePanel defaultSize={50} minSize={30}>
+                  <div className="h-full p-4">
+                    <Label className="mb-2 block">Editor</Label>
+                    <Textarea
+                      {...register('content')}
+                      placeholder="Escreva o conteúdo em Markdown..."
+                      className="font-mono h-[calc(100%-2rem)] resize-none"
+                    />
+                  </div>
+                </ResizablePanel>
+                
+                <ResizableHandle withHandle />
+                
+                <ResizablePanel defaultSize={50} minSize={30}>
+                  <div className="h-full overflow-auto">
+                    <MarkdownPreview 
+                      content={content}
+                      title={title}
+                      excerpt={excerpt}
+                      featuredImage={featuredImage}
+                      className="h-full"
+                    />
+                  </div>
+                </ResizablePanel>
+              </ResizablePanelGroup>
+              {errors.content && (
+                <p className="text-sm text-destructive mt-1">{errors.content.message}</p>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
 
       <div>
         <Label>Imagem de Destaque</Label>
