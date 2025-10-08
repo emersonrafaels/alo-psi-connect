@@ -1,11 +1,11 @@
 import { useParams } from 'react-router-dom';
 import { BlogLayout } from '@/components/blog/BlogLayout';
 import { BlogPostEditor } from '@/components/blog/BlogPostEditor';
-import { useBlogPost } from '@/hooks/useBlogPost';
+import { useBlogPostById } from '@/hooks/useBlogPostById';
 
 const BlogEditor = () => {
   const { id } = useParams();
-  const { data: post, isLoading } = useBlogPost(id);
+  const { data: post, isLoading } = useBlogPostById(id);
 
   return (
     <BlogLayout>
