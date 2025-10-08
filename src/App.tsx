@@ -13,6 +13,7 @@ import WhatsAppFloat from "@/components/ui/whatsapp-float";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import Professional from "./pages/Professional";
 import Professionals from "./pages/Professionals";
 import Schedule from "./pages/Schedule";
@@ -76,7 +77,8 @@ const AppWithShortcuts = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/sobre" element={<About />} />
-      <Route path="/blog" element={<Blog />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/profissionais" element={<Professionals />} />
       <Route path="/profissional/:id" element={<Professional />} />
       <Route path="/professional/:id" element={<Professional />} />
