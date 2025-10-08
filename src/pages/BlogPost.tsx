@@ -73,7 +73,7 @@ export default function BlogPost() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
-        <article className="container mx-auto px-4 py-8 max-w-4xl">
+        <article className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
           <Button variant="ghost" asChild className="mb-6">
             <Link to="/blog">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -91,7 +91,7 @@ export default function BlogPost() {
             </div>
           )}
 
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2 mb-6">
             {post.tags?.map((tag) => (
               <Badge key={tag.id} variant="secondary">
                 {tag.name}
@@ -99,9 +99,17 @@ export default function BlogPost() {
             ))}
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">{post.title}</h1>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 leading-tight tracking-tight">
+            {post.title}
+          </h1>
 
-          <div className="flex flex-wrap gap-6 text-muted-foreground mb-8 pb-8 border-b">
+          {post.excerpt && (
+            <p className="text-xl text-muted-foreground leading-relaxed mb-8 font-light">
+              {post.excerpt}
+            </p>
+          )}
+
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-6 text-sm sm:text-base text-muted-foreground mb-8 pb-8 border-b">
             <AuthorBadge 
               name={post.author.nome} 
               photoUrl={post.author.foto_perfil_url}
@@ -124,15 +132,32 @@ export default function BlogPost() {
             </div>
           </div>
 
-          <PostRating
-            postId={post.id}
-            allowRatings={post.allow_ratings ?? true}
-            averageRating={post.average_rating || 0}
-            ratingsCount={post.ratings_count || 0}
-          />
+          <hr className="my-8 border-border" />
 
-          <div className="prose prose-lg dark:prose-invert max-w-none">
+          <div className="blog-content prose prose-lg dark:prose-invert max-w-none 
+                          prose-headings:font-bold prose-headings:tracking-tight
+                          prose-h1:text-4xl prose-h1:mb-6 prose-h1:mt-12
+                          prose-h2:text-3xl prose-h2:mb-4 prose-h2:mt-10
+                          prose-h3:text-2xl prose-h3:mb-3 prose-h3:mt-8
+                          prose-p:text-lg prose-p:leading-relaxed prose-p:mb-6
+                          prose-li:text-lg prose-li:leading-relaxed
+                          prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                          prose-strong:text-foreground prose-strong:font-semibold
+                          prose-blockquote:border-l-4 prose-blockquote:border-primary
+                          prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-muted-foreground
+                          prose-code:text-primary prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded
+                          prose-pre:bg-muted prose-pre:border prose-pre:border-border
+                          prose-img:rounded-xl prose-img:shadow-lg prose-img:my-8">
             <ReactMarkdown>{post.content}</ReactMarkdown>
+          </div>
+
+          <div className="mt-12 pt-8 border-t">
+            <PostRating
+              postId={post.id}
+              allowRatings={post.allow_ratings ?? true}
+              averageRating={post.average_rating || 0}
+              ratingsCount={post.ratings_count || 0}
+            />
           </div>
 
           {filteredRelatedPosts.length > 0 && (

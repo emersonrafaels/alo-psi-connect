@@ -232,6 +232,29 @@ All colors MUST be HSL.
   .scrollbar-track-transparent {
     scrollbar-color: hsl(var(--primary) / 0.2) transparent;
   }
+  
+  /* Blog post content styling */
+  .blog-content {
+    @apply leading-relaxed;
+    font-feature-settings: 'kern' 1, 'liga' 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .blog-content p:first-of-type::first-letter {
+    @apply text-5xl font-bold float-left mr-2 mt-1 leading-none;
+    color: hsl(var(--primary));
+  }
+  
+  .blog-content img {
+    @apply shadow-xl;
+    transition: transform 0.3s ease;
+  }
+  
+  .blog-content img:hover {
+    @apply scale-[1.02];
+  }
 }
 
 /* Modern card animations */
