@@ -62,6 +62,7 @@ export type Database = {
           status: string
           stripe_session_id: string | null
           telefone_paciente: string
+          tenant_id: string | null
           updated_at: string
           user_id: string
           valor: number | null
@@ -80,6 +81,7 @@ export type Database = {
           status?: string
           stripe_session_id?: string | null
           telefone_paciente: string
+          tenant_id?: string | null
           updated_at?: string
           user_id: string
           valor?: number | null
@@ -98,11 +100,19 @@ export type Database = {
           status?: string
           stripe_session_id?: string | null
           telefone_paciente?: string
+          tenant_id?: string | null
           updated_at?: string
           user_id?: string
           valor?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "agendamentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_agendamentos_professional_id"
             columns: ["professional_id"]
@@ -403,6 +413,7 @@ export type Database = {
           post_id: string
           referrer: string | null
           session_id: string
+          tenant_id: string | null
           time_spent: number | null
           user_id: string | null
           viewed_at: string
@@ -415,6 +426,7 @@ export type Database = {
           post_id: string
           referrer?: string | null
           session_id: string
+          tenant_id?: string | null
           time_spent?: number | null
           user_id?: string | null
           viewed_at?: string
@@ -427,6 +439,7 @@ export type Database = {
           post_id?: string
           referrer?: string | null
           session_id?: string
+          tenant_id?: string | null
           time_spent?: number | null
           user_id?: string | null
           viewed_at?: string
@@ -437,6 +450,13 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_post_views_tracking_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -462,6 +482,7 @@ export type Database = {
           read_time_minutes: number | null
           slug: string
           status: string
+          tenant_id: string | null
           title: string
           updated_at: string | null
           views_count: number | null
@@ -488,6 +509,7 @@ export type Database = {
           read_time_minutes?: number | null
           slug: string
           status?: string
+          tenant_id?: string | null
           title: string
           updated_at?: string | null
           views_count?: number | null
@@ -514,11 +536,20 @@ export type Database = {
           read_time_minutes?: number | null
           slug?: string
           status?: string
+          tenant_id?: string | null
           title?: string
           updated_at?: string | null
           views_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       blog_saved_posts: {
         Row: {
@@ -868,6 +899,7 @@ export type Database = {
           sleep_hours: number | null
           sleep_quality: number | null
           tags: string[] | null
+          tenant_id: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -885,6 +917,7 @@ export type Database = {
           sleep_hours?: number | null
           sleep_quality?: number | null
           tags?: string[] | null
+          tenant_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -902,6 +935,7 @@ export type Database = {
           sleep_hours?: number | null
           sleep_quality?: number | null
           tags?: string[] | null
+          tenant_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -911,6 +945,13 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mood_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -981,6 +1022,7 @@ export type Database = {
           id: string
           instituicao_ensino: string | null
           profile_id: string
+          tenant_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -988,6 +1030,7 @@ export type Database = {
           id?: string
           instituicao_ensino?: string | null
           profile_id: string
+          tenant_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -995,6 +1038,7 @@ export type Database = {
           id?: string
           instituicao_ensino?: string | null
           profile_id?: string
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -1002,6 +1046,13 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pacientes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -1038,6 +1089,51 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      professional_tenants: {
+        Row: {
+          created_at: string | null
+          featured_order: number | null
+          id: string
+          is_featured: boolean | null
+          professional_id: number
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          featured_order?: number | null
+          id?: string
+          is_featured?: boolean | null
+          professional_id: number
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          featured_order?: number | null
+          id?: string
+          is_featured?: boolean | null
+          professional_id?: number
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_tenants_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_tenants_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       professional_unavailability: {
         Row: {
@@ -1089,6 +1185,7 @@ export type Database = {
           google_calendar_token: string | null
           id: string
           nome: string
+          tenant_id: string | null
           tipo_usuario: string
           updated_at: string | null
           user_id: string | null
@@ -1106,6 +1203,7 @@ export type Database = {
           google_calendar_token?: string | null
           id?: string
           nome: string
+          tenant_id?: string | null
           tipo_usuario: string
           updated_at?: string | null
           user_id?: string | null
@@ -1123,11 +1221,20 @@ export type Database = {
           google_calendar_token?: string | null
           id?: string
           nome?: string
+          tenant_id?: string | null
           tipo_usuario?: string
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profissionais: {
         Row: {
@@ -1328,6 +1435,54 @@ export type Database = {
         }
         Relationships: []
       }
+      tenants: {
+        Row: {
+          accent_color: string
+          base_path: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          meta_config: Json | null
+          name: string
+          primary_color: string
+          secondary_color: string | null
+          slug: string
+          theme_config: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          accent_color: string
+          base_path: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          meta_config?: Json | null
+          name: string
+          primary_color: string
+          secondary_color?: string | null
+          slug: string
+          theme_config?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          accent_color?: string
+          base_path?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          meta_config?: Json | null
+          name?: string
+          primary_color?: string
+          secondary_color?: string | null
+          slug?: string
+          theme_config?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_booking_tracking: {
         Row: {
           booking_data: Json | null
@@ -1468,6 +1623,10 @@ export type Database = {
       clean_old_chat_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      get_current_tenant_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       has_role: {
         Args: {
