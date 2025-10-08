@@ -39,12 +39,6 @@ const adminMenuItems = [
     requiredRole: 'admin' as const // Apenas admins (analytics gerais da plataforma)
   },
   {
-    title: 'Blog Analytics',
-    url: '/admin/blog-analytics',
-    icon: BarChart3,
-    requiredRole: null // Autores podem ver analytics dos próprios posts
-  },
-  {
     title: 'Usuários',
     url: '/admin/users',
     icon: Users,
@@ -85,12 +79,6 @@ const adminMenuItems = [
     url: '/admin/blog',
     icon: FileText,
     requiredRole: null // Autores e admins podem ver
-  },
-  {
-    title: 'Curadoria',
-    url: '/admin/blog/curation',
-    icon: Star,
-    requiredRole: 'admin' as const
   }
 ];
 
