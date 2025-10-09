@@ -1440,6 +1440,7 @@ export type Database = {
           accent_color: string
           base_path: string
           created_at: string | null
+          header_color: string | null
           id: string
           is_active: boolean | null
           logo_url: string | null
@@ -1455,6 +1456,7 @@ export type Database = {
           accent_color: string
           base_path: string
           created_at?: string | null
+          header_color?: string | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
@@ -1470,6 +1472,7 @@ export type Database = {
           accent_color?: string
           base_path?: string
           created_at?: string | null
+          header_color?: string | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null

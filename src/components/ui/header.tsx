@@ -51,7 +51,13 @@ const Header = () => {
   }
 
   return (
-    <header className="bg-primary text-primary-foreground">
+    <header 
+      className="sticky top-0 z-50 w-full border-b shadow-sm" 
+      style={{ 
+        backgroundColor: 'hsl(var(--header-bg))',
+        color: 'hsl(var(--header-fg))'
+      }}
+    >
       <div className="container mx-auto px-4">
         <div className="flex items-center h-16 md:h-20 gap-4">
           {/* Logo */}

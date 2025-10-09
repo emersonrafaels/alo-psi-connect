@@ -19,6 +19,7 @@ export const TenantBrandingConfig = () => {
     logo_url: '',
     hero_title: '',
     hero_subtitle: '',
+    header_color: '',
     primary_color: '#000000',
     accent_color: '#000000',
     secondary_color: '#000000',
@@ -160,6 +161,41 @@ export const TenantBrandingConfig = () => {
                 <p className="text-sm text-muted-foreground mb-2">Preview:</p>
                 <h1 className="text-2xl font-bold mb-2">{branding.hero_title}</h1>
                 <p className="text-muted-foreground">{branding.hero_subtitle}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Cor do Header</CardTitle>
+              <CardDescription>Cor de fundo do cabeçalho da página</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="header_color">Cor do Header</Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    id="header_color"
+                    type="color"
+                    value={branding.header_color || branding.primary_color}
+                    onChange={e => setBranding(prev => ({ ...prev, header_color: e.target.value }))}
+                    className="w-20 h-10"
+                  />
+                  <Input
+                    value={branding.header_color || branding.primary_color}
+                    onChange={e => setBranding(prev => ({ ...prev, header_color: e.target.value }))}
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+              <div className="border rounded-lg p-4 bg-muted/50">
+                <p className="text-sm text-muted-foreground mb-2">Preview do Header:</p>
+                <div 
+                  className="h-16 rounded flex items-center px-4" 
+                  style={{ backgroundColor: branding.header_color || branding.primary_color }}
+                >
+                  <span className="text-white font-semibold">Header Preview</span>
+                </div>
               </div>
             </CardContent>
           </Card>

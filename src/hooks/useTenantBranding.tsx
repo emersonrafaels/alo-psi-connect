@@ -7,6 +7,7 @@ export interface TenantBrandingData {
   logo_url: string;
   hero_title: string;
   hero_subtitle: string;
+  header_color?: string;
   primary_color: string;
   accent_color: string;
   secondary_color: string;

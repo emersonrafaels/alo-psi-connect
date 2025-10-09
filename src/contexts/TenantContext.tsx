@@ -132,6 +132,21 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       root.style.setProperty('--muted', mutedColor);
     }
 
+    // Aplicar cor específica do header (se existir)
+    if (tenantData.header_color) {
+      const headerColor = isHexColor(tenantData.header_color) 
+        ? hexToHSL(tenantData.header_color)
+        : tenantData.header_color;
+      
+      root.style.setProperty('--header-bg', headerColor);
+      
+      const headerTextColor = getContrastingTextColor(tenantData.header_color);
+      root.style.setProperty('--header-fg', headerTextColor);
+    } else {
+      root.style.setProperty('--header-bg', 'var(--primary)');
+      root.style.setProperty('--header-fg', 'var(--primary-foreground)');
+    }
+
     // Atualizar meta tags
     document.title = tenantData.meta_config.title;
     
