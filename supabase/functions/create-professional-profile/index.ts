@@ -21,6 +21,28 @@ serve(async (req) => {
     
     const { profileData, professionalData, horariosData, userId } = await req.json();
 
+    // Detect tenant from request origin/referer
+    const origin = req.headers.get('origin') || '';
+    const referer = req.headers.get('referer') || '';
+    const tenantSlug = (origin.includes('/medcos') || referer.includes('/medcos')) 
+      ? 'medcos' 
+      : 'alopsi';
+
+    // Fetch tenant_id
+    const { data: tenant, error: tenantError } = await supabaseAdmin
+      .from('tenants')
+      .select('id')
+      .eq('slug', tenantSlug)
+      .single();
+
+    if (tenantError || !tenant) {
+      console.error('Tenant not found:', tenantError);
+      return new Response(
+        JSON.stringify({ error: 'Tenant não encontrado' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log('Creating professional profile for user:', userId);
 
     // Check if profile already exists
@@ -36,7 +58,10 @@ serve(async (req) => {
       // Update existing profile
       const { data: updatedProfile, error: updateError } = await supabaseAdmin
         .from('profiles')
-        .update(profileData)
+        .update({
+          ...profileData,
+          tenant_id: tenant.id
+        })
         .eq('user_id', userId)
         .select()
         .single();
@@ -52,6 +77,7 @@ serve(async (req) => {
         .from('profiles')
         .insert({
           user_id: userId,
+          tenant_id: tenant.id,
           ...profileData
         })
         .select()
@@ -123,6 +149,21 @@ serve(async (req) => {
         throw professionalError;
       }
       professional = newProfessional;
+
+      // Create entry in professional_tenants
+      const { error: tenantLinkError } = await supabaseAdmin
+        .from('professional_tenants')
+        .insert({
+          professional_id: newProfessional.id,
+          tenant_id: tenant.id,
+          is_featured: false,
+        });
+
+      if (tenantLinkError) {
+        console.error('Error linking professional to tenant:', tenantLinkError);
+      } else {
+        console.log('Professional linked to tenant:', tenantSlug);
+      }
     }
 
     // Sync photo between profissionais and profiles tables

@@ -63,6 +63,7 @@ import AdminRoles from "@/pages/admin/Roles";
 import BlogManagement from "@/pages/admin/BlogManagement";
 import BlogEditor from "@/pages/admin/BlogEditor";
 import PostAnalytics from "@/pages/admin/PostAnalytics";
+import AdminTenants from "@/pages/admin/Tenants";
 
 import "./App.css";
 
@@ -159,6 +160,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/appointments" element={<AdminLayout><AdminAppointments /></AdminLayout>} />
       <Route path="/admin/financial" element={<AdminLayout><AdminFinancial /></AdminLayout>} />
       <Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />
+      <Route path="/admin/tenants" element={<AdminLayout><AdminTenants /></AdminLayout>} />
       <Route path="/admin/blog" element={<BlogLayout><BlogManagement /></BlogLayout>} />
       <Route path="/admin/post-analytics/:postId" element={<BlogLayout><PostAnalytics /></BlogLayout>} />
       <Route path="/admin/blog/new" element={<BlogEditor />} />

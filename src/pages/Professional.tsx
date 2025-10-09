@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CalendarWidget } from "@/components/CalendarWidget";
 import { stripHtmlTags } from "@/lib/utils";
+import { useTenant } from "@/hooks/useTenant";
 interface Professional {
   id: number;
   display_name: string;
@@ -40,30 +41,43 @@ const Professional = () => {
   const {
     toast
   } = useToast();
+  const { tenant } = useTenant();
   const [professional, setProfessional] = useState<Professional | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   useEffect(() => {
-    if (id) {
+    if (id && tenant) {
       fetchProfessional();
       fetchSessions();
     }
-  }, [id]);
+  }, [id, tenant]);
   const fetchProfessional = async () => {
+    if (!tenant) return;
+
     try {
       const {
         data,
         error
-      } = await supabase.from('profissionais').select('*').eq('id', parseInt(id)).eq('ativo', true).single();
+      } = await supabase
+        .from('profissionais')
+        .select(`
+          *,
+          professional_tenants!inner(tenant_id)
+        `)
+        .eq('id', parseInt(id))
+        .eq('ativo', true)
+        .eq('professional_tenants.tenant_id', tenant.id)
+        .single();
+
       if (error) throw error;
       setProfessional(data);
     } catch (error) {
       console.error('Error fetching professional:', error);
       toast({
         title: "Erro",
-        description: "Profissional não encontrado.",
+        description: "Profissional não encontrado neste site.",
         variant: "destructive"
       });
     } finally {

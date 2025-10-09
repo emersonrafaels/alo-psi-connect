@@ -23,6 +23,28 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLoading(true);
       setError(null);
 
+      // Check cache first (1 hour TTL)
+      const cacheKey = `tenant_${slug}_cache`;
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          const oneHour = 60 * 60 * 1000;
+          
+          if (Date.now() - timestamp < oneHour) {
+            console.log('Using cached tenant data for', slug);
+            setTenant(data as Tenant);
+            applyTenantTheme(data as Tenant);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          // Invalid cache, proceed with fetch
+          localStorage.removeItem(cacheKey);
+        }
+      }
+
       const { data, error: fetchError } = await supabase
         .from('tenants')
         .select('*')
@@ -32,6 +54,12 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (fetchError) throw fetchError;
       if (!data) throw new Error(`Tenant '${slug}' não encontrado`);
+
+      // Cache the result
+      localStorage.setItem(cacheKey, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
 
       setTenant(data as unknown as Tenant);
 

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { Upload, ExternalLink, Loader2 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ProfessionalTenantsEditor } from '@/components/admin/ProfessionalTenantsEditor'
 
 interface Professional {
   id: number
@@ -184,10 +185,11 @@ export const EditProfessionalModal = ({
               </Avatar>
               
               <Tabs defaultValue="upload" className="w-80">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="upload">Upload</TabsTrigger>
-                  <TabsTrigger value="url">URL</TabsTrigger>
-                </TabsList>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="upload">Upload</TabsTrigger>
+                <TabsTrigger value="url">URL</TabsTrigger>
+                <TabsTrigger value="tenants">Sites</TabsTrigger>
+              </TabsList>
                 
                 <TabsContent value="upload" className="space-y-4">
                   <div className="space-y-2">
@@ -229,10 +231,22 @@ export const EditProfessionalModal = ({
                         <ExternalLink className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="tenants">
+                <ProfessionalTenantsEditor
+                  professionalId={professional.id}
+                  onSuccess={() => {
+                    toast({
+                      title: 'Sucesso',
+                      description: 'Associações de sites atualizadas!',
+                    });
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
 
             {/* Form Fields */}
             <div className="flex-1 grid grid-cols-2 gap-4">

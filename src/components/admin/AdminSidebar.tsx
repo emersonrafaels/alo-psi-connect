@@ -9,7 +9,8 @@ import {
   Shield,
   Home,
   FileText,
-  Star
+  Star,
+  Building2
 } from 'lucide-react';
 import {
   Sidebar,
@@ -72,6 +73,12 @@ const adminMenuItems = [
     title: 'Roles',
     url: '/admin/roles',
     icon: Shield,
+    requiredRole: 'super_admin' as const
+  },
+  {
+    title: 'Tenants',
+    url: '/admin/tenants',
+    icon: Building2,
     requiredRole: 'super_admin' as const
   },
   {

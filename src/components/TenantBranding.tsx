@@ -27,8 +27,13 @@ export const TenantBranding = () => {
         />
       ) : (
         <>
-          <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-            <span className="text-accent-foreground font-bold text-sm">
+          <div 
+            className="w-8 h-8 rounded-full flex items-center justify-center relative overflow-hidden"
+            style={{
+              background: `linear-gradient(135deg, ${tenant.primary_color}, ${tenant.accent_color})`
+            }}
+          >
+            <span className="text-white font-bold text-sm relative z-10">
               {tenant.slug === 'alopsi' ? 'AP' : 'MC'}
             </span>
           </div>
