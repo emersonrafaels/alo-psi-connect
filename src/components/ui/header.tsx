@@ -66,8 +66,10 @@ const Header = () => {
                 key={item.name}
                 to={item.href}
                 className={cn(
-                  "text-sm hover:text-accent transition-colors",
-                  isActive(item.href) && "text-accent font-medium"
+                  "text-sm font-medium transition-colors",
+                  isActive(item.href) 
+                    ? "text-accent font-semibold" 
+                    : "text-primary-foreground hover:text-accent"
                 )}
               >
                 {item.name}
@@ -81,16 +83,10 @@ const Header = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
+                <Button
                   variant="outline"
                   size="sm"
-                  className="
-                    border-accent text-primary dark:text-primary-foreground
-                    hover:bg-accent hover:text-[#0B2B4C] 
-                    dark:hover:text-[#0B2B4C]
-                    dark:border-transparent
-                    flex items-center gap-2
-                  "
+                  className="flex items-center gap-2"
                   >
                   <Avatar className="h-6 w-6">
                     <AvatarImage src={profile?.foto_perfil_url} alt={profile?.nome || user.email || ''} />
@@ -153,23 +149,13 @@ const Header = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="
-                  border-accent 
-                  text-primary 
-                  dark:text-primary-foreground 
-                  hover:bg-accent 
-                  hover:text-[#0B2B4C] 
-                  dark:hover:text-[#0B2B4C]
-                  dark:border-transparent
-                  "
                   onClick={() => navigate(buildTenantPath(tenantSlug, '/cadastro/tipo-usuario'))}
                 >
                   Cadastrar
                 </Button>
                 <Button 
-                  variant="default" 
+                  variant="accent" 
                   size="sm" 
-                  className="bg-accent text-[#0B2B4C] hover:bg-accent/90"
                   onClick={() => navigate('/auth')}
                 >
                   Entrar

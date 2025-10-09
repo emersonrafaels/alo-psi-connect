@@ -82,16 +82,41 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const applyTenantTheme = useCallback((tenantData: Tenant) => {
     const root = document.documentElement;
     
-    // Aplicar cores principais
-    root.style.setProperty('--primary', tenantData.primary_color);
-    root.style.setProperty('--accent', tenantData.accent_color);
+    // Import color helpers
+    const { hexToHSL, isHexColor, getContrastingTextColor } = require('@/utils/colorHelpers');
+    
+    // Aplicar cores principais (converter hex para HSL se necessário)
+    const primaryColor = isHexColor(tenantData.primary_color) 
+      ? hexToHSL(tenantData.primary_color)
+      : tenantData.primary_color;
+    
+    const accentColor = isHexColor(tenantData.accent_color)
+      ? hexToHSL(tenantData.accent_color)
+      : tenantData.accent_color;
+    
+    root.style.setProperty('--primary', primaryColor);
+    root.style.setProperty('--accent', accentColor);
+    
+    // Calcular cor de texto com contraste adequado
+    const primaryForeground = getContrastingTextColor(primaryColor);
+    const accentForeground = getContrastingTextColor(accentColor);
+    
+    root.style.setProperty('--primary-foreground', primaryForeground);
+    root.style.setProperty('--accent-foreground', accentForeground);
     
     // Aplicar cores do theme_config se existirem
     if (tenantData.theme_config.secondary_color) {
-      root.style.setProperty('--secondary', tenantData.theme_config.secondary_color);
+      const secondaryColor = isHexColor(tenantData.theme_config.secondary_color)
+        ? hexToHSL(tenantData.theme_config.secondary_color)
+        : tenantData.theme_config.secondary_color;
+      root.style.setProperty('--secondary', secondaryColor);
+      root.style.setProperty('--secondary-foreground', getContrastingTextColor(secondaryColor));
     }
     if (tenantData.theme_config.muted_color) {
-      root.style.setProperty('--muted', tenantData.theme_config.muted_color);
+      const mutedColor = isHexColor(tenantData.theme_config.muted_color)
+        ? hexToHSL(tenantData.theme_config.muted_color)
+        : tenantData.theme_config.muted_color;
+      root.style.setProperty('--muted', mutedColor);
     }
 
     // Atualizar meta tags

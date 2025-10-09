@@ -104,7 +104,7 @@ const Index = () => {
                 {tenant?.theme_config?.hero_subtitle || 'Encontre profissionais especializados em saúde mental com atendimento humanizado e de qualidade.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button variant="default" size="lg" className="bg-primary text-primary-foreground" onClick={() => navigate('/profissionais')}>
+                <Button variant="default" size="lg" onClick={() => navigate('/profissionais')}>
                   Encontrar Profissional
                 </Button>
               <Button variant="accent" size="lg" onClick={() => navigate('/profissionais')}>
