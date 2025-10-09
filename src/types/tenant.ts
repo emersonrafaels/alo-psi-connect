@@ -13,6 +13,18 @@ export interface Tenant {
   hero_images?: string[];
   hero_autoplay?: boolean;
   hero_autoplay_delay?: number;
+  
+  // Advanced branding - Header
+  header_text_color_light?: string;
+  header_text_color_dark?: string;
+  logo_size?: number;
+  
+  // Advanced branding - Buttons
+  button_bg_color_light?: string;
+  button_bg_color_dark?: string;
+  button_text_color_light?: string;
+  button_text_color_dark?: string;
+  
   theme_config: {
     secondary_color?: string;
     muted_color?: string;

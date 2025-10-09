@@ -147,6 +147,56 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       root.style.setProperty('--header-fg', 'var(--primary-foreground)');
     }
 
+    // Aplicar cores dos textos do header (light/dark mode)
+    if (tenantData.header_text_color_light) {
+      const headerTextLight = isHexColor(tenantData.header_text_color_light)
+        ? hexToHSL(tenantData.header_text_color_light)
+        : tenantData.header_text_color_light;
+      root.style.setProperty('--header-text-light', headerTextLight);
+    }
+    
+    if (tenantData.header_text_color_dark) {
+      const headerTextDark = isHexColor(tenantData.header_text_color_dark)
+        ? hexToHSL(tenantData.header_text_color_dark)
+        : tenantData.header_text_color_dark;
+      root.style.setProperty('--header-text-dark', headerTextDark);
+    }
+
+    // Aplicar tamanho do logo
+    if (tenantData.logo_size) {
+      root.style.setProperty('--logo-size', `${tenantData.logo_size}px`);
+    }
+
+    // Aplicar cores dos botões (light mode)
+    if (tenantData.button_bg_color_light) {
+      const btnBgLight = isHexColor(tenantData.button_bg_color_light)
+        ? hexToHSL(tenantData.button_bg_color_light)
+        : tenantData.button_bg_color_light;
+      root.style.setProperty('--btn-primary-bg-light', btnBgLight);
+    }
+    
+    if (tenantData.button_text_color_light) {
+      const btnTextLight = isHexColor(tenantData.button_text_color_light)
+        ? hexToHSL(tenantData.button_text_color_light)
+        : tenantData.button_text_color_light;
+      root.style.setProperty('--btn-primary-text-light', btnTextLight);
+    }
+
+    // Aplicar cores dos botões (dark mode)
+    if (tenantData.button_bg_color_dark) {
+      const btnBgDark = isHexColor(tenantData.button_bg_color_dark)
+        ? hexToHSL(tenantData.button_bg_color_dark)
+        : tenantData.button_bg_color_dark;
+      root.style.setProperty('--btn-primary-bg-dark', btnBgDark);
+    }
+    
+    if (tenantData.button_text_color_dark) {
+      const btnTextDark = isHexColor(tenantData.button_text_color_dark)
+        ? hexToHSL(tenantData.button_text_color_dark)
+        : tenantData.button_text_color_dark;
+      root.style.setProperty('--btn-primary-text-dark', btnTextDark);
+    }
+
     // Atualizar meta tags
     document.title = tenantData.meta_config.title;
     

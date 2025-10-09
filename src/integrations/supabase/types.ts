@@ -1439,8 +1439,14 @@ export type Database = {
         Row: {
           accent_color: string
           base_path: string
+          button_bg_color_dark: string | null
+          button_bg_color_light: string | null
+          button_text_color_dark: string | null
+          button_text_color_light: string | null
           created_at: string | null
           header_color: string | null
+          header_text_color_dark: string | null
+          header_text_color_light: string | null
           hero_autoplay: boolean | null
           hero_autoplay_delay: number | null
           hero_images: string[] | null
@@ -1448,6 +1454,7 @@ export type Database = {
           hero_title: string | null
           id: string
           is_active: boolean | null
+          logo_size: number | null
           logo_url: string | null
           meta_config: Json | null
           name: string
@@ -1460,8 +1467,14 @@ export type Database = {
         Insert: {
           accent_color: string
           base_path: string
+          button_bg_color_dark?: string | null
+          button_bg_color_light?: string | null
+          button_text_color_dark?: string | null
+          button_text_color_light?: string | null
           created_at?: string | null
           header_color?: string | null
+          header_text_color_dark?: string | null
+          header_text_color_light?: string | null
           hero_autoplay?: boolean | null
           hero_autoplay_delay?: number | null
           hero_images?: string[] | null
@@ -1469,6 +1482,7 @@ export type Database = {
           hero_title?: string | null
           id?: string
           is_active?: boolean | null
+          logo_size?: number | null
           logo_url?: string | null
           meta_config?: Json | null
           name: string
@@ -1481,8 +1495,14 @@ export type Database = {
         Update: {
           accent_color?: string
           base_path?: string
+          button_bg_color_dark?: string | null
+          button_bg_color_light?: string | null
+          button_text_color_dark?: string | null
+          button_text_color_light?: string | null
           created_at?: string | null
           header_color?: string | null
+          header_text_color_dark?: string | null
+          header_text_color_light?: string | null
           hero_autoplay?: boolean | null
           hero_autoplay_delay?: number | null
           hero_images?: string[] | null
@@ -1490,6 +1510,7 @@ export type Database = {
           hero_title?: string | null
           id?: string
           is_active?: boolean | null
+          logo_size?: number | null
           logo_url?: string | null
           meta_config?: Json | null
           name?: string

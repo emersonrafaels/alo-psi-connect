@@ -55,7 +55,7 @@ const Header = () => {
       className="sticky top-0 z-50 w-full border-b shadow-sm" 
       style={{ 
         backgroundColor: 'hsl(var(--header-bg))',
-        color: 'hsl(var(--header-fg))'
+        color: 'hsl(var(--header-text))'
       }}
     >
       <div className="container mx-auto px-4">
@@ -75,8 +75,9 @@ const Header = () => {
                   "text-sm font-medium transition-colors",
                   isActive(item.href) 
                     ? "text-accent font-semibold" 
-                    : "text-primary-foreground hover:text-accent"
+                    : "hover:text-accent"
                 )}
+                style={{ color: isActive(item.href) ? undefined : 'inherit' }}
               >
                 {item.name}
               </Link>
@@ -160,7 +161,7 @@ const Header = () => {
                   Cadastrar
                 </Button>
                 <Button 
-                  variant="accent" 
+                  variant="tenant-primary" 
                   size="sm" 
                   onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'))}
                 >
@@ -285,13 +286,8 @@ const Header = () => {
   </Button>
 
   <Button
-    variant="default"
+    variant="tenant-primary"
     size="sm"
-    className="
-      bg-[hsl(var(--accent))]
-      text-[hsl(var(--accent-foreground))]
-      hover:bg-[hsl(var(--accent)/0.9)]
-    "
     onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'))}
   >
     Entrar

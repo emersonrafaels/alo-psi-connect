@@ -23,6 +23,13 @@ interface Tenant {
   hero_images?: string[];
   hero_autoplay?: boolean;
   hero_autoplay_delay?: number;
+  header_text_color_light?: string;
+  header_text_color_dark?: string;
+  logo_size?: number;
+  button_bg_color_light?: string;
+  button_bg_color_dark?: string;
+  button_text_color_light?: string;
+  button_text_color_dark?: string;
   theme_config: {
     secondary_color?: string;
     muted_color?: string;
@@ -58,6 +65,13 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     hero_images: [] as string[],
     hero_autoplay: true,
     hero_autoplay_delay: 3000,
+    header_text_color_light: "#ffffff",
+    header_text_color_dark: "#ffffff",
+    logo_size: 40,
+    button_bg_color_light: "#0ea5e9",
+    button_bg_color_dark: "#0ea5e9",
+    button_text_color_light: "#ffffff",
+    button_text_color_dark: "#ffffff",
     meta_title: "",
     meta_description: "",
     meta_favicon: "",
@@ -81,6 +95,13 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         hero_images: tenant.hero_images || [],
         hero_autoplay: tenant.hero_autoplay ?? true,
         hero_autoplay_delay: tenant.hero_autoplay_delay || 3000,
+        header_text_color_light: tenant.header_text_color_light || "#ffffff",
+        header_text_color_dark: tenant.header_text_color_dark || "#ffffff",
+        logo_size: tenant.logo_size || 40,
+        button_bg_color_light: tenant.button_bg_color_light || "#0ea5e9",
+        button_bg_color_dark: tenant.button_bg_color_dark || "#0ea5e9",
+        button_text_color_light: tenant.button_text_color_light || "#ffffff",
+        button_text_color_dark: tenant.button_text_color_dark || "#ffffff",
         meta_title: tenant.meta_config?.title || "",
         meta_description: tenant.meta_config?.description || "",
         meta_favicon: tenant.meta_config?.favicon || "",
@@ -101,6 +122,13 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         hero_images: [] as string[],
         hero_autoplay: true,
         hero_autoplay_delay: 3000,
+        header_text_color_light: "#ffffff",
+        header_text_color_dark: "#ffffff",
+        logo_size: 40,
+        button_bg_color_light: "#0ea5e9",
+        button_bg_color_dark: "#0ea5e9",
+        button_text_color_light: "#ffffff",
+        button_text_color_dark: "#ffffff",
         meta_title: "",
         meta_description: "",
         meta_favicon: "",
@@ -128,6 +156,13 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         hero_images: formData.hero_images.length > 0 ? formData.hero_images : null,
         hero_autoplay: formData.hero_autoplay,
         hero_autoplay_delay: formData.hero_autoplay_delay,
+        header_text_color_light: formData.header_text_color_light,
+        header_text_color_dark: formData.header_text_color_dark,
+        logo_size: formData.logo_size,
+        button_bg_color_light: formData.button_bg_color_light,
+        button_bg_color_dark: formData.button_bg_color_dark,
+        button_text_color_light: formData.button_text_color_light,
+        button_text_color_dark: formData.button_text_color_dark,
         theme_config: {
           secondary_color: formData.secondary_color
         },
@@ -327,6 +362,187 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
                     onChange={(e) => setFormData({ ...formData, header_color: e.target.value })}
                     placeholder="#000000"
                   />
+                </div>
+              </div>
+
+              {/* Cores dos Textos do Header */}
+              <div className="border rounded-lg p-4 space-y-4">
+                <h3 className="font-medium">Cores dos Textos do Header</h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="header_text_color_light">Light Mode</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="header_text_color_light"
+                        type="color"
+                        value={formData.header_text_color_light}
+                        onChange={(e) => setFormData({ ...formData, header_text_color_light: e.target.value })}
+                        className="w-16 h-10"
+                      />
+                      <Input
+                        value={formData.header_text_color_light}
+                        onChange={(e) => setFormData({ ...formData, header_text_color_light: e.target.value })}
+                        placeholder="#ffffff"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="header_text_color_dark">Dark Mode</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="header_text_color_dark"
+                        type="color"
+                        value={formData.header_text_color_dark}
+                        onChange={(e) => setFormData({ ...formData, header_text_color_dark: e.target.value })}
+                        className="w-16 h-10"
+                      />
+                      <Input
+                        value={formData.header_text_color_dark}
+                        onChange={(e) => setFormData({ ...formData, header_text_color_dark: e.target.value })}
+                        placeholder="#ffffff"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tamanho do Logo */}
+              <div>
+                <Label htmlFor="logo_size">Tamanho do Logo (altura em pixels)</Label>
+                <Input
+                  id="logo_size"
+                  type="number"
+                  value={formData.logo_size}
+                  onChange={(e) => setFormData({ ...formData, logo_size: parseInt(e.target.value) || 40 })}
+                  min={20}
+                  max={100}
+                  step={5}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Altura do logo em pixels (padrão: 40px)
+                </p>
+              </div>
+
+              {/* Cores dos Botões */}
+              <div className="border rounded-lg p-4 space-y-4">
+                <h3 className="font-medium">Cores dos Botões Principais</h3>
+                
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Cor de Preenchimento (Background)</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="button_bg_color_light">Light Mode</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="button_bg_color_light"
+                          type="color"
+                          value={formData.button_bg_color_light}
+                          onChange={(e) => setFormData({ ...formData, button_bg_color_light: e.target.value })}
+                          className="w-16 h-10"
+                        />
+                        <Input
+                          value={formData.button_bg_color_light}
+                          onChange={(e) => setFormData({ ...formData, button_bg_color_light: e.target.value })}
+                          placeholder="#0ea5e9"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="button_bg_color_dark">Dark Mode</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="button_bg_color_dark"
+                          type="color"
+                          value={formData.button_bg_color_dark}
+                          onChange={(e) => setFormData({ ...formData, button_bg_color_dark: e.target.value })}
+                          className="w-16 h-10"
+                        />
+                        <Input
+                          value={formData.button_bg_color_dark}
+                          onChange={(e) => setFormData({ ...formData, button_bg_color_dark: e.target.value })}
+                          placeholder="#0ea5e9"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Cor do Texto (Label)</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="button_text_color_light">Light Mode</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="button_text_color_light"
+                          type="color"
+                          value={formData.button_text_color_light}
+                          onChange={(e) => setFormData({ ...formData, button_text_color_light: e.target.value })}
+                          className="w-16 h-10"
+                        />
+                        <Input
+                          value={formData.button_text_color_light}
+                          onChange={(e) => setFormData({ ...formData, button_text_color_light: e.target.value })}
+                          placeholder="#ffffff"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="button_text_color_dark">Dark Mode</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="button_text_color_dark"
+                          type="color"
+                          value={formData.button_text_color_dark}
+                          onChange={(e) => setFormData({ ...formData, button_text_color_dark: e.target.value })}
+                          className="w-16 h-10"
+                        />
+                        <Input
+                          value={formData.button_text_color_dark}
+                          onChange={(e) => setFormData({ ...formData, button_text_color_dark: e.target.value })}
+                          placeholder="#ffffff"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preview dos Botões */}
+                <div className="pt-4 space-y-2">
+                  <p className="text-sm font-medium">Preview:</p>
+                  <div className="flex gap-4">
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Light Mode</p>
+                      <button
+                        type="button"
+                        className="px-4 py-2 rounded-md font-medium"
+                        style={{
+                          backgroundColor: formData.button_bg_color_light,
+                          color: formData.button_text_color_light
+                        }}
+                      >
+                        Botão Exemplo
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Dark Mode</p>
+                      <button
+                        type="button"
+                        className="px-4 py-2 rounded-md font-medium"
+                        style={{
+                          backgroundColor: formData.button_bg_color_dark,
+                          color: formData.button_text_color_dark
+                        }}
+                      >
+                        Botão Exemplo
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 

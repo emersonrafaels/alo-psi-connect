@@ -33,7 +33,11 @@ export const TenantBranding = () => {
         <img 
           src={tenant.logo_url} 
           alt={tenant.name} 
-          className="h-10 w-auto object-contain max-w-full"
+          style={{ 
+            height: tenant.logo_size ? `${tenant.logo_size}px` : 'var(--logo-size, 40px)',
+            width: 'auto'
+          }}
+          className="object-contain max-w-full"
           onError={(e) => {
             console.error('[TenantBranding] Failed to load logo:', tenant.logo_url, e);
             setImageError(true);

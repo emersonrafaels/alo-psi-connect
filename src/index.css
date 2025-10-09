@@ -78,6 +78,13 @@ All colors MUST be HSL.
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Header text colors - theme aware */
+    --header-text: var(--header-text-light, 0 0% 100%);
+    
+    /* Button colors - theme aware */
+    --btn-primary-bg: var(--btn-primary-bg-light, 199 89% 48%);
+    --btn-primary-text: var(--btn-primary-text-light, 0 0% 100%);
   }
 
   .dark {
@@ -122,6 +129,13 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Header text colors - dark mode */
+    --header-text: var(--header-text-dark, 0 0% 100%);
+    
+    /* Button colors - dark mode */
+    --btn-primary-bg: var(--btn-primary-bg-dark, 199 89% 48%);
+    --btn-primary-text: var(--btn-primary-text-dark, 0 0% 100%);
   }
 }
 
