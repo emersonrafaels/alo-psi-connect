@@ -8,6 +8,11 @@ export interface Tenant {
   primary_color: string;
   accent_color: string;
   secondary_color?: string;
+  hero_title?: string;
+  hero_subtitle?: string;
+  hero_images?: string[];
+  hero_autoplay?: boolean;
+  hero_autoplay_delay?: number;
   theme_config: {
     secondary_color?: string;
     muted_color?: string;

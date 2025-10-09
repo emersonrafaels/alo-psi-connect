@@ -14,9 +14,15 @@ interface Tenant {
   name: string;
   base_path: string;
   logo_url: string | null;
+  header_color?: string;
   primary_color: string;
   accent_color: string;
   secondary_color?: string;
+  hero_title?: string;
+  hero_subtitle?: string;
+  hero_images?: string[];
+  hero_autoplay?: boolean;
+  hero_autoplay_delay?: number;
   theme_config: {
     secondary_color?: string;
     muted_color?: string;
@@ -43,9 +49,15 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     name: "",
     base_path: "",
     logo_url: "",
+    header_color: "",
     primary_color: "#0ea5e9",
     accent_color: "#06b6d4",
     secondary_color: "#6366f1",
+    hero_title: "",
+    hero_subtitle: "",
+    hero_images: [] as string[],
+    hero_autoplay: true,
+    hero_autoplay_delay: 3000,
     meta_title: "",
     meta_description: "",
     meta_favicon: "",
@@ -60,9 +72,15 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         name: tenant.name || "",
         base_path: tenant.base_path || "",
         logo_url: tenant.logo_url || "",
+        header_color: tenant.header_color || "",
         primary_color: tenant.primary_color || "#0ea5e9",
         accent_color: tenant.accent_color || "#06b6d4",
         secondary_color: tenant.secondary_color || tenant.theme_config?.secondary_color || "#6366f1",
+        hero_title: tenant.hero_title || "",
+        hero_subtitle: tenant.hero_subtitle || "",
+        hero_images: tenant.hero_images || [],
+        hero_autoplay: tenant.hero_autoplay ?? true,
+        hero_autoplay_delay: tenant.hero_autoplay_delay || 3000,
         meta_title: tenant.meta_config?.title || "",
         meta_description: tenant.meta_config?.description || "",
         meta_favicon: tenant.meta_config?.favicon || "",
@@ -74,9 +92,15 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         name: "",
         base_path: "",
         logo_url: "",
+        header_color: "",
         primary_color: "#0ea5e9",
         accent_color: "#06b6d4",
         secondary_color: "#6366f1",
+        hero_title: "",
+        hero_subtitle: "",
+        hero_images: [] as string[],
+        hero_autoplay: true,
+        hero_autoplay_delay: 3000,
         meta_title: "",
         meta_description: "",
         meta_favicon: "",
@@ -95,9 +119,15 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         name: formData.name,
         base_path: formData.base_path || `/${formData.slug}`,
         logo_url: formData.logo_url || null,
+        header_color: formData.header_color || null,
         primary_color: formData.primary_color,
         accent_color: formData.accent_color,
         secondary_color: formData.secondary_color,
+        hero_title: formData.hero_title || null,
+        hero_subtitle: formData.hero_subtitle || null,
+        hero_images: formData.hero_images.length > 0 ? formData.hero_images : null,
+        hero_autoplay: formData.hero_autoplay,
+        hero_autoplay_delay: formData.hero_autoplay_delay,
         theme_config: {
           secondary_color: formData.secondary_color
         },
@@ -150,9 +180,10 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
 
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="basic">Básico</TabsTrigger>
               <TabsTrigger value="theme">Tema</TabsTrigger>
+              <TabsTrigger value="branding">Branding</TabsTrigger>
               <TabsTrigger value="meta">SEO/Meta</TabsTrigger>
             </TabsList>
 
@@ -276,6 +307,95 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
                     className="w-12 h-12 rounded-md border" 
                     style={{ backgroundColor: formData.secondary_color }}
                   />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="branding" className="space-y-4">
+              <div>
+                <Label htmlFor="header_color">Cor do Header</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="header_color"
+                    type="color"
+                    value={formData.header_color || formData.primary_color}
+                    onChange={(e) => setFormData({ ...formData, header_color: e.target.value })}
+                    className="w-16 h-10"
+                  />
+                  <Input
+                    value={formData.header_color || formData.primary_color}
+                    onChange={(e) => setFormData({ ...formData, header_color: e.target.value })}
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="hero_title">Título do Hero</Label>
+                <Input
+                  id="hero_title"
+                  value={formData.hero_title}
+                  onChange={(e) => setFormData({ ...formData, hero_title: e.target.value })}
+                  placeholder="Bem-vindo ao AloPsi"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="hero_subtitle">Subtítulo do Hero</Label>
+                <Textarea
+                  id="hero_subtitle"
+                  value={formData.hero_subtitle}
+                  onChange={(e) => setFormData({ ...formData, hero_subtitle: e.target.value })}
+                  placeholder="Sua plataforma de bem-estar emocional"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="hero_images">Imagens do Carrossel (uma URL por linha)</Label>
+                <Textarea
+                  id="hero_images"
+                  value={formData.hero_images.join('\n')}
+                  onChange={(e) => setFormData({ 
+                    ...formData, 
+                    hero_images: e.target.value.split('\n').filter(url => url.trim()) 
+                  })}
+                  placeholder="https://example.com/image1.jpg"
+                  rows={4}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="hero_autoplay"
+                    checked={formData.hero_autoplay}
+                    onChange={(e) => setFormData({ ...formData, hero_autoplay: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="hero_autoplay">Autoplay do Carrossel</Label>
+                </div>
+                <div>
+                  <Label htmlFor="hero_autoplay_delay">Delay (ms)</Label>
+                  <Input
+                    id="hero_autoplay_delay"
+                    type="number"
+                    value={formData.hero_autoplay_delay}
+                    onChange={(e) => setFormData({ ...formData, hero_autoplay_delay: parseInt(e.target.value) })}
+                    min={1000}
+                    step={1000}
+                  />
+                </div>
+              </div>
+
+              <div className="border rounded-lg p-4 bg-muted/50">
+                <p className="text-sm font-medium mb-2">Preview do Header</p>
+                <div 
+                  className="h-16 rounded flex items-center px-4" 
+                  style={{ backgroundColor: formData.header_color || formData.primary_color }}
+                >
+                  <span className="text-white font-semibold">Header Preview</span>
                 </div>
               </div>
             </TabsContent>

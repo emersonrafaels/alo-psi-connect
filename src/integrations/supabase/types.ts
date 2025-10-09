@@ -1441,6 +1441,11 @@ export type Database = {
           base_path: string
           created_at: string | null
           header_color: string | null
+          hero_autoplay: boolean | null
+          hero_autoplay_delay: number | null
+          hero_images: string[] | null
+          hero_subtitle: string | null
+          hero_title: string | null
           id: string
           is_active: boolean | null
           logo_url: string | null
@@ -1457,6 +1462,11 @@ export type Database = {
           base_path: string
           created_at?: string | null
           header_color?: string | null
+          hero_autoplay?: boolean | null
+          hero_autoplay_delay?: number | null
+          hero_images?: string[] | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
@@ -1473,6 +1483,11 @@ export type Database = {
           base_path?: string
           created_at?: string | null
           header_color?: string | null
+          hero_autoplay?: boolean | null
+          hero_autoplay_delay?: number | null
+          hero_images?: string[] | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
