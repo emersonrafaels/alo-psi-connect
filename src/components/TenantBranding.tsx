@@ -17,6 +17,13 @@ export const TenantBranding = () => {
     );
   }
 
+  const formatColor = (color: string) => {
+    if (color.startsWith('#')) {
+      return color;
+    }
+    return `hsl(${color})`;
+  };
+
   return (
     <Link to={tenant.base_path || '/'} className="flex items-center space-x-2">
       {tenant.logo_url ? (
@@ -30,7 +37,7 @@ export const TenantBranding = () => {
           <div 
             className="w-8 h-8 rounded-full flex items-center justify-center relative overflow-hidden"
             style={{
-              background: `linear-gradient(135deg, ${tenant.primary_color}, ${tenant.accent_color})`
+              background: `linear-gradient(135deg, ${formatColor(tenant.primary_color)}, ${formatColor(tenant.accent_color)})`
             }}
           >
             <span className="text-white font-bold text-sm relative z-10">
