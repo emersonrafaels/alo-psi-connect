@@ -182,6 +182,16 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
           .eq('id', tenant.id);
 
         if (error) throw error;
+        
+        // Invalidar cache do tenant editado
+        const cacheKey = `tenant_${formData.slug}_cache`;
+        localStorage.removeItem(cacheKey);
+        
+        // Disparar evento customizado para forçar reload se for o tenant atual
+        window.dispatchEvent(new CustomEvent('tenant-updated', { 
+          detail: { slug: formData.slug } 
+        }));
+        
         toast.success("Tenant atualizado com sucesso!");
       } else {
         // Create new tenant

@@ -228,6 +228,24 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     fetchTenant(currentTenantSlug);
   }, [currentTenantSlug, fetchTenant]);
 
+  // Escutar evento de atualização de tenant
+  useEffect(() => {
+    const handleTenantUpdate = (event: CustomEvent) => {
+      const { slug } = event.detail;
+      if (slug === currentTenantSlug) {
+        console.log('[TenantContext] Tenant updated, clearing cache and reloading...');
+        localStorage.removeItem(`tenant_${slug}_cache`);
+        fetchTenant(currentTenantSlug);
+      }
+    };
+
+    window.addEventListener('tenant-updated', handleTenantUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('tenant-updated', handleTenantUpdate as EventListener);
+    };
+  }, [currentTenantSlug, fetchTenant]);
+
   const contextValue = useMemo<TenantContextType>(() => ({
     tenant,
     loading,
