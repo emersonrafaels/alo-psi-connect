@@ -25,12 +25,12 @@ export const TenantBranding = () => {
   };
 
   return (
-    <Link to={tenant.base_path || '/'} className="flex items-center space-x-2">
+    <Link to={tenant.base_path || '/'} className="flex items-center space-x-2 max-w-[200px]">
       {tenant.logo_url ? (
         <img 
           src={tenant.logo_url} 
           alt={tenant.name} 
-          className="h-10 w-auto object-contain"
+          className="h-10 w-auto object-contain max-w-full"
         />
       ) : (
         <>
