@@ -98,11 +98,10 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-foreground">
-                Atendimento especializado, 
-                online e acessível
+                {tenant?.theme_config?.hero_title || 'Atendimento especializado, online e acessível'}
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
-                Encontre profissionais especializados em saúde mental com atendimento humanizado e de qualidade.
+                {tenant?.theme_config?.hero_subtitle || 'Encontre profissionais especializados em saúde mental com atendimento humanizado e de qualidade.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button variant="default" size="lg" className="bg-primary text-primary-foreground" onClick={() => navigate('/profissionais')}>

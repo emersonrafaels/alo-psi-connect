@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { usePublicConfig } from '@/hooks/usePublicConfig';
+import { useTenant } from '@/hooks/useTenant';
 import { Skeleton } from '@/components/ui/skeleton';
 import Autoplay from 'embla-carousel-autoplay';
 
@@ -19,29 +20,31 @@ const convertS3ToHttps = (url: string): string => {
 
 export const HeroCarousel = () => {
   const { getConfig, loading } = usePublicConfig(['homepage']);
+  const { tenant } = useTenant();
   const [imageLoading, setImageLoading] = useState(true);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
   const { isCarousel, images, autoPlayOptions } = useMemo(() => {
     if (loading) return { isCarousel: false, images: [], autoPlayOptions: null };
     
+    // Prefer tenant configuration over public config
+    const imageUrls = tenant?.theme_config?.hero_images || getConfig('homepage', 'hero_images', []);
     const carouselMode = getConfig('homepage', 'hero_carousel_mode', 'false');
-    const imageUrls = getConfig('homepage', 'hero_images', []);
-    const autoPlay = getConfig('homepage', 'hero_carousel_auto_play', false);
-    const autoPlayDelay = getConfig('homepage', 'hero_carousel_auto_play_delay', 5);
+    const autoPlay = tenant?.theme_config?.hero_autoplay ?? getConfig('homepage', 'hero_carousel_auto_play', false);
+    const autoPlayDelay = tenant?.theme_config?.hero_autoplay_delay || Number(getConfig('homepage', 'hero_carousel_auto_play_delay', 5)) * 1000;
     
-    console.log('HeroCarousel Debug:', { carouselMode, imageUrls, autoPlay, autoPlayDelay, loading });
+    console.log('HeroCarousel Debug:', { carouselMode, imageUrls, autoPlay, autoPlayDelay, loading, tenant });
     
     // Converter carouselMode string para boolean
     const isCarouselEnabled = carouselMode === 'true' || carouselMode === true;
-    const isAutoPlayEnabled = autoPlay === 'true' || autoPlay === true;
+    const isAutoPlayEnabled = autoPlay === 'true' || autoPlay === true || autoPlay === true;
     
     const processedImages = Array.isArray(imageUrls) 
       ? imageUrls.map(convertS3ToHttps).filter(Boolean)
       : [convertS3ToHttps(imageUrls)].filter(Boolean);
     
     const autoPlayPluginOptions = isAutoPlayEnabled ? {
-      delay: Number(autoPlayDelay) * 1000, // Convert seconds to milliseconds
+      delay: typeof autoPlayDelay === 'number' ? autoPlayDelay : Number(autoPlayDelay) * 1000,
       stopOnMouseEnter: true,
       stopOnInteraction: false
     } : null;
@@ -51,7 +54,7 @@ export const HeroCarousel = () => {
       images: processedImages,
       autoPlayOptions: autoPlayPluginOptions
     };
-  }, [loading, getConfig]);
+  }, [loading, getConfig, tenant]);
 
   // Preload images for better performance
   useEffect(() => {
