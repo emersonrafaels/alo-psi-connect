@@ -1438,6 +1438,7 @@ export type Database = {
       tenants: {
         Row: {
           accent_color: string
+          ai_match_button_text: string | null
           base_path: string
           button_bg_color_dark: string | null
           button_bg_color_light: string | null
@@ -1461,11 +1462,16 @@ export type Database = {
           primary_color: string
           secondary_color: string | null
           slug: string
+          specialty_tag_bg_dark: string | null
+          specialty_tag_bg_light: string | null
+          specialty_tag_text_dark: string | null
+          specialty_tag_text_light: string | null
           theme_config: Json | null
           updated_at: string | null
         }
         Insert: {
           accent_color: string
+          ai_match_button_text?: string | null
           base_path: string
           button_bg_color_dark?: string | null
           button_bg_color_light?: string | null
@@ -1489,11 +1495,16 @@ export type Database = {
           primary_color: string
           secondary_color?: string | null
           slug: string
+          specialty_tag_bg_dark?: string | null
+          specialty_tag_bg_light?: string | null
+          specialty_tag_text_dark?: string | null
+          specialty_tag_text_light?: string | null
           theme_config?: Json | null
           updated_at?: string | null
         }
         Update: {
           accent_color?: string
+          ai_match_button_text?: string | null
           base_path?: string
           button_bg_color_dark?: string | null
           button_bg_color_light?: string | null
@@ -1517,6 +1528,10 @@ export type Database = {
           primary_color?: string
           secondary_color?: string | null
           slug?: string
+          specialty_tag_bg_dark?: string | null
+          specialty_tag_bg_light?: string | null
+          specialty_tag_text_dark?: string | null
+          specialty_tag_text_light?: string | null
           theme_config?: Json | null
           updated_at?: string | null
         }

@@ -65,7 +65,12 @@ const ProfessionalCard = ({
                   <Badge
                     key={index}
                     variant="secondary"
-                    className="text-xs px-2 py-1 bg-primary/10 text-primary dark:text-white border-primary/20 dark:border-white/20"
+                    className="text-xs px-2 py-1"
+                    style={{
+                      backgroundColor: 'hsl(var(--specialty-tag-bg-light))',
+                      color: 'hsl(var(--specialty-tag-text-light))',
+                      borderColor: 'hsl(var(--specialty-tag-text-light) / 0.2)'
+                    }}
                   >
                     {specialty}
                   </Badge>
@@ -137,7 +142,16 @@ const ProfessionalCard = ({
             <div className="mb-6">
               <div className="flex flex-wrap gap-2">
                 {specialties.slice(0, 3).map((specialty, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs px-3 py-1 bg-primary/10 text-primary border-primary/20">
+                  <Badge 
+                    key={index} 
+                    variant="secondary" 
+                    className="text-xs px-3 py-1"
+                    style={{
+                      backgroundColor: 'hsl(var(--specialty-tag-bg-light))',
+                      color: 'hsl(var(--specialty-tag-text-light))',
+                      borderColor: 'hsl(var(--specialty-tag-text-light) / 0.2)'
+                    }}
+                  >
                     {specialty}
                   </Badge>
                 ))}

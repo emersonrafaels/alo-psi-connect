@@ -197,6 +197,36 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       root.style.setProperty('--btn-primary-text-dark', btnTextDark);
     }
 
+    // Aplicar cores das tags de especialidades (light mode)
+    if (tenantData.specialty_tag_bg_light) {
+      const tagBgLight = isHexColor(tenantData.specialty_tag_bg_light)
+        ? hexToHSL(tenantData.specialty_tag_bg_light)
+        : tenantData.specialty_tag_bg_light;
+      root.style.setProperty('--specialty-tag-bg-light', tagBgLight);
+    }
+    
+    if (tenantData.specialty_tag_text_light) {
+      const tagTextLight = isHexColor(tenantData.specialty_tag_text_light)
+        ? hexToHSL(tenantData.specialty_tag_text_light)
+        : tenantData.specialty_tag_text_light;
+      root.style.setProperty('--specialty-tag-text-light', tagTextLight);
+    }
+
+    // Aplicar cores das tags de especialidades (dark mode)
+    if (tenantData.specialty_tag_bg_dark) {
+      const tagBgDark = isHexColor(tenantData.specialty_tag_bg_dark)
+        ? hexToHSL(tenantData.specialty_tag_bg_dark)
+        : tenantData.specialty_tag_bg_dark;
+      root.style.setProperty('--specialty-tag-bg-dark', tagBgDark);
+    }
+    
+    if (tenantData.specialty_tag_text_dark) {
+      const tagTextDark = isHexColor(tenantData.specialty_tag_text_dark)
+        ? hexToHSL(tenantData.specialty_tag_text_dark)
+        : tenantData.specialty_tag_text_dark;
+      root.style.setProperty('--specialty-tag-text-dark', tagTextDark);
+    }
+
     // Atualizar meta tags
     document.title = tenantData.meta_config.title;
     

@@ -30,6 +30,11 @@ interface Tenant {
   button_bg_color_dark?: string;
   button_text_color_light?: string;
   button_text_color_dark?: string;
+  specialty_tag_bg_light?: string;
+  specialty_tag_text_light?: string;
+  specialty_tag_bg_dark?: string;
+  specialty_tag_text_dark?: string;
+  ai_match_button_text?: string;
   theme_config: {
     secondary_color?: string;
     muted_color?: string;
@@ -72,6 +77,11 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     button_bg_color_dark: "#0ea5e9",
     button_text_color_light: "#ffffff",
     button_text_color_dark: "#ffffff",
+    specialty_tag_bg_light: "#e0f2fe",
+    specialty_tag_text_light: "#0ea5e9",
+    specialty_tag_bg_dark: "#1e3a8a",
+    specialty_tag_text_dark: "#93c5fd",
+    ai_match_button_text: "Alô Psi Match",
     meta_title: "",
     meta_description: "",
     meta_favicon: "",
@@ -102,6 +112,11 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         button_bg_color_dark: tenant.button_bg_color_dark || "#0ea5e9",
         button_text_color_light: tenant.button_text_color_light || "#ffffff",
         button_text_color_dark: tenant.button_text_color_dark || "#ffffff",
+        specialty_tag_bg_light: tenant.specialty_tag_bg_light || "#e0f2fe",
+        specialty_tag_text_light: tenant.specialty_tag_text_light || "#0ea5e9",
+        specialty_tag_bg_dark: tenant.specialty_tag_bg_dark || "#1e3a8a",
+        specialty_tag_text_dark: tenant.specialty_tag_text_dark || "#93c5fd",
+        ai_match_button_text: tenant.ai_match_button_text || "Alô Psi Match",
         meta_title: tenant.meta_config?.title || "",
         meta_description: tenant.meta_config?.description || "",
         meta_favicon: tenant.meta_config?.favicon || "",
@@ -129,6 +144,11 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         button_bg_color_dark: "#0ea5e9",
         button_text_color_light: "#ffffff",
         button_text_color_dark: "#ffffff",
+        specialty_tag_bg_light: "#e0f2fe",
+        specialty_tag_text_light: "#0ea5e9",
+        specialty_tag_bg_dark: "#1e3a8a",
+        specialty_tag_text_dark: "#93c5fd",
+        ai_match_button_text: "Alô Psi Match",
         meta_title: "",
         meta_description: "",
         meta_favicon: "",
@@ -163,6 +183,11 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         button_bg_color_dark: formData.button_bg_color_dark,
         button_text_color_light: formData.button_text_color_light,
         button_text_color_dark: formData.button_text_color_dark,
+        specialty_tag_bg_light: formData.specialty_tag_bg_light,
+        specialty_tag_text_light: formData.specialty_tag_text_light,
+        specialty_tag_bg_dark: formData.specialty_tag_bg_dark,
+        specialty_tag_text_dark: formData.specialty_tag_text_dark,
+        ai_match_button_text: formData.ai_match_button_text,
         theme_config: {
           secondary_color: formData.secondary_color
         },
@@ -554,6 +579,165 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Cores das Tags de Especialidades */}
+              <div className="border rounded-lg p-4 space-y-4">
+                <h3 className="font-medium">Cores das Tags de Especialidades</h3>
+                
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Cor de Fundo (Background)</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="specialty_tag_bg_light">Light Mode</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="specialty_tag_bg_light"
+                          type="color"
+                          value={formData.specialty_tag_bg_light}
+                          onChange={(e) => setFormData({ ...formData, specialty_tag_bg_light: e.target.value })}
+                          className="w-16 h-10"
+                        />
+                        <Input
+                          value={formData.specialty_tag_bg_light}
+                          onChange={(e) => setFormData({ ...formData, specialty_tag_bg_light: e.target.value })}
+                          placeholder="#e0f2fe"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="specialty_tag_bg_dark">Dark Mode</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="specialty_tag_bg_dark"
+                          type="color"
+                          value={formData.specialty_tag_bg_dark}
+                          onChange={(e) => setFormData({ ...formData, specialty_tag_bg_dark: e.target.value })}
+                          className="w-16 h-10"
+                        />
+                        <Input
+                          value={formData.specialty_tag_bg_dark}
+                          onChange={(e) => setFormData({ ...formData, specialty_tag_bg_dark: e.target.value })}
+                          placeholder="#1e3a8a"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Cor do Texto</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="specialty_tag_text_light">Light Mode</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="specialty_tag_text_light"
+                          type="color"
+                          value={formData.specialty_tag_text_light}
+                          onChange={(e) => setFormData({ ...formData, specialty_tag_text_light: e.target.value })}
+                          className="w-16 h-10"
+                        />
+                        <Input
+                          value={formData.specialty_tag_text_light}
+                          onChange={(e) => setFormData({ ...formData, specialty_tag_text_light: e.target.value })}
+                          placeholder="#0ea5e9"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="specialty_tag_text_dark">Dark Mode</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="specialty_tag_text_dark"
+                          type="color"
+                          value={formData.specialty_tag_text_dark}
+                          onChange={(e) => setFormData({ ...formData, specialty_tag_text_dark: e.target.value })}
+                          className="w-16 h-10"
+                        />
+                        <Input
+                          value={formData.specialty_tag_text_dark}
+                          onChange={(e) => setFormData({ ...formData, specialty_tag_text_dark: e.target.value })}
+                          placeholder="#93c5fd"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preview das Tags */}
+                <div className="pt-4 space-y-2">
+                  <p className="text-sm font-medium">Preview:</p>
+                  <div className="flex gap-4">
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Light Mode</p>
+                      <div className="flex gap-2">
+                        <span
+                          className="text-xs px-3 py-1 rounded-md border"
+                          style={{
+                            backgroundColor: formData.specialty_tag_bg_light,
+                            color: formData.specialty_tag_text_light,
+                            borderColor: formData.specialty_tag_text_light + '33'
+                          }}
+                        >
+                          Ansiedade
+                        </span>
+                        <span
+                          className="text-xs px-3 py-1 rounded-md border"
+                          style={{
+                            backgroundColor: formData.specialty_tag_bg_light,
+                            color: formData.specialty_tag_text_light,
+                            borderColor: formData.specialty_tag_text_light + '33'
+                          }}
+                        >
+                          Depressão
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Dark Mode</p>
+                      <div className="flex gap-2">
+                        <span
+                          className="text-xs px-3 py-1 rounded-md border"
+                          style={{
+                            backgroundColor: formData.specialty_tag_bg_dark,
+                            color: formData.specialty_tag_text_dark,
+                            borderColor: formData.specialty_tag_text_dark + '33'
+                          }}
+                        >
+                          Ansiedade
+                        </span>
+                        <span
+                          className="text-xs px-3 py-1 rounded-md border"
+                          style={{
+                            backgroundColor: formData.specialty_tag_bg_dark,
+                            color: formData.specialty_tag_text_dark,
+                            borderColor: formData.specialty_tag_text_dark + '33'
+                          }}
+                        >
+                          Depressão
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Texto do Botão AI Match */}
+              <div>
+                <Label htmlFor="ai_match_button_text">Texto do Botão AI Match</Label>
+                <Input
+                  id="ai_match_button_text"
+                  value={formData.ai_match_button_text}
+                  onChange={(e) => setFormData({ ...formData, ai_match_button_text: e.target.value })}
+                  placeholder="Ex: Medcos Match, Alô Psi Match"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Texto personalizado exibido no botão do assistente de IA
+                </p>
               </div>
 
               <div>

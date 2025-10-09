@@ -25,6 +25,15 @@ export interface Tenant {
   button_text_color_light?: string;
   button_text_color_dark?: string;
   
+  // Specialty tags colors
+  specialty_tag_bg_light?: string;
+  specialty_tag_text_light?: string;
+  specialty_tag_bg_dark?: string;
+  specialty_tag_text_dark?: string;
+  
+  // AI Match button text
+  ai_match_button_text?: string;
+  
   theme_config: {
     secondary_color?: string;
     muted_color?: string;
