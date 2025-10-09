@@ -1,6 +1,7 @@
 import { Navigate, Link } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useAuth } from '@/hooks/useAuth';
+import { useTenant } from '@/hooks/useTenant';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from './AdminSidebar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,6 +15,7 @@ interface AdminLayoutProps {
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { isAdmin, loading } = useAdminAuth();
   const { signOut } = useAuth();
+  const { tenant } = useTenant();
 
   if (loading) {
     return (
@@ -63,7 +65,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
               </h1>
               <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="px-2 py-1 bg-primary/10 text-primary rounded-md font-medium">
-                  AloPsi
+                  {tenant?.name || "Alô, Psi!"}
                 </span>
               </div>
             </div>

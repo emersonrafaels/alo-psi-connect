@@ -6,12 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Heart, Shield, Sparkles, Users, Star, Award, BookOpen } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useTenant } from "@/hooks/useTenant"
 
 const WorkWithUs = () => {
+  const { tenant } = useTenant();
+  const platformName = tenant?.name || "Alô, Psi!";
+  
   const benefits = [
     "Flexibilidade total de horários - você define quando atender",
     "Plataforma completa para gestão de consultas",
-    "Suporte contínuo da equipe AloPsi",
+    `Suporte contínuo da equipe ${platformName}`,
     "Comunidade de profissionais engajados",
     "Oportunidades de educação continuada",
     "Remuneração justa e transparente",
@@ -56,7 +60,7 @@ const WorkWithUs = () => {
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-teal to-accent bg-clip-text text-transparent">
-              Se Torne um Profissional AloPsi
+              Se Torne um Profissional {platformName}
             </h1>
             <p className="text-xl lg:text-2xl text-muted-foreground mb-4 leading-relaxed">
               <strong className="text-foreground">Ajude além do rótulo.</strong> Transforme vidas oferecendo cuidado em saúde mental que enxerga a pessoa por completo.
@@ -67,7 +71,7 @@ const WorkWithUs = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="btn-gradient text-lg px-8 py-4 h-auto">
                 <Heart className="mr-2 h-5 w-5" />
-                Quero Atender na AloPsi
+                Quero Atender na {platformName}
               </Button>
               <Button variant="outline" size="lg" className="text-lg px-8 py-4 h-auto border-2">
                 Saiba Mais
@@ -85,7 +89,7 @@ const WorkWithUs = () => {
           Nossa Missão: Cuidar da Pessoa, Não do Diagnóstico
         </h2>
         <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-          Na AloPsi, acreditamos que cada pessoa que busca ajuda é muito mais do que qualquer rótulo ou diagnóstico.
+          Na {platformName}, acreditamos que cada pessoa que busca ajuda é muito mais do que qualquer rótulo ou diagnóstico.
           Somos profissionais que escolheram ver além - que enxergam potencial onde outros veem limitações,
           que escutam histórias onde outros veem sintomas.
         </p>
@@ -134,7 +138,7 @@ const WorkWithUs = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl lg:text-4xl font-bold text-center mb-12">
-              Por que Escolher a AloPsi?
+              Por que Escolher a {platformName}?
             </h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
@@ -214,7 +218,7 @@ const WorkWithUs = () => {
                 Pronto para Fazer a Diferença?
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Cadastre-se agora e comece sua jornada como profissional AloPsi. 
+                Cadastre-se agora e comece sua jornada como profissional {platformName}.
                 Juntos, vamos transformar o cuidado em saúde mental no Brasil.
               </p>
             </div>
@@ -226,7 +230,7 @@ const WorkWithUs = () => {
                   <CardHeader>
                     <CardTitle className="text-2xl flex items-center gap-2">
                       <Heart className="text-primary h-6 w-6" />
-                      Quero Atender na AloPsi
+                      Quero Atender na {platformName}
                     </CardTitle>
                     <p className="text-muted-foreground">
                       Preencha os dados abaixo e nossa equipe entrará em contato em até 48 horas.
@@ -351,7 +355,7 @@ const WorkWithUs = () => {
                         <Badge variant="default" className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">4</Badge>
                         <div>
                           <p className="text-sm font-medium">Integração</p>
-                          <p className="text-xs text-muted-foreground">Bem-vindo à família AloPsi!</p>
+                          <p className="text-xs text-muted-foreground">Bem-vindo à família {platformName}!</p>
                         </div>
                       </div>
                     </div>
@@ -387,14 +391,14 @@ const WorkWithUs = () => {
               Transforme Vidas, Começando pela Sua
             </h2>
             <p className="text-xl mb-8 opacity-90 leading-relaxed">
-              Cada pessoa que você atender na AloPsi não será apenas mais um paciente. 
+              Cada pessoa que você atender na {platformName} não será apenas mais um paciente. 
               Será uma vida que você tocou, uma história que você ajudou a reescrever, 
               um futuro que você ajudou a construir.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="accent" size="lg" className="text-lg px-8 py-4 h-auto bg-white text-primary hover:bg-white/90">
                 <Heart className="mr-2 h-5 w-5" />
-                Quero Fazer Parte da AloPsi
+                Quero Fazer Parte da {platformName}
               </Button>
               <Button variant="accent" size="lg" className="text-lg px-8 py-4 h-auto bg-white text-primary hover:bg-white/90">
                 <Link to="/professionals" className="flex items-center">

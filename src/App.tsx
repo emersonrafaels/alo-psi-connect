@@ -7,7 +7,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TenantProvider } from "@/contexts/TenantContext";
+import { useTenant } from "@/hooks/useTenant";
 import { useGlobalCacheShortcut } from "@/hooks/useGlobalCacheShortcut";
+import { useEffect, useState } from "react";
 import WhatsAppFloat from "@/components/ui/whatsapp-float";
 
 // Pages
@@ -78,8 +80,17 @@ const queryClient = new QueryClient({
 
 const AppWithShortcuts = () => {
   useGlobalCacheShortcut();
+  const { tenant } = useTenant();
+  const [storageKey, setStorageKey] = useState("alopsi-theme");
+
+  useEffect(() => {
+    if (tenant?.slug) {
+      setStorageKey(`${tenant.slug}-theme`);
+    }
+  }, [tenant?.slug]);
   
   return (
+    <ThemeProvider defaultTheme="light" storageKey={storageKey}>
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/sobre" element={<About />} />
@@ -168,6 +179,7 @@ const AppWithShortcuts = () => {
       
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </ThemeProvider>
   );
 };
 
@@ -175,20 +187,18 @@ const App: React.FC = () => {
   return (
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="alopsi-theme">
-          <TooltipProvider>
-            <BrowserRouter>
-              <TenantProvider>
-                <AuthProvider>
-                  <AppWithShortcuts />
-                  <WhatsAppFloat />
-                </AuthProvider>
-              </TenantProvider>
-            </BrowserRouter>
-            <Toaster />
-            <Sonner />
-          </TooltipProvider>
-        </ThemeProvider>
+        <TooltipProvider>
+          <BrowserRouter>
+            <TenantProvider>
+              <AuthProvider>
+                <AppWithShortcuts />
+                <WhatsAppFloat />
+              </AuthProvider>
+            </TenantProvider>
+          </BrowserRouter>
+          <Toaster />
+          <Sonner />
+        </TooltipProvider>
       </QueryClientProvider>
     </React.StrictMode>
   );
