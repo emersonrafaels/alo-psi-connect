@@ -2,9 +2,11 @@ import { useTenant } from '@/hooks/useTenant';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 import { buildTenantPath } from '@/utils/tenantHelpers';
+import { useState } from 'react';
 
 export const TenantBranding = () => {
   const { tenant, loading } = useTenant();
+  const [imageError, setImageError] = useState(false);
 
   if (loading) {
     return <Skeleton className="h-10 w-40" />;
@@ -27,11 +29,12 @@ export const TenantBranding = () => {
 
   return (
     <Link to={buildTenantPath(tenant.slug, '/')} className="flex items-center space-x-2 max-w-[200px]">
-      {tenant.logo_url ? (
+      {tenant.logo_url && !imageError ? (
         <img 
           src={tenant.logo_url} 
           alt={tenant.name} 
           className="h-10 w-auto object-contain max-w-full"
+          onError={() => setImageError(true)}
         />
       ) : (
         <>
