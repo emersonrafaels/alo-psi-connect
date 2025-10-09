@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Tenant, TenantContextType, DEFAULT_TENANT_SLUG } from '@/types/tenant';
 import { getTenantSlugFromPath, clearTenantCache } from '@/utils/tenantHelpers';
+import { hexToHSL, isHexColor, getContrastingTextColor } from '@/utils/colorHelpers';
 
 export const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
@@ -96,9 +97,6 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Aplicar tema do tenant
   const applyTenantTheme = useCallback((tenantData: Tenant) => {
     const root = document.documentElement;
-    
-    // Import color helpers
-    const { hexToHSL, isHexColor, getContrastingTextColor } = require('@/utils/colorHelpers');
     
     // Aplicar cores principais (converter hex para HSL se necessário)
     const primaryColor = isHexColor(tenantData.primary_color) 
