@@ -156,7 +156,7 @@ const Header = () => {
                 <Button 
                   variant="accent" 
                   size="sm" 
-                  onClick={() => navigate('/auth')}
+                  onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'))}
                 >
                   Entrar
                 </Button>
@@ -286,7 +286,7 @@ const Header = () => {
       text-[hsl(var(--accent-foreground))]
       hover:bg-[hsl(var(--accent)/0.9)]
     "
-    onClick={() => navigate('/auth')}
+    onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'))}
   >
     Entrar
   </Button>

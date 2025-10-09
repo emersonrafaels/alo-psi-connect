@@ -10,6 +10,7 @@ import { HeroCarousel } from "@/components/HeroCarousel";
 import { supabase } from "@/integrations/supabase/client";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { useTenant } from "@/hooks/useTenant";
+import { buildTenantPath } from "@/utils/tenantHelpers";
 interface FeaturedProfessional {
   id: number;
   display_name: string;
@@ -22,6 +23,7 @@ interface FeaturedProfessional {
 const Index = () => {
   const navigate = useNavigate();
   const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const [featuredProfessionals, setFeaturedProfessionals] = useState<FeaturedProfessional[]>([]);
   const [loading, setLoading] = useState(true);
   const { getConfig } = usePublicConfig(['homepage']);
@@ -104,10 +106,10 @@ const Index = () => {
                 {tenant?.theme_config?.hero_subtitle || 'Encontre profissionais especializados em saúde mental com atendimento humanizado e de qualidade.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button variant="default" size="lg" onClick={() => navigate('/profissionais')}>
+                <Button variant="default" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
                   Encontrar Profissional
                 </Button>
-              <Button variant="accent" size="lg" onClick={() => navigate('/profissionais')}>
+              <Button variant="accent" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
                 Agendar Consulta
               </Button>
               </div>
@@ -341,7 +343,7 @@ const Index = () => {
             Empatia, Compreensão, Transformação: <br />
             O Seu Caminho Para A Cura.
           </h2>
-          <Button variant="accent" size="lg" className="mt-8" onClick={() => navigate('/profissionais')}>
+          <Button variant="accent" size="lg" className="mt-8" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
             Agendar Consulta
           </Button>
         </div>
