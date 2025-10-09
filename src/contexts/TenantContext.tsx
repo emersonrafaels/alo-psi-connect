@@ -14,7 +14,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Detectar tenant baseado na URL
   const currentTenantSlug = useMemo(() => {
-    return getTenantSlugFromPath(location.pathname);
+    const slug = getTenantSlugFromPath(location.pathname);
+    console.log('[TenantContext] Detected slug:', slug, 'from path:', location.pathname);
+    return slug;
   }, [location.pathname]);
 
   // Função para buscar dados do tenant
@@ -33,7 +35,8 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const oneHour = 60 * 60 * 1000;
           
           if (Date.now() - timestamp < oneHour) {
-            console.log('Using cached tenant data for', slug);
+            console.log('[TenantContext] Using cached tenant data for', slug);
+            console.log('[TenantContext] Cached tenant:', data);
             setTenant(data as Tenant);
             applyTenantTheme(data as Tenant);
             setLoading(false);
@@ -60,6 +63,18 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         data,
         timestamp: Date.now()
       }));
+
+      console.log('[TenantContext] Fetched tenant from database:', data);
+
+      // Validar se o tenant carregado é o correto
+      if (data.slug !== slug) {
+        console.error(`[TenantContext] Tenant mismatch: esperado ${slug}, recebido ${data.slug}`);
+        localStorage.removeItem(`tenant_${slug}_cache`);
+        localStorage.removeItem(`tenant_${data.slug}_cache`);
+        // Recarregar sem cache
+        window.location.reload();
+        return;
+      }
 
       setTenant(data as unknown as Tenant);
 
@@ -136,7 +151,17 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Buscar tenant quando a URL mudar
   useEffect(() => {
-    clearTenantCache(); // Limpar cache ao mudar tenant
+    // Limpar cache de profissionais
+    clearTenantCache();
+    
+    // Limpar cache do tenant anterior se houver mudança
+    const oldTenantSlug = localStorage.getItem('current_tenant_slug');
+    if (oldTenantSlug && oldTenantSlug !== currentTenantSlug) {
+      console.log('[TenantContext] Clearing cache for old tenant:', oldTenantSlug);
+      localStorage.removeItem(`tenant_${oldTenantSlug}_cache`);
+    }
+    localStorage.setItem('current_tenant_slug', currentTenantSlug);
+    
     fetchTenant(currentTenantSlug);
   }, [currentTenantSlug, fetchTenant]);
 
