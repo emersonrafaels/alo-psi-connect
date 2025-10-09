@@ -19,6 +19,7 @@ import { useBlogPosts } from '@/hooks/useBlogPosts';
 import { ShareButtons } from '@/components/blog/ShareButtons';
 import { useSavedPosts } from '@/hooks/useSavedPosts';
 import { usePostViewTracking } from '@/hooks/usePostViewTracking';
+import { useTenant } from '@/hooks/useTenant';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -30,6 +31,7 @@ import {
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
+  const { tenant } = useTenant();
   const { data: post, isLoading, incrementViews } = useBlogPost(slug);
   const { data: relatedPosts } = useBlogPosts({ 
     status: 'published',
@@ -49,9 +51,10 @@ export default function BlogPost() {
 
   // SEO: Dynamic meta tags and Schema.org
   useEffect(() => {
-    if (post) {
+    if (post && tenant) {
       // Page title
-      document.title = `${post.title} | Alô, Psi! Blog`;
+      const siteTitle = tenant.meta_config?.title || tenant.name || 'Alô, Psi!';
+      document.title = `${post.title} | ${siteTitle} Blog`;
       
       // Meta description
       const metaDescription = document.querySelector('meta[name="description"]');
@@ -92,6 +95,9 @@ export default function BlogPost() {
       }
       
       // Schema.org JSON-LD
+      const publisherName = tenant.name || 'Alô, Psi!';
+      const publisherLogo = tenant.logo_url || "https://lovable.dev/opengraph-image-p98pqg.png";
+      
       const schema = {
         "@context": "https://schema.org",
         "@type": "BlogPosting",
@@ -105,10 +111,10 @@ export default function BlogPost() {
         },
         "publisher": {
           "@type": "Organization",
-          "name": "Alô, Psi!",
+          "name": publisherName,
           "logo": {
             "@type": "ImageObject",
-            "url": "https://lovable.dev/opengraph-image-p98pqg.png"
+            "url": publisherLogo
           }
         },
         "datePublished": post.published_at || post.created_at,
@@ -155,9 +161,10 @@ export default function BlogPost() {
       if (existingSchema) {
         existingSchema.remove();
       }
-      document.title = 'Alô, Psi! - Plataforma de Saúde Mental';
+      const defaultTitle = tenant?.meta_config?.title || 'Alô, Psi! - Plataforma de Saúde Mental';
+      document.title = defaultTitle;
     };
-  }, [post]);
+  }, [post, tenant]);
 
   if (isLoading) {
     return (

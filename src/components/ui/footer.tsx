@@ -3,16 +3,21 @@ import { Input } from "@/components/ui/input";
 import { GlobalCacheButton } from "./global-cache-button";
 import { useNewsletter } from "@/hooks/useNewsletter";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useTenant } from "@/hooks/useTenant";
+import { buildTenantPath } from "@/utils/tenantHelpers";
 import { useState } from "react";
 import { Mail, MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, MessageCircle, Heart, MessageCircleIcon } from "lucide-react";
 const Footer = () => {
   const { isAdmin } = useAdminAuth();
+  const { tenant } = useTenant();
   const {
     subscribe,
     isLoading
   } = useNewsletter();
   const [email, setEmail] = useState("");
   const [nome, setNome] = useState("");
+  
+  const tenantSlug = tenant?.slug || 'alopsi';
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
@@ -28,40 +33,40 @@ const Footer = () => {
   const links = {
     useful: [{
       name: "Sobre Nós",
-      href: "/about",
+      href: buildTenantPath(tenantSlug, "/sobre"),
       icon: Users
     }, {
       name: "Nossos Profissionais",
-      href: "/professionals",
+      href: buildTenantPath(tenantSlug, "/profissionais"),
       icon: Heart
     }, {
       name: "Agendar Consulta",
-      href: "/appointment",
+      href: buildTenantPath(tenantSlug, "/agendamento"),
       icon: Calendar
     }, {
       name: "Blog",
-      href: "/blog",
+      href: buildTenantPath(tenantSlug, "/blog"),
       icon: FileText
     }, {
       name: "Trabalhe Conosco",
-      href: "/work-with-us",
+      href: buildTenantPath(tenantSlug, "/trabalhe-conosco"),
       icon: MessageCircle
     }],
     navigation: [{
       name: "Home",
-      href: "/"
+      href: buildTenantPath(tenantSlug, "/")
     }, {
       name: "Profissionais",
-      href: "/professionals"
+      href: buildTenantPath(tenantSlug, "/profissionais")
     }, {
       name: "Agendar",
-      href: "/appointment"
+      href: buildTenantPath(tenantSlug, "/agendamento")
     }, {
       name: "Contato",
-      href: "/contact"
+      href: buildTenantPath(tenantSlug, "/contato")
     }, {
       name: "Blog",
-      href: "/blog"
+      href: buildTenantPath(tenantSlug, "/blog")
     }]
   };
   return <footer className="bg-primary text-primary-foreground">
@@ -185,7 +190,7 @@ const Footer = () => {
 
         {/* Bottom */}
         <div className="border-t border-primary-foreground/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm opacity-60">Copyright © Alô, Psi! | Todos os direitos reservados</p>
+          <p className="text-sm opacity-60">Copyright © {tenant?.name || 'Alô, Psi!'} | Todos os direitos reservados</p>
           <div className="w-16 h-16 bg-accent rounded-full mt-4 md:mt-0"></div>
         </div>
       </div>
