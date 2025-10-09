@@ -40,6 +40,33 @@ serve(async (req) => {
 
     console.log('Creating patient profile for:', email);
 
+    // Detect tenant from origin or referer
+    const origin = req.headers.get('origin') || '';
+    const referer = req.headers.get('referer') || '';
+    const tenantSlug = (origin.includes('/medcos') || referer.includes('/medcos')) 
+      ? 'medcos' 
+      : 'alopsi';
+
+    // Get tenant_id
+    const { data: tenantData, error: tenantError } = await supabase
+      .from('tenants')
+      .select('id')
+      .eq('slug', tenantSlug)
+      .single();
+
+    if (tenantError || !tenantData) {
+      console.error('Tenant not found:', tenantSlug);
+      return new Response(
+        JSON.stringify({ error: 'Tenant não encontrado' }),
+        { 
+          status: 404, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const tenantId = tenantData.id;
+
     let userId;
     let isNewUser = false; // Track if we're creating a new user
 
@@ -136,7 +163,8 @@ serve(async (req) => {
           genero,
           cpf,
           como_conheceu: comoConheceu,
-          tipo_usuario: 'paciente'
+          tipo_usuario: 'paciente',
+          tenant_id: tenantId
         })
         .select()
         .single();
@@ -198,7 +226,8 @@ serve(async (req) => {
         .insert({
           profile_id: profileData.id,
           eh_estudante: ehEstudante,
-          instituicao_ensino: ehEstudante ? instituicaoEnsino : null
+          instituicao_ensino: ehEstudante ? instituicaoEnsino : null,
+          tenant_id: tenantId
         })
         .select()
         .single();

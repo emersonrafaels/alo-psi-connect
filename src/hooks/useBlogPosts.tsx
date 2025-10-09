@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useTenant } from '@/hooks/useTenant';
 
 export interface BlogPost {
   id: string;
@@ -47,9 +48,13 @@ interface UseBlogPostsOptions {
 }
 
 export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
+  const { tenant } = useTenant();
+
   return useQuery({
-    queryKey: ['blog-posts', options],
+    queryKey: ['blog-posts', options, tenant?.id],
     queryFn: async () => {
+      if (!tenant) return [];
+
       let query = supabase
         .from('blog_posts')
         .select(`
@@ -57,7 +62,8 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
           tags:blog_post_tags(
             tag:blog_tags(id, name, slug)
           )
-        `);
+        `)
+        .eq('tenant_id', tenant.id);
 
       if (options.status) {
         query = query.eq('status', options.status);
@@ -109,6 +115,7 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
         author: authorsMap.get(post.author_id) || undefined,
         tags: post.tags?.map((t: any) => t.tag).filter(Boolean) || []
       })) as BlogPost[];
-    }
+    },
+    enabled: !!tenant
   });
 };

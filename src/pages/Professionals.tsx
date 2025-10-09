@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
+import { useTenant } from "@/hooks/useTenant"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -57,6 +58,7 @@ interface Professional {
 
 const Professionals = () => {
   const navigate = useNavigate()
+  const { tenant } = useTenant()
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [filteredProfessionals, setFilteredProfessionals] = useState<Professional[]>([])
   const [loading, setLoading] = useState(true)
@@ -103,8 +105,10 @@ const Professionals = () => {
   }, [getFiltersFromURL]) // Adicionar dependência
 
   useEffect(() => {
-    fetchProfessionals()
-  }, [])
+    if (tenant) {
+      fetchProfessionals()
+    }
+  }, [tenant])
 
   useEffect(() => {
     filterProfessionals()
@@ -265,10 +269,12 @@ const Professionals = () => {
   }
 
   const fetchProfessionals = async () => {
+    if (!tenant) return;
+    
     try {
       setLoading(true)
       
-      // Fetch professionals
+      // Fetch professionals with tenant filter
       const { data: professionalsData, error: profError } = await supabase
         .from('profissionais')
         .select(`
@@ -283,9 +289,11 @@ const Professionals = () => {
           user_email,
           linkedin,
           servicos_raw,
-          user_id
+          user_id,
+          professional_tenants!inner(tenant_id)
         `)
         .eq('ativo', true)
+        .eq('professional_tenants.tenant_id', tenant.id)
         .order('display_name')
 
       if (profError) throw profError

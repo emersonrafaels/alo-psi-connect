@@ -9,6 +9,7 @@ import { FirstLoginWelcome } from "@/components/FirstLoginWelcome";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { supabase } from "@/integrations/supabase/client";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
+import { useTenant } from "@/hooks/useTenant";
 interface FeaturedProfessional {
   id: number;
   display_name: string;
@@ -20,13 +21,17 @@ interface FeaturedProfessional {
 }
 const Index = () => {
   const navigate = useNavigate();
+  const { tenant } = useTenant();
   const [featuredProfessionals, setFeaturedProfessionals] = useState<FeaturedProfessional[]>([]);
   const [loading, setLoading] = useState(true);
   const { getConfig } = usePublicConfig(['homepage']);
+  
   useEffect(() => {
-    fetchFeaturedProfessionals();
+    if (tenant) {
+      fetchFeaturedProfessionals();
+    }
     preloadCriticalImages();
-  }, []);
+  }, [tenant]);
 
   // Preload critical hero images for faster loading
   const preloadCriticalImages = () => {
@@ -49,11 +54,29 @@ const Index = () => {
     });
   };
   const fetchFeaturedProfessionals = async () => {
+    if (!tenant) return;
+    
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('profissionais').select('id, display_name, profissao, crp_crm, servicos_raw, preco_consulta, foto_perfil_url').eq('ativo', true).eq('em_destaque', true).not('preco_consulta', 'is', null).order('ordem_destaque', { ascending: true, nullsFirst: false }).order('display_name').limit(3);
+      const { data, error } = await supabase
+        .from('profissionais')
+        .select(`
+          id, 
+          display_name, 
+          profissao, 
+          crp_crm, 
+          servicos_raw, 
+          preco_consulta, 
+          foto_perfil_url,
+          professional_tenants!inner(tenant_id, is_featured, featured_order)
+        `)
+        .eq('ativo', true)
+        .eq('professional_tenants.tenant_id', tenant.id)
+        .eq('professional_tenants.is_featured', true)
+        .not('preco_consulta', 'is', null)
+        .order('professional_tenants.featured_order', { ascending: true, nullsFirst: false })
+        .order('display_name')
+        .limit(3);
+
       if (error) throw error;
       setFeaturedProfessionals(data || []);
     } catch (error) {

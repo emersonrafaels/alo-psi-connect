@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTenant } from '@/hooks/useTenant';
 
 interface ProfessionalData {
   id: number;
@@ -19,6 +20,7 @@ interface ProfessionalData {
 }
 
 export const useProfessionalData = (profileId?: string, isProfessional?: boolean) => {
+  const { tenant } = useTenant();
   const [professionalData, setProfessionalData] = useState<ProfessionalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export const useProfessionalData = (profileId?: string, isProfessional?: boolean
   );
 
   const loadProfessionalData = useCallback(async () => {
-    if (!profileId || !isProfessional) {
+    if (!profileId || !isProfessional || !tenant) {
       setLoading(false);
       return;
     }
@@ -56,8 +58,12 @@ export const useProfessionalData = (profileId?: string, isProfessional?: boolean
     try {
       const { data, error } = await supabase
         .from('profissionais')
-        .select('*')
+        .select(`
+          *,
+          professional_tenants!inner(tenant_id)
+        `)
         .eq('profile_id', profileId)
+        .eq('professional_tenants.tenant_id', tenant.id)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -81,7 +87,7 @@ export const useProfessionalData = (profileId?: string, isProfessional?: boolean
     } finally {
       setLoading(false);
     }
-  }, [profileId, isProfessional, cacheKey]); // Removed toast from dependencies
+  }, [profileId, isProfessional, tenant, cacheKey]); // Removed toast from dependencies
 
   // Load data only once or when key dependencies change
   useEffect(() => {

@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useMemo, useCallback } from 
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Tenant, TenantContextType, DEFAULT_TENANT_SLUG } from '@/types/tenant';
-import { getTenantSlugFromPath } from '@/utils/tenantHelpers';
+import { getTenantSlugFromPath, clearTenantCache } from '@/utils/tenantHelpers';
 
 export const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
@@ -83,6 +83,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Buscar tenant quando a URL mudar
   useEffect(() => {
+    clearTenantCache(); // Limpar cache ao mudar tenant
     fetchTenant(currentTenantSlug);
   }, [currentTenantSlug, fetchTenant]);
 

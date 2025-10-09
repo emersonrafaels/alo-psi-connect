@@ -50,3 +50,15 @@ export const isPathForTenant = (pathname: string, tenantSlug: string): boolean =
   const detectedSlug = getTenantSlugFromPath(pathname);
   return detectedSlug === tenantSlug;
 };
+
+/**
+ * Limpa cache local de profissionais ao mudar de tenant
+ */
+export const clearTenantCache = () => {
+  const keys = Object.keys(localStorage);
+  keys.forEach(key => {
+    if (key.startsWith('professional_')) {
+      localStorage.removeItem(key);
+    }
+  });
+};
