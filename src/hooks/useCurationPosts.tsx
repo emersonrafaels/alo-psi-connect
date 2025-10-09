@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BlogPost } from './useBlogPosts';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 
 export interface CurationFilters {
   status?: 'published' | 'draft' | 'archived' | 'all';
@@ -22,12 +23,19 @@ export interface CurationStats {
 }
 
 export const useCurationPosts = (filters?: CurationFilters) => {
+  const { tenantFilter } = useAdminTenant();
+
   return useQuery({
-    queryKey: ['curation-posts', filters],
+    queryKey: ['curation-posts', filters, tenantFilter],
     queryFn: async () => {
       let query = supabase
         .from('blog_posts')
         .select('*, author:profiles!blog_posts_author_id_fkey(id, nome, email, foto_perfil_url)');
+
+      // Apply tenant filter
+      if (tenantFilter) {
+        query = query.eq('tenant_id', tenantFilter);
+      }
 
       // Apply status filter
       if (filters?.status && filters.status !== 'all') {
@@ -86,12 +94,20 @@ export const useCurationPosts = (filters?: CurationFilters) => {
 };
 
 export const useCurationStats = () => {
+  const { tenantFilter } = useAdminTenant();
+
   return useQuery({
-    queryKey: ['curation-stats'],
+    queryKey: ['curation-stats', tenantFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('blog_posts')
         .select('is_featured, editorial_badge, status, views_count');
+
+      if (tenantFilter) {
+        query = query.eq('tenant_id', tenantFilter);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 

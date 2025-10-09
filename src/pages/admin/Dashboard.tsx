@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { StatsCard } from '@/components/admin/StatsCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 
 interface DashboardStats {
   totalUsers: number;
@@ -17,11 +18,12 @@ interface DashboardStats {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const { tenantFilter } = useAdminTenant();
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Buscar estatísticas do banco
+        // Buscar estatísticas do banco aplicando filtro de tenant
         const [
           { count: totalUsers },
           { count: totalProfessionals },
@@ -29,11 +31,31 @@ export default function AdminDashboard() {
           { count: totalAppointments },
           { count: pendingAppointments }
         ] = await Promise.all([
-          supabase.from('profiles').select('*', { count: 'exact', head: true }),
-          supabase.from('profissionais').select('*', { count: 'exact', head: true }),
-          supabase.from('profissionais').select('*', { count: 'exact', head: true }).eq('ativo', true),
-          supabase.from('agendamentos').select('*', { count: 'exact', head: true }),
-          supabase.from('agendamentos').select('*', { count: 'exact', head: true }).eq('status', 'pendente')
+          (() => {
+            let q = supabase.from('profiles').select('*', { count: 'exact', head: true });
+            if (tenantFilter) q = q.eq('tenant_id', tenantFilter);
+            return q;
+          })(),
+          (() => {
+            let q = supabase.from('profissionais').select('*, professional_tenants!inner(tenant_id)', { count: 'exact', head: true });
+            if (tenantFilter) q = q.eq('professional_tenants.tenant_id', tenantFilter);
+            return q;
+          })(),
+          (() => {
+            let q = supabase.from('profissionais').select('*, professional_tenants!inner(tenant_id)', { count: 'exact', head: true }).eq('ativo', true);
+            if (tenantFilter) q = q.eq('professional_tenants.tenant_id', tenantFilter);
+            return q;
+          })(),
+          (() => {
+            let q = supabase.from('agendamentos').select('*', { count: 'exact', head: true });
+            if (tenantFilter) q = q.eq('tenant_id', tenantFilter);
+            return q;
+          })(),
+          (() => {
+            let q = supabase.from('agendamentos').select('*', { count: 'exact', head: true }).eq('status', 'pendente');
+            if (tenantFilter) q = q.eq('tenant_id', tenantFilter);
+            return q;
+          })()
         ]);
 
         // Calcular receita do mês atual
@@ -41,11 +63,17 @@ export default function AdminDashboard() {
         firstDayOfMonth.setDate(1);
         firstDayOfMonth.setHours(0, 0, 0, 0);
 
-        const { data: revenueData } = await supabase
+        let revenueQuery = supabase
           .from('agendamentos')
           .select('valor')
           .gte('created_at', firstDayOfMonth.toISOString())
           .eq('status', 'confirmado');
+        
+        if (tenantFilter) {
+          revenueQuery = revenueQuery.eq('tenant_id', tenantFilter);
+        }
+        
+        const { data: revenueData } = await revenueQuery;
 
         const thisMonthRevenue = revenueData?.reduce((sum, item) => sum + (item.valor || 0), 0) || 0;
 
@@ -65,7 +93,7 @@ export default function AdminDashboard() {
     };
 
     fetchStats();
-  }, []);
+  }, [tenantFilter]);
 
   if (loading) {
     return (

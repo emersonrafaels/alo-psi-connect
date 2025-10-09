@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 
 interface Appointment {
   id: string;
@@ -50,9 +51,10 @@ const Appointments = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const { tenantFilter } = useAdminTenant();
 
   const { data: appointments, isLoading } = useQuery({
-    queryKey: ['admin-appointments', statusFilter, paymentFilter],
+    queryKey: ['admin-appointments', statusFilter, paymentFilter, tenantFilter],
     queryFn: async () => {
       let query = supabase
         .from('agendamentos')
@@ -62,6 +64,10 @@ const Appointments = () => {
         `)
         .order('data_consulta', { ascending: false })
         .order('horario', { ascending: false });
+
+      if (tenantFilter) {
+        query = query.eq('tenant_id', tenantFilter);
+      }
 
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);

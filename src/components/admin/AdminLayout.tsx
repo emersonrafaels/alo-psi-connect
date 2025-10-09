@@ -1,7 +1,8 @@
 import { Navigate, Link } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useAuth } from '@/hooks/useAuth';
-import { useTenant } from '@/hooks/useTenant';
+import { AdminTenantProvider } from '@/contexts/AdminTenantContext';
+import { AdminTenantSelector } from '@/components/admin/AdminTenantSelector';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from './AdminSidebar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,7 +16,6 @@ interface AdminLayoutProps {
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { isAdmin, loading } = useAdminAuth();
   const { signOut } = useAuth();
-  const { tenant } = useTenant();
 
   if (loading) {
     return (
@@ -51,44 +51,44 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-background">
-        <AdminSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="sticky top-0 z-40 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-8 shadow-sm">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted">
-                <Menu className="h-4 w-4" />
-              </SidebarTrigger>
-              <h1 className="text-xl font-semibold text-foreground">
-                Painel Administrativo
-              </h1>
-              <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="px-2 py-1 bg-primary/10 text-primary rounded-md font-medium">
-                  {tenant?.name || "Alô, Psi!"}
-                </span>
+    <AdminTenantProvider>
+      <SidebarProvider defaultOpen={true}>
+        <div className="min-h-screen flex w-full bg-background">
+          <AdminSidebar />
+          <div className="flex-1 flex flex-col min-w-0">
+            <header className="sticky top-0 z-40 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-8 shadow-sm">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted">
+                  <Menu className="h-4 w-4" />
+                </SidebarTrigger>
+                <h1 className="text-xl font-semibold text-foreground">
+                  Painel Administrativo
+                </h1>
+                <div className="hidden md:flex">
+                  <AdminTenantSelector />
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button asChild variant="outline" size="sm">
-                <Link to="/" className="flex items-center gap-2">
-                  <Home className="h-4 w-4" />
-                  <span className="hidden sm:inline">Voltar ao Site</span>
-                </Link>
-              </Button>
-              <Button onClick={signOut} variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Sair</span>
-              </Button>
-            </div>
-          </header>
-          <main className="flex-1 overflow-auto bg-background">
-            <div className="container mx-auto px-6 py-6 space-y-6 max-w-7xl">
-              {children}
-            </div>
-          </main>
+              <div className="flex items-center gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/" className="flex items-center gap-2">
+                    <Home className="h-4 w-4" />
+                    <span className="hidden sm:inline">Voltar ao Site</span>
+                  </Link>
+                </Button>
+                <Button onClick={signOut} variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline">Sair</span>
+                </Button>
+              </div>
+            </header>
+            <main className="flex-1 overflow-auto bg-background">
+              <div className="container mx-auto px-6 py-6 space-y-6 max-w-7xl">
+                {children}
+              </div>
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </AdminTenantProvider>
   );
 };

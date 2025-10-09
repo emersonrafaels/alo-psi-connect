@@ -12,6 +12,7 @@ import { useUserManagement } from '@/hooks/useUserManagement';
 import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
 import { useEmailResend } from '@/hooks/useEmailResend';
 import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound } from 'lucide-react';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 
 interface UserProfile {
   id: string;
@@ -35,18 +36,25 @@ export default function AdminUsers() {
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
   const { deleteUser } = useUserManagement();
   const { resendEmailConfirmation, resendPasswordReset, loading: emailLoading } = useEmailResend();
+  const { tenantFilter } = useAdminTenant();
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [tenantFilter]);
 
   const fetchUsers = async () => {
     try {
-      // Get profiles with their roles
-      const { data: profiles, error: profilesError } = await supabase
+      // Get profiles with their roles, applying tenant filter
+      let profilesQuery = supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      if (tenantFilter) {
+        profilesQuery = profilesQuery.eq('tenant_id', tenantFilter);
+      }
+
+      const { data: profiles, error: profilesError } = await profilesQuery;
 
       if (profilesError) {
         console.error('Erro ao buscar perfis:', profilesError);

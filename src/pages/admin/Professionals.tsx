@@ -16,6 +16,7 @@ import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 
 interface Professional {
   id: number;
@@ -41,14 +42,21 @@ const Professionals = () => {
   const [unavailabilityModalOpen, setUnavailabilityModalOpen] = useState(false);
   const [selectedProfessionalForUnavailability, setSelectedProfessionalForUnavailability] = useState<Professional | null>(null);
   const { toast } = useToast();
+  const { tenantFilter } = useAdminTenant();
 
   const { data: professionals, isLoading, refetch } = useQuery({
-    queryKey: ['admin-professionals'],
+    queryKey: ['admin-professionals', tenantFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('profissionais')
-        .select('*')
+        .select('*, professional_tenants!inner(tenant_id)')
         .order('display_name');
+      
+      if (tenantFilter) {
+        query = query.eq('professional_tenants.tenant_id', tenantFilter);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       return data as Professional[];
