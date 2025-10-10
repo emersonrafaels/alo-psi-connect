@@ -29,7 +29,7 @@ export const useAIAssistantConfig = () => {
   };
 
   // Memoize config to prevent unnecessary re-renders
-  const aiConfig = useMemo(() => getAIAssistantConfig(), [getConfig, tenant]);
+  const aiConfig = useMemo(() => getAIAssistantConfig(), [getConfig, tenant?.id]);
 
   // Force cache refresh on config changes
   useEffect(() => {

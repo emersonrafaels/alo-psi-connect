@@ -41,12 +41,7 @@ export const AIAssistantModal = ({
   } = useAuth();
   const { tenant } = useTenant();
   const [sessionId] = useState(() => crypto.randomUUID());
-  const [messages, setMessages] = useState<Message[]>([{
-    id: '1',
-    role: 'assistant',
-    content: aiConfig.initialMessage,
-    timestamp: new Date()
-  }]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const {
@@ -54,6 +49,19 @@ export const AIAssistantModal = ({
   } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Reset messages when modal opens or config changes
+  useEffect(() => {
+    if (open) {
+      setMessages([{
+        id: '1',
+        role: 'assistant',
+        content: aiConfig.initialMessage,
+        timestamp: new Date()
+      }]);
+    }
+  }, [aiConfig.initialMessage, open]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth"
