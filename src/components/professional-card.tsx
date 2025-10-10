@@ -67,9 +67,9 @@ const ProfessionalCard = ({
                     variant="secondary"
                     className="text-xs px-2 py-1"
                     style={{
-                      backgroundColor: 'hsl(var(--specialty-tag-bg-light))',
-                      color: 'hsl(var(--specialty-tag-text-light))',
-                      borderColor: 'hsl(var(--specialty-tag-text-light) / 0.2)'
+                      backgroundColor: 'hsl(var(--specialty-tag-bg))',
+                      color: 'hsl(var(--specialty-tag-text))',
+                      borderColor: 'hsl(var(--specialty-tag-text) / 0.2)'
                     }}
                   >
                     {specialty}
@@ -147,9 +147,9 @@ const ProfessionalCard = ({
                     variant="secondary" 
                     className="text-xs px-3 py-1"
                     style={{
-                      backgroundColor: 'hsl(var(--specialty-tag-bg-light))',
-                      color: 'hsl(var(--specialty-tag-text-light))',
-                      borderColor: 'hsl(var(--specialty-tag-text-light) / 0.2)'
+                      backgroundColor: 'hsl(var(--specialty-tag-bg))',
+                      color: 'hsl(var(--specialty-tag-text))',
+                      borderColor: 'hsl(var(--specialty-tag-text) / 0.2)'
                     }}
                   >
                     {specialty}
