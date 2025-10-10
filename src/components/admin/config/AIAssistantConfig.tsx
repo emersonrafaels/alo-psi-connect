@@ -16,7 +16,7 @@ import { MetricsCard } from './MetricsCard';
 import { UsageChart } from './UsageChart';
 import { ConfigDataTable } from './ConfigDataTable';
 import { clearConfigCache, forceConfigRefresh } from '@/utils/configCache';
-import { useTenant } from '@/hooks/useTenant';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 
 const GPT_MODELS = [
   { value: 'gpt-4o', label: 'GPT-4o (Mais Avançado)' },
@@ -28,7 +28,8 @@ const GPT_MODELS = [
 export const AIAssistantConfig = () => {
   const { getConfig, updateConfig, loading, hasPermission, configs } = useSystemConfig(['ai_assistant']);
   const { toast } = useToast();
-  const { tenant } = useTenant();
+  const { selectedTenantId, tenants } = useAdminTenant();
+  const currentTenant = tenants.find(t => t.id === selectedTenantId);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [usageData, setUsageData] = useState<any[]>([]);
@@ -140,7 +141,7 @@ Responda sempre em português brasileiro, de forma clara e objetiva.`),
         initial_message: getConfig('ai_assistant', 'initial_message', '👋 Olá! Sou seu assistente de saúde mental especializado da AloPsi. Estou aqui para te ajudar a encontrar o profissional ideal para suas consultas online.\n\nComo posso te ajudar hoje?\n\n🔍 Sobre o que você gostaria de conversar:\n• Que tipo de apoio psicológico você está buscando?\n• Alguma especialidade específica (ansiedade, depressão, relacionamentos, etc.)?\n• Prefere Psicólogo(a), Psiquiatra(a) ou Psicoterapeuta(a)?\n\n⏰ Horários e disponibilidade:\n• Qual período prefere? (manhã, tarde ou noite)\n• Que dias da semana funcionam melhor para você?\n\n💰 Investimento:\n• Qual sua faixa de orçamento para as consultas?\n• Busca valores mais acessíveis ou tem flexibilidade?\n\n📱 Todas as consultas são realizadas online - você pode ter sessões de qualquer lugar')
       });
     }
-  }, [configs, getConfig]);
+  }, [configs, getConfig, selectedTenantId]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -343,9 +344,14 @@ Responda sempre em português brasileiro, de forma clara e objetiva.`),
               </CardTitle>
               <CardDescription className="flex items-center gap-2">
                 Configure o comportamento e parâmetros do assistente de IA
-                {tenant && (
+                {selectedTenantId !== 'all' && currentTenant && (
                   <Badge variant="outline">
-                    {tenant.name}
+                    {currentTenant.name}
+                  </Badge>
+                )}
+                {selectedTenantId === 'all' && (
+                  <Badge variant="outline">
+                    Global
                   </Badge>
                 )}
               </CardDescription>

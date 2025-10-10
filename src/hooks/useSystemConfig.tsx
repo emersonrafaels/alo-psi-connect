@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useTenant } from '@/hooks/useTenant';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 
 export interface SystemConfig {
   id: string;
@@ -19,7 +20,17 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
   const [hasPermission, setHasPermission] = useState(false);
   const { toast } = useToast();
   const { hasRole, loading: authLoading } = useAdminAuth();
+  
+  // Try to detect admin context, fallback to tenant context
+  let adminContext = null;
+  try {
+    adminContext = useAdminTenant();
+  } catch {
+    // Not in admin context
+  }
+  
   const { tenant } = useTenant();
+  const effectiveTenantId = adminContext?.tenantFilter || tenant?.id || null;
 
   const fetchConfigs = async () => {
     if (!hasPermission) {
@@ -34,8 +45,8 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
         .select('*');
 
       // Buscar configs do tenant atual + configs globais (fallback)
-      if (tenant?.id) {
-        query = query.or(`tenant_id.is.null,tenant_id.eq.${tenant.id}`);
+      if (effectiveTenantId) {
+        query = query.or(`tenant_id.is.null,tenant_id.eq.${effectiveTenantId}`);
       } else {
         // Se não há tenant, buscar apenas globais
         query = query.is('tenant_id', null);
@@ -95,8 +106,8 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
         .eq('category', category)
         .eq('key', key);
       
-      if (tenant?.id) {
-        query = query.eq('tenant_id', tenant.id);
+      if (effectiveTenantId) {
+        query = query.eq('tenant_id', effectiveTenantId);
       } else {
         query = query.is('tenant_id', null);
       }
@@ -107,7 +118,7 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
         category,
         key,
         value: typeof value === 'string' ? value : JSON.stringify(value),
-        tenant_id: tenant?.id || null,
+        tenant_id: effectiveTenantId || null,
         updated_by: (await supabase.auth.getUser()).data.user?.id
       };
 
@@ -128,9 +139,14 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
       if (error) throw error;
 
       await fetchConfigs();
+      
+      const tenantName = adminContext 
+        ? adminContext.tenants.find(t => t.id === effectiveTenantId)?.name || 'Global'
+        : tenant?.name || 'Global';
+      
       toast({
         title: "Sucesso",
-        description: `Configuração atualizada para ${tenant?.name || 'Global'}`
+        description: `Configuração atualizada para ${tenantName}`
       });
     } catch (error) {
       console.error('Error updating system configuration:', error);
@@ -221,7 +237,7 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
       setLoading(false);
       setConfigs([]);
     }
-  }, [hasPermission, authLoading]);
+  }, [hasPermission, authLoading, adminContext?.selectedTenantId]);
 
   return {
     configs,
