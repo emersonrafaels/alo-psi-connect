@@ -7,6 +7,8 @@ import { Link } from "react-router-dom"
 import { useTenant } from "@/hooks/useTenant"
 import { buildTenantPath } from "@/utils/tenantHelpers"
 
+// Página Trabalhe Conosco - Cadastro gratuito + contato
+
 const WorkWithUs = () => {
   const { tenant } = useTenant();
   const platformName = tenant?.name || "Alô, Psi!";
