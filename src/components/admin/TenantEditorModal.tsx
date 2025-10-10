@@ -844,13 +844,30 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
             </TabsContent>
           </Tabs>
 
-          <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
+          <DialogFooter className="mt-6 flex justify-between items-center">
+            <Button 
+              type="button" 
+              variant="ghost" 
+              onClick={() => {
+                if (tenant) {
+                  const cacheKey = `tenant_${tenant.slug}_cache`;
+                  localStorage.removeItem(cacheKey);
+                  toast.success("Cache limpo! Recarregue a página para ver as mudanças.");
+                }
+              }}
+              disabled={!tenant}
+            >
+              🗑️ Limpar Cache
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Salvando..." : tenant ? "Atualizar" : "Criar"}
-            </Button>
+            
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Salvando..." : tenant ? "Atualizar" : "Criar"}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

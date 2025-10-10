@@ -32,6 +32,7 @@ export const hexToHSL = (hex: string): string => {
   s = Math.round(s * 100);
   l = Math.round(l * 100);
   
+  // IMPORTANTE: Retornar sem vírgulas, apenas espaços (formato Tailwind CSS)
   return `${h} ${s}% ${l}%`;
 };
 
