@@ -84,6 +84,7 @@ export interface Tenant {
   fallback_professional_image?: string;
   terms_url?: string;
   privacy_url?: string;
+  favicon_url?: string;
   
   theme_config: {
     secondary_color?: string;

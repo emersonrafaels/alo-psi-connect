@@ -304,10 +304,16 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       metaDescription.setAttribute('content', tenantData.meta_config.description);
     }
 
-    // Atualizar favicon
-    const favicon = document.querySelector('link[rel="icon"]');
-    if (favicon && tenantData.meta_config.favicon) {
-      favicon.setAttribute('href', tenantData.meta_config.favicon);
+    // Atualizar favicon (prioriza favicon_url, depois meta_config.favicon)
+    const faviconUrl = tenantData.favicon_url || tenantData.meta_config.favicon;
+    if (faviconUrl) {
+      let favicon = document.querySelector('link[rel="icon"]');
+      if (!favicon) {
+        favicon = document.createElement('link');
+        favicon.setAttribute('rel', 'icon');
+        document.head.appendChild(favicon);
+      }
+      favicon.setAttribute('href', faviconUrl);
     }
   }, []);
 

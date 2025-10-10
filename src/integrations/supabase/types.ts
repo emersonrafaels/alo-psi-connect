@@ -1459,6 +1459,7 @@ export type Database = {
           email_support_email: string | null
           empty_state_message: string | null
           fallback_professional_image: string | null
+          favicon_url: string | null
           font_family_body: string | null
           font_family_headings: string | null
           footer_bg_color_dark: string | null
@@ -1526,6 +1527,7 @@ export type Database = {
           email_support_email?: string | null
           empty_state_message?: string | null
           fallback_professional_image?: string | null
+          favicon_url?: string | null
           font_family_body?: string | null
           font_family_headings?: string | null
           footer_bg_color_dark?: string | null
@@ -1593,6 +1595,7 @@ export type Database = {
           email_support_email?: string | null
           empty_state_message?: string | null
           fallback_professional_image?: string | null
+          favicon_url?: string | null
           font_family_body?: string | null
           font_family_headings?: string | null
           footer_bg_color_dark?: string | null

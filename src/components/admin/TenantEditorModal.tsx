@@ -46,6 +46,7 @@ interface Tenant {
   specialty_tag_bg_dark?: string;
   specialty_tag_text_dark?: string;
   ai_match_button_text?: string;
+  favicon_url?: string;
   theme_config: {
     secondary_color?: string;
     muted_color?: string;
@@ -96,6 +97,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     meta_title: "",
     meta_description: "",
     meta_favicon: "",
+    favicon_url: "",
     is_active: true
   });
   const [loading, setLoading] = useState(false);
@@ -131,6 +133,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         meta_title: tenant.meta_config?.title || "",
         meta_description: tenant.meta_config?.description || "",
         meta_favicon: tenant.meta_config?.favicon || "",
+        favicon_url: tenant.favicon_url || "",
         is_active: tenant.is_active ?? true
       });
     } else {
@@ -163,6 +166,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         meta_title: "",
         meta_description: "",
         meta_favicon: "",
+        favicon_url: "",
         is_active: true
       });
     }
@@ -207,6 +211,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
           description: formData.meta_description || `${formData.name} - Plataforma de Saúde Mental`,
           favicon: formData.meta_favicon || "/favicon.ico"
         },
+        favicon_url: formData.favicon_url || null,
         is_active: formData.is_active
       };
 
@@ -852,13 +857,35 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
               </div>
 
               <div>
-                <Label htmlFor="meta_favicon">Favicon URL</Label>
+                <Label htmlFor="meta_favicon">Favicon URL (Legacy - use campo abaixo)</Label>
                 <Input
                   id="meta_favicon"
                   value={formData.meta_favicon}
                   onChange={(e) => setFormData({ ...formData, meta_favicon: e.target.value })}
                   placeholder="/favicon.ico"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="favicon_url">Favicon URL do Tenant</Label>
+                <Input
+                  id="favicon_url"
+                  value={formData.favicon_url}
+                  onChange={(e) => setFormData({ ...formData, favicon_url: e.target.value })}
+                  placeholder="https://example.com/favicon.png"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  URL do favicon específico deste tenant. Este campo tem prioridade sobre o favicon legacy.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="is_active"
+                  checked={formData.is_active}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked as boolean })}
+                />
+                <Label htmlFor="is_active">Tenant Ativo</Label>
               </div>
             </TabsContent>
 
