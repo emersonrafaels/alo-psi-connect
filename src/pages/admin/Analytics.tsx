@@ -4,13 +4,11 @@ import { BlogAnalyticsDashboard } from '@/components/admin/BlogAnalyticsDashboar
 import { AnalyticsFilters } from '@/components/admin/AnalyticsFilters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, Users, Calendar, TrendingUp } from 'lucide-react';
-import { AdminLayout } from '@/components/admin/AdminLayout';
 
 export default function AdminAnalytics() {
   const [dateRange, setDateRange] = useState(30);
 
   return (
-    <AdminLayout>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -95,6 +93,5 @@ export default function AdminAnalytics() {
         </TabsContent>
       </Tabs>
     </div>
-    </AdminLayout>
   );
 }

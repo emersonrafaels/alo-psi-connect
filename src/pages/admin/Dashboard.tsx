@@ -5,7 +5,6 @@ import { StatsCard } from '@/components/admin/StatsCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
-import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface DashboardStats {
   totalUsers: number;
@@ -100,26 +99,23 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-            <p className="text-muted-foreground">
-              Visão geral da plataforma
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-32" />
-            ))}
-          </div>
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <p className="text-muted-foreground">
+            Visão geral da plataforma
+          </p>
         </div>
-      </AdminLayout>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
@@ -212,6 +208,5 @@ export default function AdminDashboard() {
         </Card>
       </div>
     </div>
-    </AdminLayout>
   );
 }

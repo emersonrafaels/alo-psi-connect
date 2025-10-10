@@ -8,7 +8,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TenantEditorModal } from '@/components/admin/TenantEditorModal';
 import { Building2, Users, FileText, Plus, Edit, Eye, EyeOff, Power, PowerOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface Tenant {
   id: string;
@@ -100,7 +99,6 @@ export default function Tenants() {
 
   if (isLoading) {
     return (
-      <AdminLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -114,12 +112,10 @@ export default function Tenants() {
           ))}
         </div>
       </div>
-      </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -247,6 +243,5 @@ export default function Tenants() {
         onSuccess={handleSuccess}
       />
     </div>
-    </AdminLayout>
   );
 }

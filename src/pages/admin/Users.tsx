@@ -13,7 +13,6 @@ import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
 import { useEmailResend } from '@/hooks/useEmailResend';
 import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound } from 'lucide-react';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
-import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface UserProfile {
   id: string;
@@ -141,7 +140,6 @@ export default function AdminUsers() {
   const adminsWithRoles = users.filter(user => user.roles && user.roles.length > 0);
 
   return (
-    <AdminLayout>
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Usuários</h2>
@@ -338,6 +336,5 @@ export default function AdminUsers() {
         onTypeUpdated={fetchUsers}
       />
     </div>
-    </AdminLayout>
   );
 }

@@ -162,16 +162,16 @@ const AppWithShortcuts = () => {
       <Route path="/medcos/diario-emocional/historico" element={<MoodHistory />} />
       <Route path="/medcos/diario-emocional/analises" element={<MoodAnalytics />} />
       
-      {/* Rotas Admin */}
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/admin/analytics" element={<AdminAnalytics />} />
-      <Route path="/admin/users" element={<AdminUsers />} />
-      <Route path="/admin/configuracoes" element={<AdminConfigurations />} />
-      <Route path="/admin/professionals" element={<AdminProfessionals />} />
-      <Route path="/admin/appointments" element={<AdminAppointments />} />
-      <Route path="/admin/financial" element={<AdminFinancial />} />
-      <Route path="/admin/roles" element={<AdminRoles />} />
-      <Route path="/admin/tenants" element={<AdminTenants />} />
+      {/* Rotas Admin - Todas compartilham o mesmo AdminLayout */}
+      <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+      <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
+      <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+      <Route path="/admin/configuracoes" element={<AdminLayout><AdminConfigurations /></AdminLayout>} />
+      <Route path="/admin/professionals" element={<AdminLayout><AdminProfessionals /></AdminLayout>} />
+      <Route path="/admin/appointments" element={<AdminLayout><AdminAppointments /></AdminLayout>} />
+      <Route path="/admin/financial" element={<AdminLayout><AdminFinancial /></AdminLayout>} />
+      <Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />
+      <Route path="/admin/tenants" element={<AdminLayout><AdminTenants /></AdminLayout>} />
 
       <Route path="/admin/blog" element={<BlogLayout><BlogManagement /></BlogLayout>} />
       <Route path="/admin/post-analytics/:postId" element={<BlogLayout><PostAnalytics /></BlogLayout>} />
