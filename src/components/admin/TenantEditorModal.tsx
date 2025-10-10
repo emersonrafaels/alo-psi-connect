@@ -6,7 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import {
+  ContactConfigTab,
+  FooterConfigTab,
+  ModulesConfigTab,
+  CTAConfigTab,
+  TypographyConfigTab,
+  SEOConfigTab,
+  EmailConfigTab,
+  BookingConfigTab
+} from "./TenantConfigTabs";
 
 interface Tenant {
   id: string;
@@ -250,11 +261,19 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
 
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-6 h-auto flex-wrap">
               <TabsTrigger value="basic">Básico</TabsTrigger>
               <TabsTrigger value="theme">Tema</TabsTrigger>
               <TabsTrigger value="branding">Branding</TabsTrigger>
-              <TabsTrigger value="meta">SEO/Meta</TabsTrigger>
+              <TabsTrigger value="contact">Contato</TabsTrigger>
+              <TabsTrigger value="footer">Footer</TabsTrigger>
+              <TabsTrigger value="modules">Módulos</TabsTrigger>
+              <TabsTrigger value="cta">CTAs</TabsTrigger>
+              <TabsTrigger value="typography">Tipografia</TabsTrigger>
+              <TabsTrigger value="seo">SEO</TabsTrigger>
+              <TabsTrigger value="email">Email</TabsTrigger>
+              <TabsTrigger value="booking">Agendamento</TabsTrigger>
+              <TabsTrigger value="meta">Meta</TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic" className="space-y-4">
@@ -841,6 +860,38 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
                   placeholder="/favicon.ico"
                 />
               </div>
+            </TabsContent>
+
+            <TabsContent value="contact">
+              <ContactConfigTab formData={formData} setFormData={setFormData} />
+            </TabsContent>
+
+            <TabsContent value="footer">
+              <FooterConfigTab formData={formData} setFormData={setFormData} />
+            </TabsContent>
+
+            <TabsContent value="modules">
+              <ModulesConfigTab formData={formData} setFormData={setFormData} />
+            </TabsContent>
+
+            <TabsContent value="cta">
+              <CTAConfigTab formData={formData} setFormData={setFormData} />
+            </TabsContent>
+
+            <TabsContent value="typography">
+              <TypographyConfigTab formData={formData} setFormData={setFormData} />
+            </TabsContent>
+
+            <TabsContent value="seo">
+              <SEOConfigTab formData={formData} setFormData={setFormData} />
+            </TabsContent>
+
+            <TabsContent value="email">
+              <EmailConfigTab formData={formData} setFormData={setFormData} />
+            </TabsContent>
+
+            <TabsContent value="booking">
+              <BookingConfigTab formData={formData} setFormData={setFormData} />
             </TabsContent>
           </Tabs>
 

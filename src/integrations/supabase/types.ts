@@ -1440,16 +1440,39 @@ export type Database = {
           accent_color: string
           ai_match_button_text: string | null
           base_path: string
+          booking_max_days_ahead: number | null
+          booking_min_hours_notice: number | null
           button_bg_color_dark: string | null
           button_bg_color_light: string | null
           button_text_color_dark: string | null
           button_text_color_light: string | null
+          cnpj: string | null
+          contact_address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          contact_whatsapp: string | null
           created_at: string | null
+          cta_primary_text: string | null
+          cta_secondary_text: string | null
+          email_sender_email: string | null
+          email_sender_name: string | null
+          email_support_email: string | null
+          empty_state_message: string | null
+          fallback_professional_image: string | null
+          font_family_body: string | null
+          font_family_headings: string | null
+          footer_bg_color_dark: string | null
+          footer_bg_color_light: string | null
+          footer_text_color_dark: string | null
+          footer_text_color_light: string | null
+          google_analytics_id: string | null
+          google_tag_manager_id: string | null
           header_color: string | null
           header_text_color_dark: string | null
           header_text_color_light: string | null
           hero_autoplay: boolean | null
           hero_autoplay_delay: number | null
+          hero_cta_text: string | null
           hero_images: string[] | null
           hero_subtitle: string | null
           hero_title: string | null
@@ -1458,31 +1481,65 @@ export type Database = {
           logo_size: number | null
           logo_url: string | null
           meta_config: Json | null
+          meta_keywords: string[] | null
+          modules_enabled: Json | null
           name: string
+          payment_methods: Json | null
           primary_color: string
+          privacy_url: string | null
+          razao_social: string | null
           secondary_color: string | null
           slug: string
+          social_facebook: string | null
+          social_instagram: string | null
+          social_linkedin: string | null
+          social_share_image: string | null
           specialty_tag_bg_dark: string | null
           specialty_tag_bg_light: string | null
           specialty_tag_text_dark: string | null
           specialty_tag_text_light: string | null
+          terms_url: string | null
           theme_config: Json | null
           updated_at: string | null
+          welcome_message: string | null
         }
         Insert: {
           accent_color: string
           ai_match_button_text?: string | null
           base_path: string
+          booking_max_days_ahead?: number | null
+          booking_min_hours_notice?: number | null
           button_bg_color_dark?: string | null
           button_bg_color_light?: string | null
           button_text_color_dark?: string | null
           button_text_color_light?: string | null
+          cnpj?: string | null
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
           created_at?: string | null
+          cta_primary_text?: string | null
+          cta_secondary_text?: string | null
+          email_sender_email?: string | null
+          email_sender_name?: string | null
+          email_support_email?: string | null
+          empty_state_message?: string | null
+          fallback_professional_image?: string | null
+          font_family_body?: string | null
+          font_family_headings?: string | null
+          footer_bg_color_dark?: string | null
+          footer_bg_color_light?: string | null
+          footer_text_color_dark?: string | null
+          footer_text_color_light?: string | null
+          google_analytics_id?: string | null
+          google_tag_manager_id?: string | null
           header_color?: string | null
           header_text_color_dark?: string | null
           header_text_color_light?: string | null
           hero_autoplay?: boolean | null
           hero_autoplay_delay?: number | null
+          hero_cta_text?: string | null
           hero_images?: string[] | null
           hero_subtitle?: string | null
           hero_title?: string | null
@@ -1491,31 +1548,65 @@ export type Database = {
           logo_size?: number | null
           logo_url?: string | null
           meta_config?: Json | null
+          meta_keywords?: string[] | null
+          modules_enabled?: Json | null
           name: string
+          payment_methods?: Json | null
           primary_color: string
+          privacy_url?: string | null
+          razao_social?: string | null
           secondary_color?: string | null
           slug: string
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_share_image?: string | null
           specialty_tag_bg_dark?: string | null
           specialty_tag_bg_light?: string | null
           specialty_tag_text_dark?: string | null
           specialty_tag_text_light?: string | null
+          terms_url?: string | null
           theme_config?: Json | null
           updated_at?: string | null
+          welcome_message?: string | null
         }
         Update: {
           accent_color?: string
           ai_match_button_text?: string | null
           base_path?: string
+          booking_max_days_ahead?: number | null
+          booking_min_hours_notice?: number | null
           button_bg_color_dark?: string | null
           button_bg_color_light?: string | null
           button_text_color_dark?: string | null
           button_text_color_light?: string | null
+          cnpj?: string | null
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
           created_at?: string | null
+          cta_primary_text?: string | null
+          cta_secondary_text?: string | null
+          email_sender_email?: string | null
+          email_sender_name?: string | null
+          email_support_email?: string | null
+          empty_state_message?: string | null
+          fallback_professional_image?: string | null
+          font_family_body?: string | null
+          font_family_headings?: string | null
+          footer_bg_color_dark?: string | null
+          footer_bg_color_light?: string | null
+          footer_text_color_dark?: string | null
+          footer_text_color_light?: string | null
+          google_analytics_id?: string | null
+          google_tag_manager_id?: string | null
           header_color?: string | null
           header_text_color_dark?: string | null
           header_text_color_light?: string | null
           hero_autoplay?: boolean | null
           hero_autoplay_delay?: number | null
+          hero_cta_text?: string | null
           hero_images?: string[] | null
           hero_subtitle?: string | null
           hero_title?: string | null
@@ -1524,16 +1615,27 @@ export type Database = {
           logo_size?: number | null
           logo_url?: string | null
           meta_config?: Json | null
+          meta_keywords?: string[] | null
+          modules_enabled?: Json | null
           name?: string
+          payment_methods?: Json | null
           primary_color?: string
+          privacy_url?: string | null
+          razao_social?: string | null
           secondary_color?: string | null
           slug?: string
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_share_image?: string | null
           specialty_tag_bg_dark?: string | null
           specialty_tag_bg_light?: string | null
           specialty_tag_text_dark?: string | null
           specialty_tag_text_light?: string | null
+          terms_url?: string | null
           theme_config?: Json | null
           updated_at?: string | null
+          welcome_message?: string | null
         }
         Relationships: []
       }

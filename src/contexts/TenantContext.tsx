@@ -227,6 +227,75 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       root.style.setProperty('--specialty-tag-text-dark', tagTextDark);
     }
 
+    // FASE 1: Aplicar cores do footer (light mode)
+    if (tenantData.footer_bg_color_light) {
+      const footerBgLight = isHexColor(tenantData.footer_bg_color_light)
+        ? hexToHSL(tenantData.footer_bg_color_light)
+        : tenantData.footer_bg_color_light;
+      root.style.setProperty('--footer-bg-light', footerBgLight);
+    }
+    
+    if (tenantData.footer_text_color_light) {
+      const footerTextLight = isHexColor(tenantData.footer_text_color_light)
+        ? hexToHSL(tenantData.footer_text_color_light)
+        : tenantData.footer_text_color_light;
+      root.style.setProperty('--footer-text-light', footerTextLight);
+    }
+
+    // Aplicar cores do footer (dark mode)
+    if (tenantData.footer_bg_color_dark) {
+      const footerBgDark = isHexColor(tenantData.footer_bg_color_dark)
+        ? hexToHSL(tenantData.footer_bg_color_dark)
+        : tenantData.footer_bg_color_dark;
+      root.style.setProperty('--footer-bg-dark', footerBgDark);
+    }
+    
+    if (tenantData.footer_text_color_dark) {
+      const footerTextDark = isHexColor(tenantData.footer_text_color_dark)
+        ? hexToHSL(tenantData.footer_text_color_dark)
+        : tenantData.footer_text_color_dark;
+      root.style.setProperty('--footer-text-dark', footerTextDark);
+    }
+
+    // FASE 2: Aplicar tipografia customizada
+    if (tenantData.font_family_headings) {
+      root.style.setProperty('--font-headings', tenantData.font_family_headings);
+    }
+    
+    if (tenantData.font_family_body) {
+      root.style.setProperty('--font-body', tenantData.font_family_body);
+    }
+
+    // FASE 3: Aplicar Google Analytics
+    if (tenantData.google_analytics_id && !document.querySelector(`script[src*="${tenantData.google_analytics_id}"]`)) {
+      const gaScript = document.createElement('script');
+      gaScript.async = true;
+      gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${tenantData.google_analytics_id}`;
+      document.head.appendChild(gaScript);
+      
+      const gaConfig = document.createElement('script');
+      gaConfig.innerHTML = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${tenantData.google_analytics_id}');
+      `;
+      document.head.appendChild(gaConfig);
+    }
+
+    // Aplicar Google Tag Manager
+    if (tenantData.google_tag_manager_id && !document.querySelector(`script[src*="${tenantData.google_tag_manager_id}"]`)) {
+      const gtmScript = document.createElement('script');
+      gtmScript.innerHTML = `
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','${tenantData.google_tag_manager_id}');
+      `;
+      document.head.appendChild(gtmScript);
+    }
+
     // Atualizar meta tags
     document.title = tenantData.meta_config.title;
     

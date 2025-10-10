@@ -34,6 +34,57 @@ export interface Tenant {
   // AI Match button text
   ai_match_button_text?: string;
   
+  // Fase 1: Contato e Footer
+  contact_phone?: string;
+  contact_email?: string;
+  contact_address?: string;
+  contact_whatsapp?: string;
+  social_instagram?: string;
+  social_facebook?: string;
+  social_linkedin?: string;
+  cnpj?: string;
+  razao_social?: string;
+  footer_bg_color_light?: string;
+  footer_bg_color_dark?: string;
+  footer_text_color_light?: string;
+  footer_text_color_dark?: string;
+  
+  // Fase 2: Módulos, CTAs e Tipografia
+  modules_enabled?: {
+    blog?: boolean;
+    mood_diary?: boolean;
+    ai_assistant?: boolean;
+    professionals?: boolean;
+    appointments?: boolean;
+    [key: string]: boolean | undefined;
+  };
+  cta_primary_text?: string;
+  cta_secondary_text?: string;
+  hero_cta_text?: string;
+  font_family_headings?: string;
+  font_family_body?: string;
+  
+  // Fase 3: SEO, Email e Agendamento
+  meta_keywords?: string[];
+  social_share_image?: string;
+  google_analytics_id?: string;
+  google_tag_manager_id?: string;
+  email_sender_name?: string;
+  email_sender_email?: string;
+  email_support_email?: string;
+  booking_min_hours_notice?: number;
+  booking_max_days_ahead?: number;
+  payment_methods?: {
+    mercadopago?: boolean;
+    stripe?: boolean;
+    [key: string]: boolean | undefined;
+  };
+  welcome_message?: string;
+  empty_state_message?: string;
+  fallback_professional_image?: string;
+  terms_url?: string;
+  privacy_url?: string;
+  
   theme_config: {
     secondary_color?: string;
     muted_color?: string;

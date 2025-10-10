@@ -5,8 +5,10 @@ import { useNewsletter } from "@/hooks/useNewsletter";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { buildTenantPath } from "@/utils/tenantHelpers";
+import { useModuleEnabled } from "@/hooks/useModuleEnabled";
 import { useState } from "react";
 import { Mail, MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, MessageCircle, Heart, MessageCircleIcon } from "lucide-react";
+
 const Footer = () => {
   const { isAdmin } = useAdminAuth();
   const { tenant } = useTenant();
@@ -18,6 +20,11 @@ const Footer = () => {
   const [nome, setNome] = useState("");
   
   const tenantSlug = tenant?.slug || 'alopsi';
+  
+  // Check if modules are enabled
+  const blogEnabled = useModuleEnabled('blog');
+  const professionalsEnabled = useModuleEnabled('professionals');
+  const appointmentsEnabled = useModuleEnabled('appointments');
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
@@ -30,44 +37,70 @@ const Footer = () => {
       setNome("");
     }
   };
-  const links = {
-    useful: [{
+  const usefulLinks = [
+    {
       name: "Sobre Nós",
       href: buildTenantPath(tenantSlug, "/sobre"),
-      icon: Users
-    }, {
+      icon: Users,
+      enabled: true
+    },
+    {
       name: "Nossos Profissionais",
       href: buildTenantPath(tenantSlug, "/profissionais"),
-      icon: Heart
-    }, {
+      icon: Heart,
+      enabled: professionalsEnabled
+    },
+    {
       name: "Agendar Consulta",
       href: buildTenantPath(tenantSlug, "/agendamento"),
-      icon: Calendar
-    }, {
+      icon: Calendar,
+      enabled: appointmentsEnabled
+    },
+    {
       name: "Blog",
       href: buildTenantPath(tenantSlug, "/blog"),
-      icon: FileText
-    }, {
+      icon: FileText,
+      enabled: blogEnabled
+    },
+    {
       name: "Trabalhe Conosco",
       href: buildTenantPath(tenantSlug, "/trabalhe-conosco"),
-      icon: MessageCircle
-    }],
-    navigation: [{
+      icon: MessageCircle,
+      enabled: true
+    }
+  ].filter(link => link.enabled);
+
+  const navigationLinks = [
+    {
       name: "Home",
-      href: buildTenantPath(tenantSlug, "/")
-    }, {
+      href: buildTenantPath(tenantSlug, "/"),
+      enabled: true
+    },
+    {
       name: "Profissionais",
-      href: buildTenantPath(tenantSlug, "/profissionais")
-    }, {
+      href: buildTenantPath(tenantSlug, "/profissionais"),
+      enabled: professionalsEnabled
+    },
+    {
       name: "Agendar",
-      href: buildTenantPath(tenantSlug, "/agendamento")
-    }, {
+      href: buildTenantPath(tenantSlug, "/agendamento"),
+      enabled: appointmentsEnabled
+    },
+    {
       name: "Contato",
-      href: buildTenantPath(tenantSlug, "/contato")
-    }, {
+      href: buildTenantPath(tenantSlug, "/contato"),
+      enabled: true
+    },
+    {
       name: "Blog",
-      href: buildTenantPath(tenantSlug, "/blog")
-    }]
+      href: buildTenantPath(tenantSlug, "/blog"),
+      enabled: blogEnabled
+    }
+  ].filter(link => link.enabled);
+  
+  const links = {
+    useful: usefulLinks,
+    navigation: navigationLinks
   };
   return <footer className="bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 py-16">
@@ -123,12 +156,12 @@ const Footer = () => {
                   </a>
                 </li>)}
               <li>
-                <a href="/politica-privacidade" className="text-sm opacity-80 hover:opacity-100 transition-opacity">
+                <a href={tenant?.privacy_url || "/politica-privacidade"} className="text-sm opacity-80 hover:opacity-100 transition-opacity">
                   Política de Privacidade
                 </a>
               </li>
               <li>
-                <a href="/termos-servico" className="text-sm opacity-80 hover:opacity-100 transition-opacity">
+                <a href={tenant?.terms_url || "/termos-servico"} className="text-sm opacity-80 hover:opacity-100 transition-opacity">
                   Termos de Serviço
                 </a>
               </li>
@@ -142,50 +175,57 @@ const Footer = () => {
               Contato
             </h3>
             <div className="space-y-3 text-sm opacity-80">
-              <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <p>R. Joaquim Távora, 1240 - Vila Mariana, São Paulo - SP, 04015-013</p>
-              </div>
-              <p>CNPJ: 12.345.678/0001-90, Brasil</p>
-              <div className="flex items-center gap-2">
-                <MessageCircleIcon className="w-4 h-4" />
-                <a href="tel:+5511947994163" className="hover:opacity-100 transition-opacity">(11) 97587-2447</a>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                <a href="mailto:alopsi.host@gmail.com" className="hover:opacity-100 transition-opacity">
-                  alopsi.host@gmail.com
-                </a>
-              </div>
+              {tenant?.contact_address && (
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <p>{tenant.contact_address}</p>
+                </div>
+              )}
+              {tenant?.cnpj && (
+                <p>CNPJ: {tenant.cnpj}</p>
+              )}
+              {tenant?.contact_phone && (
+                <div className="flex items-center gap-2">
+                  <MessageCircleIcon className="w-4 h-4" />
+                  <a href={`tel:${tenant.contact_phone}`} className="hover:opacity-100 transition-opacity">
+                    {tenant.contact_phone}
+                  </a>
+                </div>
+              )}
+              {tenant?.contact_email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  <a href={`mailto:${tenant.contact_email}`} className="hover:opacity-100 transition-opacity">
+                    {tenant.contact_email}
+                  </a>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Redes Sociais */}
-          {/* ta escondida */}
-          <div className="lg:col-span-1 hidden ">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 md:flex ">
-              <Instagram className="w-5 h-5" />
-              <a href="https://www.instagram.com/medcos_br/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-                Siga-nos
-              </a>
-            </h3>
-            <div className="grid grid-cols-3 gap-2 mb-4 md:grid">
-              {Array.from({
-              length: 6
-            }).map((_, index) => <a key={index} href="https://www.instagram.com/medcos_br/" target="_blank" rel="noopener noreferrer" className="aspect-square bg-teal rounded-md hover:opacity-80 transition-opacity cursor-pointer" />)}
+          {(tenant?.social_instagram || tenant?.social_facebook || tenant?.social_linkedin) && (
+            <div className="lg:col-span-1">
+              <h3 className="text-lg font-semibold mb-4">Redes Sociais</h3>
+              <div className="flex gap-3">
+                {tenant?.social_instagram && (
+                  <a href={tenant.social_instagram} target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
+                    <Instagram className="w-5 h-5" />
+                  </a>
+                )}
+                {tenant?.social_facebook && (
+                  <a href={tenant.social_facebook} target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
+                    <Facebook className="w-5 h-5" />
+                  </a>
+                )}
+                {tenant?.social_linkedin && (
+                  <a href={tenant.social_linkedin} target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
+                    <Linkedin className="w-5 h-5" />
+                  </a>
+                )}
+              </div>
             </div>
-            <div className="flex gap-3">
-              <a href="https://www.instagram.com/medcos_br/" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a href="#" className="opacity-80 hover:opacity-100 transition-opacity">
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a href="#" className="opacity-80 hover:opacity-100 transition-opacity">
-                <Linkedin className="w-5 h-5" />
-              </a>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Bottom */}
