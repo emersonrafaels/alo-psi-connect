@@ -1,16 +1,23 @@
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Heart, Shield, Sparkles, Users, Star, Award, BookOpen } from "lucide-react"
+import { CheckCircle, Heart, Shield, Sparkles, Users, Award, BookOpen, MessageCircle, Mail, UserPlus } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useTenant } from "@/hooks/useTenant"
+import { buildTenantPath } from "@/utils/tenantHelpers"
 
 const WorkWithUs = () => {
   const { tenant } = useTenant();
   const platformName = tenant?.name || "Alô, Psi!";
+  const whatsappNumber = tenant?.whatsapp_number || "5511947994163";
+  const contactEmail = tenant?.contact_email || "contato@alopsi.com.br";
+  
+  const handleWhatsAppClick = () => {
+    const message = `Olá! Sou profissional e gostaria de saber mais sobre atender na ${platformName}`;
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
   
   const benefits = [
     "Flexibilidade total de horários - você define quando atender",
@@ -69,12 +76,15 @@ const WorkWithUs = () => {
               Junte-se a uma comunidade de profissionais que acredita no poder da conexão humana, da escuta ativa e do acolhimento sem julgamentos.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="btn-gradient text-lg px-8 py-4 h-auto">
-                <Heart className="mr-2 h-5 w-5" />
-                Quero Atender na {platformName}
+              <Button asChild size="lg" className="btn-gradient text-lg px-8 py-4 h-auto">
+                <Link to={buildTenantPath(tenant?.slug || 'alopsi', '/register/profissional')}>
+                  <UserPlus className="mr-2 h-5 w-5" />
+                  Cadastre-se Gratuitamente
+                </Link>
               </Button>
-              <Button variant="outline" size="lg" className="text-lg px-8 py-4 h-auto border-2">
-                Saiba Mais
+              <Button onClick={handleWhatsAppClick} variant="outline" size="lg" className="text-lg px-8 py-4 h-auto border-2">
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Falar com Especialista
               </Button>
             </div>
           </div>
@@ -185,7 +195,7 @@ const WorkWithUs = () => {
                 <Card className="border-2 border-primary/20">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Star className="text-yellow-500 h-5 w-5" />
+                      <Award className="text-yellow-500 h-5 w-5" />
                       Benefícios Exclusivos
                     </CardTitle>
                   </CardHeader>
@@ -198,9 +208,6 @@ const WorkWithUs = () => {
                         </li>
                       ))}
                     </ul>
-                    <Button variant="ghost" className="mt-4 p-0 h-auto text-primary">
-                      Ver todos os benefícios →
-                    </Button>
                   </CardContent>
                 </Card>
               </div>
@@ -209,204 +216,117 @@ const WorkWithUs = () => {
         </div>
       </section>
 
-      {/* Application Form Section */}
-      <section className="py-16">
+      {/* How to Get Started Section */}
+      <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-teal/5">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-                Pronto para Fazer a Diferença?
+                Como Começar?
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Cadastre-se agora e comece sua jornada como profissional {platformName}.
-                Juntos, vamos transformar o cuidado em saúde mental no Brasil.
+              <p className="text-lg text-muted-foreground">
+                É simples! Cadastre-se gratuitamente ou fale com nossa equipe para tirar dúvidas.
               </p>
             </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Application Form */}
-              <div className="lg:col-span-2">
-                <Card className="border-2">
-                  <CardHeader>
-                    <CardTitle className="text-2xl flex items-center gap-2">
-                      <Heart className="text-primary h-6 w-6" />
-                      Quero Atender na {platformName}
-                    </CardTitle>
-                    <p className="text-muted-foreground">
-                      Preencha os dados abaixo e nossa equipe entrará em contato em até 48 horas.
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <form className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Nome Completo *</label>
-                          <Input placeholder="Seu nome completo" className="border-2 focus:border-primary/50" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">E-mail *</label>
-                          <Input type="email" placeholder="seu@email.com" className="border-2 focus:border-primary/50" />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Telefone *</label>
-                          <Input placeholder="(11) 99999-9999" className="border-2 focus:border-primary/50" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Profissão *</label>
-                          <Input placeholder="Ex: Psicólogo(a), Psiquiatra, Terapeuta" className="border-2 focus:border-primary/50" />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Registro Profissional *</label>
-                        <Input placeholder="Ex: CRP 06/123456, CRM 123456/SP" className="border-2 focus:border-primary/50" />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Especialidades e Abordagens</label>
-                        <Input placeholder="Ex: Terapia Cognitivo-Comportamental, Psicanálise, Terapia Humanizada" className="border-2 focus:border-primary/50" />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2 text-foreground dark:text-gray-200">
-                          Conte-nos sobre sua visão do cuidado em saúde mental
-                        </label>
-                        <textarea
-                          placeholder="Como você enxerga o cuidado além dos rótulos? Qual sua experiência em criar conexões genuínas com pacientes?"
-                          rows={4}
-                          className="
-                          w-full p-3 rounded-md border-2 border-input resize-none
-                          bg-white text-gray-800 placeholder:text-gray-400
-                          dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500
-                          focus:border-primary/50 transition-colors
-                          "
-                          />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Currículo (PDF - opcional)</label>
-                        <Input type="file" accept=".pdf" className="border-2 focus:border-primary/50" />
-                      </div>
-                      
-                      <Button size="lg" className="w-full btn-gradient text-lg px-4 sm:px-6 py-4 h-auto flex items-center justify-center whitespace-normal break-words text-center">
-                        <Heart className="mr-2 h-5 w-5" />
-                        Enviar Candidatura - Quero Atender!
-                      </Button>
-                      
-                      <p className="text-xs text-muted-foreground text-center">
-                        Ao enviar, você concorda com nossos termos de uso e política de privacidade.
-                      </p>
-                    </form>
-                  </CardContent>
-                </Card>
-              </div>
 
-              {/* Sidebar Information */}
-              <div className="space-y-6">
-                {/* Requirements */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Requisitos</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3">
-                      {requirements.map((requirement, index) => (
-                        <li key={index} className="flex items-start space-x-3">
-                          <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-                          <span className="text-sm text-muted-foreground">{requirement}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Cadastro Gratuito */}
+              <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all">
+                <CardHeader>
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <UserPlus className="h-8 w-8 text-primary" />
+                  </div>
+                  <CardTitle className="text-center">Cadastro Gratuito</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Crie sua conta profissional agora e comece a atender em minutos. 
+                    Sem processo seletivo, sem burocracia.
+                  </p>
+                  <Button asChild size="lg" className="w-full btn-gradient">
+                    <Link to={buildTenantPath(tenant?.slug || 'alopsi', '/register/profissional')}>
+                      <UserPlus className="mr-2 h-5 w-5" />
+                      Cadastrar Agora
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
 
-                {/* Process */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Processo de Seleção</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-start space-x-3">
-                        <Badge variant="default" className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">1</Badge>
-                        <div>
-                          <p className="text-sm font-medium">Análise da candidatura</p>
-                          <p className="text-xs text-muted-foreground">Avaliação do perfil e alinhamento com nossos valores</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <Badge variant="default" className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">2</Badge>
-                        <div>
-                          <p className="text-sm font-medium">Conversa inicial</p>
-                          <p className="text-xs text-muted-foreground">Bate-papo sobre sua visão de cuidado humanizado</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <Badge variant="default" className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">3</Badge>
-                        <div>
-                          <p className="text-sm font-medium">Verificação de documentos</p>
-                          <p className="text-xs text-muted-foreground">Validação de registros e formação</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <Badge variant="default" className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">4</Badge>
-                        <div>
-                          <p className="text-sm font-medium">Integração</p>
-                          <p className="text-xs text-muted-foreground">Bem-vindo à família {platformName}!</p>
-                        </div>
-                      </div>
+              {/* Falar com Especialista */}
+              <Card className="border-2 border-teal/20 hover:border-teal/40 transition-all">
+                <CardHeader>
+                  <div className="w-16 h-16 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MessageCircle className="h-8 w-8 text-teal" />
+                  </div>
+                  <CardTitle className="text-center">Tire suas Dúvidas</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Converse com nosso time de especialistas para entender melhor 
+                    como funciona a plataforma.
+                  </p>
+                  <Button onClick={handleWhatsAppClick} size="lg" variant="outline" className="w-full border-2 border-teal hover:bg-teal/10">
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    WhatsApp
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Requisitos */}
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="text-primary h-5 w-5" />
+                  Requisitos para Atender
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {requirements.map((requirement, index) => (
+                    <div key={index} className="flex items-start space-x-3">
+                      <CheckCircle className="text-green-600 flex-shrink-0 mt-0.5" size={18} />
+                      <span className="text-sm text-muted-foreground">{requirement}</span>
                     </div>
-                  </CardContent>
-                </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-                {/* Contact */}
-                <Card className="bg-primary text-primary-foreground">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Dúvidas?</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm opacity-90 mb-4">
-                      Nossa equipe está pronta para esclarecer qualquer questão sobre o processo.
-                    </p>
-                    <Button variant="accent" size="sm" className="w-full">
-                      Falar Conosco
-                    </Button>
-                  </CardContent>
-                </Card>
+            {/* Contact Info */}
+            <div className="mt-8 text-center">
+              <p className="text-sm text-muted-foreground mb-3">
+                Ainda tem dúvidas? Entre em contato diretamente:
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a 
+                  href={`mailto:${contactEmail}`}
+                  className="flex items-center gap-2 text-primary hover:underline"
+                >
+                  <Mail className="h-4 w-4" />
+                  {contactEmail}
+                </a>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Final CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-primary via-teal to-accent text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-6">
-              Transforme Vidas, Começando pela Sua
-            </h2>
-            <p className="text-xl mb-8 opacity-90 leading-relaxed">
-              Cada pessoa que você atender na {platformName} não será apenas mais um paciente. 
-              Será uma vida que você tocou, uma história que você ajudou a reescrever, 
-              um futuro que você ajudou a construir.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="accent" size="lg" className="text-lg px-8 py-4 h-auto bg-white text-primary hover:bg-white/90">
-                <Heart className="mr-2 h-5 w-5" />
-                Quero Fazer Parte da {platformName}
-              </Button>
-              <Button variant="accent" size="lg" className="text-lg px-8 py-4 h-auto bg-white text-primary hover:bg-white/90">
-                <Link to="/professionals" className="flex items-center">
-                  Conheça Nossa Equipe
-                </Link>
-              </Button>
-            </div>
-          </div>
+      {/* Final CTA */}
+      <section className="py-20 bg-gradient-to-r from-primary via-teal to-accent text-white">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl font-bold mb-6">
+            Pronto para Transformar Vidas?
+          </h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+            Junte-se a nós e faça parte de uma comunidade que acredita no poder do cuidado humanizado.
+          </p>
+          <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-4 h-auto">
+            <Link to={buildTenantPath(tenant?.slug || 'alopsi', '/register/profissional')}>
+              <Heart className="mr-2 h-5 w-5" />
+              Começar Agora
+            </Link>
+          </Button>
         </div>
       </section>
 
