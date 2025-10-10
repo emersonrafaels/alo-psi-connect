@@ -65,12 +65,7 @@ const ProfessionalCard = ({
                   <Badge
                     key={index}
                     variant="secondary"
-                    className="text-xs px-2 py-1"
-                    style={{
-                      backgroundColor: 'hsl(var(--specialty-tag-bg))',
-                      color: 'hsl(var(--specialty-tag-text))',
-                      borderColor: 'hsl(var(--specialty-tag-text) / 0.2)'
-                    }}
+                    className="text-xs px-2 py-1 specialty-tag"
                   >
                     {specialty}
                   </Badge>
@@ -145,12 +140,7 @@ const ProfessionalCard = ({
                   <Badge 
                     key={index} 
                     variant="secondary" 
-                    className="text-xs px-3 py-1"
-                    style={{
-                      backgroundColor: 'hsl(var(--specialty-tag-bg))',
-                      color: 'hsl(var(--specialty-tag-text))',
-                      borderColor: 'hsl(var(--specialty-tag-text) / 0.2)'
-                    }}
+                    className="text-xs px-3 py-1 specialty-tag"
                   >
                     {specialty}
                   </Badge>

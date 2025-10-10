@@ -86,9 +86,9 @@ All colors MUST be HSL.
     --btn-primary-bg: var(--btn-primary-bg-light, 199 89% 48%);
     --btn-primary-text: var(--btn-primary-text-light, 0 0% 100%);
     
-    /* Specialty tags colors - light mode */
-    --specialty-tag-bg: var(--specialty-tag-bg-light, 199 95% 94%);
-    --specialty-tag-text: var(--specialty-tag-text-light, 199 89% 48%);
+    /* Specialty tags colors - light mode (default values) */
+    --specialty-tag-bg-light: 199 95% 94%;
+    --specialty-tag-text-light: 199 89% 48%;
   }
 
   .dark {
@@ -141,9 +141,9 @@ All colors MUST be HSL.
     --btn-primary-bg: var(--btn-primary-bg-dark, 199 89% 48%);
     --btn-primary-text: var(--btn-primary-text-dark, 0 0% 100%);
     
-    /* Specialty tags colors - dark mode */
-    --specialty-tag-bg: var(--specialty-tag-bg-dark, 217 91% 21%);
-    --specialty-tag-text: var(--specialty-tag-text-dark, 199 95% 74%);
+    /* Specialty tags colors - dark mode (default values) */
+    --specialty-tag-bg-dark: 217 91% 21%;
+    --specialty-tag-text-dark: 199 95% 74%;
   }
 }
 
@@ -276,6 +276,19 @@ All colors MUST be HSL.
   
   .blog-content img:hover {
     @apply scale-[1.02];
+  }
+
+  /* Specialty tag styling with theme support */
+  .specialty-tag {
+    background-color: hsl(var(--specialty-tag-bg-light));
+    color: hsl(var(--specialty-tag-text-light));
+    border: 1px solid hsl(var(--specialty-tag-text-light) / 0.2);
+  }
+
+  .dark .specialty-tag {
+    background-color: hsl(var(--specialty-tag-bg-dark));
+    color: hsl(var(--specialty-tag-text-dark));
+    border: 1px solid hsl(var(--specialty-tag-text-dark) / 0.2);
   }
 }
 
