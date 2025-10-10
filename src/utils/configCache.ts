@@ -169,10 +169,26 @@ export const setConfigCacheVersion = (version: string) => {
 };
 
 export const logConfigState = (context: string, config: any) => {
-  console.log(`🔧 [${context}] AI Assistant Config:`, {
-    enabled: config.enabled,
-    title: config.title,
-    cacheVersion: getConfigCacheVersion(),
-    timestamp: new Date().toISOString()
+  const version = getConfigCacheVersion();
+  console.log(`[ConfigCache] ${context}:`, {
+    version,
+    timestamp: new Date().toISOString(),
+    config,
+    cacheInfo: getCacheInfo()
   });
+};
+
+export const clearTenantConfigCache = (tenantSlug: string) => {
+  const keysToRemove = [
+    `ai_assistant_config_${tenantSlug}`,
+    `public_config_${tenantSlug}`,
+    `tenant_config_${tenantSlug}`
+  ];
+  
+  keysToRemove.forEach(key => {
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  });
+  
+  console.log(`[ConfigCache] Cache do tenant ${tenantSlug} limpo`);
 };

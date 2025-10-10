@@ -1407,6 +1407,7 @@ export type Database = {
           description: string | null
           id: string
           key: string
+          tenant_id: string | null
           updated_at: string
           updated_by: string | null
           value: Json
@@ -1418,6 +1419,7 @@ export type Database = {
           description?: string | null
           id?: string
           key: string
+          tenant_id?: string | null
           updated_at?: string
           updated_by?: string | null
           value: Json
@@ -1429,11 +1431,20 @@ export type Database = {
           description?: string | null
           id?: string
           key?: string
+          tenant_id?: string | null
           updated_at?: string
           updated_by?: string | null
           value?: Json
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "system_configurations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tenants: {
         Row: {

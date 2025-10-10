@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useTenant } from '@/hooks/useTenant';
 
 export interface SystemConfig {
   id: string;
@@ -18,6 +19,7 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
   const [hasPermission, setHasPermission] = useState(false);
   const { toast } = useToast();
   const { hasRole, loading: authLoading } = useAdminAuth();
+  const { tenant } = useTenant();
 
   const fetchConfigs = async () => {
     if (!hasPermission) {
@@ -31,6 +33,14 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
         .from('system_configurations')
         .select('*');
 
+      // Buscar configs do tenant atual + configs globais (fallback)
+      if (tenant?.id) {
+        query = query.or(`tenant_id.is.null,tenant_id.eq.${tenant.id}`);
+      } else {
+        // Se não há tenant, buscar apenas globais
+        query = query.is('tenant_id', null);
+      }
+
       // Filter by allowed categories if specified
       if (allowedCategories && allowedCategories.length > 0) {
         query = query.in('category', allowedCategories);
@@ -39,7 +49,26 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
       const { data, error } = await query.order('category, key');
 
       if (error) throw error;
-      setConfigs(data || []);
+      
+      // Priorizar configs do tenant sobre globais
+      const prioritizedConfigs = data?.reduce((acc, config) => {
+        const key = `${config.category}_${config.key}`;
+        const existing = acc.find(c => `${c.category}_${c.key}` === key);
+        
+        // Se já existe, manter apenas se o novo for do tenant
+        if (existing && !config.tenant_id) {
+          return acc;
+        }
+        
+        // Remover config global se houver uma do tenant
+        if (existing && config.tenant_id) {
+          return [...acc.filter(c => `${c.category}_${c.key}` !== key), config];
+        }
+        
+        return [...acc, config];
+      }, [] as SystemConfig[]) || [];
+      
+      setConfigs(prioritizedConfigs);
     } catch (error) {
       console.error('Error fetching system configurations:', error);
       setConfigs([]);
@@ -65,9 +94,11 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
           category,
           key,
           value: typeof value === 'string' ? value : JSON.stringify(value),
+          tenant_id: tenant?.id || null,
           updated_by: (await supabase.auth.getUser()).data.user?.id
         }, {
-          onConflict: 'category,key'
+          onConflict: 'category,key,tenant_id',
+          ignoreDuplicates: false
         });
 
       if (error) throw error;
@@ -75,7 +106,7 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
       await fetchConfigs();
       toast({
         title: "Sucesso",
-        description: "Configuração atualizada com sucesso"
+        description: `Configuração atualizada para ${tenant?.name || 'Global'}`
       });
     } catch (error) {
       console.error('Error updating system configuration:', error);

@@ -16,6 +16,7 @@ import { MetricsCard } from './MetricsCard';
 import { UsageChart } from './UsageChart';
 import { ConfigDataTable } from './ConfigDataTable';
 import { clearConfigCache, forceConfigRefresh } from '@/utils/configCache';
+import { useTenant } from '@/hooks/useTenant';
 
 const GPT_MODELS = [
   { value: 'gpt-4o', label: 'GPT-4o (Mais Avançado)' },
@@ -27,6 +28,7 @@ const GPT_MODELS = [
 export const AIAssistantConfig = () => {
   const { getConfig, updateConfig, loading, hasPermission, configs } = useSystemConfig(['ai_assistant']);
   const { toast } = useToast();
+  const { tenant } = useTenant();
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [usageData, setUsageData] = useState<any[]>([]);
@@ -339,8 +341,13 @@ Responda sempre em português brasileiro, de forma clara e objetiva.`),
                 <Bot className="h-5 w-5" />
                 Configurações do Assistente de IA
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="flex items-center gap-2">
                 Configure o comportamento e parâmetros do assistente de IA
+                {tenant && (
+                  <Badge variant="outline">
+                    {tenant.name}
+                  </Badge>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">

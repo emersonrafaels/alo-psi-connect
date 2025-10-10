@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAIAssistantConfig } from "@/hooks/useAIAssistantConfig";
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/hooks/useTenant";
 import ReactMarkdown from "react-markdown";
 interface Message {
   id: string;
@@ -38,6 +39,7 @@ export const AIAssistantModal = ({
   const {
     user
   } = useAuth();
+  const { tenant } = useTenant();
   const [sessionId] = useState(() => crypto.randomUUID());
   const [messages, setMessages] = useState<Message[]>([{
     id: '1',
@@ -228,6 +230,7 @@ export const AIAssistantModal = ({
             message: inputMessage,
             sessionId: sessionId,
             userId: user?.id,
+            tenantId: tenant?.id,
             professionals: professionals
           }
         });

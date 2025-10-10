@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, professionals: providedProfessionals, sessionId, userId } = await req.json();
+    const { message, professionals: providedProfessionals, sessionId, userId, tenantId } = await req.json();
 
     // Ensure we have a valid session ID
     const validSessionId = sessionId || crypto.randomUUID();
@@ -40,16 +40,34 @@ serve(async (req) => {
     // Manage chat session and memory window
     await manageSessionAndMemory(supabase, validSessionId, userId, message);
 
-    // Get AI configuration
+    // Get AI configuration (tenant-specific + global fallback)
     const { data: configs } = await supabase
       .from('system_configurations')
-      .select('key, value')
-      .eq('category', 'ai_assistant');
+      .select('key, value, tenant_id')
+      .eq('category', 'ai_assistant')
+      .or(`tenant_id.is.null${tenantId ? `,tenant_id.eq.${tenantId}` : ''}`);
 
+    // Priorizar configs do tenant sobre globais
     const configMap = configs?.reduce((acc, config) => {
-      acc[config.key] = config.value;
-      return acc;
+      // Se já existe uma config e a atual é global, ignorar
+      if (acc[config.key] && !config.tenant_id) {
+        return acc;
+      }
+      
+      // Se já existe uma config global e a atual é do tenant, substituir
+      if (acc[config.key] && config.tenant_id) {
+        return { ...acc, [config.key]: config.value };
+      }
+      
+      // Nova config
+      return { ...acc, [config.key]: config.value };
     }, {} as Record<string, any>) || {};
+
+    console.log('📋 AI Configuration for tenant:', tenantId || 'global', {
+      configCount: configs?.length || 0,
+      hasTitle: !!configMap.title,
+      hasSystemPrompt: !!configMap.system_prompt
+    });
 
     // Get AI data sources configuration
     let dataSources = [];
