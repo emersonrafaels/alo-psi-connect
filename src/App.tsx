@@ -172,6 +172,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/financial" element={<AdminFinancial />} />
       <Route path="/admin/roles" element={<AdminRoles />} />
       <Route path="/admin/tenants" element={<AdminTenants />} />
+
       <Route path="/admin/blog" element={<BlogLayout><BlogManagement /></BlogLayout>} />
       <Route path="/admin/post-analytics/:postId" element={<BlogLayout><PostAnalytics /></BlogLayout>} />
       <Route path="/admin/blog/new" element={<BlogEditor />} />

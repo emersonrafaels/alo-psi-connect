@@ -5,6 +5,7 @@ import { StatsCard } from '@/components/admin/StatsCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface DashboardStats {
   totalUsers: number;
@@ -58,24 +59,26 @@ export default function AdminDashboard() {
           })()
         ]);
 
-        // Calcular receita do mês atual
-        const firstDayOfMonth = new Date();
-        firstDayOfMonth.setDate(1);
-        firstDayOfMonth.setHours(0, 0, 0, 0);
+        // Calcular receita mensal
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
 
         let revenueQuery = supabase
           .from('agendamentos')
           .select('valor')
-          .gte('created_at', firstDayOfMonth.toISOString())
-          .eq('status', 'confirmado');
+          .eq('payment_status', 'paid')
+          .gte('created_at', startOfMonth.toISOString());
         
         if (tenantFilter) {
           revenueQuery = revenueQuery.eq('tenant_id', tenantFilter);
         }
         
         const { data: revenueData } = await revenueQuery;
-
-        const thisMonthRevenue = revenueData?.reduce((sum, item) => sum + (item.valor || 0), 0) || 0;
+        
+        const thisMonthRevenue = revenueData?.reduce((sum, apt) => 
+          sum + (parseFloat(apt.valor?.toString() || '0')), 0
+        ) || 0;
 
         setStats({
           totalUsers: totalUsers || 0,
@@ -86,7 +89,7 @@ export default function AdminDashboard() {
           thisMonthRevenue
         });
       } catch (error) {
-        console.error('Erro ao buscar estatísticas:', error);
+        console.error('Error fetching dashboard stats:', error);
       } finally {
         setLoading(false);
       }
@@ -97,104 +100,95 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">Visão geral da plataforma AloPsi</p>
+      <AdminLayout>
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+            <p className="text-muted-foreground">
+              Visão geral da plataforma
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-32" />
+            ))}
+          </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
-        </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
+    <AdminLayout>
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">Visão geral da plataforma AloPsi</p>
+        <p className="text-muted-foreground">
+          Visão geral da plataforma
+        </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatsCard
           title="Total de Usuários"
           value={stats?.totalUsers || 0}
-          description="Pacientes cadastrados"
+          description="usuários cadastrados"
           icon={Users}
         />
-
         <StatsCard
           title="Profissionais"
-          value={`${stats?.activeProfessionals || 0}/${stats?.totalProfessionals || 0}`}
-          description="Ativos / Total"
+          value={stats?.totalProfessionals || 0}
+          description={`${stats?.activeProfessionals || 0} ativos`}
           icon={UserCheck}
         />
-
         <StatsCard
-          title="Agendamentos"
+          title="Consultas"
           value={stats?.totalAppointments || 0}
           description={`${stats?.pendingAppointments || 0} pendentes`}
           icon={Calendar}
         />
-
         <StatsCard
-          title="Receita do Mês"
-          value={`R$ ${(stats?.thisMonthRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-          description="Faturamento atual"
+          title="Receita Mensal"
+          value={`R$ ${stats?.thisMonthRevenue.toFixed(2) || '0,00'}`}
+          description="este mês"
           icon={DollarSign}
+        />
+        <StatsCard
+          title="Taxa de Conversão"
+          value="0%"
+          description="vs. mês anterior"
+          icon={TrendingUp}
+        />
+        <StatsCard
+          title="Usuários Ativos"
+          value="0"
+          description="últimos 7 dias"
+          icon={Activity}
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Métricas Rápidas
-            </CardTitle>
+            <CardTitle>Atividade Recente</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Taxa de Profissionais Ativos</span>
-                <span className="font-semibold">
-                  {stats?.totalProfessionals ? 
-                    Math.round((stats.activeProfessionals / stats.totalProfessionals) * 100) : 0}%
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Agendamentos Pendentes</span>
-                <span className="font-semibold">
-                  {stats?.totalAppointments ? 
-                    Math.round((stats.pendingAppointments / stats.totalAppointments) * 100) : 0}%
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Ticket Médio</span>
-                <span className="font-semibold">
-                  R$ {stats?.totalAppointments && stats.thisMonthRevenue ? 
-                    (stats.thisMonthRevenue / stats.totalAppointments).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : 
-                    '0,00'}
-                </span>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                Nenhuma atividade recente registrada.
+              </p>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Status da Plataforma
-            </CardTitle>
+            <CardTitle>Status do Sistema</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Sistema</span>
+                <span className="text-sm text-muted-foreground">API</span>
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 bg-green-500 rounded-full"></div>
                   <span className="text-sm font-medium">Online</span>
@@ -218,5 +212,6 @@ export default function AdminDashboard() {
         </Card>
       </div>
     </div>
+    </AdminLayout>
   );
 }
