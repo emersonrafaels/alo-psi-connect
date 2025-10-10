@@ -1,6 +1,7 @@
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
 import { Button } from "@/components/ui/button"
+import { AboutImageSection } from "@/components/AboutImageSection"
 
 const About = () => {
   return (
@@ -11,9 +12,7 @@ const About = () => {
       <section className="bg-gray-50 py-16">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="w-full h-80 bg-gray-200 rounded-lg flex items-center justify-center">
-              <span className="text-gray-500">Imagem sobre nós</span>
-            </div>
+            <AboutImageSection />
             <div>
               <h1 className="text-4xl lg:text-5xl font-bold mb-6">
                 Cuidando De Quem <br />

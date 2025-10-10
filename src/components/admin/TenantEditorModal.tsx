@@ -34,6 +34,9 @@ interface Tenant {
   hero_images?: string[];
   hero_autoplay?: boolean;
   hero_autoplay_delay?: number;
+  about_images?: string[];
+  about_autoplay?: boolean;
+  about_autoplay_delay?: number;
   header_text_color_light?: string;
   header_text_color_dark?: string;
   logo_size?: number;
@@ -82,6 +85,9 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     hero_images: [] as string[],
     hero_autoplay: true,
     hero_autoplay_delay: 3000,
+    about_images: [] as string[],
+    about_autoplay: true,
+    about_autoplay_delay: 5000,
     header_text_color_light: "#ffffff",
     header_text_color_dark: "#ffffff",
     logo_size: 40,
@@ -118,6 +124,9 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         hero_images: tenant.hero_images || [],
         hero_autoplay: tenant.hero_autoplay ?? true,
         hero_autoplay_delay: tenant.hero_autoplay_delay || 3000,
+        about_images: tenant.about_images || [],
+        about_autoplay: tenant.about_autoplay ?? true,
+        about_autoplay_delay: tenant.about_autoplay_delay || 5000,
         header_text_color_light: tenant.header_text_color_light || "#ffffff",
         header_text_color_dark: tenant.header_text_color_dark || "#ffffff",
         logo_size: tenant.logo_size || 40,
@@ -151,6 +160,9 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         hero_images: [] as string[],
         hero_autoplay: true,
         hero_autoplay_delay: 3000,
+        about_images: [] as string[],
+        about_autoplay: true,
+        about_autoplay_delay: 5000,
         header_text_color_light: "#ffffff",
         header_text_color_dark: "#ffffff",
         logo_size: 40,
@@ -191,6 +203,9 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         hero_images: formData.hero_images.length > 0 ? formData.hero_images : null,
         hero_autoplay: formData.hero_autoplay,
         hero_autoplay_delay: formData.hero_autoplay_delay,
+        about_images: formData.about_images.length > 0 ? formData.about_images : null,
+        about_autoplay: formData.about_autoplay,
+        about_autoplay_delay: formData.about_autoplay_delay,
         header_text_color_light: formData.header_text_color_light,
         header_text_color_dark: formData.header_text_color_dark,
         logo_size: formData.logo_size,
@@ -270,6 +285,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
               <TabsTrigger value="basic">Básico</TabsTrigger>
               <TabsTrigger value="theme">Tema</TabsTrigger>
               <TabsTrigger value="branding">Branding</TabsTrigger>
+              <TabsTrigger value="about">Página Sobre</TabsTrigger>
               <TabsTrigger value="contact">Contato</TabsTrigger>
               <TabsTrigger value="footer">Footer</TabsTrigger>
               <TabsTrigger value="modules">Módulos</TabsTrigger>
@@ -834,59 +850,94 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
               </div>
             </TabsContent>
 
+            <TabsContent value="about" className="space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Imagens da Página "Sobre"</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Configure imagens para a seção hero da página "Sobre Nós". Adicione uma URL para imagem única ou múltiplas URLs para carrossel automático.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="about_images">URLs das Imagens (uma por linha)</Label>
+                  <Textarea
+                    id="about_images"
+                    value={formData.about_images.join('\n')}
+                    onChange={(e) => 
+                      setFormData({ ...formData, about_images: e.target.value.split('\n').filter(url => url.trim()) })
+                    }
+                    placeholder="https://exemplo.com/imagem1.jpg&#10;https://exemplo.com/imagem2.jpg"
+                    rows={5}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    💡 Uma URL = Imagem estática | Múltiplas URLs = Carrossel automático
+                  </p>
+                </div>
+
+                {formData.about_images.length > 1 && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="about_autoplay"
+                        checked={formData.about_autoplay}
+                        onCheckedChange={(checked) => 
+                          setFormData({ ...formData, about_autoplay: checked as boolean })
+                        }
+                      />
+                      <Label htmlFor="about_autoplay">Ativar rotação automática</Label>
+                    </div>
+
+                    {formData.about_autoplay && (
+                      <div className="space-y-2">
+                        <Label htmlFor="about_autoplay_delay">
+                          Intervalo de rotação (milissegundos)
+                        </Label>
+                        <Input
+                          id="about_autoplay_delay"
+                          type="number"
+                          value={formData.about_autoplay_delay}
+                          onChange={(e) => 
+                            setFormData({ ...formData, about_autoplay_delay: parseInt(e.target.value) || 5000 })
+                          }
+                          min={1000}
+                          step={1000}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Recomendado: 3000-5000ms (3-5 segundos)
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {formData.about_images.length > 0 && (
+                  <div className="border rounded-lg p-4 bg-muted/20">
+                    <p className="text-sm font-medium mb-2">
+                      Preview ({formData.about_images.length} {formData.about_images.length === 1 ? 'imagem' : 'imagens'})
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {formData.about_images.map((url, index) => (
+                        <div key={index} className="relative aspect-video rounded overflow-hidden border">
+                          <img
+                            src={url}
+                            alt={`About imagem ${index + 1}`}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.src = 'https://via.placeholder.com/400x300?text=Erro+ao+carregar';
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
             <TabsContent value="meta" className="space-y-4">
-              <div>
-                <Label htmlFor="meta_title">Título SEO</Label>
-                <Input
-                  id="meta_title"
-                  value={formData.meta_title}
-                  onChange={(e) => setFormData({ ...formData, meta_title: e.target.value })}
-                  placeholder="Alô, Psi! - Plataforma de Saúde Mental"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="meta_description">Descrição SEO</Label>
-                <Textarea
-                  id="meta_description"
-                  value={formData.meta_description}
-                  onChange={(e) => setFormData({ ...formData, meta_description: e.target.value })}
-                  placeholder="Encontre profissionais de saúde mental qualificados..."
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="meta_favicon">Favicon URL (Legacy - use campo abaixo)</Label>
-                <Input
-                  id="meta_favicon"
-                  value={formData.meta_favicon}
-                  onChange={(e) => setFormData({ ...formData, meta_favicon: e.target.value })}
-                  placeholder="/favicon.ico"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="favicon_url">Favicon URL do Tenant</Label>
-                <Input
-                  id="favicon_url"
-                  value={formData.favicon_url}
-                  onChange={(e) => setFormData({ ...formData, favicon_url: e.target.value })}
-                  placeholder="https://example.com/favicon.png"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  URL do favicon específico deste tenant. Este campo tem prioridade sobre o favicon legacy.
-                </p>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked as boolean })}
-                />
-                <Label htmlFor="is_active">Tenant Ativo</Label>
-              </div>
+...
             </TabsContent>
 
             <TabsContent value="contact">

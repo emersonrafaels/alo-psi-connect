@@ -14,6 +14,11 @@ export interface Tenant {
   hero_autoplay?: boolean;
   hero_autoplay_delay?: number;
   
+  // About page configuration
+  about_images?: string[];
+  about_autoplay?: boolean;
+  about_autoplay_delay?: number;
+  
   // Advanced branding - Header
   header_text_color_light?: string;
   header_text_color_dark?: string;
