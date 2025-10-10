@@ -88,18 +88,42 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
     }
 
     try {
-      const { error } = await supabase
+      // 1. Buscar configuração existente
+      let query = supabase
         .from('system_configurations')
-        .upsert({
-          category,
-          key,
-          value: typeof value === 'string' ? value : JSON.stringify(value),
-          tenant_id: tenant?.id || null,
-          updated_by: (await supabase.auth.getUser()).data.user?.id
-        }, {
-          onConflict: 'category,key,tenant_id',
-          ignoreDuplicates: false
-        });
+        .select('id')
+        .eq('category', category)
+        .eq('key', key);
+      
+      if (tenant?.id) {
+        query = query.eq('tenant_id', tenant.id);
+      } else {
+        query = query.is('tenant_id', null);
+      }
+      
+      const { data: existing } = await query.maybeSingle();
+
+      const payload = {
+        category,
+        key,
+        value: typeof value === 'string' ? value : JSON.stringify(value),
+        tenant_id: tenant?.id || null,
+        updated_by: (await supabase.auth.getUser()).data.user?.id
+      };
+
+      let error;
+      if (existing) {
+        // 2a. Atualizar configuração existente
+        ({ error } = await supabase
+          .from('system_configurations')
+          .update(payload)
+          .eq('id', existing.id));
+      } else {
+        // 2b. Inserir nova configuração
+        ({ error } = await supabase
+          .from('system_configurations')
+          .insert(payload));
+      }
 
       if (error) throw error;
 
@@ -112,7 +136,7 @@ export const useSystemConfig = (allowedCategories?: string[]) => {
       console.error('Error updating system configuration:', error);
       toast({
         title: "Erro",
-        description: "Erro ao atualizar configuração",
+        description: error.message || "Erro ao atualizar configuração",
         variant: "destructive"
       });
     }
