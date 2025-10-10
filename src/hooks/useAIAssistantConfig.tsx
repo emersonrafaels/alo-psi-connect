@@ -37,7 +37,7 @@ export const useAIAssistantConfig = () => {
       const configVersion = Date.now().toString();
       setConfigCacheVersion(configVersion);
     }
-  }, [loading]);
+  }, [loading, tenant?.id]);
 
   return {
     getAIAssistantConfig,

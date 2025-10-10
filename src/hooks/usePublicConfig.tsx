@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useTenant } from './useTenant';
 
 export interface PublicConfig {
   id: string;
@@ -8,9 +9,11 @@ export interface PublicConfig {
   value: any;
   description?: string;
   updated_at: string;
+  tenant_id?: string | null;
 }
 
 export const usePublicConfig = (allowedCategories?: string[]) => {
+  const { tenant } = useTenant();
   const [configs, setConfigs] = useState<PublicConfig[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,6 +23,13 @@ export const usePublicConfig = (allowedCategories?: string[]) => {
       let query = supabase
         .from('system_configurations')
         .select('*');
+
+      // Filter by tenant (tenant-specific or global)
+      if (tenant?.id) {
+        query = query.or(`tenant_id.is.null,tenant_id.eq.${tenant.id}`);
+      } else {
+        query = query.is('tenant_id', null);
+      }
 
       // Filter by allowed categories if specified
       if (allowedCategories && allowedCategories.length > 0) {
@@ -63,7 +73,9 @@ export const usePublicConfig = (allowedCategories?: string[]) => {
         
         setConfigs(defaultConfigs);
       } else {
-        setConfigs(data || []);
+        // Priorizar configurações tenant-específicas sobre globais
+        const prioritizedConfigs = prioritizeByTenant(data || [], tenant?.id);
+        setConfigs(prioritizedConfigs);
       }
     } catch (error) {
       console.error('Error fetching public configurations:', error);
@@ -138,7 +150,24 @@ export const usePublicConfig = (allowedCategories?: string[]) => {
 
   useEffect(() => {
     fetchConfigs();
-  }, []);
+  }, [tenant?.id]);
+
+  // Helper function to prioritize tenant-specific configs
+  const prioritizeByTenant = (configs: PublicConfig[], tenantId?: string): PublicConfig[] => {
+    const grouped = new Map<string, PublicConfig>();
+    
+    configs.forEach(config => {
+      const key = `${config.category}:${config.key}`;
+      const existing = grouped.get(key);
+      
+      // Se não existe ou o novo é tenant-específico, usa o novo
+      if (!existing || (config.tenant_id === tenantId && existing.tenant_id === null)) {
+        grouped.set(key, config);
+      }
+    });
+    
+    return Array.from(grouped.values());
+  };
 
   return {
     configs,
