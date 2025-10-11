@@ -19,9 +19,6 @@ export interface Tenant {
   about_autoplay?: boolean;
   about_autoplay_delay?: number;
 
-  // Contact information
-  whatsapp_number?: string;
-
   // Advanced branding - Header
   header_text_color_light?: string;
   header_text_color_dark?: string;
