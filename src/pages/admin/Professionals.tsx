@@ -49,7 +49,14 @@ const Professionals = () => {
     queryFn: async () => {
       let query = supabase
         .from('profissionais')
-        .select('*, professional_tenants!inner(tenant_id)')
+        .select(`
+          *,
+          professional_tenants!inner(
+            tenant_id,
+            is_featured,
+            featured_order
+          )
+        `)
         .order('display_name');
       
       if (tenantFilter) {
@@ -82,13 +89,26 @@ const Professionals = () => {
   }, [professionals, searchTerm, statusFilter]);
 
   const stats = useMemo(() => {
-    if (!professionals) return { total: 0, active: 0, inactive: 0 };
+    if (!professionals) return { 
+      totalRegistered: 0,
+      available: 0,
+      inactive: 0,
+      availabilityRate: 0
+    };
     
-    const total = professionals.length;
-    const active = professionals.filter(p => p.ativo).length;
-    const inactive = total - active;
+    const totalRegistered = professionals.length;
+    const available = professionals.filter(p => p.ativo).length;
+    const inactive = totalRegistered - available;
+    const availabilityRate = totalRegistered > 0 
+      ? Math.round((available / totalRegistered) * 100) 
+      : 0;
     
-    return { total, active, inactive };
+    return { 
+      totalRegistered, 
+      available, 
+      inactive,
+      availabilityRate 
+    };
   }, [professionals]);
 
   const handleToggleStatus = async (professionalId: number, currentStatus: boolean) => {
@@ -188,26 +208,26 @@ const Professionals = () => {
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-4">
           <StatsCard
-            title="Total de Profissionais"
-            value={stats.total}
+            title="Cadastrados no Site"
+            value={stats.totalRegistered}
             icon={Users}
-            description="Total cadastrado"
+            description="Total vinculados ao tenant"
           />
           <StatsCard
-            title="Profissionais Ativos"
-            value={stats.active}
+            title="Disponíveis no Site"
+            value={stats.available}
             icon={UserCheck}
-            description="Disponíveis para agendamento"
+            description="Ativos para agendamento"
           />
           <StatsCard
-            title="Profissionais Inativos"
+            title="Inativos"
             value={stats.inactive}
             icon={UserX}
             description="Não disponíveis"
           />
           <StatsCard
-            title="Taxa de Ativação"
-            value={`${stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0}%`}
+            title="Taxa de Disponibilidade"
+            value={`${stats.availabilityRate}%`}
             icon={CheckCircle}
             description="Profissionais ativos"
           />

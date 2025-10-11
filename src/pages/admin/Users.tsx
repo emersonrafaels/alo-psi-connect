@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -41,6 +42,28 @@ export default function AdminUsers() {
   useEffect(() => {
     fetchUsers();
   }, [tenantFilter]);
+
+  // Query para profissionais específicos do tenant
+  const { data: tenantProfessionals } = useQuery({
+    queryKey: ['tenant-professionals-count', tenantFilter],
+    queryFn: async () => {
+      if (!tenantFilter) {
+        // Se "Todos os Tenants", retorna total de profissionais
+        const { count } = await supabase
+          .from('profissionais')
+          .select('*', { count: 'exact', head: true });
+        return count || 0;
+      }
+      
+      // Se tenant específico, conta apenas os associados
+      const { count } = await supabase
+        .from('professional_tenants')
+        .select('professional_id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantFilter);
+      
+      return count || 0;
+    }
+  });
 
   const fetchUsers = async () => {
     try {
@@ -175,7 +198,12 @@ export default function AdminUsers() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{profissionais.length}</div>
+            <div className="text-2xl font-bold">
+              {tenantProfessionals ?? profissionais.length}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {tenantFilter ? 'Vinculados ao tenant' : 'Total na plataforma'}
+            </p>
           </CardContent>
         </Card>
 
