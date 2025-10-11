@@ -14,13 +14,20 @@ import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Eye, EyeOff, Check, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, EyeOff, Check, Clock, X, Brain, Stethoscope, Users } from 'lucide-react';
 import { PhotoUpload } from '@/components/ui/photo-upload';
 import { Badge } from '@/components/ui/badge';
 import { useProfileManager } from '@/hooks/useProfileManager';
 import { ScheduleSelector } from '@/components/ScheduleSelector';
 import { SpecialtiesSelector } from '@/components/SpecialtiesSelector';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
+import { TimelineProgress } from '@/components/register/TimelineProgress';
+import { FieldWithTooltip } from '@/components/register/FieldWithTooltip';
+import { ProfessionalSummaryField } from '@/components/register/ProfessionalSummaryField';
+import { ProfilePreview } from '@/components/register/ProfilePreview';
+import { formatCPF, validateCPF, getCPFErrorMessage } from '@/utils/cpfValidator';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { useTenant } from '@/hooks/useTenant';
 
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
@@ -40,6 +47,8 @@ const ProfessionalForm = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { saveGooglePhoto, uploadProfilePhoto } = useProfileManager();
+  const { tenant } = useTenant();
+  const platformName = tenant?.name || "Alô, Psi!";
   const googleData = location.state?.googleData || null;
 
   const [formData, setFormData] = useState({
@@ -95,7 +104,19 @@ const ProfessionalForm = () => {
     }
   }, [user, toast]);
 
-  const totalSteps = 7;
+  // Auto-save do progresso
+  const { clearSaved } = useFormPersistence({
+    key: 'professional-registration-draft',
+    data: { formData, currentStep },
+    enabled: !user, // Só salvar se ainda não estiver autenticado
+    debounceMs: 2000,
+    onRestore: (restoredData) => {
+      setFormData(restoredData.formData);
+      setCurrentStep(restoredData.currentStep);
+    }
+  });
+
+  const totalSteps = 8;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleNext = async () => {
@@ -276,6 +297,9 @@ const ProfessionalForm = () => {
       if (error) throw new Error(error.message || 'Erro ao criar perfil');
       if (!data?.success) throw new Error('Erro no processamento do cadastro');
 
+      // Limpar dados salvos após sucesso
+      clearSaved();
+
       // Check if this is a new user that needs email confirmation
       if (data.isNewUser && data.confirmationEmailSent) {
         setShowEmailConfirmationModal(true);
@@ -417,26 +441,38 @@ const ProfessionalForm = () => {
 
         <div>
           <Label htmlFor="cpf">CPF <span className="text-red-500">*</span></Label>
-          <Input
-            id="cpf"
-            value={formData.cpf}
-            onChange={(e) => {
-              // Only allow digits and format as XXX.XXX.XXX-XX
-              let value = e.target.value.replace(/\D/g, '').slice(0, 11);
-              value = value
-          .replace(/^(\d{3})(\d)/, '$1.$2')
-          .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
-          .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-              updateFormData('cpf', value);
-            }}
-            placeholder="000.000.000-00"
-            required
-            maxLength={14}
-            pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
-            inputMode="numeric"
-          />
-          {formData.cpf && !/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf) && (
-            <p className="text-sm text-red-500 mt-1">CPF deve ter 11 dígitos no formato XXX.XXX.XXX-XX</p>
+          <div className="relative">
+            <Input
+              id="cpf"
+              value={formData.cpf}
+              onChange={(e) => {
+                const formatted = formatCPF(e.target.value);
+                updateFormData('cpf', formatted);
+              }}
+              placeholder="000.000.000-00"
+              required
+              maxLength={14}
+              inputMode="numeric"
+              className={getCPFErrorMessage(formData.cpf) ? 'border-red-500 pr-10' : 'pr-10'}
+            />
+            {/* Ícone de validação */}
+            {formData.cpf && formData.cpf.length === 14 && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {validateCPF(formData.cpf) ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <X className="h-4 w-4 text-red-500" />
+                )}
+              </div>
+            )}
+          </div>
+          {/* Mensagem de erro/sucesso */}
+          {formData.cpf && (
+            <p className={`text-sm mt-1 ${
+              getCPFErrorMessage(formData.cpf) ? 'text-red-500' : 'text-green-600'
+            }`}>
+              {getCPFErrorMessage(formData.cpf) || '✓ CPF válido'}
+            </p>
           )}
         </div>
       </div>
@@ -454,25 +490,29 @@ const ProfessionalForm = () => {
           onValueChange={(value) => updateFormData('profissao', value)}
           className="space-y-3"
         >
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors">
             <RadioGroupItem value="Psicólogo" id="psicologo" />
-            <Label htmlFor="psicologo" className="cursor-pointer">Psicólogo</Label>
+            <Brain className="h-5 w-5 text-primary" />
+            <Label htmlFor="psicologo" className="cursor-pointer flex-1">Psicólogo</Label>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors">
             <RadioGroupItem value="Psiquiatra" id="psiquiatra" />
-            <Label htmlFor="psiquiatra" className="cursor-pointer">Psiquiatra</Label>
+            <Stethoscope className="h-5 w-5 text-primary" />
+            <Label htmlFor="psiquiatra" className="cursor-pointer flex-1">Psiquiatra</Label>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors">
             <RadioGroupItem value="Psicoterapeuta" id="psicoterapeuta" />
-            <Label htmlFor="psicoterapeuta" className="cursor-pointer">Psicoterapeuta</Label>
+            <Users className="h-5 w-5 text-primary" />
+            <Label htmlFor="psicoterapeuta" className="cursor-pointer flex-1">Psicoterapeuta</Label>
           </div>
         </RadioGroup>
       </div>
 
-      <div>
-        <Label className="text-base font-medium mb-4 block">
-          Possui E-Psi? <span className="text-red-500">*</span>
-        </Label>
+      <FieldWithTooltip
+        label="Possui E-Psi?"
+        tooltip="O E-Psi é um cadastro nacional obrigatório para atendimento psicológico online, emitido pelo Conselho Federal de Psicologia (CFP)."
+        required
+      >
         <RadioGroup 
           value={formData.possuiEPsi} 
           onValueChange={(value) => updateFormData('possuiEPsi', value)}
@@ -487,12 +527,16 @@ const ProfessionalForm = () => {
             <Label htmlFor="epsi-nao" className="cursor-pointer">Não</Label>
           </div>
         </RadioGroup>
-      </div>
+      </FieldWithTooltip>
 
-      <div>
-        <Label htmlFor="crpCrm">
-          Número do {formData.profissao === 'Psiquiatra' ? 'CRM' : 'CRP'} <span className="text-red-500">*</span>
-        </Label>
+      <FieldWithTooltip
+        htmlFor="crpCrm"
+        label={`Número do ${formData.profissao === 'Psiquiatra' ? 'CRM' : 'CRP'}`}
+        tooltip={formData.profissao === 'Psiquiatra' 
+          ? "Número do Conselho Regional de Medicina (CRM) necessário para exercer psiquiatria."
+          : "Número do Conselho Regional de Psicologia (CRP) necessário para exercer psicologia."}
+        required
+      >
         <Input
           id="crpCrm"
           value={formData.crpCrm}
@@ -500,7 +544,7 @@ const ProfessionalForm = () => {
           placeholder={`Digite seu número do ${formData.profissao === 'Psiquiatra' ? 'CRM' : 'CRP'}`}
           required
         />
-      </div>
+      </FieldWithTooltip>
     </div>
   );
 
@@ -566,18 +610,21 @@ const ProfessionalForm = () => {
         )}
       </div>
 
-      <div>
-        <Label htmlFor="linkedin">LinkedIn</Label>
+      <FieldWithTooltip
+        htmlFor="linkedin"
+        label="LinkedIn"
+        tooltip="Adicione o link completo do seu perfil no LinkedIn (ex: https://linkedin.com/in/seu-nome). Isso aumenta a credibilidade do seu perfil."
+      >
         <Input
           id="linkedin"
           value={formData.linkedin}
           onChange={(e) => updateFormData('linkedin', e.target.value)}
           placeholder="https://linkedin.com/in/seu-perfil"
         />
-      </div>
+      </FieldWithTooltip>
 
       <div>
-        <Label htmlFor="comoConheceu">Como conheceu o Alô, Psi?</Label>
+        <Label htmlFor="comoConheceu">Como conheceu {platformName}?</Label>
         <Select value={formData.comoConheceu} onValueChange={(value) => updateFormData('comoConheceu', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione uma opção" />
@@ -596,20 +643,10 @@ const ProfessionalForm = () => {
 
   const renderStep4 = () => (
     <div className="space-y-6">
-      <div>
-        <Label htmlFor="resumoProfissional">Escreva seu resumo profissional <span className="text-red-500">*</span></Label>
-        <p className="text-sm text-muted-foreground mb-3">
-          Descreva sua experiência, especializações e abordagem terapêutica. Este texto será exibido no seu perfil público.
-        </p>
-        <Textarea
-          id="resumoProfissional"
-          value={formData.resumoProfissional}
-          onChange={(e) => updateFormData('resumoProfissional', e.target.value)}
-          placeholder="Descreva sua experiência, especializações e abordagem terapêutica..."
-          rows={6}
-          required
-        />
-      </div>
+      <ProfessionalSummaryField
+        value={formData.resumoProfissional}
+        onChange={(value) => updateFormData('resumoProfissional', value)}
+      />
     </div>
   );
 
@@ -620,13 +657,12 @@ const ProfessionalForm = () => {
         onChange={(especialidades) => updateFormData('especialidades', especialidades)}
       />
       
-      <div>
-        <Label htmlFor="precoConsulta" className="text-base font-medium">
-          Preço da Consulta (R$) <span className="text-red-500">*</span>
-        </Label>
-        <p className="text-sm text-muted-foreground mb-3">
-          Informe o valor que você cobra por consulta (50 minutos).
-        </p>
+      <FieldWithTooltip
+        htmlFor="precoConsulta"
+        label="Preço da Consulta (R$)"
+        tooltip="Informe o valor cobrado por sessão de 50 minutos. Média de mercado: R$ 120-200. Você poderá alterar este valor depois."
+        required
+      >
         <Input
           id="precoConsulta"
           type="number"
@@ -637,7 +673,7 @@ const ProfessionalForm = () => {
           placeholder="Ex: 120.00"
           required
         />
-      </div>
+      </FieldWithTooltip>
     </div>
   );
 
@@ -733,14 +769,21 @@ const ProfessionalForm = () => {
     </div>
   );
 
+  const renderStep8 = () => (
+    <ProfilePreview 
+      formData={formData} 
+      onEdit={(step) => setCurrentStep(step)} 
+    />
+  );
 
-  const canProceedStep1 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf;
+  const canProceedStep1 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf && validateCPF(formData.cpf);
   const canProceedStep2 = formData.profissao && formData.possuiEPsi && formData.crpCrm;
   const canProceedStep3 = true; // Campos opcionais
-  const canProceedStep4 = formData.resumoProfissional; // Resumo é obrigatório
+  const canProceedStep4 = formData.resumoProfissional && formData.resumoProfissional.length >= 100;
   const canProceedStep5 = formData.especialidades.length > 0 && formData.precoConsulta;
   const canProceedStep6 = formData.intervaloHorarios && formData.horarios.length > 0;
-  const canSubmit = formData.senha && formData.senha.length >= 6 && formData.confirmarSenha && formData.senha === formData.confirmarSenha; // Credenciais na última etapa
+  const canProceedStep7 = formData.senha && formData.senha.length >= 6 && formData.confirmarSenha && formData.senha === formData.confirmarSenha;
+  const canSubmit = canProceedStep7; // Credenciais na última etapa
 
   return (
     <div className="min-h-screen bg-background">
@@ -761,76 +804,22 @@ const ProfessionalForm = () => {
             </p>
           </div>
 
-          <Card>
-            <CardHeader>
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-muted-foreground">Passo {currentStep} de {totalSteps}</span>
-                  <span className="text-sm text-muted-foreground">{Math.round(progressPercentage)}% concluído</span>
-                </div>
-                
-                {/* Timeline horizontal distribuída */}
-                <div className="flex items-center justify-between w-full">
-                  {[
-                    { number: 1, title: 'Dados\nPessoais', completed: currentStep > 1 },
-                    { number: 2, title: 'Profissão', completed: currentStep > 2 },
-                    { number: 3, title: 'Perfil', completed: currentStep > 3 },
-                    { number: 4, title: 'Resumo', completed: currentStep > 4 },
-                    { number: 5, title: 'Especialidades', completed: currentStep > 5 },
-                    { number: 6, title: 'Horários', completed: currentStep > 6 },
-                    { number: 7, title: 'Credenciais', completed: currentStep > 7 }
-                  ].map((step, index) => (
-                    <div key={step.number} className="flex flex-col items-center relative">
-                      {/* Linha de conexão */}
-                      {index < 6 && (
-                        <div 
-                          className={`absolute top-4 left-8 w-full h-0.5 -z-10 
-                            ${step.completed ? 'bg-primary' : 'bg-muted'}`} 
-                          style={{ width: 'calc(100vw / 7 - 2rem)' }}
-                        />
-                      )}
-                      
-                      {/* Círculo do step */}
-                      <div
-                        className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all cursor-pointer hover:scale-105 mb-2
-                          ${step.completed 
-                            ? 'bg-primary text-primary-foreground' 
-                            : currentStep === step.number
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground'
-                          }`}
-                        onClick={() => setCurrentStep(step.number)}
-                      >
-                        {step.completed ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          step.number
-                        )}
-                      </div>
-                      
-                      {/* Nome do step */}
-                      <span 
-                        className={`text-xs text-center whitespace-pre-line leading-tight cursor-pointer
-                          ${step.completed || currentStep === step.number 
-                            ? 'text-primary font-medium' 
-                            : 'text-muted-foreground'
-                          }`}
-                        onClick={() => setCurrentStep(step.number)}
-                      >
-                        {step.title}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <CardTitle className="text-center text-xl">
+          <Card className="shadow-xl border-2">
+            <CardHeader className="space-y-4 pb-6">
+              <TimelineProgress 
+                currentStep={currentStep}
+                totalSteps={totalSteps}
+                onStepClick={(step) => setCurrentStep(step)}
+              />
+              <CardTitle className="text-center text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                  {currentStep === 1 ? 'Seus dados pessoais' :
                   currentStep === 2 ? 'Informações profissionais' :
                   currentStep === 3 ? 'Perfil e contatos' :
                   currentStep === 4 ? 'Resumo profissional' :
                   currentStep === 5 ? 'Suas especialidades' :
                   currentStep === 6 ? 'Horários de atendimento' :
-                  'Credenciais de acesso'}
+                  currentStep === 7 ? 'Credenciais de acesso' :
+                  'Revise suas informações'}
               </CardTitle>
             </CardHeader>
             
@@ -842,6 +831,7 @@ const ProfessionalForm = () => {
               {currentStep === 5 && renderStep5()}
               {currentStep === 6 && renderStep6()}
               {currentStep === 7 && renderStep7()}
+              {currentStep === 8 && renderStep8()}
 
               <div className="flex justify-between pt-6">
                 <Button
@@ -856,19 +846,20 @@ const ProfessionalForm = () => {
 
                 {currentStep < totalSteps ? (
                   <Button
-                    onClick={handleNext}
+                    onClick={currentStep === 7 ? () => setCurrentStep(8) : handleNext}
                     disabled={
                       (currentStep === 1 && !canProceedStep1) ||
                       (currentStep === 2 && !canProceedStep2) ||
                       (currentStep === 3 && !canProceedStep3) ||
                       (currentStep === 4 && !canProceedStep4) ||
                       (currentStep === 5 && !canProceedStep5) ||
-                      (currentStep === 6 && !canProceedStep6)
+                      (currentStep === 6 && !canProceedStep6) ||
+                      (currentStep === 7 && !canProceedStep7)
                     }
                     variant="teal"
                     className="flex items-center gap-2"
                   >
-                    Prosseguir
+                    {currentStep === 7 ? 'Revisar cadastro' : 'Prosseguir'}
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 ) : (
@@ -876,9 +867,9 @@ const ProfessionalForm = () => {
                     onClick={handleSubmit}
                     disabled={!canSubmit || loading}
                     variant="teal"
-                    className="flex items-center gap-2"
+                    className="w-full"
                   >
-                    {loading ? 'Cadastrando...' : 'Finalizar Cadastro'}
+                    {loading ? 'Cadastrando...' : 'Confirmar e Finalizar Cadastro'}
                   </Button>
                 )}
               </div>
