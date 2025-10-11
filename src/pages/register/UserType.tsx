@@ -5,6 +5,8 @@ import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import { useEffect } from 'react';
 
 const UserType = () => {
@@ -13,21 +15,27 @@ const UserType = () => {
   const googleData = location.state?.googleData || null;
   const { user } = useAuth();
   const { hasProfile, loading } = useUserProfile();
+  const { tenant } = useTenant();
 
   useEffect(() => {
     // Se o usuário está logado e já tem perfil, redirecionar para home
     if (user && !loading && hasProfile) {
-      navigate('/');
+      const tenantSlug = tenant?.slug || 'alopsi';
+      navigate(buildTenantPath(tenantSlug, '/'));
     }
-  }, [user, hasProfile, loading, navigate]);
+  }, [user, hasProfile, loading, navigate, tenant]);
 
   if (loading) return null;
 
   const handleUserTypeSelection = (tipo: 'paciente' | 'profissional') => {
+    const tenantSlug = tenant?.slug || 'alopsi';
+    
     if (tipo === 'paciente') {
-      navigate('/cadastro/paciente', { state: { googleData } });
+      const path = buildTenantPath(tenantSlug, '/cadastro/paciente');
+      navigate(path, { state: { googleData } });
     } else {
-      navigate('/cadastro/profissional', { state: { googleData } });
+      const path = buildTenantPath(tenantSlug, '/cadastro/profissional');
+      navigate(path, { state: { googleData } });
     }
   };
 
@@ -128,7 +136,10 @@ const UserType = () => {
             <p className="text-muted-foreground">
               Caso já possua conta,{' '}
               <button
-                onClick={() => navigate('/auth')}
+                onClick={() => {
+                  const tenantSlug = tenant?.slug || 'alopsi';
+                  navigate(buildTenantPath(tenantSlug, '/auth'));
+                }}
                 className="text-primary hover:underline font-medium"
               >
                 clique aqui
