@@ -303,7 +303,7 @@ const Auth = () => {
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Bem-vindo ao {tenant?.name || 'Alô, Psi'}!
+              Bem-vindo {tenant?.slug === 'medcos' ? 'à' : 'ao'} {tenant?.name || 'Alô, Psi'}!
             </h1>
             <p className="text-muted-foreground">
               Entre ou crie sua conta para continuar
