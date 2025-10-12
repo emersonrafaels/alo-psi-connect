@@ -109,7 +109,7 @@ const Index = () => {
                 <Button variant="default" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
                   Encontrar Profissional
                 </Button>
-              <Button variant="accent" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
+              <Button variant="tenant-primary" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
                 Agendar Consulta
               </Button>
               </div>
