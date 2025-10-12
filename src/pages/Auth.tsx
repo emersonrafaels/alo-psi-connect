@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useTenant } from '@/hooks/useTenant';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { resendEmailConfirmation, loading: resendLoading } = useEmailResend();
+  const { tenant } = useTenant();
   
   const { user } = useAuth();
 
@@ -301,7 +303,7 @@ const Auth = () => {
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Bem-vindo ao Alô, Psi!
+              Bem-vindo ao {tenant?.name || 'Alô, Psi'}!
             </h1>
             <p className="text-muted-foreground">
               Entre ou crie sua conta para continuar
