@@ -129,7 +129,7 @@ serve(async (req) => {
           ...profileData,
           tenant_id: tenant.id
         })
-        .eq('user_id', userId)
+        .eq('id', existingProfile.id)
         .select()
         .single();
 
