@@ -162,6 +162,24 @@ const AppWithShortcuts = () => {
       <Route path="/medcos/diario-emocional/historico" element={<MoodHistory />} />
       <Route path="/medcos/diario-emocional/analises" element={<MoodAnalytics />} />
       
+      {/* Rotas de autenticação e perfil Medcos */}
+      <Route path="/medcos/auth" element={<Auth />} />
+      <Route path="/medcos/auth/callback" element={<AuthCallback />} />
+      <Route path="/medcos/perfil" element={<Profile />} />
+      <Route path="/medcos/professional-profile" element={<ProfessionalProfile />} />
+      <Route path="/medcos/agendamentos" element={<MyAppointments />} />
+      <Route path="/medcos/reagendar/:appointmentId" element={<RescheduleAppointment />} />
+
+      {/* Rotas de agendamento e pagamento Medcos */}
+      <Route path="/medcos/agendamento/:token" element={<AppointmentAccess />} />
+      <Route path="/medcos/confirmacao-agendamento" element={<BookingConfirmation />} />
+      <Route path="/medcos/pagamento-sucesso" element={<PaymentSuccess />} />
+      <Route path="/medcos/pagamento-cancelado" element={<PaymentCancelled />} />
+
+      {/* Rotas legais Medcos */}
+      <Route path="/medcos/politica-privacidade" element={<PrivacyPolicy />} />
+      <Route path="/medcos/termos-servico" element={<TermsOfService />} />
+      
       {/* Rotas Admin - Todas compartilham o mesmo AdminLayout */}
       <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
       <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
