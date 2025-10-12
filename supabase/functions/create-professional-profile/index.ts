@@ -123,21 +123,27 @@ serve(async (req) => {
     if (existingProfile) {
       console.log('Profile already exists, updating:', existingProfile.id);
       // Update existing profile
-      const { data: updatedProfile, error: updateError } = await supabaseAdmin
+      const { data: updatedProfiles, error: updateError } = await supabaseAdmin
         .from('profiles')
         .update({
           ...profileData,
           tenant_id: tenant.id
         })
         .eq('id', existingProfile.id)
-        .select()
-        .single();
+        .select();
 
       if (updateError) {
         console.error('Profile update error:', updateError);
+        console.error('Error code:', updateError.code);
+        console.error('Error message:', updateError.message);
         throw updateError;
       }
-      profile = updatedProfile;
+
+      if (!updatedProfiles || updatedProfiles.length === 0) {
+        throw new Error('Falha ao atualizar profile - nenhum registro retornado');
+      }
+      
+      profile = updatedProfiles[0];
     } else {
       // Create new profile
       const { data: newProfile, error: profileError } = await supabaseAdmin
@@ -187,18 +193,24 @@ serve(async (req) => {
       finalUserId = existingProfessional.user_id; // Use existing user_id
       
       // Update existing professional
-      const { data: updatedProfessional, error: updateError } = await supabaseAdmin
+      const { data: updatedProfessionals, error: updateError } = await supabaseAdmin
         .from('profissionais')
         .update(professionalData)
         .eq('profile_id', profile.id)
-        .select()
-        .single();
+        .select();
 
       if (updateError) {
         console.error('Professional update error:', updateError);
+        console.error('Error code:', updateError.code);
+        console.error('Error message:', updateError.message);
         throw updateError;
       }
-      professional = updatedProfessional;
+
+      if (!updatedProfessionals || updatedProfessionals.length === 0) {
+        throw new Error('Falha ao atualizar profissional - nenhum registro retornado');
+      }
+      
+      professional = updatedProfessionals[0];
     } else {
       // Create new professional with generated integer user_id
       const { data: newProfessional, error: professionalError } = await supabaseAdmin
