@@ -6,6 +6,41 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to clean profile data for UPDATE operations
+function cleanProfileDataForUpdate(data: any): any {
+  const cleanData = { ...data };
+  
+  // Remove immutable fields that should never be updated
+  delete cleanData.id;
+  delete cleanData.user_id;
+  delete cleanData.created_at;
+  
+  console.log('🧹 Cleaned profile data for update:', {
+    original_keys: Object.keys(data),
+    cleaned_keys: Object.keys(cleanData)
+  });
+  
+  return cleanData;
+}
+
+// Helper function to clean professional data for UPDATE operations
+function cleanProfessionalDataForUpdate(data: any): any {
+  const cleanData = { ...data };
+  
+  // Remove immutable fields that should never be updated
+  delete cleanData.id;
+  delete cleanData.user_id;
+  delete cleanData.profile_id;
+  delete cleanData.created_at;
+  
+  console.log('🧹 Cleaned professional data for update:', {
+    original_keys: Object.keys(data),
+    cleaned_keys: Object.keys(cleanData)
+  });
+  
+  return cleanData;
+}
+
 // Helper para gerar email HTML dinâmico baseado no tenant
 function generateConfirmationEmailHTML(
   tenantName: string,
@@ -122,27 +157,67 @@ serve(async (req) => {
     let profile;
     if (existingProfile) {
       console.log('Profile already exists, updating:', existingProfile.id);
+      
+      // Check for duplicate profiles with same user_id
+      const { data: duplicateProfiles, error: duplicateCheckError } = await supabaseAdmin
+        .from('profiles')
+        .select('id, created_at')
+        .eq('user_id', userId);
+      
+      if (!duplicateCheckError && duplicateProfiles && duplicateProfiles.length > 1) {
+        console.warn('⚠️ Found duplicate profiles for user_id:', userId, 'Count:', duplicateProfiles.length);
+        
+        // Keep the oldest profile, delete the rest
+        const sortedProfiles = duplicateProfiles.sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        
+        const profileToKeep = sortedProfiles[0];
+        const profilesToDelete = sortedProfiles.slice(1);
+        
+        console.log('🗑️ Deleting duplicate profiles, keeping:', profileToKeep.id);
+        
+        for (const dupProfile of profilesToDelete) {
+          await supabaseAdmin
+            .from('profiles')
+            .delete()
+            .eq('id', dupProfile.id);
+          
+          console.log('Deleted duplicate profile:', dupProfile.id);
+        }
+        
+        // Update existingProfile reference to the one we kept
+        existingProfile.id = profileToKeep.id;
+      }
+      
+      // Clean profile data before update (remove immutable fields)
+      const cleanedProfileData = cleanProfileDataForUpdate(profileData);
+      
+      console.log('📝 Updating profile with cleaned data');
+      
       // Update existing profile
       const { data: updatedProfiles, error: updateError } = await supabaseAdmin
         .from('profiles')
         .update({
-          ...profileData,
+          ...cleanedProfileData,
           tenant_id: tenant.id
         })
         .eq('id', existingProfile.id)
         .select();
 
       if (updateError) {
-        console.error('Profile update error:', updateError);
+        console.error('❌ Profile update error:', updateError);
         console.error('Error code:', updateError.code);
         console.error('Error message:', updateError.message);
-        throw updateError;
+        console.error('Error details:', updateError.details);
+        throw new Error(`Erro ao atualizar profile: ${updateError.message} (${updateError.code})`);
       }
 
       if (!updatedProfiles || updatedProfiles.length === 0) {
         throw new Error('Falha ao atualizar profile - nenhum registro retornado');
       }
       
+      console.log('✅ Profile updated successfully. Rows affected:', updatedProfiles.length);
       profile = updatedProfiles[0];
     } else {
       // Create new profile
@@ -192,24 +267,31 @@ serve(async (req) => {
       console.log('Professional already exists, updating:', existingProfessional.id);
       finalUserId = existingProfessional.user_id; // Use existing user_id
       
+      // Clean professional data before update (remove immutable fields)
+      const cleanedProfessionalData = cleanProfessionalDataForUpdate(professionalData);
+      
+      console.log('📝 Updating professional with cleaned data');
+      
       // Update existing professional
       const { data: updatedProfessionals, error: updateError } = await supabaseAdmin
         .from('profissionais')
-        .update(professionalData)
+        .update(cleanedProfessionalData)
         .eq('profile_id', profile.id)
         .select();
 
       if (updateError) {
-        console.error('Professional update error:', updateError);
+        console.error('❌ Professional update error:', updateError);
         console.error('Error code:', updateError.code);
         console.error('Error message:', updateError.message);
-        throw updateError;
+        console.error('Error details:', updateError.details);
+        throw new Error(`Erro ao atualizar profissional: ${updateError.message} (${updateError.code})`);
       }
 
       if (!updatedProfessionals || updatedProfessionals.length === 0) {
         throw new Error('Falha ao atualizar profissional - nenhum registro retornado');
       }
       
+      console.log('✅ Professional updated successfully. Rows affected:', updatedProfessionals.length);
       professional = updatedProfessionals[0];
     } else {
       // Create new professional with generated integer user_id
