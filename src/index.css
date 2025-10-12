@@ -18,8 +18,8 @@ All colors MUST be HSL.
     --popover-foreground: 222.2 84% 4.9%;
 
     /* Alô, Psi! Brand Colors */
-    --primary: 217 91% 21%; /* Deep blue from header */
-    --primary-foreground: 0 0% 100%;
+    --primary: var(--primary-light, 217 91% 21%); /* Deep blue - usar valores do tenant quando disponíveis */
+    --primary-foreground: var(--primary-foreground-light, 0 0% 100%);
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -27,8 +27,8 @@ All colors MUST be HSL.
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 65 92% 76%; /* Lime green from buttons */
-    --accent-foreground: 217 91% 21%;
+    --accent: var(--accent-light, 199 89% 48%); /* Cyan vibrant - usar valores do tenant quando disponíveis */
+    --accent-foreground: var(--accent-foreground-light, 0 0% 100%);
 
     --teal: 188 94% 37%; /* Teal from design elements */
     --teal-foreground: 0 0% 100%;
@@ -101,8 +101,8 @@ All colors MUST be HSL.
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217 91% 21%; /* Mantém o azul primário */
-    --primary-foreground: 210 40% 98%;
+    --primary: var(--primary-dark, 217 91% 21%); /* Azul primário dark mode */
+    --primary-foreground: var(--primary-foreground-dark, 210 40% 98%);
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -110,8 +110,8 @@ All colors MUST be HSL.
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 65 92% 76%; /* Mantém o verde-limão */
-    --accent-foreground: 222.2 84% 4.9%;
+    --accent: var(--accent-dark, 199 89% 48%); /* Cyan vibrant dark mode */
+    --accent-foreground: var(--accent-foreground-dark, 0 0% 100%);
 
     --teal: 188 94% 37%; /* Mantém o teal */
     --teal-foreground: 210 40% 98%;
