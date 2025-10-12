@@ -83,12 +83,12 @@ All colors MUST be HSL.
     --header-text: var(--header-text-light, 0 0% 100%);
     
     /* Button colors - theme aware */
-    --btn-primary-bg: var(--btn-primary-bg-light, 188 94% 37%);
+    --btn-primary-bg: var(--btn-primary-bg-light, 199 89% 48%);
     --btn-primary-text: var(--btn-primary-text-light, 0 0% 100%);
     
     /* Specialty tags colors - light mode (default values) */
-    --specialty-tag-bg-light: 188 94% 94%;
-    --specialty-tag-text-light: 188 94% 37%;
+    --specialty-tag-bg-light: 199 95% 94%;
+    --specialty-tag-text-light: 199 89% 48%;
   }
 
   .dark {
@@ -138,12 +138,12 @@ All colors MUST be HSL.
     --header-text: var(--header-text-dark, 0 0% 100%);
     
     /* Button colors - dark mode */
-    --btn-primary-bg: var(--btn-primary-bg-dark, 188 94% 37%);
+    --btn-primary-bg: var(--btn-primary-bg-dark, 199 89% 48%);
     --btn-primary-text: var(--btn-primary-text-dark, 0 0% 100%);
     
     /* Specialty tags colors - dark mode (default values) */
     --specialty-tag-bg-dark: 217 91% 21%;
-    --specialty-tag-text-dark: 188 94% 74%;
+    --specialty-tag-text-dark: 199 95% 74%;
   }
 }
 
