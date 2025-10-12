@@ -75,14 +75,25 @@ serve(async (req) => {
     // Use service role to bypass RLS
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { profileData, professionalData, horariosData, userId } = await req.json();
+    const { profileData, professionalData, horariosData, userId, tenantSlug: requestTenantSlug } = await req.json();
 
-    // Detect tenant from request origin/referer
+    // Detect tenant from multiple sources
     const origin = req.headers.get('origin') || '';
     const referer = req.headers.get('referer') || '';
-    const tenantSlug = (origin.includes('/medcos') || referer.includes('/medcos')) 
-      ? 'medcos' 
-      : 'alopsi';
+
+    console.log('🔍 Tenant Detection:', { 
+      origin, 
+      referer, 
+      requestTenantSlug,
+      method: 'create-professional-profile'
+    });
+
+    // Priority: 1. Explicit tenantSlug from request, 2. Referer, 3. Origin, 4. Default
+    const tenantSlug = requestTenantSlug || 
+      (referer.includes('/medcos') ? 'medcos' : 
+       (origin.includes('/medcos') ? 'medcos' : 'alopsi'));
+
+    console.log('✅ Using tenant:', tenantSlug);
 
     // Fetch tenant data
     const { data: tenant, error: tenantError } = await supabaseAdmin

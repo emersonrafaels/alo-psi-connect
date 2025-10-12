@@ -290,7 +290,8 @@ const ProfessionalForm = () => {
           userId: userToUse.id,
           profileData,
           professionalData,
-          horariosData: horariosData.length > 0 ? horariosData : null
+          horariosData: horariosData.length > 0 ? horariosData : null,
+          tenantSlug: tenant?.slug || 'alopsi' // ⭐ Enviar tenant explicitamente
         }
       });
 

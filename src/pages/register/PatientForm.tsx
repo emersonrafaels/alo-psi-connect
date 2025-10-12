@@ -17,6 +17,7 @@ import { ChevronLeft, ChevronRight, Check, Eye, EyeOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
+import { useTenant } from '@/hooks/useTenant';
 
 const PatientForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -29,6 +30,7 @@ const PatientForm = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { tenant } = useTenant();
   const googleData = location.state?.googleData || null;
 
   const [formData, setFormData] = useState({
@@ -142,7 +144,8 @@ const PatientForm = () => {
             ehEstudante: formData.ehEstudante === 'estudante',
             instituicaoEnsino: formData.ehEstudante === 'estudante' ? formData.instituicaoEnsino : null,
             telefone: '',
-            existingUserId: session.user.id // Pass existing user ID for Google users
+            existingUserId: session.user.id, // Pass existing user ID for Google users
+            tenantSlug: tenant?.slug || 'alopsi' // ⭐ Enviar tenant explicitamente
           }
         });
 
@@ -187,7 +190,8 @@ const PatientForm = () => {
           comoConheceu: formData.comoConheceu,
           ehEstudante: formData.ehEstudante === 'estudante',
           instituicaoEnsino: formData.ehEstudante === 'estudante' ? formData.instituicaoEnsino : null,
-          telefone: ''
+          telefone: '',
+          tenantSlug: tenant?.slug || 'alopsi' // ⭐ Enviar tenant explicitamente
         }
       });
 
