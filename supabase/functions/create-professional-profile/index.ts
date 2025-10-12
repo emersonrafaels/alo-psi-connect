@@ -15,9 +15,13 @@ function cleanProfileDataForUpdate(data: any): any {
   delete cleanData.user_id;
   delete cleanData.created_at;
   
+  // SEMPRE forçar tipo_usuario como profissional em cadastros/updates profissionais
+  cleanData.tipo_usuario = 'profissional';
+  
   console.log('🧹 Cleaned profile data for update:', {
     original_keys: Object.keys(data),
-    cleaned_keys: Object.keys(cleanData)
+    cleaned_keys: Object.keys(cleanData),
+    forcing_tipo_usuario: 'profissional'
   });
   
   return cleanData;

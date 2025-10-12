@@ -223,7 +223,8 @@ const ProfessionalForm = () => {
           options: {
             // Desabilitar envio automático de email de confirmação
             data: {
-              skip_confirmation: true
+              skip_confirmation: true,
+              skip_profile_creation: true // 🛡️ Prevenir criação automática de perfil como paciente
             }
           }
         });

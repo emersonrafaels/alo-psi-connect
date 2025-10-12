@@ -78,6 +78,12 @@ export const useUserProfile = () => {
 
   const createInitialProfile = async (user: any) => {
     try {
+      // 🛡️ SEGURANÇA: Não criar perfil automático se for cadastro profissional
+      if (user.user_metadata?.skip_profile_creation) {
+        console.log('useUserProfile: Skipping automatic profile creation (professional registration in progress)');
+        return;
+      }
+      
       console.log('useUserProfile: Creating initial profile for user:', user.id);
       
       const profileData = {
