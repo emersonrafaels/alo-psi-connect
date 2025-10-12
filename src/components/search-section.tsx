@@ -301,7 +301,7 @@ const SearchSection = () => {
               </div>
             </div>
             
-            <Button variant="accent" className="w-full md:w-auto px-8" onClick={handleSearch}>
+            <Button variant="tenant-primary" className="w-full md:w-auto px-8" onClick={handleSearch}>
               Buscar Profissionais
             </Button>
           </div>
