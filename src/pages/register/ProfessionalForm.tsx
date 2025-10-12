@@ -81,6 +81,57 @@ const ProfessionalForm = () => {
     }
   }, [googleData, formData.fotoPerfilUrl, photoPreviewUrl]);
 
+  // Auto-save do progresso
+  const { clearSaved } = useFormPersistence({
+    key: 'professional-registration-draft',
+    data: { formData, currentStep },
+    enabled: !user, // Só salvar se ainda não estiver autenticado
+    debounceMs: 2000,
+    onRestore: (restoredData) => {
+      setFormData(restoredData.formData);
+      setCurrentStep(restoredData.currentStep);
+    }
+  });
+
+  // Verificar se o usuário já é profissional cadastrado
+  useEffect(() => {
+    const checkExistingProfessional = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profissionais')
+          .select('id')
+          .eq('profile_id', user.id)
+          .maybeSingle();
+        
+        if (data) {
+          // Usuário já é profissional - limpar dados e redirecionar
+          toast({
+            title: "Você já está cadastrado",
+            description: "Redirecionando para seu perfil profissional...",
+            variant: "default",
+          });
+          
+          // Limpar todos os dados salvos
+          sessionStorage.removeItem('pendingProfessionalData');
+          sessionStorage.removeItem('continueRegistration');
+          sessionStorage.removeItem('professional-registration-draft');
+          clearSaved();
+          
+          // Redirecionar para perfil profissional
+          setTimeout(() => {
+            navigate('/professional-profile');
+          }, 2000);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar profissional:', error);
+      }
+    };
+    
+    checkExistingProfessional();
+  }, [user, navigate, toast, clearSaved]);
+
   // Verificar se há dados pendentes de cadastro profissional
   useEffect(() => {
     const pendingData = sessionStorage.getItem('pendingProfessionalData');
@@ -103,18 +154,6 @@ const ProfessionalForm = () => {
       }
     }
   }, [user, toast]);
-
-  // Auto-save do progresso
-  const { clearSaved } = useFormPersistence({
-    key: 'professional-registration-draft',
-    data: { formData, currentStep },
-    enabled: !user, // Só salvar se ainda não estiver autenticado
-    debounceMs: 2000,
-    onRestore: (restoredData) => {
-      setFormData(restoredData.formData);
-      setCurrentStep(restoredData.currentStep);
-    }
-  });
 
   const totalSteps = 8;
   const progressPercentage = (currentStep / totalSteps) * 100;
@@ -298,7 +337,10 @@ const ProfessionalForm = () => {
       if (error) throw new Error(error.message || 'Erro ao criar perfil');
       if (!data?.success) throw new Error('Erro no processamento do cadastro');
 
-      // Limpar dados salvos após sucesso
+      // Limpar TODOS os dados salvos após sucesso
+      sessionStorage.removeItem('pendingProfessionalData');
+      sessionStorage.removeItem('continueRegistration');
+      sessionStorage.removeItem('professional-registration-draft');
       clearSaved();
 
       // Check if this is a new user that needs email confirmation
