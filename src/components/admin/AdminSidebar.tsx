@@ -10,7 +10,8 @@ import {
   Home,
   FileText,
   Star,
-  Building2
+  Building2,
+  FlaskConical
 } from 'lucide-react';
 import {
   Sidebar,
@@ -79,6 +80,12 @@ const adminMenuItems = [
     title: 'Tenants',
     url: '/admin/tenants',
     icon: Building2,
+    requiredRole: 'super_admin' as const
+  },
+  {
+    title: 'Testes',
+    url: '/admin/tests',
+    icon: FlaskConical,
     requiredRole: 'super_admin' as const
   },
   {

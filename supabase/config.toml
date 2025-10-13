@@ -106,3 +106,6 @@ verify_jwt = false
 
 [functions.aggregate-blog-analytics]
 verify_jwt = false
+
+[functions.test-user-registration]
+verify_jwt = true
