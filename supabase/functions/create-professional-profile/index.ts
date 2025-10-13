@@ -199,15 +199,14 @@ serve(async (req) => {
       
       console.log('📝 Updating profile with cleaned data');
       
-      // Update existing profile
-        const { data: updatedProfiles, error: updateError } = await supabaseAdmin
+      // Update existing profile (SEM .select())
+        const { error: updateError } = await supabaseAdmin
           .from('profiles')
           .update({
             ...cleanedProfileData,
             tenant_id: tenant.id
           })
-          .eq('id', existingProfile.id)
-          .select();
+          .eq('id', existingProfile.id);
 
         if (updateError) {
           console.error('❌ Profile update error:', updateError);
@@ -217,12 +216,19 @@ serve(async (req) => {
           throw new Error(`Erro ao atualizar profile: ${updateError.message} (${updateError.code})`);
         }
 
-        if (!updatedProfiles || updatedProfiles.length === 0) {
-          throw new Error('Falha ao atualizar profile - nenhum registro retornado');
+        // Fetch updated profile separadamente
+        const { data: updatedProfile, error: fetchError } = await supabaseAdmin
+          .from('profiles')
+          .select('*')
+          .eq('id', existingProfile.id)
+          .single();
+
+        if (fetchError || !updatedProfile) {
+          throw new Error('Falha ao buscar profile atualizado');
         }
 
         console.log('✅ Profile updated successfully');
-        profile = updatedProfiles[0];
+        profile = updatedProfile;
     } else {
       // Create new profile
       const { data: newProfile, error: profileError } = await supabaseAdmin
