@@ -83,9 +83,11 @@ export const useUserProfile = () => {
       // 🛡️ SEGURANÇA: Não criar perfil automático se for cadastro profissional
       if (isRegistering) {
         console.log('🛡️ [useUserProfile] Skipping automatic profile creation - professional registration in progress via Context');
+        console.log('🛡️ [useUserProfile] Context state:', { isRegistering });
         return;
       }
       
+      console.log('✅ [useUserProfile] Creating automatic patient profile - Context state:', { isRegistering });
       console.log('useUserProfile: Creating initial profile for user:', user.id);
       
       const profileData = {

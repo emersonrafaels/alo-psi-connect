@@ -208,6 +208,12 @@ const ProfessionalForm = () => {
     // 🛡️ Sinalizar início do registro profissional via Context
     startRegistration();
     
+    // ⏱️ CRÍTICO: Aguardar 150ms para garantir propagação completa do Context
+    // Isso garante que useUserProfile verá isRegistering: true
+    await new Promise(resolve => setTimeout(resolve, 150));
+    
+    console.log('🎯 [ProfessionalForm] Starting professional registration for:', formData.email);
+    
     try {
       let currentUser = user;
       

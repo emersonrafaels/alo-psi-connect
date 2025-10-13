@@ -20,8 +20,10 @@ export const ProfessionalRegistrationProvider: React.FC<{ children: React.ReactN
 
   const startRegistration = () => {
     console.log('🎯 [ProfessionalRegistration] Starting professional registration');
+    console.log('🎯 [ProfessionalRegistration] Previous state:', { isRegistering });
     setIsRegistering(true);
     localStorage.setItem('professional_registration_in_progress', 'true');
+    console.log('🎯 [ProfessionalRegistration] New state: isRegistering = true');
   };
 
   const endRegistration = () => {
