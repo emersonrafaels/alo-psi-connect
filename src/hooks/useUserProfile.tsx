@@ -1,9 +1,11 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useProfessionalRegistration } from '@/contexts/ProfessionalRegistrationContext';
 
 export const useUserProfile = () => {
   const { user } = useAuth();
+  const { isRegistering } = useProfessionalRegistration();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
@@ -79,10 +81,8 @@ export const useUserProfile = () => {
   const createInitialProfile = async (user: any) => {
     try {
       // 🛡️ SEGURANÇA: Não criar perfil automático se for cadastro profissional
-      const isProfessionalRegistration = localStorage.getItem('professional_registration_in_progress') === 'true';
-      
-      if (isProfessionalRegistration) {
-        console.log('useUserProfile: Skipping automatic profile creation (professional registration in progress)');
+      if (isRegistering) {
+        console.log('🛡️ [useUserProfile] Skipping automatic profile creation - professional registration in progress via Context');
         return;
       }
       

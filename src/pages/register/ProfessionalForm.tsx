@@ -14,6 +14,7 @@ import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useProfessionalRegistration } from '@/contexts/ProfessionalRegistrationContext';
 import { ChevronLeft, ChevronRight, Eye, EyeOff, Check, Clock, X, Brain, Stethoscope, Users } from 'lucide-react';
 import { PhotoUpload } from '@/components/ui/photo-upload';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +49,7 @@ const ProfessionalForm = () => {
   const { toast } = useToast();
   const { saveGooglePhoto, uploadProfilePhoto } = useProfileManager();
   const { tenant } = useTenant();
+  const { startRegistration, endRegistration } = useProfessionalRegistration();
   const platformName = tenant?.name || "Alô, Psi!";
   const googleData = location.state?.googleData || null;
 
@@ -202,10 +204,11 @@ const ProfessionalForm = () => {
     }
 
     setLoading(true);
+    
+    // 🛡️ Sinalizar início do registro profissional via Context
+    startRegistration();
+    
     try {
-      // 🛡️ Sinalizar que é cadastro profissional para evitar race condition
-      localStorage.setItem('professional_registration_in_progress', 'true');
-      
       let currentUser = user;
       
       // Se não há usuário logado, verificar se email já existe antes de criar conta
@@ -346,8 +349,8 @@ const ProfessionalForm = () => {
       sessionStorage.removeItem('professional-registration-draft');
       clearSaved();
 
-      // Limpar flag de registro profissional
-      localStorage.removeItem('professional_registration_in_progress');
+      // 🛡️ Finalizar registro profissional via Context
+      endRegistration();
       
       // Check if this is a new user that needs email confirmation
       if (data.isNewUser && data.confirmationEmailSent) {
@@ -363,8 +366,9 @@ const ProfessionalForm = () => {
     } catch (error: any) {
       console.error('Erro detalhado:', error);
       
-      // Limpar flag em caso de erro também
-      localStorage.removeItem('professional_registration_in_progress');
+      // 🛡️ Finalizar registro profissional em caso de erro
+      endRegistration();
+      
       let errorMessage = error.message;
       
       // Tratamento de erros mais específicos
