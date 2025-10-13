@@ -14,6 +14,7 @@ import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
 import { useEmailResend } from '@/hooks/useEmailResend';
 import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound } from 'lucide-react';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface UserProfile {
   id: string;
@@ -38,6 +39,7 @@ export default function AdminUsers() {
   const { deleteUser } = useUserManagement();
   const { resendEmailConfirmation, resendPasswordReset, loading: emailLoading } = useEmailResend();
   const { tenantFilter } = useAdminTenant();
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchUsers();
@@ -326,12 +328,22 @@ export default function AdminUsers() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                         <AlertDialogAction
-                           onClick={() => handleDeleteUser(user.user_id || '')}
-                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                         >
-                           Deletar Completamente
-                         </AlertDialogAction>
+                        <AlertDialogAction
+                          onClick={() => {
+                            if (!user.user_id) {
+                              toast({
+                                title: "Erro",
+                                description: "ID de usuário não encontrado. Não é possível deletar este usuário.",
+                                variant: "destructive"
+                              });
+                              return;
+                            }
+                            handleDeleteUser(user.user_id);
+                          }}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Deletar Completamente
+                        </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>

@@ -83,6 +83,15 @@ export const useUserManagement = () => {
   };
 
   const deleteUser = async (userId: string, deletionReason?: string) => {
+    if (!userId || userId.trim() === '') {
+      toast({
+        title: "Erro de validação",
+        description: "ID de usuário inválido ou vazio",
+        variant: "destructive",
+      });
+      return { success: false, error: 'Invalid user ID' };
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('delete-user-completely', {
