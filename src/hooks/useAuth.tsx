@@ -29,34 +29,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Função para validar se usuário existe (fora do callback para evitar deadlock)
+  const validateUserExists = async (userId: string) => {
+    try {
+      const { error } = await supabase.auth.getUser();
+      if (error?.status === 403 || error?.message?.includes('not found')) {
+        console.log('🔒 [useAuth] User no longer exists - forcing logout');
+        await signOut();
+      }
+    } catch (e) {
+      console.error('🔒 [useAuth] Error checking user existence:', e);
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // Se o evento é TOKEN_REFRESHED e falhou, fazer logout
-        if (event === 'TOKEN_REFRESHED' && !session) {
-          console.log('🔒 [useAuth] Token refresh failed - user might be deleted');
-          await signOut();
-          return;
-        }
-        
-        // Se há sessão, verificar se usuário ainda existe
-        if (session?.user) {
-          try {
-            const { error } = await supabase.auth.getUser();
-            if (error?.status === 403 || error?.message?.includes('not found')) {
-              console.log('🔒 [useAuth] User no longer exists - forcing logout');
-              await signOut();
-              return;
-            }
-          } catch (e) {
-            console.error('🔒 [useAuth] Error checking user existence:', e);
-          }
-        }
-        
+      (event, session) => {
+        // ✅ Apenas operações síncronas aqui para evitar deadlock
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // ✅ Validação assíncrona agendada para depois do callback
+        if (session?.user) {
+          setTimeout(() => {
+            validateUserExists(session.user.id);
+          }, 0);
+        }
       }
     );
 
