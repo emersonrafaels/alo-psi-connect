@@ -138,7 +138,8 @@ async function testProfessionalRegistration(supabaseAdmin: any, tenant: any): Pr
             preco_consulta: 150,
             tempo_consulta: 50
           },
-          scheduleData: [],
+          horariosData: [],
+          userId: null,
           password: testPassword,
           tenantSlug: tenant.slug
         }
@@ -286,18 +287,13 @@ async function testPatientRegistration(supabaseAdmin: any, tenant: any): Promise
       'create-patient-profile',
       {
         body: {
-          profileData: {
-            nome: testName,
-            email: testEmail,
-            cpf: '987.654.321-00',
-            data_nascimento: '1990-08-20',
-            genero: 'masculino',
-            tipo_usuario: 'paciente'
-          },
-          patientData: {
-            eh_estudante: false
-          },
+          nome: testName,
+          email: testEmail,
+          cpf: '987.654.321-00',
+          dataNascimento: '1990-08-20',
+          genero: 'masculino',
           password: testPassword,
+          ehEstudante: false,
           tenantSlug: tenant.slug
         }
       }
