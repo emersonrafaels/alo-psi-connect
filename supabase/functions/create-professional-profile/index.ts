@@ -199,38 +199,43 @@ serve(async (req) => {
       // Clean profile data before update (remove immutable fields)
       const cleanedProfileData = cleanProfileDataForUpdate(profileData);
       
-      console.log('📝 Updating profile with cleaned data');
+      console.log('[v1.0.1] 📝 Updating profile with separated UPDATE and SELECT operations');
+      console.log('[v1.0.1] Profile ID to update:', existingProfile.id);
+      console.log('[v1.0.1] Cleaned data keys:', Object.keys(cleanedProfileData));
       
-      // Update existing profile (SEM .select())
-        const { error: updateError } = await supabaseAdmin
-          .from('profiles')
-          .update({
-            ...cleanedProfileData,
-            tenant_id: tenant.id
-          })
-          .eq('id', existingProfile.id);
+      // Step 1: UPDATE without .select() to avoid ON CONFLICT error
+      const { error: updateError } = await supabaseAdmin
+        .from('profiles')
+        .update({
+          ...cleanedProfileData,
+          tenant_id: tenant.id
+        })
+        .eq('id', existingProfile.id);
 
-        if (updateError) {
-          console.error('❌ Profile update error:', updateError);
-          console.error('Error code:', updateError.code);
-          console.error('Error message:', updateError.message);
-          console.error('Error details:', updateError.details);
-          throw new Error(`Erro ao atualizar profile: ${updateError.message} (${updateError.code})`);
-        }
+      if (updateError) {
+        console.error('[v1.0.1] ❌ Profile update error:', updateError);
+        console.error('[v1.0.1] Error code:', updateError.code);
+        console.error('[v1.0.1] Error message:', updateError.message);
+        console.error('[v1.0.1] Error details:', updateError.details);
+        throw new Error(`Erro ao atualizar profile: ${updateError.message} (${updateError.code})`);
+      }
 
-        // Fetch updated profile separadamente
-        const { data: updatedProfile, error: fetchError } = await supabaseAdmin
-          .from('profiles')
-          .select('*')
-          .eq('id', existingProfile.id)
-          .single();
+      console.log('[v1.0.1] ✅ Profile UPDATE executed successfully');
 
-        if (fetchError || !updatedProfile) {
-          throw new Error('Falha ao buscar profile atualizado');
-        }
+      // Step 2: Fetch updated profile with separate SELECT query
+      const { data: updatedProfile, error: fetchError } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .eq('id', existingProfile.id)
+        .single();
 
-        console.log('✅ Profile updated successfully');
-        profile = updatedProfile;
+      if (fetchError || !updatedProfile) {
+        console.error('[v1.0.1] ❌ Profile fetch error:', fetchError);
+        throw new Error('Falha ao buscar profile atualizado');
+      }
+
+      console.log('[v1.0.1] ✅ Profile fetched successfully');
+      profile = updatedProfile;
     } else {
       // Create new profile
       const { data: newProfile, error: profileError } = await supabaseAdmin
