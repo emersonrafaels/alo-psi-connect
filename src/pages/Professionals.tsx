@@ -1107,7 +1107,7 @@ const Professionals = () => {
                                       <Badge
                                         key={index}
                                         variant="secondary"
-                                        className="text-xs specialty-tag px-2 py-1 font-medium"
+                                        className="text-xs specialty-tag px-2 py-1 font-medium bg-[lightgray] text-black hover:bg-[lightgray]/80 border-transparent rounded-full"
                                       >
                                         {capitalized}
                                       </Badge>
