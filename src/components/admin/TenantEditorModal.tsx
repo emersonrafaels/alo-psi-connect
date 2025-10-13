@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { FieldWithTooltip } from "@/components/register/FieldWithTooltip";
 import {
   ContactConfigTab,
   FooterConfigTab,
@@ -860,19 +861,21 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="about_images">URLs das Imagens (uma por linha)</Label>
-                  <Textarea
-                    id="about_images"
-                    value={formData.about_images.join('\n')}
-                    onChange={(e) => 
-                      setFormData({ ...formData, about_images: e.target.value.split('\n').filter(url => url.trim()) })
-                    }
-                    placeholder="https://exemplo.com/imagem1.jpg&#10;https://exemplo.com/imagem2.jpg"
-                    rows={5}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    💡 Uma URL = Imagem estática | Múltiplas URLs = Carrossel automático
-                  </p>
+                  <FieldWithTooltip
+                    htmlFor="about_images"
+                    label="URLs das Imagens (uma por linha)"
+                    tooltip="Configure as imagens da página 'Sobre'. Se adicionar apenas 1 imagem, ela será exibida estaticamente. Com 2 ou mais imagens, um carrossel será criado automaticamente. Cada linha deve conter uma URL completa de imagem (ex: https://exemplo.com/foto.jpg)"
+                  >
+                    <Textarea
+                      id="about_images"
+                      value={formData.about_images.join('\n')}
+                      onChange={(e) => 
+                        setFormData({ ...formData, about_images: e.target.value.split('\n').filter(url => url.trim()) })
+                      }
+                      placeholder="https://exemplo.com/imagem1.jpg&#10;https://exemplo.com/imagem2.jpg"
+                      rows={5}
+                    />
+                  </FieldWithTooltip>
                 </div>
 
                 {formData.about_images.length > 1 && (
@@ -885,27 +888,34 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
                           setFormData({ ...formData, about_autoplay: checked as boolean })
                         }
                       />
-                      <Label htmlFor="about_autoplay">Ativar rotação automática</Label>
+                      <FieldWithTooltip
+                        htmlFor="about_autoplay"
+                        label="Ativar rotação automática"
+                        tooltip="Quando ativado, o carrossel de imagens da página Sobre irá trocar automaticamente entre as imagens no intervalo configurado. Os usuários ainda podem navegar manualmente."
+                      />
                     </div>
 
                     {formData.about_autoplay && (
                       <div className="space-y-2">
-                        <Label htmlFor="about_autoplay_delay">
-                          Intervalo de rotação (milissegundos)
-                        </Label>
-                        <Input
-                          id="about_autoplay_delay"
-                          type="number"
-                          value={formData.about_autoplay_delay}
-                          onChange={(e) => 
-                            setFormData({ ...formData, about_autoplay_delay: parseInt(e.target.value) || 5000 })
-                          }
-                          min={1000}
-                          step={1000}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Recomendado: 3000-5000ms (3-5 segundos)
-                        </p>
+                        <FieldWithTooltip
+                          htmlFor="about_autoplay_delay"
+                          label="Intervalo de rotação (milissegundos)"
+                          tooltip="Define quanto tempo cada imagem ficará visível antes de passar para a próxima automaticamente. 1000ms = 1 segundo. Recomendado: entre 3000ms (3s) e 8000ms (8s)"
+                        >
+                          <Input
+                            id="about_autoplay_delay"
+                            type="number"
+                            value={formData.about_autoplay_delay}
+                            onChange={(e) => 
+                              setFormData({ ...formData, about_autoplay_delay: parseInt(e.target.value) || 5000 })
+                            }
+                            min={1000}
+                            step={500}
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Valor atual: {(formData.about_autoplay_delay / 1000).toFixed(1)}s
+                          </p>
+                        </FieldWithTooltip>
                       </div>
                     )}
                   </>

@@ -1448,6 +1448,9 @@ export type Database = {
       }
       tenants: {
         Row: {
+          about_autoplay: boolean | null
+          about_autoplay_delay: number | null
+          about_images: string[] | null
           accent_color: string
           ai_match_button_text: string | null
           base_path: string
@@ -1516,6 +1519,9 @@ export type Database = {
           welcome_message: string | null
         }
         Insert: {
+          about_autoplay?: boolean | null
+          about_autoplay_delay?: number | null
+          about_images?: string[] | null
           accent_color: string
           ai_match_button_text?: string | null
           base_path: string
@@ -1584,6 +1590,9 @@ export type Database = {
           welcome_message?: string | null
         }
         Update: {
+          about_autoplay?: boolean | null
+          about_autoplay_delay?: number | null
+          about_images?: string[] | null
           accent_color?: string
           ai_match_button_text?: string | null
           base_path?: string
