@@ -394,6 +394,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
+        userId: userId,
+        profileId: profileData.id,
+        patientId: patientData.id,
         profile: profileData,
         patient: patientData,
         user: { id: userId, email },

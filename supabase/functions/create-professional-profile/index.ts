@@ -317,6 +317,9 @@ serve(async (req) => {
         .insert({
           profile_id: profile.id,
           user_id: nextUserId, // Use generated integer ID
+          user_login: profile.email.split('@')[0], // Generate user_login from email
+          user_email: profile.email, // Email from profile
+          display_name: profile.nome, // Name from profile
           ...professionalData
         })
         .select()
