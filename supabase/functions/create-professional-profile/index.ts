@@ -416,9 +416,13 @@ serve(async (req) => {
     let isNewUser = false;
     
     try {
-      // Check if this is a new user by checking if they have an unconfirmed email
-      // AND if they were created very recently (within last 10 minutes)
-      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
+      // Only try to send confirmation email if userId is not null (user is authenticated)
+      if (!userId) {
+        console.log('Skipping confirmation email - no authenticated user (public registration)');
+      } else {
+        // Check if this is a new user by checking if they have an unconfirmed email
+        // AND if they were created very recently (within last 10 minutes)
+        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
       
       if (!authError && authUser.user && !authUser.user.email_confirmed_at) {
         // Check if user was created recently (indicates new registration)
@@ -493,6 +497,7 @@ serve(async (req) => {
           }
         }
       }
+      } // Closing the if (!userId) else block
     } catch (emailError) {
       console.error('Error sending confirmation email:', emailError);
     }
