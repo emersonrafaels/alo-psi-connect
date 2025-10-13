@@ -79,7 +79,9 @@ export const useUserProfile = () => {
   const createInitialProfile = async (user: any) => {
     try {
       // 🛡️ SEGURANÇA: Não criar perfil automático se for cadastro profissional
-      if (user.user_metadata?.skip_profile_creation) {
+      const isProfessionalRegistration = localStorage.getItem('professional_registration_in_progress') === 'true';
+      
+      if (isProfessionalRegistration) {
         console.log('useUserProfile: Skipping automatic profile creation (professional registration in progress)');
         return;
       }

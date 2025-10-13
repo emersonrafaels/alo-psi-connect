@@ -203,6 +203,9 @@ const ProfessionalForm = () => {
 
     setLoading(true);
     try {
+      // 🛡️ Sinalizar que é cadastro profissional para evitar race condition
+      localStorage.setItem('professional_registration_in_progress', 'true');
+      
       let currentUser = user;
       
       // Se não há usuário logado, verificar se email já existe antes de criar conta
@@ -223,8 +226,7 @@ const ProfessionalForm = () => {
           options: {
             // Desabilitar envio automático de email de confirmação
             data: {
-              skip_confirmation: true,
-              skip_profile_creation: true // 🛡️ Prevenir criação automática de perfil como paciente
+              skip_confirmation: true
             }
           }
         });
@@ -344,6 +346,9 @@ const ProfessionalForm = () => {
       sessionStorage.removeItem('professional-registration-draft');
       clearSaved();
 
+      // Limpar flag de registro profissional
+      localStorage.removeItem('professional_registration_in_progress');
+      
       // Check if this is a new user that needs email confirmation
       if (data.isNewUser && data.confirmationEmailSent) {
         setShowEmailConfirmationModal(true);
@@ -357,6 +362,9 @@ const ProfessionalForm = () => {
       }
     } catch (error: any) {
       console.error('Erro detalhado:', error);
+      
+      // Limpar flag em caso de erro também
+      localStorage.removeItem('professional_registration_in_progress');
       let errorMessage = error.message;
       
       // Tratamento de erros mais específicos
