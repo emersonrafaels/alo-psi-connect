@@ -206,7 +206,7 @@ serve(async (req) => {
           ...cleanedProfileData,
           tenant_id: tenant.id
         })
-        .eq('id', existingProfile.id)
+        .eq('user_id', userId)
         .select();
 
       if (updateError) {
