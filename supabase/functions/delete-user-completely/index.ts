@@ -39,16 +39,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if user is super admin
+    // Check if user is super admin or admin
     const { data: userRoles, error: roleError } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id);
 
-    if (roleError || !userRoles?.some(r => r.role === 'super_admin')) {
+    const hasPermission = userRoles?.some(r => r.role === 'super_admin' || r.role === 'admin');
+    
+    if (roleError || !hasPermission) {
       console.error('Permission denied. User roles:', userRoles);
       return new Response(
-        JSON.stringify({ error: 'Permission denied. Only super admins can delete users.' }),
+        JSON.stringify({ error: 'Permission denied. Only admins can delete users.' }),
         { status: 403, headers: corsHeaders }
       );
     }
