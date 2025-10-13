@@ -411,95 +411,116 @@ serve(async (req) => {
       console.log('Schedules processed successfully');
     }
 
-    // Send confirmation email for new users (need to check if user was just created)
+    // Send confirmation email for new professional users
     let confirmationEmailSent = false;
     let isNewUser = false;
     
     try {
-      // Only try to send confirmation email if userId is not null (user is authenticated)
+      // Only send for authenticated professional registrations
       if (!userId) {
-        console.log('Skipping confirmation email - no authenticated user (public registration)');
+        console.log('⏭️ Skipping confirmation email - public registration without auth');
       } else {
-        // Check if this is a new user by checking if they have an unconfirmed email
-        // AND if they were created very recently (within last 10 minutes)
+        console.log('🔍 Checking if confirmation email should be sent for userId:', userId);
+        
+        // Check if user needs email confirmation
         const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
-      
-      if (!authError && authUser.user && !authUser.user.email_confirmed_at) {
-        // Check if user was created recently (indicates new registration)
-        const userCreatedAt = new Date(authUser.user.created_at);
-        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
         
-        if (userCreatedAt > tenMinutesAgo) {
+        if (authError) {
+          console.error('❌ Error fetching user for email confirmation:', authError);
+        } else if (authUser.user && !authUser.user.email_confirmed_at) {
+          // User exists and email not confirmed - SEND CONFIRMATION
           isNewUser = true;
-        console.log('Sending confirmation email for new professional user:', profileData.email);
-        
-        // Generate confirmation token
-        const confirmationToken = crypto.randomUUID();
-        const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours from now
+          console.log('📧 Sending confirmation email for professional user:', profileData.email);
+          
+          // Generate confirmation token
+          const confirmationToken = crypto.randomUUID();
+          const expiresAt = new Date();
+          expiresAt.setHours(expiresAt.getHours() + 24);
 
-        // Invalidate any existing tokens for this user first
-        await supabaseAdmin
-          .from('email_confirmation_tokens')
-          .update({ used: true })
-          .eq('user_id', userId)
-          .eq('used', false);
+          console.log('🔑 Generated confirmation token:', confirmationToken);
 
-        // Save new token to database
-        const { error: tokenError } = await supabaseAdmin
-          .from('email_confirmation_tokens')
-          .insert({
-            user_id: userId,
-            email: profileData.email,
-            token: confirmationToken,
-            expires_at: expiresAt.toISOString(),
-            used: false
-          });
+          // Invalidate existing tokens for this user
+          const { error: invalidateError } = await supabaseAdmin
+            .from('email_confirmation_tokens')
+            .update({ used: true })
+            .eq('user_id', userId)
+            .eq('used', false);
 
-        if (tokenError) {
-          console.error('Error saving confirmation token:', tokenError);
-        } else {
-          // Send email using Resend
-          const resendApiKey = Deno.env.get('RESEND_API_KEY');
-          if (resendApiKey) {
-            const baseUrl = Deno.env.get('APP_BASE_URL') || 'https://alopsi.com.br';
-            const tenantPath = tenantSlug === 'medcos' ? '/medcos' : '';
-            const confirmationUrl = `${baseUrl}${tenantPath}/auth?confirm=true&token=${confirmationToken}`;
+          if (invalidateError) {
+            console.error('⚠️ Error invalidating old tokens:', invalidateError);
+          } else {
+            console.log('✅ Old tokens invalidated successfully');
+          }
 
-            const emailResponse = await fetch('https://api.resend.com/emails', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${resendApiKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                from: `${tenant.name} <noreply@alopsi.com.br>`,
-                to: [profileData.email],
-                subject: `Bem-vindo à ${tenant.name} - Confirme seu email`,
-                html: generateConfirmationEmailHTML(
-                  tenant.name,
-                  tenant.primary_color,
-                  tenant.logo_url,
-                  profileData.nome,
-                  confirmationUrl,
-                  true
-                )
-              }),
+          // Save new token
+          const { error: tokenError } = await supabaseAdmin
+            .from('email_confirmation_tokens')
+            .insert({
+              user_id: userId,
+              email: profileData.email,
+              token: confirmationToken,
+              expires_at: expiresAt.toISOString(),
+              used: false
             });
 
-            if (emailResponse.ok) {
-              confirmationEmailSent = true;
-              console.log('Confirmation email sent successfully');
+          if (tokenError) {
+            console.error('❌ Error saving confirmation token:', tokenError);
+          } else {
+            console.log('✅ Confirmation token saved successfully');
+            
+            // Send email via Resend
+            const resendApiKey = Deno.env.get('RESEND_API_KEY');
+            if (!resendApiKey) {
+              console.error('❌ RESEND_API_KEY not configured in environment');
             } else {
-              console.error('Failed to send confirmation email:', await emailResponse.text());
+              console.log('📬 Preparing to send email via Resend');
+              
+              const baseUrl = Deno.env.get('APP_BASE_URL') || 'https://alopsi.com.br';
+              const tenantPath = tenantSlug === 'medcos' ? '/medcos' : '';
+              const confirmationUrl = `${baseUrl}${tenantPath}/auth?confirm=true&token=${confirmationToken}`;
+
+              console.log('🔗 Confirmation URL:', confirmationUrl);
+              console.log('📨 Sending to:', profileData.email);
+              console.log('🏢 Tenant:', tenant.name, '| Slug:', tenantSlug);
+
+              const emailResponse = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${resendApiKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  from: `${tenant.name} <noreply@alopsi.com.br>`,
+                  to: [profileData.email],
+                  subject: `Bem-vindo à ${tenant.name} - Confirme seu email`,
+                  html: generateConfirmationEmailHTML(
+                    tenant.name,
+                    tenant.primary_color,
+                    tenant.logo_url,
+                    profileData.nome,
+                    confirmationUrl,
+                    true // isProfessional = true
+                  )
+                }),
+              });
+
+              if (emailResponse.ok) {
+                const emailResult = await emailResponse.json();
+                confirmationEmailSent = true;
+                console.log('✅ Confirmation email sent successfully:', emailResult);
+              } else {
+                const errorText = await emailResponse.text();
+                console.error('❌ Failed to send confirmation email. Status:', emailResponse.status);
+                console.error('❌ Error details:', errorText);
+              }
             }
           }
-          }
+        } else {
+          console.log('ℹ️ User email already confirmed or user not found');
         }
       }
-      } // Closing the if (!userId) else block
     } catch (emailError) {
-      console.error('Error sending confirmation email:', emailError);
+      console.error('💥 Error in confirmation email process:', emailError);
     }
 
     return new Response(
