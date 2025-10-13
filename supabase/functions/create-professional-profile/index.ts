@@ -499,7 +499,10 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        success: true, 
+        success: true,
+        userId: userId,
+        profileId: profile.id,
+        professionalId: professional.id,
         profile: profile,
         professional: professional,
         confirmationEmailSent,
