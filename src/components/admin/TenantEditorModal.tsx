@@ -219,6 +219,17 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         specialty_tag_bg_dark: formData.specialty_tag_bg_dark,
         specialty_tag_text_dark: formData.specialty_tag_text_dark,
         ai_match_button_text: formData.ai_match_button_text,
+        // Contact information
+        contact_phone: formData.contact_phone || null,
+        contact_whatsapp: formData.contact_whatsapp || null,
+        contact_email: formData.contact_email || null,
+        contact_address: formData.contact_address || null,
+        cnpj: formData.cnpj || null,
+        razao_social: formData.razao_social || null,
+        // Social media
+        social_instagram: formData.social_instagram || null,
+        social_facebook: formData.social_facebook || null,
+        social_linkedin: formData.social_linkedin || null,
         theme_config: {
           secondary_color: formData.secondary_color
         },
