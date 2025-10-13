@@ -200,30 +200,29 @@ serve(async (req) => {
       console.log('📝 Updating profile with cleaned data');
       
       // Update existing profile
-      const { data: updatedProfile, error: updateError } = await supabaseAdmin
-        .from('profiles')
-        .update({
-          ...cleanedProfileData,
-          tenant_id: tenant.id
-        })
-        .eq('id', existingProfile.id)
-        .select()
-        .single();
+        const { data: updatedProfiles, error: updateError } = await supabaseAdmin
+          .from('profiles')
+          .update({
+            ...cleanedProfileData,
+            tenant_id: tenant.id
+          })
+          .eq('id', existingProfile.id)
+          .select();
 
-      if (updateError) {
-        console.error('❌ Profile update error:', updateError);
-        console.error('Error code:', updateError.code);
-        console.error('Error message:', updateError.message);
-        console.error('Error details:', updateError.details);
-        throw new Error(`Erro ao atualizar profile: ${updateError.message} (${updateError.code})`);
-      }
+        if (updateError) {
+          console.error('❌ Profile update error:', updateError);
+          console.error('Error code:', updateError.code);
+          console.error('Error message:', updateError.message);
+          console.error('Error details:', updateError.details);
+          throw new Error(`Erro ao atualizar profile: ${updateError.message} (${updateError.code})`);
+        }
 
-      if (!updatedProfile) {
-        throw new Error('Falha ao atualizar profile - nenhum registro retornado');
-      }
-      
-      console.log('✅ Profile updated successfully');
-      profile = updatedProfile;
+        if (!updatedProfiles || updatedProfiles.length === 0) {
+          throw new Error('Falha ao atualizar profile - nenhum registro retornado');
+        }
+
+        console.log('✅ Profile updated successfully');
+        profile = updatedProfiles[0];
     } else {
       // Create new profile
       const { data: newProfile, error: profileError } = await supabaseAdmin
