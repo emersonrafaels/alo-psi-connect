@@ -1,3 +1,5 @@
+// Version: 1.0.1 - Fixed 42P10 error by separating UPDATE and SELECT operations
+// Last updated: 2025-01-13
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
