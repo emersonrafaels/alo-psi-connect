@@ -36,7 +36,7 @@ export default function AdminUsers() {
   const [selectedUserType, setSelectedUserType] = useState<string>('');
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
-  const { deleteUser } = useUserManagement();
+  const { deleteUser, cleanupOrphanProfiles } = useUserManagement();
   const { resendEmailConfirmation, resendPasswordReset, loading: emailLoading } = useEmailResend();
   const { tenantFilter } = useAdminTenant();
   const { toast } = useToast();
@@ -375,6 +375,31 @@ export default function AdminUsers() {
         currentType={selectedUserType}
         onTypeUpdated={fetchUsers}
       />
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-destructive">⚠️ Limpeza de Perfis Órfãos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Deleta perfis que não têm user_id associado (órfãos criados por testes ou erros de registro).
+          </p>
+          <Button
+            variant="destructive"
+            onClick={async () => {
+              if (confirm('Tem certeza que deseja deletar TODOS os perfis de teste órfãos? Esta ação não pode ser desfeita!')) {
+                const result = await cleanupOrphanProfiles('test-%@test.com');
+                if (result.success) {
+                  fetchUsers();
+                }
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Limpar Perfis de Teste Órfãos
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

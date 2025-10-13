@@ -203,11 +203,46 @@ export const useUserManagement = () => {
     }
   };
 
+  const cleanupOrphanProfiles = async (emailPattern: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('cleanup-orphan-profiles', {
+        body: { emailPattern }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: "Limpeza concluída",
+        description: `${data.deletedCount} perfis órfãos foram deletados`,
+      });
+
+      return { success: true, data };
+    } catch (error: any) {
+      console.error('Error cleaning up orphan profiles:', error);
+      toast({
+        title: "Erro na limpeza",
+        description: error.message || "Erro desconhecido",
+        variant: "destructive",
+      });
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     createAdminUser,
     manageUserRole,
     deleteUser,
-    updateUserType
+    updateUserType,
+    cleanupOrphanProfiles
   };
 };
