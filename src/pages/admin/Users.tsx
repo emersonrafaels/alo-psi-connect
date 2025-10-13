@@ -378,26 +378,32 @@ export default function AdminUsers() {
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle className="text-destructive">⚠️ Limpeza de Perfis Órfãos</CardTitle>
+          <CardTitle className="text-destructive">⚠️ Limpeza de Perfis de Teste</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Deleta perfis que não têm user_id associado (órfãos criados por testes ou erros de registro).
-          </p>
-          <Button
-            variant="destructive"
-            onClick={async () => {
-              if (confirm('Tem certeza que deseja deletar TODOS os perfis de teste órfãos? Esta ação não pode ser desfeita!')) {
-                const result = await cleanupOrphanProfiles('test-%@test.com');
-                if (result.success) {
-                  fetchUsers();
+        <CardContent className="space-y-4">
+          <div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Deleta perfis que não têm user_id associado (órfãos criados por testes ou erros de registro).
+            </p>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (confirm('Tem certeza que deseja deletar TODOS os perfis de teste órfãos? Esta ação não pode ser desfeita!')) {
+                  const result = await cleanupOrphanProfiles('test-%@test.com');
+                  if (result.success) {
+                    toast({
+                      title: "Perfis deletados",
+                      description: `${result.data?.deletedCount || 0} perfis de teste órfãos foram removidos.`,
+                    });
+                    fetchUsers();
+                  }
                 }
-              }
-            }}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Limpar Perfis de Teste Órfãos
-          </Button>
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Limpar Perfis de Teste Órfãos
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
