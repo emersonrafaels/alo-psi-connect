@@ -15,3 +15,18 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
+// Listener global para erros de autenticação
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
+    console.log('🔒 [Supabase Client] Auth error detected - clearing session');
+    // Limpar localStorage
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Redirecionar para home se não estiver lá
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      window.location.href = '/';
+    }
+  }
+});

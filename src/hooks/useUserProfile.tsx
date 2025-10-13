@@ -59,8 +59,17 @@ export const useUserProfile = () => {
 
         setProfile(data);
 
-        // Se não há perfil, criar um automaticamente
+        // Se não há perfil, verificar se usuário ainda existe antes de criar
         if (!data && user.email) {
+          // 🛡️ Verificar se o usuário ainda existe no auth
+          const { error: authError } = await supabase.auth.getUser();
+          
+          if (authError?.status === 403 || authError?.message?.includes('not found')) {
+            console.log('🔒 [useUserProfile] User deleted - will not create profile');
+            setProfile(null);
+            return;
+          }
+          
           await createInitialProfile(user);
         }
       } catch (error) {
@@ -105,6 +114,12 @@ export const useUserProfile = () => {
         .single();
 
       if (error) {
+        // Se erro é foreign key (usuário não existe mais)
+        if (error.code === '23503') {
+          console.log('🔒 [useUserProfile] Cannot create profile - user deleted from auth');
+          setProfile(null);
+          return;
+        }
         console.error('useUserProfile: Error creating profile:', error);
         return;
       }
