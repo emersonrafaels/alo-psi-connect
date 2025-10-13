@@ -45,15 +45,25 @@ serve(async (req) => {
       }
     );
 
-    const { action, tenant, cleanup_user_ids } = await req.json();
+    const { action, tenant, cleanup_user_ids, cleanup_all } = await req.json();
 
     // Cleanup action
-    if (action === 'cleanup' && cleanup_user_ids) {
-      const cleanupResults = await cleanupTestData(supabaseAdmin, cleanup_user_ids);
-      return new Response(JSON.stringify(cleanupResults), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      });
+    if (action === 'cleanup') {
+      if (cleanup_all) {
+        const cleanupResults = await cleanupAllTestUsers(supabaseAdmin);
+        return new Response(JSON.stringify(cleanupResults), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        });
+      }
+      
+      if (cleanup_user_ids) {
+        const cleanupResults = await cleanupTestData(supabaseAdmin, cleanup_user_ids);
+        return new Response(JSON.stringify(cleanupResults), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        });
+      }
     }
 
     // Get tenants
@@ -384,6 +394,58 @@ async function testPatientRegistration(supabaseAdmin: any, tenant: any): Promise
 
   result.duration_ms = Date.now() - startTime;
   return result;
+}
+
+// Cleanup all test users
+async function cleanupAllTestUsers(supabaseAdmin: any) {
+  console.log('[CLEANUP] Iniciando limpeza completa de usuários de teste');
+  
+  const results = {
+    success: [] as string[],
+    failed: [] as { userId: string; error: string }[],
+    total: 0
+  };
+
+  try {
+    // Buscar todos os usuários de teste do auth
+    const { data: authUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (listError) throw listError;
+
+    // Filtrar apenas usuários de teste (email começa com 'test-' e termina com '@test.com')
+    const testUsers = authUsers.users.filter((user: any) => 
+      user.email?.startsWith('test-') && user.email?.endsWith('@test.com')
+    );
+
+    results.total = testUsers.length;
+    console.log(`[CLEANUP] Encontrados ${results.total} usuários de teste para deletar`);
+
+    // Deletar cada usuário de teste
+    for (const user of testUsers) {
+      try {
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+        
+        if (deleteError) throw deleteError;
+        
+        results.success.push(user.id);
+        console.log(`[CLEANUP] ✓ Deletado: ${user.email} (${user.id})`);
+      } catch (error: any) {
+        results.failed.push({
+          userId: user.id,
+          error: error.message
+        });
+        console.error(`[CLEANUP] ✗ Falha ao deletar ${user.email}:`, error);
+      }
+    }
+
+    console.log(`[CLEANUP] Concluído: ${results.success.length} sucessos, ${results.failed.length} falhas`);
+    
+  } catch (error: any) {
+    console.error('[CLEANUP] Erro ao listar usuários:', error);
+    throw error;
+  }
+
+  return results;
 }
 
 async function cleanupTestData(supabaseAdmin: any, userIds: string[]): Promise<any> {

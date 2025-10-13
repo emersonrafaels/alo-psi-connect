@@ -13,17 +13,25 @@ export default function TestUserRegistration() {
     runTest,
     runAllTests,
     cleanupTests,
+    cleanupAllTestUsers,
     testResults,
     isRunning,
     overallStats
   } = useUserRegistrationTests();
 
   const [cleanupLoading, setCleanupLoading] = useState(false);
+  const [cleanupAllLoading, setCleanupAllLoading] = useState(false);
 
   const handleCleanup = async () => {
     setCleanupLoading(true);
     await cleanupTests();
     setCleanupLoading(false);
+  };
+
+  const handleCleanupAll = async () => {
+    setCleanupAllLoading(true);
+    await cleanupAllTestUsers();
+    setCleanupAllLoading(false);
   };
 
   const getStatusBadge = (status: 'success' | 'failed' | 'running' | null) => {
@@ -127,6 +135,25 @@ export default function TestUserRegistration() {
               <>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Limpar Dados de Teste
+              </>
+            )}
+          </Button>
+
+          <Button
+            onClick={handleCleanupAll}
+            disabled={cleanupAllLoading || isRunning}
+            variant="destructive"
+            size="lg"
+          >
+            {cleanupAllLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Limpando Tudo...
+              </>
+            ) : (
+              <>
+                <Trash2 className="mr-2 h-4 w-4" />
+                🗑️ Limpar TODOS os Usuários de Teste
               </>
             )}
           </Button>

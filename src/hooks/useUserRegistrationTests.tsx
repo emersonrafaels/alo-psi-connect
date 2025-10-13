@@ -134,6 +134,32 @@ export const useUserRegistrationTests = () => {
     }
   };
 
+  const cleanupAllTestUsers = async () => {
+    setIsRunning(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('test-user-registration', {
+        body: { action: 'cleanup', cleanup_all: true }
+      });
+
+      if (error) throw error;
+
+      toast.success(`✓ ${data.success.length} de ${data.total} usuários de teste removidos`);
+      
+      if (data.failed.length > 0) {
+        toast.warning(`${data.failed.length} usuários falharam ao ser removidos`);
+      }
+
+      // Clear test results
+      setTestResults([]);
+    } catch (error: any) {
+      console.error('Cleanup all error:', error);
+      toast.error(`Erro ao limpar todos os dados: ${error.message}`);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
   const overallStats = {
     total: testResults.filter(r => r.status !== 'running').length,
     success: testResults.filter(r => r.status === 'success').length,
@@ -144,6 +170,7 @@ export const useUserRegistrationTests = () => {
     runTest,
     runAllTests,
     cleanupTests,
+    cleanupAllTestUsers,
     testResults,
     isRunning,
     overallStats
