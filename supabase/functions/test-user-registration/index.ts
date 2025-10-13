@@ -126,7 +126,7 @@ async function testProfessionalRegistration(supabaseAdmin: any, tenant: any): Pr
             email: testEmail,
             cpf: '123.456.789-00',
             data_nascimento: '1985-05-15',
-            genero: 'Masculino',
+            genero: 'masculino',
             tipo_usuario: 'profissional'
           },
           professionalData: {
@@ -291,7 +291,7 @@ async function testPatientRegistration(supabaseAdmin: any, tenant: any): Promise
             email: testEmail,
             cpf: '987.654.321-00',
             data_nascimento: '1990-08-20',
-            genero: 'Masculino',
+            genero: 'masculino',
             tipo_usuario: 'paciente'
           },
           patientData: {
