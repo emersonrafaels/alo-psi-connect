@@ -343,7 +343,7 @@ const Index = () => {
             Empatia, Compreensão, Transformação: <br />
             O Seu Caminho Para A Cura.
           </h2>
-          <Button variant="accent" size="lg" className="mt-8" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
+          <Button variant="tenant-primary" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
             Agendar Consulta
           </Button>
         </div>
