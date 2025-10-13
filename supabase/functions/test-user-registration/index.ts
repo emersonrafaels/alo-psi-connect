@@ -140,7 +140,6 @@ async function testProfessionalRegistration(supabaseAdmin: any, tenant: any): Pr
           },
           horariosData: [],
           userId: null,
-          password: testPassword,
           tenantSlug: tenant.slug
         }
       }
