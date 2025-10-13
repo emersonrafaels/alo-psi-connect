@@ -51,6 +51,17 @@ interface Tenant {
   specialty_tag_text_dark?: string;
   ai_match_button_text?: string;
   favicon_url?: string;
+  // Contact information
+  contact_phone?: string;
+  contact_whatsapp?: string;
+  contact_email?: string;
+  contact_address?: string;
+  cnpj?: string;
+  razao_social?: string;
+  // Social media
+  social_instagram?: string;
+  social_facebook?: string;
+  social_linkedin?: string;
   theme_config: {
     secondary_color?: string;
     muted_color?: string;
@@ -101,6 +112,17 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     specialty_tag_bg_dark: "#1e3a8a",
     specialty_tag_text_dark: "#93c5fd",
     ai_match_button_text: "Alô Psi Match",
+    // Contact information
+    contact_phone: "",
+    contact_whatsapp: "",
+    contact_email: "",
+    contact_address: "",
+    cnpj: "",
+    razao_social: "",
+    // Social media
+    social_instagram: "",
+    social_facebook: "",
+    social_linkedin: "",
     meta_title: "",
     meta_description: "",
     meta_favicon: "",
@@ -140,6 +162,17 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         specialty_tag_bg_dark: tenant.specialty_tag_bg_dark || "#1e3a8a",
         specialty_tag_text_dark: tenant.specialty_tag_text_dark || "#93c5fd",
         ai_match_button_text: tenant.ai_match_button_text || "Alô Psi Match",
+        // Contact information
+        contact_phone: tenant.contact_phone || "",
+        contact_whatsapp: tenant.contact_whatsapp || "",
+        contact_email: tenant.contact_email || "",
+        contact_address: tenant.contact_address || "",
+        cnpj: tenant.cnpj || "",
+        razao_social: tenant.razao_social || "",
+        // Social media
+        social_instagram: tenant.social_instagram || "",
+        social_facebook: tenant.social_facebook || "",
+        social_linkedin: tenant.social_linkedin || "",
         meta_title: tenant.meta_config?.title || "",
         meta_description: tenant.meta_config?.description || "",
         meta_favicon: tenant.meta_config?.favicon || "",
@@ -176,6 +209,17 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         specialty_tag_bg_dark: "#1e3a8a",
         specialty_tag_text_dark: "#93c5fd",
         ai_match_button_text: "Alô Psi Match",
+        // Contact information
+        contact_phone: "",
+        contact_whatsapp: "",
+        contact_email: "",
+        contact_address: "",
+        cnpj: "",
+        razao_social: "",
+        // Social media
+        social_instagram: "",
+        social_facebook: "",
+        social_linkedin: "",
         meta_title: "",
         meta_description: "",
         meta_favicon: "",
