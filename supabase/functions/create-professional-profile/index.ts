@@ -322,6 +322,7 @@ serve(async (req) => {
 
     // ✅ NOVO: Criar usuário via Admin API se userId não foi fornecido
     let finalUserId = userId;
+    let authUserId = userId; // ✅ UUID do auth.users (separado do ID sequencial)
     let isNewUser = false;
 
     if (!userId) {
@@ -386,6 +387,7 @@ serve(async (req) => {
       }
       
       finalUserId = newUser.user.id;
+      authUserId = newUser.user.id; // ✅ Armazenar UUID para operações de autenticação
       isNewUser = true;
       console.log('✅ User created successfully:', finalUserId);
       
@@ -494,7 +496,7 @@ serve(async (req) => {
       const { data: newProfile, error: profileError } = await supabaseAdmin
         .from('profiles')
         .insert({
-          user_id: userId,
+          user_id: authUserId, // ✅ Usar UUID do auth.users
           tenant_id: tenant.id,
           ...profileData
         })
@@ -521,7 +523,9 @@ serve(async (req) => {
       ? (maxUserIdData[0].user_id || 0) + 1 
       : 1;
 
-    console.log('Using user_id for professional:', nextUserId);
+    const professionalId = nextUserId; // ✅ ID inteiro sequencial para tabela profissionais
+    console.log('Using professionalId for profissionais table:', professionalId);
+    console.log('Using authUserId for auth operations:', authUserId);
 
     // Check if professional already exists
     const { data: existingProfessional } = await supabaseAdmin
@@ -531,7 +535,7 @@ serve(async (req) => {
       .single();
 
     let professional;
-    finalUserId = nextUserId;
+    finalUserId = professionalId; // Manter compatibilidade com código existente
     
     if (existingProfessional) {
       console.log('Professional already exists, updating:', existingProfessional.id);
@@ -695,13 +699,13 @@ serve(async (req) => {
     
     try {
       // Only send for authenticated professional registrations
-      if (!finalUserId) {
+      if (!authUserId) {
         console.log('⏭️ Skipping confirmation email - public registration without auth');
       } else {
-        console.log('🔍 Checking if confirmation email should be sent for userId:', finalUserId);
+        console.log('🔍 Checking if confirmation email should be sent for authUserId:', authUserId);
         
         // Check if user needs email confirmation
-        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(finalUserId);
+        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(authUserId); // ✅ Usar UUID do auth.users
         
         if (authError) {
           console.error('❌ Error fetching user for email confirmation:', authError);
@@ -721,7 +725,7 @@ serve(async (req) => {
           const { error: invalidateError } = await supabaseAdmin
             .from('email_confirmation_tokens')
             .update({ used: true })
-            .eq('user_id', finalUserId)
+            .eq('user_id', authUserId) // ✅ Usar UUID do auth.users
             .eq('used', false);
 
           if (invalidateError) {
@@ -734,7 +738,7 @@ serve(async (req) => {
           const { error: tokenError } = await supabaseAdmin
             .from('email_confirmation_tokens')
             .insert({
-              user_id: userId,
+              user_id: authUserId, // ✅ Usar UUID do auth.users
               email: profileData.email,
               token: confirmationToken,
               expires_at: expiresAt.toISOString(),
