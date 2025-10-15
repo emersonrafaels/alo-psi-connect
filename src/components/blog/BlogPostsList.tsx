@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useBlogPosts } from '@/hooks/useBlogPosts';
+import { supabase } from '@/integrations/supabase/client';
 import { useBlogPostManager } from '@/hooks/useBlogPostManager';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -31,11 +32,28 @@ export const BlogPostsList = () => {
   const navigate = useNavigate();
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'published' | 'draft' | 'all'>('all');
+  const [tenants, setTenants] = useState<Map<string, { name: string; slug: string }>>(new Map());
   
   const { data: posts, isLoading } = useBlogPosts({
     status: statusFilter === 'all' ? undefined : statusFilter
   });
   const { deletePost, publishPost } = useBlogPostManager();
+
+  // Carregar tenants
+  useEffect(() => {
+    const fetchTenants = async () => {
+      const { data } = await supabase
+        .from('tenants')
+        .select('id, name, slug');
+      
+      if (data) {
+        const tenantsMap = new Map(data.map(t => [t.id, { name: t.name, slug: t.slug }]));
+        setTenants(tenantsMap);
+      }
+    };
+    
+    fetchTenants();
+  }, []);
 
   const handleDelete = () => {
     if (deletePostId) {
@@ -71,6 +89,7 @@ export const BlogPostsList = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Título</TableHead>
+              <TableHead>Site</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Curadoria</TableHead>
               <TableHead>Visualizações</TableHead>
@@ -79,9 +98,23 @@ export const BlogPostsList = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {posts?.map((post) => (
+            {posts?.map((post) => {
+              const tenant = (post as any).tenant_id ? tenants.get((post as any).tenant_id) : null;
+              
+              return (
               <TableRow key={post.id}>
                 <TableCell className="font-medium">{post.title}</TableCell>
+                <TableCell>
+                  {tenant ? (
+                    <Badge variant="outline" className="gap-1">
+                      {tenant.slug === 'alopsi' && '🟢'}
+                      {tenant.slug === 'medcos' && '🔵'}
+                      {tenant.name}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">Sem tenant</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   <PostStatusBadge status={post.status} />
                 </TableCell>
@@ -155,7 +188,8 @@ export const BlogPostsList = () => {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </div>
