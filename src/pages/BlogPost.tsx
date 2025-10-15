@@ -20,6 +20,14 @@ import { ShareButtons } from '@/components/blog/ShareButtons';
 import { useSavedPosts } from '@/hooks/useSavedPosts';
 import { usePostViewTracking } from '@/hooks/usePostViewTracking';
 import { useTenant } from '@/hooks/useTenant';
+import { ReadingProgress } from '@/components/blog/ReadingProgress';
+import { TableOfContents } from '@/components/blog/TableOfContents';
+import { FloatingBackButton } from '@/components/blog/FloatingBackButton';
+import { AuthorCard } from '@/components/blog/AuthorCard';
+import { PostBadges } from '@/components/blog/PostBadges';
+import { NewsletterCTA } from '@/components/blog/NewsletterCTA';
+import { ShareButtonsFloating } from '@/components/blog/ShareButtonsFloating';
+import { PostStats } from '@/components/blog/PostStats';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -205,6 +213,10 @@ export default function BlogPost() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <ReadingProgress />
+      <FloatingBackButton />
+      <ShareButtonsFloating url={window.location.href} title={post.title} />
+      <TableOfContents content={post.content} />
       <Header />
       <main className="flex-1">
         <article className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-4xl">
@@ -251,22 +263,30 @@ export default function BlogPost() {
             </div>
           </div>
 
+          <PostBadges 
+            isFeatured={post.is_featured}
+            editorialBadge={post.editorial_badge}
+            publishedAt={post.published_at || post.created_at}
+          />
+
           {post.featured_image_url && (
-            <div className="aspect-video rounded-lg overflow-hidden mb-8">
+            <div className="aspect-video rounded-lg overflow-hidden mb-8 relative group">
               <img
                 src={post.featured_image_url}
                 alt={post.title}
                 loading="eager"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             </div>
           )}
 
           <div className="flex flex-wrap gap-2 mb-6">
             {post.tags?.map((tag) => (
-              <Badge key={tag.id} variant="secondary">
-                {tag.name}
-              </Badge>
+              <Link key={tag.id} to={`/blog?tag=${tag.slug}`}>
+                <Badge variant="secondary" className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors">
+                  {tag.name}
+                </Badge>
+              </Link>
             ))}
           </div>
 
@@ -303,7 +323,13 @@ export default function BlogPost() {
             </div>
           </div>
 
-          <hr className="my-8 border-border" />
+          <PostStats 
+            views={post.views_count || 0}
+            readTime={post.read_time_minutes || 5}
+            averageRating={post.average_rating}
+            ratingsCount={post.ratings_count}
+            commentsCount={post.comments_count}
+          />
 
           <div className="blog-content prose prose-lg dark:prose-invert max-w-none 
                           prose-headings:font-bold prose-headings:tracking-tight
@@ -336,6 +362,10 @@ export default function BlogPost() {
             </ReactMarkdown>
           </div>
 
+          <NewsletterCTA />
+
+          <AuthorCard author={post.author} />
+
           <div className="mt-12 pt-8 border-t">
             <PostRating
               postId={post.id}
@@ -347,10 +377,12 @@ export default function BlogPost() {
 
           {filteredRelatedPosts.length > 0 && (
             <div className="mt-16 pt-8 border-t">
-              <h2 className="text-2xl font-bold mb-6">Posts Relacionados</h2>
+              <h2 className="text-2xl font-bold mb-6">Você também pode gostar</h2>
               <div className="grid md:grid-cols-2 gap-6">
                 {filteredRelatedPosts.map(relatedPost => (
-                  <PostCard key={relatedPost.id} post={relatedPost} />
+                  <div key={relatedPost.id} className="group">
+                    <PostCard post={relatedPost} />
+                  </div>
                 ))}
               </div>
             </div>
