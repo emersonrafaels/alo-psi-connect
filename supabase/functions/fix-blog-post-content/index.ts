@@ -55,6 +55,7 @@ A prática da auto-compaixão não é apenas um ato de bondade para consigo mesm
       .update({
         content: correctedContent,
         status: 'published',
+        published_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', '3175eaef-b4f2-41df-b5a9-3258756408f0')

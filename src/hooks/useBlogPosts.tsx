@@ -77,7 +77,9 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
         query = query.or(`title.ilike.%${options.searchTerm}%,content.ilike.%${options.searchTerm}%,excerpt.ilike.%${options.searchTerm}%`);
       }
 
-      query = query.order('published_at', { ascending: false, nullsFirst: false });
+      // Ordenar por published_at (usando created_at como fallback)
+      query = query.order('published_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false });
 
       if (options.limit) {
         query = query.limit(options.limit);
