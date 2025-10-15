@@ -355,6 +355,20 @@ serve(async (req) => {
       finalUserId = newUser.user.id;
       isNewUser = true;
       console.log('✅ User created successfully:', finalUserId);
+      
+      // ✅ UPDATE: Link user_id to any orphan profiles for this email
+      const { error: linkProfileError } = await supabaseAdmin
+        .from('profiles')
+        .update({ user_id: finalUserId })
+        .eq('email', profileData.email)
+        .is('user_id', null);
+      
+      if (linkProfileError) {
+        console.error('⚠️ Warning: Could not link orphan profile:', linkProfileError);
+        // Don't throw - continue with registration
+      } else {
+        console.log('✅ Orphan profiles linked to user_id:', finalUserId);
+      }
     }
 
     console.log('Creating professional profile for user:', finalUserId);

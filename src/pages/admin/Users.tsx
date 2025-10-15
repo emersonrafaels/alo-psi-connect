@@ -335,13 +335,27 @@ export default function AdminUsers() {
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => {
+                          onClick={async () => {
                             if (!user.user_id) {
-                              toast({
-                                title: "Erro",
-                                description: "ID de usuário não encontrado. Não é possível deletar este usuário.",
-                                variant: "destructive"
-                              });
+                              // Usuário órfão - deletar apenas o perfil
+                              const { error } = await supabase
+                                .from('profiles')
+                                .delete()
+                                .eq('id', user.id);
+                              
+                              if (error) {
+                                toast({
+                                  title: "Erro ao deletar perfil órfão",
+                                  description: error.message,
+                                  variant: "destructive"
+                                });
+                              } else {
+                                toast({
+                                  title: "Perfil órfão deletado",
+                                  description: `Perfil de ${user.nome} foi removido com sucesso.`,
+                                });
+                                fetchUsers();
+                              }
                               return;
                             }
                             handleDeleteUser(user.user_id);
