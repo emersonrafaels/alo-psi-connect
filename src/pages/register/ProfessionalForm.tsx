@@ -26,7 +26,7 @@ import { TimelineProgress } from '@/components/register/TimelineProgress';
 import { FieldWithTooltip } from '@/components/register/FieldWithTooltip';
 import { ProfessionalSummaryField } from '@/components/register/ProfessionalSummaryField';
 import { ProfilePreview } from '@/components/register/ProfilePreview';
-import { EmailValidationFeedback } from '@/components/register/EmailValidationFeedback';
+
 import { BirthDateInput } from '@/components/register/BirthDateInput';
 import { CRPCRMInput } from '@/components/register/CRPCRMInput';
 import { PriceInput } from '@/components/register/PriceInput';
@@ -50,7 +50,6 @@ const ProfessionalForm = () => {
   
   const [showExistingAccountModal, setShowExistingAccountModal] = useState(false);
   const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
-  const [emailExistsModalShown, setEmailExistsModalShown] = useState(false);
   const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string>('');
   const navigate = useNavigate();
@@ -428,22 +427,6 @@ const ProfessionalForm = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Resetar flag quando email mudar
-  useEffect(() => {
-    setEmailExistsModalShown(false);
-  }, [formData.email]);
-
-  // Handler para abrir modal automaticamente quando email já existe
-  const handleEmailExists = (email: string) => {
-    if (emailExistsModalShown) return;
-    
-    setEmailExistsModalShown(true);
-    
-    // Delay de 2s para usuário ler o feedback primeiro
-    setTimeout(() => {
-      setShowExistingAccountModal(true);
-    }, 2000);
-  };
 
   const renderStep1 = () => (
     <div className="space-y-6">
@@ -477,7 +460,7 @@ const ProfessionalForm = () => {
               required
               disabled={!!user}
             />
-            {!user && <EmailValidationFeedback email={formData.email} onEmailExists={handleEmailExists} />}
+            
             {googleData?.emailVerified && (
               <Badge variant="secondary" className="text-xs">
                 <Check className="h-3 w-3 mr-1" />
