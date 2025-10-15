@@ -484,7 +484,7 @@ serve(async (req) => {
       .single();
 
     let professional;
-    let finalUserId = nextUserId;
+    finalUserId = nextUserId;
     
     if (existingProfessional) {
       console.log('Professional already exists, updating:', existingProfessional.id);
