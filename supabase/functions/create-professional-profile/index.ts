@@ -328,47 +328,43 @@ serve(async (req) => {
       console.log('🔐 [v1.0.2] Creating new user via Admin API');
       console.log('📧 Email:', profileData.email);
       
-      // ✅ IMPROVED: Verificar se email já existe e detectar usuários órfãos
-      try {
-        const { data: existingUser } = await supabaseAdmin.auth.admin.getUserByEmail(profileData.email);
+      // 🔍 Verificar se o email já existe no perfil
+      console.log('🔍 Verificando se email já existe:', profileData.email);
+      
+      const { data: existingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('id, user_id, email')
+        .eq('email', profileData.email)
+        .maybeSingle();
+      
+      if (existingProfile) {
+        // Verificar se o user_id ainda existe em auth.users
+        let userStillExists = false;
         
-        if (existingUser) {
-          console.log('⚠️ Email já existe em auth.users:', profileData.email);
+        if (existingProfile.user_id) {
+          try {
+            const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(existingProfile.user_id);
+            userStillExists = !!authUser.user;
+          } catch (error) {
+            console.log('⚠️ user_id não existe em auth.users:', existingProfile.user_id);
+          }
+        }
+        
+        if (userStillExists) {
+          // Usuário válido já existe
+          console.log('❌ Email já cadastrado com usuário válido');
+          throw new Error('Email já cadastrado no sistema');
+        } else {
+          // Perfil órfão - limpar antes de criar novo
+          console.log('⚠️ Perfil órfão detectado, removendo:', existingProfile.id);
           
-          // Verificar se tem perfil vinculado
-          const { data: profile, error: profileError } = await supabaseAdmin
+          await supabaseAdmin
             .from('profiles')
-            .select('id, user_id')
-            .eq('email', profileData.email)
-            .maybeSingle();
+            .delete()
+            .eq('id', existingProfile.id);
           
-          if (profileError) {
-            console.error('❌ Erro ao verificar perfil:', profileError);
-            throw new Error('Erro ao validar usuário existente');
-          }
-          
-          if (!profile || !profile.user_id) {
-            // Usuário órfão detectado - deletar e permitir recriação
-            console.log('⚠️ Usuário órfão detectado - removendo:', existingUser.user.id);
-            const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(existingUser.user.id);
-            
-            if (deleteError) {
-              console.error('❌ Erro ao deletar usuário órfão:', deleteError);
-              throw new Error('Erro ao limpar usuário órfão');
-            }
-            
-            console.log('✅ Usuário órfão removido com sucesso');
-          } else {
-            // Usuário tem perfil válido - não permitir recadastro
-            throw new Error('Email já cadastrado no sistema');
-          }
+          console.log('✅ Perfil órfão removido, prosseguindo com criação');
         }
-      } catch (error: any) {
-        // getUserByEmail retorna erro se não encontrar - isso é OK
-        if (!error.message?.includes('User not found')) {
-          throw error;
-        }
-        console.log('📧 Email disponível para cadastro:', profileData.email);
       }
       
       // Criar usuário via Admin API (bypassa rate limits e não envia email automático)
