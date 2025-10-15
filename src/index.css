@@ -258,24 +258,41 @@ All colors MUST be HSL.
   /* Blog post content styling */
   .blog-content {
     @apply leading-relaxed;
-    font-feature-settings: 'kern' 1, 'liga' 1;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    word-spacing: 0.05em;
+    hyphens: auto;
   }
   
-  .blog-content p:first-of-type::first-letter {
-    @apply text-5xl font-bold float-left mr-2 mt-1 leading-none;
+  /* Drop cap condicional */
+  .blog-content.with-drop-cap p:first-of-type::first-letter {
+    @apply text-5xl font-bold float-left mr-3 mt-1 leading-none;
     color: hsl(var(--primary));
   }
   
   .blog-content img {
-    @apply shadow-xl;
-    transition: transform 0.3s ease;
+    @apply shadow-2xl;
+    transition: all 0.3s ease;
   }
   
   .blog-content img:hover {
-    @apply scale-[1.02];
+    @apply scale-[1.01];
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+  
+  /* Melhor espaçamento para listas */
+  .blog-content ul li,
+  .blog-content ol li {
+    margin-bottom: 0.5rem;
+    padding-left: 0.5rem;
+  }
+  
+  /* Destaque para links */
+  .blog-content a {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
   }
 
   /* Specialty tag styling with theme support */
