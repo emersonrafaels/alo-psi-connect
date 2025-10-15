@@ -1,3 +1,5 @@
+import React from 'react';
+
 export const highlightText = (text: string, searchTerm: string): React.ReactNode => {
   if (!searchTerm.trim()) return text;
   
