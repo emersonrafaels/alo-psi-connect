@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
 import { useEmailResend } from '@/hooks/useEmailResend';
-import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart } from 'lucide-react';
+import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle } from 'lucide-react';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -36,6 +36,11 @@ export default function AdminUsers() {
   const [selectedUserType, setSelectedUserType] = useState<string>('');
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
+  const [deletionInfo, setDeletionInfo] = useState<{
+    appointmentsCount: number;
+    isProfessional: boolean;
+    isPatient: boolean;
+  } | null>(null);
   const { deleteUser, cleanupOrphanProfiles } = useUserManagement();
   const { resendEmailConfirmation, resendPasswordReset, loading: emailLoading } = useEmailResend();
   const { tenantFilter } = useAdminTenant();
@@ -126,6 +131,59 @@ export default function AdminUsers() {
     const result = await deleteUser(userId);
     if (result.success) {
       fetchUsers();
+    }
+  };
+
+  const fetchDeletionInfo = async (user: UserProfile) => {
+    try {
+      // Determinar se é profissional
+      const isProfessional = user.tipo_usuario === 'profissional';
+      const isPatient = user.tipo_usuario === 'paciente';
+      
+      let totalAppointments = 0;
+
+      // Buscar agendamentos como paciente
+      if (user.user_id) {
+        const { count: patientCount } = await supabase
+          .from('agendamentos')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.user_id)
+          .neq('status', 'cancelado');
+        
+        totalAppointments += patientCount || 0;
+      }
+
+      // Buscar agendamentos como profissional
+      if (isProfessional) {
+        const { data: prof } = await supabase
+          .from('profissionais')
+          .select('id')
+          .eq('profile_id', user.id)
+          .maybeSingle();
+        
+        if (prof) {
+          const { count: professionalCount } = await supabase
+            .from('agendamentos')
+            .select('id', { count: 'exact', head: true })
+            .eq('professional_id', prof.id)
+            .neq('status', 'cancelado');
+          
+          totalAppointments += professionalCount || 0;
+        }
+      }
+
+      setDeletionInfo({
+        appointmentsCount: totalAppointments,
+        isProfessional,
+        isPatient
+      });
+    } catch (error) {
+      console.error('Erro ao buscar informações de deleção:', error);
+      setDeletionInfo({
+        appointmentsCount: 0,
+        isProfessional: user.tipo_usuario === 'profissional',
+        isPatient: user.tipo_usuario === 'paciente'
+      });
     }
   };
 
@@ -318,7 +376,12 @@ export default function AdminUsers() {
                   
                   <AlertDialog>
                      <AlertDialogTrigger asChild>
-                       <Button variant="outline" size="sm" className="gap-2 text-destructive hover:text-destructive">
+                       <Button 
+                         variant="outline" 
+                         size="sm" 
+                         className="gap-2 text-destructive hover:text-destructive"
+                         onClick={() => fetchDeletionInfo(user)}
+                       >
                          <Trash2 className="h-4 w-4" />
                          Deletar
                        </Button>
@@ -326,10 +389,43 @@ export default function AdminUsers() {
                     <AlertDialogContent>
                       <AlertDialogHeader>
                        <AlertDialogTitle>Deletar usuário completamente</AlertDialogTitle>
-                         <AlertDialogDescription>
-                           <strong>ATENÇÃO:</strong> Tem certeza que deseja deletar completamente o usuário {user.nome}? 
-                           Esta ação irá remover TODOS os dados do usuário do sistema e não pode ser desfeita.
-                           Todos os agendamentos serão cancelados e o usuário não conseguirá mais fazer login.
+                         <AlertDialogDescription className="space-y-3">
+                           <div className="font-semibold text-destructive flex items-center gap-2">
+                             <AlertCircle className="h-5 w-5" />
+                             ATENÇÃO: Esta ação é IRREVERSÍVEL
+                           </div>
+                           
+                           <p>
+                             Tem certeza que deseja deletar completamente o usuário <strong>{user.nome}</strong>?
+                           </p>
+                           
+                           <div className="bg-muted p-3 rounded-md space-y-2">
+                             <p className="font-medium">O que será removido:</p>
+                             <ul className="list-disc list-inside space-y-1 text-sm">
+                               <li>Conta de acesso (não poderá mais fazer login)</li>
+                               <li>Dados de perfil completo</li>
+                               {deletionInfo?.isProfessional && (
+                                 <li className="text-orange-600 font-medium">
+                                   Perfil profissional e todas as configurações
+                                 </li>
+                               )}
+                               {deletionInfo && deletionInfo.appointmentsCount > 0 && (
+                                 <li className="text-destructive font-medium">
+                                   {deletionInfo.appointmentsCount} agendamento(s) serão CANCELADOS
+                                   {deletionInfo.isProfessional && deletionInfo.isPatient && " (como paciente e profissional)"}
+                                   {deletionInfo.isProfessional && !deletionInfo.isPatient && " (como profissional)"}
+                                   {!deletionInfo.isProfessional && deletionInfo.isPatient && " (como paciente)"}
+                                 </li>
+                               )}
+                               {user.roles && user.roles.length > 0 && (
+                                 <li>Roles administrativas: {user.roles.join(", ")}</li>
+                               )}
+                             </ul>
+                           </div>
+                           
+                           <p className="text-sm text-muted-foreground">
+                             ℹ️ Os agendamentos serão mantidos no histórico com status "cancelado" para fins de auditoria.
+                           </p>
                          </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
