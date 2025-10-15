@@ -11,6 +11,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { useGlobalCacheShortcut } from "@/hooks/useGlobalCacheShortcut";
 import { useEffect, useState } from "react";
 import WhatsAppFloat from "@/components/ui/whatsapp-float";
+import { FirstLoginWelcome } from "@/components/FirstLoginWelcome";
 
 // Pages
 import Index from "./pages/Index";
@@ -212,6 +213,7 @@ const App: React.FC = () => {
           <BrowserRouter>
             <TenantProvider>
               <AuthProvider>
+                <FirstLoginWelcome />
                 <AppWithShortcuts />
                 <WhatsAppFloat />
               </AuthProvider>

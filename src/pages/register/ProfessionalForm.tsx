@@ -308,12 +308,41 @@ const ProfessionalForm = () => {
       if (data.isNewUser && data.confirmationEmailSent) {
         setShowEmailConfirmationModal(true);
       } else {
-        toast({
-          title: "Cadastro Finalizado!",
-          description: "Seu perfil profissional foi criado com sucesso. Bem-vindo(a) à nossa plataforma!",
-        });
-        // Redirecionar para login após cadastro bem-sucedido
-        navigate('/auth');
+        // ✅ Login automático após cadastro bem-sucedido
+        console.log('🔐 Fazendo login automático após cadastro...');
+        
+        try {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.senha,
+          });
+
+          if (signInError) {
+            console.error('❌ Erro no login automático:', signInError);
+            toast({
+              title: "Cadastro Concluído!",
+              description: "Seu perfil foi criado. Faça login para acessar.",
+            });
+            navigate('/auth');
+            return;
+          }
+
+          console.log('✅ Login automático bem-sucedido:', signInData.user?.email);
+          
+          toast({
+            title: "Bem-vindo(a)!",
+            description: "Cadastro concluído com sucesso. Você já está logado!",
+          });
+
+          // Aguardar um momento para o AuthProvider processar a sessão
+          setTimeout(() => {
+            navigate('/professional-profile');
+          }, 1000);
+
+        } catch (error) {
+          console.error('❌ Erro inesperado no login:', error);
+          navigate('/auth');
+        }
       }
     } catch (error: any) {
       console.error('Erro detalhado:', error);
