@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Lightbulb, FileText } from 'lucide-react';
+import { Lightbulb, FileText, Check } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProfessionalSummaryFieldProps {
   value: string;
@@ -21,6 +23,22 @@ const EXAMPLES = [
   {
     title: "Psicoterapeuta - Abordagem Humanista",
     text: "Psicoterapeuta com formação em Gestalt-terapia e 5 anos de experiência. Trabalho com autoconhecimento, relacionamentos e processos de mudança. Meu foco é criar um espaço seguro para você se expressar autenticamente e encontrar seus próprios caminhos."
+  },
+  {
+    title: "Psicólogo Infantil",
+    text: "Psicóloga especializada em atendimento infantil e adolescente há 6 anos. Utilizo ludoterapia e técnicas lúdicas para ajudar crianças a expressarem suas emoções. Atuo com dificuldades escolares, ansiedade infantil, TDAH e questões familiares."
+  },
+  {
+    title: "Terapeuta de Casal",
+    text: "Psicoterapeuta especializado em terapia de casal com 10 anos de experiência. Ajudo casais a fortalecerem sua comunicação, resolverem conflitos e reconstruírem vínculos afetivos. Abordagem empática e imparcial, focada no diálogo e compreensão mútua."
+  },
+  {
+    title: "Psicólogo Organizacional",
+    text: "Psicólogo organizacional com MBA em Gestão de Pessoas. Atuo com coaching de carreira, desenvolvimento de liderança e gestão de estresse profissional. Ajudo executivos e profissionais a alcançarem equilíbrio entre vida pessoal e carreira."
+  },
+  {
+    title: "Neuropsicólogo",
+    text: "Neuropsicólogo especializado em avaliação cognitiva e reabilitação neuropsicológica. Atuo com casos de TDAH, dislexia, lesões cerebrais e declínio cognitivo. Utilizo testes padronizados e técnicas baseadas em neurociência para diagnóstico e intervenção."
   }
 ];
 
@@ -29,6 +47,9 @@ const MAX_CHARS = 500;
 const IDEAL_CHARS = 200;
 
 export const ProfessionalSummaryField = ({ value, onChange }: ProfessionalSummaryFieldProps) => {
+  const { toast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isHighlighted, setIsHighlighted] = useState(false);
   const charCount = value.length;
   
   const getCharCountColor = () => {
@@ -46,7 +67,7 @@ export const ProfessionalSummaryField = ({ value, onChange }: ProfessionalSummar
         </Label>
         
         {/* Modal com exemplos */}
-        <Dialog>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button type="button" variant="ghost" size="sm" className="h-auto p-1">
               <FileText className="h-4 w-4 mr-1" />
@@ -66,7 +87,19 @@ export const ProfessionalSummaryField = ({ value, onChange }: ProfessionalSummar
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => onChange(example.text)}
+                    onClick={() => {
+                      onChange(example.text);
+                      setIsOpen(false);
+                      setIsHighlighted(true);
+                      
+                      toast({
+                        title: "✨ Template aplicado!",
+                        description: `"${example.title}" foi adicionado como base. Personalize conforme necessário.`,
+                        duration: 4000,
+                      });
+                      
+                      setTimeout(() => setIsHighlighted(false), 2000);
+                    }}
                   >
                     Usar como base
                   </Button>
@@ -106,7 +139,18 @@ export const ProfessionalSummaryField = ({ value, onChange }: ProfessionalSummar
         rows={6}
         required
         maxLength={MAX_CHARS}
+        className={isHighlighted ? "ring-2 ring-green-500 ring-offset-2 transition-all duration-500" : ""}
       />
+
+      {/* Badge de confirmação */}
+      {isHighlighted && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg animate-in fade-in slide-in-from-top-2 duration-500">
+          <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+          <span className="text-sm text-green-700 dark:text-green-300 font-medium">
+            Template aplicado! Agora personalize com suas informações.
+          </span>
+        </div>
+      )}
 
       {/* Contador de caracteres com barra de progresso */}
       <div className="space-y-1">
