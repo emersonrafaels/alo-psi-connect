@@ -48,13 +48,13 @@ export const useBlogPostManager = () => {
         throw new Error('Nenhum tenant disponível. Por favor, selecione um site ou acesse via URL de um tenant.');
       }
 
-      // Validar slug único (apenas posts publicados - drafts podem ter slugs duplicados)
+      // Validar slug único por tenant (apenas posts publicados - drafts podem ter slugs duplicados)
       const { data: existingPost } = await supabase
         .from('blog_posts')
         .select('id')
         .eq('slug', data.slug)
-        .eq('tenant_id', tenantId)
         .eq('status', 'published') // Só verificar contra posts publicados
+        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`) // Verificar no mesmo tenant ou posts sem tenant
         .maybeSingle();
 
       if (existingPost) {
@@ -117,17 +117,18 @@ export const useBlogPostManager = () => {
 
   const updatePost = useMutation({
     mutationFn: async (data: UpdatePostData) => {
-      // Validar slug único (exceto o próprio post, apenas contra publicados)
+      // Validar slug único por tenant (exceto o próprio post, apenas contra publicados)
       const { data: existingPost } = await supabase
         .from('blog_posts')
-        .select('id')
+        .select('id, tenant_id')
         .eq('slug', data.slug)
         .eq('status', 'published') // Só verificar contra posts publicados
+        .or(`tenant_id.eq.${data.tenant_id || null},tenant_id.is.null`) // Verificar no mesmo tenant
         .neq('id', data.id)
         .maybeSingle();
 
       if (existingPost) {
-        throw new Error('Já existe outro post com este slug. Por favor, escolha outro.');
+        throw new Error('Já existe outro post com este slug neste site. Por favor, escolha outro.');
       }
 
       const { error } = await supabase
@@ -140,6 +141,7 @@ export const useBlogPostManager = () => {
           featured_image_url: data.featured_image_url,
           status: data.status,
           read_time_minutes: data.read_time_minutes,
+          tenant_id: data.tenant_id, // ✅ Atualizar tenant_id
           published_at: data.status === 'published' ? new Date().toISOString() : null,
           allow_comments: data.allow_comments ?? true,
           allow_ratings: data.allow_ratings ?? true,
