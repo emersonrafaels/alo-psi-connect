@@ -32,7 +32,7 @@ import { CRPCRMInput } from '@/components/register/CRPCRMInput';
 import { PriceInput } from '@/components/register/PriceInput';
 import { ScheduleTemplates } from '@/components/register/ScheduleTemplates';
 import { AutoSaveIndicator } from '@/components/register/AutoSaveIndicator';
-import { StepEstimator } from '@/components/register/StepEstimator';
+
 import { formatCPF, validateCPF, getCPFErrorMessage } from '@/utils/cpfValidator';
 import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { useTenant } from '@/hooks/useTenant';
@@ -861,10 +861,6 @@ const ProfessionalForm = () => {
                 onStepClick={(step) => setCurrentStep(step)}
               />
 
-              {/* Step estimator */}
-              {currentStep < totalSteps && (
-                <StepEstimator currentStep={currentStep} totalSteps={totalSteps} />
-              )}
 
               <CardTitle className="text-center text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                  {currentStep === 1 ? 'Seus dados pessoais' :
