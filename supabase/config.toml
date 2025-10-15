@@ -109,3 +109,6 @@ verify_jwt = false
 
 [functions.test-user-registration]
 verify_jwt = true
+
+[functions.fix-blog-post-content]
+verify_jwt = false
