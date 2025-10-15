@@ -121,6 +121,9 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
     },
   });
 
+  // Separar o ref do content para usar callback ref pattern
+  const { ref: contentRef, ...contentRegister } = register('content');
+
   // Recuperar rascunho se aceito
   useEffect(() => {
     if (draft && !showRecoveryModal && !post) {
@@ -407,9 +410,12 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
               <div className="border rounded-lg overflow-hidden">
                 <MarkdownToolbar onAction={applyFormatting} />
                 <Textarea
-                  ref={textareaRef}
+                  {...contentRegister}
+                  ref={(e) => {
+                    contentRef(e);
+                    textareaRef.current = e;
+                  }}
                   id="content"
-                  {...register('content')}
                   onKeyDown={handleKeyDown}
                   placeholder="Escreva o conteúdo em Markdown..."
                   rows={20}
@@ -438,8 +444,11 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
                     <div className="flex-1 overflow-hidden flex flex-col">
                       <MarkdownToolbar onAction={applyFormatting} />
                       <Textarea
-                        ref={textareaRef}
-                        {...register('content')}
+                        {...contentRegister}
+                        ref={(e) => {
+                          contentRef(e);
+                          textareaRef.current = e;
+                        }}
                         onKeyDown={handleKeyDown}
                         placeholder="Escreva o conteúdo em Markdown..."
                         className="font-mono flex-1 resize-none border-0 rounded-none focus-visible:ring-0"

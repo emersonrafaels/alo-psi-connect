@@ -28,9 +28,11 @@ export const insertText = (
   textarea.setSelectionRange(newCursorPosition, newCursorPosition);
   textarea.focus();
   
-  // Trigger change event
-  const event = new Event('input', { bubbles: true });
-  textarea.dispatchEvent(event);
+  // Trigger both input and change events to ensure React Hook Form updates
+  const inputEvent = new Event('input', { bubbles: true });
+  const changeEvent = new Event('change', { bubbles: true });
+  textarea.dispatchEvent(inputEvent);
+  textarea.dispatchEvent(changeEvent);
 };
 
 export const wrapSelection = (
@@ -60,8 +62,11 @@ export const insertAtLineStart = (
   textarea.setSelectionRange(newCursorPosition, newCursorPosition);
   textarea.focus();
   
-  const event = new Event('input', { bubbles: true });
-  textarea.dispatchEvent(event);
+  // Trigger both events
+  const inputEvent = new Event('input', { bubbles: true });
+  const changeEvent = new Event('change', { bubbles: true });
+  textarea.dispatchEvent(inputEvent);
+  textarea.dispatchEvent(changeEvent);
 };
 
 export const replaceSelection = (
