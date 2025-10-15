@@ -319,7 +319,44 @@ serve(async (req) => {
     
     detectedTenant = tenant;
 
-    console.log('Creating professional profile for user:', userId);
+    // ✅ NOVO: Criar usuário via Admin API se userId não foi fornecido
+    let finalUserId = userId;
+    let isNewUser = false;
+
+    if (!userId) {
+      console.log('🔐 [v1.0.2] Creating new user via Admin API');
+      console.log('📧 Email:', profileData.email);
+      
+      // Verificar se email já existe
+      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+      const emailExists = existingUsers?.users?.some(u => u.email === profileData.email);
+      
+      if (emailExists) {
+        throw new Error('Email já cadastrado no sistema');
+      }
+      
+      // Criar usuário via Admin API (bypassa rate limits e não envia email automático)
+      const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
+        email: profileData.email,
+        password: professionalData.senha, // Senha vem do frontend
+        email_confirm: false, // NÃO confirmar automaticamente
+        user_metadata: {
+          full_name: profileData.nome,
+          tipo_usuario: 'profissional'
+        }
+      });
+      
+      if (createUserError || !newUser.user) {
+        console.error('❌ Error creating user:', createUserError);
+        throw new Error(`Erro ao criar conta: ${createUserError?.message}`);
+      }
+      
+      finalUserId = newUser.user.id;
+      isNewUser = true;
+      console.log('✅ User created successfully:', finalUserId);
+    }
+
+    console.log('Creating professional profile for user:', finalUserId);
 
     // Check if profile already exists
     const { data: existingProfile, error: checkError } = await supabaseAdmin

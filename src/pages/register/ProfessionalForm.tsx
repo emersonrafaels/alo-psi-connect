@@ -14,7 +14,7 @@ import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useProfessionalRegistration } from '@/contexts/ProfessionalRegistrationContext';
+
 import { ChevronLeft, ChevronRight, Eye, EyeOff, Check, Clock, X, Brain, Stethoscope, Users } from 'lucide-react';
 import { PhotoUpload } from '@/components/ui/photo-upload';
 import { Badge } from '@/components/ui/badge';
@@ -49,7 +49,7 @@ const ProfessionalForm = () => {
   const { toast } = useToast();
   const { saveGooglePhoto, uploadProfilePhoto } = useProfileManager();
   const { tenant } = useTenant();
-  const { startRegistration, endRegistration } = useProfessionalRegistration();
+  
   const platformName = tenant?.name || "Alô, Psi!";
   const googleData = location.state?.googleData || null;
 
@@ -205,57 +205,10 @@ const ProfessionalForm = () => {
 
     setLoading(true);
     
-    // 🛡️ Sinalizar início do registro profissional via Context
-    startRegistration();
-    
-    // ⏱️ CRÍTICO: Aguardar 150ms para garantir propagação completa do Context
-    // Isso garante que useUserProfile verá isRegistering: true
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    console.log('🎯 [ProfessionalForm] Starting professional registration for:', formData.email);
+    console.log('📤 [ProfessionalForm] Iniciando cadastro profissional para:', formData.email);
     
     try {
-      let currentUser = user;
-      
-      // Se não há usuário logado, verificar se email já existe antes de criar conta
-      if (!currentUser) {
-        const emailCheck = await checkEmailExists(formData.email);
-        if (emailCheck?.exists) {
-          // Salvar dados do formulário
-          sessionStorage.setItem('pendingProfessionalData', JSON.stringify(formData));
-          setShowExistingAccountModal(true);
-          setLoading(false);
-          return;
-        }
-
-        // Criar a conta - sem email automático do Supabase
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.senha,
-          options: {
-            // Desabilitar envio automático de email de confirmação
-            data: {
-              skip_confirmation: true
-            }
-          }
-        });
-
-        if (authError) throw authError;
-        if (!authData.user) throw new Error('Erro ao criar conta');
-        
-        currentUser = authData.user;
-        
-        // Aguardar um pouco para garantir que a autenticação seja processada
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-
-      // Verificar se o usuário está realmente autenticado
-      const { data: { user: authenticatedUser } } = await supabase.auth.getUser();
-      if (!authenticatedUser && !currentUser) {
-        throw new Error('Erro na autenticação. Tente novamente.');
-      }
-
-      const userToUse = authenticatedUser || currentUser;
+      // ✅ NOVO: Não criar usuário aqui, edge function faz tudo
 
       // Upload da foto se foi selecionada
       let uploadedPhotoUrl = formData.fotoPerfilUrl;
@@ -317,8 +270,9 @@ const ProfessionalForm = () => {
         possui_e_psi: formData.possuiEPsi === 'sim',
         servicos_raw: formData.especialidades.length > 0 ? formData.especialidades.join(', ') : null,
         preco_consulta: formData.precoConsulta ? parseFloat(formData.precoConsulta) : null,
-        tempo_consulta: 50, // Fixado em 50 minutos
-        ativo: true
+        tempo_consulta: 50,
+        ativo: true,
+        senha: formData.senha // ✅ NOVO: Edge function precisa da senha para criar usuário
       };
 
       const horariosData = formData.horarios.map(horario => ({
@@ -328,21 +282,16 @@ const ProfessionalForm = () => {
         duration: horario.duration || 30
       }));
 
-      console.log('📤 Enviando dados para edge function:', { 
-        userId: userToUse.id, 
-        profileHasPhoto: !!profileData.foto_perfil_url,
-        professionalHasPhoto: !!professionalData.foto_perfil_url,
-        photoUrl: uploadedPhotoUrl
-      });
+      console.log('📤 Enviando dados para edge function (sem userId - edge function cria usuário)');
 
-      // Usar edge function para criar perfil com privilégios administrativos
+      // ✅ NOVO: Edge function cria usuário, perfil e profissional atomicamente
       const { data, error } = await supabase.functions.invoke('create-professional-profile', {
         body: {
-          userId: userToUse.id,
+          // Sem userId - edge function cria o usuário
           profileData,
           professionalData,
           horariosData: horariosData.length > 0 ? horariosData : null,
-          tenantSlug: tenant?.slug || 'alopsi' // ⭐ Enviar tenant explicitamente
+          tenantSlug: tenant?.slug || 'alopsi'
         }
       });
 
@@ -354,9 +303,6 @@ const ProfessionalForm = () => {
       sessionStorage.removeItem('continueRegistration');
       sessionStorage.removeItem('professional-registration-draft');
       clearSaved();
-
-      // 🛡️ Finalizar registro profissional via Context
-      endRegistration();
       
       // Check if this is a new user that needs email confirmation
       if (data.isNewUser && data.confirmationEmailSent) {
@@ -371,9 +317,6 @@ const ProfessionalForm = () => {
       }
     } catch (error: any) {
       console.error('Erro detalhado:', error);
-      
-      // 🛡️ Finalizar registro profissional em caso de erro
-      endRegistration();
       
       let errorMessage = error.message;
       
