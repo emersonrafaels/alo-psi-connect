@@ -328,12 +328,47 @@ serve(async (req) => {
       console.log('🔐 [v1.0.2] Creating new user via Admin API');
       console.log('📧 Email:', profileData.email);
       
-      // Verificar se email já existe
-      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-      const emailExists = existingUsers?.users?.some(u => u.email === profileData.email);
-      
-      if (emailExists) {
-        throw new Error('Email já cadastrado no sistema');
+      // ✅ IMPROVED: Verificar se email já existe e detectar usuários órfãos
+      try {
+        const { data: existingUser } = await supabaseAdmin.auth.admin.getUserByEmail(profileData.email);
+        
+        if (existingUser) {
+          console.log('⚠️ Email já existe em auth.users:', profileData.email);
+          
+          // Verificar se tem perfil vinculado
+          const { data: profile, error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .select('id, user_id')
+            .eq('email', profileData.email)
+            .maybeSingle();
+          
+          if (profileError) {
+            console.error('❌ Erro ao verificar perfil:', profileError);
+            throw new Error('Erro ao validar usuário existente');
+          }
+          
+          if (!profile || !profile.user_id) {
+            // Usuário órfão detectado - deletar e permitir recriação
+            console.log('⚠️ Usuário órfão detectado - removendo:', existingUser.user.id);
+            const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(existingUser.user.id);
+            
+            if (deleteError) {
+              console.error('❌ Erro ao deletar usuário órfão:', deleteError);
+              throw new Error('Erro ao limpar usuário órfão');
+            }
+            
+            console.log('✅ Usuário órfão removido com sucesso');
+          } else {
+            // Usuário tem perfil válido - não permitir recadastro
+            throw new Error('Email já cadastrado no sistema');
+          }
+        }
+      } catch (error: any) {
+        // getUserByEmail retorna erro se não encontrar - isso é OK
+        if (!error.message?.includes('User not found')) {
+          throw error;
+        }
+        console.log('📧 Email disponível para cadastro:', profileData.email);
       }
       
       // Criar usuário via Admin API (bypassa rate limits e não envia email automático)
