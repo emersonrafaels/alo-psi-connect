@@ -50,6 +50,7 @@ const ProfessionalForm = () => {
   
   const [showExistingAccountModal, setShowExistingAccountModal] = useState(false);
   const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
+  const [emailExistsModalShown, setEmailExistsModalShown] = useState(false);
   const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string>('');
   const navigate = useNavigate();
@@ -427,6 +428,23 @@ const ProfessionalForm = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Resetar flag quando email mudar
+  useEffect(() => {
+    setEmailExistsModalShown(false);
+  }, [formData.email]);
+
+  // Handler para abrir modal automaticamente quando email já existe
+  const handleEmailExists = (email: string) => {
+    if (emailExistsModalShown) return;
+    
+    setEmailExistsModalShown(true);
+    
+    // Delay de 2s para usuário ler o feedback primeiro
+    setTimeout(() => {
+      setShowExistingAccountModal(true);
+    }, 2000);
+  };
+
   const renderStep1 = () => (
     <div className="space-y-6">
       <div className="grid gap-4">
@@ -459,7 +477,7 @@ const ProfessionalForm = () => {
               required
               disabled={!!user}
             />
-            {!user && <EmailValidationFeedback email={formData.email} />}
+            {!user && <EmailValidationFeedback email={formData.email} onEmailExists={handleEmailExists} />}
             {googleData?.emailVerified && (
               <Badge variant="secondary" className="text-xs">
                 <Check className="h-3 w-3 mr-1" />

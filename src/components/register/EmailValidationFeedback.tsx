@@ -6,9 +6,10 @@ import { cn } from '@/lib/utils';
 interface EmailValidationFeedbackProps {
   email: string;
   onValidationChange?: (isValid: boolean, exists: boolean) => void;
+  onEmailExists?: (email: string) => void;
 }
 
-export const EmailValidationFeedback = ({ email, onValidationChange }: EmailValidationFeedbackProps) => {
+export const EmailValidationFeedback = ({ email, onValidationChange, onEmailExists }: EmailValidationFeedbackProps) => {
   const validation = useEmailValidation(email);
 
   useEffect(() => {
@@ -18,7 +19,12 @@ export const EmailValidationFeedback = ({ email, onValidationChange }: EmailVali
         !validation.isAvailable && !validation.error
       );
     }
-  }, [validation.isAvailable, validation.error, onValidationChange]);
+
+    // Disparar callback quando email existe
+    if (!validation.isChecking && !validation.error && !validation.isAvailable && onEmailExists) {
+      onEmailExists(email);
+    }
+  }, [validation.isAvailable, validation.error, validation.isChecking, onValidationChange, onEmailExists, email]);
 
   if (!email || email.length < 3) return null;
 
