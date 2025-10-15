@@ -96,9 +96,14 @@ export const useMarkdownToolbar = (
   const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const clipboardData = e.clipboardData;
     const htmlContent = clipboardData.getData('text/html');
+    const plainText = clipboardData.getData('text/plain');
     
-    // Se não tem HTML, deixa o navegador colar normalmente
-    if (!htmlContent) return;
+    // Se não tem HTML OU se o HTML é muito simples (apenas tags básicas), 
+    // usar texto plano normalmente (preserva Markdown)
+    if (!htmlContent || htmlContent.length < plainText.length * 1.2) {
+      // Deixar navegador colar texto plano normalmente
+      return;
+    }
     
     e.preventDefault();
     const textarea = textareaRef.current;

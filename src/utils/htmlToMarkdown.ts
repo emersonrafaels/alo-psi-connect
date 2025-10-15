@@ -37,6 +37,11 @@ export const convertHtmlToMarkdown = (html: string): string => {
         
         case 'strong':
         case 'b':
+          // Se contém apenas números e ponto, pode ser marcador de lista
+          const strongContent = children.trim();
+          if (/^\d+\.?$/.test(strongContent)) {
+            return `**${strongContent}** `;
+          }
           return `**${children}**`;
         
         case 'em':
@@ -56,6 +61,14 @@ export const convertHtmlToMarkdown = (html: string): string => {
           return `![${alt}](${src})`;
         
         case 'p':
+          // Se o parágrafo contém APENAS <strong> ou <b>, pode ser um heading
+          const strongOnly = element.querySelector('strong, b');
+          const textContent = element.textContent?.trim() || '';
+          
+          if (strongOnly && strongOnly.textContent === textContent && textContent.length < 80 && textContent.length > 0) {
+            // Provavelmente é um heading disfarçado (parágrafo curto só com negrito)
+            return `## ${textContent}\n\n`;
+          }
           return `${children}\n\n`;
         
         case 'br':
@@ -71,6 +84,13 @@ export const convertHtmlToMarkdown = (html: string): string => {
           // Detectar se é item de lista ordenada ou não
           const parent = element.parentElement;
           const isOrdered = parent?.tagName.toLowerCase() === 'ol';
+          
+          // Detectar se começa com **N.** ou **N**
+          const match = children.match(/^\*\*(\d+)\.?\*\*\s*/);
+          if (match) {
+            return `**${match[1]}.** ${children.replace(match[0], '')}\n`;
+          }
+          
           const prefix = isOrdered ? '1. ' : '- ';
           return `${prefix}${children}\n`;
         
