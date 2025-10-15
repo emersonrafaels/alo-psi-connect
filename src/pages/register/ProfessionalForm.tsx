@@ -804,8 +804,8 @@ const ProfessionalForm = () => {
       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
         <h4 className="text-sm font-medium text-green-900 mb-2">Quase pronto!</h4>
         <p className="text-sm text-green-700">
-          Após finalizar o cadastro, você será automaticamente logado e poderá conectar sua agenda do Google Calendar 
-          para uma melhor gestão dos seus horários.
+          Após finalizar o cadastro, você receberá um email de confirmação. Clique no link do email para ativar sua conta 
+          e depois faça login para acessar a plataforma.
         </p>
       </div>
     </div>
