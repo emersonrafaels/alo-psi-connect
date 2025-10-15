@@ -37,7 +37,7 @@ export const useBlogPost = (slug: string | undefined) => {
 
       return {
         ...data,
-        author: authorData || { nome: 'Autor Desconhecido', foto_perfil_url: null, email: '' },
+        author: authorData || { nome: 'Administrador do Sistema', foto_perfil_url: null, email: '' },
         tags: data.tags?.map((t: any) => t.tag).filter(Boolean) || []
       } as BlogPost & { author: { nome: string; foto_perfil_url: string | null; email: string } };
     },

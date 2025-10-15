@@ -48,7 +48,7 @@ export const AnalyticsFilters = ({
         new Map(data?.map(p => [p.author_id, p.author]) || []).entries()
       ).map(([id, author]: [string, any]) => ({
         id,
-        name: author?.nome || 'Autor Desconhecido'
+        name: author?.nome || 'Administrador do Sistema'
       }));
       
       return uniqueAuthors;

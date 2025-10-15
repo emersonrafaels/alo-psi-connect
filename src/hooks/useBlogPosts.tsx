@@ -114,7 +114,11 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
 
       return posts.map((post: any) => ({
         ...post,
-        author: authorsMap.get(post.author_id) || undefined,
+        author: authorsMap.get(post.author_id) || { 
+          user_id: post.author_id,
+          nome: 'Administrador do Sistema', 
+          foto_perfil_url: null 
+        },
         tags: post.tags?.map((t: any) => t.tag).filter(Boolean) || []
       })) as BlogPost[];
     },

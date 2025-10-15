@@ -81,7 +81,7 @@ export const AuthorAnalytics = ({ dateRange }: AuthorAnalyticsProps) => {
 
         const authorId = day.post.author_id;
         const authorInfo = authorLookup.get(authorId);
-        const authorName = authorInfo?.nome || 'Autor Desconhecido';
+        const authorName = authorInfo?.nome || 'Administrador do Sistema';
         const authorPhoto = authorInfo?.foto_perfil_url;
 
         if (!authorMap.has(authorId)) {
