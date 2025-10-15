@@ -1,5 +1,6 @@
 import { useCallback, RefObject } from 'react';
 import { wrapSelection, insertText, insertAtLineStart } from '@/utils/markdownHelpers';
+import { convertHtmlToMarkdown } from '@/utils/htmlToMarkdown';
 
 export const useMarkdownToolbar = (
   textareaRef: RefObject<HTMLTextAreaElement>,
@@ -92,8 +93,46 @@ export const useMarkdownToolbar = (
     }
   }, [applyFormatting, textareaRef, onContentChange]);
 
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const clipboardData = e.clipboardData;
+    const htmlContent = clipboardData.getData('text/html');
+    
+    // Se não tem HTML, deixa o navegador colar normalmente
+    if (!htmlContent) return;
+    
+    e.preventDefault();
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    // Converter HTML para Markdown
+    const markdown = convertHtmlToMarkdown(htmlContent);
+    
+    // Inserir no cursor atual
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentValue = textarea.value;
+    const newValue = currentValue.substring(0, start) + markdown + currentValue.substring(end);
+    
+    textarea.value = newValue;
+    
+    // IMPORTANTE: Notificar React Hook Form PRIMEIRO
+    if (onContentChange) {
+      onContentChange(newValue);
+    }
+    
+    // Ajustar cursor
+    const newPosition = start + markdown.length;
+    textarea.setSelectionRange(newPosition, newPosition);
+    textarea.focus();
+    
+    // Disparar eventos
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    textarea.dispatchEvent(new Event('change', { bubbles: true }));
+  }, [textareaRef, onContentChange]);
+
   return {
     applyFormatting,
-    handleKeyDown
+    handleKeyDown,
+    handlePaste
   };
 };

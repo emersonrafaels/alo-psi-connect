@@ -25,16 +25,16 @@ export const insertText = (
   const newValue = value.substring(0, start) + textToInsert + value.substring(end);
   textarea.value = newValue;
   
-  const newCursorPosition = start + textToInsert.length + cursorOffset;
-  textarea.setSelectionRange(newCursorPosition, newCursorPosition);
-  textarea.focus();
-  
-  // Notify React Hook Form
+  // IMPORTANTE: Notificar React Hook Form PRIMEIRO, antes de ajustar cursor
   if (onContentChange) {
     onContentChange(newValue);
   }
   
-  // Trigger both input and change events as fallback
+  const newCursorPosition = start + textToInsert.length + cursorOffset;
+  textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+  textarea.focus();
+  
+  // Trigger events as fallback
   const inputEvent = new Event('input', { bubbles: true });
   const changeEvent = new Event('change', { bubbles: true });
   textarea.dispatchEvent(inputEvent);
@@ -66,16 +66,16 @@ export const insertAtLineStart = (
   const newValue = value.substring(0, lineStart) + prefix + value.substring(lineStart);
   textarea.value = newValue;
   
-  const newCursorPosition = start + prefix.length;
-  textarea.setSelectionRange(newCursorPosition, newCursorPosition);
-  textarea.focus();
-  
-  // Notify React Hook Form
+  // IMPORTANTE: Notificar React Hook Form PRIMEIRO
   if (onContentChange) {
     onContentChange(newValue);
   }
   
-  // Trigger both events as fallback
+  const newCursorPosition = start + prefix.length;
+  textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+  textarea.focus();
+  
+  // Trigger events as fallback
   const inputEvent = new Event('input', { bubbles: true });
   const changeEvent = new Event('change', { bubbles: true });
   textarea.dispatchEvent(inputEvent);

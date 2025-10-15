@@ -84,7 +84,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [availableTenants, setAvailableTenants] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { applyFormatting, handleKeyDown } = useMarkdownToolbar(
+  const { applyFormatting, handleKeyDown, handlePaste } = useMarkdownToolbar(
     textareaRef,
     (newValue) => setValue('content', newValue, { shouldDirty: true, shouldTouch: true })
   );
@@ -487,6 +487,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
                   }}
                   id="content"
                   onKeyDown={handleKeyDown}
+                  onPaste={handlePaste}
                   placeholder="Escreva o conteúdo em Markdown..."
                   rows={20}
                   className="font-mono border-0 rounded-none focus-visible:ring-0"
@@ -520,6 +521,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
                           textareaRef.current = e;
                         }}
                         onKeyDown={handleKeyDown}
+                        onPaste={handlePaste}
                         placeholder="Escreva o conteúdo em Markdown..."
                         className="font-mono flex-1 resize-none border-0 rounded-none focus-visible:ring-0"
                       />
