@@ -1,5 +1,5 @@
-// Version: 1.0.1 - Fixed 42P10 error by separating UPDATE and SELECT operations
-// Last updated: 2025-01-13
+// Version: 1.0.3 - Fixed getUserByEmail error (replaced with profiles check + orphan cleanup)
+// Last updated: 2025-10-15
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -325,7 +325,7 @@ serve(async (req) => {
     let isNewUser = false;
 
     if (!userId) {
-      console.log('🔐 [v1.0.2] Creating new user via Admin API');
+      console.log('🔐 [v1.0.3] Creating new user via Admin API');
       console.log('📧 Email:', profileData.email);
       
       // 🔍 Verificar se o email já existe no perfil
@@ -366,6 +366,8 @@ serve(async (req) => {
           console.log('✅ Perfil órfão removido, prosseguindo com criação');
         }
       }
+      
+      console.log('✅ [v1.0.3] Email validation passed, proceeding with user creation');
       
       // Criar usuário via Admin API (bypassa rate limits e não envia email automático)
       const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
