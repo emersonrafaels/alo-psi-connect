@@ -96,7 +96,7 @@ export const useUserManagement = () => {
     try {
       const { data, error } = await supabase.functions.invoke('delete-user-completely', {
         body: { 
-          userId: userId || undefined,
+          userId: userId || null,
           profileId: profileId,
           deletionReason 
         }

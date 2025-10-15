@@ -117,42 +117,47 @@ Deno.serve(async (req) => {
     // 3. Delete related data in order (most dependent first)
     console.log('Deleting related data...');
 
-    // Delete mood factors first (depends on mood_entries)
-    console.log('Deleting mood factors...');
-    const { data: moodEntryIds } = await supabaseAdmin
-      .from('mood_entries')
-      .select('id')
-      .eq('user_id', userId);
-    
-    if (moodEntryIds?.length) {
-      await supabaseAdmin.from('mood_factors').delete().in('mood_entry_id', moodEntryIds.map(entry => entry.id));
+    // Only delete auth.users-related data if user_id exists
+    if (profile.user_id) {
+      // Delete mood factors first (depends on mood_entries)
+      console.log('Deleting mood factors...');
+      const { data: moodEntryIds } = await supabaseAdmin
+        .from('mood_entries')
+        .select('id')
+        .eq('user_id', profile.user_id);
+      
+      if (moodEntryIds?.length) {
+        await supabaseAdmin.from('mood_factors').delete().in('mood_entry_id', moodEntryIds.map(entry => entry.id));
+      }
+
+      // Delete mood entries (has foreign key to auth.users)
+      console.log('Deleting mood entries...');
+      await supabaseAdmin.from('mood_entries').delete().eq('user_id', profile.user_id);
+
+      // Delete AI insights history (has foreign key to auth.users)
+      console.log('Deleting AI insights history...');
+      await supabaseAdmin.from('ai_insights_history').delete().eq('user_id', profile.user_id);
+      
+      // Delete AI insights usage
+      console.log('Deleting AI insights usage...');
+      await supabaseAdmin.from('ai_insights_usage').delete().eq('user_id', profile.user_id);
+
+      // Delete booking tracking
+      console.log('Deleting booking tracking...');
+      await supabaseAdmin.from('user_booking_tracking').delete().eq('user_id', profile.user_id);
+      
+      // Delete comments
+      console.log('Deleting comments...');
+      await supabaseAdmin.from('comments').delete().eq('user_id', profile.user_id);
+      
+      // Cancel appointments (don't delete for history)
+      await supabaseAdmin
+        .from('agendamentos')
+        .update({ status: 'cancelado' })
+        .eq('user_id', profile.user_id);
+    } else {
+      console.log('⚠️ [ORPHAN PROFILE] Skipping auth-related data deletions');
     }
-
-    // Delete mood entries (has foreign key to auth.users)
-    console.log('Deleting mood entries...');
-    await supabaseAdmin.from('mood_entries').delete().eq('user_id', userId);
-
-    // Delete AI insights history (has foreign key to auth.users)
-    console.log('Deleting AI insights history...');
-    await supabaseAdmin.from('ai_insights_history').delete().eq('user_id', userId);
-    
-    // Delete AI insights usage
-    console.log('Deleting AI insights usage...');
-    await supabaseAdmin.from('ai_insights_usage').delete().eq('user_id', userId);
-
-    // Delete booking tracking
-    console.log('Deleting booking tracking...');
-    await supabaseAdmin.from('user_booking_tracking').delete().eq('user_id', userId);
-    
-    // Delete comments
-    console.log('Deleting comments...');
-    await supabaseAdmin.from('comments').delete().eq('user_id', userId);
-    
-    // Cancel appointments (don't delete for history)
-    await supabaseAdmin
-      .from('agendamentos')
-      .update({ status: 'cancelado' })
-      .eq('user_id', userId);
     
     // Delete patient info
     const { data: patientData } = await supabaseAdmin
@@ -176,11 +181,13 @@ Deno.serve(async (req) => {
       await supabaseAdmin.from('profissionais').delete().eq('profile_id', profile.id);
     }
     
-    // Delete user roles
-    await supabaseAdmin.from('user_roles').delete().eq('user_id', userId);
-    
-    // Delete password reset tokens
-    await supabaseAdmin.from('password_reset_tokens').delete().eq('user_id', userId);
+    // Delete user roles (only if user_id exists)
+    if (profile.user_id) {
+      await supabaseAdmin.from('user_roles').delete().eq('user_id', profile.user_id);
+      
+      // Delete password reset tokens
+      await supabaseAdmin.from('password_reset_tokens').delete().eq('user_id', profile.user_id);
+    }
     
     // Delete agendamento tokens
     await supabaseAdmin.from('agendamento_tokens').delete().eq('email', profile.email);
@@ -189,7 +196,7 @@ Deno.serve(async (req) => {
     const { error: profileDeleteError } = await supabaseAdmin
       .from('profiles')
       .delete()
-      .eq('user_id', userId);
+      .eq('id', profile.id);
 
     if (profileDeleteError) {
       console.error('Error deleting profile:', profileDeleteError);
