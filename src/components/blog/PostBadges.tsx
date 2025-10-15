@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Star, Sparkles } from 'lucide-react';
+import { EditorialBadge } from './EditorialBadge';
 
 interface PostBadgesProps {
   isFeatured?: boolean;
@@ -33,11 +34,7 @@ export const PostBadges = ({ isFeatured, isNew, editorialBadge, publishedAt }: P
           Novo
         </Badge>
       )}
-      {editorialBadge && (
-        <Badge variant="outline" className="border-primary text-primary">
-          {editorialBadge}
-        </Badge>
-      )}
+      {editorialBadge && <EditorialBadge badge={editorialBadge} />}
     </div>
   );
 };
