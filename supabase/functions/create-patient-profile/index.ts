@@ -46,7 +46,7 @@ function generateConfirmationEmailHTML(
               <p style="margin: 0; font-size: 16px; color: #4b5563;">Para começar a utilizar todos os recursos da plataforma, confirme seu email clicando no botão abaixo:</p>
             </div>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${confirmationUrl}" style="display: inline-block; background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%); color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px ${primaryColor}33;">✅ Confirmar Email</a>
+              <a href="${confirmationUrl}" style="display: inline-block; background: #16a34a; color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);">✅ Confirmar Email</a>
             </div>
             <div style="background-color: #fef3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b; margin: 30px 0;">
               <p style="margin: 0; font-size: 14px; color: #a16207;"><strong>⏰ Importante:</strong> Este link expira em 24 horas por segurança.</p>
