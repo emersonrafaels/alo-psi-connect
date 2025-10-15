@@ -1,14 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BlogPost } from './useBlogPosts';
+import { useTenant } from './useTenant';
 
 export const useBlogPost = (slug: string | undefined) => {
   const queryClient = useQueryClient();
+  const { tenant } = useTenant();
 
   const query = useQuery({
-    queryKey: ['blog-post', slug],
+    queryKey: ['blog-post', slug, tenant?.id],
     queryFn: async () => {
-      if (!slug) return null;
+      if (!slug || !tenant) return null;
 
       const { data, error } = await supabase
         .from('blog_posts')
@@ -20,6 +22,7 @@ export const useBlogPost = (slug: string | undefined) => {
         `)
         .eq('slug', slug)
         .eq('status', 'published')
+        .or(`tenant_id.eq.${tenant.id},tenant_id.is.null`)
         .maybeSingle();
 
       if (error) throw error;
@@ -38,7 +41,7 @@ export const useBlogPost = (slug: string | undefined) => {
         tags: data.tags?.map((t: any) => t.tag).filter(Boolean) || []
       } as BlogPost & { author: { nome: string; foto_perfil_url: string | null; email: string } };
     },
-    enabled: !!slug
+    enabled: !!slug && !!tenant
   });
 
   const incrementViews = useMutation({
