@@ -42,14 +42,13 @@ export const useEmailValidation = (email: string, debounceMs: number = 500) => {
 
     const timeoutId = setTimeout(async () => {
       try {
-        // Check if email is already registered
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', email)
-          .limit(1);
+        // Check if email exists in auth.users via edge function
+        const { data, error } = await supabase.functions.invoke('check-email-exists', {
+          body: { email }
+        });
 
         if (error) {
+          console.error('Erro ao verificar email:', error);
           setResult({
             isValid: true,
             isAvailable: false,
@@ -59,15 +58,16 @@ export const useEmailValidation = (email: string, debounceMs: number = 500) => {
           return;
         }
 
-        const isAvailable = !data || data.length === 0;
+        const isAvailable = !data?.exists;
 
         setResult({
           isValid: true,
           isAvailable,
           isChecking: false,
-          error: isAvailable ? undefined : 'Este email já está em uso',
+          error: isAvailable ? undefined : 'Este email já está cadastrado',
         });
       } catch (error) {
+        console.error('Exceção ao verificar email:', error);
         setResult({
           isValid: true,
           isAvailable: false,
