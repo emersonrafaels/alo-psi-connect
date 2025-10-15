@@ -1,4 +1,5 @@
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 
 interface MarkdownPreviewProps {
@@ -35,6 +36,7 @@ export const MarkdownPreview = ({
       )}
       
       <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => <h1 className="text-4xl font-bold mt-16 mb-8 tracking-tight">{children}</h1>,
           h2: ({ children }) => <h2 className="text-3xl font-bold mt-14 mb-6 tracking-tight">{children}</h2>,

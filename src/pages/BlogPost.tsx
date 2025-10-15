@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Clock, Eye, Home, Bookmark } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -348,6 +349,7 @@ export default function BlogPost() {
                           prose-img:rounded-2xl prose-img:shadow-2xl prose-img:my-12
                           prose-hr:my-12 prose-hr:border-border/50">
             <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
               components={{
                 h1: ({ node, children, ...props }) => {
                   const text = children?.toString() || '';
