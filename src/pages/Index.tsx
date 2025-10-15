@@ -5,7 +5,6 @@ import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
 import SearchSection from "@/components/search-section";
 import ProfessionalCard from "@/components/professional-card";
-import { FirstLoginWelcome } from "@/components/FirstLoginWelcome";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { supabase } from "@/integrations/supabase/client";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
@@ -358,9 +357,6 @@ const Index = () => {
       </section>
 
       <Footer />
-      
-      {/* Welcome modal para primeiro login de profissionais */}
-      <FirstLoginWelcome />
     </div>;
 };
 export default Index;
