@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
 import { useEmailResend } from '@/hooks/useEmailResend';
-import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound } from 'lucide-react';
+import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart } from 'lucide-react';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -242,13 +242,19 @@ export default function AdminUsers() {
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
                     {user.tipo_usuario === 'paciente' && (
-                      <Badge variant="secondary">Paciente</Badge>
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Heart className="h-3 w-3" />
+                        Paciente
+                      </Badge>
                     )}
                     {user.tipo_usuario === 'profissional' && (
-                      <Badge variant="outline">Profissional</Badge>
+                      <Badge variant="default" className="flex items-center gap-1">
+                        <Stethoscope className="h-3 w-3" />
+                        Profissional
+                      </Badge>
                     )}
                     {user.tipo_usuario === 'admin' && (
-                      <Badge variant="default">Administrador</Badge>
+                      <Badge variant="destructive">Administrador</Badge>
                     )}
                   </div>
                   

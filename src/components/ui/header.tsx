@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -108,8 +109,22 @@ const Header = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-2 py-1.5 text-sm">
-                    <div className="font-medium">{profile?.nome || user.email}</div>
-                    <div className="text-xs text-muted-foreground">{user.email}</div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-medium truncate">{profile?.nome || user.email}</div>
+                      {profile?.tipo_usuario === 'profissional' && (
+                        <Badge variant="default" className="flex items-center gap-1 shrink-0">
+                          <Stethoscope className="h-3 w-3" />
+                          <span className="text-xs">Pro</span>
+                        </Badge>
+                      )}
+                      {profile?.tipo_usuario === 'paciente' && (
+                        <Badge variant="secondary" className="flex items-center gap-1 shrink-0">
+                          <Heart className="h-3 w-3" />
+                          <span className="text-xs">Paciente</span>
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">{user.email}</div>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/agendamentos')}>
