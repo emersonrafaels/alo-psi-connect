@@ -207,7 +207,7 @@ export default function BlogPost() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
-        <article className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
+        <article className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-4xl">
           <div className="flex items-center justify-between mb-6">
             <Breadcrumb>
               <BreadcrumbList>
@@ -307,18 +307,20 @@ export default function BlogPost() {
 
           <div className="blog-content prose prose-lg dark:prose-invert max-w-none 
                           prose-headings:font-bold prose-headings:tracking-tight
-                          prose-h1:text-4xl prose-h1:mb-6 prose-h1:mt-12
-                          prose-h2:text-3xl prose-h2:mb-4 prose-h2:mt-10
-                          prose-h3:text-2xl prose-h3:mb-3 prose-h3:mt-8
-                          prose-p:text-lg prose-p:leading-relaxed prose-p:mb-6
-                          prose-li:text-lg prose-li:leading-relaxed
+                          prose-h1:text-4xl prose-h1:mb-8 prose-h1:mt-16
+                          prose-h2:text-3xl prose-h2:mb-6 prose-h2:mt-14
+                          prose-h3:text-2xl prose-h3:mb-5 prose-h3:mt-10
+                          prose-p:text-lg prose-p:leading-loose prose-p:mb-8
+                          prose-li:text-lg prose-li:leading-relaxed prose-li:mb-3
+                          prose-ul:my-8 prose-ol:my-8
                           prose-a:text-primary prose-a:no-underline hover:prose-a:underline
                           prose-strong:text-foreground prose-strong:font-semibold
                           prose-blockquote:border-l-4 prose-blockquote:border-primary
-                          prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-muted-foreground
+                          prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-blockquote:my-8
                           prose-code:text-primary prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded
-                          prose-pre:bg-muted prose-pre:border prose-pre:border-border
-                          prose-img:rounded-xl prose-img:shadow-lg prose-img:my-8">
+                          prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:my-8
+                          prose-img:rounded-xl prose-img:shadow-lg prose-img:my-10
+                          prose-hr:my-12">
             <ReactMarkdown
               components={{
                 img: ({ node, ...props }) => (
