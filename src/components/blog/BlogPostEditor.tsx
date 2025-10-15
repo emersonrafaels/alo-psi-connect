@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MarkdownPreview } from './MarkdownPreview';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { FileEdit, Eye, Columns, ExternalLink } from 'lucide-react';
+import { FileEdit, Eye, Columns, ExternalLink, Building2 } from 'lucide-react';
 import { MarkdownToolbar } from './MarkdownToolbar';
 import { EditorMetrics } from './EditorMetrics';
 import { MarkdownCheatSheet } from './MarkdownCheatSheet';
@@ -30,6 +30,7 @@ import { useSuperAuthorRole } from '@/hooks/useSuperAuthorRole';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star } from 'lucide-react';
+import { useTenant } from '@/hooks/useTenant';
 
 const postSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -71,6 +72,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const { toast } = useToast();
   const { createPost, updatePost } = useBlogPostManager();
   const { isSuperAuthor } = useSuperAuthorRole();
+  const { tenant: contextTenant } = useTenant();
   const [featuredImage, setFeaturedImage] = useState(post?.featured_image_url || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(
     post?.tags?.map(t => t.id) || []
@@ -79,6 +81,8 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const [slugExists, setSlugExists] = useState(false);
   const [checkingSlug, setCheckingSlug] = useState(false);
   const [userStartedEditing, setUserStartedEditing] = useState(false);
+  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
+  const [availableTenants, setAvailableTenants] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { applyFormatting, handleKeyDown } = useMarkdownToolbar(
     textareaRef,
@@ -126,6 +130,23 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
 
   // Separar o ref do content para usar callback ref pattern
   const { ref: contentRef, ...contentRegister } = register('content');
+
+  // Carregar lista de tenants disponíveis
+  useEffect(() => {
+    const fetchTenants = async () => {
+      const { data } = await supabase
+        .from('tenants')
+        .select('id, name, slug')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (data) {
+        setAvailableTenants(data);
+      }
+    };
+    
+    fetchTenants();
+  }, []);
 
   // Recuperar rascunho se aceito
   useEffect(() => {
@@ -285,6 +306,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
       tags: selectedTags,
       allow_comments: data.allow_comments,
       allow_ratings: data.allow_ratings,
+      tenant_id: selectedTenantId || undefined,
       is_featured: isSuperAuthor ? isFeatured : undefined,
       featured_order: isSuperAuthor && isFeatured && featuredOrder ? parseInt(featuredOrder) : undefined,
       editorial_badge: isSuperAuthor && editorialBadge !== 'none' ? editorialBadge : undefined,
@@ -354,6 +376,51 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
           {errors.title && (
             <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
           )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="tenant" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            Site de Publicação
+          </Label>
+          <Select 
+            value={selectedTenantId || 'context'} 
+            onValueChange={(value) => setSelectedTenantId(value === 'context' ? null : value)}
+          >
+            <SelectTrigger id="tenant" className="bg-background">
+              <SelectValue placeholder="Selecione o site" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="context">
+                <div className="flex flex-col gap-1">
+                  <span className="font-medium">🌐 Site Atual (Auto)</span>
+                  <span className="text-xs text-muted-foreground">
+                    {contextTenant ? `${contextTenant.name} (${contextTenant.slug})` : 'Detectado pela URL'}
+                  </span>
+                </div>
+              </SelectItem>
+              
+              <div className="my-1 border-t" />
+              
+              {availableTenants.map((tenant) => (
+                <SelectItem key={tenant.id} value={tenant.id}>
+                  <div className="flex flex-col gap-1">
+                    <span className="font-medium flex items-center gap-2">
+                      {tenant.slug === 'alopsi' && '🟢'}
+                      {tenant.slug === 'medcos' && '🔵'}
+                      {tenant.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{tenant.slug}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {selectedTenantId 
+              ? 'Post será criado para o site selecionado acima' 
+              : 'Post será criado para o site atual (baseado na URL)'}
+          </p>
         </div>
 
         <div>
