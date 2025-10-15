@@ -32,11 +32,25 @@ export const useBlogPostManager = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Não autenticado');
 
+      // Get current tenant from localStorage
+      const tenantSlug = localStorage.getItem('selected-tenant');
+      if (!tenantSlug) throw new Error('Nenhum tenant selecionado');
+
+      // Fetch tenant ID
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('id')
+        .eq('slug', tenantSlug)
+        .single();
+
+      if (!tenant) throw new Error('Tenant não encontrado');
+
       // Validar slug único
       const { data: existingPost } = await supabase
         .from('blog_posts')
         .select('id')
         .eq('slug', data.slug)
+        .eq('tenant_id', tenant.id)
         .maybeSingle();
 
       if (existingPost) {
@@ -54,6 +68,7 @@ export const useBlogPostManager = () => {
           status: data.status,
           read_time_minutes: data.read_time_minutes,
           author_id: user.id,
+          tenant_id: tenant.id,
           published_at: data.status === 'published' ? new Date().toISOString() : null,
           allow_comments: data.allow_comments ?? true,
           allow_ratings: data.allow_ratings ?? true,
