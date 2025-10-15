@@ -1090,6 +1090,59 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_registration_attempts: {
+        Row: {
+          created_at: string | null
+          email: string
+          error_message: string | null
+          form_data: Json
+          id: string
+          ip_address: string | null
+          nome: string | null
+          notification_sent: boolean | null
+          notification_sent_at: string | null
+          status: string | null
+          tenant_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          error_message?: string | null
+          form_data: Json
+          id?: string
+          ip_address?: string | null
+          nome?: string | null
+          notification_sent?: boolean | null
+          notification_sent_at?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          error_message?: string | null
+          form_data?: Json
+          id?: string
+          ip_address?: string | null
+          nome?: string | null
+          notification_sent?: boolean | null
+          notification_sent_at?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_registration_attempts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_tenants: {
         Row: {
           created_at: string | null

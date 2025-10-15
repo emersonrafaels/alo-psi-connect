@@ -47,6 +47,168 @@ function cleanProfessionalDataForUpdate(data: any): any {
   return cleanData;
 }
 
+// Helper function to save failed registration attempt
+async function saveFailedAttempt(
+  supabase: any,
+  email: string,
+  nome: string,
+  tenantId: string,
+  formData: any,
+  errorMessage: string,
+  status: 'failed' | 'incomplete' | 'duplicate'
+) {
+  try {
+    const { error } = await supabase
+      .from('professional_registration_attempts')
+      .insert({
+        email,
+        nome,
+        tenant_id: tenantId,
+        form_data: formData,
+        status,
+        error_message: errorMessage,
+        notification_sent: false
+      });
+    
+    if (error) {
+      console.error('❌ Erro ao salvar tentativa falha:', error);
+    } else {
+      console.log('✅ Tentativa falha salva para análise');
+    }
+  } catch (err) {
+    console.error('❌ Exceção ao salvar tentativa:', err);
+  }
+}
+
+// Helper function to send abandonment emails
+async function sendAbandonmentEmails(
+  supabase: any,
+  professionalEmail: string,
+  professionalName: string,
+  tenant: any,
+  errorMessage: string
+) {
+  const resendApiKey = Deno.env.get('RESEND_API_KEY');
+  if (!resendApiKey) {
+    console.error('❌ RESEND_API_KEY não configurado');
+    return;
+  }
+
+  try {
+    // 📧 Email 1: Para o profissional
+    const professionalEmailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
+            <h2 style="color: #dc2626;">⚠️ Ops! Algo deu errado no seu cadastro</h2>
+            <p>Olá, <strong>${professionalName}</strong>,</p>
+            <p>Identificamos um problema ao processar seu cadastro na plataforma <strong>${tenant.name}</strong>.</p>
+            
+            <div style="background: #fef3cd; padding: 15px; border-radius: 6px; margin: 20px 0;">
+              <p style="margin: 0; color: #92400e;"><strong>Erro encontrado:</strong> ${errorMessage}</p>
+            </div>
+            
+            <p><strong>O que fazer agora?</strong></p>
+            <ul>
+              <li>Verifique se preencheu todos os campos obrigatórios</li>
+              <li>Confirme se o email e CPF estão corretos</li>
+              <li>Tente novamente em alguns minutos</li>
+            </ul>
+            
+            <p>Se o problema persistir, <strong>entre em contato conosco</strong> e nossa equipe te ajudará a concluir o cadastro!</p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                Email: ${tenant.contact_email || 'contato@alopsi.com.br'}<br>
+                WhatsApp: ${tenant.contact_whatsapp || 'Não disponível'}
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // 📧 Email 2: Para a equipe Medcos (no email da Alopsi)
+    const teamEmailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
+            <h2 style="color: #dc2626;">🚨 Cadastro Profissional Abandonado</h2>
+            
+            <div style="background: #fee; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #dc2626;">
+              <p style="margin: 0;"><strong>Profissional:</strong> ${professionalName}</p>
+              <p style="margin: 5px 0 0 0;"><strong>Email:</strong> ${professionalEmail}</p>
+              <p style="margin: 5px 0 0 0;"><strong>Tenant:</strong> ${tenant.name} (${tenant.slug})</p>
+            </div>
+            
+            <h3 style="color: #991b1b;">Erro técnico:</h3>
+            <pre style="background: #f9fafb; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 12px;">${errorMessage}</pre>
+            
+            <div style="background: #fef3cd; padding: 15px; border-radius: 6px; margin: 20px 0;">
+              <p style="margin: 0; color: #92400e;"><strong>⚠️ Ação necessária:</strong> Entre em contato com o profissional para ajudá-lo a concluir o cadastro!</p>
+            </div>
+            
+            <p style="margin-top: 30px; color: #6b7280; font-size: 14px;">
+              💡 <strong>Dica:</strong> Verifique a tabela <code>professional_registration_attempts</code> no banco para mais detalhes.
+            </p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Enviar emails via Resend
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: `${tenant.name} <noreply@alopsi.com.br>`,
+        to: [professionalEmail],
+        subject: `⚠️ Problema no seu cadastro - ${tenant.name}`,
+        html: professionalEmailHtml,
+      }),
+    });
+
+    const teamResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: `Sistema Alô Psi <notificacoes@alopsi.com.br>`,
+        to: [tenant.contact_email || 'contato@alopsi.com.br'],
+        subject: `🚨 Cadastro Abandonado: ${professionalName} (${tenant.name})`,
+        html: teamEmailHtml,
+      }),
+    });
+
+    if (response.ok && teamResponse.ok) {
+      console.log('✅ Emails de abandono enviados com sucesso');
+      
+      // Marcar notificação como enviada
+      await supabase
+        .from('professional_registration_attempts')
+        .update({ 
+          notification_sent: true,
+          notification_sent_at: new Date().toISOString()
+        })
+        .eq('email', professionalEmail)
+        .order('created_at', { ascending: false })
+        .limit(1);
+    } else {
+      console.error('❌ Erro ao enviar emails via Resend');
+    }
+
+  } catch (emailError) {
+    console.error('❌ Exceção ao enviar emails:', emailError);
+  }
+}
+
 // Helper para gerar email HTML dinâmico baseado no tenant
 function generateConfirmationEmailHTML(
   tenantName: string,
@@ -109,14 +271,18 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  
+  // Use service role to bypass RLS
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+  
+  let requestData: any;
+  let detectedTenant: any;
+  
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    // Use service role to bypass RLS
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-    
-    const { profileData, professionalData, horariosData, userId, tenantSlug: requestTenantSlug } = await req.json();
+    requestData = await req.json();
+    const { profileData, professionalData, horariosData, userId, tenantSlug: requestTenantSlug } = requestData;
 
     // Detect tenant from multiple sources
     const origin = req.headers.get('origin') || '';
@@ -139,7 +305,7 @@ serve(async (req) => {
     // Fetch tenant data
     const { data: tenant, error: tenantError } = await supabaseAdmin
       .from('tenants')
-      .select('id, name, slug, logo_url, primary_color')
+      .select('id, name, slug, logo_url, primary_color, contact_email, contact_whatsapp')
       .eq('slug', tenantSlug)
       .single();
 
@@ -150,6 +316,8 @@ serve(async (req) => {
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    detectedTenant = tenant;
 
     console.log('Creating professional profile for user:', userId);
 
@@ -540,14 +708,44 @@ serve(async (req) => {
       }
     );
 
-  } catch (error) {
-    console.error('Function error:', error);
+  } catch (error: any) {
+    console.error('❌ Function error:', error);
     
     // Get more specific error message
-    const errorMessage = (error as any)?.message || 'Erro desconhecido';
-    const errorDetails = (error as any)?.details || (error as any)?.code || 'Sem detalhes adicionais';
+    const errorMessage = error?.message || 'Erro desconhecido';
+    const errorDetails = error?.details || error?.code || 'Sem detalhes adicionais';
     
     console.error('Error details:', errorDetails);
+    
+    // 🔴 SALVAR TENTATIVA FALHA NA TABELA TEMPORÁRIA
+    try {
+      const status = error?.code === '23505' ? 'duplicate' : 
+                    (!requestData?.profileData?.email || !requestData?.profileData?.nome) ? 'incomplete' : 
+                    'failed';
+      
+      await saveFailedAttempt(
+        supabaseAdmin,
+        requestData?.profileData?.email || 'email_desconhecido',
+        requestData?.profileData?.nome || 'Nome não informado',
+        detectedTenant?.id,
+        requestData, // Dados completos do formulário
+        errorMessage,
+        status
+      );
+      
+      // 📧 ENVIAR EMAILS DE NOTIFICAÇÃO
+      if (requestData?.profileData?.email && detectedTenant) {
+        await sendAbandonmentEmails(
+          supabaseAdmin,
+          requestData.profileData.email,
+          requestData.profileData.nome || 'Profissional',
+          detectedTenant,
+          errorMessage
+        );
+      }
+    } catch (saveError) {
+      console.error('❌ Erro ao processar falha:', saveError);
+    }
     
     return new Response(
       JSON.stringify({ 
