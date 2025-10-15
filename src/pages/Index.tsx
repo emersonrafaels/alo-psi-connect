@@ -75,7 +75,6 @@ const Index = () => {
         .eq('professional_tenants.tenant_id', tenant.id)
         .eq('professional_tenants.is_featured', true)
         .not('preco_consulta', 'is', null)
-        .order('professional_tenants.featured_order', { ascending: true, nullsFirst: false })
         .order('display_name')
         .limit(3);
 

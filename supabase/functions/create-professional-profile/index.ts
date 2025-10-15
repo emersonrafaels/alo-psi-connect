@@ -311,6 +311,7 @@ serve(async (req) => {
 
     if (tenantError || !tenant) {
       console.error('Tenant not found:', tenantError);
+      // ✅ CORS headers já incluídos
       return new Response(
         JSON.stringify({ error: 'Tenant não encontrado' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -362,7 +363,7 @@ serve(async (req) => {
     const { data: existingProfile, error: checkError } = await supabaseAdmin
       .from('profiles')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', finalUserId)
       .single();
 
     let profile;
@@ -373,10 +374,10 @@ serve(async (req) => {
       const { data: duplicateProfiles, error: duplicateCheckError } = await supabaseAdmin
         .from('profiles')
         .select('id, created_at')
-        .eq('user_id', userId);
+        .eq('user_id', finalUserId);
       
       if (!duplicateCheckError && duplicateProfiles && duplicateProfiles.length > 1) {
-        console.warn('⚠️ Found duplicate profiles for user_id:', userId, 'Count:', duplicateProfiles.length);
+        console.warn('⚠️ Found duplicate profiles for user_id:', finalUserId, 'Count:', duplicateProfiles.length);
         
         // Keep the oldest profile, delete the rest
         const sortedProfiles = duplicateProfiles.sort((a, b) => 
@@ -644,13 +645,13 @@ serve(async (req) => {
     
     try {
       // Only send for authenticated professional registrations
-      if (!userId) {
+      if (!finalUserId) {
         console.log('⏭️ Skipping confirmation email - public registration without auth');
       } else {
-        console.log('🔍 Checking if confirmation email should be sent for userId:', userId);
+        console.log('🔍 Checking if confirmation email should be sent for userId:', finalUserId);
         
         // Check if user needs email confirmation
-        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
+        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(finalUserId);
         
         if (authError) {
           console.error('❌ Error fetching user for email confirmation:', authError);
@@ -670,7 +671,7 @@ serve(async (req) => {
           const { error: invalidateError } = await supabaseAdmin
             .from('email_confirmation_tokens')
             .update({ used: true })
-            .eq('user_id', userId)
+            .eq('user_id', finalUserId)
             .eq('used', false);
 
           if (invalidateError) {
@@ -753,7 +754,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        userId: userId,
+        userId: finalUserId,
         profileId: profile.id,
         professionalId: professional.id,
         profile: profile,
