@@ -48,12 +48,13 @@ export const useBlogPostManager = () => {
         throw new Error('Nenhum tenant disponível. Por favor, selecione um site ou acesse via URL de um tenant.');
       }
 
-      // Validar slug único
+      // Validar slug único (apenas posts publicados - drafts podem ter slugs duplicados)
       const { data: existingPost } = await supabase
         .from('blog_posts')
         .select('id')
         .eq('slug', data.slug)
         .eq('tenant_id', tenantId)
+        .eq('status', 'published') // Só verificar contra posts publicados
         .maybeSingle();
 
       if (existingPost) {
@@ -116,11 +117,12 @@ export const useBlogPostManager = () => {
 
   const updatePost = useMutation({
     mutationFn: async (data: UpdatePostData) => {
-      // Validar slug único (exceto o próprio post)
+      // Validar slug único (exceto o próprio post, apenas contra publicados)
       const { data: existingPost } = await supabase
         .from('blog_posts')
         .select('id')
         .eq('slug', data.slug)
+        .eq('status', 'published') // Só verificar contra posts publicados
         .neq('id', data.id)
         .maybeSingle();
 

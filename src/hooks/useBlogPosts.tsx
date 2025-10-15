@@ -63,7 +63,7 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
             tag:blog_tags(id, name, slug)
           )
         `)
-        .eq('tenant_id', tenant.id);
+        .or(`tenant_id.eq.${tenant.id},tenant_id.is.null`); // Aceitar posts sem tenant também
 
       if (options.status) {
         query = query.eq('status', options.status);
