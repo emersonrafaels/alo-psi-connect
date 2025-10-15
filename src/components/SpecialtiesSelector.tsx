@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Search } from 'lucide-react';
 
 interface SpecialtiesSelectorProps {
   value: string[];
@@ -45,6 +45,7 @@ const COMMON_SPECIALTIES = [
 
 export const SpecialtiesSelector: React.FC<SpecialtiesSelectorProps> = ({ value, onChange }) => {
   const [customSpecialty, setCustomSpecialty] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleSpecialtyToggle = (specialty: string) => {
     if (value.includes(specialty)) {
@@ -71,6 +72,11 @@ export const SpecialtiesSelector: React.FC<SpecialtiesSelectorProps> = ({ value,
       addCustomSpecialty();
     }
   };
+
+  // Filtrar especialidades com base na busca
+  const filteredSpecialties = COMMON_SPECIALTIES.filter(specialty =>
+    specialty.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -108,25 +114,48 @@ export const SpecialtiesSelector: React.FC<SpecialtiesSelectorProps> = ({ value,
           </div>
         )}
 
+        {/* Campo de busca */}
+        <div className="space-y-2 mb-4">
+          <Label className="text-sm font-medium">Buscar especialidade:</Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Digite para buscar..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+
         {/* Especialidades comuns */}
         <div className="space-y-4">
-          <Label className="text-sm font-medium">Especialidades comuns:</Label>
+          <Label className="text-sm font-medium">
+            Especialidades comuns 
+            {searchTerm && ` (${filteredSpecialties.length} encontradas)`}:
+          </Label>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {COMMON_SPECIALTIES.map((specialty) => (
-              <div key={specialty} className="flex items-center space-x-2">
-                <Checkbox
-                  id={specialty}
-                  checked={value.includes(specialty)}
-                  onCheckedChange={() => handleSpecialtyToggle(specialty)}
-                />
-                <Label 
-                  htmlFor={specialty} 
-                  className="text-sm cursor-pointer leading-tight"
-                >
-                  {specialty}
-                </Label>
-              </div>
-            ))}
+            {filteredSpecialties.length > 0 ? (
+              filteredSpecialties.map((specialty) => (
+                <div key={specialty} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={specialty}
+                    checked={value.includes(specialty)}
+                    onCheckedChange={() => handleSpecialtyToggle(specialty)}
+                  />
+                  <Label 
+                    htmlFor={specialty} 
+                    className="text-sm cursor-pointer leading-tight"
+                  >
+                    {specialty}
+                  </Label>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground col-span-3">
+                Nenhuma especialidade encontrada com "{searchTerm}"
+              </p>
+            )}
           </div>
         </div>
 

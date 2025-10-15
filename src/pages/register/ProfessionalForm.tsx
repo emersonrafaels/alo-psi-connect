@@ -26,6 +26,13 @@ import { TimelineProgress } from '@/components/register/TimelineProgress';
 import { FieldWithTooltip } from '@/components/register/FieldWithTooltip';
 import { ProfessionalSummaryField } from '@/components/register/ProfessionalSummaryField';
 import { ProfilePreview } from '@/components/register/ProfilePreview';
+import { EmailValidationFeedback } from '@/components/register/EmailValidationFeedback';
+import { BirthDateInput } from '@/components/register/BirthDateInput';
+import { CRPCRMInput } from '@/components/register/CRPCRMInput';
+import { PriceInput } from '@/components/register/PriceInput';
+import { ScheduleTemplates } from '@/components/register/ScheduleTemplates';
+import { AutoSaveIndicator } from '@/components/register/AutoSaveIndicator';
+import { StepEstimator } from '@/components/register/StepEstimator';
 import { formatCPF, validateCPF, getCPFErrorMessage } from '@/utils/cpfValidator';
 import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { useTenant } from '@/hooks/useTenant';
@@ -38,6 +45,8 @@ const ProfessionalForm = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [showExistingAccountModal, setShowExistingAccountModal] = useState(false);
   const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
@@ -94,6 +103,18 @@ const ProfessionalForm = () => {
       setCurrentStep(restoredData.currentStep);
     }
   });
+
+  // Simular salvamento para indicador
+  useEffect(() => {
+    if (!user && formData.nome) {
+      setIsSaving(true);
+      const timer = setTimeout(() => {
+        setIsSaving(false);
+        setLastSaved(new Date());
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [formData, user]);
 
   // Verificar se o usuário já é profissional cadastrado
   useEffect(() => {
@@ -438,6 +459,7 @@ const ProfessionalForm = () => {
               required
               disabled={!!user}
             />
+            {!user && <EmailValidationFeedback email={formData.email} />}
             {googleData?.emailVerified && (
               <Badge variant="secondary" className="text-xs">
                 <Check className="h-3 w-3 mr-1" />
@@ -447,16 +469,10 @@ const ProfessionalForm = () => {
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="dataNascimento">Data de nascimento <span className="text-red-500">*</span></Label>
-          <Input
-            id="dataNascimento"
-            type="date"
-            value={formData.dataNascimento}
-            onChange={(e) => updateFormData('dataNascimento', e.target.value)}
-            required
-          />
-        </div>
+        <BirthDateInput
+          value={formData.dataNascimento}
+          onChange={(value) => updateFormData('dataNascimento', value)}
+        />
 
         <div>
           <Label htmlFor="genero">Gênero <span className="text-red-500">*</span></Label>
@@ -563,22 +579,11 @@ const ProfessionalForm = () => {
         </RadioGroup>
       </FieldWithTooltip>
 
-      <FieldWithTooltip
-        htmlFor="crpCrm"
-        label={`Número do ${formData.profissao === 'Psiquiatra' ? 'CRM' : 'CRP'}`}
-        tooltip={formData.profissao === 'Psiquiatra' 
-          ? "Número do Conselho Regional de Medicina (CRM) necessário para exercer psiquiatria."
-          : "Número do Conselho Regional de Psicologia (CRP) necessário para exercer psicologia."}
-        required
-      >
-        <Input
-          id="crpCrm"
-          value={formData.crpCrm}
-          onChange={(e) => updateFormData('crpCrm', e.target.value)}
-          placeholder={`Digite seu número do ${formData.profissao === 'Psiquiatra' ? 'CRM' : 'CRP'}`}
-          required
-        />
-      </FieldWithTooltip>
+      <CRPCRMInput
+        value={formData.crpCrm}
+        onChange={(value) => updateFormData('crpCrm', value)}
+        profession={formData.profissao}
+      />
     </div>
   );
 
@@ -691,23 +696,10 @@ const ProfessionalForm = () => {
         onChange={(especialidades) => updateFormData('especialidades', especialidades)}
       />
       
-      <FieldWithTooltip
-        htmlFor="precoConsulta"
-        label="Preço da Consulta (R$)"
-        tooltip="Informe o valor cobrado por sessão de 50 minutos. Média de mercado: R$ 120-200. Você poderá alterar este valor depois."
-        required
-      >
-        <Input
-          id="precoConsulta"
-          type="number"
-          step="0.01"
-          min="0"
-          value={formData.precoConsulta}
-          onChange={(e) => updateFormData('precoConsulta', e.target.value)}
-          placeholder="Ex: 120.00"
-          required
-        />
-      </FieldWithTooltip>
+      <PriceInput
+        value={formData.precoConsulta}
+        onChange={(value) => updateFormData('precoConsulta', value)}
+      />
     </div>
   );
 
@@ -731,6 +723,21 @@ const ProfessionalForm = () => {
           </p>
         </div>
       </div>
+
+      <ScheduleTemplates
+        onApplyTemplate={(slots) => {
+          const newSlots = slots.map((slot, index) => ({
+            id: `${slot.day}-${slot.startTime}-${Date.now()}-${index}`,
+            ...slot
+          }));
+          updateFormData('horarios', newSlots);
+          toast({
+            title: "✨ Template aplicado!",
+            description: `${newSlots.length} horários foram adicionados. Você pode ajustá-los abaixo.`,
+            duration: 3000,
+          });
+        }}
+      />
 
       <ScheduleSelector
         value={formData.horarios}
@@ -840,11 +847,24 @@ const ProfessionalForm = () => {
 
           <Card className="shadow-xl border-2">
             <CardHeader className="space-y-4 pb-6">
+              {/* Auto-save indicator */}
+              {!user && currentStep < totalSteps && (
+                <div className="flex justify-end">
+                  <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
+                </div>
+              )}
+
               <TimelineProgress 
                 currentStep={currentStep}
                 totalSteps={totalSteps}
                 onStepClick={(step) => setCurrentStep(step)}
               />
+
+              {/* Step estimator */}
+              {currentStep < totalSteps && (
+                <StepEstimator currentStep={currentStep} totalSteps={totalSteps} />
+              )}
+
               <CardTitle className="text-center text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                  {currentStep === 1 ? 'Seus dados pessoais' :
                   currentStep === 2 ? 'Informações profissionais' :
