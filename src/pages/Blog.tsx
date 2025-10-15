@@ -8,15 +8,23 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search } from "lucide-react";
+import { Search, X, Loader2 } from "lucide-react";
 import { PostCard } from "@/components/blog/PostCard";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
 import { useBlogTags } from "@/hooks/useBlogTags";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useRecentPosts } from "@/hooks/useRecentPosts";
+import { SortDropdown, SortOption } from "@/components/blog/SortDropdown";
+import { MobileFilters } from "@/components/blog/MobileFilters";
 
 const Blog = () => {
   const { tenant } = useTenant();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>('recent');
+  
+  // Debounce search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // SEO: Set meta tags for blog page
   useEffect(() => {
@@ -38,11 +46,25 @@ const Blog = () => {
   
   const { data: posts = [], isLoading } = useBlogPosts({
     status: 'published',
-    searchTerm: searchTerm || undefined,
-    tagSlug: selectedTag || undefined 
+    searchTerm: debouncedSearchTerm || undefined,
+    tagSlug: selectedTag || undefined,
+    sortBy
   });
   
   const { data: allTags = [] } = useBlogTags();
+  const { data: recentPosts = [], isLoading: recentPostsLoading } = useRecentPosts(5);
+  
+  // Check if currently searching (debouncing)
+  const isSearching = searchTerm !== debouncedSearchTerm && searchTerm.length > 0;
+  
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setSelectedTag(null);
+  };
+  
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -57,6 +79,52 @@ const Blog = () => {
       </section>
 
       <div className="container mx-auto px-4 py-12">
+        {/* Active Filters & Sort */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Mobile Filters Button */}
+            <MobileFilters 
+              allTags={allTags}
+              selectedTag={selectedTag}
+              onTagSelect={setSelectedTag}
+            />
+            
+            {/* Result count & active filters */}
+            {debouncedSearchTerm && (
+              <Badge variant="secondary" className="text-sm">
+                Buscando: "{debouncedSearchTerm}"
+              </Badge>
+            )}
+            {selectedTag && (
+              <Badge variant="secondary" className="text-sm gap-1">
+                Tag: {allTags.find(t => t.slug === selectedTag)?.name}
+                <X 
+                  className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                  onClick={() => setSelectedTag(null)}
+                />
+              </Badge>
+            )}
+            {!isLoading && !isSearching && (
+              <span className="text-sm text-muted-foreground">
+                {posts.length} {posts.length === 1 ? 'post encontrado' : 'posts encontrados'}
+              </span>
+            )}
+            {isSearching && (
+              <Badge variant="outline" className="gap-2">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Buscando...
+              </Badge>
+            )}
+          </div>
+          
+          {/* Sort Dropdown */}
+          <SortDropdown 
+            value={sortBy} 
+            onChange={setSortBy}
+            hasSearchTerm={!!debouncedSearchTerm}
+          />
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Main Content */}
           <div className="lg:col-span-2">
@@ -74,14 +142,11 @@ const Blog = () => {
             ) : posts.length === 0 ? (
               <div className="text-center py-16">
                 <p className="text-muted-foreground text-lg">Nenhum post encontrado.</p>
-                {(searchTerm || selectedTag) && (
+                {(debouncedSearchTerm || selectedTag) && (
                   <Button 
                     variant="outline" 
                     className="mt-4"
-                    onClick={() => {
-                      setSearchTerm('');
-                      setSelectedTag(null);
-                    }}
+                    onClick={handleClearFilters}
                   >
                     Limpar Filtros
                   </Button>
@@ -90,30 +155,44 @@ const Blog = () => {
             ) : (
               <div className="space-y-8">
                 {posts.map((post) => (
-                  <PostCard key={post.id} post={post} />
+                  <PostCard key={post.id} post={post} searchTerm={debouncedSearchTerm} />
                 ))}
               </div>
             )}
           </div>
 
           {/* Sidebar */}
-          <aside className="space-y-8">
+          <aside className="space-y-8 hidden lg:block">
             {/* Search */}
             <Card>
               <CardHeader>
                 <CardTitle>Busca</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="relative">
+                <form onSubmit={handleSearchSubmit} className="relative">
                   <Input 
                     placeholder="Procurar por palavra..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pr-20"
                   />
-                  <Button size="sm" className="absolute right-1 top-1 h-8 w-8" variant="default">
-                    <Search size={16} />
-                  </Button>
-                </div>
+                  <div className="absolute right-1 top-1 flex gap-1">
+                    {searchTerm && (
+                      <Button 
+                        size="sm" 
+                        className="h-8 w-8" 
+                        variant="ghost"
+                        type="button"
+                        onClick={() => setSearchTerm('')}
+                      >
+                        <X size={16} />
+                      </Button>
+                    )}
+                    <Button size="sm" className="h-8 w-8" variant="default" type="submit">
+                      <Search size={16} />
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 
@@ -123,12 +202,12 @@ const Blog = () => {
                 <CardTitle>Posts Recentes</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {isLoading ? (
-                  [1, 2, 3].map(i => (
+                {recentPostsLoading ? (
+                  [1, 2, 3, 4, 5].map(i => (
                     <Skeleton key={i} className="h-20 w-full" />
                   ))
                 ) : (
-                  posts.slice(0, 3).map((post) => (
+                  recentPosts.map((post) => (
                     <Link 
                       key={post.id} 
                       to={`/blog/${post.slug}`}

@@ -5,12 +5,14 @@ import { Calendar, Clock, Eye, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BlogPost } from '@/hooks/useBlogPosts';
+import { highlightText } from '@/utils/highlightHelpers';
 
 interface PostCardProps {
   post: BlogPost;
+  searchTerm?: string;
 }
 
-export const PostCard = ({ post }: PostCardProps) => {
+export const PostCard = ({ post, searchTerm }: PostCardProps) => {
   return (
     <Link to={`/blog/${post.slug}`}>
       <Card className="overflow-hidden transition-all hover:shadow-lg h-full">
@@ -28,17 +30,20 @@ export const PostCard = ({ post }: PostCardProps) => {
           <div className="flex flex-wrap gap-2 mb-2">
             {post.tags?.slice(0, 3).map((tag) => (
               <Badge key={tag.id} variant="secondary">
-                {tag.name}
+                {searchTerm ? highlightText(tag.name, searchTerm) : tag.name}
               </Badge>
             ))}
           </div>
           <h3 className="text-2xl font-bold line-clamp-2 hover:text-primary transition-colors">
-            {post.title}
+            {searchTerm ? highlightText(post.title, searchTerm) : post.title}
           </h3>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground line-clamp-3 mb-4">
-            {post.excerpt || post.content.substring(0, 150) + '...'}
+            {searchTerm 
+              ? highlightText(post.excerpt || post.content.substring(0, 150) + '...', searchTerm)
+              : (post.excerpt || post.content.substring(0, 150) + '...')
+            }
           </p>
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
             {post.author && (

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/hooks/useTenant';
+import { getRelevanceScore } from '@/utils/highlightHelpers';
 
 export interface BlogPost {
   id: string;
@@ -45,6 +46,7 @@ interface UseBlogPostsOptions {
   tagSlug?: string;
   limit?: number;
   offset?: number;
+  sortBy?: 'recent' | 'views' | 'read-time' | 'rating' | 'relevance';
 }
 
 export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
@@ -77,9 +79,21 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
         query = query.or(`title.ilike.%${options.searchTerm}%,content.ilike.%${options.searchTerm}%,excerpt.ilike.%${options.searchTerm}%`);
       }
 
-      // Ordenar por published_at (usando created_at como fallback)
-      query = query.order('published_at', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false });
+      // Ordenação baseada no sortBy
+      const sortBy = options.sortBy || 'recent';
+      
+      if (sortBy === 'recent') {
+        query = query.order('published_at', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false });
+      } else if (sortBy === 'views') {
+        query = query.order('views_count', { ascending: false });
+      } else if (sortBy === 'read-time') {
+        query = query.order('read_time_minutes', { ascending: true, nullsFirst: false });
+      } else if (sortBy === 'rating') {
+        query = query.order('average_rating', { ascending: false, nullsFirst: false })
+          .order('ratings_count', { ascending: false });
+      }
+      // relevance sorting is done client-side after fetching
 
       if (options.limit) {
         query = query.limit(options.limit);
@@ -96,11 +110,26 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
       // Fetch authors for all posts
       let posts = data || [];
       
-      // Filter by tag client-side if needed
+      // Filter by tag client-side (includes tag name in search)
       if (options.tagSlug) {
         posts = posts.filter(post => 
           post.tags?.some((tagRelation: any) => tagRelation.tag?.slug === options.tagSlug)
         );
+      }
+      
+      // Also search in tags if searchTerm exists
+      if (options.searchTerm) {
+        const term = options.searchTerm.toLowerCase();
+        posts = posts.filter(post => {
+          const titleMatch = post.title?.toLowerCase().includes(term);
+          const contentMatch = post.content?.toLowerCase().includes(term);
+          const excerptMatch = post.excerpt?.toLowerCase().includes(term);
+          const tagMatch = post.tags?.some((tagRelation: any) => 
+            tagRelation.tag?.name?.toLowerCase().includes(term)
+          );
+          
+          return titleMatch || contentMatch || excerptMatch || tagMatch;
+        });
       }
       
       const authorIds = [...new Set(posts.map(p => p.author_id))];
@@ -112,7 +141,7 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
 
       const authorsMap = new Map(authorsData?.map(a => [a.user_id, a]) || []);
 
-      return posts.map((post: any) => ({
+      let processedPosts = posts.map((post: any) => ({
         ...post,
         author: authorsMap.get(post.author_id) || { 
           user_id: post.author_id,
@@ -121,6 +150,17 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
         },
         tags: post.tags?.map((t: any) => t.tag).filter(Boolean) || []
       })) as BlogPost[];
+      
+      // Sort by relevance if needed (client-side)
+      if (options.sortBy === 'relevance' && options.searchTerm) {
+        processedPosts = processedPosts.sort((a, b) => {
+          const scoreA = getRelevanceScore(a, options.searchTerm!);
+          const scoreB = getRelevanceScore(b, options.searchTerm!);
+          return scoreB - scoreA;
+        });
+      }
+      
+      return processedPosts;
     },
     enabled: !!tenant
   });
