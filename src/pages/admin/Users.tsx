@@ -127,8 +127,8 @@ export default function AdminUsers() {
     setTypeDialogOpen(true);
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    const result = await deleteUser(userId);
+  const handleDeleteUser = async (userId: string | null, profileId: string) => {
+    const result = await deleteUser(userId, profileId);
     if (result.success) {
       fetchUsers();
     }
@@ -431,31 +431,7 @@ export default function AdminUsers() {
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={async () => {
-                            if (!user.user_id) {
-                              // Usuário órfão - deletar apenas o perfil
-                              const { error } = await supabase
-                                .from('profiles')
-                                .delete()
-                                .eq('id', user.id);
-                              
-                              if (error) {
-                                toast({
-                                  title: "Erro ao deletar perfil órfão",
-                                  description: error.message,
-                                  variant: "destructive"
-                                });
-                              } else {
-                                toast({
-                                  title: "Perfil órfão deletado",
-                                  description: `Perfil de ${user.nome} foi removido com sucesso.`,
-                                });
-                                fetchUsers();
-                              }
-                              return;
-                            }
-                            handleDeleteUser(user.user_id);
-                          }}
+                          onClick={() => handleDeleteUser(user.user_id || null, user.id)}
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
                           Deletar Completamente

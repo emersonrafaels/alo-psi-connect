@@ -82,20 +82,24 @@ export const useUserManagement = () => {
     }
   };
 
-  const deleteUser = async (userId: string, deletionReason?: string) => {
-    if (!userId || userId.trim() === '') {
+  const deleteUser = async (userId: string | null, profileId: string, deletionReason?: string) => {
+    if (!userId && !profileId) {
       toast({
         title: "Erro de validação",
-        description: "ID de usuário inválido ou vazio",
+        description: "ID de usuário ou perfil é necessário",
         variant: "destructive",
       });
-      return { success: false, error: 'Invalid user ID' };
+      return { success: false, error: 'Invalid identifiers' };
     }
 
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('delete-user-completely', {
-        body: { userId, deletionReason }
+        body: { 
+          userId: userId || undefined,
+          profileId: profileId,
+          deletionReason 
+        }
       });
 
       if (error) {

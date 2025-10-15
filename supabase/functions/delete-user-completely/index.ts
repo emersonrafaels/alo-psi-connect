@@ -55,23 +55,27 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { userId, deletionReason } = await req.json();
+    const { userId, profileId, deletionReason } = await req.json();
     
-    if (!userId) {
+    if (!userId && !profileId) {
       return new Response(
-        JSON.stringify({ error: 'User ID is required' }),
+        JSON.stringify({ error: 'User ID or Profile ID is required' }),
         { status: 400, headers: corsHeaders }
       );
     }
 
-    console.log(`Starting deletion process for user: ${userId}`);
+    console.log(`Starting deletion process - userId: ${userId || 'N/A'}, profileId: ${profileId || 'N/A'}`);
 
     // 1. Get user profile data for audit
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
+    let query = supabase.from('profiles').select('*');
+    
+    if (userId) {
+      query = query.eq('user_id', userId);
+    } else if (profileId) {
+      query = query.eq('id', profileId);
+    }
+    
+    const { data: profile, error: profileError } = await query.maybeSingle();
 
     if (profileError) {
       console.error('Error fetching profile:', profileError);
@@ -89,15 +93,16 @@ Deno.serve(async (req) => {
     }
 
     // 2. Store deleted user data for audit
+    const isOrphan = !profile.user_id;
     const { error: auditError } = await supabase
       .from('deleted_users')
       .insert({
-        original_user_id: userId,
+        original_user_id: profile.user_id || '00000000-0000-0000-0000-000000000000',
         email: profile.email,
         nome: profile.nome,
         tipo_usuario: profile.tipo_usuario,
         deleted_by: user.id,
-        deletion_reason: deletionReason || 'No reason provided',
+        deletion_reason: `${isOrphan ? '[ORPHAN PROFILE] ' : ''}${deletionReason || 'No reason provided'}`,
         user_data: profile
       });
 
@@ -194,26 +199,32 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 5. Delete from auth.users using admin client
-    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    // 5. Delete from auth.users using admin client (only if user_id exists)
+    if (profile.user_id) {
+      const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(profile.user_id);
 
-    if (authDeleteError) {
-      console.error('Error deleting auth user:', authDeleteError);
-      return new Response(
-        JSON.stringify({ error: 'Error deleting user from authentication system' }),
-        { status: 500, headers: corsHeaders }
-      );
+      if (authDeleteError) {
+        console.error('Error deleting auth user:', authDeleteError);
+        return new Response(
+          JSON.stringify({ error: 'Error deleting user from authentication system' }),
+          { status: 500, headers: corsHeaders }
+        );
+      }
+      console.log(`Auth user ${profile.user_id} deleted successfully`);
+    } else {
+      console.log(`⚠️ [ORPHAN PROFILE] Skipping auth.users deletion - no user_id`);
     }
 
-    console.log(`User ${userId} deleted successfully`);
+    console.log(`Profile ${profile.id} deleted successfully`);
 
     // Ensure we return properly formatted user data
     const formattedUserData = {
-      id: userId,
+      id: profile.user_id || profile.id,
       nome: profile.nome || null,
       email: profile.email || null,
       tipo_usuario: profile.tipo_usuario || 'unknown',
-      deletedAt: new Date().toISOString()
+      deletedAt: new Date().toISOString(),
+      wasOrphan: isOrphan
     };
 
     return new Response(
