@@ -305,27 +305,17 @@ export default function BlogPost() {
             </p>
           )}
 
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-6 text-sm sm:text-base text-muted-foreground mb-8 pb-8 border-b">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 pb-6 border-b">
             <AuthorBadge 
               name={post.author.nome} 
               photoUrl={post.author.foto_perfil_url}
             />
             {post.published_at && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4" />
                 <span>{format(new Date(post.published_at), "d 'de' MMMM, yyyy", { locale: ptBR })}</span>
               </div>
             )}
-            {post.read_time_minutes && (
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>{post.read_time_minutes} min de leitura</span>
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4" />
-              <span>{post.views_count} visualizações</span>
-            </div>
           </div>
 
           <PostStats 
