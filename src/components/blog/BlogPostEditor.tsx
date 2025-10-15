@@ -80,7 +80,10 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const [checkingSlug, setCheckingSlug] = useState(false);
   const [userStartedEditing, setUserStartedEditing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { applyFormatting, handleKeyDown } = useMarkdownToolbar(textareaRef);
+  const { applyFormatting, handleKeyDown } = useMarkdownToolbar(
+    textareaRef,
+    (newValue) => setValue('content', newValue, { shouldDirty: true, shouldTouch: true })
+  );
   
   // Curation fields (only for super_author/admin)
   const [isFeatured, setIsFeatured] = useState(post?.is_featured || false);

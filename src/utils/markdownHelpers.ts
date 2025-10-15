@@ -15,7 +15,8 @@ export const getTextSelection = (textarea: HTMLTextAreaElement): TextSelection =
 export const insertText = (
   textarea: HTMLTextAreaElement,
   textToInsert: string,
-  cursorOffset: number = 0
+  cursorOffset: number = 0,
+  onContentChange?: (newValue: string) => void
 ): void => {
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
@@ -28,7 +29,12 @@ export const insertText = (
   textarea.setSelectionRange(newCursorPosition, newCursorPosition);
   textarea.focus();
   
-  // Trigger both input and change events to ensure React Hook Form updates
+  // Notify React Hook Form
+  if (onContentChange) {
+    onContentChange(newValue);
+  }
+  
+  // Trigger both input and change events as fallback
   const inputEvent = new Event('input', { bubbles: true });
   const changeEvent = new Event('change', { bubbles: true });
   textarea.dispatchEvent(inputEvent);
@@ -38,16 +44,18 @@ export const insertText = (
 export const wrapSelection = (
   textarea: HTMLTextAreaElement,
   prefix: string,
-  suffix: string = prefix
+  suffix: string = prefix,
+  onContentChange?: (newValue: string) => void
 ): void => {
   const selection = getTextSelection(textarea);
   const wrappedText = `${prefix}${selection.selectedText || 'texto'}${suffix}`;
-  insertText(textarea, wrappedText, selection.selectedText ? 0 : -suffix.length - 5);
+  insertText(textarea, wrappedText, selection.selectedText ? 0 : -suffix.length - 5, onContentChange);
 };
 
 export const insertAtLineStart = (
   textarea: HTMLTextAreaElement,
-  prefix: string
+  prefix: string,
+  onContentChange?: (newValue: string) => void
 ): void => {
   const value = textarea.value;
   const start = textarea.selectionStart;
@@ -62,7 +70,12 @@ export const insertAtLineStart = (
   textarea.setSelectionRange(newCursorPosition, newCursorPosition);
   textarea.focus();
   
-  // Trigger both events
+  // Notify React Hook Form
+  if (onContentChange) {
+    onContentChange(newValue);
+  }
+  
+  // Trigger both events as fallback
   const inputEvent = new Event('input', { bubbles: true });
   const changeEvent = new Event('change', { bubbles: true });
   textarea.dispatchEvent(inputEvent);
