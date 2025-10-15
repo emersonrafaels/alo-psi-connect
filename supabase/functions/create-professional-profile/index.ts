@@ -540,6 +540,9 @@ serve(async (req) => {
       professional = updatedProfessionals[0];
     } else {
       // Create new professional with generated integer user_id
+      // Remove senha from professionalData as it's not a column in profissionais table
+      const { senha, ...professionalDataWithoutPassword } = professionalData;
+      
       const { data: newProfessional, error: professionalError } = await supabaseAdmin
         .from('profissionais')
         .insert({
@@ -548,7 +551,7 @@ serve(async (req) => {
           user_login: profile.email.split('@')[0], // Generate user_login from email
           user_email: profile.email, // Email from profile
           display_name: profile.nome, // Name from profile
-          ...professionalData
+          ...professionalDataWithoutPassword
         })
         .select()
         .single();
