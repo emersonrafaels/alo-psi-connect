@@ -9,19 +9,6 @@ interface PriceInputProps {
 }
 
 export const PriceInput = ({ value, onChange, required = true }: PriceInputProps) => {
-  const priceValue = parseFloat(value) || 0;
-  
-  const getPriceCategory = () => {
-    if (!priceValue) return null;
-    if (priceValue < 80) return { label: 'Abaixo da média', color: 'text-orange-600' };
-    if (priceValue <= 120) return { label: 'Iniciante', color: 'text-blue-600' };
-    if (priceValue <= 180) return { label: 'Intermediário', color: 'text-green-600' };
-    if (priceValue <= 300) return { label: 'Experiente', color: 'text-purple-600' };
-    return { label: 'Premium', color: 'text-purple-700' };
-  };
-
-  const category = getPriceCategory();
-
   return (
     <div>
       <Label htmlFor="precoConsulta">
@@ -66,12 +53,6 @@ export const PriceInput = ({ value, onChange, required = true }: PriceInputProps
         placeholder="150.00"
         required={required}
       />
-      
-      {category && (
-        <p className={`text-sm mt-2 font-medium ${category.color}`}>
-          Categoria: {category.label}
-        </p>
-      )}
     </div>
   );
 };
