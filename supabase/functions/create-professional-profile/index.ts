@@ -641,7 +641,7 @@ serve(async (req) => {
 
     // Send confirmation email for new professional users
     let confirmationEmailSent = false;
-    let isNewUser = false;
+    isNewUser = false;
     
     try {
       // Only send for authenticated professional registrations
