@@ -450,17 +450,39 @@ serve(async (req) => {
     
     if (existingProfessional) {
       console.log('Professional already exists, updating:', existingProfessional.id);
-      finalUserId = existingProfessional.user_id; // Use existing user_id
+      
+      // ⚠️ Se user_id for null, gerar um novo
+      if (!existingProfessional.user_id) {
+        console.log('⚠️ Existing professional has null user_id, generating new one');
+        finalUserId = nextUserId; // Usar o ID gerado
+      } else {
+        finalUserId = existingProfessional.user_id; // Usar existente
+      }
       
       // Clean professional data before update (remove immutable fields)
       const cleanedProfessionalData = cleanProfessionalDataForUpdate(professionalData);
       
-      console.log('📝 Updating professional with cleaned data');
+      // ✅ Se user_id estava null, incluir no UPDATE
+      const dataToUpdate = !existingProfessional.user_id 
+        ? { ...cleanedProfessionalData, user_id: finalUserId }
+        : cleanedProfessionalData;
+      
+      console.log('🔍 Professional UPDATE details:', {
+        existingUserId: existingProfessional.user_id,
+        finalUserId: finalUserId,
+        willSetUserId: !existingProfessional.user_id,
+        profileId: profile.id
+      });
+      
+      console.log('📝 Updating professional with cleaned data', {
+        hasUserId: !existingProfessional.user_id,
+        finalUserId: finalUserId
+      });
       
       // Update existing professional
       const { data: updatedProfessionals, error: updateError } = await supabaseAdmin
         .from('profissionais')
-        .update(cleanedProfessionalData)
+        .update(dataToUpdate)
         .eq('profile_id', profile.id)
         .select();
 
@@ -719,14 +741,23 @@ serve(async (req) => {
     
     // 🔴 SALVAR TENTATIVA FALHA NA TABELA TEMPORÁRIA
     try {
+      // Garantir que requestData existe
+      const fallbackData = requestData || {};
+      const email = fallbackData?.profileData?.email || 
+                    fallbackData?.professional?.user_email || 
+                    'email_desconhecido';
+      const nome = fallbackData?.profileData?.nome || 
+                   fallbackData?.professional?.display_name || 
+                   'Nome não informado';
+      
       const status = error?.code === '23505' ? 'duplicate' : 
-                    (!requestData?.profileData?.email || !requestData?.profileData?.nome) ? 'incomplete' : 
+                    (!fallbackData?.profileData?.email || !fallbackData?.profileData?.nome) ? 'incomplete' : 
                     'failed';
       
       await saveFailedAttempt(
         supabaseAdmin,
-        requestData?.profileData?.email || 'email_desconhecido',
-        requestData?.profileData?.nome || 'Nome não informado',
+        email,
+        nome,
         detectedTenant?.id,
         requestData, // Dados completos do formulário
         errorMessage,
@@ -734,11 +765,11 @@ serve(async (req) => {
       );
       
       // 📧 ENVIAR EMAILS DE NOTIFICAÇÃO
-      if (requestData?.profileData?.email && detectedTenant) {
+      if (email !== 'email_desconhecido' && detectedTenant) {
         await sendAbandonmentEmails(
           supabaseAdmin,
-          requestData.profileData.email,
-          requestData.profileData.nome || 'Profissional',
+          email,
+          nome,
           detectedTenant,
           errorMessage
         );
