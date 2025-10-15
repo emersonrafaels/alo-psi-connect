@@ -211,6 +211,11 @@ export default function BlogPost() {
 
   const filteredRelatedPosts = relatedPosts?.filter(p => p.id !== post.id).slice(0, 2) || [];
 
+  // Helper para gerar IDs consistentes para os headings
+  const generateHeadingId = (text: string) => {
+    return text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <ReadingProgress />
@@ -349,6 +354,21 @@ export default function BlogPost() {
                           prose-hr:my-12">
             <ReactMarkdown
               components={{
+                h1: ({ node, children, ...props }) => {
+                  const text = children?.toString() || '';
+                  const id = generateHeadingId(text);
+                  return <h1 id={id} {...props}>{children}</h1>;
+                },
+                h2: ({ node, children, ...props }) => {
+                  const text = children?.toString() || '';
+                  const id = generateHeadingId(text);
+                  return <h2 id={id} {...props}>{children}</h2>;
+                },
+                h3: ({ node, children, ...props }) => {
+                  const text = children?.toString() || '';
+                  const id = generateHeadingId(text);
+                  return <h3 id={id} {...props}>{children}</h3>;
+                },
                 img: ({ node, ...props }) => (
                   <img 
                     {...props} 
