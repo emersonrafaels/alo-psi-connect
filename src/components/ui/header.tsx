@@ -127,17 +127,17 @@ const Header = () => {
                     <div className="text-xs text-muted-foreground truncate">{user.email}</div>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/agendamentos')}>
+                  <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/agendamentos'))}>
                     <Calendar className="h-4 w-4 mr-2" />
                     Meus Agendamentos
                   </DropdownMenuItem>
                   {isProfessional && (
-                    <DropdownMenuItem onClick={() => navigate('/professional-profile')}>
+                    <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/professional-profile'))}>
                       <Briefcase className="h-4 w-4 mr-2" />
                       Área Profissional
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => navigate('/perfil')}>
+                  <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/perfil'))}>
                     <Settings className="h-4 w-4 mr-2" />
                     Meu Perfil
                   </DropdownMenuItem>

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ProfessionalProfile as ProfessionalProfileComponent } from '@/components/ProfessionalProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserType } from '@/hooks/useUserType';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,13 +13,15 @@ import { Loader2, AlertCircle } from 'lucide-react';
 const ProfessionalProfile = () => {
   const { user } = useAuth();
   const { isProfessional, loading } = useUserType();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/auth');
+      navigate(buildTenantPath(tenantSlug, '/auth'));
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, tenantSlug]);
 
   if (loading) {
     return (

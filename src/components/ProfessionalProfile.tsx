@@ -12,6 +12,8 @@ import { useUserType } from '@/hooks/useUserType';
 import { useGoogleCalendarStatus } from '@/hooks/useGoogleCalendarStatus';
 import { useToast } from '@/hooks/use-toast';
 import { useProfessionalData } from '@/hooks/useProfessionalData';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   User, 
@@ -117,6 +119,8 @@ export const ProfessionalProfile: React.FC = () => {
   const { isProfessional } = useUserType();
   const { isConnected: googleCalendarConnected, refetch: refetchGoogleCalendar } = useGoogleCalendarStatus();
   const { toast } = useToast();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   
   // Use the optimized professional data hook
   const { 
@@ -209,7 +213,7 @@ export const ProfessionalProfile: React.FC = () => {
             <p className="text-muted-foreground mb-6">
               Esta área é exclusiva para profissionais cadastrados.
             </p>
-            <Button onClick={() => navigate('/')}>
+            <Button onClick={() => navigate(buildTenantPath(tenantSlug, '/'))}>
               Voltar ao início
             </Button>
           </div>

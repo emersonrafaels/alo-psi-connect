@@ -17,6 +17,8 @@ import { useProfileManager } from '@/hooks/useProfileManager';
 import { useUserType } from '@/hooks/useUserType';
 import { useGoogleCalendarStatus } from '@/hooks/useGoogleCalendarStatus';
 import { useToast } from '@/hooks/use-toast';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import { GoogleCalendarIntegration } from '@/components/GoogleCalendarIntegration';
 import { ArrowLeft, Camera, Check } from 'lucide-react';
 
@@ -27,6 +29,8 @@ const Profile = () => {
   const { isProfessional } = useUserType();
   const { isConnected: googleCalendarConnected, refetch: refetchGoogleCalendar } = useGoogleCalendarStatus();
   const { toast } = useToast();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -185,7 +189,7 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/')}
+              onClick={() => navigate(buildTenantPath(tenantSlug, '/'))}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -395,7 +399,7 @@ const Profile = () => {
                         <span>{googleCalendarConnected ? 'Agenda conectada' : 'Agenda desconectada'}</span>
                       </div>
                     </div>
-                    <Button onClick={() => navigate('/professional-profile')}>
+                    <Button onClick={() => navigate(buildTenantPath(tenantSlug, '/professional-profile'))}>
                       Gerenciar Perfil Profissional
                     </Button>
                   </div>
