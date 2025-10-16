@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client"
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
 import { useTenant } from "@/hooks/useTenant"
+import { buildTenantPath } from "@/utils/tenantHelpers"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -59,6 +60,7 @@ interface Professional {
 const Professionals = () => {
   const navigate = useNavigate()
   const { tenant } = useTenant()
+  const tenantSlug = tenant?.slug || 'alopsi'
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [filteredProfessionals, setFilteredProfessionals] = useState<Professional[]>([])
   const [loading, setLoading] = useState(true)
@@ -1162,13 +1164,13 @@ const Professionals = () => {
                         {/* Actions */}
                         <div className="flex lg:flex-col gap-3 lg:w-32 lg:flex-shrink-0">
                           <Button variant="outline" size="sm" className="flex-1 lg:flex-none border-2 hover:border-primary/50 hover:bg-primary/5" asChild>
-                            <Link to={`/profissional/${professional.id}`}>
+                            <Link to={buildTenantPath(tenantSlug, `/profissional/${professional.id}`)}>
                               <Star className="h-4 w-4 mr-2" />
                               Ver Perfil
                             </Link>
                           </Button>
                           <Button size="sm" className="flex-1 lg:flex-none btn-gradient shadow-lg" asChild>
-                            <Link to={`/agendamento?professionalId=${professional.id}`}>
+                            <Link to={buildTenantPath(tenantSlug, `/agendamento?professionalId=${professional.id}`)}>
                               <Calendar className="h-4 w-4 mr-2" />
                               Agendar
                             </Link>
