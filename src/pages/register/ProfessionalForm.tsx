@@ -36,6 +36,7 @@ import { AutoSaveIndicator } from '@/components/register/AutoSaveIndicator';
 import { formatCPF, validateCPF, getCPFErrorMessage } from '@/utils/cpfValidator';
 import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
@@ -58,6 +59,7 @@ const ProfessionalForm = () => {
   const { toast } = useToast();
   const { saveGooglePhoto, uploadProfilePhoto } = useProfileManager();
   const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   
   const platformName = tenant?.name || "Alô, Psi!";
   const googleData = location.state?.googleData || null;
@@ -344,7 +346,7 @@ const ProfessionalForm = () => {
               title: "Cadastro Concluído!",
               description: "Seu perfil foi criado. Faça login para acessar.",
             });
-            navigate('/auth');
+            navigate(buildTenantPath(tenantSlug, '/auth'));
             return;
           }
 
@@ -357,12 +359,12 @@ const ProfessionalForm = () => {
 
           // Aguardar um momento para o AuthProvider processar a sessão
           setTimeout(() => {
-            navigate('/professional-profile');
+            navigate(buildTenantPath(tenantSlug, '/professional-profile'));
           }, 1000);
 
         } catch (error) {
           console.error('❌ Erro inesperado no login:', error);
-          navigate('/auth');
+          navigate(buildTenantPath(tenantSlug, '/auth'));
         }
       }
     } catch (error: any) {

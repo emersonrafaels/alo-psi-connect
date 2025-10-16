@@ -12,6 +12,8 @@ import { Card } from '@/components/ui/card';
 import { User, Key } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 interface ExistingAccountModalProps {
   isOpen: boolean;
@@ -26,6 +28,8 @@ export const ExistingAccountModal: React.FC<ExistingAccountModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const [sendingReset, setSendingReset] = React.useState(false);
 
   const handleLogin = () => {
@@ -38,7 +42,7 @@ export const ExistingAccountModal: React.FC<ExistingAccountModalProps> = ({
     }
     
     onClose();
-    navigate('/auth');
+    navigate(buildTenantPath(tenantSlug, '/auth'));
   };
 
   const handleForgotPassword = async () => {

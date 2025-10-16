@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
 import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 const PatientForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -31,6 +32,7 @@ const PatientForm = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const googleData = location.state?.googleData || null;
 
   const [formData, setFormData] = useState({
@@ -163,7 +165,7 @@ const PatientForm = () => {
           title: "Cadastro realizado com sucesso!",
           description: "Bem-vindo ao Alô, Psi!",
         });
-        navigate('/');
+        navigate(buildTenantPath(tenantSlug, '/'));
         return;
       }
 
@@ -203,7 +205,7 @@ const PatientForm = () => {
             description: "Este email já está cadastrado. Tente fazer login.",
             variant: "destructive",
           });
-          navigate('/auth');
+          navigate(buildTenantPath(tenantSlug, '/auth'));
         } else {
           toast({
             title: "Erro no cadastro",
@@ -225,7 +227,7 @@ const PatientForm = () => {
           title: "Cadastro realizado com sucesso!",
           description: "Bem-vindo ao Alô, Psi!",
         });
-        navigate('/auth');
+        navigate(buildTenantPath(tenantSlug, '/auth'));
       }
 
     } catch (error: any) {
