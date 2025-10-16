@@ -93,7 +93,8 @@ export const BlogPostsList = () => {
               <TableHead>Status</TableHead>
               <TableHead>Curadoria</TableHead>
               <TableHead>Visualizações</TableHead>
-              <TableHead>Data</TableHead>
+              <TableHead>Criado em</TableHead>
+              <TableHead>Última Modificação</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -138,9 +139,38 @@ export const BlogPostsList = () => {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {post.published_at 
-                    ? new Date(post.published_at).toLocaleDateString('pt-BR')
-                    : '-'}
+                  <div className="text-sm">
+                    <div className="font-medium">
+                      {new Date(post.created_at).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })}
+                    </div>
+                    <div className="text-muted-foreground text-xs">
+                      {new Date(post.created_at).toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    <div className="font-medium">
+                      {new Date(post.updated_at).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })}
+                    </div>
+                    <div className="text-muted-foreground text-xs">
+                      {new Date(post.updated_at).toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })} • {(post as any).author?.nome || 'Sistema'}
+                    </div>
+                  </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
