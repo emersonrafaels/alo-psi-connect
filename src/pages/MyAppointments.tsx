@@ -14,6 +14,8 @@ import { useUserType } from "@/hooks/useUserType"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useNavigate } from "react-router-dom"
+import { useTenant } from "@/hooks/useTenant"
+import { buildTenantPath } from "@/utils/tenantHelpers"
 
 interface Appointment {
   id: string
@@ -47,6 +49,8 @@ const MyAppointments = () => {
   const { isProfessional, professionalId } = useUserType()
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { tenant } = useTenant()
+  const tenantSlug = tenant?.slug || 'alopsi'
 
   useEffect(() => {
     if (user) {
@@ -350,7 +354,7 @@ const MyAppointments = () => {
               Você precisa estar logado para ver seus agendamentos.
             </p>
             <Button asChild>
-              <Link to="/auth">Fazer Login</Link>
+              <Link to={buildTenantPath(tenantSlug, '/auth')}>Fazer Login</Link>
             </Button>
           </div>
         </main>
@@ -433,7 +437,7 @@ const MyAppointments = () => {
                       </p>
                       {tab === 'all' && (
                         <Button asChild>
-                          <Link to="/profissionais">
+                          <Link to={buildTenantPath(tenantSlug, '/profissionais')}>
                             Agendar Consulta
                           </Link>
                         </Button>

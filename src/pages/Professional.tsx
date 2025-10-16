@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CalendarWidget } from "@/components/CalendarWidget";
 import { stripHtmlTags } from "@/lib/utils";
 import { useTenant } from "@/hooks/useTenant";
+import { buildTenantPath } from "@/utils/tenantHelpers";
 interface Professional {
   id: number;
   display_name: string;
@@ -42,6 +43,7 @@ const Professional = () => {
     toast
   } = useToast();
   const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const [professional, setProfessional] = useState<Professional | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,7 +169,7 @@ const Professional = () => {
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Profissional não encontrado</h1>
             <Button asChild>
-              <Link to="/profissionais">
+              <Link to={buildTenantPath(tenantSlug, '/profissionais')}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar aos Profissionais
               </Link>
@@ -186,7 +188,7 @@ const Professional = () => {
         <div className="absolute inset-0 bg-gradient-subtle opacity-50"></div>
         <div className="container mx-auto px-4 relative">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-            <Link to="/profissionais" className="hover:text-primary transition-colors">
+            <Link to={buildTenantPath(tenantSlug, '/profissionais')} className="hover:text-primary transition-colors">
               Profissionais
             </Link>
             <span>›</span>

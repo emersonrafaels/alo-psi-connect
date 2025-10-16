@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
+import { useTenant } from "@/hooks/useTenant"
+import { buildTenantPath } from "@/utils/tenantHelpers"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -38,6 +40,8 @@ const AppointmentAccess = () => {
   const [loadingMagicLink, setLoadingMagicLink] = useState(false)
   const { user } = useAuth()
   const { toast } = useToast()
+  const { tenant } = useTenant()
+  const tenantSlug = tenant?.slug || 'alopsi'
 
   useEffect(() => {
     if (token) {
@@ -216,7 +220,7 @@ const AppointmentAccess = () => {
             </Alert>
             <div className="mt-6 text-center">
               <Button asChild>
-                <Link to="/professionals">
+                <Link to={buildTenantPath(tenantSlug, '/profissionais')}>
                   <Calendar className="mr-2 h-4 w-4" />
                   Fazer Novo Agendamento
                 </Link>
@@ -413,14 +417,14 @@ const AppointmentAccess = () => {
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4">
             <Button asChild className="flex-1">
-              <Link to="/professionals">
+              <Link to={buildTenantPath(tenantSlug, '/profissionais')}>
                 <Calendar className="mr-2 h-4 w-4" />
                 Novo Agendamento
               </Link>
             </Button>
             
             <Button asChild variant="outline" className="flex-1">
-              <Link to="/">
+              <Link to={buildTenantPath(tenantSlug, '/')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Página Inicial
               </Link>

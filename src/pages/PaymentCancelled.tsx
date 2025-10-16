@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
+import { useTenant } from "@/hooks/useTenant"
+import { buildTenantPath } from "@/utils/tenantHelpers"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { XCircle, ArrowLeft, Home, RefreshCw } from "lucide-react"
@@ -9,6 +11,8 @@ import { XCircle, ArrowLeft, Home, RefreshCw } from "lucide-react"
 const PaymentCancelled = () => {
   const [searchParams] = useSearchParams()
   const [agendamentoId, setAgendamentoId] = useState<string | null>(null)
+  const { tenant } = useTenant()
+  const tenantSlug = tenant?.slug || 'alopsi'
 
   useEffect(() => {
     const id = searchParams.get('agendamento')
@@ -129,13 +133,13 @@ const PaymentCancelled = () => {
           {/* Actions */}
           <div className="flex gap-4 justify-center">
             <Button variant="outline" size="lg" asChild>
-              <Link to="/">
+              <Link to={buildTenantPath(tenantSlug, '/')}>
                 <Home className="h-4 w-4 mr-2" />
                 Voltar ao Início
               </Link>
             </Button>
             <Button size="lg" asChild>
-              <Link to="/profissionais">
+              <Link to={buildTenantPath(tenantSlug, '/profissionais')}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Tentar Novamente
               </Link>

@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/hooks/useTenant";
+import { buildTenantPath } from "@/utils/tenantHelpers";
 
 interface CommentFormProps {
   postId: string;
@@ -15,6 +18,8 @@ export const CommentForm = ({ postId, onCommentAdded }: CommentFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,9 +79,9 @@ export const CommentForm = ({ postId, onCommentAdded }: CommentFormProps) => {
     return (
       <div className="bg-card/50 p-6 rounded-lg border border-border/50">
         <p className="text-muted-foreground text-center">
-          <a href="/auth" className="text-primary hover:underline">
+          <Link to={buildTenantPath(tenantSlug, '/auth')} className="text-primary hover:underline">
             Faça login
-          </a>{" "}
+          </Link>{" "}
           para deixar um comentário.
         </p>
       </div>

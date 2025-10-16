@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
+import { useTenant } from "@/hooks/useTenant"
+import { buildTenantPath } from "@/utils/tenantHelpers"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,6 +36,8 @@ const PaymentSuccess = () => {
   const [loadingMagicLink, setLoadingMagicLink] = useState(false)
   const { user } = useAuth()
   const { toast } = useToast()
+  const { tenant } = useTenant()
+  const tenantSlug = tenant?.slug || 'alopsi'
 
   useEffect(() => {
     const agendamentoId = searchParams.get('agendamento')
@@ -371,14 +375,14 @@ const PaymentSuccess = () => {
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4">
             <Button asChild className="flex-1">
-              <Link to="/professionals">
+              <Link to={buildTenantPath(tenantSlug, '/profissionais')}>
                 <Calendar className="mr-2 h-4 w-4" />
                 Novo Agendamento
               </Link>
             </Button>
             
             <Button asChild variant="outline" className="flex-1">
-              <Link to="/">
+              <Link to={buildTenantPath(tenantSlug, '/')}>
                 <Home className="mr-2 h-4 w-4" />
                 Página Inicial
               </Link>

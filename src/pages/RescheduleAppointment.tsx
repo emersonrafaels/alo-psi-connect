@@ -12,6 +12,8 @@ import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { RescheduleCalendar } from "@/components/RescheduleCalendar"
+import { useTenant } from "@/hooks/useTenant"
+import { buildTenantPath } from "@/utils/tenantHelpers"
 
 interface Appointment {
   id: string
@@ -61,6 +63,8 @@ const RescheduleAppointment = () => {
   const { user } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { tenant } = useTenant()
+  const tenantSlug = tenant?.slug || 'alopsi'
 
   useEffect(() => {
     if (user && appointmentId) {
@@ -255,7 +259,7 @@ const RescheduleAppointment = () => {
               Você precisa estar logado para reagendar consultas.
             </p>
             <Button asChild>
-              <Link to="/auth">Fazer Login</Link>
+              <Link to={buildTenantPath(tenantSlug, '/auth')}>Fazer Login</Link>
             </Button>
           </div>
         </main>
@@ -287,7 +291,7 @@ const RescheduleAppointment = () => {
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Agendamento não encontrado</h1>
             <Button asChild>
-              <Link to="/agendamentos">
+              <Link to={buildTenantPath(tenantSlug, '/agendamentos')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Voltar aos Agendamentos
               </Link>
@@ -308,7 +312,7 @@ const RescheduleAppointment = () => {
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
             <Button variant="outline" size="sm" asChild>
-              <Link to="/agendamentos">
+              <Link to={buildTenantPath(tenantSlug, '/agendamentos')}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar
               </Link>

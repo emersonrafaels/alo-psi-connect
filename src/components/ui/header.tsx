@@ -214,8 +214,8 @@ const Header = () => {
               ))}
               {user && (
                 <>
-                  <Link
-                    to="/agendamentos"
+                   <Link
+                    to={buildTenantPath(tenantSlug, '/agendamentos')}
                     className="text-sm hover:text-accent transition-colors flex items-center gap-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -224,7 +224,7 @@ const Header = () => {
                   </Link>
                   {isProfessional && (
                     <Link
-                      to="/professional-profile"
+                      to={buildTenantPath(tenantSlug, '/professional-profile')}
                       className="text-sm hover:text-accent transition-colors flex items-center gap-2"
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -233,7 +233,7 @@ const Header = () => {
                     </Link>
                   )}
                   <Link
-                    to="/perfil"
+                    to={buildTenantPath(tenantSlug, '/perfil')}
                     className="text-sm hover:text-accent transition-colors flex items-center gap-2"
                     onClick={() => setIsMenuOpen(false)}
                   >

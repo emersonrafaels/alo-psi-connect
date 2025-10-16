@@ -21,6 +21,7 @@ import { ShareButtons } from '@/components/blog/ShareButtons';
 import { useSavedPosts } from '@/hooks/useSavedPosts';
 import { usePostViewTracking } from '@/hooks/usePostViewTracking';
 import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import { ReadingProgress } from '@/components/blog/ReadingProgress';
 import { TableOfContents } from '@/components/blog/TableOfContents';
 import { FloatingBackButton } from '@/components/blog/FloatingBackButton';
@@ -41,6 +42,7 @@ import {
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const { data: post, isLoading, incrementViews } = useBlogPost(slug);
   const { data: relatedPosts } = useBlogPosts({ 
     status: 'published',
@@ -199,7 +201,7 @@ export default function BlogPost() {
           <h1 className="text-4xl font-bold mb-4">Post não encontrado</h1>
           <p className="text-muted-foreground mb-8">O post que você está procurando não existe.</p>
           <Button asChild>
-            <Link to="/blog">
+            <Link to={buildTenantPath(tenantSlug, '/blog')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar ao Blog
             </Link>
@@ -231,7 +233,7 @@ export default function BlogPost() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/">
+                    <Link to={buildTenantPath(tenantSlug, '/')}>
                       <Home className="h-4 w-4" />
                     </Link>
                   </BreadcrumbLink>
@@ -239,7 +241,7 @@ export default function BlogPost() {
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/blog">Blog</Link>
+                    <Link to={buildTenantPath(tenantSlug, '/blog')}>Blog</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />

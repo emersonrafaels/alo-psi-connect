@@ -18,6 +18,8 @@ import { useBookingTracking } from "@/hooks/useBookingTracking"
 import { useAuthRedirect } from "@/hooks/useAuthRedirect"
 import { supabase } from "@/integrations/supabase/client"
 import QuickSignupModal from "@/components/QuickSignupModal"
+import { useTenant } from "@/hooks/useTenant"
+import { buildTenantPath } from "@/utils/tenantHelpers"
 
 
 interface BookingData {
@@ -37,6 +39,8 @@ const BookingConfirmation = () => {
   const { saveCurrentLocationAndRedirect } = useAuthRedirect()
   const [bookingData, setBookingData] = useState<BookingData | null>(null)
   const { trackEvent } = useBookingTracking(bookingData?.professionalId)
+  const { tenant } = useTenant()
+  const tenantSlug = tenant?.slug || 'alopsi'
   const [loading, setLoading] = useState(false)
   const [showQuickSignup, setShowQuickSignup] = useState(false)
   const [formData, setFormData] = useState({
@@ -499,7 +503,7 @@ const BookingConfirmation = () => {
               Informações de agendamento não encontradas.
             </p>
             <Button asChild>
-              <Link to="/profissionais">
+              <Link to={buildTenantPath(tenantSlug, '/profissionais')}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar aos Profissionais
               </Link>
@@ -518,7 +522,7 @@ const BookingConfirmation = () => {
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <Link to="/profissionais" className="hover:text-primary transition-colors">
+          <Link to={buildTenantPath(tenantSlug, '/profissionais')} className="hover:text-primary transition-colors">
             Profissionais
           </Link>
           <span>›</span>

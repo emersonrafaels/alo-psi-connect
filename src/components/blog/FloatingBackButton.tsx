@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 export const FloatingBackButton = () => {
   const [isVisible, setIsVisible] = useState(false);
   const navigate = useNavigate();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -19,7 +23,7 @@ export const FloatingBackButton = () => {
 
   return (
     <Button
-      onClick={() => navigate('/blog')}
+      onClick={() => navigate(buildTenantPath(tenantSlug, '/blog'))}
       size="icon"
       variant="secondary"
       className={cn(
