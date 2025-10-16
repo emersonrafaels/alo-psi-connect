@@ -11,6 +11,7 @@ import { buildTenantPath } from "@/utils/tenantHelpers"
 
 const WorkWithUs = () => {
   const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const platformName = tenant?.name || "Alô, Psi!";
   const whatsappNumber = tenant?.contact_whatsapp || "5511947994163";
   const contactEmail = tenant?.contact_email || "contato@alopsi.com.br";
@@ -79,7 +80,7 @@ const WorkWithUs = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="btn-gradient text-lg px-8 py-4 h-auto">
-                <Link to={buildTenantPath(tenant?.slug || 'alopsi', '/register/profissional')}>
+                <Link to={buildTenantPath(tenantSlug, '/register/profissional')}>
                   <UserPlus className="mr-2 h-5 w-5" />
                   Cadastre-se Gratuitamente
                 </Link>
@@ -246,7 +247,7 @@ const WorkWithUs = () => {
                     Sem processo seletivo, sem burocracia.
                   </p>
                   <Button asChild size="lg" className="w-full btn-gradient">
-                    <Link to={buildTenantPath(tenant?.slug || 'alopsi', '/register/profissional')}>
+                    <Link to={buildTenantPath(tenantSlug, '/register/profissional')}>
                       <UserPlus className="mr-2 h-5 w-5" />
                       Cadastrar Agora
                     </Link>
@@ -324,7 +325,7 @@ const WorkWithUs = () => {
             Junte-se a nós e faça parte de uma comunidade que acredita no poder do cuidado humanizado.
           </p>
           <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-4 h-auto">
-            <Link to={buildTenantPath(tenant?.slug || 'alopsi', '/register/profissional')}>
+            <Link to={buildTenantPath(tenantSlug, '/register/profissional')}>
               <Heart className="mr-2 h-5 w-5" />
               Começar Agora
             </Link>
