@@ -3,8 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Eye, Home, Bookmark } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import DOMPurify from 'dompurify';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -331,7 +330,8 @@ export default function BlogPost() {
 
           <div className="my-10 w-24 h-1 bg-gradient-to-r from-primary/50 to-transparent rounded-full" />
 
-          <div className="blog-content prose prose-lg dark:prose-invert max-w-none 
+          <div 
+            className="blog-content prose prose-lg dark:prose-invert max-w-none 
                           prose-headings:font-bold prose-headings:tracking-tight prose-headings:scroll-mt-24
                           prose-h1:text-4xl prose-h1:mb-6 prose-h1:mt-12 prose-h1:leading-tight
                           prose-h2:text-3xl prose-h2:mb-5 prose-h2:mt-12 prose-h2:leading-snug
@@ -349,37 +349,20 @@ export default function BlogPost() {
                           prose-code:text-primary prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm prose-code:font-mono
                           prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:my-8 prose-pre:rounded-lg
                           prose-img:rounded-2xl prose-img:shadow-2xl prose-img:my-12
-                          prose-hr:my-12 prose-hr:border-border/50">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                h1: ({ node, children, ...props }) => {
-                  const text = children?.toString() || '';
-                  const id = generateHeadingId(text);
-                  return <h1 id={id} {...props}>{children}</h1>;
-                },
-                h2: ({ node, children, ...props }) => {
-                  const text = children?.toString() || '';
-                  const id = generateHeadingId(text);
-                  return <h2 id={id} {...props}>{children}</h2>;
-                },
-                h3: ({ node, children, ...props }) => {
-                  const text = children?.toString() || '';
-                  const id = generateHeadingId(text);
-                  return <h3 id={id} {...props}>{children}</h3>;
-                },
-                img: ({ node, ...props }) => (
-                  <img 
-                    {...props} 
-                    loading="lazy"
-                    className="rounded-xl shadow-lg my-8"
-                  />
-                )
-              }}
-            >
-              {post.content}
-            </ReactMarkdown>
-          </div>
+                          prose-hr:my-12 prose-hr:border-border/50"
+            dangerouslySetInnerHTML={{ 
+              __html: DOMPurify.sanitize(post.content, {
+                ALLOWED_TAGS: [
+                  'p', 'br', 'strong', 'em', 'u', 's', 'a', 'img',
+                  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                  'ul', 'ol', 'li', 'blockquote', 'code', 'pre',
+                  'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr',
+                  'div', 'span'
+                ],
+                ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'target', 'rel']
+              })
+            }}
+          />
 
           <NewsletterCTA />
 

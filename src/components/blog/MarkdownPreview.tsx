@@ -1,5 +1,4 @@
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import DOMPurify from 'dompurify';
 import { cn } from '@/lib/utils';
 
 interface MarkdownPreviewProps {
@@ -35,55 +34,20 @@ export const MarkdownPreview = ({
         <p className="text-lg text-muted-foreground mb-6 italic">{excerpt}</p>
       )}
       
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          h1: ({ children }) => <h1 className="text-4xl font-bold mt-16 mb-8 tracking-tight">{children}</h1>,
-          h2: ({ children }) => <h2 className="text-3xl font-bold mt-14 mb-6 tracking-tight">{children}</h2>,
-          h3: ({ children }) => <h3 className="text-2xl font-bold mt-10 mb-5 tracking-tight">{children}</h3>,
-          p: ({ children }) => <p className="text-lg leading-loose mb-8">{children}</p>,
-          ul: ({ children }) => <ul className="list-disc list-inside my-8 space-y-3">{children}</ul>,
-          ol: ({ children }) => <ol className="list-decimal list-inside my-8 space-y-3">{children}</ol>,
-          li: ({ children }) => <li className="text-lg leading-relaxed mb-3 ml-4">{children}</li>,
-          blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-primary pl-6 italic my-8 text-muted-foreground">
-              {children}
-            </blockquote>
-          ),
-          code: ({ inline, children }: { inline?: boolean; children?: React.ReactNode }) => 
-            inline ? (
-              <code className="text-primary bg-muted px-2 py-1 rounded">{children}</code>
-            ) : (
-              <code className="block bg-muted border border-border p-4 rounded my-8 overflow-x-auto">
-                {children}
-              </code>
-            ),
-          a: ({ href, children }) => (
-            <a href={href} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
-              {children}
-            </a>
-          ),
-          img: ({ src, alt }) => (
-            <img src={src} alt={alt} loading="lazy" className="rounded-xl shadow-lg my-10 w-full" />
-          ),
-          hr: () => <hr className="my-12 border-border" />,
-          table: ({ children }) => (
-            <div className="overflow-x-auto my-4">
-              <table className="min-w-full border border-border">{children}</table>
-            </div>
-          ),
-          th: ({ children }) => (
-            <th className="border border-border px-4 py-2 bg-muted font-semibold text-left">
-              {children}
-            </th>
-          ),
-          td: ({ children }) => (
-            <td className="border border-border px-4 py-2">{children}</td>
-          ),
+      <div 
+        dangerouslySetInnerHTML={{ 
+          __html: DOMPurify.sanitize(content || '<p class="text-muted-foreground italic">Comece a escrever para ver o preview...</p>', {
+            ALLOWED_TAGS: [
+              'p', 'br', 'strong', 'em', 'u', 's', 'a', 'img',
+              'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+              'ul', 'ol', 'li', 'blockquote', 'code', 'pre',
+              'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr',
+              'div', 'span'
+            ],
+            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'target', 'rel']
+          })
         }}
-      >
-        {content || '*Comece a escrever para ver o preview...*'}
-      </ReactMarkdown>
+      />
     </div>
   );
 };
