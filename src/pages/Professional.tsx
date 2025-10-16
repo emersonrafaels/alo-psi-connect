@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ const Professional = () => {
   const {
     toast
   } = useToast();
+  const navigate = useNavigate();
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
   const [professional, setProfessional] = useState<Professional | null>(null);
@@ -131,7 +132,11 @@ const Professional = () => {
       }
     } else {
       // Navigate to confirmation if date/time selected
-      window.location.href = `/confirmacao-agendamento?professionalId=${professional?.id}&professionalName=${professional?.display_name}&price=${professional?.preco_consulta}&date=${selectedDate.toISOString().split('T')[0]}&time=${selectedTime}`;
+      const bookingPath = buildTenantPath(
+        tenantSlug, 
+        `/confirmacao-agendamento?professionalId=${professional?.id}&professionalName=${professional?.display_name}&price=${professional?.preco_consulta}&date=${selectedDate.toISOString().split('T')[0]}&time=${selectedTime}`
+      );
+      navigate(bookingPath);
     }
   };
   const parseSpecialties = (raw: string): string[] => {

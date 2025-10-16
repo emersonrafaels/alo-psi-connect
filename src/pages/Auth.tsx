@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const { resendEmailConfirmation, loading: resendLoading } = useEmailResend();
   const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   
   const { user } = useAuth();
 
@@ -52,7 +54,7 @@ const Auth = () => {
         navigate(returnTo, { replace: true })
       } else if (pendingBooking) {
         const booking = JSON.parse(pendingBooking)
-        navigate(booking.returnTo || '/confirmacao-agendamento', { replace: true })
+        navigate(booking.returnTo || buildTenantPath(tenantSlug, '/confirmacao-agendamento'), { replace: true })
       } else {
         navigate('/')
       }
@@ -192,7 +194,7 @@ const Auth = () => {
         navigate(returnTo, { replace: true })
       } else if (pendingBooking) {
         const booking = JSON.parse(pendingBooking)
-        navigate(booking.returnTo || '/confirmacao-agendamento', { replace: true })
+        navigate(booking.returnTo || buildTenantPath(tenantSlug, '/confirmacao-agendamento'), { replace: true })
       } else {
         navigate('/')
       }
