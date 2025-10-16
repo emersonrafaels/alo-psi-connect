@@ -8,6 +8,8 @@ import { format, addDays, startOfDay, isSameDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
+import { useTenant } from "@/hooks/useTenant"
+import { buildTenantPath } from "@/utils/tenantHelpers"
 
 interface Session {
   id: number
@@ -31,6 +33,8 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
   const [availableTimes, setAvailableTimes] = useState<any[]>([])
   const [loadingTimes, setLoadingTimes] = useState(false)
   const navigate = useNavigate()
+  const { tenant } = useTenant()
+  const tenantSlug = tenant?.slug || 'alopsi'
 
   // Generate available dates for the next 30 days
   const generateAvailableDates = () => {
@@ -265,7 +269,7 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
       price: price || '0'
     })
     
-    navigate(`/confirmacao-agendamento?${params.toString()}`)
+    navigate(buildTenantPath(tenantSlug, `/confirmacao-agendamento?${params.toString()}`))
   }
 
   // Load available times when date is selected
