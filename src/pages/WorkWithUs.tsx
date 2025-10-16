@@ -80,7 +80,7 @@ const WorkWithUs = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="btn-gradient text-lg px-8 py-4 h-auto">
-                <Link to={buildTenantPath(tenantSlug, '/register/profissional')}>
+                <Link to={buildTenantPath(tenantSlug, '/cadastro/profissional')}>
                   <UserPlus className="mr-2 h-5 w-5" />
                   Cadastre-se Gratuitamente
                 </Link>
@@ -247,7 +247,7 @@ const WorkWithUs = () => {
                     Sem processo seletivo, sem burocracia.
                   </p>
                   <Button asChild size="lg" className="w-full btn-gradient">
-                    <Link to={buildTenantPath(tenantSlug, '/register/profissional')}>
+                    <Link to={buildTenantPath(tenantSlug, '/cadastro/profissional')}>
                       <UserPlus className="mr-2 h-5 w-5" />
                       Cadastrar Agora
                     </Link>
@@ -325,7 +325,7 @@ const WorkWithUs = () => {
             Junte-se a nós e faça parte de uma comunidade que acredita no poder do cuidado humanizado.
           </p>
           <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-4 h-auto">
-            <Link to={buildTenantPath(tenantSlug, '/register/profissional')}>
+            <Link to={buildTenantPath(tenantSlug, '/cadastro/profissional')}>
               <Heart className="mr-2 h-5 w-5" />
               Começar Agora
             </Link>
