@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,26 +17,33 @@ import { useAutoSave } from '@/hooks/useAutoSave';
 import { useLocalDraft } from '@/hooks/useLocalDraft';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MarkdownPreview } from './MarkdownPreview';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { FileEdit, Eye, Columns, ExternalLink, Building2 } from 'lucide-react';
-import { MarkdownToolbar } from './MarkdownToolbar';
+import { RichTextEditor } from './RichTextEditor';
 import { EditorMetrics } from './EditorMetrics';
-import { MarkdownCheatSheet } from './MarkdownCheatSheet';
 import { PostTemplates } from './PostTemplates';
-import { useMarkdownToolbar } from '@/hooks/useMarkdownToolbar';
 import { supabase } from '@/integrations/supabase/client';
 import { useSuperAuthorRole } from '@/hooks/useSuperAuthorRole';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star } from 'lucide-react';
 import { useTenant } from '@/hooks/useTenant';
+import { sanitizeHtml, extractTextFromHtml } from '@/utils/htmlSanitizer';
+import { useBlogTags } from '@/hooks/useBlogTags';
 
 const postSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
   slug: z.string().min(1, 'Slug é obrigatório'),
   excerpt: z.string().optional(),
-  content: z.string().min(1, 'Conteúdo é obrigatório'),
+  content: z.string()
+    .min(1, 'Conteúdo é obrigatório')
+    .refine(
+      (html) => {
+        const textContent = extractTextFromHtml(html).trim();
+        return textContent.length >= 50;
+      },
+      'O conteúdo deve ter pelo menos 50 caracteres de texto'
+    ),
   status: z.enum(['draft', 'published']),
   read_time_minutes: z.number().optional(),
   allow_comments: z.boolean().optional(),
@@ -73,9 +80,10 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const { createPost, updatePost } = useBlogPostManager();
   const { isSuperAuthor } = useSuperAuthorRole();
   const { tenant: contextTenant } = useTenant();
+  const { data: allTags = [] } = useBlogTags();
   const [featuredImage, setFeaturedImage] = useState(post?.featured_image_url || '');
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    post?.tags?.map(t => t.id) || []
+  const [selectedTags, setSelectedTags] = useState<Array<{ id: string; name: string; slug: string }>>(
+    post?.tags || []
   );
   const [viewMode, setViewMode] = useState<'editor' | 'preview' | 'split'>('editor');
   const [slugExists, setSlugExists] = useState(false);
@@ -83,11 +91,6 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const [userStartedEditing, setUserStartedEditing] = useState(false);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [availableTenants, setAvailableTenants] = useState<Array<{ id: string; name: string; slug: string }>>([]);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { applyFormatting, handleKeyDown, handlePaste } = useMarkdownToolbar(
-    textareaRef,
-    (newValue) => setValue('content', newValue, { shouldDirty: true, shouldTouch: true })
-  );
   
   // Curation fields (only for super_author/admin)
   const [isFeatured, setIsFeatured] = useState(post?.is_featured || false);
@@ -128,9 +131,6 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
     },
   });
 
-  // Separar o ref do content para usar callback ref pattern
-  const { ref: contentRef, ...contentRegister } = register('content');
-
   // Carregar lista de tenants disponíveis
   useEffect(() => {
     const fetchTenants = async () => {
@@ -163,7 +163,9 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
         setFeaturedImage(draft.featured_image_url);
       }
       if (draft.tags) {
-        setSelectedTags(draft.tags);
+        // Convert tag IDs to full tag objects
+        const fullTags = allTags.filter(tag => draft.tags?.includes(tag.id));
+        setSelectedTags(fullTags);
       }
     }
   }, [draft, showRecoveryModal, post, reset]);
@@ -194,9 +196,6 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
 
   const handleTemplateSelect = (templateContent: string) => {
     setValue('content', templateContent);
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-    }
     toast({
       title: 'Template aplicado',
       description: 'O template foi inserido no editor. Personalize conforme necessário.',
@@ -205,31 +204,29 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
 
   // Auto-save to database (debounced)
   const autoSaveHandler = async (data: typeof allFormData) => {
-    if (!data.title || !data.content) return; // Não salvar se vazio
+    if (!data.title || !data.content) return;
+    
+    const sanitizedContent = sanitizeHtml(data.content);
     
     const postData = {
       title: data.title,
       slug: data.slug,
       excerpt: data.excerpt,
-      content: data.content,
-      status: 'draft' as const, // Sempre salvar como draft no auto-save
+      content: sanitizedContent,
+      status: 'draft' as const,
       read_time_minutes: data.read_time_minutes,
       featured_image_url: featuredImage || undefined,
-      tags: selectedTags,
+      tags: selectedTags.map(t => t.id),
     };
 
     if (post) {
       await updatePost.mutateAsync({ ...postData, id: post.id });
-    } else {
-      // Para posts novos, só cria no banco quando o usuário clicar em salvar
-      // Auto-save vai apenas para localStorage
-      return;
     }
   };
 
   const { saveStatus, lastSaved } = useAutoSave(allFormData, {
     delay: 3000,
-    enabled: !!post, // Só auto-save no banco para posts existentes
+    enabled: !!post,
     onSave: autoSaveHandler,
     onSuccess: () => {
       console.log('Auto-save successful');
@@ -244,24 +241,21 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
     }
   });
 
-  // Helper para verificar se o conteúdo é significativo
   const hasSignificantContent = useCallback(() => {
     const titleLength = (allFormData.title || '').trim().length;
-    const contentLength = (allFormData.content || '').trim().length;
+    const contentLength = extractTextFromHtml(allFormData.content || '').trim().length;
     const hasImage = !!featuredImage;
     const hasTags = selectedTags.length > 0;
     
     return titleLength > 3 || contentLength > 10 || hasImage || hasTags;
-  }, [allFormData.title, allFormData.content, featuredImage, selectedTags]);
+  }, [allFormData.title, allFormData.content, featuredImage, selectedTags.length]);
 
-  // Marcar que o usuário começou a editar quando houver mudanças reais
   useEffect(() => {
     if (!userStartedEditing && hasSignificantContent()) {
       setUserStartedEditing(true);
     }
   }, [userStartedEditing, hasSignificantContent]);
 
-  // Memoizar dados do draft para evitar re-criação
   const draftData = useMemo(() => ({
     title: allFormData.title,
     slug: allFormData.slug,
@@ -270,11 +264,10 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
     status: allFormData.status,
     read_time_minutes: allFormData.read_time_minutes,
     featured_image_url: featuredImage,
-    tags: selectedTags
+    tags: selectedTags.map(t => t.id)
   }), [allFormData.title, allFormData.slug, allFormData.excerpt, allFormData.content, 
        allFormData.status, allFormData.read_time_minutes, featuredImage, selectedTags]);
 
-  // Auto-save to localStorage apenas se usuário começou a editar E tem conteúdo significativo
   useEffect(() => {
     if (userStartedEditing && hasSignificantContent()) {
       saveDraft(draftData);
@@ -295,15 +288,17 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   }, [title, post, setValue]);
 
   const onSubmit = (data: PostFormData) => {
+    const sanitizedContent = sanitizeHtml(data.content);
+    
     const postData = {
       title: data.title,
       slug: data.slug,
       excerpt: data.excerpt,
-      content: data.content,
+      content: sanitizedContent,
       status: data.status,
       read_time_minutes: data.read_time_minutes,
       featured_image_url: featuredImage || undefined,
-      tags: selectedTags,
+      tags: selectedTags.map(t => t.id),
       allow_comments: data.allow_comments,
       allow_ratings: data.allow_ratings,
       tenant_id: selectedTenantId || undefined,
@@ -317,14 +312,14 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
         { ...postData, id: post.id },
         {
           onSuccess: () => {
-            clearDraft(); // Limpar rascunho após salvar com sucesso
+            clearDraft();
           }
         }
       );
     } else {
       createPost.mutate(postData, {
         onSuccess: () => {
-          clearDraft(); // Limpar rascunho após criar com sucesso
+          clearDraft();
         }
       });
     }
@@ -357,7 +352,6 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
                 Ver no Blog
               </Button>
             )}
-            <MarkdownCheatSheet />
             <PostTemplates onSelectTemplate={handleTemplateSelect} />
           </div>
           <AutoSaveIndicator status={saveStatus} lastSaved={lastSaved} />
@@ -458,7 +452,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
         </div>
 
         <div>
-          <Label htmlFor="content">Conteúdo (Markdown)</Label>
+          <Label htmlFor="content">Conteúdo</Label>
           
           <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as typeof viewMode)} className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-4">
@@ -477,239 +471,178 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
             </TabsList>
 
             <TabsContent value="editor" className="mt-0">
-              <div className="border rounded-lg overflow-hidden">
-                <MarkdownToolbar onAction={applyFormatting} />
-                <Textarea
-                  {...contentRegister}
-                  ref={(e) => {
-                    contentRef(e);
-                    textareaRef.current = e;
-                  }}
-                  id="content"
-                  onKeyDown={handleKeyDown}
-                  onPaste={handlePaste}
-                  placeholder="Escreva o conteúdo em Markdown..."
-                  rows={20}
-                  className="font-mono border-0 rounded-none focus-visible:ring-0"
-                />
-              </div>
-              {errors.content && (
-                <p className="text-sm text-destructive mt-1">{errors.content.message}</p>
-              )}
-            </TabsContent>
-
-            <TabsContent value="preview" className="mt-0">
-              <MarkdownPreview 
-                content={content}
-                title={title}
-                excerpt={excerpt}
-                featuredImage={featuredImage}
+              <RichTextEditor
+                value={content || ''}
+                onChange={(html) => setValue('content', html, { shouldValidate: true })}
+                placeholder="Comece a escrever o conteúdo do seu post..."
+                minHeight="500px"
               />
             </TabsContent>
 
+            <TabsContent value="preview" className="mt-0">
+              <div className="border rounded-lg p-6 min-h-[500px] bg-background">
+                <div 
+                  className="prose prose-slate dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(content || '') }}
+                />
+              </div>
+            </TabsContent>
+
             <TabsContent value="split" className="mt-0">
-              <ResizablePanelGroup direction="horizontal" className="min-h-[600px] rounded-lg border">
-                <ResizablePanel defaultSize={50} minSize={30}>
-                  <div className="h-full flex flex-col">
-                    <Label className="p-4 pb-0 block">Editor</Label>
-                    <div className="flex-1 overflow-hidden flex flex-col">
-                      <MarkdownToolbar onAction={applyFormatting} />
-                      <Textarea
-                        {...contentRegister}
-                        ref={(e) => {
-                          contentRef(e);
-                          textareaRef.current = e;
-                        }}
-                        onKeyDown={handleKeyDown}
-                        onPaste={handlePaste}
-                        placeholder="Escreva o conteúdo em Markdown..."
-                        className="font-mono flex-1 resize-none border-0 rounded-none focus-visible:ring-0"
-                      />
-                    </div>
+              <ResizablePanelGroup direction="horizontal" className="min-h-[500px]">
+                <ResizablePanel defaultSize={50}>
+                  <div className="h-full pr-2">
+                    <RichTextEditor
+                      value={content || ''}
+                      onChange={(html) => setValue('content', html, { shouldValidate: true })}
+                      placeholder="Comece a escrever o conteúdo do seu post..."
+                      minHeight="500px"
+                    />
                   </div>
                 </ResizablePanel>
                 
                 <ResizableHandle withHandle />
                 
-                <ResizablePanel defaultSize={50} minSize={30}>
-                  <div className="h-full overflow-auto">
-                    <MarkdownPreview 
-                      content={content}
-                      title={title}
-                      excerpt={excerpt}
-                      featuredImage={featuredImage}
-                      className="h-full"
+                <ResizablePanel defaultSize={50}>
+                  <div className="h-full pl-2 border rounded-lg p-6 bg-background overflow-y-auto">
+                    <div 
+                      className="prose prose-slate dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(content || '') }}
                     />
                   </div>
                 </ResizablePanel>
               </ResizablePanelGroup>
-              {errors.content && (
-                <p className="text-sm text-destructive mt-1">{errors.content.message}</p>
-              )}
             </TabsContent>
           </Tabs>
-        </div>
-
-      <div>
-        <Label>Imagem de Destaque</Label>
-        <BlogImageUpload
-          currentImageUrl={featuredImage}
-          onImageUploaded={setFeaturedImage}
-          onImageRemoved={() => setFeaturedImage('')}
-        />
-      </div>
-
-      <div>
-        <Label>Tags</Label>
-        <TagSelector
-          selectedTags={selectedTags.map(id => {
-            const tag = post?.tags?.find(t => t.id === id);
-            return tag || { id, name: '', slug: '' };
-          })}
-          onChange={(tags) => setSelectedTags(tags.map(t => t.id))}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="status">Status</Label>
-          <Select
-            defaultValue={post?.status || 'draft'}
-            onValueChange={(value) => setValue('status', value as 'draft' | 'published')}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="draft">Rascunho</SelectItem>
-              <SelectItem value="published">Publicado</SelectItem>
-            </SelectContent>
-          </Select>
+          
+          {errors.content && (
+            <p className="text-sm text-destructive mt-1">{errors.content.message}</p>
+          )}
         </div>
 
         <div>
-          <Label htmlFor="read_time_minutes">Tempo de Leitura (min)</Label>
-          <Input
-            id="read_time_minutes"
-            type="number"
-            {...register('read_time_minutes', { valueAsNumber: true })}
-            placeholder="5"
+          <Label>Imagem de Destaque</Label>
+          <BlogImageUpload
+            currentImageUrl={featuredImage || null}
+            onImageUploaded={setFeaturedImage}
+            onImageRemoved={() => setFeaturedImage('')}
           />
         </div>
-      </div>
 
-      <div className="border-t pt-4 space-y-4">
-        <h3 className="font-semibold">Configurações de Interação</h3>
-        
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="allow_comments">Permitir comentários</Label>
-            <p className="text-sm text-muted-foreground">
-              {post?.comments_count ? `${post.comments_count} comentário${post.comments_count > 1 ? 's' : ''} atualmente` : 'Permitir que leitores comentem'}
-            </p>
+        <div>
+          <Label>Tags</Label>
+          <TagSelector
+            selectedTags={selectedTags}
+            onChange={setSelectedTags}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="status">Status</Label>
+            <Select onValueChange={(value) => setValue('status', value as 'draft' | 'published')}>
+              <SelectTrigger id="status">
+                <SelectValue placeholder={watch('status') === 'draft' ? 'Rascunho' : 'Publicado'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Rascunho</SelectItem>
+                <SelectItem value="published">Publicado</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <input
-            id="allow_comments"
-            type="checkbox"
-            {...register('allow_comments')}
-            className="h-5 w-5 rounded border-gray-300"
-          />
-        </div>
 
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="allow_ratings">Permitir avaliações</Label>
-            <p className="text-sm text-muted-foreground">
-              {post?.ratings_count ? `⭐ ${post.average_rating?.toFixed(1)} (${post.ratings_count} avaliações)` : 'Permitir que leitores avaliem'}
-            </p>
-          </div>
-          <input
-            id="allow_ratings"
-            type="checkbox"
-            {...register('allow_ratings')}
-            className="h-5 w-5 rounded border-gray-300"
-          />
-        </div>
-      </div>
-
-      {/* Curation Section - Only for Super Author/Admin */}
-      {isSuperAuthor && (
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-primary" />
-              Configurações de Curadoria
-            </CardTitle>
-            <CardDescription>
-              Controles avançados para destacar e categorizar este post
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Featured Post */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="is_featured">Post em Destaque</Label>
-                <p className="text-sm text-muted-foreground">
-                  Destacar este post na página principal
-                </p>
-              </div>
+          <div className="flex items-end gap-4">
+            <div className="flex items-center space-x-2">
               <Switch
-                id="is_featured"
-                checked={isFeatured}
-                onCheckedChange={setIsFeatured}
+                id="allow_comments"
+                checked={watch('allow_comments') ?? true}
+                onCheckedChange={(checked) => setValue('allow_comments', checked)}
               />
+              <Label htmlFor="allow_comments" className="text-sm">Comentários</Label>
             </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="allow_ratings"
+                checked={watch('allow_ratings') ?? true}
+                onCheckedChange={(checked) => setValue('allow_ratings', checked)}
+              />
+              <Label htmlFor="allow_ratings" className="text-sm">Avaliações</Label>
+            </div>
+          </div>
+        </div>
 
-            {/* Featured Order */}
-            {isFeatured && (
-              <div>
-                <Label htmlFor="featured_order">Ordem do Destaque</Label>
-                <Input
-                  id="featured_order"
-                  type="number"
-                  min="1"
-                  value={featuredOrder}
-                  onChange={(e) => setFeaturedOrder(e.target.value)}
-                  placeholder="1"
+        {/* Curation Fields - Only for Super Authors */}
+        {isSuperAuthor && (
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-primary" />
+                Curadoria Avançada
+              </CardTitle>
+              <CardDescription>
+                Controles especiais para destaque e badges editoriais
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="is_featured">Post em Destaque</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Exibir este post na seção de destaques
+                  </p>
+                </div>
+                <Switch
+                  id="is_featured"
+                  checked={isFeatured}
+                  onCheckedChange={setIsFeatured}
                 />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Posts com ordem menor aparecem primeiro (1, 2, 3...)
-                </p>
               </div>
-            )}
 
-            {/* Editorial Badge */}
-            <div>
-              <Label htmlFor="editorial_badge">Badge Editorial</Label>
-              <Select value={editorialBadge} onValueChange={setEditorialBadge}>
-                <SelectTrigger id="editorial_badge">
-                  <SelectValue placeholder="Selecione um badge" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum</SelectItem>
-                  <SelectItem value="editors_pick">⭐ Escolha do Editor</SelectItem>
-                  <SelectItem value="trending">🔥 Em Alta</SelectItem>
-                  <SelectItem value="must_read">📚 Leitura Obrigatória</SelectItem>
-                  <SelectItem value="community_favorite">❤️ Favorito da Comunidade</SelectItem>
-                  <SelectItem value="staff_pick">✨ Escolha da Equipe</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-muted-foreground mt-1">
-                Badge especial que aparecerá no card do post
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+              {isFeatured && (
+                <div>
+                  <Label htmlFor="featured_order">Ordem de Exibição</Label>
+                  <Input
+                    id="featured_order"
+                    type="number"
+                    min="1"
+                    placeholder="1"
+                    value={featuredOrder}
+                    onChange={(e) => setFeaturedOrder(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Menor número aparece primeiro
+                  </p>
+                </div>
+              )}
 
-      <div className="flex gap-4">
-        <Button type="submit" disabled={createPost.isPending || updatePost.isPending}>
-          {post ? 'Atualizar Post' : 'Criar Post'}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => navigate('/admin/blog')}>
-          Cancelar
-        </Button>
-      </div>
+              <div>
+                <Label htmlFor="editorial_badge">Badge Editorial</Label>
+                <Select value={editorialBadge} onValueChange={setEditorialBadge}>
+                  <SelectTrigger id="editorial_badge">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    <SelectItem value="hot">🔥 Hot</SelectItem>
+                    <SelectItem value="trending">📈 Trending</SelectItem>
+                    <SelectItem value="featured">⭐ Featured</SelectItem>
+                    <SelectItem value="new">✨ New</SelectItem>
+                    <SelectItem value="editors_choice">👑 Editor's Choice</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="flex gap-3">
+          <Button type="submit" disabled={createPost.isPending || updatePost.isPending || slugExists}>
+            {createPost.isPending || updatePost.isPending ? 'Salvando...' : 'Salvar Post'}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => navigate('/admin/blog-management')}>
+            Cancelar
+          </Button>
+        </div>
       </form>
     </>
   );

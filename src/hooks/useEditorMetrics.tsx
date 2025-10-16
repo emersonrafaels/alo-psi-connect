@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { calculateReadTime, countWords, countCharacters } from '@/utils/calculateReadTime';
+import { extractTextFromHtml, countWordsInHtml, countCharactersInHtml } from '@/utils/htmlSanitizer';
 
 interface EditorMetrics {
   titleLength: number;
@@ -20,11 +20,11 @@ interface UseEditorMetricsProps {
 
 export const useEditorMetrics = ({ title, excerpt, content }: UseEditorMetricsProps): EditorMetrics => {
   return useMemo(() => {
-    const titleLength = countCharacters(title);
-    const excerptLength = countCharacters(excerpt);
-    const contentWords = countWords(content);
-    const contentCharacters = countCharacters(content);
-    const readTimeMinutes = calculateReadTime(content);
+    const titleLength = title.length;
+    const excerptLength = excerpt.length;
+    const contentWords = countWordsInHtml(content);
+    const contentCharacters = countCharactersInHtml(content);
+    const readTimeMinutes = Math.ceil(contentWords / 200);
 
     // SEO optimal ranges
     const titleStatus: 'good' | 'warning' | 'error' = 

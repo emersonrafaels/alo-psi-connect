@@ -157,6 +157,41 @@ All colors MUST be HSL.
   }
 }
 
+/* TipTap Editor Styles */
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: hsl(var(--muted-foreground));
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+  border: 2px solid hsl(var(--border));
+  padding: 0.5rem;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.ProseMirror table th {
+  font-weight: bold;
+  background-color: hsl(var(--muted));
+}
+
 @layer components {
   /* Professional card animations */
   .professional-card {
