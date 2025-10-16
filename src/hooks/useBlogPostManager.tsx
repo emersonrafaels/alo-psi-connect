@@ -122,8 +122,8 @@ export const useBlogPostManager = () => {
         .from('blog_posts')
         .select('id, tenant_id')
         .eq('slug', data.slug)
-        .eq('status', 'published') // Só verificar contra posts publicados
-        .or(`tenant_id.eq.${data.tenant_id || null},tenant_id.is.null`) // Verificar no mesmo tenant
+        .eq('status', 'published')
+        .or(`tenant_id.eq.${data.tenant_id || null},tenant_id.is.null`)
         .neq('id', data.id)
         .maybeSingle();
 
@@ -131,7 +131,7 @@ export const useBlogPostManager = () => {
         throw new Error('Já existe outro post com este slug neste site. Por favor, escolha outro.');
       }
 
-      const { error } = await supabase
+      const { data: updatedPost, error } = await supabase
         .from('blog_posts')
         .update({
           title: data.title,
@@ -141,7 +141,7 @@ export const useBlogPostManager = () => {
           featured_image_url: data.featured_image_url,
           status: data.status,
           read_time_minutes: data.read_time_minutes,
-          tenant_id: data.tenant_id, // ✅ Atualizar tenant_id
+          tenant_id: data.tenant_id,
           published_at: data.status === 'published' ? new Date().toISOString() : null,
           allow_comments: data.allow_comments ?? true,
           allow_ratings: data.allow_ratings ?? true,
@@ -149,7 +149,9 @@ export const useBlogPostManager = () => {
           featured_order: data.featured_order,
           editorial_badge: data.editorial_badge as any
         } as any)
-        .eq('id', data.id);
+        .eq('id', data.id)
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -175,6 +177,8 @@ export const useBlogPostManager = () => {
           if (tagError) throw tagError;
         }
       }
+
+      return updatedPost;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
