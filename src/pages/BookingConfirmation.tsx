@@ -725,7 +725,7 @@ const BookingConfirmation = () => {
                   {/* Actions */}
                   <div className="flex gap-4 pt-6">
                     <Button variant="outline" size="lg" className="flex-1" asChild>
-                      <Link to="/profissionais">
+                      <Link to={buildTenantPath(tenantSlug, '/profissionais')}>
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Voltar
                       </Link>
