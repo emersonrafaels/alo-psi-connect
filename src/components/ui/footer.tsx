@@ -21,6 +21,16 @@ const Footer = () => {
   
   const tenantSlug = tenant?.slug || 'alopsi';
   
+  // Helper function to build footer links with tenant context
+  const buildFooterLink = (customUrl: string | null | undefined, defaultPath: string) => {
+    // If it's an external URL, don't prefix with tenant path
+    if (customUrl && (customUrl.startsWith('http://') || customUrl.startsWith('https://'))) {
+      return customUrl;
+    }
+    // Otherwise, use buildTenantPath
+    return buildTenantPath(tenantSlug, customUrl || defaultPath);
+  };
+  
   // Check if modules are enabled
   const blogEnabled = useModuleEnabled('blog');
   const professionalsEnabled = useModuleEnabled('professionals');
@@ -52,7 +62,7 @@ const Footer = () => {
     },
     {
       name: "Agendar Consulta",
-      href: buildTenantPath(tenantSlug, "/agendamento"),
+      href: buildTenantPath(tenantSlug, "/profissionais"),
       icon: Calendar,
       enabled: appointmentsEnabled
     },
@@ -83,7 +93,7 @@ const Footer = () => {
     },
     {
       name: "Agendar",
-      href: buildTenantPath(tenantSlug, "/agendamento"),
+      href: buildTenantPath(tenantSlug, "/profissionais"),
       enabled: appointmentsEnabled
     },
     {
@@ -156,12 +166,12 @@ const Footer = () => {
                   </a>
                 </li>)}
               <li>
-                <a href={tenant?.privacy_url || "/politica-privacidade"} className="text-sm opacity-80 hover:opacity-100 transition-opacity">
+                <a href={buildFooterLink(tenant?.privacy_url, "/politica-privacidade")} className="text-sm opacity-80 hover:opacity-100 transition-opacity">
                   Política de Privacidade
                 </a>
               </li>
               <li>
-                <a href={tenant?.terms_url || "/termos-servico"} className="text-sm opacity-80 hover:opacity-100 transition-opacity">
+                <a href={buildFooterLink(tenant?.terms_url, "/termos-servico")} className="text-sm opacity-80 hover:opacity-100 transition-opacity">
                   Termos de Serviço
                 </a>
               </li>
