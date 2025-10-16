@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft, DollarSign, Clock, MapPin, Star } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { useTenant } from '@/hooks/useTenant'
+import { buildTenantPath } from '@/utils/tenantHelpers'
 
 interface Professional {
   id: number
@@ -37,6 +39,8 @@ const Appointment = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { tenant } = useTenant()
+  const tenantSlug = tenant?.slug || 'alopsi'
   
   const [professional, setProfessional] = useState<Professional | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
@@ -51,7 +55,7 @@ const Appointment = () => {
         description: "ID do profissional não encontrado",
         variant: "destructive"
       })
-      navigate('/profissionais')
+      navigate(buildTenantPath(tenantSlug, '/profissionais'))
       return
     }
 
@@ -102,7 +106,7 @@ const Appointment = () => {
         description: "Não foi possível carregar os dados do profissional",
         variant: "destructive"
       })
-      navigate('/profissionais')
+      navigate(buildTenantPath(tenantSlug, '/profissionais'))
     } finally {
       setLoading(false)
     }
@@ -195,7 +199,7 @@ const Appointment = () => {
             <p className="text-muted-foreground mb-8">
               O profissional que você está procurando não foi encontrado ou não está mais disponível.
             </p>
-            <Button onClick={() => navigate('/profissionais')}>
+            <Button onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar aos Profissionais
             </Button>
@@ -217,7 +221,7 @@ const Appointment = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/profissionais')}
+            onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}
             className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
