@@ -47,6 +47,7 @@ interface UseBlogPostsOptions {
   limit?: number;
   offset?: number;
   sortBy?: 'recent' | 'views' | 'read-time' | 'rating' | 'relevance';
+  ignoreTenantIsolation?: boolean;
 }
 
 export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
@@ -55,7 +56,7 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
   return useQuery({
     queryKey: ['blog-posts', options, tenant?.id],
     queryFn: async () => {
-      if (!tenant) return [];
+      if (!options.ignoreTenantIsolation && !tenant) return [];
 
       let query = supabase
         .from('blog_posts')
@@ -64,8 +65,12 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
           tags:blog_post_tags(
             tag:blog_tags(id, name, slug)
           )
-        `)
-        .or(`tenant_id.eq.${tenant.id},tenant_id.is.null`); // Aceitar posts sem tenant também
+        `);
+      
+      // Aplicar filtro de tenant apenas se não for para ignorar
+      if (!options.ignoreTenantIsolation && tenant) {
+        query = query.or(`tenant_id.eq.${tenant.id},tenant_id.is.null`);
+      }
 
       if (options.status) {
         query = query.eq('status', options.status);
@@ -162,6 +167,6 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
       
       return processedPosts;
     },
-    enabled: !!tenant
+    enabled: options.ignoreTenantIsolation ? true : !!tenant
   });
 };

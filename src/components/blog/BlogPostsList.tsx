@@ -35,7 +35,8 @@ export const BlogPostsList = () => {
   const [tenants, setTenants] = useState<Map<string, { name: string; slug: string }>>(new Map());
   
   const { data: posts, isLoading } = useBlogPosts({
-    status: statusFilter === 'all' ? undefined : statusFilter
+    status: statusFilter === 'all' ? undefined : statusFilter,
+    ignoreTenantIsolation: true
   });
   const { deletePost, publishPost } = useBlogPostManager();
 
