@@ -21,12 +21,15 @@ interface FeaturedProfessional {
 }
 const Index = () => {
   const navigate = useNavigate();
-  const { tenant } = useTenant();
+  const {
+    tenant
+  } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
   const [featuredProfessionals, setFeaturedProfessionals] = useState<FeaturedProfessional[]>([]);
   const [loading, setLoading] = useState(true);
-  const { getConfig } = usePublicConfig(['homepage']);
-  
+  const {
+    getConfig
+  } = usePublicConfig(['homepage']);
   useEffect(() => {
     if (tenant) {
       fetchFeaturedProfessionals();
@@ -37,30 +40,24 @@ const Index = () => {
   // Preload critical hero images for faster loading
   const preloadCriticalImages = () => {
     const heroImages = getConfig('homepage', 'hero_images', []);
-    const imagesToPreload = [
-      "https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png",
-      ...(Array.isArray(heroImages) ? heroImages.slice(0, 2) : [heroImages]).filter(Boolean)
-    ];
-
+    const imagesToPreload = ["https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png", ...(Array.isArray(heroImages) ? heroImages.slice(0, 2) : [heroImages]).filter(Boolean)];
     imagesToPreload.forEach(src => {
       if (src) {
         const link = document.createElement('link');
         link.rel = 'preload';
         link.as = 'image';
-        link.href = src.startsWith('s3://') 
-          ? src.replace(/^s3:\/\/([^\/]+)\/(.+)$/, 'https://$1.s3.us-east-1.amazonaws.com/$2')
-          : src;
+        link.href = src.startsWith('s3://') ? src.replace(/^s3:\/\/([^\/]+)\/(.+)$/, 'https://$1.s3.us-east-1.amazonaws.com/$2') : src;
         document.head.appendChild(link);
       }
     });
   };
   const fetchFeaturedProfessionals = async () => {
     if (!tenant) return;
-    
     try {
-      const { data, error } = await supabase
-        .from('profissionais')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('profissionais').select(`
           id, 
           display_name, 
           profissao, 
@@ -69,14 +66,7 @@ const Index = () => {
           preco_consulta, 
           foto_perfil_url,
           professional_tenants!inner(tenant_id, is_featured, featured_order)
-        `)
-        .eq('ativo', true)
-        .eq('professional_tenants.tenant_id', tenant.id)
-        .eq('professional_tenants.is_featured', true)
-        .not('preco_consulta', 'is', null)
-        .order('display_name')
-        .limit(3);
-
+        `).eq('ativo', true).eq('professional_tenants.tenant_id', tenant.id).eq('professional_tenants.is_featured', true).not('preco_consulta', 'is', null).order('display_name').limit(3);
       if (error) throw error;
       setFeaturedProfessionals(data || []);
     } catch (error) {
@@ -209,16 +199,13 @@ const Index = () => {
         </div>
       </section>
 
-{/* Video Section */}
-<section className="py-20 bg-hsla(0, 0%, 100%, 1.00) text-gray-800 relative overflow-hidden">
+    {/* Video Section */}
+    <section className="py-20 bg-hsla(0, 0%, 100%, 1.00) text-gray-800 relative overflow-hidden">
   {/* Background Pattern: bloco branco com “furos” */}
   <div className="absolute inset-0">
-    <div  
-      className="absolute inset-0 opacity-40"
-      style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='60' height='60' fill='%23ffffff'/%3E%3Ccircle cx='30' cy='30' r='1.5' fill='transparent'/%3E%3C/svg%3E")`,
-      }}
-    />
+    <div className="absolute inset-0 opacity-40" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='60' height='60' fill='%23ffffff'/%3E%3Ccircle cx='30' cy='30' r='1.5' fill='transparent'/%3E%3C/svg%3E")`
+        }} />
   </div>
 
   <div className="container mx-auto px-4 relative">
@@ -253,7 +240,7 @@ const Index = () => {
               <span className="text-2xl">🎓</span>
             </div>
             <div>
-              <h3 className="text-3xl font-bold">50+</h3>
+              <h3 className="text-3xl font-bold">500+</h3>
               <p>Estudantes Atendidos</p>
             </div>
           </div>
@@ -282,14 +269,7 @@ const Index = () => {
       <div className="relative">
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-lg">
           <div className="aspect-video rounded-xl overflow-hidden">
-            <iframe
-              className="w-full h-full"
-              src="https://www.youtube.com/embed/_5JzohY3G58"
-              title="Vídeo sobre Saúde Mental e Medicina"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
+            <iframe className="w-full h-full" src="https://www.youtube.com/embed/_5JzohY3G58" title="Vídeo sobre Saúde Mental e Medicina" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
           </div>
           <div className="mt-4 text-center">
             <p className="font-semibold">
@@ -303,7 +283,7 @@ const Index = () => {
       </div>
     </div>
   </div>
-</section>
+    </section>
 
 
       {/* Featured Professionals */}
