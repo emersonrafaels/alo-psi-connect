@@ -20,8 +20,9 @@ import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { BirthDateInput } from '@/components/register/BirthDateInput';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 
-const BRAZILIAN_INSTITUTIONS = [
+const DEFAULT_INSTITUTIONS = [
   // Universidades Privadas de Saúde/Medicina
   "Centro Universitário Barão de Mauá",
   "Centro Universitário das Américas (FAM)",
@@ -83,6 +84,8 @@ const PatientForm = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { tenant } = useTenant();
+  const { getConfig, loading: configLoading } = useSystemConfig(['registration']);
+  const [institutions, setInstitutions] = useState<string[]>(DEFAULT_INSTITUTIONS);
   const tenantSlug = tenant?.slug || 'alopsi';
   const googleData = location.state?.googleData || null;
 
@@ -125,6 +128,20 @@ const PatientForm = () => {
       }
     }
   }, [user, toast]);
+  
+  // Carregar instituições do banco de dados
+  useEffect(() => {
+    if (!configLoading) {
+      const savedInstitutions = getConfig('registration', 'educational_institutions', []);
+      
+      if (!savedInstitutions || savedInstitutions.length === 0) {
+        setInstitutions(DEFAULT_INSTITUTIONS);
+      } else {
+        setInstitutions(Array.isArray(savedInstitutions) ? savedInstitutions.sort() : DEFAULT_INSTITUTIONS);
+      }
+    }
+  }, [configLoading, getConfig]);
+  
   const totalSteps = user ? 3 : 4; // 4 passos se não há usuário logado (inclui senha)
   const progressPercentage = (currentStep / totalSteps) * 100;
 
@@ -453,7 +470,7 @@ const PatientForm = () => {
             <SelectValue placeholder="Selecione sua instituição de ensino" />
           </SelectTrigger>
           <SelectContent className="bg-background max-h-[300px]">
-            {BRAZILIAN_INSTITUTIONS.map((institution) => (
+            {institutions.map((institution) => (
               <SelectItem key={institution} value={institution}>
                 {institution}
               </SelectItem>
