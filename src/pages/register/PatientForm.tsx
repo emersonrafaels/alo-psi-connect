@@ -20,11 +20,61 @@ import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 
+const BRAZILIAN_INSTITUTIONS = [
+  // Universidades Privadas de Saúde/Medicina
+  "Centro Universitário Barão de Mauá",
+  "Centro Universitário das Américas (FAM)",
+  "Centro Universitário São Camilo",
+  "Centro Universitário São Leopoldo Mandic",
+  "Faculdade de Ciências Médicas da Santa Casa de São Paulo (FCMSCSP)",
+  "Faculdade de Medicina de São José do Rio Preto (FAMERP)",
+  "Faculdade de Medicina do ABC (FMABC)",
+  
+  // Universidades Privadas (Gerais)
+  "Fundação Getúlio Vargas (FGV)",
+  "Insper - Instituto de Ensino e Pesquisa",
+  "Pontifícia Universidade Católica de Campinas (PUC-Campinas)",
+  "Pontifícia Universidade Católica de São Paulo (PUC-SP)",
+  "Pontifícia Universidade Católica do Paraná (PUC-PR)",
+  "Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)",
+  "Pontifícia Universidade Católica do Rio Grande do Sul (PUC-RS)",
+  "Universidade Anhembi Morumbi",
+  "Universidade Cidade de São Paulo (UNICID)",
+  
+  // Universidades Públicas
+  "Universidade de Brasília (UnB)",
+  "Universidade de Marília (UNIMAR)",
+  "Universidade de São Paulo (USP)",
+  "Universidade do Estado do Rio de Janeiro (UERJ)",
+  "Universidade Estadual de Campinas (UNICAMP)",
+  "Universidade Estadual de Londrina (UEL)",
+  "Universidade Estadual de Maringá (UEM)",
+  "Universidade Estadual Paulista (UNESP)",
+  "Universidade Federal da Bahia (UFBA)",
+  "Universidade Federal de Goiás (UFG)",
+  "Universidade Federal de Minas Gerais (UFMG)",
+  "Universidade Federal de Pernambuco (UFPE)",
+  "Universidade Federal de Santa Catarina (UFSC)",
+  "Universidade Federal de São Paulo (UNIFESP)",
+  "Universidade Federal do Ceará (UFC)",
+  "Universidade Federal do Espírito Santo (UFES)",
+  "Universidade Federal do Paraná (UFPR)",
+  "Universidade Federal do Rio de Janeiro (UFRJ)",
+  "Universidade Federal do Rio Grande do Norte (UFRN)",
+  "Universidade Federal do Rio Grande do Sul (UFRGS)",
+  "Universidade Federal Fluminense (UFF)",
+  "Universidade Nove de Julho (UNINOVE)",
+  "Universidade Paulista (UNIP)",
+  "Universidade Positivo",
+  "Universidade Presbiteriana Mackenzie",
+].sort();
+
 const PatientForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showCustomInstitution, setShowCustomInstitution] = useState(false);
   const [showExistingAccountModal, setShowExistingAccountModal] = useState(false);
   const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
   const navigate = useNavigate();
@@ -388,25 +438,57 @@ const PatientForm = () => {
         <Label htmlFor="instituicaoEnsino">
           Instituição de ensino {formData.estudanteStatus === 'estudante' && <span className="text-red-500">*</span>}
         </Label>
-        <Input
-          id="instituicaoEnsino"
-          value={formData.instituicaoEnsino}
-          onChange={(e) => {
-            updateFormData('instituicaoEnsino', e.target.value);
-            updateFormData('instituicao', e.target.value);
+        
+        <Select 
+          value={showCustomInstitution ? "outra" : formData.instituicaoEnsino}
+          onValueChange={(value) => {
+            if (value === "outra") {
+              setShowCustomInstitution(true);
+              updateFormData('instituicaoEnsino', '');
+              updateFormData('instituicao', '');
+            } else {
+              setShowCustomInstitution(false);
+              updateFormData('instituicaoEnsino', value);
+              updateFormData('instituicao', value);
+            }
           }}
-          placeholder="Nome da sua instituição de ensino"
-          required={formData.estudanteStatus === 'estudante'}
-        />
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione sua instituição de ensino" />
+          </SelectTrigger>
+          <SelectContent className="bg-background max-h-[300px]">
+            {BRAZILIAN_INSTITUTIONS.map((institution) => (
+              <SelectItem key={institution} value={institution}>
+                {institution}
+              </SelectItem>
+            ))}
+            <SelectItem value="outra" className="font-semibold text-primary border-t mt-2 pt-2">
+              ✏️ Outra instituição
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        {showCustomInstitution && (
+          <Input
+            className="mt-2"
+            placeholder="Digite o nome da sua instituição"
+            value={formData.instituicaoEnsino}
+            onChange={(e) => {
+              updateFormData('instituicaoEnsino', e.target.value);
+              updateFormData('instituicao', e.target.value);
+            }}
+            required={formData.estudanteStatus === 'estudante'}
+          />
+        )}
       </div>
 
       <div>
-        <Label htmlFor="comoConheceu">Como conheceu o Alô, Psi?</Label>
+        <Label htmlFor="comoConheceu">Como conheceu o {tenant?.name || "Alô, Psi!"}?</Label>
         <Select value={formData.comoConheceu} onValueChange={(value) => updateFormData('comoConheceu', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione uma opção" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background">
             <SelectItem value="google">Google/Busca online</SelectItem>
             <SelectItem value="redes_sociais">Redes sociais</SelectItem>
             <SelectItem value="indicacao_amigo">Indicação de amigo</SelectItem>
