@@ -1,13 +1,8 @@
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
-import { AlertCircle, CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import { AlertCircle } from 'lucide-react';
 
 interface BirthDateInputProps {
   value: string;
@@ -28,40 +23,103 @@ const calculateAge = (birthDate: string): number => {
   return age;
 };
 
+const formatDateInput = (value: string): string => {
+  // Remove tudo que não é número
+  const numbers = value.replace(/\D/g, '');
+  
+  // Limita a 8 dígitos
+  const limited = numbers.slice(0, 8);
+  
+  // Adiciona barras automaticamente
+  let formatted = limited;
+  if (limited.length >= 3) {
+    formatted = `${limited.slice(0, 2)}/${limited.slice(2)}`;
+  }
+  if (limited.length >= 5) {
+    formatted = `${limited.slice(0, 2)}/${limited.slice(2, 4)}/${limited.slice(4)}`;
+  }
+  
+  return formatted;
+};
+
+const convertToISO = (dateStr: string): string | null => {
+  // "23/10/1995" → "1995-10-23"
+  if (dateStr.length !== 10) return null;
+  
+  const [day, month, year] = dateStr.split('/');
+  if (!day || !month || !year || year.length !== 4) return null;
+  
+  const dayNum = parseInt(day, 10);
+  const monthNum = parseInt(month, 10);
+  const yearNum = parseInt(year, 10);
+  
+  // Validar ranges básicos
+  if (dayNum < 1 || dayNum > 31 || monthNum < 1 || monthNum > 12) return null;
+  
+  // Verificar se é uma data válida
+  const date = new Date(yearNum, monthNum - 1, dayNum);
+  if (
+    date.getDate() !== dayNum ||
+    date.getMonth() !== monthNum - 1 ||
+    date.getFullYear() !== yearNum
+  ) {
+    return null;
+  }
+  
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+};
+
+const convertFromISO = (isoStr: string): string => {
+  // "1995-10-23" → "23/10/1995"
+  if (!isoStr || isoStr.length !== 10) return '';
+  const [year, month, day] = isoStr.split('-');
+  return `${day}/${month}/${year}`;
+};
+
 export const BirthDateInput = ({ value, onChange, required = true }: BirthDateInputProps) => {
   const { toast } = useToast();
   const [error, setError] = useState<string>('');
-  const [open, setOpen] = useState(false);
+  const [displayValue, setDisplayValue] = useState<string>('');
 
-  // Converter string para Date (se existir)
-  const selectedDate = value ? new Date(value) : undefined;
+  // Inicializar displayValue a partir do value ISO
+  useEffect(() => {
+    if (value) {
+      setDisplayValue(convertFromISO(value));
+    } else {
+      setDisplayValue('');
+    }
+  }, [value]);
 
-  const handleSelect = (date: Date | undefined) => {
-    if (!date) {
+  const validateAndConvert = (formattedDate: string) => {
+    if (formattedDate.length !== 10) {
       setError('');
       onChange('');
-      setOpen(false);
+      return;
+    }
+
+    const isoDate = convertToISO(formattedDate);
+    
+    if (!isoDate) {
+      setError('Data inválida');
       return;
     }
 
     setError('');
     const today = new Date();
+    const selectedDate = new Date(isoDate);
     const minDate = new Date('1920-01-01');
 
     // Validar data futura
-    if (date > today) {
+    if (selectedDate > today) {
       setError('Data de nascimento não pode ser no futuro');
       return;
     }
 
     // Validar data muito antiga
-    if (date < minDate) {
+    if (selectedDate < minDate) {
       setError('Data de nascimento inválida');
       return;
     }
-
-    // Converter para formato ISO (YYYY-MM-DD)
-    const isoDate = format(date, 'yyyy-MM-dd');
 
     // Validar idade mínima
     const age = calculateAge(isoDate);
@@ -85,7 +143,12 @@ export const BirthDateInput = ({ value, onChange, required = true }: BirthDateIn
     }
 
     onChange(isoDate);
-    setOpen(false);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatDateInput(e.target.value);
+    setDisplayValue(formatted);
+    validateAndConvert(formatted);
   };
 
   return (
@@ -93,39 +156,17 @@ export const BirthDateInput = ({ value, onChange, required = true }: BirthDateIn
       <Label htmlFor="dataNascimento">
         Data de nascimento {required && <span className="text-red-500">*</span>}
       </Label>
-      
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              "w-full justify-start text-left font-normal",
-              !value && "text-muted-foreground",
-              error && "border-red-500"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {value ? format(new Date(value), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : "Selecione a data"}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={handleSelect}
-            disabled={(date) =>
-              date > new Date() || date < new Date("1920-01-01")
-            }
-            initialFocus
-            defaultMonth={selectedDate || new Date(2000, 0)}
-            captionLayout="dropdown-buttons"
-            fromYear={1920}
-            toYear={new Date().getFullYear()}
-            className="pointer-events-auto"
-          />
-        </PopoverContent>
-      </Popover>
-
+      <Input
+        id="dataNascimento"
+        type="text"
+        value={displayValue}
+        onChange={handleChange}
+        placeholder="dd/mm/aaaa"
+        maxLength={10}
+        required={required}
+        className={error ? 'border-red-500' : ''}
+        inputMode="numeric"
+      />
       {error && (
         <div className="flex items-center gap-2 text-sm text-red-500 mt-2">
           <AlertCircle className="h-4 w-4" />
