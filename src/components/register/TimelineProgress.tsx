@@ -12,21 +12,25 @@ interface TimelineProgressProps {
   currentStep: number;
   totalSteps: number;
   onStepClick: (step: number) => void;
+  stepTitles?: string[]; // Títulos customizados opcionais
 }
 
-export const TimelineProgress = ({ currentStep, totalSteps, onStepClick }: TimelineProgressProps) => {
+export const TimelineProgress = ({ currentStep, totalSteps, onStepClick, stepTitles }: TimelineProgressProps) => {
   const isMobile = useIsMobile();
   
-  const steps: Step[] = [
-    { number: 1, title: 'Dados Pessoais', completed: currentStep > 1 },
-    { number: 2, title: 'Profissão', completed: currentStep > 2 },
-    { number: 3, title: 'Perfil', completed: currentStep > 3 },
-    { number: 4, title: 'Resumo', completed: currentStep > 4 },
-    { number: 5, title: 'Especialidades', completed: currentStep > 5 },
-    { number: 6, title: 'Horários', completed: currentStep > 6 },
-    { number: 7, title: 'Credenciais', completed: currentStep > 7 },
-    { number: 8, title: 'Revisão', completed: currentStep > 8 }
+  // Títulos padrão (profissional) ou customizados
+  const defaultTitles = [
+    'Dados Pessoais', 'Profissão', 'Perfil', 'Resumo',
+    'Especialidades', 'Horários', 'Credenciais', 'Revisão'
   ];
+  
+  const titles = stepTitles || defaultTitles;
+  
+  const steps: Step[] = Array.from({ length: totalSteps }, (_, i) => ({
+    number: i + 1,
+    title: titles[i] || `Passo ${i + 1}`,
+    completed: currentStep > (i + 1)
+  }));
 
   // LAYOUT MOBILE: Vertical compacto
   if (isMobile) {

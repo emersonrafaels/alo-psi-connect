@@ -7,13 +7,13 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ProgressIndicator } from '@/components/ui/progress-indicator';
+import { TimelineProgress } from '@/components/register/TimelineProgress';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Check, Eye, EyeOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Eye, EyeOff, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
@@ -21,6 +21,7 @@ import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { BirthDateInput } from '@/components/register/BirthDateInput';
 import { InstitutionSelector } from '@/components/register/InstitutionSelector';
+import { formatCPF, validateCPF, getCPFErrorMessage } from '@/utils/cpfValidator';
 
 const PatientForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -100,6 +101,13 @@ const PatientForm = () => {
   const handlePrev = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleStepClick = (step: number) => {
+    // Permitir navegar apenas para passos já completados ou atual
+    if (step <= currentStep) {
+      setCurrentStep(step);
     }
   };
 
@@ -354,26 +362,38 @@ const PatientForm = () => {
 
         <div>
           <Label htmlFor="cpf">CPF <span className="text-red-500">*</span></Label>
-          <Input
-            id="cpf"
-            value={formData.cpf}
-            onChange={(e) => {
-              // Only allow digits and format as XXX.XXX.XXX-XX
-              let value = e.target.value.replace(/\D/g, '').slice(0, 11);
-              value = value
-          .replace(/^(\d{3})(\d)/, '$1.$2')
-          .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
-          .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-              updateFormData('cpf', value);
-            }}
-            placeholder="000.000.000-00"
-            required
-            maxLength={14}
-            pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
-            inputMode="numeric"
-          />
-          {formData.cpf && !/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf) && (
-            <p className="text-sm text-red-500 mt-1">CPF deve ter 11 dígitos no formato XXX.XXX.XXX-XX</p>
+          <div className="relative">
+            <Input
+              id="cpf"
+              value={formData.cpf}
+              onChange={(e) => {
+                const formatted = formatCPF(e.target.value);
+                updateFormData('cpf', formatted);
+              }}
+              placeholder="000.000.000-00"
+              required
+              maxLength={14}
+              inputMode="numeric"
+              className={getCPFErrorMessage(formData.cpf) ? 'border-red-500 pr-10' : 'pr-10'}
+            />
+            {/* Ícone de validação */}
+            {formData.cpf && formData.cpf.length === 14 && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {validateCPF(formData.cpf) ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <X className="h-4 w-4 text-red-500" />
+                )}
+              </div>
+            )}
+          </div>
+          {/* Mensagem de erro/sucesso */}
+          {formData.cpf && (
+            <p className={`text-sm mt-1 ${
+              getCPFErrorMessage(formData.cpf) ? 'text-red-500' : 'text-green-600'
+            }`}>
+              {getCPFErrorMessage(formData.cpf) || '✓ CPF válido'}
+            </p>
           )}
         </div>
       </div>
@@ -488,11 +508,11 @@ const PatientForm = () => {
 
           <Card>
             <CardHeader>
-              <ProgressIndicator 
-                currentStep={currentStep} 
-                totalSteps={totalSteps} 
-                stepLabels={user ? ['Perfil', 'Dados Pessoais', 'Finalização'] : ['Perfil', 'Dados Pessoais', 'Informações', 'Senha']}
-                className="mb-6"
+              <TimelineProgress
+                currentStep={currentStep}
+                totalSteps={totalSteps}
+                onStepClick={handleStepClick}
+                stepTitles={user ? ['Perfil', 'Dados Pessoais', 'Finalização'] : ['Perfil', 'Dados Pessoais', 'Informações', 'Senha']}
               />
               <CardTitle className="text-center text-xl">
                 {currentStep === 1 ? 'Defina seu perfil' :
