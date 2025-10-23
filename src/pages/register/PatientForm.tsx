@@ -22,6 +22,8 @@ import { buildTenantPath } from '@/utils/tenantHelpers';
 import { BirthDateInput } from '@/components/register/BirthDateInput';
 import { InstitutionSelector } from '@/components/register/InstitutionSelector';
 import { formatCPF, validateCPF, getCPFErrorMessage } from '@/utils/cpfValidator';
+import { AutoSaveIndicator } from '@/components/register/AutoSaveIndicator';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
 
 const PatientForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -30,6 +32,8 @@ const PatientForm = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showExistingAccountModal, setShowExistingAccountModal] = useState(false);
   const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -54,6 +58,30 @@ const PatientForm = () => {
     password: '', // Added for edge function compatibility
     telefone: '' // Added for edge function compatibility
   });
+
+  // Auto-save do progresso
+  const { clearSaved } = useFormPersistence({
+    key: 'patient-registration-draft',
+    data: { formData, currentStep },
+    enabled: !user, // Só salvar se ainda não estiver autenticado
+    debounceMs: 2000,
+    onRestore: (restoredData) => {
+      setFormData(restoredData.formData);
+      setCurrentStep(restoredData.currentStep);
+    }
+  });
+
+  // Simular salvamento para indicador
+  useEffect(() => {
+    if (!user && formData.nome) {
+      setIsSaving(true);
+      const timer = setTimeout(() => {
+        setIsSaving(false);
+        setLastSaved(new Date());
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [formData, user]);
 
   // Verificar se há dados pendentes de cadastro de paciente
   useEffect(() => {
@@ -229,6 +257,9 @@ const PatientForm = () => {
 
       console.log('Patient profile created successfully:', data);
       console.log('isNewUser:', data.isNewUser, 'confirmationEmailSent:', data.confirmationEmailSent);
+      
+      // Limpar draft salvo após sucesso
+      clearSaved();
       
       // Check if this is a new user that needs email confirmation
       if (data.isNewUser && data.confirmationEmailSent) {
@@ -508,6 +539,12 @@ const PatientForm = () => {
 
           <Card>
             <CardHeader>
+              {/* Auto-save indicator */}
+              {!user && currentStep < totalSteps && (
+                <div className="flex justify-end mb-4">
+                  <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
+                </div>
+              )}
               <TimelineProgress
                 currentStep={currentStep}
                 totalSteps={totalSteps}
