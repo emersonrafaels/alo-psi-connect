@@ -205,7 +205,7 @@ export function InstitutionSelector({ value, onChange, className }: InstitutionS
 
       {isCustomInstitution && (
         <p className="text-sm text-muted-foreground">
-          Instituição personalizada: <strong>{value}</strong>
+          Instituição selecionada: <strong>{value}</strong>
         </p>
       )}
     </div>
