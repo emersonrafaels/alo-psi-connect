@@ -20,10 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake } from 'lucide-react';
+import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle } from 'lucide-react';
 import { useInstitutions, EducationalInstitution } from '@/hooks/useInstitutions';
+import { useUncataloguedInstitutions } from '@/hooks/useUncataloguedInstitutions';
 import { EditInstitutionModal } from '@/components/admin/EditInstitutionModal';
 import { InstitutionPatientsModal } from '@/components/admin/InstitutionPatientsModal';
+import { UncataloguedInstitutionsTable } from '@/components/admin/UncataloguedInstitutionsTable';
 import { useInstitutionPatients } from '@/hooks/useInstitutionPatients';
 
 export default function Institutions() {
@@ -36,6 +38,16 @@ export default function Institutions() {
     deleteInstitution,
     isUpdating,
   } = useInstitutions();
+
+  const {
+    uncatalogued,
+    isLoading: isLoadingUncatalogued,
+    stats: uncataloguedStats,
+    catalogueInstitution,
+    linkInstitution,
+    isCataloguing,
+    isLinking,
+  } = useUncataloguedInstitutions();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'public' | 'private'>('all');
@@ -101,34 +113,43 @@ export default function Institutions() {
         </div>
 
         {/* Cards de Estatísticas */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total</CardTitle>
+              <CardTitle className="text-sm font-medium">Catalogadas</CardTitle>
               <GraduationCap className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.public} públicas, {stats.private} privadas
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Públicas</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Não Catalogadas</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-warning" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.public}</div>
+              <div className="text-2xl font-bold text-warning">{uncataloguedStats.total}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Variações digitadas livremente
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Privadas</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Pacientes Afetados</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.private}</div>
+              <div className="text-2xl font-bold">{uncataloguedStats.affectedPatients}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Com instituições não catalogadas
+              </p>
             </CardContent>
           </Card>
 
@@ -139,6 +160,22 @@ export default function Institutions() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.withPartnership}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Instituições parceiras
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Ativas</CardTitle>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.active}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Visíveis no cadastro
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -198,9 +235,42 @@ export default function Institutions() {
           </CardContent>
         </Card>
 
-        {/* Tabela */}
+        {/* Seção: Instituições Não Catalogadas */}
+        {uncataloguedStats.total > 0 && (
+          <Card className="border-warning">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-warning" />
+                Instituições Não Catalogadas
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Estas instituições foram digitadas livremente por pacientes e não estão no catálogo oficial.
+                Você pode catalogá-las, vinculá-las a instituições existentes ou ignorá-las.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <UncataloguedInstitutionsTable
+                institutions={uncatalogued}
+                isLoading={isLoadingUncatalogued}
+                onCatalogue={(customName, officialData) => {
+                  catalogueInstitution({ customName, officialData });
+                }}
+                onLink={(customName, targetInstitutionId) => {
+                  linkInstitution({ customName, targetInstitutionId });
+                }}
+                isCataloguing={isCataloguing}
+                isLinking={isLinking}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tabela de Instituições Catalogadas */}
         <Card>
-          <CardContent className="pt-6">
+          <CardHeader>
+            <CardTitle>Instituições Catalogadas</CardTitle>
+          </CardHeader>
+          <CardContent>
             {isLoading ? (
               <p>Carregando...</p>
             ) : (

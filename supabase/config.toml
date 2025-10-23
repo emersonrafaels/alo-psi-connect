@@ -112,3 +112,6 @@ verify_jwt = true
 
 [functions.fix-blog-post-content]
 verify_jwt = false
+
+[functions.normalize-institutions]
+verify_jwt = true
