@@ -12,17 +12,22 @@ export interface EducationalInstitution {
   updated_at: string;
 }
 
-export const useInstitutions = () => {
+export const useInstitutions = (activeOnly: boolean = false) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: institutions, isLoading } = useQuery({
-    queryKey: ['educational-institutions'],
+    queryKey: ['educational-institutions', activeOnly],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('educational_institutions')
-        .select('*')
-        .order('name');
+        .select('*');
+      
+      if (activeOnly) {
+        query = query.eq('is_active', true);
+      }
+      
+      const { data, error } = await query.order('name');
       
       if (error) throw error;
       return data as EducationalInstitution[];
