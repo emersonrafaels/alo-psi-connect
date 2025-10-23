@@ -1926,6 +1926,15 @@ export type Database = {
     Functions: {
       clean_old_chat_sessions: { Args: never; Returns: undefined }
       get_current_tenant_id: { Args: never; Returns: string }
+      get_uncatalogued_institutions: {
+        Args: never
+        Returns: {
+          first_mention: string
+          last_mention: string
+          name: string
+          patient_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -35,7 +35,6 @@ export function LinkInstitutionModal({
   const institutionOptions = institutions.map((inst) => ({
     value: inst.id,
     label: inst.name,
-    badge: inst.has_partnership ? { text: 'Parceria', variant: 'default' as const } : undefined,
   }));
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -77,9 +76,9 @@ export function LinkInstitutionModal({
             <Combobox
               options={institutionOptions}
               value={selectedInstitutionId}
-              onChange={setSelectedInstitutionId}
+              onValueChange={setSelectedInstitutionId}
               placeholder="Buscar instituição..."
-              emptyMessage="Nenhuma instituição encontrada"
+              emptyText="Nenhuma instituição encontrada"
             />
             {selectedInstitution && (
               <p className="text-sm text-muted-foreground">

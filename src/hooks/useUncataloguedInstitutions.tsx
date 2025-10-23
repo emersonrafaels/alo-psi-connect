@@ -32,10 +32,62 @@ export const useUncataloguedInstitutions = () => {
   const { data: uncatalogued, isLoading } = useQuery({
     queryKey: ['uncatalogued-institutions'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_uncatalogued_institutions');
-      
-      if (error) throw error;
-      return data as UncataloguedInstitution[];
+      // Query SQL direta para buscar instituições não catalogadas
+      const { data: pacientes, error: pacientesError } = await supabase
+        .from('pacientes')
+        .select('instituicao_ensino, created_at');
+
+      if (pacientesError) throw pacientesError;
+
+      const { data: institutions, error: institutionsError } = await supabase
+        .from('educational_institutions')
+        .select('name');
+
+      if (institutionsError) throw institutionsError;
+
+      // Normalizar nomes de instituições catalogadas para comparação
+      const cataloguedNames = new Set(
+        institutions.map((i) => i.name.toLowerCase().trim())
+      );
+
+      // Agrupar pacientes por instituição não catalogada
+      const grouped = new Map<string, { count: number; firstMention: string; lastMention: string }>();
+
+      pacientes.forEach((p) => {
+        if (!p.instituicao_ensino) return;
+
+        const normalizedName = p.instituicao_ensino.toLowerCase().trim();
+        if (cataloguedNames.has(normalizedName)) return;
+
+        const existing = grouped.get(p.instituicao_ensino);
+        if (existing) {
+          existing.count++;
+          if (p.created_at < existing.firstMention) {
+            existing.firstMention = p.created_at;
+          }
+          if (p.created_at > existing.lastMention) {
+            existing.lastMention = p.created_at;
+          }
+        } else {
+          grouped.set(p.instituicao_ensino, {
+            count: 1,
+            firstMention: p.created_at,
+            lastMention: p.created_at,
+          });
+        }
+      });
+
+      // Converter para array e ordenar
+      const result: UncataloguedInstitution[] = Array.from(grouped.entries())
+        .map(([name, stats]) => ({
+          name,
+          patient_count: stats.count,
+          first_mention: stats.firstMention,
+          last_mention: stats.lastMention,
+        }))
+        .sort((a, b) => b.patient_count - a.patient_count);
+
+      return result;
     },
   });
 
