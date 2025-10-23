@@ -56,10 +56,11 @@ export const useBlogAnalyticsSummary = (
   dateRange: number = 30, 
   authorId?: string,
   tagSlug?: string,
-  featuredStatus: 'all' | 'featured' | 'normal' = 'all'
+  featuredStatus: 'all' | 'featured' | 'normal' = 'all',
+  tenantFilter?: string | null
 ) => {
   return useQuery({
-    queryKey: ['blog-analytics-summary', dateRange, authorId, tagSlug, featuredStatus],
+    queryKey: ['blog-analytics-summary', dateRange, authorId, tagSlug, featuredStatus, tenantFilter],
     queryFn: async () => {
       const startDate = format(subDays(startOfDay(new Date()), dateRange), 'yyyy-MM-dd');
       
@@ -72,6 +73,10 @@ export const useBlogAnalyticsSummary = (
         .from('blog_posts')
         .select('id, blog_post_tags(tag_id)')
         .eq('status', 'published');
+
+      if (tenantFilter) {
+        postsQuery = postsQuery.eq('tenant_id', tenantFilter);
+      }
 
       if (authorId) {
         postsQuery = postsQuery.eq('author_id', authorId);
@@ -362,10 +367,11 @@ export const usePostAnalytics = (
   limit: number = 10, 
   authorId?: string,
   tagSlug?: string,
-  featuredStatus: 'all' | 'featured' | 'normal' = 'all'
+  featuredStatus: 'all' | 'featured' | 'normal' = 'all',
+  tenantFilter?: string | null
 ) => {
   return useQuery({
-    queryKey: ['post-analytics', dateRange, limit, authorId, tagSlug, featuredStatus],
+    queryKey: ['post-analytics', dateRange, limit, authorId, tagSlug, featuredStatus, tenantFilter],
     queryFn: async () => {
       const startDate = format(subDays(startOfDay(new Date()), dateRange), 'yyyy-MM-dd');
 
@@ -374,6 +380,10 @@ export const usePostAnalytics = (
         .from('blog_posts')
         .select('id, blog_post_tags(tag_id)')
         .eq('status', 'published');
+      
+      if (tenantFilter) {
+        postsFilterQuery = postsFilterQuery.eq('tenant_id', tenantFilter);
+      }
         
       if (authorId) {
         postsFilterQuery = postsFilterQuery.eq('author_id', authorId);
@@ -480,10 +490,11 @@ export const useDailyAnalytics = (
   dateRange: number = 30, 
   authorId?: string,
   tagSlug?: string,
-  featuredStatus: 'all' | 'featured' | 'normal' = 'all'
+  featuredStatus: 'all' | 'featured' | 'normal' = 'all',
+  tenantFilter?: string | null
 ) => {
   return useQuery({
-    queryKey: ['daily-analytics', dateRange, authorId, tagSlug, featuredStatus],
+    queryKey: ['daily-analytics', dateRange, authorId, tagSlug, featuredStatus, tenantFilter],
     queryFn: async () => {
       const startDate = format(subDays(startOfDay(new Date()), dateRange), 'yyyy-MM-dd');
 
@@ -492,6 +503,10 @@ export const useDailyAnalytics = (
         .from('blog_posts')
         .select('id, blog_post_tags(tag_id)')
         .eq('status', 'published');
+      
+      if (tenantFilter) {
+        postsFilterQuery = postsFilterQuery.eq('tenant_id', tenantFilter);
+      }
         
       if (authorId) {
         postsFilterQuery = postsFilterQuery.eq('author_id', authorId);

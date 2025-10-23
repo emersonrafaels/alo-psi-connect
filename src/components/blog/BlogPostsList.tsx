@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useBlogPosts } from '@/hooks/useBlogPosts';
 import { supabase } from '@/integrations/supabase/client';
 import { useBlogPostManager } from '@/hooks/useBlogPostManager';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PostStatusBadge } from './PostStatusBadge';
@@ -33,11 +34,19 @@ export const BlogPostsList = () => {
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'published' | 'draft' | 'all'>('all');
   const [tenants, setTenants] = useState<Map<string, { name: string; slug: string }>>(new Map());
+  const { tenantFilter } = useAdminTenant();
   
-  const { data: posts, isLoading } = useBlogPosts({
+  const { data: allPosts, isLoading } = useBlogPosts({
     status: statusFilter === 'all' ? undefined : statusFilter,
     ignoreTenantIsolation: true
   });
+  
+  // Filtrar posts baseado no tenantFilter do AdminTenantContext
+  const posts = allPosts?.filter(post => {
+    if (!tenantFilter) return true; // Se "Todos os Sites", mostra tudo
+    return (post as any).tenant_id === tenantFilter;
+  }) || [];
+  
   const { deletePost, publishPost } = useBlogPostManager();
 
   // Carregar tenants

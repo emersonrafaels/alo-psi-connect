@@ -6,6 +6,7 @@ import { AnalyticsFilters } from '@/components/admin/AnalyticsFilters';
 import { AuthorAnalytics } from '@/components/admin/AuthorAnalytics';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { Button } from '@/components/ui/button';
 import { FileText, BarChart3, Star, Sparkles } from 'lucide-react';
 import { CurationStatsCards } from '@/components/blog/curation/CurationStatsCards';
@@ -24,6 +25,7 @@ const BlogManagement = () => {
   const { user } = useAuth();
   const { hasRole } = useAdminAuth();
   const isAdmin = hasRole('admin' as any);
+  const { tenantFilter } = useAdminTenant();
   
   const [filters, setFilters] = useState<FilterType>({
     status: 'all',
@@ -106,6 +108,7 @@ const BlogManagement = () => {
                 authorId={selectedAuthor !== 'all' ? selectedAuthor : undefined}
                 tagSlug={selectedTag !== 'all' ? selectedTag : undefined}
                 featuredStatus={selectedStatus}
+                tenantFilter={tenantFilter}
               />
             </TabsContent>
 

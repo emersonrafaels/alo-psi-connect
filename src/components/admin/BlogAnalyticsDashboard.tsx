@@ -14,17 +14,19 @@ interface BlogAnalyticsDashboardProps {
   authorId?: string;
   tagSlug?: string;
   featuredStatus?: 'all' | 'featured' | 'normal';
+  tenantFilter?: string | null;
 }
 
 export const BlogAnalyticsDashboard = ({ 
   dateRange = 30, 
   authorId,
   tagSlug,
-  featuredStatus = 'all'
+  featuredStatus = 'all',
+  tenantFilter
 }: BlogAnalyticsDashboardProps) => {
-  const { data: summary, isLoading: loadingSummary } = useBlogAnalyticsSummary(dateRange, authorId, tagSlug, featuredStatus);
-  const { data: dailyData, isLoading: loadingDaily } = useDailyAnalytics(dateRange, authorId, tagSlug, featuredStatus);
-  const { data: topPosts, isLoading: loadingPosts } = usePostAnalytics(dateRange, 10, authorId, tagSlug, featuredStatus);
+  const { data: summary, isLoading: loadingSummary } = useBlogAnalyticsSummary(dateRange, authorId, tagSlug, featuredStatus, tenantFilter);
+  const { data: dailyData, isLoading: loadingDaily } = useDailyAnalytics(dateRange, authorId, tagSlug, featuredStatus, tenantFilter);
+  const { data: topPosts, isLoading: loadingPosts } = usePostAnalytics(dateRange, 10, authorId, tagSlug, featuredStatus, tenantFilter);
 
   if (loadingSummary || loadingDaily || loadingPosts) {
     return (
