@@ -85,6 +85,7 @@ export function Combobox({
                     onValueChange(currentValue === value ? "" : currentValue)
                     setOpen(false)
                   }}
+                  className="hover:bg-[hsl(var(--hover-bg))] hover:text-[hsl(var(--hover-text))] data-[selected=true]:bg-[hsl(var(--hover-bg))] data-[selected=true]:text-[hsl(var(--hover-text))] cursor-pointer"
                 >
                   <Check
                     className={cn(

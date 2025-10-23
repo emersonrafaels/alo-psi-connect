@@ -52,10 +52,14 @@ export const EditInstitutionModal = ({
 
   const onSubmit = (data: InstitutionForm) => {
     if (institution) {
+      // Modo edição: incluir ID
       onSave({ ...data, id: institution.id });
-      reset();
-      onClose();
+    } else {
+      // Modo criação: sem ID (será gerado pelo banco)
+      onSave(data as any);
     }
+    reset();
+    onClose();
   };
 
   return (
