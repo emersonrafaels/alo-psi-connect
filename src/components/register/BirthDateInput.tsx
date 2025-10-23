@@ -93,7 +93,6 @@ export const BirthDateInput = ({ value, onChange, required = true }: BirthDateIn
   const validateAndConvert = (formattedDate: string) => {
     if (formattedDate.length !== 10) {
       setError('');
-      onChange('');
       return;
     }
 
