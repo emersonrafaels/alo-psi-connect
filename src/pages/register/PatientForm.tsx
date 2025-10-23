@@ -19,6 +19,7 @@ import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
+import { BirthDateInput } from '@/components/register/BirthDateInput';
 
 const BRAZILIAN_INSTITUTIONS = [
   // Universidades Privadas de Saúde/Medicina
@@ -378,16 +379,11 @@ const PatientForm = () => {
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="dataNascimento">Data de nascimento <span className="text-red-500">*</span></Label>
-          <Input
-            id="dataNascimento"
-            type="date"
-            value={formData.dataNascimento}
-            onChange={(e) => updateFormData('dataNascimento', e.target.value)}
-            required
-          />
-        </div>
+        <BirthDateInput
+          value={formData.dataNascimento}
+          onChange={(value) => updateFormData('dataNascimento', value)}
+          required
+        />
 
         <div>
           <Label htmlFor="genero">Gênero <span className="text-red-500">*</span></Label>
