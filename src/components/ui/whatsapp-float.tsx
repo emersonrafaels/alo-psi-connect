@@ -2,7 +2,7 @@ import { MessageCircle } from "lucide-react"
 import { Button } from "./button"
 
 const WhatsAppFloat = () => {
-  const phoneNumber = "5511947994163" // Formato internacional sem símbolos
+  const phoneNumber = "5511956850046" // Formato internacional sem símbolos
   const defaultMessage = "Olá! Gostaria de agendar uma consulta através do whats Alô, Psi!"
   
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(defaultMessage)}`

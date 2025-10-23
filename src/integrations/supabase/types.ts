@@ -1852,14 +1852,8 @@ export type Database = {
       }
     }
     Functions: {
-      clean_old_chat_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_current_tenant_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      clean_old_chat_sessions: { Args: never; Returns: undefined }
+      get_current_tenant_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1867,22 +1861,10 @@ export type Database = {
         }
         Returns: boolean
       }
-      increment_post_views: {
-        Args: { post_slug: string }
-        Returns: undefined
-      }
-      invoke_blog_analytics_aggregation: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      invoke_google_calendar_sync: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      is_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      increment_post_views: { Args: { post_slug: string }; Returns: undefined }
+      invoke_blog_analytics_aggregation: { Args: never; Returns: undefined }
+      invoke_google_calendar_sync: { Args: never; Returns: undefined }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       normalize_specialties: {
         Args: { raw_specialties: string[] }
         Returns: string[]
