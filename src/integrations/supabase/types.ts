@@ -767,6 +767,36 @@ export type Database = {
         }
         Relationships: []
       }
+      educational_institutions: {
+        Row: {
+          created_at: string
+          has_partnership: boolean
+          id: string
+          is_active: boolean
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          has_partnership?: boolean
+          id?: string
+          is_active?: boolean
+          name: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          has_partnership?: boolean
+          id?: string
+          is_active?: boolean
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_confirmation_tokens: {
         Row: {
           created_at: string
@@ -1089,6 +1119,48 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      patient_institutions: {
+        Row: {
+          created_at: string
+          enrollment_date: string | null
+          enrollment_status: string
+          id: string
+          institution_id: string
+          patient_id: string
+        }
+        Insert: {
+          created_at?: string
+          enrollment_date?: string | null
+          enrollment_status?: string
+          id?: string
+          institution_id: string
+          patient_id: string
+        }
+        Update: {
+          created_at?: string
+          enrollment_date?: string | null
+          enrollment_status?: string
+          id?: string
+          institution_id?: string
+          patient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_institutions_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_institutions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       professional_registration_attempts: {
         Row: {

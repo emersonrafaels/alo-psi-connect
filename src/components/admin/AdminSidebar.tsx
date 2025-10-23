@@ -11,7 +11,8 @@ import {
   FileText,
   Star,
   Building2,
-  FlaskConical
+  FlaskConical,
+  GraduationCap
 } from 'lucide-react';
 import {
   Sidebar,
@@ -50,13 +51,19 @@ const adminMenuItems = [
     title: 'Profissionais',
     url: '/admin/professionals',
     icon: UserCheck,
-    requiredRole: 'admin' as const // Apenas admins/super_admins
+    requiredRole: 'admin' as const
+  },
+  {
+    title: 'Instituições',
+    url: '/admin/instituicoes',
+    icon: GraduationCap,
+    requiredRole: 'admin' as const
   },
   {
     title: 'Agendamentos',
     url: '/admin/appointments',
     icon: Calendar,
-    requiredRole: 'admin' as const // Apenas admins/super_admins
+    requiredRole: 'admin' as const
   },
   {
     title: 'Financeiro',
