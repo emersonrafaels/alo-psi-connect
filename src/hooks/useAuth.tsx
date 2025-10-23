@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { getTenantSlugFromPath, buildTenantPath } from '@/utils/tenantHelpers';
 
 interface AuthContextType {
   session: Session | null;
@@ -85,8 +86,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error('Logout error (continuing anyway):', error);
     } finally {
-      // Force redirect to home page using window.location for logout
-      window.location.href = '/';
+      // Detectar tenant atual e redirecionar para homepage correta
+      const tenantSlug = getTenantSlugFromPath(window.location.pathname);
+      const homePath = buildTenantPath(tenantSlug, '/');
+      window.location.href = homePath;
     }
   };
 
