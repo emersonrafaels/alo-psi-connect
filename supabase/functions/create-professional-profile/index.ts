@@ -463,6 +463,8 @@ serve(async (req) => {
         .from('profiles')
         .update({
           ...cleanedProfileData,
+          raca: profileData.raca || null,
+          sexualidade: profileData.sexualidade || null,
           tenant_id: tenant.id
         })
         .eq('id', existingProfile.id);
@@ -498,6 +500,8 @@ serve(async (req) => {
         .insert({
           user_id: authUserId, // ✅ Usar UUID do auth.users
           tenant_id: tenant.id,
+          raca: profileData.raca || null,
+          sexualidade: profileData.sexualidade || null,
           ...profileData
         })
         .select()

@@ -1310,6 +1310,8 @@ export type Database = {
           google_calendar_token: string | null
           id: string
           nome: string
+          raca: string | null
+          sexualidade: string | null
           tenant_id: string | null
           tipo_usuario: string
           updated_at: string | null
@@ -1328,6 +1330,8 @@ export type Database = {
           google_calendar_token?: string | null
           id?: string
           nome: string
+          raca?: string | null
+          sexualidade?: string | null
           tenant_id?: string | null
           tipo_usuario: string
           updated_at?: string | null
@@ -1346,6 +1350,8 @@ export type Database = {
           google_calendar_token?: string | null
           id?: string
           nome?: string
+          raca?: string | null
+          sexualidade?: string | null
           tenant_id?: string | null
           tipo_usuario?: string
           updated_at?: string | null

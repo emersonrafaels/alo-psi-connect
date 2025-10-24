@@ -69,6 +69,8 @@ const ProfessionalForm = () => {
     email: user?.email || googleData?.email || '',
     dataNascimento: '',
     genero: '',
+    raca: '',
+    sexualidade: '',
     cpf: '',
     profissao: '',
     possuiEPsi: '',
@@ -488,6 +490,41 @@ const ProfessionalForm = () => {
               <SelectItem value="feminino">Feminino</SelectItem>
               <SelectItem value="nao_binario">Não binário</SelectItem>
               <SelectItem value="prefiro_nao_dizer">Prefiro não dizer</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="raca">Raça/Etnia</Label>
+          <Select value={formData.raca} onValueChange={(value) => updateFormData('raca', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="branca">Branca</SelectItem>
+              <SelectItem value="preta">Preta</SelectItem>
+              <SelectItem value="parda">Parda</SelectItem>
+              <SelectItem value="amarela">Amarela</SelectItem>
+              <SelectItem value="indigena">Indígena</SelectItem>
+              <SelectItem value="prefiro_nao_declarar">Prefiro não declarar</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="sexualidade">Orientação Sexual</Label>
+          <Select value={formData.sexualidade} onValueChange={(value) => updateFormData('sexualidade', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="heterossexual">Heterossexual</SelectItem>
+              <SelectItem value="homossexual">Homossexual</SelectItem>
+              <SelectItem value="bissexual">Bissexual</SelectItem>
+              <SelectItem value="pansexual">Pansexual</SelectItem>
+              <SelectItem value="assexual">Assexual</SelectItem>
+              <SelectItem value="outro">Outro</SelectItem>
+              <SelectItem value="prefiro_nao_declarar">Prefiro não declarar</SelectItem>
             </SelectContent>
           </Select>
         </div>
