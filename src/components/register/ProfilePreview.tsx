@@ -80,12 +80,12 @@ export const ProfilePreview = ({ formData, onEdit }: ProfilePreviewProps) => {
               {/* Mensagem sobre a foto */}
               {hasUploadedPhoto && (
                 <p className="text-xs text-muted-foreground text-center max-w-[200px]">
-                  Sua foto será exibida após o cadastro ser completado
+                  ✓ Foto selecionada. Ela será salva ao finalizar o cadastro.
                 </p>
               )}
               {!hasUploadedPhoto && (
                 <p className="text-xs text-muted-foreground text-center max-w-[200px]">
-                  Avatar ilustrativo (você pode adicionar sua foto depois)
+                  Avatar ilustrativo (você pode adicionar sua foto no passo anterior)
                 </p>
               )}
             </div>

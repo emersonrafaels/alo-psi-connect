@@ -718,6 +718,9 @@ const ProfessionalForm = () => {
               const previewUrl = URL.createObjectURL(file);
               setPhotoPreviewUrl(previewUrl);
               
+              // Atualizar formData para que o preview funcione
+              updateFormData('fotoPerfilUrl', previewUrl);
+              
               console.log('Foto selecionada para upload posterior:', {
                 fileName: file.name,
                 fileSize: file.size,
