@@ -609,21 +609,30 @@ const ProfessionalForm = () => {
           onValueChange={(value) => updateFormData('profissao', value)}
           className="space-y-3"
         >
-          <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors">
+          <Label 
+            htmlFor="psicologo" 
+            className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent hover:border-primary cursor-pointer transition-all group"
+          >
             <RadioGroupItem value="Psicólogo" id="psicologo" />
-            <Brain className="h-5 w-5 text-primary" />
-            <Label htmlFor="psicologo" className="cursor-pointer flex-1">Psicólogo</Label>
-          </div>
-          <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors">
+            <Brain className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+            <span className="flex-1 font-medium">Psicólogo</span>
+          </Label>
+          <Label 
+            htmlFor="psiquiatra" 
+            className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent hover:border-primary cursor-pointer transition-all group"
+          >
             <RadioGroupItem value="Psiquiatra" id="psiquiatra" />
-            <Stethoscope className="h-5 w-5 text-primary" />
-            <Label htmlFor="psiquiatra" className="cursor-pointer flex-1">Psiquiatra</Label>
-          </div>
-          <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors">
+            <Stethoscope className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+            <span className="flex-1 font-medium">Psiquiatra</span>
+          </Label>
+          <Label 
+            htmlFor="psicoterapeuta" 
+            className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent hover:border-primary cursor-pointer transition-all group"
+          >
             <RadioGroupItem value="Psicoterapeuta" id="psicoterapeuta" />
-            <Users className="h-5 w-5 text-primary" />
-            <Label htmlFor="psicoterapeuta" className="cursor-pointer flex-1">Psicoterapeuta</Label>
-          </div>
+            <Users className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+            <span className="flex-1 font-medium">Psicoterapeuta</span>
+          </Label>
         </RadioGroup>
       </div>
 
