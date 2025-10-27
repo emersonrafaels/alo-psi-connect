@@ -26,6 +26,7 @@ import { TimelineProgress } from '@/components/register/TimelineProgress';
 import { FieldWithTooltip } from '@/components/register/FieldWithTooltip';
 import { ProfessionalSummaryField } from '@/components/register/ProfessionalSummaryField';
 import { ProfilePreview } from '@/components/register/ProfilePreview';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 import { BirthDateInput } from '@/components/register/BirthDateInput';
 import { CRPCRMInput } from '@/components/register/CRPCRMInput';
@@ -233,51 +234,18 @@ const ProfessionalForm = () => {
     console.log('📤 [ProfessionalForm] Iniciando cadastro profissional para:', formData.email);
     
     try {
-      // ✅ NOVO: Não criar usuário aqui, edge function faz tudo
-
-      // Upload da foto se foi selecionada
-      let uploadedPhotoUrl = formData.fotoPerfilUrl;
-      if (selectedPhotoFile) {
-        console.log('🔄 Fazendo upload da foto após autenticação...', { fileName: selectedPhotoFile.name, fileSize: selectedPhotoFile.size });
-        
-        try {
-          uploadedPhotoUrl = await uploadProfilePhoto(selectedPhotoFile);
-          if (uploadedPhotoUrl) {
-            console.log('✅ Foto carregada com sucesso:', uploadedPhotoUrl);
-            // Garantir que a foto seja incluída nos dados
-            setFormData(prev => ({ ...prev, fotoPerfilUrl: uploadedPhotoUrl! }));
-          } else {
-            console.warn('❌ Falha no upload da foto - função retornou null');
-          }
-        } catch (error) {
-          console.error('❌ Erro durante upload da foto:', error);
-          uploadedPhotoUrl = null;
-        }
-      } else if (formData.fotoPerfilUrl && formData.fotoPerfilUrl.startsWith('http')) {
-        // Se há uma URL de foto do Google, tentar salvá-la
-        console.log('🔄 Salvando foto do Google...', formData.fotoPerfilUrl);
-        try {
-          uploadedPhotoUrl = await saveGooglePhoto(formData.fotoPerfilUrl);
-          if (uploadedPhotoUrl) {
-            console.log('✅ Foto do Google salva com sucesso:', uploadedPhotoUrl);
-          }
-        } catch (error) {
-          console.error('❌ Erro ao salvar foto do Google:', error);
-        }
-      }
-
-      console.log('📸 URL final da foto:', uploadedPhotoUrl);
-
-      // Preparar dados para a edge function
+      // Preparar dados (SEM foto inicialmente)
       const profileData = {
         nome: formData.nome,
         email: formData.email,
         data_nascimento: formData.dataNascimento || null,
         genero: formData.genero || null,
         cpf: formData.cpf || null,
+        raca: formData.raca || null,
+        sexualidade: formData.sexualidade || null,
         como_conheceu: formData.comoConheceu || null,
         tipo_usuario: 'profissional',
-        foto_perfil_url: uploadedPhotoUrl || null
+        foto_perfil_url: null // Sem foto no primeiro momento
       };
 
       const professionalData = {
@@ -291,13 +259,13 @@ const ProfessionalForm = () => {
         cpf: formData.cpf || null,
         linkedin: formData.linkedin || null,
         resumo_profissional: formData.resumoProfissional || null,
-        foto_perfil_url: uploadedPhotoUrl || null,
+        foto_perfil_url: null,
         possui_e_psi: formData.possuiEPsi === 'sim',
         servicos_raw: formData.especialidades.length > 0 ? formData.especialidades.join(', ') : null,
         preco_consulta: formData.precoConsulta ? parseFloat(formData.precoConsulta) : null,
         tempo_consulta: 50,
         ativo: true,
-        senha: formData.senha // ✅ NOVO: Edge function precisa da senha para criar usuário
+        senha: formData.senha
       };
 
       const horariosData = formData.horarios.map(horario => ({
@@ -307,12 +275,10 @@ const ProfessionalForm = () => {
         duration: horario.duration || 30
       }));
 
-      console.log('📤 Enviando dados para edge function (sem userId - edge function cria usuário)');
-
-      // ✅ NOVO: Edge function cria usuário, perfil e profissional atomicamente
+      // 1️⃣ CRIAR USUÁRIO E PERFIL (sem foto)
+      console.log('📝 Criando perfil profissional...');
       const { data, error } = await supabase.functions.invoke('create-professional-profile', {
         body: {
-          // Sem userId - edge function cria o usuário
           profileData,
           professionalData,
           horariosData: horariosData.length > 0 ? horariosData : null,
@@ -322,6 +288,69 @@ const ProfessionalForm = () => {
 
       if (error) throw new Error(error.message || 'Erro ao criar perfil');
       if (!data?.success) throw new Error('Erro no processamento do cadastro');
+
+      console.log('✅ Perfil criado com sucesso!');
+
+      // 2️⃣ FAZER LOGIN AUTOMÁTICO
+      console.log('🔐 Autenticando usuário...');
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.senha,
+      });
+
+      if (signInError) throw signInError;
+      console.log('✅ Usuário autenticado!');
+
+      // 3️⃣ AGORA FAZER UPLOAD DA FOTO (se existe)
+      if (selectedPhotoFile) {
+        console.log('📸 Fazendo upload da foto de perfil...');
+        
+        const uploadedPhotoUrl = await uploadProfilePhoto(selectedPhotoFile);
+        
+        if (uploadedPhotoUrl) {
+          console.log('✅ Foto carregada, atualizando perfil...');
+          
+          // 4️⃣ ATUALIZAR PERFIL E PROFISSIONAL COM A FOTO
+          const { error: profileUpdateError } = await supabase
+            .from('profiles')
+            .update({ foto_perfil_url: uploadedPhotoUrl })
+            .eq('user_id', signInData.user.id);
+          
+          if (profileUpdateError) console.error('⚠️ Erro ao atualizar foto no profile:', profileUpdateError);
+          
+          const { error: professionalUpdateError } = await supabase
+            .from('profissionais')
+            .update({ foto_perfil_url: uploadedPhotoUrl })
+            .eq('profile_id', data.profile.id);
+          
+          if (professionalUpdateError) console.error('⚠️ Erro ao atualizar foto no profissional:', professionalUpdateError);
+          
+          console.log('✅ Foto atualizada em ambas as tabelas!');
+        } else {
+          console.warn('⚠️ Não foi possível fazer upload da foto');
+        }
+      } else if (formData.fotoPerfilUrl && formData.fotoPerfilUrl.startsWith('http')) {
+        // Se há uma URL de foto do Google, tentar salvá-la
+        console.log('🔄 Salvando foto do Google...');
+        try {
+          const uploadedPhotoUrl = await saveGooglePhoto(formData.fotoPerfilUrl);
+          if (uploadedPhotoUrl) {
+            console.log('✅ Foto do Google salva com sucesso:', uploadedPhotoUrl);
+            
+            await supabase
+              .from('profiles')
+              .update({ foto_perfil_url: uploadedPhotoUrl })
+              .eq('user_id', signInData.user.id);
+            
+            await supabase
+              .from('profissionais')
+              .update({ foto_perfil_url: uploadedPhotoUrl })
+              .eq('profile_id', data.profile.id);
+          }
+        } catch (error) {
+          console.error('❌ Erro ao salvar foto do Google:', error);
+        }
+      }
 
       // Limpar TODOS os dados salvos após sucesso
       sessionStorage.removeItem('pendingProfessionalData');
@@ -627,98 +656,119 @@ const ProfessionalForm = () => {
     </div>
   );
 
-  const renderStep3 = () => (
-    <div className="space-y-6">
-      <div className="space-y-2">
-         <PhotoUpload
-          onPhotoSelected={(file) => {
-            if (!file) return;
+  const renderStep3 = () => {
+    const previewAvatar = selectedPhotoFile 
+      ? URL.createObjectURL(selectedPhotoFile)
+      : photoPreviewUrl || formData.fotoPerfilUrl;
 
-            // Validar arquivo
-            if (!file.type.startsWith('image/')) {
-              toast({
-                title: "Erro",
-                description: "Por favor, selecione apenas arquivos de imagem.",
-                variant: "destructive",
+    return (
+      <div className="space-y-6">
+        {/* Avatar Preview */}
+        <div className="flex flex-col items-center gap-3">
+          <Avatar className="h-24 w-24 border-2 border-primary/20">
+            <AvatarImage src={previewAvatar} />
+            <AvatarFallback>
+              {formData.nome ? formData.nome.slice(0, 2).toUpperCase() : 'FT'}
+            </AvatarFallback>
+          </Avatar>
+          <p className="text-xs text-muted-foreground text-center max-w-[280px]">
+            {selectedPhotoFile 
+              ? 'Foto selecionada. Ela será salva após finalizar o cadastro.' 
+              : 'Adicione uma foto de perfil para que os pacientes possam reconhecê-lo'}
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <PhotoUpload
+            onPhotoSelected={(file) => {
+              if (!file) return;
+
+              // Validar arquivo
+              if (!file.type.startsWith('image/')) {
+                toast({
+                  title: "Erro",
+                  description: "Por favor, selecione apenas arquivos de imagem.",
+                  variant: "destructive",
+                });
+                return;
+              }
+
+              if (file.size > 10 * 1024 * 1024) { // 10MB
+                toast({
+                  title: "Erro",
+                  description: "Arquivo muito grande. Máximo 10MB.",
+                  variant: "destructive",
+                });
+                return;
+              }
+
+              // Armazenar arquivo localmente para upload posterior
+              setSelectedPhotoFile(file);
+              
+              // Criar URL para preview
+              const previewUrl = URL.createObjectURL(file);
+              setPhotoPreviewUrl(previewUrl);
+              
+              console.log('Foto selecionada para upload posterior:', {
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type
               });
-              return;
-            }
 
-            if (file.size > 10 * 1024 * 1024) { // 10MB
               toast({
-                title: "Erro",
-                description: "Arquivo muito grande. Máximo 10MB.",
-                variant: "destructive",
+                title: "Foto selecionada",
+                description: "A foto será carregada quando finalizar o cadastro.",
               });
-              return;
-            }
+            }}
+            onPhotoUrlChange={(url) => updateFormData('fotoPerfilUrl', url)}
+            currentPhotoUrl={photoPreviewUrl || formData.fotoPerfilUrl}
+            label="Foto de Perfil"
+          />
+          {googleData?.picture && photoPreviewUrl && (
+            <Badge variant="secondary" className="text-xs">
+              <Check className="h-3 w-3 mr-1" />
+              Foto importada do Google
+            </Badge>
+          )}
+          {selectedPhotoFile && (
+            <Badge variant="secondary" className="text-xs">
+              <Check className="h-3 w-3 mr-1" />
+              Foto selecionada: {selectedPhotoFile.name}
+            </Badge>
+          )}
+        </div>
 
-            // Armazenar arquivo localmente para upload posterior
-            setSelectedPhotoFile(file);
-            
-            // Criar URL para preview
-            const previewUrl = URL.createObjectURL(file);
-            setPhotoPreviewUrl(previewUrl);
-            
-            console.log('Foto selecionada para upload posterior:', {
-              fileName: file.name,
-              fileSize: file.size,
-              fileType: file.type
-            });
+        <FieldWithTooltip
+          htmlFor="linkedin"
+          label="LinkedIn"
+          tooltip="Adicione o link completo do seu perfil no LinkedIn (ex: https://linkedin.com/in/seu-nome). Isso aumenta a credibilidade do seu perfil."
+        >
+          <Input
+            id="linkedin"
+            value={formData.linkedin}
+            onChange={(e) => updateFormData('linkedin', e.target.value)}
+            placeholder="https://linkedin.com/in/seu-perfil"
+          />
+        </FieldWithTooltip>
 
-            toast({
-              title: "Foto selecionada",
-              description: "A foto será carregada quando finalizar o cadastro.",
-            });
-          }}
-          onPhotoUrlChange={(url) => updateFormData('fotoPerfilUrl', url)}
-          currentPhotoUrl={photoPreviewUrl || formData.fotoPerfilUrl}
-          label="Foto de Perfil"
-        />
-        {googleData?.picture && photoPreviewUrl && (
-          <Badge variant="secondary" className="text-xs">
-            <Check className="h-3 w-3 mr-1" />
-            Foto importada do Google
-          </Badge>
-        )}
-        {selectedPhotoFile && (
-          <Badge variant="secondary" className="text-xs">
-            <Check className="h-3 w-3 mr-1" />
-            Foto selecionada: {selectedPhotoFile.name}
-          </Badge>
-        )}
+        <div>
+          <Label htmlFor="comoConheceu">Como conheceu {platformName}?</Label>
+          <Select value={formData.comoConheceu} onValueChange={(value) => updateFormData('comoConheceu', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma opção" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="google">Google/Busca online</SelectItem>
+              <SelectItem value="redes_sociais">Redes sociais</SelectItem>
+              <SelectItem value="indicacao_amigo">Indicação de amigo</SelectItem>
+              <SelectItem value="indicacao_profissional">Indicação profissional</SelectItem>
+              <SelectItem value="outro">Outro</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-
-      <FieldWithTooltip
-        htmlFor="linkedin"
-        label="LinkedIn"
-        tooltip="Adicione o link completo do seu perfil no LinkedIn (ex: https://linkedin.com/in/seu-nome). Isso aumenta a credibilidade do seu perfil."
-      >
-        <Input
-          id="linkedin"
-          value={formData.linkedin}
-          onChange={(e) => updateFormData('linkedin', e.target.value)}
-          placeholder="https://linkedin.com/in/seu-perfil"
-        />
-      </FieldWithTooltip>
-
-      <div>
-        <Label htmlFor="comoConheceu">Como conheceu {platformName}?</Label>
-        <Select value={formData.comoConheceu} onValueChange={(value) => updateFormData('comoConheceu', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione uma opção" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="google">Google/Busca online</SelectItem>
-            <SelectItem value="redes_sociais">Redes sociais</SelectItem>
-            <SelectItem value="indicacao_amigo">Indicação de amigo</SelectItem>
-            <SelectItem value="indicacao_profissional">Indicação profissional</SelectItem>
-            <SelectItem value="outro">Outro</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderStep4 = () => (
     <div className="space-y-6">

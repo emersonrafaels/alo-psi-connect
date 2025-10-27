@@ -4,6 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Edit2, Check, Clock, DollarSign, Calendar } from 'lucide-react';
+import { getIllustrativeAvatar, hasCustomPhoto } from '@/utils/avatarHelpers';
 
 interface ProfilePreviewProps {
   formData: any;
@@ -29,6 +30,13 @@ export const ProfilePreview = ({ formData, onEdit }: ProfilePreviewProps) => {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  // Gerar avatar ilustrativo se não houver foto
+  const avatarUrl = formData.fotoPerfilUrl 
+    ? formData.fotoPerfilUrl 
+    : getIllustrativeAvatar(formData.genero, formData.raca, formData.nome);
+  
+  const hasUploadedPhoto = hasCustomPhoto(formData.fotoPerfilUrl);
 
   const formatSchedule = () => {
     const scheduleByDay = formData.horarios.reduce((acc: any, slot: any) => {
@@ -61,13 +69,30 @@ export const ProfilePreview = ({ formData, onEdit }: ProfilePreviewProps) => {
       <Card>
         <CardContent className="pt-6 space-y-6">
           {/* Cabeçalho do perfil */}
-          <div className="flex items-start gap-4">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={formData.fotoPerfilUrl} />
-              <AvatarFallback>{getInitials()}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 space-y-2">
-              <div className="flex items-start justify-between">
+          <div className="flex flex-col items-center gap-4">
+            {/* Avatar centralizado */}
+            <div className="flex flex-col items-center gap-2">
+              <Avatar className="h-24 w-24 border-2 border-primary/20">
+                <AvatarImage src={avatarUrl} />
+                <AvatarFallback>{getInitials()}</AvatarFallback>
+              </Avatar>
+              
+              {/* Mensagem sobre a foto */}
+              {hasUploadedPhoto && (
+                <p className="text-xs text-muted-foreground text-center max-w-[200px]">
+                  Sua foto será exibida após o cadastro ser completado
+                </p>
+              )}
+              {!hasUploadedPhoto && (
+                <p className="text-xs text-muted-foreground text-center max-w-[200px]">
+                  Avatar ilustrativo (você pode adicionar sua foto depois)
+                </p>
+              )}
+            </div>
+
+            {/* Informações do profissional */}
+            <div className="flex-1 space-y-2 text-center w-full">
+              <div className="flex flex-col items-center gap-2">
                 <div>
                   <h4 className="text-xl font-semibold">{formData.nome}</h4>
                   <p className="text-sm text-muted-foreground">{formData.profissao}</p>
@@ -82,7 +107,7 @@ export const ProfilePreview = ({ formData, onEdit }: ProfilePreviewProps) => {
                   Editar
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 justify-center">
                 <Badge variant="secondary">
                   {formData.crpCrm}
                 </Badge>
