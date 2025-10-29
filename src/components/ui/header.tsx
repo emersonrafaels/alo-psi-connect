@@ -60,42 +60,9 @@ const Header = () => {
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center h-16 md:h-20 gap-4">
-          {/* Logo com Cross-Linking */}
-          <div className="flex-shrink-0 flex items-center gap-3">
-            {/* Logo Principal (Tenant Atual) */}
+          {/* Logo Principal */}
+          <div className="flex-shrink-0">
             <TenantBranding />
-            
-            {/* Separador */}
-            <div className="h-6 w-px bg-border opacity-30" />
-            
-            {/* Logo Secundário (Outro Tenant) */}
-            {tenantSlug === 'alopsi' ? (
-              // Se está na Alopsi, mostrar link para Medcos
-              <Link 
-                to="/medcos" 
-                className="flex items-center opacity-60 hover:opacity-100 transition-opacity"
-                title="Ir para Medcos"
-              >
-                <img 
-                  src="https://medcos.app.br/wp-content/uploads/elementor/thumbs/LogoMEDCOS-r5pr2yuqprrdwsv0thbrcgimoe2po47c2w2agtjnao.png"
-                  alt="Medcos" 
-                  className="h-6 w-auto object-contain"
-                />
-              </Link>
-            ) : (
-              // Se está na Medcos, mostrar link para Alopsi
-              <Link 
-                to="/" 
-                className="flex items-center opacity-60 hover:opacity-100 transition-opacity"
-                title="Ir para Alô, Psi!"
-              >
-                <img 
-                  src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/logo/Logo.png"
-                  alt="Alô, Psi!" 
-                  className="h-6 w-auto object-contain"
-                />
-              </Link>
-            )}
           </div>
 
           {/* Desktop Navigation */}
@@ -119,6 +86,36 @@ const Header = () => {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center space-x-4 flex-shrink-0">
+            {/* Logo Secundário (Outro Tenant) */}
+            {tenantSlug === 'alopsi' ? (
+              <Link 
+                to="/medcos" 
+                className="flex items-center opacity-60 hover:opacity-100 transition-opacity"
+                title="Ir para Medcos"
+              >
+                <img 
+                  src="https://medcos.app.br/wp-content/uploads/elementor/thumbs/LogoMEDCOS-r5pr2yuqprrdwsv0thbrcgimoe2po47c2w2agtjnao.png"
+                  alt="Medcos" 
+                  className="h-8 w-auto object-contain"
+                />
+              </Link>
+            ) : (
+              <Link 
+                to="/" 
+                className="flex items-center opacity-60 hover:opacity-100 transition-opacity"
+                title="Ir para Alô, Psi!"
+              >
+                <img 
+                  src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/logo/Logo.png"
+                  alt="Alô, Psi!" 
+                  className="h-8 w-auto object-contain"
+                />
+              </Link>
+            )}
+            
+            {/* Separador Visual */}
+            <div className="h-8 w-px bg-border opacity-30" />
+            
             <ThemeToggle />
             {user ? (
               <DropdownMenu>
