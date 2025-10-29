@@ -69,7 +69,7 @@ export const RichTextEditor = ({
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-slate dark:prose-invert max-w-none focus:outline-none p-4',
+        class: 'prose prose-lg dark:prose-invert max-w-none focus:outline-none p-4 prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-4xl prose-h1:mb-6 prose-h1:mt-8 prose-h2:text-3xl prose-h2:mb-5 prose-h2:mt-8 prose-h3:text-2xl prose-h3:mb-4 prose-h3:mt-6 prose-p:text-base prose-p:leading-[1.7] prose-p:mb-5',
       },
     },
   });
