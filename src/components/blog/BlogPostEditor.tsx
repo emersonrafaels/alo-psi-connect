@@ -623,11 +623,11 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Nenhum</SelectItem>
-                    <SelectItem value="hot">🔥 Em Alta</SelectItem>
-                    <SelectItem value="trending">📈 Tendência</SelectItem>
-                    <SelectItem value="featured">⭐ Destaque</SelectItem>
-                    <SelectItem value="new">✨ Novo</SelectItem>
-                    <SelectItem value="editors_choice">👑 Escolha do Editor</SelectItem>
+                    <SelectItem value="trending">🔥 Em Alta</SelectItem>
+                    <SelectItem value="must_read">📚 Leitura Obrigatória</SelectItem>
+                    <SelectItem value="editors_pick">⭐ Escolha do Editor</SelectItem>
+                    <SelectItem value="community_favorite">❤️ Favorito da Comunidade</SelectItem>
+                    <SelectItem value="staff_pick">✨ Escolha da Equipe</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
