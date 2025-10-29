@@ -90,6 +90,13 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
     </Button>
   );
 
+  const getActiveHeadingLevel = () => {
+    if (editor.isActive('heading', { level: 1 })) return 'H1';
+    if (editor.isActive('heading', { level: 2 })) return 'H2';
+    if (editor.isActive('heading', { level: 3 })) return 'H3';
+    return 'Título';
+  };
+
   return (
     <>
       <div className="border-b bg-muted/30 p-2 flex flex-wrap gap-1 items-center">
@@ -132,17 +139,17 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
           <DropdownMenuTrigger asChild>
             <Button type="button" variant="ghost" size="sm" className="h-8 px-2">
               <Heading1 className="h-4 w-4 mr-1" />
-              Título
+              {getActiveHeadingLevel()}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
+            <DropdownMenuItem onClick={() => editor.chain().focus().setHeading({ level: 1 }).run()}>
               <Heading1 className="h-4 w-4 mr-2" /> Título 1
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+            <DropdownMenuItem onClick={() => editor.chain().focus().setHeading({ level: 2 }).run()}>
               <Heading2 className="h-4 w-4 mr-2" /> Título 2
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
+            <DropdownMenuItem onClick={() => editor.chain().focus().setHeading({ level: 3 }).run()}>
               <Heading3 className="h-4 w-4 mr-2" /> Título 3
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => editor.chain().focus().setParagraph().run()}>
