@@ -483,6 +483,27 @@ All colors MUST be HSL.
     text-underline-offset: 3px;
   }
 
+  /* Otimizações de legibilidade */
+  .blog-content p {
+    text-align: justify;
+    text-justify: inter-word;
+  }
+
+  @media (max-width: 640px) {
+    .blog-content p {
+      text-align: left;
+    }
+  }
+
+  /* Melhorar espaçamento de listas aninhadas */
+  .blog-content ul ul,
+  .blog-content ol ol,
+  .blog-content ul ol,
+  .blog-content ol ul {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
   /* Specialty tag styling with theme support */
   .specialty-tag {
     background-color: hsl(var(--specialty-tag-bg-light));

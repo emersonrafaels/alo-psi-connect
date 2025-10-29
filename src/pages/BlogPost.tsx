@@ -226,7 +226,7 @@ export default function BlogPost() {
       <TableOfContents content={post.content} />
       <Header />
       <main className="flex-1">
-        <article className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-3xl">
+        <article className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-2xl xl:max-w-3xl">
           <div className="flex items-center justify-between mb-6">
             <Breadcrumb>
               <BreadcrumbList>
@@ -334,22 +334,22 @@ export default function BlogPost() {
             className="blog-content prose prose-lg dark:prose-invert max-w-none 
                           prose-headings:font-bold prose-headings:tracking-tight prose-headings:scroll-mt-24
                           prose-h1:text-4xl prose-h1:mb-6 prose-h1:mt-12 prose-h1:leading-tight
-                          prose-h2:text-3xl prose-h2:mb-5 prose-h2:mt-12 prose-h2:leading-snug
-                          prose-h3:text-2xl prose-h3:mb-4 prose-h3:mt-8 prose-h3:leading-snug
-                          prose-p:text-[1.125rem] prose-p:leading-[1.8] prose-p:mb-6 prose-p:text-foreground/90
-                          prose-li:text-[1.125rem] prose-li:leading-[1.7] prose-li:mb-2
-                          prose-ul:my-6 prose-ul:ml-6 prose-ol:my-6 prose-ol:ml-6
+                          prose-h2:text-3xl prose-h2:mb-5 prose-h2:mt-10 prose-h2:leading-snug
+                          prose-h3:text-2xl prose-h3:mb-4 prose-h3:mt-6 prose-h3:leading-snug
+                          prose-p:text-base prose-p:leading-[1.7] prose-p:mb-5 prose-p:text-foreground
+                          prose-li:text-base prose-li:leading-[1.6] prose-li:mb-2
+                          prose-ul:my-5 prose-ul:ml-6 prose-ol:my-5 prose-ol:ml-6
                           prose-a:text-primary prose-a:font-medium prose-a:no-underline prose-a:transition-all hover:prose-a:underline hover:prose-a:text-primary/80
                           prose-strong:text-foreground prose-strong:font-semibold
-                          prose-em:text-foreground/80 prose-em:italic
+                          prose-em:text-foreground/90 prose-em:italic
                           prose-blockquote:border-l-4 prose-blockquote:border-primary/40
-                          prose-blockquote:pl-6 prose-blockquote:pr-6 prose-blockquote:py-2
+                          prose-blockquote:pl-6 prose-blockquote:pr-6 prose-blockquote:py-3
                           prose-blockquote:italic prose-blockquote:text-muted-foreground
-                          prose-blockquote:bg-muted/30 prose-blockquote:rounded-r-lg prose-blockquote:my-8
+                          prose-blockquote:bg-muted/30 prose-blockquote:rounded-r-lg prose-blockquote:my-6
                           prose-code:text-primary prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm prose-code:font-mono
-                          prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:my-8 prose-pre:rounded-lg
-                          prose-img:rounded-2xl prose-img:shadow-2xl prose-img:my-12
-                          prose-hr:my-12 prose-hr:border-border/50"
+                          prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:my-6 prose-pre:rounded-lg
+                          prose-img:rounded-2xl prose-img:shadow-2xl prose-img:my-10
+                          prose-hr:my-10 prose-hr:border-border/50"
             dangerouslySetInnerHTML={{ 
               __html: DOMPurify.sanitize(post.content, {
                 ALLOWED_TAGS: [
