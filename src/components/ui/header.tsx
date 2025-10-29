@@ -90,7 +90,7 @@ const Header = () => {
             {tenantSlug === 'alopsi' ? (
               <Link 
                 to="/medcos" 
-                className="flex items-center opacity-60 hover:opacity-100 transition-opacity"
+                className="flex items-center bg-[#ffffff] hover:bg-[#f1fa89] text-white rounded-lg px-3 py-2 transition-colors cursor-pointer shadow-md"
                 title="Ir para Medcos"
               >
                 <img 
@@ -102,7 +102,7 @@ const Header = () => {
             ) : (
               <Link 
                 to="/" 
-                className="flex items-center opacity-60 hover:opacity-100 transition-opacity"
+                className="flex items-center bg-[#5e95e8] hover:bg-[#4fb828] text-white rounded-lg px-3 py-2 transition-colors cursor-pointer shadow-md"
                 title="Ir para Alô, Psi!"
               >
                 <img 
