@@ -29,6 +29,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Star } from 'lucide-react';
 import { useTenant } from '@/hooks/useTenant';
 import { sanitizeHtml, extractTextFromHtml } from '@/utils/htmlSanitizer';
+import { normalizeHtmlForEditor } from '@/utils/htmlHelpers';
 import { useBlogTags } from '@/hooks/useBlogTags';
 
 const postSchema = z.object({
@@ -123,7 +124,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
       title: post?.title || '',
       slug: post?.slug || '',
       excerpt: post?.excerpt || '',
-      content: post?.content || '',
+      content: post?.content ? normalizeHtmlForEditor(post.content) : '',
       status: post?.status || 'draft',
       read_time_minutes: post?.read_time_minutes || undefined,
       allow_comments: post?.allow_comments ?? true,
