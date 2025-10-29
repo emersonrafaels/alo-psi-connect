@@ -71,12 +71,6 @@ const Footer = () => {
       href: buildTenantPath(tenantSlug, "/blog"),
       icon: FileText,
       enabled: blogEnabled
-    },
-    {
-      name: "Trabalhe Conosco",
-      href: buildTenantPath(tenantSlug, "/trabalhe-conosco"),
-      icon: MessageCircle,
-      enabled: true
     }
   ].filter(link => link.enabled);
 
@@ -210,6 +204,17 @@ const Footer = () => {
                   </a>
                 </div>
               )}
+              
+              {/* Trabalhe Conosco */}
+              <div className="pt-2 border-t border-primary-foreground/20">
+                <a 
+                  href={buildTenantPath(tenantSlug, '/trabalhe-conosco')} 
+                  className="flex items-center gap-2 hover:opacity-100 transition-opacity font-medium"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Trabalhe Conosco
+                </a>
+              </div>
             </div>
           </div>
 
