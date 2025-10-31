@@ -12,6 +12,7 @@ interface AudioRecorderProps {
   existingAudioUrl?: string;
   userId: string;
   entryDate: string;
+  tenantId?: string;
   className?: string;
 }
 
@@ -21,6 +22,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   existingAudioUrl,
   userId,
   entryDate,
+  tenantId,
   className
 }) => {
   const {
@@ -91,9 +93,12 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       reader.onload = async () => {
         const base64Audio = (reader.result as string).split(',')[1];
         
-        const { data: transcriptionData, error } = await supabase.functions.invoke('transcribe-audio', {
-          body: { audio: base64Audio }
-        });
+      const { data: transcriptionData, error } = await supabase.functions.invoke('transcribe-audio', {
+        body: { 
+          audio: base64Audio,
+          tenant_id: tenantId 
+        }
+      });
         
         if (error) {
           throw error;

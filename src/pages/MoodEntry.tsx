@@ -727,6 +727,7 @@ const MoodEntry = () => {
                     <AudioRecorder
                       userId={user?.id || ''}
                       entryDate={formData.date}
+                      tenantId={tenant?.id}
                       existingAudioUrl={formData.audio_url || undefined}
                       onAudioUploaded={(audioUrl) => setFormData(prev => ({ ...prev, audio_url: audioUrl }))}
                       onTranscriptionComplete={(transcription, reflection) => {

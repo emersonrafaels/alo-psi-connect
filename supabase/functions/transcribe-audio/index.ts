@@ -43,43 +43,61 @@ serve(async (req) => {
   }
 
   try {
-    const { audio } = await req.json()
+    const { audio, tenant_id } = await req.json()
     
     if (!audio) {
       throw new Error('No audio data provided')
     }
 
-    console.log('Starting transcription with Alô, Psi...')
+    console.log('Starting transcription with Alô, Psi...', { tenant_id })
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Fetch configuration from database
-    const { data: configs, error: configError } = await supabase
-      .from('system_configurations')
-      .select('key, value')
-      .eq('category', 'audio_transcription')
-
-    if (configError) {
-      console.error('Error fetching configurations:', configError)
-    }
-
-    // Parse configurations with fallbacks
-    const getConfig = (key: string, defaultValue: any) => {
-      const config = configs?.find(c => c.key === key)
-      if (!config) return defaultValue
-      
-      try {
-        const parsed = JSON.parse(config.value)
-        return parsed
-      } catch {
-        return config.value
+    // Helper function to fetch config with tenant prioritization
+    const getConfig = async (key: string, defaultValue: any) => {
+      // Try tenant-specific config first
+      if (tenant_id) {
+        const { data: tenantConfig } = await supabase
+          .from('system_configurations')
+          .select('value')
+          .eq('category', 'audio_transcription')
+          .eq('key', key)
+          .eq('tenant_id', tenant_id)
+          .maybeSingle()
+        
+        if (tenantConfig?.value) {
+          try {
+            return JSON.parse(tenantConfig.value)
+          } catch {
+            return tenantConfig.value
+          }
+        }
       }
+      
+      // Fallback to global config
+      const { data: globalConfig } = await supabase
+        .from('system_configurations')
+        .select('value')
+        .eq('category', 'audio_transcription')
+        .eq('key', key)
+        .is('tenant_id', null)
+        .maybeSingle()
+      
+      if (globalConfig?.value) {
+        try {
+          return JSON.parse(globalConfig.value)
+        } catch {
+          return globalConfig.value
+        }
+      }
+      
+      return defaultValue
     }
 
-    const systemPrompt = getConfig('system_prompt', 
+    const systemPrompt = await getConfig('system_prompt',
       `Você é Alô, Psi - um assistente de inteligência artificial especializado em saúde mental e bem-estar emocional.
 
 Sua tarefa é processar a transcrição de um áudio gravado por um usuário em seu diário emocional.
@@ -102,11 +120,17 @@ TRANSCRIÇÃO ORIGINAL:
 INSIGHTS E REFLEXÕES:
 [análise empática e organizada, como se fosse uma reflexão do próprio usuário mas melhor estruturada]`)
 
-    const model = getConfig('model', 'gpt-4o-mini')
-    const maxTokens = getConfig('max_tokens', 600)
-    const temperature = getConfig('temperature', 0.7)
+    const model = await getConfig('model', 'gpt-4o-mini')
+    const maxTokens = await getConfig('max_tokens', 600)
+    const temperature = await getConfig('temperature', 0.7)
 
-    console.log('Using configurations:', { model, maxTokens, temperature })
+    console.log('[Transcribe Audio] Configurations loaded:', { 
+      tenant_id, 
+      model, 
+      maxTokens, 
+      temperature,
+      promptLength: systemPrompt.length 
+    })
 
     // Process audio in chunks
     const binaryAudio = processBase64Chunks(audio)
