@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, GripVertical, Settings2, Sparkles, Check } from 'lucide-react';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -24,6 +26,7 @@ import { Label } from '@/components/ui/label';
 
 const EmotionConfigPage = () => {
   const navigate = useNavigate();
+  const { tenant } = useTenant();
   const {
     userConfigs,
     activeConfigs,
@@ -163,7 +166,7 @@ const EmotionConfigPage = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/diario-emocional')}
+            onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional'))}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>

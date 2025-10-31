@@ -4,6 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
 import { useEmotionConfig } from '@/hooks/useEmotionConfig';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -21,6 +23,7 @@ const MoodDiary = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { profile } = useUserProfile();
+  const { tenant } = useTenant();
   const { entries, loading: entriesLoading } = useMoodEntries();
   const { userConfigs } = useEmotionConfig();
   const { toast } = useToast();
@@ -29,9 +32,9 @@ const MoodDiary = () => {
   // Redirect non-authenticated users to experience page
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/diario-emocional/experiencia');
+      navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/experiencia'));
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, tenant]);
 
   const handleShare = async (platform: string, entry?: any) => {
     const shareData = entry || (entries.length > 0 ? entries[0] : null);
@@ -251,7 +254,7 @@ const MoodDiary = () => {
               <div className="space-y-4">
                 <div className="flex gap-3 justify-center flex-wrap">
                   <Button 
-                    onClick={() => navigate('/diario-emocional/nova-entrada')}
+                    onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/nova-entrada'))}
                     className="flex items-center gap-2"
                     size="lg"
                   >
@@ -261,7 +264,7 @@ const MoodDiary = () => {
                   {todayEntry && (
                     <Button 
                       variant="secondary"
-                      onClick={() => navigate(`/diario-emocional/nova-entrada?date=${getTodayLocalDateString()}`)}
+                      onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', `/diario-emocional/nova-entrada?date=${getTodayLocalDateString()}`))}
                       className="flex items-center gap-2"
                       size="lg"
                     >
@@ -271,7 +274,7 @@ const MoodDiary = () => {
                   )}
                   <Button 
                     variant="outline"
-                    onClick={() => navigate('/diario-emocional/historico')}
+                    onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/historico'))}
                     className="flex items-center gap-2"
                   >
                     <Calendar className="h-4 w-4" />
@@ -279,7 +282,7 @@ const MoodDiary = () => {
                   </Button>
                   <Button 
                     variant="outline"
-                    onClick={() => navigate('/diario-emocional/analises')}
+                    onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/analises'))}
                     className="flex items-center gap-2"
                   >
                     <BarChart3 className="h-4 w-4" />
@@ -287,7 +290,7 @@ const MoodDiary = () => {
                   </Button>
                   <Button 
                     variant="outline"
-                    onClick={() => navigate('/diario-emocional/configurar')}
+                    onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/configurar'))}
                     className="flex items-center gap-2"
                   >
                     <Settings className="h-4 w-4" />
@@ -385,7 +388,7 @@ const MoodDiary = () => {
                   <div className="text-center mt-4">
                     <Button 
                       variant="ghost" 
-                      onClick={() => navigate('/diario-emocional/historico')}
+                      onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/historico'))}
                     >
                       Ver todas as entradas
                     </Button>

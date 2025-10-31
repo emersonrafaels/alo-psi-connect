@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoodEntries, type MoodEntry } from '@/hooks/useMoodEntries';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useEmotionConfig } from '@/hooks/useEmotionConfig';
@@ -31,6 +33,7 @@ const MoodEntry = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { profile, loading } = useUserProfile();
+  const { tenant } = useTenant();
   const { getEntryByDate, getEntryById, createOrUpdateEntry } = useMoodEntries();
   const { toast } = useToast();
   const { activeConfigs, loading: configsLoading } = useEmotionConfig();
@@ -211,7 +214,7 @@ const MoodEntry = () => {
           description: "A entrada solicitada não foi encontrada ou você não tem permissão para acessá-la.",
           variant: "destructive",
         });
-        navigate('/diario-emocional/nova-entrada');
+        navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/nova-entrada'));
       }
     } catch (error) {
       console.error('Error loading entry by ID:', error);
@@ -249,7 +252,7 @@ const MoodEntry = () => {
   // Redirect non-authenticated users
   useEffect(() => {
     if (!user) {
-      navigate('/diario-emocional/experiencia');
+      navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/experiencia'));
     }
   }, [user, navigate]);
 
@@ -297,7 +300,7 @@ const MoodEntry = () => {
       
       // Pequeno delay para garantir que o usuário veja a confirmação
       setTimeout(() => {
-        navigate('/diario-emocional');
+        navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional'));
       }, 500);
       
     } catch (error) {
@@ -750,7 +753,7 @@ const MoodEntry = () => {
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate('/diario-emocional')}
+                  onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional'))}
                   disabled={saving || checkingExisting}
                 >
                   Cancelar

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
 import { useEmotionConfig } from '@/hooks/useEmotionConfig';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import { parseISODateLocal } from '@/lib/utils';
 import { getAllEmotions, getEmotionColor, getEmotionLabel, formatValue } from '@/utils/emotionFormatters';
 import Header from '@/components/ui/header';
@@ -17,6 +19,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 const MoodHistory = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { tenant } = useTenant();
   const { entries, loading, deleteEntry } = useMoodEntries();
   const { userConfigs } = useEmotionConfig();
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,7 +27,7 @@ const MoodHistory = () => {
 
   // Redirect non-authenticated users
   if (!user) {
-    navigate('/diario-emocional/experiencia');
+    navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/experiencia'));
     return null;
   }
 
@@ -104,7 +107,7 @@ const MoodHistory = () => {
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              onClick={() => navigate('/diario-emocional')}
+              onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional'))}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -117,7 +120,7 @@ const MoodHistory = () => {
               </p>
             </div>
             <Button 
-              onClick={() => navigate('/diario-emocional/nova-entrada')}
+            onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/nova-entrada'))}
               className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
@@ -167,9 +170,9 @@ const MoodHistory = () => {
                     : 'Você ainda não tem entradas registradas.'
                   }
                 </p>
-                <Button onClick={() => navigate('/diario-emocional/nova-entrada')}>
-                  Criar primeira entrada
-                </Button>
+                  <Button onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/nova-entrada'))}>
+                    Criar primeira entrada
+                  </Button>
               </CardContent>
             </Card>
           ) : (
@@ -219,7 +222,7 @@ const MoodHistory = () => {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => navigate(`/diario-emocional/nova-entrada?date=${entry.date}`)}
+                                    onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', `/diario-emocional/nova-entrada?date=${entry.date}`))}
                                   >
                                     <Edit className="h-4 w-4" />
                                   </Button>

@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import { parseISODateLocal } from '@/lib/utils';
 import { AIInsightsCard } from '@/components/AIInsightsCard';
 import Header from '@/components/ui/header';
@@ -13,11 +15,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const MoodAnalytics = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { tenant } = useTenant();
   const { entries, loading } = useMoodEntries();
 
   // Redirect non-authenticated users
   if (!user) {
-    navigate('/diario-emocional/experiencia');
+    navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/experiencia'));
     return null;
   }
 
@@ -135,7 +138,7 @@ const MoodAnalytics = () => {
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              onClick={() => navigate('/diario-emocional')}
+              onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional'))}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -157,7 +160,7 @@ const MoodAnalytics = () => {
                 <p className="text-muted-foreground mb-4">
                   Você precisa de pelo menos algumas entradas para gerar análises.
                 </p>
-                <Button onClick={() => navigate('/diario-emocional/nova-entrada')}>
+                <Button onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/nova-entrada'))}>
                   Criar primeira entrada
                 </Button>
               </CardContent>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +29,7 @@ const MoodExperience = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const { tenant } = useTenant();
   const { getShareConfig } = useShareConfig();
   
   const { 
@@ -58,9 +61,9 @@ const MoodExperience = () => {
   // Redirect authenticated users to the main diary page
   useEffect(() => {
     if (!authLoading && user) {
-      navigate('/diario-emocional');
+      navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional'));
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, tenant]);
 
   // Show loading while checking authentication or loading configuration
   if (authLoading || configLoading) {

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useUserProfile } from './useUserProfile';
+import { useTenant } from './useTenant';
 import { useToast } from '@/hooks/use-toast';
 import { normalizeDateForStorage } from '@/lib/utils';
 
@@ -34,6 +35,8 @@ export interface MoodFactor {
 export const useMoodEntries = () => {
   const { user } = useAuth();
   const { profile } = useUserProfile();
+  const { tenant } = useTenant();
+  const tenantId = tenant?.id;
   const { toast } = useToast();
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +44,7 @@ export const useMoodEntries = () => {
 
   const fetchEntries = useCallback(async () => {
     // Evitar múltiplos fetches simultâneos
-    if (fetchingRef.current || !user || !profile) {
+    if (fetchingRef.current || !user || !profile || !tenantId) {
       if (!user || !profile) {
         setLoading(false);
       }
@@ -55,6 +58,7 @@ export const useMoodEntries = () => {
         .from('mood_entries')
         .select('*')
         .eq('user_id', user.id)
+        .eq('tenant_id', tenantId)
         .order('date', { ascending: false });
 
       if (error) throw error;
@@ -70,10 +74,10 @@ export const useMoodEntries = () => {
       setLoading(false);
       fetchingRef.current = false;
     }
-  }, [user?.id, profile?.id, toast]);
+  }, [user?.id, profile?.id, tenantId, toast]);
 
   const createEntry = useCallback(async (entryData: Omit<MoodEntry, 'id' | 'user_id' | 'profile_id' | 'created_at' | 'updated_at'>) => {
-    if (!user || !profile) {
+    if (!user || !profile || !tenantId) {
       toast({
         title: "Erro",
         description: "Você precisa estar logado para criar uma entrada.",
@@ -89,6 +93,7 @@ export const useMoodEntries = () => {
           ...entryData,
           user_id: user.id,
           profile_id: profile.id,
+          tenant_id: tenantId,
         })
         .select()
         .single();
@@ -111,7 +116,7 @@ export const useMoodEntries = () => {
       });
       return null;
     }
-  }, [user, profile, fetchEntries, toast]);
+  }, [user, profile, tenantId, fetchEntries, toast]);
 
   const updateEntry = useCallback(async (id: string, entryData: Partial<MoodEntry>) => {
     try {
@@ -165,7 +170,7 @@ export const useMoodEntries = () => {
   }, [fetchEntries, toast]);
 
   const getEntryByDate = useCallback(async (date: string): Promise<MoodEntry | null> => {
-    if (!user || !profile) {
+    if (!user || !profile || !tenantId) {
       return null;
     }
 
@@ -174,6 +179,7 @@ export const useMoodEntries = () => {
         .from('mood_entries')
         .select('*')
         .eq('user_id', user.id)
+        .eq('tenant_id', tenantId)
         .eq('date', date)
         .maybeSingle();
 
@@ -183,7 +189,7 @@ export const useMoodEntries = () => {
       console.error('Error checking existing entry:', error);
       return null;
     }
-  }, [user]);
+  }, [user, tenantId]);
 
   const getEntryById = useCallback(async (id: string): Promise<MoodEntry | null> => {
     if (!user) {
@@ -275,6 +281,7 @@ export const useMoodEntries = () => {
             ...normalizedEntryData,
             user_id: user.id,
             profile_id: profile.id,
+            tenant_id: tenantId,
           })
           .select()
           .single();
@@ -308,14 +315,14 @@ export const useMoodEntries = () => {
       });
       return null;
     }
-  }, [user, profile, getEntryByDate, fetchEntries, toast]);
+  }, [user, profile, tenantId, getEntryByDate, fetchEntries, toast]);
 
   useEffect(() => {
     // Só executa quando temos usuário e perfil estáveis
-    if (user?.id && profile?.id && !fetchingRef.current) {
+    if (user?.id && profile?.id && tenantId && !fetchingRef.current) {
       fetchEntries();
     }
-  }, [user?.id, profile?.id, fetchEntries]);
+  }, [user?.id, profile?.id, tenantId, fetchEntries]);
 
   return {
     entries,
