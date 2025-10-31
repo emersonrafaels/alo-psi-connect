@@ -34,18 +34,21 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id)
 
-    // Parse form data
-    const formData = await req.formData()
-    const file = formData.get('file') as File
-    const professionalId = formData.get('professionalId') as string
+    // Parse JSON body (não FormData)
+    const body = await req.json()
+    const { file: base64File, fileName, fileType, professionalId } = body
 
-    if (!file) {
+    if (!base64File) {
       throw new Error('No file provided')
     }
 
-    if (!file.type.startsWith('image/')) {
+    if (!fileType.startsWith('image/')) {
       throw new Error('Only image files are allowed')
     }
+
+    // Converter base64 de volta para File/Blob
+    const fileBuffer = Uint8Array.from(atob(base64File), c => c.charCodeAt(0))
+    const file = new File([fileBuffer], fileName, { type: fileType })
 
     if (file.size > 10 * 1024 * 1024) { // 10MB limit
       throw new Error('File size exceeds 10MB limit')

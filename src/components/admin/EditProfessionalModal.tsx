@@ -67,25 +67,38 @@ export const EditProfessionalModal = ({
 
     setUploading(true)
     try {
-      const formDataUpload = new FormData()
-      formDataUpload.append('file', file)
-      formDataUpload.append('professionalId', professional.id.toString())
-
-      const response = await fetch('/functions/v1/upload-to-s3', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        },
-        body: formDataUpload
+      // Converter file para base64
+      const reader = new FileReader()
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const base64 = (reader.result as string).split(',')[1]
+          resolve(base64)
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(file)
       })
 
-      const result = await response.json()
+      const base64File = await base64Promise
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Erro ao fazer upload')
+      // Usar supabase.functions.invoke ao invés de fetch
+      const { data, error } = await supabase.functions.invoke('upload-to-s3', {
+        body: {
+          file: base64File,
+          fileName: file.name,
+          fileType: file.type,
+          professionalId: professional.id.toString()
+        }
+      })
+
+      if (error) {
+        throw new Error(error.message || 'Erro ao fazer upload')
       }
 
-      setFormData(prev => ({ ...prev, foto_perfil_url: result.url }))
+      if (!data?.url) {
+        throw new Error('URL não retornada pelo servidor')
+      }
+
+      setFormData(prev => ({ ...prev, foto_perfil_url: data.url }))
       toast({
         title: 'Sucesso',
         description: 'Foto enviada com sucesso para o S3!'
@@ -94,7 +107,7 @@ export const EditProfessionalModal = ({
       console.error('Erro no upload:', error)
       toast({
         title: 'Erro',
-        description: 'Erro ao fazer upload da foto',
+        description: error instanceof Error ? error.message : 'Erro ao fazer upload da foto',
         variant: 'destructive'
       })
     } finally {
