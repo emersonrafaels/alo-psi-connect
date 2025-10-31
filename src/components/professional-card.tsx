@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -27,6 +28,7 @@ const ProfessionalCard = ({
   consultationPrice
 }: ProfessionalCardProps) => {
   const navigate = useNavigate()
+  const [showAllSpecialties, setShowAllSpecialties] = useState(false)
 
   const handleViewProfile = () => {
     navigate(`/professional/${id}`)
@@ -61,7 +63,7 @@ const ProfessionalCard = ({
 
             {specialties.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-3">
-                {specialties.slice(0, 2).map((specialty, index) => (
+                {(showAllSpecialties ? specialties : specialties.slice(0, 2)).map((specialty, index) => (
                   <Badge
                     key={index}
                     variant="secondary"
@@ -74,9 +76,13 @@ const ProfessionalCard = ({
                 {specialties.length > 2 && (
                   <Badge
                     variant="outline"
-                    className="text-xs px-2 py-1 text-foreground dark:text-white border-border dark:border-white/30"
+                    className="text-xs px-2 py-1 text-foreground dark:text-white border-border dark:border-white/30 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowAllSpecialties(!showAllSpecialties)
+                    }}
                   >
-                    +{specialties.length - 2}
+                    {showAllSpecialties ? 'Ver menos' : `+${specialties.length - 2}`}
                   </Badge>
                 )}
               </div>
@@ -136,7 +142,7 @@ const ProfessionalCard = ({
           {specialties.length > 0 && (
             <div className="mb-6">
               <div className="flex flex-wrap gap-2">
-                {specialties.slice(0, 3).map((specialty, index) => (
+                {(showAllSpecialties ? specialties : specialties.slice(0, 3)).map((specialty, index) => (
                   <Badge 
                     key={index} 
                     variant="secondary" 
@@ -146,8 +152,15 @@ const ProfessionalCard = ({
                   </Badge>
                 ))}
                 {specialties.length > 3 && (
-                  <Badge variant="outline" className="text-xs px-3 py-1">
-                    +{specialties.length - 3}
+                  <Badge 
+                    variant="outline" 
+                    className="text-xs px-3 py-1 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowAllSpecialties(!showAllSpecialties)
+                    }}
+                  >
+                    {showAllSpecialties ? 'Ver menos' : `+${specialties.length - 3}`}
                   </Badge>
                 )}
               </div>
