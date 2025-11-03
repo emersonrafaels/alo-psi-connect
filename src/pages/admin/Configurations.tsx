@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState } from 'react';
 import { AIAssistantConfig } from '@/components/admin/config/AIAssistantConfig';
 import { N8NConfig } from '@/components/admin/config/N8NConfig';
 import { SystemConfig } from '@/components/admin/config/SystemConfig';
@@ -7,13 +7,105 @@ import { AIDataSourcesConfig } from '@/components/admin/config/AIDataSourcesConf
 import { FeaturedProfessionalsConfig } from '@/components/admin/config/FeaturedProfessionalsConfig';
 import { CrossTenantNavigationConfig } from '@/components/admin/config/CrossTenantNavigationConfig';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { Settings, Bot, Webhook, Cog, Shield, Mic, Database, Star, GraduationCap, Link2 } from 'lucide-react';
+import { Settings, Bot, Webhook, Cog, Shield, Mic, Database, Star, GraduationCap, Link2, ArrowLeft, LucideIcon } from 'lucide-react';
 import { EducationalInstitutionsConfig } from '@/components/admin/config/EducationalInstitutionsConfig';
+import { cn } from '@/lib/utils';
+
+interface ConfigCard {
+  id: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  component: React.ComponentType;
+  category: 'ai' | 'system' | 'users';
+  requiresSuperAdmin?: boolean;
+}
 
 export default function Configurations() {
   const { hasRole, loading } = useAdminAuth();
   const isSuperAdmin = hasRole('super_admin');
+  const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
+
+  const configCards: ConfigCard[] = [
+    // Inteligência Artificial
+    {
+      id: 'ai-assistant',
+      title: 'Assistente IA',
+      description: 'Configure o comportamento e respostas do assistente',
+      icon: Bot,
+      component: AIAssistantConfig,
+      category: 'ai'
+    },
+    {
+      id: 'ai-data-sources',
+      title: 'Dados do Assistente',
+      description: 'Gerencie fontes de dados para o assistente',
+      icon: Database,
+      component: AIDataSourcesConfig,
+      category: 'ai'
+    },
+    {
+      id: 'transcription',
+      title: 'Transcrição de Áudio',
+      description: 'Configure a transcrição de áudio para texto',
+      icon: Mic,
+      component: AudioTranscriptionConfig,
+      category: 'ai'
+    },
+    // Sistema e Integrações
+    {
+      id: 'n8n',
+      title: 'Integrações N8N',
+      description: 'Configure webhooks e automações',
+      icon: Webhook,
+      component: N8NConfig,
+      category: 'system'
+    },
+    {
+      id: 'navigation',
+      title: 'Navegação Cross-Tenant',
+      description: 'Configure avisos de navegação entre tenants',
+      icon: Link2,
+      component: CrossTenantNavigationConfig,
+      category: 'system'
+    },
+    {
+      id: 'system-general',
+      title: 'Sistema Geral',
+      description: 'Configurações avançadas do sistema',
+      icon: Cog,
+      component: SystemConfig,
+      category: 'system',
+      requiresSuperAdmin: true
+    },
+    // Cadastro e Usuários
+    {
+      id: 'featured',
+      title: 'Profissionais em Destaque',
+      description: 'Gerencie profissionais destacados na plataforma',
+      icon: Star,
+      component: FeaturedProfessionalsConfig,
+      category: 'users'
+    },
+    {
+      id: 'registration',
+      title: 'Instituições de Ensino',
+      description: 'Configure instituições disponíveis no cadastro',
+      icon: GraduationCap,
+      component: EducationalInstitutionsConfig,
+      category: 'users'
+    }
+  ];
+
+  const aiConfigs = configCards.filter(c => c.category === 'ai');
+  const systemConfigs = configCards
+    .filter(c => c.category === 'system')
+    .filter(c => !c.requiresSuperAdmin || isSuperAdmin);
+  const userConfigs = configCards.filter(c => c.category === 'users');
+
+  const selectedConfigData = configCards.find(c => c.id === selectedConfig);
 
   if (loading) {
     return (
@@ -31,6 +123,27 @@ export default function Configurations() {
     );
   }
 
+  const renderConfigCard = (config: ConfigCard) => (
+    <Card
+      key={config.id}
+      className={cn(
+        "cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02]",
+        selectedConfig === config.id && "ring-2 ring-primary"
+      )}
+      onClick={() => setSelectedConfig(config.id)}
+    >
+      <CardHeader className="text-center space-y-3">
+        <config.icon className="h-12 w-12 mx-auto text-primary" />
+        <div>
+          <CardTitle className="text-lg">{config.title}</CardTitle>
+          <CardDescription className="text-sm mt-2">
+            {config.description}
+          </CardDescription>
+        </div>
+      </CardHeader>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -43,98 +156,71 @@ export default function Configurations() {
         </div>
       </div>
 
-      <Tabs defaultValue="ai" className="space-y-6">
-        <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-8' : 'grid-cols-7'}`}>
-          <TabsTrigger value="ai" className="flex items-center gap-2">
-            <Bot className="h-4 w-4" />
-            Assistente IA
-          </TabsTrigger>
-          <TabsTrigger value="data-sources" className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            Dados do Assistente
-          </TabsTrigger>
-          <TabsTrigger value="transcription" className="flex items-center gap-2">
-            <Mic className="h-4 w-4" />
-            Transcrição de Áudio
-          </TabsTrigger>
-          <TabsTrigger value="n8n" className="flex items-center gap-2">
-            <Webhook className="h-4 w-4" />
-            Integrações N8N
-          </TabsTrigger>
-          <TabsTrigger value="featured" className="flex items-center gap-2">
-            <Star className="h-4 w-4" />
-            Profissionais
-          </TabsTrigger>
-          <TabsTrigger value="registration" className="flex items-center gap-2">
-            <GraduationCap className="h-4 w-4" />
-            Cadastro
-          </TabsTrigger>
-          <TabsTrigger value="navigation" className="flex items-center gap-2">
-            <Link2 className="h-4 w-4" />
-            Navegação
-          </TabsTrigger>
-          {isSuperAdmin && (
-            <TabsTrigger value="system" className="flex items-center gap-2">
-              <Cog className="h-4 w-4" />
-              Sistema Geral
-            </TabsTrigger>
-          )}
-        </TabsList>
+      {!selectedConfig ? (
+        <div className="space-y-8">
+          {/* Categoria: Inteligência Artificial */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Bot className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Inteligência Artificial</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {aiConfigs.map(renderConfigCard)}
+            </div>
+          </div>
 
-        <TabsContent value="ai">
-          <AIAssistantConfig />
-        </TabsContent>
+          {/* Categoria: Sistema e Integrações */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Cog className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Sistema e Integrações</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {systemConfigs.map(renderConfigCard)}
+            </div>
+          </div>
 
-        <TabsContent value="data-sources">
-          <AIDataSourcesConfig />
-        </TabsContent>
+          {/* Categoria: Cadastro e Usuários */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <GraduationCap className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Cadastro e Usuários</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {userConfigs.map(renderConfigCard)}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedConfig(null)}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para Configurações
+          </Button>
 
-        <TabsContent value="transcription">
-          <AudioTranscriptionConfig />
-        </TabsContent>
-
-        <TabsContent value="n8n">
-          <N8NConfig />
-        </TabsContent>
-
-        <TabsContent value="featured">
-          <FeaturedProfessionalsConfig />
-        </TabsContent>
-
-        <TabsContent value="registration">
-          <EducationalInstitutionsConfig />
-        </TabsContent>
-
-        <TabsContent value="navigation">
-          <CrossTenantNavigationConfig />
-        </TabsContent>
-
-        <TabsContent value="system">
-          {isSuperAdmin ? (
-            <SystemConfig />
-          ) : (
+          {selectedConfigData && (
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <Shield className="h-8 w-8 text-muted-foreground" />
+                  <selectedConfigData.icon className="h-6 w-6 text-primary" />
                   <div>
-                    <CardTitle>Acesso Restrito</CardTitle>
-                    <CardDescription>
-                      Esta seção está disponível apenas para Super Administradores
-                    </CardDescription>
+                    <CardTitle>{selectedConfigData.title}</CardTitle>
+                    <CardDescription>{selectedConfigData.description}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">
-                  As configurações gerais do sistema requerem privilégios de Super Administrador 
-                  para garantir a segurança e integridade da plataforma.
-                </p>
+                <selectedConfigData.component />
               </CardContent>
             </Card>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 }
