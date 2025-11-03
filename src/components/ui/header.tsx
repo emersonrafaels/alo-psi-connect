@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/useAuth"
@@ -16,9 +16,14 @@ import { useAuthorRole } from "@/hooks/useAuthorRole"
 import { useTenant } from "@/hooks/useTenant"
 import { TenantBranding } from "@/components/TenantBranding"
 import { buildTenantPath } from "@/utils/tenantHelpers"
+import { UnderConstructionModal } from "@/components/UnderConstructionModal"
+import { supabase } from "@/integrations/supabase/client"
+import { Tenant } from "@/types/tenant"
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [showConstructionModal, setShowConstructionModal] = useState(false)
+  const [targetTenant, setTargetTenant] = useState<Tenant | null>(null)
   const location = useLocation()
   const navigate = useNavigate()
   const { user, loading, signOut } = useAuth()
@@ -29,6 +34,23 @@ const Header = () => {
   const { tenant } = useTenant()
 
   const tenantSlug = tenant?.slug || 'alopsi'
+
+  // Fetch target tenant config when needed
+  const handleTenantNavigation = async (targetSlug: string, targetPath: string) => {
+    const { data: targetTenantData } = await supabase
+      .from('tenants')
+      .select('*')
+      .eq('slug', targetSlug)
+      .eq('is_active', true)
+      .single()
+
+    if (targetTenantData?.cross_tenant_navigation_warning_enabled) {
+      setTargetTenant(targetTenantData as unknown as Tenant)
+      setShowConstructionModal(true)
+    } else {
+      navigate(targetPath)
+    }
+  }
 
   const navigation = [
     { name: "Home", href: buildTenantPath(tenantSlug, '/') },
@@ -88,8 +110,8 @@ const Header = () => {
           <div className="hidden md:flex items-center space-x-4 flex-shrink-0">
             {/* Logo Secundário (Outro Tenant) */}
             {tenantSlug === 'alopsi' ? (
-              <Link 
-                to="/medcos" 
+              <button 
+                onClick={() => handleTenantNavigation('medcos', '/medcos')}
                 className="flex items-center bg-[#ffffff] hover:bg-[#f1fa89] text-white rounded-lg px-3 py-2 transition-colors cursor-pointer shadow-md"
                 title="Ir para Medcos"
               >
@@ -98,10 +120,10 @@ const Header = () => {
                   alt="Medcos" 
                   className="h-8 w-auto object-contain"
                 />
-              </Link>
+              </button>
             ) : (
-              <Link 
-                to="/" 
+              <button 
+                onClick={() => handleTenantNavigation('alopsi', '/')}
                 className="flex items-center bg-[#5e95e8] hover:bg-[#4fb828] text-white rounded-lg px-3 py-2 transition-colors cursor-pointer shadow-md"
                 title="Ir para Alô, Psi!"
               >
@@ -110,7 +132,7 @@ const Header = () => {
                   alt="Alô, Psi!" 
                   className="h-8 w-auto object-contain"
                 />
-              </Link>
+              </button>
             )}
             
             {/* Separador Visual */}
@@ -344,6 +366,15 @@ const Header = () => {
           </div>
         )}
       </div>
+
+      {/* Under Construction Modal */}
+      <UnderConstructionModal
+        open={showConstructionModal}
+        onOpenChange={setShowConstructionModal}
+        title={targetTenant?.cross_tenant_navigation_warning_title}
+        message={targetTenant?.cross_tenant_navigation_warning_message}
+        tenantName={targetTenant?.name || ''}
+      />
     </header>
   )
 }

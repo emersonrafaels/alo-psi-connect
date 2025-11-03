@@ -91,6 +91,11 @@ export interface Tenant {
   privacy_url?: string;
   favicon_url?: string;
   
+  // Cross-tenant navigation warning
+  cross_tenant_navigation_warning_enabled?: boolean;
+  cross_tenant_navigation_warning_title?: string;
+  cross_tenant_navigation_warning_message?: string;
+  
   theme_config: {
     secondary_color?: string;
     muted_color?: string;

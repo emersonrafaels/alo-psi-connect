@@ -5,9 +5,10 @@ import { SystemConfig } from '@/components/admin/config/SystemConfig';
 import AudioTranscriptionConfig from '@/components/admin/config/AudioTranscriptionConfig';
 import { AIDataSourcesConfig } from '@/components/admin/config/AIDataSourcesConfig';
 import { FeaturedProfessionalsConfig } from '@/components/admin/config/FeaturedProfessionalsConfig';
+import { CrossTenantNavigationConfig } from '@/components/admin/config/CrossTenantNavigationConfig';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { Settings, Bot, Webhook, Cog, Shield, Mic, Database, Star, GraduationCap } from 'lucide-react';
+import { Settings, Bot, Webhook, Cog, Shield, Mic, Database, Star, GraduationCap, Link2 } from 'lucide-react';
 import { EducationalInstitutionsConfig } from '@/components/admin/config/EducationalInstitutionsConfig';
 
 export default function Configurations() {
@@ -43,7 +44,7 @@ export default function Configurations() {
       </div>
 
       <Tabs defaultValue="ai" className="space-y-6">
-        <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-7' : 'grid-cols-6'}`}>
+        <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-8' : 'grid-cols-7'}`}>
           <TabsTrigger value="ai" className="flex items-center gap-2">
             <Bot className="h-4 w-4" />
             Assistente IA
@@ -67,6 +68,10 @@ export default function Configurations() {
           <TabsTrigger value="registration" className="flex items-center gap-2">
             <GraduationCap className="h-4 w-4" />
             Cadastro
+          </TabsTrigger>
+          <TabsTrigger value="navigation" className="flex items-center gap-2">
+            <Link2 className="h-4 w-4" />
+            Navegação
           </TabsTrigger>
           {isSuperAdmin && (
             <TabsTrigger value="system" className="flex items-center gap-2">
@@ -98,6 +103,10 @@ export default function Configurations() {
 
         <TabsContent value="registration">
           <EducationalInstitutionsConfig />
+        </TabsContent>
+
+        <TabsContent value="navigation">
+          <CrossTenantNavigationConfig />
         </TabsContent>
 
         <TabsContent value="system">
