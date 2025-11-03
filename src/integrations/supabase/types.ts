@@ -1597,6 +1597,9 @@ export type Database = {
           contact_phone: string | null
           contact_whatsapp: string | null
           created_at: string | null
+          cross_tenant_navigation_warning_enabled: boolean | null
+          cross_tenant_navigation_warning_message: string | null
+          cross_tenant_navigation_warning_title: string | null
           cta_primary_text: string | null
           cta_secondary_text: string | null
           email_sender_email: string | null
@@ -1668,6 +1671,9 @@ export type Database = {
           contact_phone?: string | null
           contact_whatsapp?: string | null
           created_at?: string | null
+          cross_tenant_navigation_warning_enabled?: boolean | null
+          cross_tenant_navigation_warning_message?: string | null
+          cross_tenant_navigation_warning_title?: string | null
           cta_primary_text?: string | null
           cta_secondary_text?: string | null
           email_sender_email?: string | null
@@ -1739,6 +1745,9 @@ export type Database = {
           contact_phone?: string | null
           contact_whatsapp?: string | null
           created_at?: string | null
+          cross_tenant_navigation_warning_enabled?: boolean | null
+          cross_tenant_navigation_warning_message?: string | null
+          cross_tenant_navigation_warning_title?: string | null
           cta_primary_text?: string | null
           cta_secondary_text?: string | null
           email_sender_email?: string | null
