@@ -11,11 +11,14 @@ import { StatsCard } from "@/components/admin/StatsCard";
 import { EditProfessionalModal } from "@/components/admin/EditProfessionalModal";
 import { ImageAssociationModal } from "@/components/admin/ImageAssociationModal";
 import { UnavailabilityManager } from "@/components/admin/UnavailabilityManager";
-import { Eye, Mail, Phone, User, CheckCircle, XCircle, Search, DollarSign, Clock, Users, UserCheck, UserX, Edit, Images, Calendar } from "lucide-react";
+import { Eye, Mail, Phone, User, CheckCircle, XCircle, Search, DollarSign, Clock, Users, UserCheck, UserX, Edit, Images, Calendar, Trash2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { useUserManagement } from "@/hooks/useUserManagement";
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
 
 interface Professional {
@@ -31,6 +34,10 @@ interface Professional {
   crp_crm?: string;
   preco_consulta?: number;
   tempo_consulta?: number;
+  profile_id: string;
+  profiles?: {
+    user_id: string;
+  };
 }
 
 const Professionals = () => {
@@ -41,8 +48,12 @@ const Professionals = () => {
   const [imageAssociationOpen, setImageAssociationOpen] = useState(false);
   const [unavailabilityModalOpen, setUnavailabilityModalOpen] = useState(false);
   const [selectedProfessionalForUnavailability, setSelectedProfessionalForUnavailability] = useState<Professional | null>(null);
+  const [deletingProfessional, setDeletingProfessional] = useState<Professional | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletionReason, setDeletionReason] = useState("");
   const { toast } = useToast();
   const { tenantFilter } = useAdminTenant();
+  const { deleteUser, loading: deleteLoading } = useUserManagement();
 
   const { data: professionals, isLoading, refetch } = useQuery({
     queryKey: ['admin-professionals', tenantFilter],
@@ -51,6 +62,8 @@ const Professionals = () => {
         .from('profissionais')
         .select(`
           *,
+          profile_id,
+          profiles!inner(user_id),
           professional_tenants!inner(
             tenant_id,
             is_featured,
@@ -131,6 +144,36 @@ const Professionals = () => {
       toast({
         title: "Erro",
         description: "Erro ao atualizar status do profissional.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteProfessional = async () => {
+    if (!deletingProfessional) return;
+
+    const userId = deletingProfessional.profiles?.user_id || null;
+    const profileId = deletingProfessional.profile_id;
+
+    const result = await deleteUser(
+      userId,
+      profileId,
+      deletionReason || 'Removido pelo administrador'
+    );
+
+    if (result.success) {
+      toast({
+        title: "Profissional deletado",
+        description: "O profissional foi removido completamente do sistema.",
+      });
+      setDeleteDialogOpen(false);
+      setDeletingProfessional(null);
+      setDeletionReason("");
+      refetch();
+    } else {
+      toast({
+        title: "Erro ao deletar",
+        description: result.error || "Erro desconhecido ao deletar profissional.",
         variant: "destructive",
       });
     }
@@ -346,7 +389,7 @@ const Professionals = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-border">
+                <div className="flex flex-col gap-3 pt-4 border-t border-border">
                   <div className="flex items-center space-x-3">
                     <label htmlFor={`status-${professional.id}`} className="text-sm font-medium text-foreground">
                       Status:
@@ -358,7 +401,7 @@ const Professionals = () => {
                     />
                   </div>
                   
-                  <div className="flex space-x-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -456,6 +499,18 @@ const Professionals = () => {
                       </div>
                     </DialogContent>
                   </Dialog>
+                    
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setDeletingProfessional(professional);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Deletar
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -517,6 +572,55 @@ const Professionals = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Delete Professional Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Deleção de Profissional</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                <p>
+                  Tem certeza que deseja deletar permanentemente o profissional{' '}
+                  <strong className="text-foreground">{deletingProfessional?.display_name}</strong>?
+                </p>
+                <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 mt-2">
+                  <p className="text-sm text-destructive font-medium">⚠️ Esta ação é IRREVERSÍVEL e removerá:</p>
+                  <ul className="text-sm text-destructive/90 mt-2 space-y-1 list-disc list-inside">
+                    <li>Perfil profissional e todos os dados pessoais</li>
+                    <li>Todos os agendamentos (passados e futuros)</li>
+                    <li>Horários de atendimento e bloqueios</li>
+                    <li>Vínculos com tenants</li>
+                    <li>Eventos de calendário do Google</li>
+                  </ul>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <div className="py-4">
+              <label className="text-sm font-medium text-foreground">
+                Motivo da deleção (opcional)
+              </label>
+              <Textarea
+                value={deletionReason}
+                onChange={(e) => setDeletionReason(e.target.value)}
+                placeholder="Ex: Solicitação do profissional, duplicidade, violação de termos, etc."
+                className="mt-2"
+                rows={3}
+              />
+            </div>
+            
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleteLoading}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteProfessional}
+                disabled={deleteLoading}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteLoading ? 'Deletando...' : 'Deletar Permanentemente'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
