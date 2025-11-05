@@ -8,19 +8,21 @@ import { buildTenantPath } from "@/utils/tenantHelpers";
 import { useModuleEnabled } from "@/hooks/useModuleEnabled";
 import { useState } from "react";
 import { Mail, MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, MessageCircle, Heart, MessageCircleIcon } from "lucide-react";
-
 const Footer = () => {
-  const { isAdmin } = useAdminAuth();
-  const { tenant } = useTenant();
+  const {
+    isAdmin
+  } = useAdminAuth();
+  const {
+    tenant
+  } = useTenant();
   const {
     subscribe,
     isLoading
   } = useNewsletter();
   const [email, setEmail] = useState("");
   const [nome, setNome] = useState("");
-  
   const tenantSlug = tenant?.slug || 'alopsi';
-  
+
   // Helper function to build footer links with tenant context
   const buildFooterLink = (customUrl: string | null | undefined, defaultPath: string) => {
     // If it's an external URL, don't prefix with tenant path
@@ -30,7 +32,7 @@ const Footer = () => {
     // Otherwise, use buildTenantPath
     return buildTenantPath(tenantSlug, customUrl || defaultPath);
   };
-  
+
   // Check if modules are enabled
   const blogEnabled = useModuleEnabled('blog');
   const professionalsEnabled = useModuleEnabled('professionals');
@@ -47,61 +49,48 @@ const Footer = () => {
       setNome("");
     }
   };
-  const usefulLinks = [
-    {
-      name: "Sobre Nós",
-      href: buildTenantPath(tenantSlug, "/sobre"),
-      icon: Users,
-      enabled: true
-    },
-    {
-      name: "Nossos Profissionais",
-      href: buildTenantPath(tenantSlug, "/profissionais"),
-      icon: Heart,
-      enabled: professionalsEnabled
-    },
-    {
-      name: "Agendar Consulta",
-      href: buildTenantPath(tenantSlug, "/profissionais"),
-      icon: Calendar,
-      enabled: appointmentsEnabled
-    },
-    {
-      name: "Blog",
-      href: buildTenantPath(tenantSlug, "/blog"),
-      icon: FileText,
-      enabled: blogEnabled
-    }
-  ].filter(link => link.enabled);
-
-  const navigationLinks = [
-    {
-      name: "Home",
-      href: buildTenantPath(tenantSlug, "/"),
-      enabled: true
-    },
-    {
-      name: "Profissionais",
-      href: buildTenantPath(tenantSlug, "/profissionais"),
-      enabled: professionalsEnabled
-    },
-    {
-      name: "Agendar",
-      href: buildTenantPath(tenantSlug, "/profissionais"),
-      enabled: appointmentsEnabled
-    },
-    {
-      name: "Contato",
-      href: buildTenantPath(tenantSlug, "/contato"),
-      enabled: true
-    },
-    {
-      name: "Blog",
-      href: buildTenantPath(tenantSlug, "/blog"),
-      enabled: blogEnabled
-    }
-  ].filter(link => link.enabled);
-  
+  const usefulLinks = [{
+    name: "Sobre Nós",
+    href: buildTenantPath(tenantSlug, "/sobre"),
+    icon: Users,
+    enabled: true
+  }, {
+    name: "Nossos Profissionais",
+    href: buildTenantPath(tenantSlug, "/profissionais"),
+    icon: Heart,
+    enabled: professionalsEnabled
+  }, {
+    name: "Agendar Consulta",
+    href: buildTenantPath(tenantSlug, "/profissionais"),
+    icon: Calendar,
+    enabled: appointmentsEnabled
+  }, {
+    name: "Blog",
+    href: buildTenantPath(tenantSlug, "/blog"),
+    icon: FileText,
+    enabled: blogEnabled
+  }].filter(link => link.enabled);
+  const navigationLinks = [{
+    name: "Home",
+    href: buildTenantPath(tenantSlug, "/"),
+    enabled: true
+  }, {
+    name: "Profissionais",
+    href: buildTenantPath(tenantSlug, "/profissionais"),
+    enabled: professionalsEnabled
+  }, {
+    name: "Agendar",
+    href: buildTenantPath(tenantSlug, "/profissionais"),
+    enabled: appointmentsEnabled
+  }, {
+    name: "Contato",
+    href: buildTenantPath(tenantSlug, "/contato"),
+    enabled: true
+  }, {
+    name: "Blog",
+    href: buildTenantPath(tenantSlug, "/blog"),
+    enabled: blogEnabled
+  }].filter(link => link.enabled);
   const links = {
     useful: usefulLinks,
     navigation: navigationLinks
@@ -142,11 +131,9 @@ const Footer = () => {
                     </a>
                   </li>;
             })}
-            {isAdmin && (
-              <li>
+            {isAdmin && <li>
                 <GlobalCacheButton variant="minimal" className="text-sm opacity-80 hover:opacity-100 text-primary-foreground" />
-              </li>
-            )}
+              </li>}
             </ul>
           </div>
 
@@ -179,38 +166,27 @@ const Footer = () => {
               Contato
             </h3>
             <div className="space-y-3 text-sm opacity-80">
-              {tenant?.contact_address && (
-                <div className="flex items-start gap-2">
+              {tenant?.contact_address && <div className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <p>{tenant.contact_address}</p>
-                </div>
-              )}
-              {tenant?.cnpj && (
-                <p>CNPJ: {tenant.cnpj}</p>
-              )}
-              {tenant?.contact_phone && (
-                <div className="flex items-center gap-2">
+                </div>}
+              {tenant?.cnpj && <p>CNPJ: {tenant.cnpj}</p>}
+              {tenant?.contact_phone && <div className="flex items-center gap-2">
                   <MessageCircleIcon className="w-4 h-4" />
                   <a href={`tel:${tenant.contact_phone}`} className="hover:opacity-100 transition-opacity">
                     {tenant.contact_phone}
                   </a>
-                </div>
-              )}
-              {tenant?.contact_email && (
-                <div className="flex items-center gap-2">
+                </div>}
+              {tenant?.contact_email && <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
                   <a href={`mailto:${tenant.contact_email}`} className="hover:opacity-100 transition-opacity">
                     {tenant.contact_email}
                   </a>
-                </div>
-              )}
+                </div>}
               
               {/* Trabalhe Conosco */}
               <div className="pt-2 border-t border-primary-foreground/20">
-                <a 
-                  href={buildTenantPath(tenantSlug, '/trabalhe-conosco')} 
-                  className="flex items-center gap-2 hover:opacity-100 transition-opacity font-medium"
-                >
+                <a href={buildTenantPath(tenantSlug, '/trabalhe-conosco')} className="flex items-center gap-2 hover:opacity-100 transition-opacity font-medium">
                   <MessageCircle className="w-4 h-4" />
                   Trabalhe Conosco
                 </a>
@@ -219,38 +195,29 @@ const Footer = () => {
           </div>
 
           {/* Redes Sociais */}
-          {(tenant?.social_instagram || tenant?.social_facebook || tenant?.social_linkedin) && (
-            <div className="lg:col-span-1">
+          {(tenant?.social_instagram || tenant?.social_facebook || tenant?.social_linkedin) && <div className="lg:col-span-1">
               <h3 className="text-lg font-semibold mb-4">Redes Sociais</h3>
               <div className="flex gap-3">
-                {tenant?.social_instagram && (
-                  <a href={tenant.social_instagram} target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
+                {tenant?.social_instagram && <a href={tenant.social_instagram} target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
                     <Instagram className="w-5 h-5" />
-                  </a>
-                )}
-                {tenant?.social_facebook && (
-                  <a href={tenant.social_facebook} target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
+                  </a>}
+                {tenant?.social_facebook && <a href={tenant.social_facebook} target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
                     <Facebook className="w-5 h-5" />
-                  </a>
-                )}
-                {tenant?.social_linkedin && (
-                  <a href={tenant.social_linkedin} target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
+                  </a>}
+                {tenant?.social_linkedin && <a href={tenant.social_linkedin} target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
                     <Linkedin className="w-5 h-5" />
-                  </a>
-                )}
+                  </a>}
               </div>
-            </div>
-          )}
+            </div>}
         </div>
 
         {/* Bottom */}
         <div className="border-t border-primary-foreground/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm opacity-60">Copyright © {tenant?.name || 'Rede Bem Estar'} | Todos os direitos reservados</p>
+          <p className="text-sm opacity-60">Copyright © Rede Bem Estar! | Todos os direitos reservados{tenant?.name || 'Rede Bem Estar'} | Todos os direitos reservados</p>
           <div className="w-16 h-16 bg-accent rounded-full mt-4 md:mt-0"></div>
         </div>
       </div>
     </footer>;
 };
-
 export { Footer };
 export default Footer;
