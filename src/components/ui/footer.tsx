@@ -245,7 +245,7 @@ const Footer = () => {
 
         {/* Bottom */}
         <div className="border-t border-primary-foreground/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm opacity-60">Copyright © {tenant?.name || 'Alô, Psi!'} | Todos os direitos reservados</p>
+          <p className="text-sm opacity-60">Copyright © {tenant?.name || 'Rede Bem Estar'} | Todos os direitos reservados</p>
           <div className="w-16 h-16 bg-accent rounded-full mt-4 md:mt-0"></div>
         </div>
       </div>

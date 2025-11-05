@@ -39,7 +39,7 @@ const About = () => {
                 Cuida da Saúde
               </h1>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                A MEDCOS é uma plataforma de bem-estar universitário focada em médicos e 
+                A Rede Bem Estar é uma plataforma de bem-estar universitário focada em médicos e 
                 estudantes de medicina. Unimos atendimento clínico qualificado, fluxos de 
                 apoio e dados agregados para fortalecer aprendizagem, permanência e clima acadêmico.
               </p>
