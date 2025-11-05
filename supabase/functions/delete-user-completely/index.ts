@@ -142,15 +142,25 @@ Deno.serve(async (req) => {
       console.log('Deleting AI insights usage...');
       await supabaseAdmin.from('ai_insights_usage').delete().eq('user_id', profile.user_id);
 
-      // Delete booking tracking
+    // Delete booking tracking
       console.log('Deleting booking tracking...');
-      await supabaseAdmin.from('user_booking_tracking').delete().eq('user_id', profile.user_id);
+      const { error: bookingError } = await supabaseAdmin.from('user_booking_tracking').delete().eq('user_id', profile.user_id);
+      if (bookingError) console.warn('Error deleting booking tracking:', bookingError);
       
-      // Delete comments
+      // Delete comments and their likes
       console.log('Deleting comments...');
-      await supabaseAdmin.from('comments').delete().eq('user_id', profile.user_id);
+      const { data: userComments } = await supabaseAdmin
+        .from('comments')
+        .select('id')
+        .eq('user_id', profile.user_id);
+      
+      if (userComments?.length) {
+        await supabaseAdmin.from('comment_likes').delete().in('comment_id', userComments.map(c => c.id));
+        await supabaseAdmin.from('comments').delete().eq('user_id', profile.user_id);
+      }
       
       // Cancel appointments (don't delete for history)
+      console.log('Cancelling appointments...');
       await supabaseAdmin
         .from('agendamentos')
         .update({ status: 'cancelado' })
@@ -159,25 +169,32 @@ Deno.serve(async (req) => {
       console.log('⚠️ [ORPHAN PROFILE] Skipping auth-related data deletions');
     }
     
-    // Delete patient info
+    // Delete patient info and institutions
+    console.log('Deleting patient data...');
     const { data: patientData } = await supabaseAdmin
       .from('pacientes')
       .select('id')
-      .eq('profile_id', profile.id);
+      .eq('profile_id', profile.id)
+      .maybeSingle();
     
-    if (patientData?.length) {
+    if (patientData) {
+      await supabaseAdmin.from('patient_institutions').delete().eq('patient_id', patientData.id);
       await supabaseAdmin.from('pacientes').delete().eq('profile_id', profile.id);
     }
     
     // Delete professional info and sessions
+    console.log('Deleting professional data...');
     const { data: professionalData } = await supabaseAdmin
       .from('profissionais')
-      .select('user_id')
-      .eq('profile_id', profile.id);
+      .select('id')
+      .eq('profile_id', profile.id)
+      .maybeSingle();
     
-    if (professionalData?.length) {
-      const professionalUserId = professionalData[0].user_id;
-      await supabaseAdmin.from('profissionais_sessoes').delete().eq('user_id', professionalUserId);
+    if (professionalData) {
+      const profId = professionalData.id;
+      await supabaseAdmin.from('profissionais_sessoes').delete().eq('professional_id', profId);
+      await supabaseAdmin.from('professional_tenants').delete().eq('professional_id', profId);
+      await supabaseAdmin.from('professional_unavailability').delete().eq('professional_id', profId);
       await supabaseAdmin.from('profissionais').delete().eq('profile_id', profile.id);
     }
     
