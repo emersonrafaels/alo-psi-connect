@@ -6,9 +6,12 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { AboutImageSection } from "@/components/AboutImageSection"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useNavigate } from "react-router-dom"
 import { useTenant } from "@/hooks/useTenant"
 import { buildTenantPath } from "@/utils/tenantHelpers"
+import { useProfessionals } from "@/hooks/useProfessionals"
+import { getIllustrativeAvatar } from "@/utils/avatarHelpers"
 import { 
   Target, Eye, Lightbulb, ClipboardList, UserCheck, Video, 
   Heart, BarChart3, ShieldCheck, GraduationCap, Users, Building2,
@@ -357,76 +360,8 @@ const About = () => {
           <p className="text-center text-muted-foreground mb-16 max-w-2xl mx-auto">
             Equipe clínica especializada e time de operações dedicados ao público médico
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto mb-12">
-            {[
-              {
-                name: "Dra. Maria Silva",
-                role: "Psicóloga Clínica",
-                bio: "15 anos de experiência em saúde mental universitária e supervisão clínica",
-                specialties: ["Ansiedade", "Burnout", "Terapia Breve"],
-                avatar: "MS"
-              },
-              {
-                name: "Dr. João Santos",
-                role: "Psiquiatra",
-                bio: "Especialista em transtornos de ansiedade e depressão em estudantes",
-                specialties: ["Depressão", "Ansiedade", "Psicofarmacologia"],
-                avatar: "JS"
-              },
-              {
-                name: "Dra. Ana Costa",
-                role: "Psicóloga Organizacional",
-                bio: "Foco em clima acadêmico e desenvolvimento docente",
-                specialties: ["Grupos", "Clima Acadêmico", "Liderança"],
-                avatar: "AC"
-              },
-              {
-                name: "Dr. Pedro Lima",
-                role: "Psicólogo Clínico",
-                bio: "Especializado em terapia cognitivo-comportamental para universitários",
-                specialties: ["TCC", "Procrastinação", "Autoestima"],
-                avatar: "PL"
-              },
-              {
-                name: "Dra. Carla Mendes",
-                role: "Coordenadora Clínica",
-                bio: "Gestão de protocolos e qualidade assistencial",
-                specialties: ["Supervisão", "Protocolos", "Qualidade"],
-                avatar: "CM"
-              },
-              {
-                name: "Dr. Lucas Rocha",
-                role: "Psicólogo Clínico",
-                bio: "Experiência com grupos temáticos e intervenções preventivas",
-                specialties: ["Grupos", "Prevenção", "Mindfulness"],
-                avatar: "LR"
-              }
-            ].map((member, index) => (
-              <Card key={index} className="text-center hover:shadow-xl transition-all group">
-                <CardContent className="pt-8">
-                  <Avatar className="w-24 h-24 mx-auto mb-4 ring-4 ring-primary/10 group-hover:ring-primary/30 transition-all">
-                    <AvatarImage src="" />
-                    <AvatarFallback className="text-xl bg-gradient-to-br from-primary/20 to-accent/20">
-                      {member.avatar}
-                    </AvatarFallback>
-                  </Avatar>
-                  <h3 className="font-bold text-lg mb-1">{member.name}</h3>
-                  <p className="text-sm text-primary font-medium mb-3">{member.role}</p>
-                  <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                    {member.bio}
-                  </p>
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {member.specialties.map((specialty, idx) => (
-                      <Badge key={idx} variant="secondary" className="text-xs">
-                        {specialty}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <div className="text-center">
+          <TeamSection navigate={navigate} tenantSlug={tenantSlug} />
+          <div className="text-center mt-12">
             <Button 
               variant="outline" 
               size="lg"
@@ -493,5 +428,92 @@ const About = () => {
     </div>
   )
 }
+
+// Component: Team Section with Real Data
+const TeamSection = ({ navigate, tenantSlug }: { navigate: any; tenantSlug: string }) => {
+  const { data: professionals, isLoading } = useProfessionals(6);
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Card key={index} className="text-center">
+            <CardContent className="pt-8">
+              <Skeleton className="w-24 h-24 rounded-full mx-auto mb-4" />
+              <Skeleton className="h-6 w-3/4 mx-auto mb-2" />
+              <Skeleton className="h-4 w-1/2 mx-auto mb-3" />
+              <Skeleton className="h-16 w-full mb-4" />
+              <div className="flex gap-2 justify-center">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-6 w-20" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (!professionals || professionals.length === 0) {
+    return (
+      <div className="text-center text-muted-foreground py-8">
+        <p>Nenhum profissional disponível no momento.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      {professionals.map((professional) => {
+        const photoUrl = professional.foto_perfil_url || getIllustrativeAvatar(
+          null,
+          null,
+          professional.display_name
+        );
+        const specialties = professional.servicos_normalizados || [];
+        const bio = professional.resumo_profissional || 
+          `Profissional qualificado com registro ${professional.crp_crm || 'ativo'}.`;
+
+        return (
+          <Card key={professional.id} className="text-center hover:shadow-xl transition-all group">
+            <CardContent className="pt-8">
+              <Avatar className="w-24 h-24 mx-auto mb-4 ring-4 ring-primary/10 group-hover:ring-primary/30 transition-all">
+                <AvatarImage src={photoUrl} alt={professional.display_name} />
+                <AvatarFallback className="text-xl bg-gradient-to-br from-primary/20 to-accent/20">
+                  {getInitials(professional.display_name)}
+                </AvatarFallback>
+              </Avatar>
+              <h3 className="font-bold text-lg mb-1">{professional.display_name}</h3>
+              <p className="text-sm text-primary font-medium mb-3">
+                {professional.profissao || 'Profissional de Saúde'}
+              </p>
+              <p className="text-xs text-muted-foreground mb-4 leading-relaxed line-clamp-3">
+                {bio}
+              </p>
+              {specialties.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {specialties.slice(0, 3).map((specialty, idx) => (
+                    <Badge key={idx} variant="secondary" className="text-xs">
+                      {specialty}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+};
 
 export default About
