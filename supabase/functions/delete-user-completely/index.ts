@@ -193,23 +193,30 @@ Deno.serve(async (req) => {
     if (professionalData) {
       const profId = professionalData.id;
       
-      // Cancel appointments where this user is the professional (CRITICAL: must be before deleting profissionais)
-      console.log(`Cancelling appointments for professional ${profId}...`);
-      const { error: profAppointmentsError } = await supabaseAdmin
+      // CRITICAL: Delete ALL appointments for this professional FIRST (to avoid FK constraint)
+      console.log(`Deleting ALL appointments for professional ${profId}...`);
+      const { error: deleteAppointmentsError } = await supabaseAdmin
         .from('agendamentos')
-        .update({ status: 'cancelado' })
-        .eq('professional_id', profId)
-        .neq('status', 'cancelado');
+        .delete()
+        .eq('professional_id', profId);
       
-      if (profAppointmentsError) {
-        console.error('Error cancelling professional appointments:', profAppointmentsError);
+      if (deleteAppointmentsError) {
+        console.error('Error deleting professional appointments:', deleteAppointmentsError);
+        return new Response(
+          JSON.stringify({ error: `Error deleting professional appointments: ${deleteAppointmentsError.message}` }),
+          { status: 500, headers: corsHeaders }
+        );
       }
       
       // Now delete professional-related data
       await supabaseAdmin.from('profissionais_sessoes').delete().eq('professional_id', profId);
       await supabaseAdmin.from('professional_tenants').delete().eq('professional_id', profId);
       await supabaseAdmin.from('professional_unavailability').delete().eq('professional_id', profId);
-      await supabaseAdmin.from('google_calendar_events').delete().eq('user_id', profile.user_id || '');
+      
+      if (profile.user_id) {
+        await supabaseAdmin.from('google_calendar_events').delete().eq('user_id', profile.user_id);
+      }
+      
       await supabaseAdmin.from('profissionais').delete().eq('profile_id', profile.id);
     }
     
