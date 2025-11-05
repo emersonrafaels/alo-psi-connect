@@ -192,9 +192,24 @@ Deno.serve(async (req) => {
     
     if (professionalData) {
       const profId = professionalData.id;
+      
+      // Cancel appointments where this user is the professional (CRITICAL: must be before deleting profissionais)
+      console.log(`Cancelling appointments for professional ${profId}...`);
+      const { error: profAppointmentsError } = await supabaseAdmin
+        .from('agendamentos')
+        .update({ status: 'cancelado' })
+        .eq('professional_id', profId)
+        .neq('status', 'cancelado');
+      
+      if (profAppointmentsError) {
+        console.error('Error cancelling professional appointments:', profAppointmentsError);
+      }
+      
+      // Now delete professional-related data
       await supabaseAdmin.from('profissionais_sessoes').delete().eq('professional_id', profId);
       await supabaseAdmin.from('professional_tenants').delete().eq('professional_id', profId);
       await supabaseAdmin.from('professional_unavailability').delete().eq('professional_id', profId);
+      await supabaseAdmin.from('google_calendar_events').delete().eq('user_id', profile.user_id || '');
       await supabaseAdmin.from('profissionais').delete().eq('profile_id', profile.id);
     }
     
