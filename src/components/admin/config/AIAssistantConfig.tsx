@@ -490,14 +490,61 @@ Responda sempre em português brasileiro, de forma clara e objetiva.`),
                   <TestTube2 className="h-4 w-4 mr-2" />
                   {testing ? 'Testando...' : 'Teste Rápido'}
                 </Button>
-                <Button variant="secondary" onClick={handleClearCache}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Limpar Cache
-                </Button>
-                <Button variant="destructive" onClick={handleForceRefresh}>
-                  <Zap className="h-4 w-4 mr-2" />
-                  Forçar Atualização
-                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Cache Management Section */}
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-primary">
+                <RefreshCw className="h-5 w-5" />
+                Gerenciamento de Cache
+              </CardTitle>
+              <CardDescription>
+                Use estas ações quando as alterações não aparecerem no site
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3 p-4 rounded-lg border bg-card">
+                  <div className="flex items-start gap-3">
+                    <RefreshCw className="h-5 w-5 text-primary mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-medium mb-1">Limpar Cache</h4>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Remove configurações em cache do navegador sem recarregar a página
+                      </p>
+                      <Button variant="secondary" onClick={handleClearCache} className="w-full">
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Limpar Cache
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 p-4 rounded-lg border bg-card">
+                  <div className="flex items-start gap-3">
+                    <Zap className="h-5 w-5 text-destructive mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-medium mb-1">Forçar Atualização</h4>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Limpa o cache e recarrega a página completamente
+                      </p>
+                      <Button variant="destructive" onClick={handleForceRefresh} className="w-full">
+                        <Zap className="h-4 w-4 mr-2" />
+                        Forçar Atualização
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  💡 <strong>Dica:</strong> Se as mudanças não aparecerem após salvar, use "Limpar Cache" primeiro. 
+                  Se ainda não funcionar, use "Forçar Atualização" para recarregar tudo.
+                </p>
               </div>
             </CardContent>
           </Card>
