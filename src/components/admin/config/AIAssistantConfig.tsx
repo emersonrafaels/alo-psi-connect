@@ -41,9 +41,9 @@ export const AIAssistantConfig = () => {
   });
 
   const [formData, setFormData] = useState({
-    system_prompt: `Você é o assistente de IA da AloPsi, uma plataforma de psicologia online no Brasil. Sua função é ajudar usuários a encontrar o profissional de saúde mental ideal para suas necessidades.
+    system_prompt: `Você é o assistente de IA da Rede Bem Estar, uma plataforma de psicologia online no Brasil. Sua função é ajudar usuários a encontrar o profissional de saúde mental ideal para suas necessidades.
 
-SOBRE A ALOPSI:
+SOBRE A REDE BEM ESTAR:
 - Plataforma 100% online de consultas psicológicas
 - Atendemos em todo o Brasil via videochamada
 - Temos psicólogos, psiquiatras e psicoterapeutas licenciados
@@ -86,16 +86,16 @@ Responda sempre em português brasileiro, de forma clara e objetiva.`,
     include_professional_data: true,
     title: 'Assistente de Saúde Mental',
     subtitle: 'Powered by IA • Te ajudo a encontrar o profissional ideal',
-    initial_message: '👋 Olá! Sou seu assistente de saúde mental especializado da AloPsi. Estou aqui para te ajudar a encontrar o profissional ideal para suas consultas online.\n\nComo posso te ajudar hoje?\n\n🔍 Sobre o que você gostaria de conversar:\n• Que tipo de apoio psicológico você está buscando?\n• Alguma especialidade específica (ansiedade, depressão, relacionamentos, etc.)?\n• Prefere Psicólogo(a), Psiquiatra(a) ou Psicoterapeuta(a)?\n\n⏰ Horários e disponibilidade:\n• Qual período prefere? (manhã, tarde ou noite)\n• Que dias da semana funcionam melhor para você?\n\n💰 Investimento:\n• Qual sua faixa de orçamento para as consultas?\n• Busca valores mais acessíveis ou tem flexibilidade?\n\n📱 Todas as consultas são realizadas online - você pode ter sessões de qualquer lugar'
+    initial_message: '👋 Olá! Sou seu assistente de saúde mental especializado da Rede Bem Estar. Estou aqui para te ajudar a encontrar o profissional ideal para suas consultas online.\n\nComo posso te ajudar hoje?\n\n🔍 Sobre o que você gostaria de conversar:\n• Que tipo de apoio psicológico você está buscando?\n• Alguma especialidade específica (ansiedade, depressão, relacionamentos, etc.)?\n• Prefere Psicólogo(a), Psiquiatra(a) ou Psicoterapeuta(a)?\n\n⏰ Horários e disponibilidade:\n• Qual período prefere? (manhã, tarde ou noite)\n• Que dias da semana funcionam melhor para você?\n\n💰 Investimento:\n• Qual sua faixa de orçamento para as consultas?\n• Busca valores mais acessíveis ou tem flexibilidade?\n\n📱 Todas as consultas são realizadas online - você pode ter sessões de qualquer lugar'
   });
 
   // Update formData when configs are loaded
   useEffect(() => {
     if (configs.length > 0) {
       setFormData({
-        system_prompt: getConfig('ai_assistant', 'system_prompt', `Você é o assistente de IA da AloPsi, uma plataforma de psicologia online no Brasil. Sua função é ajudar usuários a encontrar o profissional de saúde mental ideal para suas necessidades.
+        system_prompt: getConfig('ai_assistant', 'system_prompt', `Você é o assistente de IA da Rede Bem Estar, uma plataforma de psicologia online no Brasil. Sua função é ajudar usuários a encontrar o profissional de saúde mental ideal para suas necessidades.
 
-SOBRE A ALOPSI:
+SOBRE A REDE BEM ESTAR:
 - Plataforma 100% online de consultas psicológicas
 - Atendemos em todo o Brasil via videochamada
 - Temos psicólogos, psiquiatras e psicoterapeutas licenciados
@@ -138,7 +138,7 @@ Responda sempre em português brasileiro, de forma clara e objetiva.`),
         include_professional_data: getConfig('ai_assistant', 'include_professional_data', true),
         title: getConfig('ai_assistant', 'title', 'Assistente de Saúde Mental'),
         subtitle: getConfig('ai_assistant', 'subtitle', 'Powered by IA • Te ajudo a encontrar o profissional ideal'),
-        initial_message: getConfig('ai_assistant', 'initial_message', '👋 Olá! Sou seu assistente de saúde mental especializado da AloPsi. Estou aqui para te ajudar a encontrar o profissional ideal para suas consultas online.\n\nComo posso te ajudar hoje?\n\n🔍 Sobre o que você gostaria de conversar:\n• Que tipo de apoio psicológico você está buscando?\n• Alguma especialidade específica (ansiedade, depressão, relacionamentos, etc.)?\n• Prefere Psicólogo(a), Psiquiatra(a) ou Psicoterapeuta(a)?\n\n⏰ Horários e disponibilidade:\n• Qual período prefere? (manhã, tarde ou noite)\n• Que dias da semana funcionam melhor para você?\n\n💰 Investimento:\n• Qual sua faixa de orçamento para as consultas?\n• Busca valores mais acessíveis ou tem flexibilidade?\n\n📱 Todas as consultas são realizadas online - você pode ter sessões de qualquer lugar')
+        initial_message: getConfig('ai_assistant', 'initial_message', '👋 Olá! Sou seu assistente de saúde mental especializado da Rede Bem Estar. Estou aqui para te ajudar a encontrar o profissional ideal para suas consultas online.\n\nComo posso te ajudar hoje?\n\n🔍 Sobre o que você gostaria de conversar:\n• Que tipo de apoio psicológico você está buscando?\n• Alguma especialidade específica (ansiedade, depressão, relacionamentos, etc.)?\n• Prefere Psicólogo(a), Psiquiatra(a) ou Psicoterapeuta(a)?\n\n⏰ Horários e disponibilidade:\n• Qual período prefere? (manhã, tarde ou noite)\n• Que dias da semana funcionam melhor para você?\n\n💰 Investimento:\n• Qual sua faixa de orçamento para as consultas?\n• Busca valores mais acessíveis ou tem flexibilidade?\n\n📱 Todas as consultas são realizadas online - você pode ter sessões de qualquer lugar')
       });
     }
   }, [configs, getConfig, selectedTenantId]);

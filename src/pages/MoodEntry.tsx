@@ -418,7 +418,7 @@ const MoodEntry = () => {
       message += `\n📝 *Reflexões:*\n${formData.journal_text}\n`;
     }
     
-    message += `\n_Registrado através do Alô, Psi! 💚_`;
+    message += `\n_Registrado através do Rede Bem Estar 💚_`;
     
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');

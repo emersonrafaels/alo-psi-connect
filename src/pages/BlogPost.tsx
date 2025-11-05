@@ -63,7 +63,7 @@ export default function BlogPost() {
   useEffect(() => {
     if (post && tenant) {
       // Page title
-      const siteTitle = tenant.meta_config?.title || tenant.name || 'Alô, Psi!';
+      const siteTitle = tenant.meta_config?.title || tenant.name || 'Rede Bem Estar';
       document.title = `${post.title} | ${siteTitle} Blog`;
       
       // Meta description
@@ -105,7 +105,7 @@ export default function BlogPost() {
       }
       
       // Schema.org JSON-LD
-      const publisherName = tenant.name || 'Alô, Psi!';
+      const publisherName = tenant.name || 'Rede Bem Estar';
       const publisherLogo = tenant.logo_url || "https://lovable.dev/opengraph-image-p98pqg.png";
       
       const schema = {
@@ -171,7 +171,7 @@ export default function BlogPost() {
       if (existingSchema) {
         existingSchema.remove();
       }
-      const defaultTitle = tenant?.meta_config?.title || 'Alô, Psi! - Plataforma de Saúde Mental';
+      const defaultTitle = tenant?.meta_config?.title || 'Rede Bem Estar - Plataforma de Saúde Mental';
       document.title = defaultTitle;
     };
   }, [post, tenant]);

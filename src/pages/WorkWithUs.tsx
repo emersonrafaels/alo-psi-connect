@@ -12,7 +12,7 @@ import { buildTenantPath } from "@/utils/tenantHelpers"
 const WorkWithUs = () => {
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
-  const platformName = tenant?.name || "Alô, Psi!";
+  const platformName = tenant?.name || "Rede Bem Estar";
   const whatsappNumber = tenant?.contact_whatsapp || "5511956850046";
   const contactEmail = tenant?.contact_email || "contato@alopsi.com.br";
   

@@ -28,8 +28,8 @@ const TermsOfService = () => {
                   <h2 className="text-xl font-semibold">1. Definições e Escopo</h2>
                 </div>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  Estes Termos de Serviço ("Termos") regem o uso da plataforma Alô, Psi! 
-                  ("Plataforma"), operada pela empresa Alô, Psi! ("nós", "nosso" ou "Empresa").
+                  Estes Termos de Serviço ("Termos") regem o uso da plataforma Rede Bem Estar 
+                  ("Plataforma"), operada pela empresa Rede Bem Estar ("nós", "nosso" ou "Empresa").
                 </p>
                 <div className="space-y-2">
                   <p className="text-muted-foreground"><strong>Usuário:</strong> Qualquer pessoa que acesse ou utilize a Plataforma</p>
@@ -148,7 +148,7 @@ const TermsOfService = () => {
                 </div>
                 <div className="space-y-4">
                   <p className="text-muted-foreground leading-relaxed">
-                    A Alô, Psi! é uma plataforma de intermediação e não se responsabiliza por:
+                    A Rede Bem Estar é uma plataforma de intermediação e não se responsabiliza por:
                   </p>
                   <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                     <li>Qualidade dos serviços prestados pelos profissionais</li>
@@ -176,7 +176,7 @@ const TermsOfService = () => {
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
                   Todo o conteúdo da Plataforma, incluindo textos, imagens, logos, códigos e 
-                  funcionalidades, é de propriedade da Alô, Psi! ou de terceiros licenciadores. 
+                  funcionalidades, é de propriedade da Rede Bem Estar ou de terceiros licenciadores. 
                   É proibida a reprodução, distribuição ou uso comercial sem autorização expressa.
                 </p>
               </section>
@@ -221,7 +221,7 @@ const TermsOfService = () => {
                   Para dúvidas sobre estes Termos de Serviço:
                 </p>
                 <div className="p-4 bg-muted rounded-lg">
-                  <p className="font-medium">Alô, Psi!</p>
+                  <p className="font-medium">Rede Bem Estar</p>
                   <p className="text-muted-foreground">E-mail: alopsi.host@gmail.com</p>
                   <p className="text-muted-foreground">Telefone: (11) 97587-2447</p>
                   <p className="text-muted-foreground">

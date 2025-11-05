@@ -15,7 +15,7 @@ export const TenantBranding = () => {
   if (!tenant) {
     return (
       <Link to="/" className="flex items-center space-x-2">
-        <span className="text-xl font-bold">Alô, Psi!</span>
+        <span className="text-xl font-bold">Rede Bem Estar</span>
       </Link>
     );
   }

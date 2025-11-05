@@ -62,7 +62,7 @@ const ProfessionalForm = () => {
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
   
-  const platformName = tenant?.name || "Alô, Psi!";
+  const platformName = tenant?.name || "Rede Bem Estar";
   const googleData = location.state?.googleData || null;
 
   const [formData, setFormData] = useState({

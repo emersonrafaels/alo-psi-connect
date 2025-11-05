@@ -204,7 +204,7 @@ const PatientForm = () => {
 
         toast({
           title: "Cadastro realizado com sucesso!",
-          description: "Bem-vindo ao Alô, Psi!",
+          description: "Bem-vindo ao Rede Bem Estar!",
         });
         navigate(buildTenantPath(tenantSlug, '/'));
         return;
@@ -269,7 +269,7 @@ const PatientForm = () => {
       } else {
         toast({
           title: "Cadastro realizado com sucesso!",
-          description: "Bem-vindo ao Alô, Psi!",
+          description: "Bem-vindo ao Rede Bem Estar!",
         });
         navigate(buildTenantPath(tenantSlug, '/auth'));
       }
@@ -479,7 +479,7 @@ const PatientForm = () => {
       />
 
       <div>
-        <Label htmlFor="comoConheceu">Como conheceu o {tenant?.name || "Alô, Psi!"}?</Label>
+        <Label htmlFor="comoConheceu">Como conheceu o {tenant?.name || "Rede Bem Estar"}?</Label>
         <Select value={formData.comoConheceu} onValueChange={(value) => updateFormData('comoConheceu', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione uma opção" />

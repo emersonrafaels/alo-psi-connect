@@ -28,7 +28,7 @@ const PrivacyPolicy = () => {
                   <h2 className="text-xl font-semibold">1. Introdução</h2>
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
-                  A Alô, Psi! ("nós", "nosso" ou "empresa") está comprometida em proteger sua privacidade. 
+                  A Rede Bem Estar ("nós", "nosso" ou "empresa") está comprometida em proteger sua privacidade. 
                   Esta Política de Privacidade explica como coletamos, usamos, compartilhamos e protegemos 
                   suas informações quando você utiliza nossa plataforma de agendamento de consultas 
                   psicológicas online.
@@ -168,7 +168,7 @@ const PrivacyPolicy = () => {
                   entre em contato conosco:
                 </p>
                 <div className="mt-4 p-4 bg-muted rounded-lg">
-                  <p className="font-medium">Alô, Psi!</p>
+                  <p className="font-medium">Rede Bem Estar</p>
                   <p className="text-muted-foreground">E-mail: alopsi.host@gmail.com</p>
                   <p className="text-muted-foreground">Telefone: (11) 97587-2447</p>
                   <p className="text-muted-foreground">

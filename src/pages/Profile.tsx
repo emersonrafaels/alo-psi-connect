@@ -333,7 +333,7 @@ const Profile = () => {
                   <Separator />
 
                   <div>
-                    <Label htmlFor="comoConheceu">Como conheceu o Alô, Psi?</Label>
+                    <Label htmlFor="comoConheceu">Como conheceu o Rede Bem Estar?</Label>
                     <Select value={formData.como_conheceu} onValueChange={(value) => updateFormData('como_conheceu', value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione uma opção" />

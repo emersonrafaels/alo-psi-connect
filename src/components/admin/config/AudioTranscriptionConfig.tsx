@@ -101,7 +101,7 @@ const AudioTranscriptionConfig = () => {
               onChange={(e) => setFormData(prev => ({ ...prev, systemPrompt: e.target.value }))}
             />
             <p className="text-sm text-muted-foreground">
-              Este prompt define como o agente Alô, Psi processará as transcrições de áudio.
+              Este prompt define como o agente Rede Bem Estar processará as transcrições de áudio.
             </p>
           </div>
 
