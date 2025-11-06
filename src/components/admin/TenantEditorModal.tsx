@@ -117,7 +117,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     specialty_tag_text_light: "#0ea5e9",
     specialty_tag_bg_dark: "#1e3a8a",
     specialty_tag_text_dark: "#93c5fd",
-    ai_match_button_text: "Rede Bem Estar Match",
+    ai_match_button_text: "Rede Bem-Estar Match",
     // Contact information
     contact_phone: "",
     contact_whatsapp: "",
@@ -172,7 +172,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         specialty_tag_text_light: tenant.specialty_tag_text_light || "#0ea5e9",
         specialty_tag_bg_dark: tenant.specialty_tag_bg_dark || "#1e3a8a",
         specialty_tag_text_dark: tenant.specialty_tag_text_dark || "#93c5fd",
-        ai_match_button_text: tenant.ai_match_button_text || "Rede Bem Estar Match",
+        ai_match_button_text: tenant.ai_match_button_text || "Rede Bem-Estar Match",
         // Contact information
         contact_phone: tenant.contact_phone || "",
         contact_whatsapp: tenant.contact_whatsapp || "",
@@ -223,7 +223,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         specialty_tag_text_light: "#0ea5e9",
         specialty_tag_bg_dark: "#1e3a8a",
         specialty_tag_text_dark: "#93c5fd",
-        ai_match_button_text: "Rede Bem Estar Match",
+        ai_match_button_text: "Rede Bem-Estar Match",
         // Contact information
         contact_phone: "",
         contact_whatsapp: "",
@@ -473,7 +473,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Rede Bem Estar"
+                    placeholder="Rede Bem-Estar"
                     required
                   />
                 </div>
@@ -941,7 +941,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
                   id="ai_match_button_text"
                   value={formData.ai_match_button_text}
                   onChange={(e) => setFormData({ ...formData, ai_match_button_text: e.target.value })}
-                  placeholder="Ex: Medcos Match, Rede Bem Estar Match"
+                  placeholder="Ex: MEDCOS Match, Rede Bem-Estar Match"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Texto personalizado exibido no botão do assistente de IA
@@ -954,7 +954,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
                   id="hero_title"
                   value={formData.hero_title}
                   onChange={(e) => setFormData({ ...formData, hero_title: e.target.value })}
-                  placeholder="Bem-vindo ao Rede Bem Estar"
+                  placeholder="Bem-vindo ao Rede Bem-Estar"
                 />
               </div>
 

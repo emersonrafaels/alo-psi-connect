@@ -62,7 +62,7 @@ export default function TestUserRegistration() {
             <div>
               <h1 className="text-3xl font-bold">🧪 Testes de Cadastro Multi-Tenant</h1>
               <p className="text-muted-foreground mt-2">
-                Valide o cadastro de profissionais e pacientes nos tenants Alopsi e Medcos
+                Valide o cadastro de profissionais e pacientes nos tenants Alopsi e MEDCOS
               </p>
             </div>
           </div>
@@ -285,19 +285,19 @@ export default function TestUserRegistration() {
           </div>
         </div>
 
-        {/* Test Cards - Medcos */}
+        {/* Test Cards - MEDCOS */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">📋 Medcos</h2>
+          <h2 className="text-2xl font-bold mb-4">📋 MEDCOS</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Professional Test - Medcos */}
+            {/* Professional Test - MEDCOS */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  Profissional Medcos
+                  Profissional MEDCOS
                   {getStatusBadge(testResults.find(r => r.test_type === 'professional_registration' && r.tenant === 'medcos')?.status || null)}
                 </CardTitle>
                 <CardDescription>
-                  Teste de cadastro de profissional no tenant Medcos
+                  Teste de cadastro de profissional no tenant MEDCOS
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -349,15 +349,15 @@ export default function TestUserRegistration() {
               </CardContent>
             </Card>
 
-            {/* Patient Test - Medcos */}
+            {/* Patient Test - MEDCOS */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  Paciente Medcos
+                  Paciente MEDCOS
                   {getStatusBadge(testResults.find(r => r.test_type === 'patient_registration' && r.tenant === 'medcos')?.status || null)}
                 </CardTitle>
                 <CardDescription>
-                  Teste de cadastro de paciente no tenant Medcos
+                  Teste de cadastro de paciente no tenant MEDCOS
                 </CardDescription>
               </CardHeader>
               <CardContent>

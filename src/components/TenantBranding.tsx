@@ -15,7 +15,7 @@ export const TenantBranding = () => {
   if (!tenant) {
     return (
       <Link to="/" className="flex items-center space-x-2">
-        <span className="text-xl font-bold">Rede Bem Estar</span>
+        <span className="text-xl font-bold">Rede Bem-Estar</span>
       </Link>
     );
   }
@@ -48,7 +48,7 @@ export const TenantBranding = () => {
           <div 
             className="w-8 h-8 rounded-full flex items-center justify-center relative overflow-hidden"
             style={{
-              background: `linear-gradient(135deg, ${formatColor(tenant.primary_color)}, ${formatColor(tenant.accent_color)})`
+              backgroundColor: formatColor(tenant.primary_color)
             }}
           >
             <span className="text-white font-bold text-sm relative z-10">

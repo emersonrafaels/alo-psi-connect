@@ -113,11 +113,11 @@ const Header = () => {
               <button 
                 onClick={() => handleTenantNavigation('medcos', '/medcos')}
                 className="flex items-center bg-[#ffffff] hover:bg-[#f1fa89] text-white rounded-lg px-3 py-2 transition-colors cursor-pointer shadow-md"
-                title="Ir para Medcos"
+                title="Ir para MEDCOS"
               >
                 <img 
                   src="https://medcos.app.br/wp-content/uploads/elementor/thumbs/LogoMEDCOS-r5pr2yuqprrdwsv0thbrcgimoe2po47c2w2agtjnao.png"
-                  alt="Medcos" 
+                  alt="MEDCOS"
                   className="h-8 w-auto object-contain"
                 />
               </button>

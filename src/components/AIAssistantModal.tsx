@@ -294,7 +294,7 @@ export const AIAssistantModal = ({
         <DialogHeader className="flex-shrink-0 border-b pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10 bg-gradient-primary">
+              <Avatar className="h-10 w-10 bg-primary">
                 <AvatarFallback className="text-white">
                   <Bot className="h-5 w-5" />
                 </AvatarFallback>
@@ -316,7 +316,7 @@ export const AIAssistantModal = ({
         <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
           <div className="space-y-4 py-4">
             {messages.map(message => <div key={message.id} className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {message.role === 'assistant' && <Avatar className="h-8 w-8 bg-gradient-primary flex-shrink-0">
+                {message.role === 'assistant' && <Avatar className="h-8 w-8 bg-primary flex-shrink-0">
                     <AvatarFallback className="text-white">
                       <Bot className="h-4 w-4" />
                     </AvatarFallback>
@@ -388,7 +388,7 @@ export const AIAssistantModal = ({
               </div>)}
             
             {isLoading && <div className="flex gap-3 justify-start">
-                <Avatar className="h-8 w-8 bg-gradient-primary flex-shrink-0">
+                <Avatar className="h-8 w-8 bg-primary flex-shrink-0">
                   <AvatarFallback className="text-white">
                     <Bot className="h-4 w-4" />
                   </AvatarFallback>

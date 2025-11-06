@@ -239,7 +239,7 @@ export const ProfessionalProfile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/20">
+    <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Modern Header with Breadcrumb */}
@@ -258,7 +258,7 @@ export const ProfessionalProfile: React.FC = () => {
               <div className="flex items-center gap-3">
                 <div className="w-1 h-8 bg-primary rounded-full"></div>
                 <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+                  <h1 className="text-4xl font-bold text-foreground">
                     Perfil Profissional
                   </h1>
                   <p className="text-lg text-muted-foreground mt-1">
@@ -270,15 +270,13 @@ export const ProfessionalProfile: React.FC = () => {
           </div>
 
           {/* Enhanced Profile Header Card */}
-          <Card className="mb-8 overflow-hidden border-0 shadow-lg bg-card/50 backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 pointer-events-none"></div>
+          <Card className="mb-8 overflow-hidden border-0 shadow-lg bg-card">
             <CardContent className="relative pt-8 pb-6">
               {/* Desktop Layout - Clean Grid */}
               <div className="hidden lg:grid lg:grid-cols-4 gap-8 items-start">
                 {/* Avatar Section */}
                 <div className="flex flex-col items-center space-y-4">
                   <div className="relative">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-25 hover:opacity-75 transition duration-300"></div>
                     <div className="relative">
                       <PhotoUpload
                         onPhotoSelected={handlePhotoUpload}
@@ -325,7 +323,7 @@ export const ProfessionalProfile: React.FC = () => {
                   {/* Enhanced Info Cards */}
                   <div className="flex flex-wrap gap-4">
                     {professionalData?.preco_consulta && (
-                      <Card className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 hover:shadow-md transition-shadow">
+                      <Card className="p-4 bg-accent/10 border-accent/20 hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-accent/20 rounded-full">
                             <span className="text-lg">💰</span>
@@ -340,7 +338,7 @@ export const ProfessionalProfile: React.FC = () => {
                       </Card>
                     )}
                     {professionalData?.tempo_consulta && (
-                      <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-md transition-shadow">
+                      <Card className="p-4 bg-primary/10 border-primary/20 hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-primary/20 rounded-full">
                             <Clock className="h-4 w-4 text-primary" />
@@ -360,7 +358,7 @@ export const ProfessionalProfile: React.FC = () => {
                 {/* Status & Calendar Section */}
                 <div className="space-y-4">
                   {/* Status Section */}
-                  <Card className="p-4 bg-gradient-to-br from-muted/30 to-background border-muted">
+                  <Card className="p-4 bg-muted/30 border-muted">
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary"></div>
@@ -374,7 +372,7 @@ export const ProfessionalProfile: React.FC = () => {
                   </Card>
                   
                   {/* Calendar Status */}
-                  <Card className="p-4 bg-gradient-to-br from-muted/30 to-background border-muted">
+                  <Card className="p-4 bg-muted/30 border-muted">
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary"></div>
@@ -400,7 +398,6 @@ export const ProfessionalProfile: React.FC = () => {
                 {/* Avatar and Basic Info */}
                 <div className="text-center space-y-4">
                   <div className="relative inline-block">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-25"></div>
                     <div className="relative">
                       <PhotoUpload
                         onPhotoSelected={handlePhotoUpload}
@@ -444,7 +441,7 @@ export const ProfessionalProfile: React.FC = () => {
                 {/* Info Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {professionalData?.preco_consulta && (
-                    <Card className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
+                    <Card className="p-4 bg-accent/10 border-accent/20">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-accent/20 rounded-full">
                           <span className="text-lg">💰</span>
@@ -459,7 +456,7 @@ export const ProfessionalProfile: React.FC = () => {
                     </Card>
                   )}
                   {professionalData?.tempo_consulta && (
-                    <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+                    <Card className="p-4 bg-primary/10 border-primary/20">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/20 rounded-full">
                           <Clock className="h-4 w-4 text-primary" />
@@ -477,7 +474,7 @@ export const ProfessionalProfile: React.FC = () => {
 
                 {/* Status and Calendar */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Card className="p-4 bg-gradient-to-br from-muted/30 to-background border-muted">
+                  <Card className="p-4 bg-muted/30 border-muted">
                     <div className="space-y-3">
                       <h4 className="text-sm font-medium flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary"></div>
@@ -490,7 +487,7 @@ export const ProfessionalProfile: React.FC = () => {
                     </div>
                   </Card>
                   
-                  <Card className="p-4 bg-gradient-to-br from-muted/30 to-background border-muted">
+                  <Card className="p-4 bg-muted/30 border-muted">
                     <div className="space-y-3">
                       <h4 className="text-sm font-medium flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary"></div>
@@ -514,7 +511,7 @@ export const ProfessionalProfile: React.FC = () => {
               {/* Professional Description - Full width */}
               {professionalData?.resumo_profissional && (
                 <div className="mt-8">
-                  <Card className="p-6 bg-gradient-to-br from-muted/20 to-background border-muted">
+                  <Card className="p-6 bg-muted/20 border-muted">
                     <div className="space-y-4">
                       <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary"></div>

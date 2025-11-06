@@ -406,7 +406,7 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
       {/* Book Button */}
       {selectedDate && selectedTime && (
         <div className="space-y-3">
-          <div className="bg-gradient-to-r from-primary/10 to-primary/20 p-4 rounded-xl border border-primary/20">
+          <div className="bg-primary/15 p-4 rounded-xl border border-primary/20">
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">Confirmar agendamento:</p>
               <div className="space-y-1">
