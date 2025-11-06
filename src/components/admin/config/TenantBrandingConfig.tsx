@@ -10,13 +10,15 @@ import { Separator } from '@/components/ui/separator';
 import { useTenantBranding, TenantBrandingData } from '@/hooks/useTenantBranding';
 import { supabase } from '@/integrations/supabase/client';
 import { Tenant } from '@/types/tenant';
-import { Loader2, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Image as ImageIcon, Upload } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export const TenantBrandingConfig = () => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState<string>('');
   const [branding, setBranding] = useState<TenantBrandingData>({
     logo_url: '',
+    favicon_url: '',
     hero_title: '',
     hero_subtitle: '',
     header_color: '',
@@ -27,6 +29,9 @@ export const TenantBrandingConfig = () => {
     hero_autoplay: true,
     hero_autoplay_delay: 5000,
   });
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
+
+  const { toast } = useToast();
 
   const { loading, fetchBranding, updateBranding } = useTenantBranding();
 
@@ -68,6 +73,67 @@ export const TenantBrandingConfig = () => {
       .map(url => url.trim())
       .filter(url => url.length > 0);
     setBranding(prev => ({ ...prev, hero_images: urls }));
+  };
+
+  const handleFaviconUpload = async (file: File) => {
+    if (!selectedTenantId) return;
+    
+    try {
+      setUploadingFavicon(true);
+      
+      const validTypes = ['image/x-icon', 'image/png', 'image/jpeg', 'image/svg+xml'];
+      if (!validTypes.includes(file.type)) {
+        toast({
+          title: 'Formato inválido',
+          description: 'Use arquivos .ico, .png, .jpg ou .svg',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (file.size > 512 * 1024) {
+        toast({
+          title: 'Arquivo muito grande',
+          description: 'O favicon deve ter no máximo 512KB',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        const base64 = reader.result as string;
+        const base64Data = base64.split(',')[1];
+        
+        const { data, error } = await supabase.functions.invoke('upload-to-s3', {
+          body: {
+            file: base64Data,
+            filename: `favicon-${Date.now()}.${file.type.split('/')[1]}`,
+            type: file.type,
+            professionalId: selectedTenantId,
+          },
+        });
+        
+        if (error) throw error;
+        
+        setBranding(prev => ({ ...prev, favicon_url: data.url }));
+        
+        toast({
+          title: 'Upload concluído!',
+          description: 'Favicon enviado com sucesso',
+        });
+      };
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast({
+        title: 'Erro no upload',
+        description: 'Não foi possível enviar o favicon',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingFavicon(false);
+    }
   };
 
   return (
@@ -128,6 +194,78 @@ export const TenantBrandingConfig = () => {
                       e.currentTarget.style.display = 'none';
                     }}
                   />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Favicon</CardTitle>
+              <CardDescription>
+                Ícone do site que aparece na aba do navegador (recomendado: 32x32px ou 64x64px)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="favicon_url">URL do Favicon</Label>
+                <Input
+                  id="favicon_url"
+                  value={branding.favicon_url}
+                  onChange={e => setBranding(prev => ({ ...prev, favicon_url: e.target.value }))}
+                  placeholder="https://example.com/favicon.ico"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Formatos aceitos: .ico, .png, .svg, .jpg
+                </p>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <Label>Ou faça upload</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="file"
+                    accept=".ico,.png,.jpg,.jpeg,.svg"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFaviconUpload(file);
+                    }}
+                    disabled={uploadingFavicon}
+                  />
+                  {uploadingFavicon && (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Máximo 512KB
+                </p>
+              </div>
+              
+              {branding.favicon_url && (
+                <div className="border rounded-lg p-4 bg-muted/50">
+                  <p className="text-sm text-muted-foreground mb-2">Preview:</p>
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={branding.favicon_url} 
+                      alt="Favicon preview" 
+                      className="w-8 h-8 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 bg-gray-800 text-white px-2 py-1 rounded">
+                        <img 
+                          src={branding.favicon_url} 
+                          alt="" 
+                          className="w-4 h-4"
+                        />
+                        <span>Nome da Página</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
