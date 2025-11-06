@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { ParsedUserWithValidation, useBulkUserValidation } from '@/hooks/useBulkUserValidation';
+import { InstitutionSelector } from '@/components/register/InstitutionSelector';
 
 interface UserEditDialogProps {
   user: ParsedUserWithValidation | null;
@@ -195,16 +196,13 @@ export const UserEditDialog = ({ user, open, onOpenChange, onSave }: UserEditDia
                       placeholder="120.00"
                     />
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="instituicao">Instituição</Label>
-                    <Input
-                      id="instituicao"
-                      value={formData.instituicao || ''}
-                      onChange={(e) => updateField('instituicao', e.target.value)}
-                      placeholder="Ex: UNIFESP"
-                    />
-                  </div>
+                <div className="mt-4">
+                  <InstitutionSelector
+                    value={formData.instituicao || ''}
+                    onChange={(value) => updateField('instituicao', value)}
+                  />
                 </div>
               </div>
             </>
@@ -212,15 +210,10 @@ export const UserEditDialog = ({ user, open, onOpenChange, onSave }: UserEditDia
 
           {/* Instituição para pacientes */}
           {formData.tipo_usuario === 'paciente' && (
-            <div className="space-y-2">
-              <Label htmlFor="instituicao">Instituição (opcional)</Label>
-              <Input
-                id="instituicao"
-                value={formData.instituicao || ''}
-                onChange={(e) => updateField('instituicao', e.target.value)}
-                placeholder="Ex: UNIFESP"
-              />
-            </div>
+            <InstitutionSelector
+              value={formData.instituicao || ''}
+              onChange={(value) => updateField('instituicao', value)}
+            />
           )}
 
           {/* Feedback de validação */}
