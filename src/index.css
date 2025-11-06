@@ -568,3 +568,14 @@ All colors MUST be HSL.
 .animate-slide-up {
   animation: slideUp 0.3s ease-in forwards;
 }
+
+/* Fix para Popover/Combobox dentro de Dialog - z-index */
+[data-radix-popper-content-wrapper] {
+  z-index: 100 !important;
+}
+
+/* Garantir que Command List tenha altura máxima e scroll */
+[cmdk-list] {
+  max-height: 300px;
+  overflow-y: auto;
+}
