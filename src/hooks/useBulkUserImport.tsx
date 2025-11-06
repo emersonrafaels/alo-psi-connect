@@ -2,26 +2,15 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
+import { useBulkUserValidation, ParsedUser, ParsedUserWithValidation } from './useBulkUserValidation';
 
-interface ParsedUser {
-  nome: string;
-  email: string;
-  cpf?: string;
-  data_nascimento?: string;
-  genero?: string;
-  telefone?: string;
-  tipo_usuario: 'paciente' | 'profissional';
-  senha?: string;
-  instituicao?: string;
-  crp_crm?: string;
-  profissao?: string;
-  preco_consulta?: number;
-}
+export type { ParsedUser, ParsedUserWithValidation };
 
 export const useBulkUserImport = () => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const { toast } = useToast();
+  const { validateUsers } = useBulkUserValidation();
 
   const parseExcel = (file: File): Promise<ParsedUser[]> => {
     return new Promise((resolve, reject) => {
@@ -61,25 +50,49 @@ export const useBulkUserImport = () => {
     });
   };
 
-  const importUsers = async (file: File, tenantSlug: string) => {
-    setLoading(true);
-    setProgress(0);
-
+  // Método separado para parse e validação (sem importar)
+  const parseAndValidate = async (file: File): Promise<ParsedUserWithValidation[]> => {
     try {
       toast({
         title: 'Processando arquivo...',
         description: 'Lendo planilha Excel',
       });
-      
+
       const users = await parseExcel(file);
-      
+
       if (users.length === 0) {
         throw new Error('Nenhum usuário encontrado na planilha');
       }
 
+      // Validar todos os usuários
+      const usersWithValidation = validateUsers(users);
+
       toast({
-        title: `${users.length} usuários encontrados`,
-        description: 'Enviando para processamento...',
+        title: `${users.length} usuários processados`,
+        description: 'Revise os dados antes de confirmar a importação',
+      });
+
+      return usersWithValidation;
+    } catch (error: any) {
+      console.error('Error parsing file:', error);
+      toast({
+        title: 'Erro ao processar arquivo',
+        description: error.message || 'Erro desconhecido',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  // Método para importar apenas usuários válidos
+  const importUsers = async (users: ParsedUser[], tenantSlug: string) => {
+    setLoading(true);
+    setProgress(0);
+
+    try {
+      toast({
+        title: 'Importando usuários...',
+        description: `Processando ${users.length} usuários`,
       });
 
       const { data, error } = await supabase.functions.invoke('bulk-import-users', {
@@ -159,6 +172,7 @@ export const useBulkUserImport = () => {
   return {
     loading,
     progress,
+    parseAndValidate,
     importUsers,
     downloadTemplate
   };
