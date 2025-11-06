@@ -357,7 +357,17 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
 
         if (error) throw error;
         
-        // Invalidar cache do tenant editado
+        // Invalidar cache através da edge function
+        try {
+          const { data: cacheData } = await supabase.functions.invoke('invalidate-tenant-cache', {
+            body: { slug: formData.slug }
+          });
+          console.log('[TenantEditorModal] Cache invalidation response:', cacheData);
+        } catch (cacheError) {
+          console.error('[TenantEditorModal] Cache invalidation error:', cacheError);
+        }
+        
+        // Invalidar cache localmente também
         const cacheKey = `tenant_${formData.slug}_cache`;
         localStorage.removeItem(cacheKey);
         

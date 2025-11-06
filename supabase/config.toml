@@ -115,3 +115,6 @@ verify_jwt = false
 
 [functions.normalize-institutions]
 verify_jwt = true
+
+[functions.invalidate-tenant-cache]
+verify_jwt = true
