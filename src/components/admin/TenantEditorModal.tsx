@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Upload, Loader2 } from "lucide-react";
 import { FieldWithTooltip } from "@/components/register/FieldWithTooltip";
+import { invalidateTenantCache } from "@/utils/cacheHelpers";
 import {
   ContactConfigTab,
   FooterConfigTab,
@@ -387,15 +388,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
           console.error('[TenantEditorModal] Cache invalidation error:', cacheError);
         }
         
-        // Invalidar cache localmente também
-        const cacheKey = `tenant_${formData.slug}_cache`;
-        localStorage.removeItem(cacheKey);
-        
-        // Disparar evento customizado para forçar reload se for o tenant atual
-        console.log('[TenantEditorModal] Dispatching tenant-updated event for:', formData.slug);
-        window.dispatchEvent(new CustomEvent('tenant-updated', { 
-          detail: { slug: formData.slug } 
-        }));
+        // Invalidar cache local e disparar evento de atualização
+        invalidateTenantCache(formData.slug);
         
         // Atualizar o favicon dinamicamente se foi alterado
         if (formData.favicon_url) {

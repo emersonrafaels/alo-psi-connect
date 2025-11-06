@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TenantEditorModal } from '@/components/admin/TenantEditorModal';
-import { Building2, Users, FileText, Plus, Edit, Eye, EyeOff, Power, PowerOff } from 'lucide-react';
+import { Building2, Users, FileText, Plus, Edit, Eye, EyeOff, Power, PowerOff, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { clearAllTenantCaches } from '@/utils/cacheHelpers';
 
 interface Tenant {
   id: string;
@@ -122,10 +123,20 @@ export default function Tenants() {
           <h1 className="text-3xl font-bold">Gerenciar Tenants</h1>
           <p className="text-muted-foreground">Configure os diferentes sites da plataforma</p>
         </div>
-        <Button onClick={() => { setSelectedTenant(null); setEditorOpen(true); }}>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Tenant
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={clearAllTenantCaches}
+            className="gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Limpar Cache
+          </Button>
+          <Button onClick={() => { setSelectedTenant(null); setEditorOpen(true); }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Tenant
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
