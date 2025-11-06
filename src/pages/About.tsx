@@ -24,6 +24,10 @@ const About = () => {
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'medcos';
 
+  const getTenantName = () => {
+    return tenant?.slug === 'medcos' ? 'A MEDCOS' : 'A Rede Bem-Estar';
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -39,7 +43,7 @@ const About = () => {
                 Cuida da Saúde
               </h1>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                A MEDCOS é uma plataforma de bem-estar universitário focada em médicos e 
+                {getTenantName()} é uma plataforma de bem-estar universitário focada em médicos e 
                 estudantes de medicina. Unimos atendimento clínico qualificado, fluxos de 
                 apoio e dados agregados para fortalecer aprendizagem, permanência e clima acadêmico.
               </p>
