@@ -1,5 +1,7 @@
 import { DEFAULT_TENANT_SLUG } from '@/types/tenant';
 
+export { DEFAULT_TENANT_SLUG };
+
 /**
  * Detecta o slug do tenant baseado no pathname
  * @param pathname - window.location.pathname

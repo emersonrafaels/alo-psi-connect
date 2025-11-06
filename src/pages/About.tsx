@@ -9,7 +9,7 @@ import { AboutImageSection } from "@/components/AboutImageSection"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useNavigate } from "react-router-dom"
 import { useTenant } from "@/hooks/useTenant"
-import { buildTenantPath } from "@/utils/tenantHelpers"
+import { buildTenantPath, DEFAULT_TENANT_SLUG } from "@/utils/tenantHelpers"
 import { useProfessionals } from "@/hooks/useProfessionals"
 import { getIllustrativeAvatar } from "@/utils/avatarHelpers"
 import { 
@@ -22,7 +22,7 @@ import {
 const About = () => {
   const navigate = useNavigate();
   const { tenant } = useTenant();
-  const tenantSlug = tenant?.slug || 'medcos';
+  const tenantSlug = tenant?.slug || DEFAULT_TENANT_SLUG;
 
   const getTenantName = () => {
     return tenant?.slug === 'medcos' ? 'A MEDCOS' : 'A Rede Bem-Estar';
@@ -397,7 +397,7 @@ const About = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4">Perguntas Frequentes</h2>
           <p className="text-center text-muted-foreground mb-16">
-            Tire suas dúvidas sobre a MEDCOS
+            Tire suas dúvidas sobre {getTenantName()}
           </p>
           <Accordion type="single" collapsible className="max-w-3xl mx-auto">
             {[
