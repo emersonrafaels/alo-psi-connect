@@ -296,12 +296,12 @@ const About = () => {
       </section>
 
       {/* SEÇÃO 7: Indicadores e Impacto */}
-      <section className="py-20 bg-primary text-primary-foreground">
+      <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
             <div>
               <h2 className="text-3xl font-bold mb-6">Dados que Transformam Decisões</h2>
-              <p className="text-primary-foreground/90 mb-6 leading-relaxed">
+              <p className="text-muted-foreground mb-6 leading-relaxed">
                 Veja métricas agregadas e anônimas que ajudam sua instituição a tomar 
                 decisões baseadas em dados reais:
               </p>
@@ -313,52 +313,52 @@ const About = () => {
                   "Engajamento em trilhas e grupos"
                 ].map((item, index) => (
                   <li key={index} className="flex items-center gap-3 group">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
-                      <TrendingUp className="w-5 h-5 flex-shrink-0" />
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+                      <TrendingUp className="w-5 h-5 flex-shrink-0 text-primary" />
                     </div>
                     <span className="group-hover:translate-x-1 transition-transform">{item}</span>
                   </li>
                 ))}
               </ul>
               <Button 
-                variant="secondary"
+                variant="default"
                 size="lg"
                 onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}
               >
                 Quero Ver um Exemplo de Painel
               </Button>
             </div>
-            <Card className="bg-white/15 backdrop-blur-sm border-white/30 hover:bg-white/20 transition-all shadow-xl">
+            <Card className="bg-card border-2 border-primary/20 hover:border-primary/40 hover:shadow-2xl transition-all">
               <CardContent className="p-8">
-                <h3 className="text-xl font-semibold mb-6 text-primary-foreground flex items-center gap-2">
+                <h3 className="text-xl font-semibold mb-6 text-foreground flex items-center gap-2">
                   <BarChart3 className="w-5 h-5" />
                   Exemplo de Painel
                 </h3>
                 <div className="space-y-4">
-                  <div className="flex items-end gap-2 h-40 bg-white/5 rounded-lg p-4">
-                    <div className="w-full bg-white/70 hover:bg-white/90 rounded-t transition-all cursor-pointer" style={{ height: '65%' }}></div>
-                    <div className="w-full bg-white/80 hover:bg-white/90 rounded-t transition-all cursor-pointer" style={{ height: '85%' }}></div>
-                    <div className="w-full bg-white/60 hover:bg-white/90 rounded-t transition-all cursor-pointer" style={{ height: '55%' }}></div>
-                    <div className="w-full bg-white/75 hover:bg-white/90 rounded-t transition-all cursor-pointer" style={{ height: '75%' }}></div>
+                  <div className="flex items-end gap-2 h-40 bg-primary/5 rounded-lg p-4">
+                    <div className="w-full bg-primary/60 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '65%' }}></div>
+                    <div className="w-full bg-primary/70 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '85%' }}></div>
+                    <div className="w-full bg-primary/50 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '55%' }}></div>
+                    <div className="w-full bg-primary/65 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '75%' }}></div>
                   </div>
                   <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="bg-white/10 hover:bg-white/20 rounded-lg p-4 transition-all cursor-pointer border border-white/20 hover:border-white/40 hover:scale-105 group">
-                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
-                        <TrendingUp className="w-5 h-5" />
+                    <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
+                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+                        <TrendingUp className="w-5 h-5 text-primary" />
                       </div>
                       <p className="text-2xl font-bold mb-1">87%</p>
                       <p className="text-xs opacity-90">Adesão</p>
                     </div>
-                    <div className="bg-white/10 hover:bg-white/20 rounded-lg p-4 transition-all cursor-pointer border border-white/20 hover:border-white/40 hover:scale-105 group">
-                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
-                        <BarChart3 className="w-5 h-5" />
+                    <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
+                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+                        <BarChart3 className="w-5 h-5 text-primary" />
                       </div>
                       <p className="text-2xl font-bold mb-1">4.8</p>
                       <p className="text-xs opacity-90">Avaliação</p>
                     </div>
-                    <div className="bg-white/10 hover:bg-white/20 rounded-lg p-4 transition-all cursor-pointer border border-white/20 hover:border-white/40 hover:scale-105 group">
-                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
-                        <Calendar className="w-5 h-5" />
+                    <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
+                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+                        <Calendar className="w-5 h-5 text-primary" />
                       </div>
                       <p className="text-2xl font-bold mb-1">320</p>
                       <p className="text-xs opacity-90">Atendimentos</p>
