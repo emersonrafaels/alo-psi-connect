@@ -66,6 +66,8 @@ import AdminRoles from "@/pages/admin/Roles";
 import BlogManagement from "@/pages/admin/BlogManagement";
 import BlogEditor from "@/pages/admin/BlogEditor";
 import PostAnalytics from "@/pages/admin/PostAnalytics";
+import BlogAnalytics from "@/pages/admin/BlogAnalytics";
+import BlogCuration from "@/pages/admin/BlogCuration";
 import AdminTenants from "@/pages/admin/Tenants";
 import AdminInstitutions from "@/pages/admin/Institutions";
 import AdminSystemMaintenance from "@/pages/admin/SystemMaintenance";
@@ -201,6 +203,8 @@ const AppWithShortcuts = () => {
       <Route path="/admin/tests" element={<AdminLayout><TestUserRegistration /></AdminLayout>} />
 
       <Route path="/admin/blog" element={<BlogLayout><BlogManagement /></BlogLayout>} />
+      <Route path="/admin/blog/curation" element={<BlogLayout><BlogCuration /></BlogLayout>} />
+      <Route path="/admin/blog-analytics" element={<BlogLayout><BlogAnalytics /></BlogLayout>} />
       <Route path="/admin/post-analytics/:postId" element={<BlogLayout><PostAnalytics /></BlogLayout>} />
       <Route path="/admin/blog/new" element={<BlogEditor />} />
       <Route path="/admin/blog/edit/:id" element={<BlogEditor />} />
