@@ -366,6 +366,17 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
           detail: { slug: formData.slug } 
         }));
         
+        // Atualizar o favicon dinamicamente se foi alterado
+        if (formData.favicon_url) {
+          let favicon = document.querySelector('link[rel="icon"]');
+          if (!favicon) {
+            favicon = document.createElement('link');
+            favicon.setAttribute('rel', 'icon');
+            document.head.appendChild(favicon);
+          }
+          favicon.setAttribute('href', formData.favicon_url);
+        }
+        
         toast.success("Tenant atualizado com sucesso!");
       } else {
         // Create new tenant
