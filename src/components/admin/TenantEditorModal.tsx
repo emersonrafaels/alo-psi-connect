@@ -7,7 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { Upload, Loader2 } from "lucide-react";
 import { FieldWithTooltip } from "@/components/register/FieldWithTooltip";
 import {
   ContactConfigTab,
@@ -130,6 +132,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     is_active: true
   });
   const [loading, setLoading] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
 
   useEffect(() => {
     if (tenant) {
@@ -228,6 +231,65 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
       });
     }
   }, [tenant]);
+
+  const handleFaviconUpload = async (file: File) => {
+    if (!tenant?.id) {
+      toast.error("Salve o tenant antes de fazer upload do favicon");
+      return;
+    }
+    
+    try {
+      setUploadingFavicon(true);
+      
+      // Validar tipo de arquivo
+      const validTypes = ['image/x-icon', 'image/png', 'image/jpeg', 'image/svg+xml'];
+      if (!validTypes.includes(file.type)) {
+        toast.error('Formato inválido. Use arquivos .ico, .png, .jpg ou .svg');
+        return;
+      }
+      
+      // Validar tamanho (máx 512KB)
+      if (file.size > 512 * 1024) {
+        toast.error('Arquivo muito grande. O favicon deve ter no máximo 512KB');
+        return;
+      }
+      
+      // Converter file para base64
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = async () => {
+        const base64String = reader.result as string;
+        const base64Data = base64String.split(',')[1];
+        
+        // Upload via edge function
+        const { data, error } = await supabase.functions.invoke('upload-to-s3', {
+          body: {
+            file: base64Data,
+            filename: file.name,
+            type: file.type,
+            professionalId: tenant.id
+          }
+        });
+        
+        if (error) throw error;
+        
+        // Atualizar state com a URL do S3
+        setFormData(prev => ({ ...prev, favicon_url: data.url }));
+        
+        toast.success('Favicon enviado com sucesso!');
+      };
+      
+      reader.onerror = () => {
+        throw new Error('Erro ao ler arquivo');
+      };
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast.error('Não foi possível enviar o favicon');
+    } finally {
+      setUploadingFavicon(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -341,6 +403,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
               <TabsTrigger value="basic">Básico</TabsTrigger>
               <TabsTrigger value="theme">Tema</TabsTrigger>
               <TabsTrigger value="branding">Branding</TabsTrigger>
+              <TabsTrigger value="favicon">Favicon</TabsTrigger>
               <TabsTrigger value="about">Página Sobre</TabsTrigger>
               <TabsTrigger value="contact">Contato</TabsTrigger>
               <TabsTrigger value="footer">Footer</TabsTrigger>
@@ -903,6 +966,82 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
                 >
                   <span className="text-white font-semibold">Header Preview</span>
                 </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="favicon" className="space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Favicon do Tenant</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Configure o ícone que aparece na aba do navegador. Recomendado: 32x32px ou 64x64px
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="favicon_url">URL do Favicon</Label>
+                  <Input
+                    id="favicon_url"
+                    value={formData.favicon_url}
+                    onChange={(e) => setFormData({ ...formData, favicon_url: e.target.value })}
+                    placeholder="https://example.com/favicon.ico"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Formatos aceitos: .ico, .png, .svg, .jpg
+                  </p>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <Label>Ou faça upload</Label>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      type="file"
+                      accept=".ico,.png,.jpg,.jpeg,.svg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFaviconUpload(file);
+                      }}
+                      disabled={uploadingFavicon || !tenant}
+                    />
+                    {uploadingFavicon && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Máximo 512KB. {!tenant && "⚠️ Salve o tenant antes de fazer upload."}
+                  </p>
+                </div>
+
+                {formData.favicon_url && (
+                  <div className="border rounded-lg p-4 bg-muted/50 space-y-3">
+                    <p className="text-sm font-medium">Preview:</p>
+                    <div className="flex items-center gap-3">
+                      <img 
+                        src={formData.favicon_url} 
+                        alt="Favicon preview" 
+                        className="w-8 h-8 object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <div className="text-xs">
+                        <div className="flex items-center gap-2 bg-background border rounded px-3 py-1.5">
+                          <img 
+                            src={formData.favicon_url} 
+                            alt="" 
+                            className="w-4 h-4"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                          <span className="text-muted-foreground">Nome da Página</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
 
