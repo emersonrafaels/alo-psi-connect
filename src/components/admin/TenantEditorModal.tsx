@@ -362,19 +362,26 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         localStorage.removeItem(cacheKey);
         
         // Disparar evento customizado para forçar reload se for o tenant atual
+        console.log('[TenantEditorModal] Dispatching tenant-updated event for:', formData.slug);
         window.dispatchEvent(new CustomEvent('tenant-updated', { 
           detail: { slug: formData.slug } 
         }));
         
         // Atualizar o favicon dinamicamente se foi alterado
         if (formData.favicon_url) {
-          let favicon = document.querySelector('link[rel="icon"]');
-          if (!favicon) {
-            favicon = document.createElement('link');
-            favicon.setAttribute('rel', 'icon');
-            document.head.appendChild(favicon);
-          }
-          favicon.setAttribute('href', formData.favicon_url);
+          // Remover TODAS as tags de favicon existentes antes de criar nova
+          const existingFavicons = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
+          existingFavicons.forEach(el => el.remove());
+
+          const favicon = document.createElement('link');
+          favicon.setAttribute('rel', 'icon');
+          const cacheBuster = `?v=${Date.now()}`;
+          const finalUrl = formData.favicon_url.includes('?')
+            ? `${formData.favicon_url}&v=${Date.now()}`
+            : `${formData.favicon_url}${cacheBuster}`;
+          favicon.setAttribute('href', finalUrl);
+          document.head.appendChild(favicon);
+          console.log('[TenantEditorModal] Favicon updated:', finalUrl);
         }
         
         toast.success("Tenant atualizado com sucesso!");

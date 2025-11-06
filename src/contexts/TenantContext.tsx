@@ -307,13 +307,21 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Atualizar favicon (prioriza favicon_url, depois meta_config.favicon)
     const faviconUrl = tenantData.favicon_url || tenantData.meta_config.favicon;
     if (faviconUrl) {
-      let favicon = document.querySelector('link[rel="icon"]');
-      if (!favicon) {
-        favicon = document.createElement('link');
-        favicon.setAttribute('rel', 'icon');
-        document.head.appendChild(favicon);
-      }
-      favicon.setAttribute('href', faviconUrl);
+      // Remover TODAS as tags de favicon existentes
+      const existingFavicons = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
+      existingFavicons.forEach(el => el.remove());
+      console.log(`[TenantContext] Removed ${existingFavicons.length} existing favicon(s)`);
+
+      // Criar nova tag com cache-buster
+      const favicon = document.createElement('link');
+      favicon.setAttribute('rel', 'icon');
+      const cacheBuster = `?v=${Date.now()}`;
+      const finalUrl = faviconUrl.includes('?') 
+        ? `${faviconUrl}&v=${Date.now()}`
+        : `${faviconUrl}${cacheBuster}`;
+      favicon.setAttribute('href', finalUrl);
+      document.head.appendChild(favicon);
+      console.log('[TenantContext] Favicon updated:', finalUrl);
     }
   }, []);
 
@@ -337,9 +345,16 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const handleTenantUpdate = (event: CustomEvent) => {
       const { slug } = event.detail;
+      
+      console.log('[TenantContext] Tenant update event received:', slug);
+      
+      // SEMPRE limpar cache do tenant editado
+      localStorage.removeItem(`tenant_${slug}_cache`);
+      console.log(`[TenantContext] Cache cleared for tenant: ${slug}`);
+      
+      // Se for o tenant atual, recarregar
       if (slug === currentTenantSlug) {
-        console.log('[TenantContext] Tenant updated, clearing cache and reloading...');
-        localStorage.removeItem(`tenant_${slug}_cache`);
+        console.log('[TenantContext] Reloading current tenant...');
         fetchTenant(currentTenantSlug);
       }
     };
