@@ -143,6 +143,35 @@ const handler = async (req: Request): Promise<Response> => {
   );
 
   try {
+    // Verify authentication if request has auth header
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+
+      if (authError || !user) {
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Check if user is admin
+      const { data: roles } = await supabaseClient
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+
+      const isAdmin = roles?.some(r => ['admin', 'super_admin'].includes(r.role));
+
+      if (!isAdmin) {
+        return new Response(
+          JSON.stringify({ error: 'Permission denied. Admin access required.' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     // Check if auto-sync is enabled
     const { data: config } = await supabaseClient
       .from('system_configurations')

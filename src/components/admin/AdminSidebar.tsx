@@ -12,7 +12,8 @@ import {
   Star,
   Building2,
   FlaskConical,
-  GraduationCap
+  GraduationCap,
+  Wrench
 } from 'lucide-react';
 import {
   Sidebar,
@@ -87,6 +88,12 @@ const adminMenuItems = [
     title: 'Tenants',
     url: '/admin/tenants',
     icon: Building2,
+    requiredRole: 'super_admin' as const
+  },
+  {
+    title: 'Sistema',
+    url: '/admin/system',
+    icon: Wrench,
     requiredRole: 'super_admin' as const
   },
   {
