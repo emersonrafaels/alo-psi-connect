@@ -569,9 +569,9 @@ All colors MUST be HSL.
   animation: slideUp 0.3s ease-in forwards;
 }
 
-/* Fix para Popover/Combobox dentro de Dialog - z-index */
+/* Fix para Popover/Combobox dentro de Dialog - z-index maior que Dialog (9999) */
 [data-radix-popper-content-wrapper] {
-  z-index: 100 !important;
+  z-index: 10000 !important;
 }
 
 /* Garantir que Command List tenha altura máxima e scroll */
