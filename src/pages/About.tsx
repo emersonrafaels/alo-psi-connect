@@ -312,9 +312,11 @@ const About = () => {
                   "Correlações com calendário acadêmico",
                   "Engajamento em trilhas e grupos"
                 ].map((item, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <TrendingUp className="w-5 h-5 flex-shrink-0" />
-                    <span>{item}</span>
+                  <li key={index} className="flex items-center gap-3 group">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                      <TrendingUp className="w-5 h-5 flex-shrink-0" />
+                    </div>
+                    <span className="group-hover:translate-x-1 transition-transform">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -326,27 +328,39 @@ const About = () => {
                 Quero Ver um Exemplo de Painel
               </Button>
             </div>
-            <Card className="bg-primary-foreground/10 backdrop-blur-sm border-primary-foreground/20 hover:bg-primary-foreground/15 transition-all">
+            <Card className="bg-white/15 backdrop-blur-sm border-white/30 hover:bg-white/20 transition-all shadow-xl">
               <CardContent className="p-8">
-                <h3 className="text-xl font-semibold mb-6 text-primary-foreground">Exemplo de Painel</h3>
+                <h3 className="text-xl font-semibold mb-6 text-primary-foreground flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Exemplo de Painel
+                </h3>
                 <div className="space-y-4">
-                  <div className="flex items-end gap-2 h-40 bg-primary-foreground/5 rounded-lg p-4">
-                    <div className="w-full bg-accent/60 rounded-t" style={{ height: '65%' }}></div>
-                    <div className="w-full bg-accent/70 rounded-t" style={{ height: '85%' }}></div>
-                    <div className="w-full bg-accent/50 rounded-t" style={{ height: '55%' }}></div>
-                    <div className="w-full bg-accent/80 rounded-t" style={{ height: '75%' }}></div>
+                  <div className="flex items-end gap-2 h-40 bg-white/5 rounded-lg p-4">
+                    <div className="w-full bg-white/70 hover:bg-white/90 rounded-t transition-all cursor-pointer" style={{ height: '65%' }}></div>
+                    <div className="w-full bg-white/80 hover:bg-white/90 rounded-t transition-all cursor-pointer" style={{ height: '85%' }}></div>
+                    <div className="w-full bg-white/60 hover:bg-white/90 rounded-t transition-all cursor-pointer" style={{ height: '55%' }}></div>
+                    <div className="w-full bg-white/75 hover:bg-white/90 rounded-t transition-all cursor-pointer" style={{ height: '75%' }}></div>
                   </div>
                   <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="bg-primary-foreground/10 rounded-lg p-3">
-                      <p className="text-2xl font-bold">87%</p>
+                    <div className="bg-white/10 hover:bg-white/20 rounded-lg p-4 transition-all cursor-pointer border border-white/20 hover:border-white/40 hover:scale-105 group">
+                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                        <TrendingUp className="w-5 h-5" />
+                      </div>
+                      <p className="text-2xl font-bold mb-1">87%</p>
                       <p className="text-xs opacity-90">Adesão</p>
                     </div>
-                    <div className="bg-primary-foreground/10 rounded-lg p-3">
-                      <p className="text-2xl font-bold">4.8</p>
+                    <div className="bg-white/10 hover:bg-white/20 rounded-lg p-4 transition-all cursor-pointer border border-white/20 hover:border-white/40 hover:scale-105 group">
+                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                        <BarChart3 className="w-5 h-5" />
+                      </div>
+                      <p className="text-2xl font-bold mb-1">4.8</p>
                       <p className="text-xs opacity-90">Avaliação</p>
                     </div>
-                    <div className="bg-primary-foreground/10 rounded-lg p-3">
-                      <p className="text-2xl font-bold">320</p>
+                    <div className="bg-white/10 hover:bg-white/20 rounded-lg p-4 transition-all cursor-pointer border border-white/20 hover:border-white/40 hover:scale-105 group">
+                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all">
+                        <Calendar className="w-5 h-5" />
+                      </div>
+                      <p className="text-2xl font-bold mb-1">320</p>
                       <p className="text-xs opacity-90">Atendimentos</p>
                     </div>
                   </div>
