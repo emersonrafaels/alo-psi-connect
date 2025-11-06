@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TenantProvider } from "@/contexts/TenantContext";
+import { TenantGuard } from "@/components/TenantGuard";
 import { useTenant } from "@/hooks/useTenant";
 import { useGlobalCacheShortcut } from "@/hooks/useGlobalCacheShortcut";
 import { useEffect, useState } from "react";
@@ -224,7 +225,9 @@ const App: React.FC = () => {
           <BrowserRouter>
             <TenantProvider>
               <AuthProvider>
-                <DomainRedirect />
+                <TenantGuard>
+                  <DomainRedirect />
+                </TenantGuard>
                 <FirstLoginWelcome />
                 <AppWithShortcuts />
                 <WhatsAppFloat />

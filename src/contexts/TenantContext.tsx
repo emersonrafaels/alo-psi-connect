@@ -373,6 +373,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     refreshTenant: () => fetchTenant(currentTenantSlug),
   }), [tenant, loading, error, currentTenantSlug, fetchTenant]);
 
+  // Sempre fornecer o contexto, mesmo durante o loading inicial
   return (
     <TenantContext.Provider value={contextValue}>
       {children}

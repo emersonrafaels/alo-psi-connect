@@ -2,12 +2,12 @@ import { useEffect } from 'react';
 import { useTenant } from '@/hooks/useTenant';
 
 export const DomainRedirect = () => {
-  const { tenant } = useTenant();
+  const { tenant, loading } = useTenant();
+
+  // Não fazer nada enquanto o tenant está carregando
+  if (loading || !tenant) return null;
 
   useEffect(() => {
-    // Aguardar tenant carregar
-    if (!tenant) return;
-
     // Verificar se redirecionamento está habilitado
     if (!tenant.domain_redirect_enabled) return;
 
