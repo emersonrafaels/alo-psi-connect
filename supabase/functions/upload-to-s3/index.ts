@@ -36,10 +36,26 @@ serve(async (req) => {
 
     // Parse JSON body (não FormData)
     const body = await req.json()
-    const { file: base64File, fileName, fileType, professionalId } = body
+    
+    // Suportar ambos formatos: fileName/fileType E filename/type
+    const base64File = body.file
+    const fileName = body.fileName || body.filename
+    const fileType = body.fileType || body.type
+    const professionalId = body.professionalId
+
+    console.log('Request body keys:', Object.keys(body))
+    console.log('Parsed values:', { fileName, fileType, professionalId })
 
     if (!base64File) {
       throw new Error('No file provided')
+    }
+
+    if (!fileName) {
+      throw new Error('No fileName provided')
+    }
+
+    if (!fileType) {
+      throw new Error('No fileType provided')
     }
 
     if (!fileType.startsWith('image/')) {
