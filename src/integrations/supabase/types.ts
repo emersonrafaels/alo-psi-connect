@@ -1162,6 +1162,60 @@ export type Database = {
           },
         ]
       }
+      professional_institutions: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          id: string
+          institution_id: string
+          is_active: boolean
+          notes: string | null
+          professional_id: number
+          relationship_type: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          institution_id: string
+          is_active?: boolean
+          notes?: string | null
+          professional_id: number
+          relationship_type?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          institution_id?: string
+          is_active?: boolean
+          notes?: string | null
+          professional_id?: number
+          relationship_type?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_institutions_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_institutions_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_registration_attempts: {
         Row: {
           created_at: string | null

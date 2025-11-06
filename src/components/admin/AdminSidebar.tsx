@@ -13,7 +13,8 @@ import {
   Building2,
   FlaskConical,
   GraduationCap,
-  Wrench
+  Wrench,
+  FileSpreadsheet
 } from 'lucide-react';
 import {
   Sidebar,
@@ -58,6 +59,12 @@ const adminMenuItems = [
     title: 'Instituições',
     url: '/admin/instituicoes',
     icon: GraduationCap,
+    requiredRole: 'admin' as const
+  },
+  {
+    title: 'Importação em Massa',
+    url: '/admin/bulk-import',
+    icon: FileSpreadsheet,
     requiredRole: 'admin' as const
   },
   {

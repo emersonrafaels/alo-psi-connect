@@ -70,6 +70,7 @@ import AdminTenants from "@/pages/admin/Tenants";
 import AdminInstitutions from "@/pages/admin/Institutions";
 import AdminSystemMaintenance from "@/pages/admin/SystemMaintenance";
 import TestUserRegistration from "@/pages/TestUserRegistration";
+import BulkImport from "@/pages/admin/BulkImport";
 
 import "./App.css";
 
@@ -195,6 +196,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />
       <Route path="/admin/tenants" element={<AdminLayout><AdminTenants /></AdminLayout>} />
       <Route path="/admin/instituicoes" element={<AdminLayout><AdminInstitutions /></AdminLayout>} />
+      <Route path="/admin/bulk-import" element={<AdminLayout><BulkImport /></AdminLayout>} />
       <Route path="/admin/system" element={<AdminLayout><AdminSystemMaintenance /></AdminLayout>} />
       <Route path="/admin/tests" element={<AdminLayout><TestUserRegistration /></AdminLayout>} />
 
