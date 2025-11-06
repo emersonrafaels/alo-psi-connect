@@ -296,7 +296,7 @@ const About = () => {
       </section>
 
       {/* SEÇÃO 7: Indicadores e Impacto */}
-      <section className="py-20 bg-gradient-to-br from-primary to-accent text-primary-foreground">
+      <section className="py-20 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
             <div>
