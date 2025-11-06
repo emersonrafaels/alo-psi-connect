@@ -1656,6 +1656,9 @@ export type Database = {
           cross_tenant_navigation_warning_title: string | null
           cta_primary_text: string | null
           cta_secondary_text: string | null
+          domain_redirect_enabled: boolean | null
+          domain_redirect_from: string[] | null
+          domain_redirect_to: string | null
           email_sender_email: string | null
           email_sender_name: string | null
           email_support_email: string | null
@@ -1730,6 +1733,9 @@ export type Database = {
           cross_tenant_navigation_warning_title?: string | null
           cta_primary_text?: string | null
           cta_secondary_text?: string | null
+          domain_redirect_enabled?: boolean | null
+          domain_redirect_from?: string[] | null
+          domain_redirect_to?: string | null
           email_sender_email?: string | null
           email_sender_name?: string | null
           email_support_email?: string | null
@@ -1804,6 +1810,9 @@ export type Database = {
           cross_tenant_navigation_warning_title?: string | null
           cta_primary_text?: string | null
           cta_secondary_text?: string | null
+          domain_redirect_enabled?: boolean | null
+          domain_redirect_from?: string[] | null
+          domain_redirect_to?: string | null
           email_sender_email?: string | null
           email_sender_name?: string | null
           email_support_email?: string | null

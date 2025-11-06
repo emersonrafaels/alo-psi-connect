@@ -64,6 +64,10 @@ interface Tenant {
   social_instagram?: string;
   social_facebook?: string;
   social_linkedin?: string;
+  // Domain redirect configuration
+  domain_redirect_enabled?: boolean;
+  domain_redirect_from?: string[];
+  domain_redirect_to?: string;
   theme_config: {
     secondary_color?: string;
     muted_color?: string;
@@ -129,7 +133,11 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     meta_description: "",
     meta_favicon: "",
     favicon_url: "",
-    is_active: true
+    is_active: true,
+    // Domain redirect configuration
+    domain_redirect_enabled: false,
+    domain_redirect_from: [] as string[],
+    domain_redirect_to: ""
   });
   const [loading, setLoading] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
@@ -180,7 +188,11 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         meta_description: tenant.meta_config?.description || "",
         meta_favicon: tenant.meta_config?.favicon || "",
         favicon_url: tenant.favicon_url || "",
-        is_active: tenant.is_active ?? true
+        is_active: tenant.is_active ?? true,
+        // Domain redirect configuration
+        domain_redirect_enabled: tenant.domain_redirect_enabled ?? false,
+        domain_redirect_from: tenant.domain_redirect_from || [],
+        domain_redirect_to: tenant.domain_redirect_to || ""
       });
     } else {
       setFormData({
@@ -227,7 +239,11 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         meta_description: "",
         meta_favicon: "",
         favicon_url: "",
-        is_active: true
+        is_active: true,
+        // Domain redirect configuration
+        domain_redirect_enabled: false,
+        domain_redirect_from: [] as string[],
+        domain_redirect_to: ""
       });
     }
   }, [tenant]);
@@ -336,6 +352,10 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         social_instagram: formData.social_instagram || null,
         social_facebook: formData.social_facebook || null,
         social_linkedin: formData.social_linkedin || null,
+        // Domain redirect configuration
+        domain_redirect_enabled: formData.domain_redirect_enabled,
+        domain_redirect_from: formData.domain_redirect_from.length > 0 ? formData.domain_redirect_from : null,
+        domain_redirect_to: formData.domain_redirect_to || null,
         theme_config: {
           secondary_color: formData.secondary_color
         },
@@ -441,6 +461,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
               <TabsTrigger value="seo">SEO</TabsTrigger>
               <TabsTrigger value="email">Email</TabsTrigger>
               <TabsTrigger value="booking">Agendamento</TabsTrigger>
+              <TabsTrigger value="domain">Domínio</TabsTrigger>
               <TabsTrigger value="meta">Meta</TabsTrigger>
             </TabsList>
 
@@ -1202,6 +1223,73 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
 
             <TabsContent value="booking">
               <BookingConfigTab formData={formData} setFormData={setFormData} />
+            </TabsContent>
+
+            <TabsContent value="domain" className="space-y-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Redirecionamento de Domínio</h3>
+                <p className="text-sm text-muted-foreground">
+                  Configure redirecionamentos automáticos de domínios alternativos para o domínio principal.
+                </p>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="domain_redirect_enabled"
+                    checked={formData.domain_redirect_enabled}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, domain_redirect_enabled: checked as boolean })
+                    }
+                  />
+                  <Label htmlFor="domain_redirect_enabled">
+                    Habilitar redirecionamento de domínio
+                  </Label>
+                </div>
+
+                {formData.domain_redirect_enabled && (
+                  <>
+                    <div>
+                      <Label htmlFor="domain_redirect_to">
+                        Domínio de Destino (Principal)
+                      </Label>
+                      <Input
+                        id="domain_redirect_to"
+                        placeholder="redebemestar.com.br"
+                        value={formData.domain_redirect_to}
+                        onChange={(e) =>
+                          setFormData({ ...formData, domain_redirect_to: e.target.value })
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Domínio para onde os usuários serão redirecionados (sem https://)
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="domain_redirect_from">
+                        Domínios de Origem (um por linha)
+                      </Label>
+                      <Textarea
+                        id="domain_redirect_from"
+                        placeholder="alopsi.com.br&#10;www.alopsi.com.br&#10;alopsi.app"
+                        value={formData.domain_redirect_from.join('\n')}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            domain_redirect_from: e.target.value
+                              .split('\n')
+                              .map(d => d.trim())
+                              .filter(d => d.length > 0)
+                          })
+                        }
+                        rows={5}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Digite um domínio por linha. Ex: alopsi.com.br (sem https://)
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
             </TabsContent>
           </Tabs>
 

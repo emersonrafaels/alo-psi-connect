@@ -96,6 +96,11 @@ export interface Tenant {
   cross_tenant_navigation_warning_title?: string;
   cross_tenant_navigation_warning_message?: string;
   
+  // Domain redirect configuration
+  domain_redirect_enabled?: boolean;
+  domain_redirect_from?: string[];
+  domain_redirect_to?: string;
+  
   theme_config: {
     secondary_color?: string;
     muted_color?: string;
