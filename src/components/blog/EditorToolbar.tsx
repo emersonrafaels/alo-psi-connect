@@ -238,7 +238,7 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
         <ToolbarButton
           icon={MoveVertical}
           label="Adicionar Espaço Extra"
-          onClick={() => editor.chain().focus().insertContent('<div class="editor-spacer" style="height: 40px; margin: 20px 0;"></div>').run()}
+          onClick={() => editor.chain().focus().setSpacer().run()}
         />
 
         <Separator orientation="vertical" className="h-8 mx-1" />

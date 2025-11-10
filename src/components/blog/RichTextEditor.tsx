@@ -13,12 +13,14 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import { useEffect } from 'react';
 import { EditorToolbar } from './EditorToolbar';
+import { Spacer } from './extensions/Spacer';
 
 interface RichTextEditorProps {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
   minHeight?: string;
+  maxHeight?: string;
   editable?: boolean;
 }
 
@@ -27,6 +29,7 @@ export const RichTextEditor = ({
   onChange,
   placeholder = 'Comece a escrever seu conteúdo...',
   minHeight = '500px',
+  maxHeight = 'calc(100vh - 300px)',
   editable = true
 }: RichTextEditorProps) => {
   const editor = useEditor({
@@ -36,6 +39,7 @@ export const RichTextEditor = ({
           levels: [1, 2, 3, 4, 5, 6],
         },
       }),
+      Spacer,
       Image.configure({
         inline: true,
         allowBase64: true,
@@ -85,14 +89,14 @@ export const RichTextEditor = ({
   }
 
   return (
-    <div className="border rounded-md bg-background">
+    <div className="border rounded-md bg-background flex flex-col" style={{ maxHeight }}>
       {editable && (
-        <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
+        <div className="sticky top-0 z-50 bg-background border-b shadow-sm flex-shrink-0">
           <EditorToolbar editor={editor} />
         </div>
       )}
       <div 
-        className="overflow-y-auto" 
+        className="overflow-y-auto flex-1" 
         style={{ minHeight }}
       >
         <EditorContent editor={editor} />
