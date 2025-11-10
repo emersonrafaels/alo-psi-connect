@@ -10,7 +10,13 @@ export const useBlogPost = (slug: string | undefined) => {
   const query = useQuery({
     queryKey: ['blog-post', slug, tenant?.id],
     queryFn: async () => {
-      if (!slug || !tenant) return null;
+      console.log('[useBlogPost] 🔍 Fetching post:', slug);
+      console.log('[useBlogPost] 🔍 Using tenant:', tenant?.slug, 'ID:', tenant?.id);
+      
+      if (!slug || !tenant) {
+        console.log('[useBlogPost] ❌ Missing slug or tenant, skipping fetch');
+        return null;
+      }
 
       const { data, error } = await supabase
         .from('blog_posts')
@@ -25,8 +31,17 @@ export const useBlogPost = (slug: string | undefined) => {
         .or(`tenant_id.eq.${tenant.id},tenant_id.is.null`)
         .maybeSingle();
 
-      if (error) throw error;
-      if (!data) return null;
+      console.log('[useBlogPost]', data ? '✅ FOUND' : '❌ NOT FOUND');
+      console.log('[useBlogPost] 🔍 Query tenant filter:', tenant.id);
+
+      if (error) {
+        console.error('[useBlogPost] ❌ Query error:', error);
+        throw error;
+      }
+      if (!data) {
+        console.log('[useBlogPost] ℹ️ No post found with current filters');
+        return null;
+      }
 
       // Fetch author separately
       const { data: authorData } = await supabase

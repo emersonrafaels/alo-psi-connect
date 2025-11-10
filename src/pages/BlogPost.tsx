@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, Eye, Home, Bookmark } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Eye, Home, Bookmark, RefreshCw } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import DOMPurify from 'dompurify';
@@ -30,6 +31,8 @@ import { PostBadges } from '@/components/blog/PostBadges';
 import { NewsletterCTA } from '@/components/blog/NewsletterCTA';
 import { ShareButtonsFloating } from '@/components/blog/ShareButtonsFloating';
 import { PostStats } from '@/components/blog/PostStats';
+import { useAuth } from '@/hooks/useAuth';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -44,6 +47,9 @@ export default function BlogPost() {
   const navigate = useNavigate();
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { isAdmin } = useAdminAuth();
   
   // First, fetch post without tenant filter to check its tenant
   const { data: postWithoutFilter, isLoading: isLoadingNoFilter } = useBlogPostBySlugWithoutTenantFilter(slug);
@@ -279,6 +285,23 @@ export default function BlogPost() {
               </BreadcrumbList>
             </Breadcrumb>
             
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const keys = Object.keys(localStorage).filter(k => k.startsWith('tenant_'));
+                  keys.forEach(k => localStorage.removeItem(k));
+                  queryClient.invalidateQueries();
+                  window.location.reload();
+                }}
+                className="gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Limpar Cache
+              </Button>
+            )}
+            
             <div className="flex items-center gap-2">
               <ShareButtons 
                 url={window.location.href}
@@ -298,6 +321,23 @@ export default function BlogPost() {
               )}
             </div>
           </div>
+
+          {isAdmin && (
+            <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                🔧 Debug do Tenant
+              </h4>
+              <div className="text-sm space-y-1 font-mono">
+                <p><strong>URL:</strong> <code className="bg-background/50 px-2 py-0.5 rounded">{window.location.pathname}</code></p>
+                <p><strong>Tenant Context:</strong> <code className="bg-background/50 px-2 py-0.5 rounded">{tenant?.slug}</code> (ID: <code className="bg-background/50 px-2 py-0.5 rounded">{tenant?.id}</code>)</p>
+                <p><strong>Post sem filtro:</strong> <code className="bg-background/50 px-2 py-0.5 rounded">{postWithoutFilter ? '✅ Encontrado' : '❌ Não encontrado'}</code></p>
+                <p><strong>Post com filtro:</strong> <code className="bg-background/50 px-2 py-0.5 rounded">{post ? '✅ Encontrado' : '❌ Não encontrado'}</code></p>
+                {postWithoutFilter && (
+                  <p><strong>Tenant do Post:</strong> <code className="bg-background/50 px-2 py-0.5 rounded">{postWithoutFilter.tenant?.slug}</code> (ID: <code className="bg-background/50 px-2 py-0.5 rounded">{postWithoutFilter.tenant?.id}</code>)</p>
+                )}
+              </div>
+            </div>
+          )}
 
           <PostBadges 
             isFeatured={post.is_featured}
