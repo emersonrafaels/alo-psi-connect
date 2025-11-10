@@ -2013,9 +2013,12 @@ export type Database = {
         Returns: {
           ativo: boolean
           available_dates: Json
+          como_conheceu: string
           cpf: string
           crp_crm: string
+          data_nascimento: string
           day: string
+          days_available: number
           display_name: string
           em_destaque: boolean
           email_secundario: string
@@ -2025,23 +2028,30 @@ export type Database = {
           formacao_raw: string
           foto_id: number
           foto_perfil_url: string
+          genero: string
           idiomas_raw: string
+          institutions: Json
           last_name: string
           linkedin: string
+          next_available_date: string
           ordem_destaque: number
           possui_e_psi: boolean
           preco_consulta: number
           professional_id: number
           profile_id: string
           profissao: string
+          raca: string
           resumo: string
           resumo_profissional: string
           servicos_normalizados: string[]
           servicos_raw: string
+          sexualidade: string
           start_time: string
           telefone: string
           tempo_consulta: number
+          tenant_info: Json
           time_slot: number
+          total_slots_available: number
           user_email: string
           user_id: number
           user_login: string
