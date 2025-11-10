@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Eye, Home, Bookmark } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -16,11 +16,12 @@ import { CommentForm } from '@/components/CommentForm';
 import { CommentsList } from '@/components/CommentsList';
 import { useBlogPost } from '@/hooks/useBlogPost';
 import { useBlogPosts } from '@/hooks/useBlogPosts';
+import { useBlogPostBySlugWithoutTenantFilter } from '@/hooks/useBlogPostBySlugWithoutTenantFilter';
 import { ShareButtons } from '@/components/blog/ShareButtons';
 import { useSavedPosts } from '@/hooks/useSavedPosts';
 import { usePostViewTracking } from '@/hooks/usePostViewTracking';
 import { useTenant } from '@/hooks/useTenant';
-import { buildTenantPath } from '@/utils/tenantHelpers';
+import { buildTenantPath, getTenantSlugFromPath } from '@/utils/tenantHelpers';
 import { ReadingProgress } from '@/components/blog/ReadingProgress';
 import { TableOfContents } from '@/components/blog/TableOfContents';
 import { FloatingBackButton } from '@/components/blog/FloatingBackButton';
@@ -40,8 +41,29 @@ import {
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
+  
+  // First, fetch post without tenant filter to check its tenant
+  const { data: postWithoutFilter, isLoading: isLoadingNoFilter } = useBlogPostBySlugWithoutTenantFilter(slug);
+  
+  // Check if redirect is needed
+  useEffect(() => {
+    if (postWithoutFilter && tenant) {
+      const currentPathTenant = getTenantSlugFromPath(window.location.pathname);
+      const postTenantSlug = postWithoutFilter.tenant?.slug || 'alopsi';
+      
+      // If post has a tenant and current path doesn't match, redirect
+      if (currentPathTenant !== postTenantSlug) {
+        const correctPath = buildTenantPath(postTenantSlug, `/blog/${slug}`);
+        console.log('Redirecting to correct tenant path:', correctPath);
+        navigate(correctPath, { replace: true });
+      }
+    }
+  }, [postWithoutFilter, tenant, slug, navigate]);
+  
+  // Then fetch with tenant filter for the UI
   const { data: post, isLoading, incrementViews } = useBlogPost(slug);
   const { data: relatedPosts } = useBlogPosts({ 
     status: 'published',
@@ -176,7 +198,7 @@ export default function BlogPost() {
     };
   }, [post, tenant]);
 
-  if (isLoading) {
+  if (isLoading || isLoadingNoFilter) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
