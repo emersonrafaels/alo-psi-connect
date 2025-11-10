@@ -86,7 +86,11 @@ export const RichTextEditor = ({
 
   return (
     <div className="border rounded-md bg-background">
-      {editable && <EditorToolbar editor={editor} />}
+      {editable && (
+        <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
+          <EditorToolbar editor={editor} />
+        </div>
+      )}
       <div 
         className="overflow-y-auto" 
         style={{ minHeight }}
