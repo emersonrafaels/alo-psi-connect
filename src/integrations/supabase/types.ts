@@ -2004,6 +2004,29 @@ export type Database = {
     Functions: {
       clean_old_chat_sessions: { Args: never; Returns: undefined }
       get_current_tenant_id: { Args: never; Returns: string }
+      get_professionals_with_filtered_availability: {
+        Args: {
+          p_date_end?: string
+          p_date_start?: string
+          p_tenant_id?: string
+        }
+        Returns: {
+          ativo: boolean
+          available_dates: Json
+          day: string
+          display_name: string
+          end_time: string
+          foto_perfil_url: string
+          ordem_destaque: number
+          preco_consulta: number
+          professional_id: number
+          profissao: string
+          resumo_profissional: string
+          servicos_raw: string
+          start_time: string
+          time_slot: number
+        }[]
+      }
       get_uncatalogued_institutions: {
         Args: never
         Returns: {
