@@ -165,9 +165,7 @@ All colors MUST be HSL.
 }
 
 /* Estilo para spacer no editor (com marcação visual) */
-.ProseMirror .editor-spacer {
-  height: 60px;
-  margin: 20px 0;
+.ProseMirror div[data-type="spacer"] {
   border: 2px dashed hsl(var(--border));
   border-radius: 4px;
   background: repeating-linear-gradient(
@@ -179,10 +177,22 @@ All colors MUST be HSL.
   );
   position: relative;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
-.ProseMirror .editor-spacer::after {
-  content: 'Espaço Extra';
+.ProseMirror div[data-type="spacer"]:hover {
+  border-color: hsl(var(--primary));
+  background: repeating-linear-gradient(
+    45deg,
+    hsl(var(--primary) / 0.05),
+    hsl(var(--primary) / 0.05) 10px,
+    hsl(var(--muted)) 10px,
+    hsl(var(--muted)) 20px
+  );
+}
+
+.ProseMirror div[data-type="spacer"]::after {
+  content: 'Espaço Extra (' attr(data-height) ')';
   position: absolute;
   top: 50%;
   left: 50%;
@@ -192,12 +202,24 @@ All colors MUST be HSL.
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  pointer-events: none;
 }
 
-/* Estilo para spacer no frontend (sem marcação visual) */
-.editor-spacer {
-  height: 60px;
-  margin: 20px 0;
+/* Frontend - invisível, só espaço */
+.spacer-block {
+  display: block;
+  width: 100%;
+}
+
+/* Responsivo - reduz altura em mobile */
+@media (max-width: 768px) {
+  .spacer-block {
+    height: calc(attr(data-height number, 60) * 0.6px) !important;
+  }
+  
+  .spacer-block[data-height="30px"] { height: 18px !important; }
+  .spacer-block[data-height="60px"] { height: 36px !important; }
+  .spacer-block[data-height="100px"] { height: 60px !important; }
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {

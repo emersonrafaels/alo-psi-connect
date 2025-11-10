@@ -235,11 +235,24 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
           label="Inserir Tabela"
           onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
         />
-        <ToolbarButton
-          icon={MoveVertical}
-          label="Adicionar Espaço Extra"
-          onClick={() => editor.chain().focus().setSpacer().run()}
-        />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" title="Adicionar Espaço Extra">
+              <MoveVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => editor.chain().focus().setSpacer('30px').run()}>
+              Pequeno (30px)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().setSpacer('60px').run()}>
+              Médio (60px)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().setSpacer('100px').run()}>
+              Grande (100px)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Separator orientation="vertical" className="h-8 mx-1" />
 

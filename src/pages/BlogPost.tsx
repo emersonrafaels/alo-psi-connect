@@ -429,7 +429,7 @@ export default function BlogPost() {
                   'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr',
                   'div', 'span'
                 ],
-                ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'target', 'rel', 'style']
+                ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'target', 'rel', 'style', 'data-type', 'data-height', 'data-caption']
               })
             }}
           />

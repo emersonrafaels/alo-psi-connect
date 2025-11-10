@@ -16,7 +16,8 @@ export const sanitizeHtml = (html: string): string => {
       'href', 'target', 'rel',
       'src', 'alt', 'title',
       'class', 'style',
-      'colspan', 'rowspan'
+      'colspan', 'rowspan',
+      'data-type', 'data-height', 'data-caption'
     ],
     ALLOW_DATA_ATTR: false,
     KEEP_CONTENT: true,
