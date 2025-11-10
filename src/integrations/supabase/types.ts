@@ -2011,20 +2011,45 @@ export type Database = {
           p_tenant_id?: string
         }
         Returns: {
+          agencia: string
           ativo: boolean
           available_dates: Json
+          banco: string
+          conta: string
+          cpf: string
+          crp_crm: string
           day: string
           display_name: string
+          em_destaque: boolean
+          email_secundario: string
           end_time: string
+          first_name: string
+          formacao_normalizada: string[]
+          formacao_raw: string
+          foto_id: number
           foto_perfil_url: string
+          idiomas_raw: string
+          last_name: string
+          linkedin: string
           ordem_destaque: number
+          pix: string
+          possui_e_psi: boolean
           preco_consulta: number
           professional_id: number
+          profile_id: string
           profissao: string
+          resumo: string
           resumo_profissional: string
+          servicos_normalizados: string[]
           servicos_raw: string
           start_time: string
+          telefone: string
+          tempo_consulta: number
           time_slot: number
+          tipo_conta: string
+          user_email: string
+          user_id: number
+          user_login: string
         }[]
       }
       get_uncatalogued_institutions: {
