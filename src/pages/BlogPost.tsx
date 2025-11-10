@@ -48,20 +48,26 @@ export default function BlogPost() {
   // First, fetch post without tenant filter to check its tenant
   const { data: postWithoutFilter, isLoading: isLoadingNoFilter } = useBlogPostBySlugWithoutTenantFilter(slug);
   
-  // Check if redirect is needed
+  // Check if redirect is needed - MUST happen before filtered query
   useEffect(() => {
-    if (postWithoutFilter && tenant) {
+    if (postWithoutFilter) {
       const currentPathTenant = getTenantSlugFromPath(window.location.pathname);
       const postTenantSlug = postWithoutFilter.tenant?.slug || 'alopsi';
+      
+      console.log('[BlogPost] Current path:', window.location.pathname);
+      console.log('[BlogPost] Detected tenant from path:', currentPathTenant);
+      console.log('[BlogPost] Post tenant:', postTenantSlug);
+      console.log('[BlogPost] Context tenant:', tenant?.slug);
       
       // If post has a tenant and current path doesn't match, redirect
       if (currentPathTenant !== postTenantSlug) {
         const correctPath = buildTenantPath(postTenantSlug, `/blog/${slug}`);
-        console.log('Redirecting to correct tenant path:', correctPath);
+        console.log('[BlogPost] Redirecting to correct tenant path:', correctPath);
         navigate(correctPath, { replace: true });
+        return;
       }
     }
-  }, [postWithoutFilter, tenant, slug, navigate]);
+  }, [postWithoutFilter, slug, navigate, tenant?.slug]);
   
   // Then fetch with tenant filter for the UI
   const { data: post, isLoading, incrementViews } = useBlogPost(slug);
@@ -198,7 +204,8 @@ export default function BlogPost() {
     };
   }, [post, tenant]);
 
-  if (isLoading || isLoadingNoFilter) {
+  // Show loading during redirect or initial load
+  if (isLoading || isLoadingNoFilter || (postWithoutFilter && !post && !isLoading)) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
