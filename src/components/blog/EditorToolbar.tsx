@@ -19,7 +19,8 @@ import {
   AlignCenter,
   AlignRight,
   Table,
-  Minus
+  Minus,
+  MoveVertical
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -233,6 +234,11 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
           icon={Table}
           label="Inserir Tabela"
           onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+        />
+        <ToolbarButton
+          icon={MoveVertical}
+          label="Adicionar Espaço Extra"
+          onClick={() => editor.chain().focus().insertContent('<div class="editor-spacer" style="height: 40px; margin: 20px 0;"></div>').run()}
         />
 
         <Separator orientation="vertical" className="h-8 mx-1" />

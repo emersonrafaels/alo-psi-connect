@@ -405,7 +405,7 @@ export default function BlogPost() {
                           prose-h1:text-4xl prose-h1:mb-8 prose-h1:mt-16 prose-h1:leading-tight
                           prose-h2:text-3xl prose-h2:mb-6 prose-h2:mt-14 prose-h2:leading-snug
                           prose-h3:text-2xl prose-h3:mb-5 prose-h3:mt-10 prose-h3:leading-snug
-                          prose-p:text-lg prose-p:leading-[1.9] prose-p:mb-8 prose-p:text-foreground
+                          prose-p:text-lg prose-p:leading-[1.9] prose-p:mb-12 prose-p:text-foreground
                           prose-li:text-lg prose-li:leading-[1.8] prose-li:mb-3
                           prose-ul:my-8 prose-ul:ml-8 prose-ol:my-8 prose-ol:ml-8
                           prose-a:text-primary prose-a:font-medium prose-a:no-underline prose-a:transition-all hover:prose-a:underline hover:prose-a:text-primary/80
@@ -418,7 +418,8 @@ export default function BlogPost() {
                           prose-code:text-primary prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm prose-code:font-mono
                           prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:my-6 prose-pre:rounded-lg
                           prose-img:rounded-2xl prose-img:shadow-2xl prose-img:my-12
-                          prose-hr:my-10 prose-hr:border-border/50"
+                          prose-hr:my-10 prose-hr:border-border/50
+                          [&_.editor-spacer]:block [&_.editor-spacer]:w-full"
             dangerouslySetInnerHTML={{ 
               __html: DOMPurify.sanitize(post.content, {
                 ALLOWED_TAGS: [
@@ -428,7 +429,7 @@ export default function BlogPost() {
                   'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr',
                   'div', 'span'
                 ],
-                ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'target', 'rel']
+                ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'target', 'rel', 'style']
               })
             }}
           />

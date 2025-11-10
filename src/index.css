@@ -164,6 +164,33 @@ All colors MUST be HSL.
   outline: none;
 }
 
+.ProseMirror .editor-spacer {
+  display: block;
+  width: 100%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 10px,
+    hsl(var(--border) / 0.2) 10px,
+    hsl(var(--border) / 0.2) 11px
+  );
+  border-radius: 4px;
+  position: relative;
+}
+
+.ProseMirror .editor-spacer::after {
+  content: "Espaço Extra";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .ProseMirror p.is-editor-empty:first-child::before {
   color: hsl(var(--muted-foreground));
   content: attr(data-placeholder);

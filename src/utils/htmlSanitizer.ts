@@ -18,6 +18,8 @@ export const sanitizeHtml = (html: string): string => {
       'class', 'style',
       'colspan', 'rowspan'
     ],
+    ALLOW_DATA_ATTR: false,
+    KEEP_CONTENT: true,
     ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
   });
 };
