@@ -374,6 +374,47 @@ export type Database = {
           },
         ]
       }
+      blog_post_revisions: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          excerpt: string | null
+          id: string
+          post_id: string
+          revision_note: string | null
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          post_id: string
+          revision_note?: string | null
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          post_id?: string
+          revision_note?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_revisions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_post_tags: {
         Row: {
           post_id: string
@@ -480,6 +521,7 @@ export type Database = {
           published_at: string | null
           ratings_count: number | null
           read_time_minutes: number | null
+          scheduled_for: string | null
           slug: string
           status: string
           tenant_id: string | null
@@ -507,6 +549,7 @@ export type Database = {
           published_at?: string | null
           ratings_count?: number | null
           read_time_minutes?: number | null
+          scheduled_for?: string | null
           slug: string
           status?: string
           tenant_id?: string | null
@@ -534,6 +577,7 @@ export type Database = {
           published_at?: string | null
           ratings_count?: number | null
           read_time_minutes?: number | null
+          scheduled_for?: string | null
           slug?: string
           status?: string
           tenant_id?: string | null
@@ -911,6 +955,48 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      media_library: {
+        Row: {
+          alt_text: string | null
+          caption: string | null
+          filename: string
+          height: number | null
+          id: string
+          mime_type: string
+          size_bytes: number | null
+          uploaded_at: string
+          uploaded_by: string | null
+          url: string
+          width: number | null
+        }
+        Insert: {
+          alt_text?: string | null
+          caption?: string | null
+          filename: string
+          height?: number | null
+          id?: string
+          mime_type: string
+          size_bytes?: number | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+          url: string
+          width?: number | null
+        }
+        Update: {
+          alt_text?: string | null
+          caption?: string | null
+          filename?: string
+          height?: number | null
+          id?: string
+          mime_type?: string
+          size_bytes?: number | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+          url?: string
+          width?: number | null
         }
         Relationships: []
       }
@@ -2085,6 +2171,7 @@ export type Database = {
         Args: { php_data: string }
         Returns: string[]
       }
+      publish_scheduled_posts: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role:

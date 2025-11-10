@@ -18,7 +18,7 @@ import { useLocalDraft } from '@/hooks/useLocalDraft';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { FileEdit, Eye, Columns, ExternalLink, Building2 } from 'lucide-react';
+import { FileEdit, Eye, Columns, ExternalLink, Building2, Maximize2 } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 import { EditorMetrics } from './EditorMetrics';
 import { PostTemplates } from './PostTemplates';
@@ -31,6 +31,8 @@ import { useTenant } from '@/hooks/useTenant';
 import { sanitizeHtml, extractTextFromHtml } from '@/utils/htmlSanitizer';
 import { normalizeHtmlForEditor } from '@/utils/htmlHelpers';
 import { useBlogTags } from '@/hooks/useBlogTags';
+import { FocusMode } from './FocusMode';
+import { ResponsivePreview } from './ResponsivePreview';
 
 const postSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -92,6 +94,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const [userStartedEditing, setUserStartedEditing] = useState(false);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [availableTenants, setAvailableTenants] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+  const [focusModeOpen, setFocusModeOpen] = useState(false);
   
   // Curation fields (only for super_author/admin)
   const [isFeatured, setIsFeatured] = useState(post?.is_featured || false);
@@ -455,22 +458,36 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
         <div>
           <Label htmlFor="content">Conteúdo</Label>
           
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as typeof viewMode)} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="editor" className="flex items-center gap-2">
-                <FileEdit className="h-4 w-4" />
-                Editor
-              </TabsTrigger>
-              <TabsTrigger value="preview" className="flex items-center gap-2">
-                <Eye className="h-4 w-4" />
-                Preview
-              </TabsTrigger>
-              <TabsTrigger value="split" className="flex items-center gap-2">
-                <Columns className="h-4 w-4" />
-                Split
-              </TabsTrigger>
-            </TabsList>
-
+          <div className="flex items-center justify-between mb-2">
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as typeof viewMode)} className="flex-1">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="editor" className="flex items-center gap-2">
+                  <FileEdit className="h-4 w-4" />
+                  Editor
+                </TabsTrigger>
+                <TabsTrigger value="preview" className="flex items-center gap-2">
+                  <Eye className="h-4 w-4" />
+                  Preview
+                </TabsTrigger>
+                <TabsTrigger value="split" className="flex items-center gap-2">
+                  <Columns className="h-4 w-4" />
+                  Split
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="ml-2 gap-2"
+              onClick={() => setFocusModeOpen(true)}
+            >
+              <Maximize2 className="h-4 w-4" />
+              Modo Foco
+            </Button>
+          </div>
+          
+          <Tabs value={viewMode} className="w-full">
             <TabsContent value="editor" className="mt-0">
               <RichTextEditor
                 value={content || ''}
@@ -481,12 +498,10 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
             </TabsContent>
 
             <TabsContent value="preview" className="mt-0">
-              <div className="border rounded-lg p-6 min-h-[500px] bg-background">
-                <div 
-                  className="prose prose-slate dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(content || '') }}
-                />
-              </div>
+              <ResponsivePreview 
+                content={sanitizeHtml(content || '')}
+                title={title || 'Sem título'}
+              />
             </TabsContent>
 
             <TabsContent value="split" className="mt-0">
@@ -645,6 +660,14 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
           </Button>
         </div>
       </form>
+
+      {/* Modo Foco */}
+      <FocusMode
+        isOpen={focusModeOpen}
+        onClose={() => setFocusModeOpen(false)}
+        value={content || ''}
+        onChange={(html) => setValue('content', html, { shouldValidate: true })}
+      />
     </>
   );
 };

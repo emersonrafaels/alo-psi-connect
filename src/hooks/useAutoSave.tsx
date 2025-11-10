@@ -24,6 +24,7 @@ export const useAutoSave = <T,>(
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [saveCount, setSaveCount] = useState(0);
   
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastDataRef = useRef<T>(data);
@@ -41,6 +42,7 @@ export const useAutoSave = <T,>(
       await onSave(data);
       setLastSaved(new Date());
       setSaveStatus('saved');
+      setSaveCount(prev => prev + 1);
       hasUnsavedChanges.current = false;
       onSuccess?.();
       
@@ -151,6 +153,7 @@ export const useAutoSave = <T,>(
     lastSaved,
     saveStatus,
     forceSave,
-    hasUnsavedChanges: hasUnsaved
+    hasUnsavedChanges: hasUnsaved,
+    saveCount,
   };
 };
