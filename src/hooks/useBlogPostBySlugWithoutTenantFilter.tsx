@@ -51,6 +51,8 @@ export const useBlogPostBySlugWithoutTenantFilter = (slug: string | undefined) =
         tenant: { id: string; slug: string } | null;
       };
     },
-    enabled: !!slug
+    enabled: !!slug,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000
   });
 };

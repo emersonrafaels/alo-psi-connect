@@ -41,7 +41,9 @@ export const useBlogPost = (slug: string | undefined) => {
         tags: data.tags?.map((t: any) => t.tag).filter(Boolean) || []
       } as BlogPost & { author: { nome: string; foto_perfil_url: string | null; email: string } };
     },
-    enabled: !!slug && !!tenant
+    enabled: !!slug && !!tenant,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000
   });
 
   const incrementViews = useMutation({

@@ -103,6 +103,11 @@ export const useBlogPostManager = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-post'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-post-slug-no-tenant'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-post-by-id'] });
+      queryClient.invalidateQueries({ queryKey: ['curation-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-posts'] });
       toast({ title: 'Post criado com sucesso' });
       navigate('/admin/blog');
     },
@@ -182,7 +187,15 @@ export const useBlogPostManager = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
-      toast({ title: 'Post atualizado com sucesso' });
+      queryClient.invalidateQueries({ queryKey: ['blog-post'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-post-slug-no-tenant'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-post-by-id'] });
+      queryClient.invalidateQueries({ queryKey: ['curation-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-posts'] });
+      toast({ 
+        title: 'Post atualizado com sucesso',
+        description: 'As alterações já estão visíveis. Recarregue a página se necessário.'
+      });
       navigate('/admin/blog');
     },
     onError: (error: any) => {
@@ -205,6 +218,11 @@ export const useBlogPostManager = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-post'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-post-slug-no-tenant'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-post-by-id'] });
+      queryClient.invalidateQueries({ queryKey: ['curation-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-posts'] });
       toast({ title: 'Post excluído com sucesso' });
     },
     onError: (error: any) => {
@@ -230,6 +248,11 @@ export const useBlogPostManager = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-post'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-post-slug-no-tenant'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-post-by-id'] });
+      queryClient.invalidateQueries({ queryKey: ['curation-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-posts'] });
       toast({ title: 'Post publicado com sucesso' });
     },
     onError: (error: any) => {

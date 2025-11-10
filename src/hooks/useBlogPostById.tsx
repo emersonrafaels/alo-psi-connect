@@ -35,6 +35,8 @@ export const useBlogPostById = (id: string | undefined) => {
         tags: data.tags?.map((t: any) => t.tag).filter(Boolean) || []
       } as BlogPost & { author: { nome: string; foto_perfil_url: string | null; email: string } };
     },
-    enabled: !!id
+    enabled: !!id,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000
   });
 };
