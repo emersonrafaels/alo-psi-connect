@@ -2011,11 +2011,8 @@ export type Database = {
           p_tenant_id?: string
         }
         Returns: {
-          agencia: string
           ativo: boolean
           available_dates: Json
-          banco: string
-          conta: string
           cpf: string
           crp_crm: string
           day: string
@@ -2032,7 +2029,6 @@ export type Database = {
           last_name: string
           linkedin: string
           ordem_destaque: number
-          pix: string
           possui_e_psi: boolean
           preco_consulta: number
           professional_id: number
@@ -2046,7 +2042,6 @@ export type Database = {
           telefone: string
           tempo_consulta: number
           time_slot: number
-          tipo_conta: string
           user_email: string
           user_id: number
           user_login: string
