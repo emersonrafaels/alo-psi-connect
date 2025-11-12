@@ -9,8 +9,9 @@ import { CrossTenantNavigationConfig } from '@/components/admin/config/CrossTena
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { Settings, Bot, Webhook, Cog, Shield, Mic, Database, Star, GraduationCap, Link2, ArrowLeft, LucideIcon } from 'lucide-react';
+import { Settings, Bot, Webhook, Cog, Shield, Mic, Database, Star, GraduationCap, Link2, ArrowLeft, LucideIcon, Mail } from 'lucide-react';
 import { EducationalInstitutionsConfig } from '@/components/admin/config/EducationalInstitutionsConfig';
+import { NewsletterSubscribersConfig } from '@/components/admin/config/NewsletterSubscribersConfig';
 import { cn } from '@/lib/utils';
 
 interface ConfigCard {
@@ -69,6 +70,14 @@ export default function Configurations() {
       description: 'Configure avisos de navegação entre tenants',
       icon: Link2,
       component: CrossTenantNavigationConfig,
+      category: 'system'
+    },
+    {
+      id: 'newsletter-subscribers',
+      title: 'Inscritos da Newsletter',
+      description: 'Visualize e gerencie os inscritos da newsletter',
+      icon: Mail,
+      component: NewsletterSubscribersConfig,
       category: 'system'
     },
     {

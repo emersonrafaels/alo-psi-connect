@@ -91,6 +91,11 @@ export default function BlogPost() {
   // Track post view analytics
   usePostViewTracking(post?.id || '');
 
+  // Scroll to top when opening a new post
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [slug]);
+
   useEffect(() => {
     if (slug && post) {
       incrementViews.mutate(slug);

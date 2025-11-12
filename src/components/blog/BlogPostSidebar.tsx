@@ -107,7 +107,7 @@ export const BlogPostSidebar = ({ post, content, relatedPosts = [], onShare }: B
               </span>
               <span className="font-semibold">{post.read_time_minutes || 5} min</span>
             </div>
-            {post.average_rating && (
+            {post.average_rating && post.average_rating > 0 && (
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2 text-muted-foreground">
                   <Star className="h-4 w-4" />
@@ -116,7 +116,7 @@ export const BlogPostSidebar = ({ post, content, relatedPosts = [], onShare }: B
                 <span className="font-semibold">{post.average_rating.toFixed(1)}/5</span>
               </div>
             )}
-            {post.comments_count && (
+            {post.comments_count && post.comments_count > 0 && (
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2 text-muted-foreground">
                   <MessageCircle className="h-4 w-4" />
