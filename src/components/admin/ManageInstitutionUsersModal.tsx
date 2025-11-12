@@ -268,7 +268,12 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge>{user.role}</Badge>
+                  <Badge 
+                    variant={user.role === 'admin' ? 'default' : 'secondary'}
+                    className={user.role === 'admin' ? 'bg-primary' : 'bg-muted'}
+                  >
+                    {user.role === 'admin' ? 'Administrador' : 'Visualizador'}
+                  </Badge>
                   <Button
                     variant="ghost"
                     size="icon"
