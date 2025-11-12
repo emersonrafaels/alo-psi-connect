@@ -2136,6 +2136,35 @@ export type Database = {
           user_login: string
         }[]
       }
+      get_professionals_with_filtered_availability_minimal: {
+        Args: {
+          p_date_end?: string
+          p_date_start?: string
+          p_tenant_id?: string
+        }
+        Returns: {
+          ativo: boolean
+          crp_crm: string
+          data_nascimento: string
+          days_available: number
+          display_name: string
+          em_destaque: boolean
+          genero: string
+          last_available_date: string
+          next_available_date: string
+          ordem_destaque: number
+          preco_consulta: number
+          professional_id: number
+          profile_id: string
+          profissao: string
+          raca: string
+          servicos_normalizados: string[]
+          sexualidade: string
+          slots_per_day: Json
+          tenant_info: Json
+          total_slots_available: number
+        }[]
+      }
       get_uncatalogued_institutions: {
         Args: never
         Returns: {

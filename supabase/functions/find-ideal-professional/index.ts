@@ -26,6 +26,7 @@ interface FindProfessionalRequest {
   sort_by?: "price_asc" | "price_desc" | "availability" | "featured" | "name";
   include_availability_details?: boolean;
   include_institutions?: boolean;
+  minimal?: boolean;
 }
 
 serve(async (req) => {
@@ -74,14 +75,17 @@ serve(async (req) => {
 
     if (useRPC) {
       // Use RPC for availability-based queries
-      const { data, error } = await supabase.rpc(
-        'get_professionals_with_filtered_availability',
-        {
-          p_date_start: params.date_start,
-          p_date_end: params.date_end,
-          p_tenant_id: params.tenant_id || null
-        }
-      );
+      const rpcName = params.minimal 
+        ? 'get_professionals_with_filtered_availability_minimal'
+        : 'get_professionals_with_filtered_availability';
+      
+      console.log(`[Find Professional] Using RPC: ${rpcName}`);
+      
+      const { data, error } = await supabase.rpc(rpcName, {
+        p_date_start: params.date_start,
+        p_date_end: params.date_end,
+        p_tenant_id: params.tenant_id || null
+      });
       
       if (error) {
         console.error('[Find Professional] RPC error:', error);
@@ -180,7 +184,8 @@ function validateAndSetDefaults(body: FindProfessionalRequest) {
     offset: body.offset || 0,
     sort_by: body.sort_by || 'featured',
     include_availability_details: body.include_availability_details !== false,
-    include_institutions: body.include_institutions || false
+    include_institutions: body.include_institutions || false,
+    minimal: body.minimal || false
   };
 }
 
@@ -319,48 +324,68 @@ function applyPagination(professionals: any[], limit: number, offset: number) {
 }
 
 function formatResponse(professionals: any[], totalCount: number, params: any, startTime: number) {
-  const formatted = professionals.map(p => ({
-    id: p.id,
-    profile_id: p.profile_id,
-    display_name: p.display_name,
-    photo_url: p.foto_perfil_url,
-    profession: p.profissao,
-    registration: p.crp_crm,
-    summary: p.resumo_profissional,
-    specialties: p.servicos_normalizados || [],
-    services: p.servicos_normalizados || [],
-    email: p.user_email,
-    phone: p.telefone,
-    linkedin: p.linkedin,
-    consultation_price: p.preco_consulta,
-    consultation_duration: p.tempo_consulta,
-    availability_summary: {
-      total_slots: p.total_slots_available || 0,
-      days_available: p.days_available || 0,
-      next_available_date: p.next_available_date,
-      last_available_date: p.last_available_date,
-      slots_per_day: params.include_availability_details ? p.slots_per_day : undefined
-    },
-    available_slots: params.include_availability_details ? p.available_dates : undefined,
-    regular_schedule: params.include_availability_details ? p.schedule_summary : undefined,
-    institutions: params.include_institutions ? p.institutions : undefined,
-    tenant: p.tenant_info ? {
-      id: p.tenant_info?.tenant_id,
-      name: p.tenant_info?.tenant_name,
-      slug: p.tenant_info?.tenant_slug,
-      is_featured: p.tenant_info?.is_featured || false,
-      featured_order: p.tenant_info?.featured_order
-    } : (p.professional_tenants && p.professional_tenants[0] ? {
-      id: p.professional_tenants[0].tenants.id,
-      name: p.professional_tenants[0].tenants.name,
-      slug: p.professional_tenants[0].tenants.slug,
-      is_featured: p.professional_tenants[0].is_featured || false,
-      featured_order: p.professional_tenants[0].featured_order
-    } : null),
-    is_active: p.ativo,
-    is_featured: p.em_destaque || false,
-    featured_order: p.ordem_destaque
-  }));
+  const formatted = professionals.map(p => {
+    // Base object with fields available in both minimal and full modes
+    const base: any = {
+      id: p.id || p.professional_id,
+      profile_id: p.profile_id,
+      display_name: p.display_name,
+      profession: p.profissao,
+      registration: p.crp_crm,
+      specialties: p.servicos_normalizados || [],
+      services: p.servicos_normalizados || [],
+      consultation_price: p.preco_consulta,
+      availability_summary: {
+        total_slots: p.total_slots_available || 0,
+        days_available: p.days_available || 0,
+        next_available_date: p.next_available_date,
+        last_available_date: p.last_available_date,
+        slots_per_day: params.include_availability_details ? p.slots_per_day : undefined
+      },
+      tenant: p.tenant_info ? {
+        id: p.tenant_info?.tenant_id,
+        name: p.tenant_info?.tenant_name,
+        slug: p.tenant_info?.tenant_slug,
+        is_featured: p.tenant_info?.is_featured || false,
+        featured_order: p.tenant_info?.featured_order
+      } : (p.professional_tenants && p.professional_tenants[0] ? {
+        id: p.professional_tenants[0].tenants.id,
+        name: p.professional_tenants[0].tenants.name,
+        slug: p.professional_tenants[0].tenants.slug,
+        is_featured: p.professional_tenants[0].is_featured || false,
+        featured_order: p.professional_tenants[0].featured_order
+      } : null),
+      is_active: p.ativo,
+      is_featured: p.em_destaque || false,
+      featured_order: p.ordem_destaque
+    };
+
+    // Add demographics if available (in minimal mode)
+    if (p.genero !== undefined || p.data_nascimento !== undefined || 
+        p.raca !== undefined || p.sexualidade !== undefined) {
+      base.demographics = {
+        gender: p.genero,
+        birth_date: p.data_nascimento,
+        race: p.raca,
+        sexuality: p.sexualidade
+      };
+    }
+
+    // Add full mode fields (only if not minimal)
+    if (!params.minimal) {
+      base.photo_url = p.foto_perfil_url;
+      base.summary = p.resumo_profissional;
+      base.email = p.user_email;
+      base.phone = p.telefone;
+      base.linkedin = p.linkedin;
+      base.consultation_duration = p.tempo_consulta;
+      base.available_slots = params.include_availability_details ? p.available_dates : undefined;
+      base.regular_schedule = params.include_availability_details ? p.schedule_summary : undefined;
+      base.institutions = params.include_institutions ? p.institutions : undefined;
+    }
+
+    return base;
+  });
   
   return {
     success: true,
@@ -390,14 +415,16 @@ function formatResponse(professionals: any[], totalCount: number, params: any, s
           limit: params.limit,
           offset: params.offset
         },
-        sort_by: params.sort_by
+        sort_by: params.sort_by,
+        minimal: params.minimal
       },
       search_metadata: {
         search_time_ms: Date.now() - startTime,
         date_range: {
           start: params.date_start,
           end: params.date_end
-        }
+        },
+        response_mode: params.minimal ? 'minimal' : 'full'
       }
     }
   };
