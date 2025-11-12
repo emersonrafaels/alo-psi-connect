@@ -11,8 +11,9 @@ import { StatsCard } from "@/components/admin/StatsCard";
 import { EditProfessionalModal } from "@/components/admin/EditProfessionalModal";
 import { ImageAssociationModal } from "@/components/admin/ImageAssociationModal";
 import { UnavailabilityManager } from "@/components/admin/UnavailabilityManager";
-import { Eye, Mail, Phone, User, CheckCircle, XCircle, Search, DollarSign, Clock, Users, UserCheck, UserX, Edit, Images, Calendar, Trash2 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { DuplicateDetectionModal } from "@/components/admin/DuplicateDetectionModal";
+import { Eye, Mail, Phone, User, CheckCircle, XCircle, Search, DollarSign, Clock, Users, UserCheck, UserX, Edit, Images, Calendar, Trash2, UserX2 } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Textarea } from "@/components/ui/textarea";
 import { useUserManagement } from "@/hooks/useUserManagement";
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
+import { useDuplicateDetection, DuplicateMatch } from '@/hooks/useDuplicateDetection';
 
 interface Professional {
   id: number;
@@ -51,9 +53,13 @@ const Professionals = () => {
   const [deletingProfessional, setDeletingProfessional] = useState<Professional | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletionReason, setDeletionReason] = useState("");
+  const [duplicateDetectionOpen, setDuplicateDetectionOpen] = useState(false);
+  const [duplicatesCount, setDuplicatesCount] = useState(0);
+  const [duplicateMatches, setDuplicateMatches] = useState<DuplicateMatch[]>([]);
   const { toast } = useToast();
   const { tenantFilter } = useAdminTenant();
   const { deleteUser, loading: deleteLoading } = useUserManagement();
+  const { detectDuplicates, consolidateDuplicate, loading: duplicateLoading } = useDuplicateDetection();
 
   const { data: professionals, isLoading, refetch } = useQuery({
     queryKey: ['admin-professionals', tenantFilter],
@@ -188,6 +194,53 @@ const Professionals = () => {
       .slice(0, 2);
   };
 
+  // Auto-detect duplicates on page load
+  useEffect(() => {
+    const checkDuplicates = async () => {
+      if (professionals && professionals.length > 0) {
+        const result = await detectDuplicates(tenantFilter);
+        if (result.success) {
+          setDuplicatesCount(result.duplicates_found);
+          setDuplicateMatches(result.matches);
+        }
+      }
+    };
+
+    checkDuplicates();
+  }, [professionals, tenantFilter]);
+
+  const handleOpenDuplicateDetection = async () => {
+    setDuplicateDetectionOpen(true);
+    // Refresh detection when opening modal
+    const result = await detectDuplicates(tenantFilter);
+    if (result.success) {
+      setDuplicatesCount(result.duplicates_found);
+      setDuplicateMatches(result.matches);
+    }
+  };
+
+  const handleConsolidateDuplicate = async (match: DuplicateMatch) => {
+    const result = await consolidateDuplicate(match);
+    if (result.success) {
+      // Refresh professionals list
+      refetch();
+      // Refresh duplicate detection
+      const newResult = await detectDuplicates(tenantFilter);
+      if (newResult.success) {
+        setDuplicatesCount(newResult.duplicates_found);
+        setDuplicateMatches(newResult.matches);
+      }
+    }
+  };
+
+  const handleIgnoreDuplicate = (match: DuplicateMatch) => {
+    // Remove from current list
+    setDuplicateMatches(prev => prev.filter(m => 
+      m.source_id !== match.source_id || m.target_id !== match.target_id
+    ));
+    setDuplicatesCount(prev => Math.max(0, prev - 1));
+  };
+
   if (isLoading) {
     return (
       <AdminLayout>
@@ -308,6 +361,20 @@ const Professionals = () => {
             >
               <Images className="h-4 w-4 mr-2" />
               Associar Imagens S3
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleOpenDuplicateDetection}
+              size="sm"
+              className="ml-2"
+            >
+              <UserX2 className="h-4 w-4 mr-2" />
+              Verificar Duplicatas
+              {duplicatesCount > 0 && (
+                <Badge variant="destructive" className="ml-2">
+                  {duplicatesCount}
+                </Badge>
+              )}
             </Button>
           </div>
         </div>
@@ -572,6 +639,16 @@ const Professionals = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Duplicate Detection Modal */}
+        <DuplicateDetectionModal
+          open={duplicateDetectionOpen}
+          onOpenChange={setDuplicateDetectionOpen}
+          matches={duplicateMatches}
+          onConsolidate={handleConsolidateDuplicate}
+          onIgnore={handleIgnoreDuplicate}
+          loading={duplicateLoading}
+        />
 
         {/* Delete Professional Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
