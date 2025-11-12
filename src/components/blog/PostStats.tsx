@@ -27,7 +27,7 @@ export const PostStats = ({
       label: 'Tempo de leitura',
       value: `${readTime} min`,
     },
-    ...(averageRating && ratingsCount ? [{
+    ...((averageRating && averageRating > 0 && ratingsCount && ratingsCount > 0) ? [{
       icon: Star,
       label: 'Avaliação',
       value: `${averageRating.toFixed(1)} (${ratingsCount})`,

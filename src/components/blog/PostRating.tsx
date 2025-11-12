@@ -49,6 +49,7 @@ export const PostRating = ({
   };
 
   const displayRating = hoverRating || userRating || 0;
+  const hasRatings = ratingsCount > 0 || averageRating > 0;
 
   return (
     <div className="flex flex-col gap-2 py-4 border-y border-border">
@@ -75,12 +76,14 @@ export const PostRating = ({
           ))}
         </div>
         
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-semibold">{averageRating.toFixed(1)}</span>
-          <span className="text-muted-foreground">
-            ({ratingsCount} {ratingsCount === 1 ? 'avaliação' : 'avaliações'})
-          </span>
-        </div>
+        {hasRatings && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-semibold">{averageRating.toFixed(1)}</span>
+            <span className="text-muted-foreground">
+              ({ratingsCount} {ratingsCount === 1 ? 'avaliação' : 'avaliações'})
+            </span>
+          </div>
+        )}
       </div>
 
       {userRating && (
