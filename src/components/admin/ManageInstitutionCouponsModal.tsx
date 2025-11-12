@@ -7,7 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Edit, Ticket, Calendar, Users, TrendingUp, Copy } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Plus, Trash2, Edit, Ticket, Calendar, Users, TrendingUp, Copy, HelpCircle, Sparkles, Gift, GraduationCap, Tag, Star, UserPlus } from 'lucide-react';
 import { useInstitutionCoupons, InstitutionCoupon } from '@/hooks/useInstitutionCoupons';
 import { useTenant } from '@/hooks/useTenant';
 import { format } from 'date-fns';
@@ -106,6 +108,100 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
     toast.success('Código copiado!');
   };
 
+  const applyTemplate = (template: string) => {
+    const templates = {
+      welcome: {
+        code: 'BOASVINDAS' + Math.random().toString(36).substring(2, 6).toUpperCase(),
+        name: 'Desconto de Boas-Vindas',
+        description: 'Cupom de 15% para a primeira consulta de novos pacientes',
+        discount_type: 'percentage' as const,
+        discount_value: 15,
+        max_discount_amount: null,
+        applies_to: 'first_appointment' as const,
+        minimum_purchase_amount: 0,
+        maximum_uses: null,
+        uses_per_user: 1,
+      },
+      student: {
+        code: 'ESTUDANTE' + Math.random().toString(36).substring(2, 6).toUpperCase(),
+        name: 'Desconto Estudante',
+        description: 'R$ 50 de desconto fixo para estudantes vinculados',
+        discount_type: 'fixed_amount' as const,
+        discount_value: 50,
+        max_discount_amount: null,
+        applies_to: 'all' as const,
+        minimum_purchase_amount: 100,
+        maximum_uses: null,
+        uses_per_user: 5,
+      },
+      blackfriday: {
+        code: 'BLACKFRIDAY' + new Date().getFullYear(),
+        name: 'Black Friday 2024',
+        description: '30% de desconto em todas as consultas (máximo R$ 150)',
+        discount_type: 'percentage' as const,
+        discount_value: 30,
+        max_discount_amount: 150,
+        applies_to: 'all' as const,
+        minimum_purchase_amount: 0,
+        maximum_uses: 100,
+        uses_per_user: 1,
+      },
+      referral: {
+        code: 'INDIQUE' + Math.random().toString(36).substring(2, 6).toUpperCase(),
+        name: 'Indicação Amigo',
+        description: '10% para quem indicar e para quem for indicado',
+        discount_type: 'percentage' as const,
+        discount_value: 10,
+        max_discount_amount: null,
+        applies_to: 'all' as const,
+        minimum_purchase_amount: 0,
+        maximum_uses: null,
+        uses_per_user: 3,
+      },
+      specialty: {
+        code: 'PSICO' + Math.random().toString(36).substring(2, 6).toUpperCase(),
+        name: 'Desconto Psicologia',
+        description: '20% de desconto para consultas de psicologia',
+        discount_type: 'percentage' as const,
+        discount_value: 20,
+        max_discount_amount: 100,
+        applies_to: 'specific_specialties' as const,
+        minimum_purchase_amount: 0,
+        maximum_uses: null,
+        uses_per_user: 10,
+      },
+    };
+
+    const selectedTemplate = templates[template as keyof typeof templates];
+    setFormData({
+      ...formData,
+      ...selectedTemplate,
+      valid_from: new Date().toISOString().split('T')[0],
+      valid_until: null,
+      is_active: true,
+    });
+    toast.success('Template aplicado! Ajuste os campos conforme necessário.');
+  };
+
+  const FieldWithTooltip = ({ label, tooltip, children }: { label: string; tooltip: string; children: React.ReactNode }) => (
+    <div>
+      <Label className="flex items-center gap-2">
+        {label}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger type="button" className="cursor-help">
+              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p>{tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </Label>
+      {children}
+    </div>
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
@@ -128,9 +224,61 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
           {/* Formulário de Criação/Edição */}
           {isCreatingNew && (
             <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg bg-muted/30">
+              {/* Botão Templates */}
+              <div className="flex items-center justify-between pb-2 border-b">
+                <h4 className="font-semibold">Configurar Cupom</h4>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="outline" size="sm">
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Usar Template
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64">
+                    <DropdownMenuItem onClick={() => applyTemplate('welcome')}>
+                      <Gift className="mr-2 h-4 w-4" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">Boas-Vindas</span>
+                        <span className="text-xs text-muted-foreground">15% para primeira consulta</span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => applyTemplate('student')}>
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">Desconto Estudante</span>
+                        <span className="text-xs text-muted-foreground">R$ 50 fixo para estudantes</span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => applyTemplate('blackfriday')}>
+                      <Tag className="mr-2 h-4 w-4" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">Black Friday</span>
+                        <span className="text-xs text-muted-foreground">30% off (máx R$ 150)</span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => applyTemplate('referral')}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">Indicação</span>
+                        <span className="text-xs text-muted-foreground">10% para indicações</span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => applyTemplate('specialty')}>
+                      <Star className="mr-2 h-4 w-4" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">Especialidade Específica</span>
+                        <span className="text-xs text-muted-foreground">20% para psicologia</span>
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Código do Cupom *</Label>
+                <FieldWithTooltip
+                  label="Código do Cupom *"
+                  tooltip="Código único que o paciente digitará no momento do agendamento. Use letras maiúsculas e números (ex: PROMO2024, ESTUDANTE50)."
+                >
                   <div className="flex gap-2">
                     <Input
                       value={formData.code}
@@ -142,32 +290,38 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
                       Gerar
                     </Button>
                   </div>
-                </div>
+                </FieldWithTooltip>
 
-                <div>
-                  <Label>Nome da Promoção *</Label>
+                <FieldWithTooltip
+                  label="Nome da Promoção *"
+                  tooltip="Nome descritivo para identificar internamente este cupom (ex: 'Desconto de Boas-Vindas', 'Black Friday 2024')."
+                >
                   <Input
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Ex: Desconto de Boas-Vindas"
                     required
                   />
-                </div>
+                </FieldWithTooltip>
               </div>
 
-              <div>
-                <Label>Descrição</Label>
+              <FieldWithTooltip
+                label="Descrição"
+                tooltip="Descrição detalhada da promoção para uso interno. Explique o objetivo e regras do cupom."
+              >
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Descrição interna do cupom..."
                   rows={2}
                 />
-              </div>
+              </FieldWithTooltip>
 
               <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label>Tipo de Desconto *</Label>
+                <FieldWithTooltip
+                  label="Tipo de Desconto *"
+                  tooltip="Escolha se o desconto será um percentual sobre o valor (ex: 15%) ou um valor fixo em reais (ex: R$ 50)."
+                >
                   <Select
                     value={formData.discount_type}
                     onValueChange={(value: 'percentage' | 'fixed_amount') =>
@@ -182,10 +336,12 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
                       <SelectItem value="fixed_amount">Valor Fixo (R$)</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </FieldWithTooltip>
 
-                <div>
-                  <Label>Valor do Desconto *</Label>
+                <FieldWithTooltip
+                  label="Valor do Desconto *"
+                  tooltip="Digite o valor do desconto. Para percentual, use números de 1 a 100. Para valor fixo, use valores em reais."
+                >
                   <Input
                     type="number"
                     step="0.01"
@@ -194,11 +350,13 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
                     placeholder={formData.discount_type === 'percentage' ? '10' : '50.00'}
                     required
                   />
-                </div>
+                </FieldWithTooltip>
 
                 {formData.discount_type === 'percentage' && (
-                  <div>
-                    <Label>Desconto Máximo (R$)</Label>
+                  <FieldWithTooltip
+                    label="Desconto Máximo (R$)"
+                    tooltip="Limite máximo em reais para o desconto percentual. Exemplo: 30% com máximo de R$ 150 garante que o desconto nunca ultrapasse R$ 150."
+                  >
                     <Input
                       type="number"
                       step="0.01"
@@ -208,13 +366,15 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
                       }
                       placeholder="Ex: 100.00"
                     />
-                  </div>
+                  </FieldWithTooltip>
                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Aplica-se a</Label>
+                <FieldWithTooltip
+                  label="Aplica-se a"
+                  tooltip="Defina o escopo do cupom: todos os profissionais, apenas profissionais específicos, especialidades específicas, ou somente primeira consulta do paciente."
+                >
                   <Select
                     value={formData.applies_to}
                     onValueChange={(value: any) => setFormData({ ...formData, applies_to: value })}
@@ -229,22 +389,26 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
                       <SelectItem value="first_appointment">Primeira consulta</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </FieldWithTooltip>
 
-                <div>
-                  <Label>Valor Mínimo da Compra (R$)</Label>
+                <FieldWithTooltip
+                  label="Valor Mínimo da Compra (R$)"
+                  tooltip="Valor mínimo da consulta para que o cupom seja válido. Use 0 para permitir qualquer valor."
+                >
                   <Input
                     type="number"
                     step="0.01"
                     value={formData.minimum_purchase_amount}
                     onChange={(e) => setFormData({ ...formData, minimum_purchase_amount: parseFloat(e.target.value) })}
                   />
-                </div>
+                </FieldWithTooltip>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Limite Total de Usos</Label>
+                <FieldWithTooltip
+                  label="Limite Total de Usos"
+                  tooltip="Número máximo total de vezes que este cupom pode ser utilizado por todos os usuários. Deixe vazio para usos ilimitados."
+                >
                   <Input
                     type="number"
                     value={formData.maximum_uses || ''}
@@ -253,47 +417,60 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
                     }
                     placeholder="Ilimitado"
                   />
-                </div>
+                </FieldWithTooltip>
 
-                <div>
-                  <Label>Usos por Usuário</Label>
+                <FieldWithTooltip
+                  label="Usos por Usuário"
+                  tooltip="Número máximo de vezes que um mesmo usuário pode utilizar este cupom (ex: 1 para uso único, 5 para múltiplos usos)."
+                >
                   <Input
                     type="number"
                     value={formData.uses_per_user}
                     onChange={(e) => setFormData({ ...formData, uses_per_user: parseInt(e.target.value) })}
                     min="1"
                   />
-                </div>
+                </FieldWithTooltip>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Válido A Partir De *</Label>
+                <FieldWithTooltip
+                  label="Válido A Partir De *"
+                  tooltip="Data de início da validade do cupom. O cupom só poderá ser usado a partir desta data."
+                >
                   <Input
                     type="date"
                     value={formData.valid_from}
                     onChange={(e) => setFormData({ ...formData, valid_from: e.target.value })}
                     required
                   />
-                </div>
+                </FieldWithTooltip>
 
-                <div>
-                  <Label>Válido Até</Label>
+                <FieldWithTooltip
+                  label="Válido Até"
+                  tooltip="Data de término da validade do cupom. Deixe vazio para cupom sem data de expiração."
+                >
                   <Input
                     type="date"
                     value={formData.valid_until || ''}
                     onChange={(e) => setFormData({ ...formData, valid_until: e.target.value || null })}
                   />
-                </div>
+                </FieldWithTooltip>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                />
-                <Label>Cupom Ativo</Label>
-              </div>
+              <FieldWithTooltip
+                label="Cupom Ativo"
+                tooltip="Ative ou desative o cupom. Cupons inativos não poderão ser utilizados pelos pacientes."
+              >
+                <div className="flex items-center gap-2 pt-2">
+                  <Switch
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {formData.is_active ? 'Cupom está ativo' : 'Cupom está inativo'}
+                  </span>
+                </div>
+              </FieldWithTooltip>
 
               <div className="flex gap-2">
                 <Button type="submit" disabled={isCreating || isUpdating}>
