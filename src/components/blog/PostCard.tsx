@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BlogPost } from '@/hooks/useBlogPosts';
 import { highlightText } from '@/utils/highlightHelpers';
+import { extractTextFromHtml } from '@/utils/htmlSanitizer';
 
 interface PostCardProps {
   post: BlogPost;
@@ -13,6 +14,19 @@ interface PostCardProps {
 }
 
 export const PostCard = ({ post, searchTerm }: PostCardProps) => {
+  const getPlainTextPreview = (): string => {
+    if (post.excerpt) {
+      return extractTextFromHtml(post.excerpt);
+    }
+    
+    const plainText = extractTextFromHtml(post.content);
+    return plainText.length > 150 
+      ? plainText.substring(0, 150) + '...' 
+      : plainText;
+  };
+  
+  const preview = getPlainTextPreview();
+
   return (
     <Link to={`/blog/${post.slug}`}>
       <Card className="overflow-hidden transition-all hover:shadow-lg h-full">
@@ -41,8 +55,8 @@ export const PostCard = ({ post, searchTerm }: PostCardProps) => {
         <CardContent>
           <p className="text-muted-foreground line-clamp-3 mb-4">
             {searchTerm 
-              ? highlightText(post.excerpt || post.content.substring(0, 150) + '...', searchTerm)
-              : (post.excerpt || post.content.substring(0, 150) + '...')
+              ? highlightText(preview, searchTerm)
+              : preview
             }
           </p>
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
