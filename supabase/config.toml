@@ -121,3 +121,6 @@ verify_jwt = true
 
 [functions.find-ideal-professional]
 verify_jwt = false
+
+[functions.create-institutional-user]
+verify_jwt = false

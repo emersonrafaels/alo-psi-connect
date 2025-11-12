@@ -241,9 +241,46 @@ export const useUserManagement = () => {
     }
   };
 
+  const createInstitutionalUser = async (userData: {
+    email: string;
+    password: string;
+    nome: string;
+    institutionId: string;
+    institutionRole?: 'admin' | 'viewer';
+    tenantId?: string;
+  }) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-institutional-user', {
+        body: userData
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      toast({
+        title: "Usuário institucional criado",
+        description: `${userData.email} foi criado e vinculado à instituição`,
+      });
+
+      return { success: true, data: data.user };
+    } catch (error: any) {
+      console.error('Error creating institutional user:', error);
+      toast({
+        title: "Erro ao criar usuário",
+        description: error.message || "Erro desconhecido",
+        variant: "destructive",
+      });
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     createAdminUser,
+    createInstitutionalUser,
     manageUserRole,
     deleteUser,
     updateUserType,

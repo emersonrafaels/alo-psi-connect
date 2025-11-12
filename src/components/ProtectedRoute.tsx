@@ -2,6 +2,8 @@ import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -11,6 +13,7 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const { hasRole, loading: roleLoading } = useUserRole(requiredRole);
+  const { tenant } = useTenant();
 
   if (loading || roleLoading) {
     return (
@@ -21,11 +24,13 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   }
 
   if (!user) {
-    return <Navigate to="/auth" />;
+    const authPath = buildTenantPath(tenant?.slug || 'alopsi', '/auth');
+    return <Navigate to={authPath} />;
   }
 
   if (requiredRole && !hasRole) {
-    return <Navigate to="/" />;
+    const homePath = buildTenantPath(tenant?.slug || 'alopsi', '/');
+    return <Navigate to={homePath} />;
   }
 
   return <>{children}</>;
