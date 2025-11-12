@@ -230,6 +230,10 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
                     <SelectItem value="admin">Administrador</SelectItem>
                   </SelectContent>
                 </Select>
+                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                  <p><strong>Visualizador:</strong> Pode apenas visualizar profissionais e alunos vinculados à instituição. Acesso somente leitura.</p>
+                  <p><strong>Administrador:</strong> Pode visualizar dados e gerenciar cupons promocionais da instituição (criar, editar, desativar).</p>
+                </div>
               </div>
               <Button 
                 onClick={() => createUserMutation.mutate()}
