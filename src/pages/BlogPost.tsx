@@ -300,7 +300,7 @@ export default function BlogPost() {
         <div className="container mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 py-12">
           <div className="flex gap-8 xl:gap-12">
             <article className={`flex-1 ${getContentWidthClass()} mx-auto`}>
-          <div className="flex items-center justify-between mb-6">
+          <div className="space-y-4 mb-6">
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
@@ -318,45 +318,47 @@ export default function BlogPost() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>{post.title}</BreadcrumbPage>
+                  <BreadcrumbPage className="max-w-xl truncate">{post.title}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
             
-            {isAdmin && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const keys = Object.keys(localStorage).filter(k => k.startsWith('tenant_'));
-                  keys.forEach(k => localStorage.removeItem(k));
-                  queryClient.invalidateQueries();
-                  window.location.reload();
-                }}
-                className="gap-2"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Limpar Cache
-              </Button>
-            )}
-            
-            <div className="flex items-center gap-2">
-              <ShareButtons 
-                url={window.location.href}
-                title={post.title}
-                description={post.excerpt || ''}
-              />
-              {post.id && (
+            <div className="flex items-center justify-between gap-3">
+              {isAdmin && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={toggleSave}
+                  onClick={() => {
+                    const keys = Object.keys(localStorage).filter(k => k.startsWith('tenant_'));
+                    keys.forEach(k => localStorage.removeItem(k));
+                    queryClient.invalidateQueries();
+                    window.location.reload();
+                  }}
                   className="gap-2"
                 >
-                  <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
-                  {isSaved ? 'Salvo' : 'Salvar'}
+                  <RefreshCw className="h-4 w-4" />
+                  Limpar Cache
                 </Button>
               )}
+              
+              <div className="flex items-center gap-2 ml-auto">
+                <ShareButtons 
+                  url={window.location.href}
+                  title={post.title}
+                  description={post.excerpt || ''}
+                />
+                {post.id && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleSave}
+                    className="gap-2"
+                  >
+                    <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
+                    {isSaved ? 'Salvo' : 'Salvar'}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
