@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     console.log('[Duplicate Detection] Starting detection...');
 
     // 1. Buscar todos os profissionais com dados de completude
-    let professionalsQuery = supabaseClient
+    const professionalsQuery = supabaseClient
       .from('profissionais')
       .select(`
         id,
@@ -73,15 +73,41 @@ Deno.serve(async (req) => {
       `)
       .order('display_name');
 
-    if (tenant_id) {
-      professionalsQuery = professionalsQuery.eq('professional_tenants.tenant_id', tenant_id);
-    }
-
     const { data: professionals, error: profError } = await professionalsQuery;
 
     if (profError) throw profError;
 
-    console.log(`[Duplicate Detection] Found ${professionals?.length || 0} professionals`);
+    // Filtrar por tenant se especificado
+    let filteredProfessionals = professionals;
+
+    if (tenant_id) {
+      console.log(`[Duplicate Detection] Filtering by tenant_id: ${tenant_id}`);
+      
+      // Buscar IDs dos profissionais deste tenant
+      const { data: tenantProfessionals, error: tenantError } = await supabaseClient
+        .from('professional_tenants')
+        .select('professional_id')
+        .eq('tenant_id', tenant_id);
+      
+      if (tenantError) {
+        console.error('[Duplicate Detection] Error fetching tenant professionals:', tenantError);
+        throw tenantError;
+      }
+      
+      // Criar Set de IDs para filtro rápido
+      const tenantProfessionalIds = new Set(
+        tenantProfessionals?.map(pt => pt.professional_id) || []
+      );
+      
+      // Filtrar apenas profissionais deste tenant
+      filteredProfessionals = professionals?.filter(p => 
+        tenantProfessionalIds.has(p.id)
+      ) || [];
+      
+      console.log(`[Duplicate Detection] Filtered to ${filteredProfessionals.length} professionals for tenant`);
+    }
+
+    console.log(`[Duplicate Detection] Found ${filteredProfessionals?.length || 0} professionals`);
 
     // 2. Buscar contagem de horários para cada profissional
     const { data: schedules, error: schedError } = await supabaseClient
@@ -96,7 +122,7 @@ Deno.serve(async (req) => {
     }, {}) || {};
 
     // 3. Calcular score de completude para cada profissional
-    const professionalsSummaries: ProfessionalSummary[] = professionals?.map(p => {
+    const professionalsSummaries: ProfessionalSummary[] = filteredProfessionals?.map(p => {
       const scheduleCount = scheduleCounts[p.user_id] || 0;
       const completenessScore = 
         (p.foto_perfil_url ? 10 : 0) +
@@ -173,8 +199,8 @@ Deno.serve(async (req) => {
             : [prof2, prof1];
 
           // Buscar profile_ids
-          const sourceProf = professionals?.find(p => p.id === source.id);
-          const targetProf = professionals?.find(p => p.id === target.id);
+          const sourceProf = filteredProfessionals?.find(p => p.id === source.id);
+          const targetProf = filteredProfessionals?.find(p => p.id === target.id);
 
           matches.push({
             source_id: source.id,
