@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-Sistema completo e flexível de cupons de desconto para instituições de ensino parceiras. Permite criar promoções com diversos tipos de descontos, condições e validações.
+Sistema completo e flexível de cupons de desconto para instituições de ensino parceiras, totalmente integrado ao fluxo de agendamento de consultas. Permite criar promoções com diversos tipos de descontos, condições e validações, com aplicação automática no pagamento via Mercado Pago.
 
 ## Estrutura do Banco de Dados
 
@@ -59,18 +59,21 @@ Ao clicar no botão Ticket, abre modal com:
 - Código, status, valor, uso atual/limite
 - Ações: editar, copiar código, deletar
 
-## Integração no Agendamento
+## Integração Completa no Agendamento
 
-### 1. Importar Componentes
+### Fluxo de Aplicação de Cupons
+
+O sistema de cupons está totalmente integrado ao fluxo de agendamento em `src/pages/BookingConfirmation.tsx`:
+
+#### 1. **Validação e Aplicação**
+
+Os pacientes podem aplicar cupons de desconto na página de confirmação de agendamento, antes do pagamento:
 
 ```tsx
 import { CouponValidator } from '@/components/CouponValidator';
 import { useCouponTracking } from '@/hooks/useCouponTracking';
-```
 
-### 2. No Componente de Agendamento
-
-```tsx
+// Estado para armazenar cupom aplicado
 const [appliedCoupon, setAppliedCoupon] = useState<{
   couponId: string;
   code: string;
@@ -78,38 +81,157 @@ const [appliedCoupon, setAppliedCoupon] = useState<{
   finalAmount: number;
 } | null>(null);
 
+// Hook para rastreamento de uso
 const { recordCouponUsage } = useCouponTracking();
 
-// Renderizar componente de cupom
+// Componente de validação (renderizado na coluna esquerda)
 <CouponValidator
-  professionalId={selectedProfessional.id}
-  amount={consultationPrice}
-  tenantId={tenant.id}
-  onCouponApplied={(discount) => {
-    setAppliedCoupon(discount);
-    // Atualizar valor final do agendamento
-  }}
-  onCouponRemoved={() => {
-    setAppliedCoupon(null);
-    // Restaurar valor original
-  }}
+  professionalId={parseInt(bookingData.professionalId)}
+  amount={parseFloat(bookingData.price)}
+  tenantId={tenant?.id || ''}
+  onCouponApplied={handleCouponApplied}
+  onCouponRemoved={handleCouponRemoved}
 />
 ```
 
-### 3. Após Confirmação do Agendamento
+#### 2. **Callbacks de Cupom**
 
 ```tsx
-// Registrar uso do cupom se foi aplicado
-if (appliedCoupon && appointmentId) {
+const handleCouponApplied = (discount) => {
+  setAppliedCoupon(discount);
+  trackEvent({
+    event_name: 'coupon_applied',
+    event_data: { 
+      coupon_code: discount.code,
+      discount_amount: discount.discountAmount,
+      final_amount: discount.finalAmount
+    }
+  });
+  toast({
+    title: "Cupom aplicado!",
+    description: `Você economizou R$ ${discount.discountAmount.toFixed(2)}`,
+  });
+};
+
+const handleCouponRemoved = () => {
+  if (appliedCoupon) {
+    trackEvent({
+      event_name: 'coupon_removed',
+      event_data: { coupon_code: appliedCoupon.code }
+    });
+  }
+  setAppliedCoupon(null);
+};
+```
+
+#### 3. **Criação do Agendamento com Cupom**
+
+Ao criar o agendamento, o sistema inclui o `coupon_id` e o valor final com desconto:
+
+```tsx
+const finalAmount = appliedCoupon?.finalAmount || parseFloat(bookingData.price);
+const agendamentoData = {
+  // ... outros campos
+  valor: finalAmount,
+  coupon_id: appliedCoupon?.couponId || null
+};
+
+const { data: agendamento } = await supabase
+  .from('agendamentos')
+  .insert(agendamentoData)
+  .select()
+  .single();
+```
+
+#### 4. **Registro de Uso do Cupom**
+
+Após criar o agendamento com sucesso, o sistema registra automaticamente o uso do cupom:
+
+```tsx
+if (appliedCoupon) {
   recordCouponUsage({
     couponId: appliedCoupon.couponId,
-    appointmentId: appointmentId,
-    originalAmount: consultationPrice,
+    appointmentId: agendamento.id,
+    originalAmount: parseFloat(bookingData.price),
     discountAmount: appliedCoupon.discountAmount,
-    finalAmount: appliedCoupon.finalAmount,
+    finalAmount: appliedCoupon.finalAmount
+  });
+  
+  trackEvent({
+    event_name: 'booking_completed_with_coupon',
+    event_data: { 
+      coupon_code: appliedCoupon.code,
+      discount_amount: appliedCoupon.discountAmount
+    }
   });
 }
 ```
+
+#### 5. **Integração com Gateway de Pagamento**
+
+O valor com desconto é automaticamente enviado ao Mercado Pago:
+
+```tsx
+const paymentAmount = appliedCoupon?.finalAmount || parseFloat(bookingData.price);
+const paymentDescription = appliedCoupon 
+  ? `Consulta agendada para ${date} às ${time} (Cupom ${appliedCoupon.code} aplicado - Economia: R$ ${appliedCoupon.discountAmount.toFixed(2)})`
+  : `Consulta agendada para ${date} às ${time}`;
+
+await supabase.functions.invoke('create-mercadopago-payment', {
+  body: {
+    agendamentoId: agendamento.id,
+    valor: paymentAmount,
+    title: `Consulta com ${professionalName}`,
+    description: paymentDescription
+  }
+});
+```
+
+### Exibição Visual
+
+O resumo do agendamento exibe claramente o desconto aplicado:
+
+- **Valor original** (riscado quando há cupom)
+- **Desconto aplicado** (badge verde com valor)
+- **Valor final** (destaque em verde)
+- **Total a pagar** (com indicação de economia)
+
+```tsx
+{appliedCoupon ? (
+  <div className="space-y-1">
+    <p className="text-sm text-muted-foreground line-through">
+      {formatPrice(bookingData.price)}
+    </p>
+    <div className="flex items-center gap-2">
+      <p className="text-lg font-bold text-green-600">
+        {formatPrice(appliedCoupon.finalAmount.toString())}
+      </p>
+      <Badge variant="secondary" className="text-xs">
+        -{formatPrice(appliedCoupon.discountAmount.toString())}
+      </Badge>
+    </div>
+  </div>
+) : (
+  <p className="text-lg font-bold text-primary">
+    {formatPrice(bookingData.price)}
+  </p>
+)}
+```
+
+### Tracking de Eventos
+
+O sistema registra os seguintes eventos para análise:
+
+- `coupon_applied` - Quando cupom é aplicado com sucesso
+- `coupon_validation_failed` - Quando validação falha (não implementado no frontend)
+- `coupon_removed` - Quando usuário remove cupom
+- `booking_completed_with_coupon` - Agendamento finalizado com desconto
+
+### Estrutura de Dados
+
+A tabela `agendamentos` agora inclui:
+- `coupon_id` (UUID): Referência ao cupom aplicado
+- Índice em `coupon_id` para melhor performance de queries
 
 ## Exemplos de Cupons
 

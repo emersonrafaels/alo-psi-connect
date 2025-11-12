@@ -20,6 +20,8 @@ import { supabase } from "@/integrations/supabase/client"
 import QuickSignupModal from "@/components/QuickSignupModal"
 import { useTenant } from "@/hooks/useTenant"
 import { buildTenantPath } from "@/utils/tenantHelpers"
+import { CouponValidator } from "@/components/CouponValidator"
+import { useCouponTracking } from "@/hooks/useCouponTracking"
 
 
 interface BookingData {
@@ -41,8 +43,15 @@ const BookingConfirmation = () => {
   const { trackEvent } = useBookingTracking(bookingData?.professionalId)
   const { tenant } = useTenant()
   const tenantSlug = tenant?.slug || 'alopsi'
+  const { recordCouponUsage } = useCouponTracking()
   const [loading, setLoading] = useState(false)
   const [showQuickSignup, setShowQuickSignup] = useState(false)
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    couponId: string;
+    code: string;
+    discountAmount: number;
+    finalAmount: number;
+  } | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -140,6 +149,37 @@ const BookingConfirmation = () => {
       .toUpperCase()
   }
 
+  const handleCouponApplied = (discount: {
+    couponId: string;
+    code: string;
+    discountAmount: number;
+    finalAmount: number;
+  }) => {
+    setAppliedCoupon(discount)
+    trackEvent({
+      event_name: 'coupon_applied',
+      event_data: { 
+        coupon_code: discount.code,
+        discount_amount: discount.discountAmount,
+        final_amount: discount.finalAmount
+      }
+    })
+    toast({
+      title: "Cupom aplicado!",
+      description: `Você economizou R$ ${discount.discountAmount.toFixed(2)}`,
+    })
+  }
+
+  const handleCouponRemoved = () => {
+    if (appliedCoupon) {
+      trackEvent({
+        event_name: 'coupon_removed',
+        event_data: { coupon_code: appliedCoupon.code }
+      })
+    }
+    setAppliedCoupon(null)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -213,6 +253,7 @@ const BookingConfirmation = () => {
       console.log('Professional Data encontrado:', professionalData)
       
       // Preparar dados do agendamento
+      const finalAmount = appliedCoupon?.finalAmount || parseFloat(bookingData.price)
       const agendamentoData = {
         professional_id: parseInt(bookingData.professionalId),
         nome_paciente: formData.name,
@@ -220,10 +261,11 @@ const BookingConfirmation = () => {
         telefone_paciente: formData.phone,
         data_consulta: bookingData.date,
         horario: bookingData.time,
-        valor: parseFloat(bookingData.price),
+        valor: finalAmount,
         observacoes: formData.notes || null,
         status: 'pendente',
-        user_id: user?.id
+        user_id: user?.id,
+        coupon_id: appliedCoupon?.couponId || null
       }
       
       console.log('Usuário logado - usando user_id real:', user.id)
@@ -322,6 +364,25 @@ const BookingConfirmation = () => {
 
       console.log('Agendamento criado com sucesso:', agendamento)
       
+      // Registrar uso do cupom se foi aplicado
+      if (appliedCoupon) {
+        recordCouponUsage({
+          couponId: appliedCoupon.couponId,
+          appointmentId: agendamento.id,
+          originalAmount: parseFloat(bookingData.price),
+          discountAmount: appliedCoupon.discountAmount,
+          finalAmount: appliedCoupon.finalAmount
+        })
+        
+        trackEvent({
+          event_name: 'booking_completed_with_coupon',
+          event_data: { 
+            coupon_code: appliedCoupon.code,
+            discount_amount: appliedCoupon.discountAmount
+          }
+        })
+      }
+      
       // Notificar sucesso no agendamento via n8n
       try {
         console.log('🔔 Enviando notificação de sucesso para n8n...');
@@ -361,14 +422,19 @@ const BookingConfirmation = () => {
 
       // 2. Create MercadoPago payment preference
       console.log('Criando preferência de pagamento...')
+      const paymentAmount = appliedCoupon?.finalAmount || parseFloat(bookingData.price)
+      const paymentDescription = appliedCoupon 
+        ? `Consulta agendada para ${parseISODateLocal(bookingData.date).toLocaleDateString('pt-BR')} às ${bookingData.time} (Cupom ${appliedCoupon.code} aplicado - Economia: R$ ${appliedCoupon.discountAmount.toFixed(2)})`
+        : `Consulta agendada para ${parseISODateLocal(bookingData.date).toLocaleDateString('pt-BR')} às ${bookingData.time}`
+      
       const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
         'create-mercadopago-payment',
         {
           body: {
             agendamentoId: agendamento.id,
-            valor: parseFloat(bookingData.price),
+            valor: paymentAmount,
             title: `Consulta com ${bookingData.professionalName}`,
-            description: `Consulta agendada para ${parseISODateLocal(bookingData.date).toLocaleDateString('pt-BR')} às ${bookingData.time}`
+            description: paymentDescription
           }
         }
       )
@@ -531,7 +597,7 @@ const BookingConfirmation = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Resumo do Agendamento */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
             <Card className="sticky top-4">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -577,13 +643,29 @@ const BookingConfirmation = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                   <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                     <DollarSign className="h-4 w-4 text-green-600" />
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm font-medium">Valor</p>
-                      <p className="text-lg font-bold text-primary">
-                        {formatPrice(bookingData.price)}
-                      </p>
+                      {appliedCoupon ? (
+                        <div className="space-y-1">
+                          <p className="text-sm text-muted-foreground line-through">
+                            {formatPrice(bookingData.price)}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-lg font-bold text-green-600">
+                              {formatPrice(appliedCoupon.finalAmount.toString())}
+                            </p>
+                            <Badge variant="secondary" className="text-xs">
+                              -{formatPrice(appliedCoupon.discountAmount.toString())}
+                            </Badge>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-lg font-bold text-primary">
+                          {formatPrice(bookingData.price)}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -591,14 +673,33 @@ const BookingConfirmation = () => {
                 {/* Total */}
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Total</span>
+                    <span className="text-sm font-medium">Total a Pagar</span>
                     <span className="text-xl font-bold text-primary">
-                      {formatPrice(bookingData.price)}
+                      {appliedCoupon 
+                        ? formatPrice(appliedCoupon.finalAmount.toString())
+                        : formatPrice(bookingData.price)
+                      }
                     </span>
                   </div>
+                  {appliedCoupon && (
+                    <p className="text-xs text-green-600 text-right mt-1">
+                      Você economizou {formatPrice(appliedCoupon.discountAmount.toString())}!
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
+
+            {/* Cupom de Desconto */}
+            {bookingData && (
+              <CouponValidator
+                professionalId={parseInt(bookingData.professionalId)}
+                amount={parseFloat(bookingData.price)}
+                tenantId={tenant?.id || ''}
+                onCouponApplied={handleCouponApplied}
+                onCouponRemoved={handleCouponRemoved}
+              />
+            )}
           </div>
 
           {/* Formulário de Confirmação */}

@@ -49,6 +49,7 @@ export type Database = {
       }
       agendamentos: {
         Row: {
+          coupon_id: string | null
           created_at: string
           data_consulta: string
           email_paciente: string
@@ -68,6 +69,7 @@ export type Database = {
           valor: number | null
         }
         Insert: {
+          coupon_id?: string | null
           created_at?: string
           data_consulta: string
           email_paciente: string
@@ -87,6 +89,7 @@ export type Database = {
           valor?: number | null
         }
         Update: {
+          coupon_id?: string | null
           created_at?: string
           data_consulta?: string
           email_paciente?: string
@@ -106,6 +109,13 @@ export type Database = {
           valor?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "agendamentos_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "institution_coupons"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "agendamentos_tenant_id_fkey"
             columns: ["tenant_id"]
