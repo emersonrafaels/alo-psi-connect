@@ -18,6 +18,10 @@ import { DomainRedirect } from "@/components/DomainRedirect";
 // Pages
 import Index from "./pages/Index";
 import About from "./pages/About";
+import InstitutionPortal from "./pages/InstitutionPortal";
+import InstitutionProfessionals from "./pages/InstitutionProfessionals";
+import InstitutionStudents from "./pages/InstitutionStudents";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Professional from "./pages/Professional";
@@ -170,6 +174,32 @@ const AppWithShortcuts = () => {
       <Route path="/medcos/diario-emocional/nova-entrada" element={<MoodEntry />} />
       <Route path="/medcos/diario-emocional/historico" element={<MoodHistory />} />
       <Route path="/medcos/diario-emocional/analises" element={<MoodAnalytics />} />
+      
+      {/* Rotas do Portal Institucional */}
+      <Route 
+        path="/portal-institucional" 
+        element={
+          <ProtectedRoute requiredRole="institution_admin">
+            <InstitutionPortal />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/portal-institucional/profissionais" 
+        element={
+          <ProtectedRoute requiredRole="institution_admin">
+            <InstitutionProfessionals />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/portal-institucional/alunos" 
+        element={
+          <ProtectedRoute requiredRole="institution_admin">
+            <InstitutionStudents />
+          </ProtectedRoute>
+        } 
+      />
       
       {/* Rotas de autenticação e perfil Medcos */}
       <Route path="/medcos/auth" element={<Auth />} />

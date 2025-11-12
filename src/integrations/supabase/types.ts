@@ -958,6 +958,57 @@ export type Database = {
         }
         Relationships: []
       }
+      institution_users: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          institution_id: string
+          is_active: boolean
+          role: string
+          tenant_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institution_id: string
+          is_active?: boolean
+          role?: string
+          tenant_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institution_id?: string
+          is_active?: boolean
+          role?: string
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_users_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_users_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media_library: {
         Row: {
           alt_text: string | null
@@ -2200,6 +2251,14 @@ export type Database = {
           patient_count: number
         }[]
       }
+      get_user_institutions: {
+        Args: { _user_id: string }
+        Returns: {
+          institution_id: string
+          role: string
+          tenant_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2220,6 +2279,10 @@ export type Database = {
         Returns: string[]
       }
       publish_scheduled_posts: { Args: never; Returns: undefined }
+      user_has_institution_access: {
+        Args: { _institution_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:

@@ -20,13 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog } from 'lucide-react';
 import { useInstitutions, EducationalInstitution } from '@/hooks/useInstitutions';
 import { useUncataloguedInstitutions } from '@/hooks/useUncataloguedInstitutions';
 import { EditInstitutionModal } from '@/components/admin/EditInstitutionModal';
 import { InstitutionPatientsModal } from '@/components/admin/InstitutionPatientsModal';
 import { UncataloguedInstitutionsTable } from '@/components/admin/UncataloguedInstitutionsTable';
 import { useInstitutionPatients } from '@/hooks/useInstitutionPatients';
+import { ManageInstitutionUsersModal } from '@/components/admin/ManageInstitutionUsersModal';
 
 export default function Institutions() {
   const {
@@ -57,6 +58,7 @@ export default function Institutions() {
   const [editingInstitution, setEditingInstitution] = useState<EducationalInstitution | null>(null);
   const [viewingPatients, setViewingPatients] = useState<EducationalInstitution | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [managingUsers, setManagingUsers] = useState<{ id: string; name: string } | null>(null);
 
   // Contar pacientes por instituição
   const { patientInstitutions: allPatientInstitutions } = useInstitutionPatients();
@@ -323,6 +325,14 @@ export default function Institutions() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => setManagingUsers({ id: institution.id, name: institution.name })}
+                            title="Gerenciar Usuários"
+                          >
+                            <UserCog className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setEditingInstitution(institution)}
                           >
                             <Edit className="h-4 w-4" />
@@ -366,6 +376,12 @@ export default function Institutions() {
         institution={viewingPatients}
         isOpen={!!viewingPatients}
         onClose={() => setViewingPatients(null)}
+      />
+
+      <ManageInstitutionUsersModal
+        institution={managingUsers}
+        isOpen={!!managingUsers}
+        onClose={() => setManagingUsers(null)}
       />
     </AdminLayout>
   );
