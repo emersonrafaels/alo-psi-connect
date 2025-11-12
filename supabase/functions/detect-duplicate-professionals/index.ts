@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
         foto_perfil_url,
         servicos_normalizados,
         formacao_normalizada,
-        resumo_profissional_html,
+        resumo_profissional,
         ativo,
         profiles!inner(user_id)
       `)
@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
         (p.foto_perfil_url ? 10 : 0) +
         (p.servicos_normalizados?.length ? 15 : 0) +
         (p.formacao_normalizada?.length ? 10 : 0) +
-        (p.resumo_profissional_html ? 10 : 0) +
+        (p.resumo_profissional ? 10 : 0) +
         (scheduleCount * 5) +
         (p.ativo ? 20 : 0);
 
@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
         user_id: p.user_id,
         normalized_services: p.servicos_normalizados,
         normalized_education: p.formacao_normalizada,
-        has_summary: !!p.resumo_profissional_html
+        has_summary: !!p.resumo_profissional
       };
     }) || [];
 
