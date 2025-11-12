@@ -219,6 +219,32 @@ const AppWithShortcuts = () => {
       <Route path="/medcos/politica-privacidade" element={<PrivacyPolicy />} />
       <Route path="/medcos/termos-servico" element={<TermsOfService />} />
       
+      {/* Rotas do Portal Institucional Medcos */}
+      <Route 
+        path="/medcos/portal-institucional" 
+        element={
+          <ProtectedRoute requiredRole="institution_admin">
+            <InstitutionPortal />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/medcos/portal-institucional/profissionais" 
+        element={
+          <ProtectedRoute requiredRole="institution_admin">
+            <InstitutionProfessionals />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/medcos/portal-institucional/alunos" 
+        element={
+          <ProtectedRoute requiredRole="institution_admin">
+            <InstitutionStudents />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Rotas Admin - Todas compartilham o mesmo AdminLayout */}
       <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
       <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
