@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +51,26 @@ export const EditInstitutionModal = ({
     },
   });
 
+  // Reinicializa o formulário quando a instituição muda
+  useEffect(() => {
+    if (institution) {
+      reset({
+        name: institution.name,
+        type: institution.type as 'public' | 'private',
+        has_partnership: institution.has_partnership,
+        is_active: institution.is_active,
+      });
+    } else {
+      // Modo criação: valores padrão
+      reset({
+        name: '',
+        type: 'private',
+        has_partnership: false,
+        is_active: true,
+      });
+    }
+  }, [institution, reset]);
+
   const onSubmit = (data: InstitutionForm) => {
     if (institution) {
       // Modo edição: incluir ID
@@ -66,7 +87,9 @@ export const EditInstitutionModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Instituição</DialogTitle>
+          <DialogTitle>
+            {institution ? 'Editar Instituição' : 'Nova Instituição'}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -121,7 +144,7 @@ export const EditInstitutionModal = ({
               Cancelar
             </Button>
             <Button type="submit" disabled={isSaving}>
-              {isSaving ? 'Salvando...' : 'Salvar'}
+              {isSaving ? 'Salvando...' : (institution ? 'Salvar' : 'Criar')}
             </Button>
           </div>
         </form>
