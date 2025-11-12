@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog } from 'lucide-react';
+import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket } from 'lucide-react';
 import { useInstitutions, EducationalInstitution } from '@/hooks/useInstitutions';
 import { useUncataloguedInstitutions } from '@/hooks/useUncataloguedInstitutions';
 import { EditInstitutionModal } from '@/components/admin/EditInstitutionModal';
@@ -28,6 +28,7 @@ import { InstitutionPatientsModal } from '@/components/admin/InstitutionPatients
 import { UncataloguedInstitutionsTable } from '@/components/admin/UncataloguedInstitutionsTable';
 import { useInstitutionPatients } from '@/hooks/useInstitutionPatients';
 import { ManageInstitutionUsersModal } from '@/components/admin/ManageInstitutionUsersModal';
+import { ManageInstitutionCouponsModal } from '@/components/admin/ManageInstitutionCouponsModal';
 
 export default function Institutions() {
   const {
@@ -59,6 +60,7 @@ export default function Institutions() {
   const [viewingPatients, setViewingPatients] = useState<EducationalInstitution | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [managingUsers, setManagingUsers] = useState<{ id: string; name: string } | null>(null);
+  const [managingCoupons, setManagingCoupons] = useState<{ id: string; name: string } | null>(null);
 
   // Contar pacientes por instituição
   const { patientInstitutions: allPatientInstitutions } = useInstitutionPatients();
@@ -322,6 +324,16 @@ export default function Institutions() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          {institution.has_partnership && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setManagingCoupons({ id: institution.id, name: institution.name })}
+                              title="Gerenciar Cupons"
+                            >
+                              <Ticket className="h-4 w-4 text-primary" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -382,6 +394,12 @@ export default function Institutions() {
         institution={managingUsers}
         isOpen={!!managingUsers}
         onClose={() => setManagingUsers(null)}
+      />
+
+      <ManageInstitutionCouponsModal
+        institution={managingCoupons}
+        isOpen={!!managingCoupons}
+        onClose={() => setManagingCoupons(null)}
       />
     </AdminLayout>
   );

@@ -733,6 +733,57 @@ export type Database = {
           },
         ]
       }
+      coupon_usage: {
+        Row: {
+          appointment_id: string | null
+          coupon_id: string
+          discount_amount: number
+          final_amount: number
+          id: string
+          metadata: Json | null
+          original_amount: number
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          coupon_id: string
+          discount_amount: number
+          final_amount: number
+          id?: string
+          metadata?: Json | null
+          original_amount: number
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          coupon_id?: string
+          discount_amount?: number
+          final_amount?: number
+          id?: string
+          metadata?: Json | null
+          original_amount?: number
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_usage_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_usage_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "institution_coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       default_emotion_types: {
         Row: {
           category: string | null
@@ -957,6 +1008,99 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      institution_coupons: {
+        Row: {
+          applicable_professional_ids: number[] | null
+          applicable_specialties: string[] | null
+          applies_to: string
+          code: string
+          created_at: string
+          created_by: string | null
+          current_usage_count: number | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          institution_id: string
+          is_active: boolean
+          max_discount_amount: number | null
+          maximum_uses: number | null
+          metadata: Json | null
+          minimum_purchase_amount: number | null
+          name: string
+          tenant_id: string | null
+          updated_at: string
+          uses_per_user: number | null
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          applicable_professional_ids?: number[] | null
+          applicable_specialties?: string[] | null
+          applies_to?: string
+          code: string
+          created_at?: string
+          created_by?: string | null
+          current_usage_count?: number | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          institution_id: string
+          is_active?: boolean
+          max_discount_amount?: number | null
+          maximum_uses?: number | null
+          metadata?: Json | null
+          minimum_purchase_amount?: number | null
+          name: string
+          tenant_id?: string | null
+          updated_at?: string
+          uses_per_user?: number | null
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          applicable_professional_ids?: number[] | null
+          applicable_specialties?: string[] | null
+          applies_to?: string
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_usage_count?: number | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          institution_id?: string
+          is_active?: boolean
+          max_discount_amount?: number | null
+          maximum_uses?: number | null
+          metadata?: Json | null
+          minimum_purchase_amount?: number | null
+          name?: string
+          tenant_id?: string | null
+          updated_at?: string
+          uses_per_user?: number | null
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_coupons_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_coupons_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       institution_users: {
         Row: {
@@ -2282,6 +2426,24 @@ export type Database = {
       user_has_institution_access: {
         Args: { _institution_id: string; _user_id: string }
         Returns: boolean
+      }
+      validate_coupon: {
+        Args: {
+          _amount: number
+          _code: string
+          _professional_id: number
+          _tenant_id: string
+          _user_id: string
+        }
+        Returns: {
+          coupon_id: string
+          discount_amount: number
+          discount_type: string
+          discount_value: number
+          error_message: string
+          final_amount: number
+          is_valid: boolean
+        }[]
       }
     }
     Enums: {
