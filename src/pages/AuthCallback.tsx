@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -9,6 +11,8 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { hasProfile, loading } = useUserProfile();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [googleData, setGoogleData] = useState<any>(null);
@@ -32,12 +36,12 @@ const AuthCallback = () => {
         
         if (error) {
           console.error('Error getting session:', error);
-          navigate('/auth');
+          navigate(buildTenantPath(tenantSlug, '/auth'));
           return;
         }
 
         if (!data.session) {
-          navigate('/auth');
+          navigate(buildTenantPath(tenantSlug, '/auth'));
           return;
         }
 
@@ -46,7 +50,7 @@ const AuthCallback = () => {
 
         // Se o usuário já tem perfil, redirecionar para home
         if (hasProfile) {
-          navigate('/');
+          navigate(buildTenantPath(tenantSlug, '/'));
         } else {
           // Extrair dados do Google se disponível
           const googleUserData = data.session?.user?.user_metadata;
@@ -61,7 +65,7 @@ const AuthCallback = () => {
           }
           
           // Se não tem perfil, redirecionar para seleção de tipo de usuário com dados do Google
-          navigate('/cadastro/tipo-usuario', { 
+          navigate(buildTenantPath(tenantSlug, '/cadastro/tipo-usuario'), { 
             state: { googleData: googleUserData ? {
               fullName: googleUserData.full_name || googleUserData.name || '',
               email: googleUserData.email || '',
@@ -72,7 +76,7 @@ const AuthCallback = () => {
         }
       } catch (error) {
         console.error('Error handling auth callback:', error);
-        navigate('/auth');
+        navigate(buildTenantPath(tenantSlug, '/auth'));
       }
     };
 
@@ -95,7 +99,7 @@ const AuthCallback = () => {
           });
           
           setTimeout(() => {
-            navigate('/auth');
+            navigate(buildTenantPath(tenantSlug, '/auth'));
           }, 3000);
           return;
         }
@@ -108,7 +112,7 @@ const AuthCallback = () => {
         });
 
         setTimeout(() => {
-          navigate('/auth');
+          navigate(buildTenantPath(tenantSlug, '/auth'));
         }, 3000);
         
       } catch (error) {
@@ -121,7 +125,7 @@ const AuthCallback = () => {
         });
         
         setTimeout(() => {
-          navigate('/auth');
+          navigate(buildTenantPath(tenantSlug, '/auth'));
         }, 3000);
       }
     };

@@ -56,7 +56,7 @@ const Auth = () => {
         const booking = JSON.parse(pendingBooking)
         navigate(booking.returnTo || buildTenantPath(tenantSlug, '/confirmacao-agendamento'), { replace: true })
       } else {
-        navigate('/')
+        navigate(buildTenantPath(tenantSlug, '/'))
       }
       return;
     }
@@ -131,7 +131,7 @@ const Auth = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate('/cadastro/tipo-usuario')}
+                  onClick={() => navigate(buildTenantPath(tenantSlug, '/cadastro/tipo-usuario'))}
                   className="ml-auto"
                 >
                   Criar conta
@@ -196,7 +196,7 @@ const Auth = () => {
         const booking = JSON.parse(pendingBooking)
         navigate(booking.returnTo || buildTenantPath(tenantSlug, '/confirmacao-agendamento'), { replace: true })
       } else {
-        navigate('/')
+        navigate(buildTenantPath(tenantSlug, '/'))
       }
     } catch (error: any) {
       // Fallback para outros tipos de erro
@@ -469,7 +469,7 @@ const Auth = () => {
                   <Button 
                     variant="outline" 
                     className="w-full"
-                    onClick={() => navigate('/cadastro/tipo-usuario')}
+                    onClick={() => navigate(buildTenantPath(tenantSlug, '/cadastro/tipo-usuario'))}
                   >
                     Criar conta gratuitamente
                   </Button>
