@@ -9,13 +9,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, X, Loader2 } from "lucide-react";
-import { PostCard } from "@/components/blog/PostCard";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
 import { useBlogTags } from "@/hooks/useBlogTags";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useRecentPosts } from "@/hooks/useRecentPosts";
 import { SortDropdown, SortOption } from "@/components/blog/SortDropdown";
 import { MobileFilters } from "@/components/blog/MobileFilters";
+import { HeroPost } from "@/components/blog/HeroPost";
+import { FeaturedGrid } from "@/components/blog/FeaturedGrid";
+import { PostCardVariant } from "@/components/blog/PostCardVariant";
+import { PopularPosts } from "@/components/blog/PopularPosts";
+import { NewsletterCTA } from "@/components/blog/NewsletterCTA";
+import { AuthorSpotlight } from "@/components/blog/AuthorSpotlight";
 
 const Blog = () => {
   const { tenant } = useTenant();
@@ -125,19 +130,17 @@ const Blog = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             {isLoading ? (
-              <div className="space-y-8">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="space-y-4">
-                    <Skeleton className="h-64 w-full" />
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-2/3" />
-                  </div>
-                ))}
+              <div className="space-y-12">
+                <Skeleton className="h-96 w-full rounded-2xl" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map(i => (
+                    <Skeleton key={i} className="h-80" />
+                  ))}
+                </div>
               </div>
             ) : posts.length === 0 ? (
               <div className="text-center py-16">
@@ -153,18 +156,53 @@ const Blog = () => {
                 )}
               </div>
             ) : (
-              <div className="space-y-8">
-                {posts.map((post) => (
-                  <PostCard key={post.id} post={post} searchTerm={debouncedSearchTerm} />
-                ))}
-              </div>
+              <>
+                {/* Hero Post - Primeiro post em destaque */}
+                {!debouncedSearchTerm && !selectedTag && posts.length > 0 && (
+                  <HeroPost post={posts[0]} />
+                )}
+
+                {/* Featured Grid - Próximos 6 posts */}
+                {!debouncedSearchTerm && !selectedTag && posts.length > 1 && (
+                  <FeaturedGrid posts={posts.slice(1, 7)} />
+                )}
+
+                {/* Regular Posts - Resto dos posts ou resultados de busca */}
+                <section>
+                  {(debouncedSearchTerm || selectedTag) && (
+                    <div className="mb-8">
+                      <h2 className="text-2xl font-bold mb-2">Resultados da Busca</h2>
+                    </div>
+                  )}
+                  {(!debouncedSearchTerm && !selectedTag && posts.length > 7) && (
+                    <div className="mb-8">
+                      <h2 className="text-2xl font-bold mb-2">Mais Artigos</h2>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {(debouncedSearchTerm || selectedTag ? posts : posts.slice(7)).map((post, index) => {
+                      // Variação de layouts
+                      const variant = index % 5 === 0 ? 'horizontal' : index % 7 === 0 ? 'minimal' : 'default';
+                      return (
+                        <PostCardVariant
+                          key={post.id}
+                          post={post}
+                          variant={variant}
+                          className={variant === 'horizontal' ? 'md:col-span-2' : ''}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
+              </>
             )}
           </div>
 
           {/* Sidebar */}
-          <aside className="space-y-8 hidden lg:block">
+          <aside className="space-y-6 hidden lg:block">
             {/* Search */}
-            <Card>
+            <Card className="shadow-card hover:shadow-card-hover transition-shadow">
               <CardHeader>
                 <CardTitle>Busca</CardTitle>
               </CardHeader>
@@ -196,55 +234,19 @@ const Blog = () => {
               </CardContent>
             </Card>
 
-            {/* Recent Posts */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Posts Recentes</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {recentPostsLoading ? (
-                  [1, 2, 3, 4, 5].map(i => (
-                    <Skeleton key={i} className="h-20 w-full" />
-                  ))
-                ) : (
-                  recentPosts.map((post) => (
-                    <Link 
-                      key={post.id} 
-                      to={`/blog/${post.slug}`}
-                      className="flex space-x-3 hover:bg-accent/50 p-2 -mx-2 rounded-lg transition-colors"
-                    >
-                      {post.featured_image_url ? (
-                        <div className="w-16 h-16 rounded flex-shrink-0 overflow-hidden">
-                          <img 
-                            src={post.featured_image_url} 
-                            alt={post.title}
-                            loading="lazy"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-16 h-16 bg-primary rounded flex-shrink-0 flex items-center justify-center">
-                          <span className="text-primary-foreground text-xs font-semibold text-center">
-                            {post.tags?.[0]?.name || 'Blog'}
-                          </span>
-                        </div>
-                      )}
-                      <div>
-                        <h4 className="font-medium text-sm leading-tight line-clamp-2">{post.title}</h4>
-                        {post.published_at && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(post.published_at).toLocaleDateString('pt-BR')}
-                          </p>
-                        )}
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </CardContent>
-            </Card>
+            {/* Popular Posts */}
+            {!isLoading && posts.length > 0 && (
+              <PopularPosts posts={posts} />
+            )}
+
+            {/* Newsletter CTA */}
+            <NewsletterCTA />
+
+            {/* Author Spotlight */}
+            <AuthorSpotlight />
 
             {/* Tags */}
-            <Card>
+            <Card className="shadow-card hover:shadow-card-hover transition-shadow">
               <CardHeader>
                 <CardTitle>Tags</CardTitle>
               </CardHeader>
@@ -252,7 +254,7 @@ const Blog = () => {
                 <div className="flex flex-wrap gap-2">
                   <Badge 
                     variant={selectedTag === null ? "default" : "secondary"}
-                    className="cursor-pointer"
+                    className="cursor-pointer hover-scale"
                     onClick={() => setSelectedTag(null)}
                   >
                     Todas
@@ -261,7 +263,7 @@ const Blog = () => {
                     <Badge 
                       key={tag.id} 
                       variant={selectedTag === tag.slug ? "default" : "secondary"}
-                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
+                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors hover-scale"
                       onClick={() => setSelectedTag(tag.slug)}
                     >
                       {tag.name}

@@ -157,6 +157,11 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 /* TipTap Editor Styles */
@@ -619,6 +624,237 @@ All colors MUST be HSL.
 /* Fix para Popover/Combobox dentro de Dialog - z-index maior que Dialog (9999) */
 [data-radix-popper-content-wrapper] {
   z-index: 10000 !important;
+}
+
+/* ============================================
+   BLOG REDESIGN - Advanced Styles & Animations
+   ============================================ */
+
+/* Hover scale animation - reusable */
+.hover-scale {
+  @apply transition-transform duration-200 ease-out;
+}
+
+.hover-scale:hover {
+  @apply scale-[1.02];
+}
+
+/* Blog card image zoom effect */
+.blog-card-image {
+  @apply overflow-hidden;
+}
+
+.blog-card-image img {
+  @apply transition-transform duration-700 ease-out;
+}
+
+.blog-card-image:hover img {
+  @apply scale-110;
+}
+
+/* Gradient text effect on hover */
+.gradient-text-hover {
+  @apply transition-all duration-300;
+}
+
+.gradient-text-hover:hover {
+  @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
+  background-size: 200% auto;
+  animation: gradient-shift 3s linear infinite;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
+}
+
+/* Shadow elevation on hover */
+.shadow-elevation {
+  @apply transition-all duration-300;
+  box-shadow: var(--shadow-card);
+}
+
+.shadow-elevation:hover {
+  @apply -translate-y-2;
+  box-shadow: var(--shadow-elegant);
+}
+
+/* Tag color variations by category */
+.tag-ansiedade {
+  @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300;
+}
+
+.tag-depressao {
+  @apply bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300;
+}
+
+.tag-terapia {
+  @apply bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300;
+}
+
+.tag-autoestima {
+  @apply bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300;
+}
+
+.tag-relacionamentos {
+  @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300;
+}
+
+.tag-estresse {
+  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300;
+}
+
+.tag-default {
+  @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300;
+}
+
+/* Pulse animation for featured badge */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 10px hsl(var(--destructive) / 0.5);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 20px hsl(var(--destructive) / 0.8);
+  }
+}
+
+.badge-featured {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Blog grid responsive utilities */
+@media (min-width: 1024px) {
+  .blog-grid-bento {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+  
+  .blog-grid-bento > *:nth-child(7n + 1),
+  .blog-grid-bento > *:nth-child(7n + 4) {
+    grid-column: span 2;
+  }
+}
+
+/* Newsletter CTA gradient background */
+.newsletter-cta {
+  @apply relative overflow-hidden;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+}
+
+.newsletter-cta::before {
+  content: '';
+  @apply absolute inset-0 opacity-20;
+  background-image: radial-gradient(circle at 20% 50%, white 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, white 0%, transparent 50%);
+  animation: shimmer-newsletter 8s ease-in-out infinite;
+}
+
+@keyframes shimmer-newsletter {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.4; }
+}
+
+/* Author spotlight card hover effect */
+.author-card {
+  @apply transition-all duration-300;
+}
+
+.author-card:hover {
+  @apply bg-accent/60;
+  transform: translateX(4px);
+}
+
+/* Popular posts ranking badge */
+.ranking-badge {
+  @apply transition-all duration-200;
+}
+
+.ranking-badge:hover {
+  @apply scale-110 rotate-3;
+}
+
+/* Smooth page transitions */
+@media (prefers-reduced-motion: no-preference) {
+  .page-transition {
+    animation: page-fade-in 0.4s ease-out;
+  }
+  
+  @keyframes page-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Card border glow effect on hover */
+.card-glow {
+  @apply transition-all duration-300;
+  border: 1px solid hsl(var(--border));
+}
+
+.card-glow:hover {
+  border-color: hsl(var(--primary) / 0.5);
+  box-shadow: 0 0 20px hsl(var(--primary) / 0.1);
+}
+
+/* Staggered fade-in animation for lists */
+@keyframes stagger-fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-item {
+  opacity: 0;
+  animation: stagger-fade 0.5s ease-out forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.05s; }
+.stagger-item:nth-child(2) { animation-delay: 0.1s; }
+.stagger-item:nth-child(3) { animation-delay: 0.15s; }
+.stagger-item:nth-child(4) { animation-delay: 0.2s; }
+.stagger-item:nth-child(5) { animation-delay: 0.25s; }
+
+/* Responsive typography for blog */
+@media (min-width: 1024px) {
+  .blog-hero-title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+  }
+  
+  .blog-hero-preview {
+    font-size: clamp(1.125rem, 1.5vw, 1.25rem);
+  }
+}
+
+/* Loading skeleton shimmer effect */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted) / 0.8) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* Garantir que Command List tenha altura máxima e scroll */
