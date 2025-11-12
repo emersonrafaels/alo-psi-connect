@@ -38,7 +38,7 @@ const About = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <AboutImageSection />
             <div>
-              <h1 className="text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-primary">
                 Cuidando de Quem <br />
                 Cuida da Saúde
               </h1>

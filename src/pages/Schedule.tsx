@@ -113,7 +113,7 @@ const Schedule = () => {
       <section className="relative bg-gradient-to-br from-primary/10 via-background to-teal/10 py-20">
         <div className="absolute inset-0 bg-gradient-subtle opacity-50"></div>
         <div className="container mx-auto px-4 text-center relative">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-teal bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-primary">
             Agende Sua Consulta
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
@@ -275,7 +275,7 @@ const Schedule = () => {
       {/* How it works */}
       <section className="py-16 bg-gradient-to-br from-muted/30 to-background">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12 bg-gradient-to-r from-primary to-teal bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold text-center mb-12 text-primary">
             Como Funciona
           </h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">

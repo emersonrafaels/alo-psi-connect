@@ -209,7 +209,7 @@ const Professional = () => {
             </Avatar>
             
             <div className="flex-1">
-              <h1 className="text-4xl font-bold text-foreground mb-2 bg-gradient-to-r from-primary to-teal bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold mb-2 text-primary">
                 {professional.display_name}
               </h1>
               <p className="text-lg text-muted-foreground mb-4">

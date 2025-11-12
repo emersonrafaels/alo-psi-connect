@@ -963,7 +963,7 @@ const ProfessionalForm = () => {
               />
 
 
-              <CardTitle className="text-center text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <CardTitle className="text-center text-2xl font-bold text-primary">
                  {currentStep === 1 ? 'Seus dados pessoais' :
                   currentStep === 2 ? 'Informações profissionais' :
                   currentStep === 3 ? 'Perfil e contatos' :

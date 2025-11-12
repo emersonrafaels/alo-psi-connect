@@ -598,7 +598,7 @@ const Professionals = () => {
         {/* Hero Section */}
         <section className="text-center mb-12">
           <div className="relative">
-            <h1 className="text-5xl font-bold text-foreground mb-6 bg-gradient-to-r from-primary via-teal to-accent bg-clip-text text-transparent">
+            <h1 className="text-5xl font-bold mb-6 text-primary">
               Nossos Profissionais
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed">
