@@ -505,6 +505,24 @@ All colors MUST be HSL.
     word-spacing: 0.05em;
     hyphens: auto;
   }
+
+  /* Reading theme - Sepia */
+  .reading-theme-sepia {
+    background-color: #f4ecd8;
+    color: #5c4a3a;
+  }
+
+  .reading-theme-sepia .blog-content {
+    color: #5c4a3a;
+  }
+
+  .reading-theme-sepia [class*="bg-background"] {
+    background-color: #f4ecd8 !important;
+  }
+
+  .reading-theme-sepia [class*="text-foreground"] {
+    color: #5c4a3a !important;
+  }
   
   /* Drop cap condicional */
   .blog-content.with-drop-cap p:first-of-type::first-letter {
@@ -512,27 +530,45 @@ All colors MUST be HSL.
     color: hsl(var(--primary));
   }
   
+  /* Fade-in animation for paragraphs */
+  @keyframes fade-in-up {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .blog-content p {
+    animation: fade-in-up 0.6s ease-out both;
+  }
+
+  .blog-content p:nth-child(1) { animation-delay: 0.1s; }
+  .blog-content p:nth-child(2) { animation-delay: 0.15s; }
+  .blog-content p:nth-child(3) { animation-delay: 0.2s; }
+  
   .blog-content img {
     @apply shadow-2xl;
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
   
   .blog-content img:hover {
-    @apply scale-[1.01];
+    transform: scale(1.02);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   }
-  
-  /* Melhor espaçamento para listas */
-  .blog-content ul li,
-  .blog-content ol li {
-    margin-bottom: 0.5rem;
-    padding-left: 0.5rem;
-  }
-  
-  /* Destaque para links */
+
+  /* Smooth link transitions */
   .blog-content a {
     text-decoration-thickness: 1px;
     text-underline-offset: 3px;
+    transition: all 0.2s ease;
+  }
+
+  .blog-content a:hover {
+    color: hsl(var(--primary) / 0.8);
   }
 
   /* Otimizações de legibilidade */

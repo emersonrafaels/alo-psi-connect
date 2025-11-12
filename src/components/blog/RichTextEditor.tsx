@@ -89,14 +89,14 @@ export const RichTextEditor = ({
   }
 
   return (
-    <div className="border rounded-md bg-background flex flex-col" style={{ maxHeight }}>
+    <div className="border-2 border-border/50 rounded-xl bg-background flex flex-col shadow-sm" style={{ maxHeight }}>
       {editable && (
-        <div className="sticky top-0 z-50 bg-background border-b shadow-sm flex-shrink-0">
+        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b-2 border-border/50 shadow-sm flex-shrink-0">
           <EditorToolbar editor={editor} />
         </div>
       )}
       <div 
-        className="overflow-y-auto flex-1" 
+        className="overflow-y-auto flex-1 p-2" 
         style={{ minHeight }}
       >
         <EditorContent editor={editor} />

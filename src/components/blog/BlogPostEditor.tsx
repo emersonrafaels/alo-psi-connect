@@ -339,9 +339,9 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
       />
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold">
+            <h2 className="text-2xl font-bold">
               {post ? 'Editando Post' : 'Novo Post'}
             </h2>
             {post && post.status === 'published' && (
@@ -361,234 +361,266 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
           <AutoSaveIndicator status={saveStatus} lastSaved={lastSaved} />
         </div>
 
-        {/* Editor Metrics */}
-        <EditorMetrics title={title} excerpt={excerpt || ''} content={content} />
-
-        <div>
-          <Label htmlFor="title">Título</Label>
-          <Input
-            id="title"
-            {...register('title')}
-            placeholder="Digite o título do post"
-          />
-          {errors.title && (
-            <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="tenant" className="flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            Site de Publicação
-          </Label>
-          <Select 
-            value={selectedTenantId || 'context'} 
-            onValueChange={(value) => setSelectedTenantId(value === 'context' ? null : value)}
-          >
-            <SelectTrigger id="tenant" className="bg-background">
-              <SelectValue placeholder="Selecione o site" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
-              <SelectItem value="context">
-                <div className="flex flex-col gap-1">
-                  <span className="font-medium">🌐 Site Atual (Auto)</span>
-                  <span className="text-xs text-muted-foreground">
-                    {contextTenant ? `${contextTenant.name} (${contextTenant.slug})` : 'Detectado pela URL'}
-                  </span>
-                </div>
-              </SelectItem>
-              
-              <div className="my-1 border-t" />
-              
-              {availableTenants.map((tenant) => (
-                <SelectItem key={tenant.id} value={tenant.id}>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-medium flex items-center gap-2">
-                      {tenant.slug === 'alopsi' && '🟢'}
-                      {tenant.slug === 'medcos' && '🔵'}
-                      {tenant.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{tenant.slug}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            {selectedTenantId 
-              ? 'Post será criado para o site selecionado acima' 
-              : 'Post será criado para o site atual (baseado na URL)'}
-          </p>
-        </div>
-
-        <div>
-          <Label htmlFor="slug">Slug (URL)</Label>
-          <Input
-            id="slug"
-            {...register('slug')}
-            placeholder="url-do-post"
-            onBlur={(e) => checkSlug(e.target.value)}
-            className={slugExists ? 'border-destructive' : ''}
-          />
-          {slugExists && (
-            <p className="text-sm text-destructive mt-1">
-              ⚠️ Este slug já está em uso. Por favor, escolha outro.
-            </p>
-          )}
-          {checkingSlug && (
-            <p className="text-sm text-muted-foreground mt-1">
-              Verificando disponibilidade...
-            </p>
-          )}
-          {errors.slug && (
-            <p className="text-sm text-destructive mt-1">{errors.slug.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="excerpt">Resumo</Label>
-          <Textarea
-            id="excerpt"
-            {...register('excerpt')}
-            placeholder="Breve descrição do post"
-            rows={3}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="content">Conteúdo</Label>
-          
-          <div className="flex items-center justify-between mb-2">
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as typeof viewMode)} className="flex-1">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="editor" className="flex items-center gap-2">
-                  <FileEdit className="h-4 w-4" />
-                  Editor
-                </TabsTrigger>
-                <TabsTrigger value="preview" className="flex items-center gap-2">
-                  <Eye className="h-4 w-4" />
-                  Preview
-                </TabsTrigger>
-                <TabsTrigger value="split" className="flex items-center gap-2">
-                  <Columns className="h-4 w-4" />
-                  Split
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="ml-2 gap-2"
-              onClick={() => setFocusModeOpen(true)}
-            >
-              <Maximize2 className="h-4 w-4" />
-              Modo Foco
-            </Button>
-          </div>
-          
-          <Tabs value={viewMode} className="w-full">
-            <TabsContent value="editor" className="mt-0">
-              <RichTextEditor
-                value={content || ''}
-                onChange={(html) => setValue('content', html, { shouldValidate: true })}
-                placeholder="Comece a escrever o conteúdo do seu post..."
-                minHeight="500px"
+        {/* 2-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: Main Content (2/3) */}
+          <div className="lg:col-span-2 space-y-6">
+            <div>
+              <Label htmlFor="title" className="text-base font-semibold">Título</Label>
+              <Input
+                id="title"
+                {...register('title')}
+                placeholder="Digite o título do post"
+                className="text-lg h-12 mt-2"
               />
-            </TabsContent>
-
-            <TabsContent value="preview" className="mt-0">
-              <ResponsivePreview 
-                content={sanitizeHtml(content || '')}
-                title={title || 'Sem título'}
-              />
-            </TabsContent>
-
-            <TabsContent value="split" className="mt-0">
-              <ResizablePanelGroup direction="horizontal" className="min-h-[500px]">
-                <ResizablePanel defaultSize={50}>
-                  <div className="h-full pr-2">
-                    <RichTextEditor
-                      value={content || ''}
-                      onChange={(html) => setValue('content', html, { shouldValidate: true })}
-                      placeholder="Comece a escrever o conteúdo do seu post..."
-                      minHeight="500px"
-                    />
-                  </div>
-                </ResizablePanel>
-                
-                <ResizableHandle withHandle />
-                
-                <ResizablePanel defaultSize={50}>
-                  <div className="h-full pl-2 border rounded-lg p-6 bg-background overflow-y-auto">
-                    <div 
-                      className="prose prose-slate dark:prose-invert max-w-none"
-                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(content || '') }}
-                    />
-                  </div>
-                </ResizablePanel>
-              </ResizablePanelGroup>
-            </TabsContent>
-          </Tabs>
-          
-          {errors.content && (
-            <p className="text-sm text-destructive mt-1">{errors.content.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Label>Imagem de Destaque</Label>
-          <BlogImageUpload
-            currentImageUrl={featuredImage || null}
-            onImageUploaded={setFeaturedImage}
-            onImageRemoved={() => setFeaturedImage('')}
-          />
-        </div>
-
-        <div>
-          <Label>Tags</Label>
-          <TagSelector
-            selectedTags={selectedTags}
-            onChange={setSelectedTags}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="status">Status</Label>
-            <Select onValueChange={(value) => setValue('status', value as 'draft' | 'published')}>
-              <SelectTrigger id="status">
-                <SelectValue placeholder={watch('status') === 'draft' ? 'Rascunho' : 'Publicado'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">Rascunho</SelectItem>
-                <SelectItem value="published">Publicado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-end gap-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="allow_comments"
-                checked={watch('allow_comments') ?? true}
-                onCheckedChange={(checked) => setValue('allow_comments', checked)}
-              />
-              <Label htmlFor="allow_comments" className="text-sm">Comentários</Label>
+              {errors.title && (
+                <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
+              )}
             </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="allow_ratings"
-                checked={watch('allow_ratings') ?? true}
-                onCheckedChange={(checked) => setValue('allow_ratings', checked)}
+
+            <div>
+              <Label htmlFor="slug" className="text-base font-semibold">Slug (URL)</Label>
+              <Input
+                id="slug"
+                {...register('slug')}
+                placeholder="url-do-post"
+                onBlur={(e) => checkSlug(e.target.value)}
+                className={`mt-2 ${slugExists ? 'border-destructive' : ''}`}
               />
-              <Label htmlFor="allow_ratings" className="text-sm">Avaliações</Label>
+              {slugExists && (
+                <p className="text-sm text-destructive mt-1">
+                  ⚠️ Este slug já está em uso. Por favor, escolha outro.
+                </p>
+              )}
+              {checkingSlug && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Verificando disponibilidade...
+                </p>
+              )}
+              {errors.slug && (
+                <p className="text-sm text-destructive mt-1">{errors.slug.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="excerpt" className="text-base font-semibold">Resumo</Label>
+              <Textarea
+                id="excerpt"
+                {...register('excerpt')}
+                placeholder="Breve descrição do post (ideal para compartilhamento)"
+                rows={3}
+                className="mt-2"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="content" className="text-base font-semibold mb-3 block">Conteúdo</Label>
+              
+              <div className="flex items-center justify-between mb-3">
+                <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as typeof viewMode)} className="flex-1">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="editor" className="flex items-center gap-2">
+                      <FileEdit className="h-4 w-4" />
+                      Editor
+                    </TabsTrigger>
+                    <TabsTrigger value="preview" className="flex items-center gap-2">
+                      <Eye className="h-4 w-4" />
+                      Preview
+                    </TabsTrigger>
+                    <TabsTrigger value="split" className="flex items-center gap-2">
+                      <Columns className="h-4 w-4" />
+                      Split
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="ml-2 gap-2"
+                  onClick={() => setFocusModeOpen(true)}
+                >
+                  <Maximize2 className="h-4 w-4" />
+                  Modo Foco
+                </Button>
+              </div>
+              
+              <Tabs value={viewMode} className="w-full">
+                <TabsContent value="editor" className="mt-0">
+                  <RichTextEditor
+                    value={content || ''}
+                    onChange={(html) => setValue('content', html, { shouldValidate: true })}
+                    placeholder="Comece a escrever o conteúdo do seu post..."
+                    minHeight="600px"
+                  />
+                </TabsContent>
+
+                <TabsContent value="preview" className="mt-0">
+                  <ResponsivePreview 
+                    content={sanitizeHtml(content || '')}
+                    title={title || 'Sem título'}
+                  />
+                </TabsContent>
+
+                <TabsContent value="split" className="mt-0">
+                  <ResizablePanelGroup direction="horizontal" className="min-h-[600px]">
+                    <ResizablePanel defaultSize={50}>
+                      <div className="h-full pr-2">
+                        <RichTextEditor
+                          value={content || ''}
+                          onChange={(html) => setValue('content', html, { shouldValidate: true })}
+                          placeholder="Comece a escrever o conteúdo do seu post..."
+                          minHeight="600px"
+                        />
+                      </div>
+                    </ResizablePanel>
+                    
+                    <ResizableHandle withHandle />
+                    
+                    <ResizablePanel defaultSize={50}>
+                      <div className="h-full pl-2 border rounded-lg p-6 bg-background overflow-y-auto">
+                        <div 
+                          className="prose prose-slate dark:prose-invert max-w-none"
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(content || '') }}
+                        />
+                      </div>
+                    </ResizablePanel>
+                  </ResizablePanelGroup>
+                </TabsContent>
+              </Tabs>
+              
+              {errors.content && (
+                <p className="text-sm text-destructive mt-1">{errors.content.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label className="text-base font-semibold">Imagem de Destaque</Label>
+              <BlogImageUpload
+                currentImageUrl={featuredImage || null}
+                onImageUploaded={setFeaturedImage}
+                onImageRemoved={() => setFeaturedImage('')}
+              />
             </div>
           </div>
-        </div>
 
-        {/* Curation Fields - Only for Super Authors */}
-        {isSuperAuthor && (
+          {/* Right Column: Sidebar (1/3) */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Sticky Sidebar */}
+            <div className="lg:sticky lg:top-6 space-y-6">
+              {/* Editor Metrics */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Métricas do Post</h3>
+                <EditorMetrics title={title} excerpt={excerpt || ''} content={content} />
+              </div>
+
+              {/* Site Selection */}
+              <Card className="border-border/40 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Site de Publicação
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select 
+                    value={selectedTenantId || 'context'} 
+                    onValueChange={(value) => setSelectedTenantId(value === 'context' ? null : value)}
+                  >
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Selecione o site" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="context">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-medium">🌐 Site Atual (Auto)</span>
+                          <span className="text-xs text-muted-foreground">
+                            {contextTenant ? `${contextTenant.name}` : 'Detectado pela URL'}
+                          </span>
+                        </div>
+                      </SelectItem>
+                      
+                      <div className="my-1 border-t" />
+                      
+                      {availableTenants.map((tenant) => (
+                        <SelectItem key={tenant.id} value={tenant.id}>
+                          <div className="flex flex-col gap-1">
+                            <span className="font-medium flex items-center gap-2">
+                              {tenant.slug === 'alopsi' && '🟢'}
+                              {tenant.slug === 'medcos' && '🔵'}
+                              {tenant.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">{tenant.slug}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {selectedTenantId 
+                      ? 'Post será criado para o site selecionado' 
+                      : 'Post será criado para o site atual'}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Tags */}
+              <Card className="border-border/40 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Tags</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <TagSelector
+                    selectedTags={selectedTags}
+                    onChange={setSelectedTags}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Publication Settings */}
+              <Card className="border-border/40 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Configurações</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="status" className="text-sm font-medium">Status</Label>
+                    <Select 
+                      value={watch('status')} 
+                      onValueChange={(value) => setValue('status', value as 'draft' | 'published')}
+                    >
+                      <SelectTrigger id="status" className="mt-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">📝 Rascunho</SelectItem>
+                        <SelectItem value="published">✅ Publicado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <Label htmlFor="allow_comments" className="text-sm">Comentários</Label>
+                    <Switch
+                      id="allow_comments"
+                      checked={watch('allow_comments') ?? true}
+                      onCheckedChange={(checked) => setValue('allow_comments', checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="allow_ratings" className="text-sm">Avaliações</Label>
+                    <Switch
+                      id="allow_ratings"
+                      checked={watch('allow_ratings') ?? true}
+                      onCheckedChange={(checked) => setValue('allow_ratings', checked)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Curation Fields - Only for Super Authors */}
+              {isSuperAuthor && (
           <Card className="border-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -648,10 +680,14 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
                 </Select>
               </div>
             </CardContent>
-          </Card>
-        )}
+              </Card>
+              )}
+            </div>
+          </div>
+        </div>
 
-        <div className="flex gap-3">
+        {/* Form Actions */}
+        <div className="flex gap-3 pt-6 border-t">
           <Button type="submit" disabled={createPost.isPending || updatePost.isPending || slugExists}>
             {createPost.isPending || updatePost.isPending ? 'Salvando...' : 'Salvar Post'}
           </Button>

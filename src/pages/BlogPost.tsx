@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, Eye, Home, Bookmark, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Eye, Home, Bookmark, RefreshCw, Star, MessageCircle } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -33,6 +33,9 @@ import { ShareButtonsFloating } from '@/components/blog/ShareButtonsFloating';
 import { PostStats } from '@/components/blog/PostStats';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { BlogPostSidebar } from '@/components/blog/BlogPostSidebar';
+import { ReadingPreferences } from '@/components/blog/ReadingPreferences';
+import { useReadingPreferences } from '@/hooks/useReadingPreferences';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -50,6 +53,7 @@ export default function BlogPost() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { isAdmin } = useAdminAuth();
+  const { preferences } = useReadingPreferences();
   
   // First, fetch post without tenant filter to check its tenant
   const { data: postWithoutFilter, isLoading: isLoadingNoFilter } = useBlogPostBySlugWithoutTenantFilter(slug);
@@ -246,7 +250,34 @@ export default function BlogPost() {
     );
   }
 
-  const filteredRelatedPosts = relatedPosts?.filter(p => p.id !== post.id).slice(0, 2) || [];
+  const filteredRelatedPosts = relatedPosts?.filter(p => p.id !== post.id).slice(0, 3) || [];
+
+  // Reading preferences classes
+  const getContentWidthClass = () => {
+    switch (preferences.contentWidth) {
+      case 'narrow': return 'max-w-3xl';
+      case 'medium': return 'max-w-4xl';
+      case 'wide': return 'max-w-5xl xl:max-w-6xl';
+      default: return 'max-w-4xl';
+    }
+  };
+
+  const getFontSizeClass = () => {
+    switch (preferences.fontSize) {
+      case 'small': return 'prose-p:text-base prose-li:text-base';
+      case 'medium': return 'prose-p:text-lg prose-li:text-lg';
+      case 'large': return 'prose-p:text-xl prose-li:text-xl';
+      default: return 'prose-p:text-lg prose-li:text-lg';
+    }
+  };
+
+  const getThemeClass = () => {
+    switch (preferences.theme) {
+      case 'sepia': return 'reading-theme-sepia';
+      case 'dark': return 'dark';
+      default: return '';
+    }
+  };
 
   // Helper para gerar IDs consistentes para os headings
   const generateHeadingId = (text: string) => {
@@ -254,14 +285,16 @@ export default function BlogPost() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={`min-h-screen flex flex-col ${getThemeClass()}`}>
       <ReadingProgress />
       <FloatingBackButton />
       <ShareButtonsFloating url={window.location.href} title={post.title} />
-      <TableOfContents content={post.content} />
+      <ReadingPreferences />
       <Header />
       <main className="flex-1">
-        <article className="container mx-auto px-6 sm:px-8 lg:px-12 py-16 max-w-3xl xl:max-w-5xl">
+        <div className="container mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 py-12">
+          <div className="flex gap-8 xl:gap-12">
+            <article className={`flex-1 ${getContentWidthClass()} mx-auto`}>
           <div className="flex items-center justify-between mb-6">
             <Breadcrumb>
               <BreadcrumbList>
@@ -346,13 +379,14 @@ export default function BlogPost() {
           />
 
           {post.featured_image_url && (
-            <div className="aspect-video rounded-lg overflow-hidden mb-8 relative group">
+            <div className="relative h-[500px] lg:h-[600px] rounded-2xl overflow-hidden mb-12 group">
               <img
                 src={post.featured_image_url}
                 alt={post.title}
                 loading="eager"
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
             </div>
           )}
 
@@ -366,14 +400,16 @@ export default function BlogPost() {
             ))}
           </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 mt-2 leading-[1.1] tracking-tight text-balance">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-8 mt-4 leading-[1.1] tracking-tight text-balance animate-fade-in">
             {post.title}
           </h1>
 
           {post.excerpt && (
-            <p className="text-2xl text-muted-foreground leading-relaxed mb-12 font-light">
-              {post.excerpt}
-            </p>
+            <div className="relative pl-6 border-l-4 border-primary/40 mb-12">
+              <p className="text-xl sm:text-2xl text-muted-foreground leading-relaxed font-light">
+                {post.excerpt}
+              </p>
+            </div>
           )}
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 pb-6 border-b">
@@ -397,29 +433,35 @@ export default function BlogPost() {
             commentsCount={post.comments_count}
           />
 
-          <div className="my-10 w-24 h-1 bg-gradient-to-r from-primary/50 to-transparent rounded-full" />
+          <div className="my-16 flex items-center gap-4">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+            <div className="h-2 w-2 rounded-full bg-primary/40" />
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+          </div>
 
           <div 
-            className="blog-content prose prose-lg dark:prose-invert max-w-none 
+            className={`blog-content prose prose-lg dark:prose-invert max-w-none
                           prose-headings:font-bold prose-headings:tracking-tight prose-headings:scroll-mt-24
-                          prose-h1:text-4xl prose-h1:mb-8 prose-h1:mt-16 prose-h1:leading-tight
-                          prose-h2:text-3xl prose-h2:mb-6 prose-h2:mt-14 prose-h2:leading-snug
-                          prose-h3:text-2xl prose-h3:mb-5 prose-h3:mt-10 prose-h3:leading-snug
-                          prose-p:text-lg prose-p:leading-[1.9] prose-p:mb-12 prose-p:text-foreground
-                          prose-li:text-lg prose-li:leading-[1.8] prose-li:mb-3
-                          prose-ul:my-8 prose-ul:ml-8 prose-ol:my-8 prose-ol:ml-8
+                          prose-h1:text-4xl prose-h1:mb-8 prose-h1:mt-20 prose-h1:leading-tight
+                          prose-h2:text-3xl prose-h2:mb-6 prose-h2:mt-16 prose-h2:leading-snug prose-h2:border-b prose-h2:border-border/30 prose-h2:pb-3
+                          prose-h3:text-2xl prose-h3:mb-5 prose-h3:mt-12 prose-h3:leading-snug
+                          ${getFontSizeClass()}
+                          prose-p:leading-[2] prose-p:mb-16 prose-p:text-foreground
+                          prose-li:leading-[1.9] prose-li:mb-3
+                          prose-ul:my-10 prose-ul:ml-8 prose-ol:my-10 prose-ol:ml-8
                           prose-a:text-primary prose-a:font-medium prose-a:no-underline prose-a:transition-all hover:prose-a:underline hover:prose-a:text-primary/80
                           prose-strong:text-foreground prose-strong:font-semibold
                           prose-em:text-foreground/90 prose-em:italic
                           prose-blockquote:border-l-4 prose-blockquote:border-primary/40
-                          prose-blockquote:pl-6 prose-blockquote:pr-6 prose-blockquote:py-3
-                          prose-blockquote:italic prose-blockquote:text-muted-foreground
-                          prose-blockquote:bg-muted/30 prose-blockquote:rounded-r-lg prose-blockquote:my-10
+                          prose-blockquote:pl-8 prose-blockquote:pr-8 prose-blockquote:py-6
+                          prose-blockquote:italic prose-blockquote:text-lg prose-blockquote:text-muted-foreground
+                          prose-blockquote:bg-muted/30 prose-blockquote:rounded-r-lg prose-blockquote:my-12
                           prose-code:text-primary prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm prose-code:font-mono
-                          prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:my-6 prose-pre:rounded-lg
-                          prose-img:rounded-2xl prose-img:shadow-2xl prose-img:my-12
-                          prose-hr:my-10 prose-hr:border-border/50
-                          [&_.editor-spacer]:block [&_.editor-spacer]:w-full"
+                          prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:my-8 prose-pre:rounded-lg
+                          prose-img:rounded-2xl prose-img:shadow-2xl prose-img:my-16 prose-img:transition-transform prose-img:duration-300 hover:prose-img:scale-[1.02]
+                          prose-hr:my-16 prose-hr:border-border/50
+                          [&_.editor-spacer]:block [&_.editor-spacer]:w-full
+                          animate-fade-in`}
             dangerouslySetInnerHTML={{ 
               __html: DOMPurify.sanitize(post.content, {
                 ALLOWED_TAGS: [
@@ -434,11 +476,17 @@ export default function BlogPost() {
             }}
           />
 
-          <NewsletterCTA />
+          <div className="my-20 p-8 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent rounded-2xl border border-primary/10">
+            <NewsletterCTA />
+          </div>
 
           <AuthorCard author={post.author} />
 
-          <div className="mt-12 pt-8 border-t">
+          <div className="mt-16 pt-10 border-t-2 border-border/50 bg-muted/20 -mx-8 px-8 py-10 rounded-2xl">
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+              <Star className="h-6 w-6 text-primary" />
+              Avalie este artigo
+            </h3>
             <PostRating
               postId={post.id}
               allowRatings={post.allow_ratings ?? true}
@@ -461,22 +509,33 @@ export default function BlogPost() {
           )}
 
           {post.allow_comments ? (
-            <div className="mt-16 pt-8 border-t">
-              <h2 className="text-2xl font-bold mb-6">
+            <div className="mt-20 pt-10 border-t-2 border-border/50 bg-muted/10 -mx-8 px-8 py-10 rounded-2xl">
+              <h2 className="text-3xl font-bold mb-8 flex items-center gap-3">
+                <MessageCircle className="h-7 w-7 text-primary" />
                 Comentários {post.comments_count ? `(${post.comments_count})` : ''}
               </h2>
               <CommentForm postId={post.id} onCommentAdded={() => {}} />
               <CommentsList postId={post.id} refreshTrigger={0} />
             </div>
           ) : (
-            <div className="mt-16 pt-8 border-t text-center">
-              <p className="text-muted-foreground">
+            <div className="mt-20 pt-10 border-t-2 border-border/50 text-center bg-muted/10 -mx-8 px-8 py-10 rounded-2xl">
+              <MessageCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+              <p className="text-muted-foreground text-lg">
                 Os comentários estão desabilitados para este post.
               </p>
             </div>
           )}
         </article>
-      </main>
+
+        <BlogPostSidebar 
+          post={post} 
+          content={post.content}
+          relatedPosts={filteredRelatedPosts}
+          onShare={() => {}}
+        />
+      </div>
+    </div>
+  </main>
       <Footer />
     </div>
   );
