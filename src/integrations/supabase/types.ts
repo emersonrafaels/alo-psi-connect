@@ -2433,6 +2433,10 @@ export type Database = {
         Returns: string[]
       }
       publish_scheduled_posts: { Args: never; Returns: undefined }
+      user_belongs_to_institution: {
+        Args: { _institution_id: string; _user_id: string }
+        Returns: boolean
+      }
       user_has_institution_access: {
         Args: { _institution_id: string; _user_id: string }
         Returns: boolean
