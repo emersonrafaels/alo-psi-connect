@@ -2228,6 +2228,7 @@ export type Database = {
         | "moderator"
         | "author"
         | "super_author"
+        | "institution_admin"
       editorial_badge:
         | "editors_pick"
         | "trending"
@@ -2362,7 +2363,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "super_admin", "moderator", "author", "super_author"],
+      app_role: [
+        "admin",
+        "super_admin",
+        "moderator",
+        "author",
+        "super_author",
+        "institution_admin",
+      ],
       editorial_badge: [
         "editors_pick",
         "trending",
