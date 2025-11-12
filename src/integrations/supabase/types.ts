@@ -2100,23 +2100,18 @@ export type Database = {
           ativo: boolean
           available_dates: Json
           como_conheceu: string
-          cpf: string
           crp_crm: string
           data_nascimento: string
-          day: string
           days_available: number
           display_name: string
           em_destaque: boolean
           email_secundario: string
-          end_time: string
           first_name: string
           formacao_normalizada: string[]
-          formacao_raw: string
-          foto_id: number
-          foto_perfil_url: string
           genero: string
           idiomas_raw: string
           institutions: Json
+          last_available_date: string
           last_name: string
           linkedin: string
           next_available_date: string
@@ -2129,14 +2124,12 @@ export type Database = {
           raca: string
           resumo: string
           resumo_profissional: string
+          schedule_summary: Json
           servicos_normalizados: string[]
-          servicos_raw: string
           sexualidade: string
-          start_time: string
+          slots_per_day: Json
           telefone: string
-          tempo_consulta: number
           tenant_info: Json
-          time_slot: number
           total_slots_available: number
           user_email: string
           user_id: number
