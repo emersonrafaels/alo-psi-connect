@@ -2295,6 +2295,12 @@ export type Database = {
     Functions: {
       clean_old_chat_sessions: { Args: never; Returns: undefined }
       get_current_tenant_id: { Args: never; Returns: string }
+      get_institution_professional_ids: {
+        Args: { _user_id: string }
+        Returns: {
+          professional_id: number
+        }[]
+      }
       get_professionals_with_filtered_availability: {
         Args: {
           p_date_end?: string
@@ -2439,6 +2445,10 @@ export type Database = {
       }
       user_has_institution_access: {
         Args: { _institution_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_is_professional: {
+        Args: { _professional_id: number; _user_id: string }
         Returns: boolean
       }
       validate_coupon: {
