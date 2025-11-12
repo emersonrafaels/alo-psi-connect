@@ -223,6 +223,7 @@ const Header = () => {
                   variant="outline" 
                   size="sm" 
                   onClick={() => navigate(buildTenantPath(tenantSlug, '/cadastro/tipo-usuario'))}
+                  title="Criar uma nova conta gratuita"
                 >
                   Cadastrar
                 </Button>
@@ -230,6 +231,7 @@ const Header = () => {
                   variant="tenant-primary" 
                   size="sm" 
                   onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'))}
+                  title="Acessar sua conta existente"
                 >
                   Entrar
                 </Button>
@@ -347,6 +349,7 @@ const Header = () => {
       hover:text-[hsl(var(--accent-foreground))]
     "
     onClick={() => navigate(buildTenantPath(tenantSlug, '/cadastro/tipo-usuario'))}
+    title="Criar uma nova conta gratuita"
   >
     Cadastrar
   </Button>
@@ -355,6 +358,7 @@ const Header = () => {
     variant="tenant-primary"
     size="sm"
     onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'))}
+    title="Acessar sua conta existente"
   >
     Entrar
   </Button>
