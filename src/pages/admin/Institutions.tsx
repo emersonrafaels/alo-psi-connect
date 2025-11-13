@@ -29,6 +29,7 @@ import { UncataloguedInstitutionsTable } from '@/components/admin/UncataloguedIn
 import { useInstitutionPatients } from '@/hooks/useInstitutionPatients';
 import { ManageInstitutionUsersModal } from '@/components/admin/ManageInstitutionUsersModal';
 import { ManageInstitutionCouponsModal } from '@/components/admin/ManageInstitutionCouponsModal';
+import { ManageInstitutionProfessionalsModal } from '@/components/admin/ManageInstitutionProfessionalsModal';
 
 export default function Institutions() {
   const {
@@ -61,6 +62,7 @@ export default function Institutions() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [managingUsers, setManagingUsers] = useState<{ id: string; name: string } | null>(null);
   const [managingCoupons, setManagingCoupons] = useState<{ id: string; name: string } | null>(null);
+  const [managingProfessionals, setManagingProfessionals] = useState<{ id: string; name: string } | null>(null);
 
   // Contar pacientes por instituição
   const { patientInstitutions: allPatientInstitutions } = useInstitutionPatients();
@@ -345,6 +347,14 @@ export default function Institutions() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => setManagingProfessionals({ id: institution.id, name: institution.name })}
+                            title="Gerenciar Profissionais Vinculados"
+                          >
+                            <GraduationCap className="h-4 w-4 text-blue-600" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setEditingInstitution(institution)}
                           >
                             <Edit className="h-4 w-4" />
@@ -400,6 +410,12 @@ export default function Institutions() {
         institution={managingCoupons}
         isOpen={!!managingCoupons}
         onClose={() => setManagingCoupons(null)}
+      />
+
+      <ManageInstitutionProfessionalsModal
+        institution={managingProfessionals}
+        isOpen={!!managingProfessionals}
+        onClose={() => setManagingProfessionals(null)}
       />
     </AdminLayout>
   );
