@@ -35,6 +35,9 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
     isUpdating 
   } = useInstitutionCoupons(institution?.id);
 
+  // Early return if no institution selected
+  if (!institution) return null;
+
   const [editingCoupon, setEditingCoupon] = useState<InstitutionCoupon | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
 
