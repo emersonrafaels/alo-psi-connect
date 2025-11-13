@@ -66,8 +66,11 @@ export const useInstitutionCoupons = (institutionId?: string) => {
         .eq('institution_id', institutionId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as InstitutionCoupon[];
+      if (error) {
+        console.error('Error fetching coupons:', error);
+        throw error;
+      }
+      return (data || []) as unknown as InstitutionCoupon[];
     },
     enabled: !!institutionId,
   });

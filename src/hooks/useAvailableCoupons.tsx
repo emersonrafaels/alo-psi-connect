@@ -52,15 +52,21 @@ export const useAvailableCoupons = (
         .lte('valid_from', new Date().toISOString())
         .or(`valid_until.is.null,valid_until.gte.${new Date().toISOString()}`);
 
-      if (error || !coupons) return [];
+      if (error) {
+        console.error('Error fetching available coupons:', error);
+        return [];
+      }
+      
+      if (!coupons) return [];
 
       // Validar cada cupom silenciosamente
       const validCoupons: AvailableCoupon[] = [];
       
       for (const coupon of coupons) {
         try {
+          const typedCoupon = coupon as unknown as InstitutionCoupon;
           const { data: result } = await supabase.rpc('validate_coupon', {
-            _code: coupon.code,
+            _code: typedCoupon.code,
             _user_id: session.session.user.id,
             _professional_id: professionalId,
             _amount: amount,
@@ -69,7 +75,7 @@ export const useAvailableCoupons = (
 
           if (result && result[0]?.is_valid) {
             validCoupons.push({
-              ...(coupon as InstitutionCoupon),
+              ...typedCoupon,
               potentialDiscount: result[0].discount_amount,
               finalAmount: result[0].final_amount,
             });
