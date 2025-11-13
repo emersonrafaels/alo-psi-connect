@@ -12,9 +12,6 @@ export interface InstitutionCoupon {
   discount_type: 'percentage' | 'fixed_amount';
   discount_value: number;
   max_discount_amount: number | null;
-  applies_to: 'all' | 'specific_professionals' | 'specific_specialties' | 'first_appointment';
-  applicable_professional_ids: number[] | null;
-  applicable_specialties: string[] | null;
   minimum_purchase_amount: number;
   maximum_uses: number | null;
   uses_per_user: number;
@@ -42,7 +39,30 @@ export const useInstitutionCoupons = (institutionId?: string) => {
 
       const { data, error } = await supabase
         .from('institution_coupons')
-        .select('*')
+        .select(`
+          id,
+          institution_id,
+          tenant_id,
+          code,
+          name,
+          description,
+          discount_type,
+          discount_value,
+          max_discount_amount,
+          minimum_purchase_amount,
+          maximum_uses,
+          uses_per_user,
+          current_usage_count,
+          valid_from,
+          valid_until,
+          is_active,
+          created_at,
+          updated_at,
+          target_audience,
+          target_audience_user_ids,
+          professional_scope,
+          professional_scope_ids
+        `)
         .eq('institution_id', institutionId)
         .order('created_at', { ascending: false });
 
