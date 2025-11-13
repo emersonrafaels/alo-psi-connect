@@ -51,9 +51,9 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
     valid_from: new Date().toISOString().split('T')[0],
     valid_until: null as string | null,
     is_active: true,
-    target_audience: 'all' as 'all' | 'institution_students' | 'other_patients',
+    target_audience: 'institution_students' as 'all' | 'institution_students' | 'other_patients',
     target_audience_user_ids: null as string[] | null,
-    professional_scope: 'all_tenant' as 'all_tenant' | 'institution_professionals',
+    professional_scope: 'institution_professionals' as 'all_tenant' | 'institution_professionals',
     professional_scope_ids: null as number[] | null,
   };
 
