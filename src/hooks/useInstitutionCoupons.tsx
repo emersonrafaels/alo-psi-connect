@@ -24,6 +24,10 @@ export interface InstitutionCoupon {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  target_audience: 'all' | 'institution_students' | 'other_patients';
+  target_audience_user_ids: string[] | null;
+  professional_scope: 'all_tenant' | 'institution_professionals';
+  professional_scope_ids: number[] | null;
 }
 
 export const useInstitutionCoupons = (institutionId?: string) => {

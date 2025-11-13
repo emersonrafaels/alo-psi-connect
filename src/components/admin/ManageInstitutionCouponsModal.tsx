@@ -9,11 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, Trash2, Edit, Ticket, Calendar, Users, TrendingUp, Copy, HelpCircle, Sparkles, Gift, GraduationCap, Tag, Star, UserPlus } from 'lucide-react';
+import { Plus, Trash2, Edit, Ticket, Calendar, Users, TrendingUp, Copy, HelpCircle, Sparkles, Gift, GraduationCap, Tag, Star, UserPlus, MapPin } from 'lucide-react';
 import { useInstitutionCoupons, InstitutionCoupon } from '@/hooks/useInstitutionCoupons';
 import { useTenant } from '@/hooks/useTenant';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { UserMultiSelect } from './UserMultiSelect';
+import { ProfessionalMultiSelect } from './ProfessionalMultiSelect';
 
 interface Props {
   institution: { id: string; name: string } | null;
@@ -52,6 +54,10 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
     valid_from: new Date().toISOString().split('T')[0],
     valid_until: null as string | null,
     is_active: true,
+    target_audience: 'all' as 'all' | 'institution_students' | 'other_patients',
+    target_audience_user_ids: null as string[] | null,
+    professional_scope: 'all_tenant' as 'all_tenant' | 'institution_professionals',
+    professional_scope_ids: null as number[] | null,
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -74,6 +80,10 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
       valid_from: coupon.valid_from.split('T')[0],
       valid_until: coupon.valid_until ? coupon.valid_until.split('T')[0] : null,
       is_active: coupon.is_active,
+      target_audience: coupon.target_audience,
+      target_audience_user_ids: coupon.target_audience_user_ids,
+      professional_scope: coupon.professional_scope,
+      professional_scope_ids: coupon.professional_scope_ids,
     });
     setIsCreatingNew(true);
   };
@@ -471,6 +481,122 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
                   </span>
                 </div>
               </FieldWithTooltip>
+
+              {/* === NOVAS SEÇÕES: Target Audience e Professional Scope === */}
+              
+              {/* Seção: Para Quem é Aplicado */}
+              <div className="space-y-4 border rounded-lg p-4 bg-muted/30">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Para Quem é Aplicado
+                </h4>
+                
+                <FieldWithTooltip
+                  label="Público-Alvo"
+                  tooltip="Define quem pode usar este cupom"
+                >
+                  <Select
+                    value={formData.target_audience}
+                    onValueChange={(value: any) => setFormData({ 
+                      ...formData, 
+                      target_audience: value,
+                      target_audience_user_ids: null
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Todos os pacientes
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="institution_students">
+                        <div className="flex items-center gap-2">
+                          <GraduationCap className="h-4 w-4" />
+                          Apenas alunos da instituição
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="other_patients">
+                        <div className="flex items-center gap-2">
+                          <UserPlus className="h-4 w-4" />
+                          Apenas pacientes não-alunos
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FieldWithTooltip>
+
+                {(formData.target_audience === 'institution_students' || 
+                  formData.target_audience === 'other_patients') && (
+                  <FieldWithTooltip
+                    label="Usuários Específicos (Opcional)"
+                    tooltip="Deixe vazio para aplicar a todos do grupo selecionado"
+                  >
+                    <UserMultiSelect
+                      institutionId={institution!.id}
+                      selectedUserIds={formData.target_audience_user_ids || []}
+                      onChange={(ids) => setFormData({ ...formData, target_audience_user_ids: ids })}
+                      filterType={formData.target_audience}
+                    />
+                  </FieldWithTooltip>
+                )}
+              </div>
+
+              {/* Seção: Em Que Consultas é Aplicado */}
+              <div className="space-y-4 border rounded-lg p-4 bg-muted/30">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Em Que Consultas é Aplicado
+                </h4>
+                
+                <FieldWithTooltip
+                  label="Abrangência de Profissionais"
+                  tooltip="Define em quais consultas o cupom pode ser usado"
+                >
+                  <Select
+                    value={formData.professional_scope}
+                    onValueChange={(value: any) => setFormData({ 
+                      ...formData, 
+                      professional_scope: value,
+                      professional_scope_ids: null
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_tenant">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Todos os profissionais da {tenant?.name}
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="institution_professionals">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Apenas profissionais da instituição
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FieldWithTooltip>
+
+                {formData.professional_scope === 'institution_professionals' && (
+                  <FieldWithTooltip
+                    label="Profissionais Específicos (Opcional)"
+                    tooltip="Deixe vazio para aplicar a todos os profissionais da instituição"
+                  >
+                    <ProfessionalMultiSelect
+                      institutionId={institution!.id}
+                      selectedProfessionalIds={formData.professional_scope_ids || []}
+                      onChange={(ids) => setFormData({ ...formData, professional_scope_ids: ids })}
+                    />
+                  </FieldWithTooltip>
+                )}
+              </div>
 
               <div className="flex gap-2">
                 <Button type="submit" disabled={isCreating || isUpdating}>

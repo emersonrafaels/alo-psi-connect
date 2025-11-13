@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ interface CouponValidatorProps {
     finalAmount: number;
   }) => void;
   onCouponRemoved: () => void;
+  autoApplyCode?: string; // Código para aplicar automaticamente
 }
 
 export const CouponValidator = ({
@@ -26,6 +27,7 @@ export const CouponValidator = ({
   tenantId,
   onCouponApplied,
   onCouponRemoved,
+  autoApplyCode,
 }: CouponValidatorProps) => {
   const { validateCoupon } = useInstitutionCoupons();
   const [couponCode, setCouponCode] = useState('');
@@ -37,6 +39,43 @@ export const CouponValidator = ({
     couponId: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-aplicar cupom quando autoApplyCode é fornecido
+  useEffect(() => {
+    if (autoApplyCode && !appliedCoupon && !isValidating) {
+      setCouponCode(autoApplyCode);
+      // Trigger validation
+      (async () => {
+        setIsValidating(true);
+        setError(null);
+
+        try {
+          const result = await validateCoupon(autoApplyCode.toUpperCase(), professionalId, amount, tenantId);
+
+          if (result.is_valid) {
+            const couponData = {
+              couponId: result.coupon_id,
+              code: autoApplyCode.toUpperCase(),
+              discountAmount: result.discount_amount,
+              finalAmount: result.final_amount,
+            };
+            
+            setAppliedCoupon(couponData);
+            onCouponApplied(couponData);
+            setError(null);
+          } else {
+            setError(result.error_message || 'Cupom inválido');
+            setAppliedCoupon(null);
+          }
+        } catch (err: any) {
+          setError(err.message || 'Erro ao validar cupom');
+          setAppliedCoupon(null);
+        } finally {
+          setIsValidating(false);
+        }
+      })();
+    }
+  }, [autoApplyCode, appliedCoupon, isValidating]);
 
   const handleValidate = async () => {
     if (!couponCode.trim()) return;
