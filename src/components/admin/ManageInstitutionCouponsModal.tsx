@@ -45,9 +45,6 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
     discount_type: 'percentage' as 'percentage' | 'fixed_amount',
     discount_value: 0,
     max_discount_amount: null as number | null,
-    applies_to: 'all' as 'all' | 'specific_professionals' | 'specific_specialties' | 'first_appointment',
-    applicable_professional_ids: null as number[] | null,
-    applicable_specialties: null as string[] | null,
     minimum_purchase_amount: 0,
     maximum_uses: null as number | null,
     uses_per_user: 1,
@@ -71,9 +68,6 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
       discount_type: coupon.discount_type,
       discount_value: coupon.discount_value,
       max_discount_amount: coupon.max_discount_amount,
-      applies_to: coupon.applies_to,
-      applicable_professional_ids: coupon.applicable_professional_ids,
-      applicable_specialties: coupon.applicable_specialties,
       minimum_purchase_amount: coupon.minimum_purchase_amount,
       maximum_uses: coupon.maximum_uses,
       uses_per_user: coupon.uses_per_user,
@@ -380,27 +374,7 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FieldWithTooltip
-                  label="Aplica-se a"
-                  tooltip="Defina o escopo do cupom: todos os profissionais, apenas profissionais específicos, especialidades específicas, ou somente primeira consulta do paciente."
-                >
-                  <Select
-                    value={formData.applies_to}
-                    onValueChange={(value: any) => setFormData({ ...formData, applies_to: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os profissionais</SelectItem>
-                      <SelectItem value="specific_professionals">Profissionais específicos</SelectItem>
-                      <SelectItem value="specific_specialties">Especialidades específicas</SelectItem>
-                      <SelectItem value="first_appointment">Primeira consulta</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FieldWithTooltip>
-
+              <div className="space-y-4">
                 <FieldWithTooltip
                   label="Valor Mínimo da Compra (R$)"
                   tooltip="Valor mínimo da consulta para que o cupom seja válido. Use 0 para permitir qualquer valor."

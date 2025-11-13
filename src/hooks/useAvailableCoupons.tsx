@@ -23,7 +23,30 @@ export const useAvailableCoupons = (
       // Buscar todos os cupons ativos do tenant
       const { data: coupons, error } = await supabase
         .from('institution_coupons')
-        .select('*')
+        .select(`
+          id,
+          institution_id,
+          tenant_id,
+          code,
+          name,
+          description,
+          discount_type,
+          discount_value,
+          max_discount_amount,
+          minimum_purchase_amount,
+          maximum_uses,
+          uses_per_user,
+          current_usage_count,
+          valid_from,
+          valid_until,
+          is_active,
+          created_at,
+          updated_at,
+          target_audience,
+          target_audience_user_ids,
+          professional_scope,
+          professional_scope_ids
+        `)
         .eq('tenant_id', tenantId)
         .eq('is_active', true)
         .lte('valid_from', new Date().toISOString())
