@@ -22,6 +22,10 @@ import { useTenant } from "@/hooks/useTenant"
 import { buildTenantPath } from "@/utils/tenantHelpers"
 import { CouponValidator } from "@/components/CouponValidator"
 import { useCouponTracking } from "@/hooks/useCouponTracking"
+import { AvailableCouponsDisplay } from "@/components/AvailableCouponsDisplay"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Sparkles } from "lucide-react"
+import { useAvailableCoupons } from "@/hooks/useAvailableCoupons"
 
 
 interface BookingData {
@@ -46,6 +50,7 @@ const BookingConfirmation = () => {
   const { recordCouponUsage } = useCouponTracking()
   const [loading, setLoading] = useState(false)
   const [showQuickSignup, setShowQuickSignup] = useState(false)
+  const [autoApplyCode, setAutoApplyCode] = useState<string | undefined>(undefined)
   const [appliedCoupon, setAppliedCoupon] = useState<{
     couponId: string;
     code: string;
@@ -690,7 +695,19 @@ const BookingConfirmation = () => {
               </CardContent>
             </Card>
 
-            {/* Cupom de Desconto */}
+            {/* Cupom de Desconto - Visualização Proativa */}
+            {bookingData && !appliedCoupon && (
+              <AvailableCouponsDisplay
+                professionalId={parseInt(bookingData.professionalId)}
+                amount={parseFloat(bookingData.price)}
+                tenantId={tenant?.id || ''}
+                onCouponSelect={(code) => {
+                  setAutoApplyCode(code);
+                }}
+              />
+            )}
+
+            {/* Cupom de Desconto - Validação Manual */}
             {bookingData && (
               <CouponValidator
                 professionalId={parseInt(bookingData.professionalId)}
@@ -698,6 +715,7 @@ const BookingConfirmation = () => {
                 tenantId={tenant?.id || ''}
                 onCouponApplied={handleCouponApplied}
                 onCouponRemoved={handleCouponRemoved}
+                autoApplyCode={autoApplyCode}
               />
             )}
           </div>
