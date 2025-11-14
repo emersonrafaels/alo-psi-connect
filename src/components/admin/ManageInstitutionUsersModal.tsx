@@ -203,44 +203,18 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
   // Mutation para adicionar vínculo
   const addUserLinkMutation = useMutation({
     mutationFn: async ({ profileId, userType }: { profileId: string; userType: 'paciente' | 'profissional' }) => {
-      if (userType === 'paciente') {
-        // Buscar patient_id do usuário
-        const { data: patient } = await supabase
-          .from('pacientes')
-          .select('id')
-          .eq('profile_id', profileId)
-          .single();
-        
-        if (!patient) throw new Error('Perfil de paciente não encontrado');
-        
-        const { error } = await supabase
-          .from('patient_institutions')
-          .insert({
-            patient_id: patient.id,
-            institution_id: institution!.id
-          });
-        
-        if (error) throw error;
-      } else {
-        // Buscar professional_id do usuário
-        const { data: professional } = await supabase
-          .from('profissionais')
-          .select('id')
-          .eq('profile_id', profileId)
-          .single();
-        
-        if (!professional) throw new Error('Perfil de profissional não encontrado');
-        
-        const { error } = await supabase
-          .from('professional_institutions')
-          .insert({
-            professional_id: professional.id,
-            institution_id: institution!.id,
-            relationship_type: 'employee'
-          });
-        
-        if (error) throw error;
-      }
+      if (!institution) throw new Error('Instituição não selecionada');
+      
+      const { data: result, error } = await supabase.functions.invoke('link-user-to-institution', {
+        body: {
+          institutionId: institution.id,
+          profileId: profileId,
+          userType: userType
+        }
+      });
+      
+      if (error) throw error;
+      if (!result?.success) throw new Error(result?.error || 'Erro ao vincular usuário');
     },
     onSuccess: (_, variables) => {
       if (variables.userType === 'paciente') {

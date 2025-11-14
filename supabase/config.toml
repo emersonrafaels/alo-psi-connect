@@ -124,3 +124,6 @@ verify_jwt = false
 
 [functions.create-institutional-user]
 verify_jwt = false
+
+[functions.link-user-to-institution]
+verify_jwt = true
