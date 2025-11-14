@@ -36,6 +36,14 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
     queryFn: async () => {
       if (!institution) return [];
       
+      // Buscar super admins para excluir
+      const { data: superAdmins } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'super_admin');
+      
+      const superAdminIds = superAdmins?.map(sa => sa.user_id) || [];
+      
       const { data, error } = await supabase
         .from('patient_institutions')
         .select(`
@@ -45,13 +53,18 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
           pacientes!inner(
             id,
             profile_id,
-            profiles!inner(nome, email, user_id)
+            profiles!inner(nome, email, user_id, tipo_usuario)
           )
         `)
         .eq('institution_id', institution.id);
       
       if (error) throw error;
-      return data;
+      
+      // Filtrar super admins e usuários com tipo_usuario = 'admin'
+      return data?.filter(p => 
+        !superAdminIds.includes(p.pacientes.profiles.user_id) &&
+        p.pacientes.profiles.tipo_usuario !== 'admin'
+      ) || [];
     },
     enabled: !!institution,
   });
@@ -61,6 +74,14 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
     queryKey: ['institution-professionals', institution?.id],
     queryFn: async () => {
       if (!institution) return [];
+      
+      // Buscar super admins para excluir
+      const { data: superAdmins } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'super_admin');
+      
+      const superAdminIds = superAdmins?.map(sa => sa.user_id) || [];
       
       const { data, error } = await supabase
         .from('professional_institutions')
@@ -72,13 +93,18 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
             id,
             profile_id,
             profissao,
-            profiles!inner(nome, email, user_id)
+            profiles!inner(nome, email, user_id, tipo_usuario)
           )
         `)
         .eq('institution_id', institution.id);
       
       if (error) throw error;
-      return data;
+      
+      // Filtrar super admins e usuários com tipo_usuario = 'admin'
+      return data?.filter(p => 
+        !superAdminIds.includes(p.profissionais.profiles.user_id) &&
+        p.profissionais.profiles.tipo_usuario !== 'admin'
+      ) || [];
     },
     enabled: !!institution,
   });
@@ -89,10 +115,23 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
     queryFn: async () => {
       if (!institution) return [];
       
+      // Buscar super admins para excluir
+      const { data: superAdmins } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'super_admin');
+      
+      const superAdminIds = superAdmins?.map(sa => sa.user_id) || [];
+      
       let query = supabase
         .from('profiles')
         .select('id, user_id, nome, email, tipo_usuario')
+        .neq('tipo_usuario', 'admin') // Não mostrar admins do sistema
         .order('nome');
+      
+      if (superAdminIds.length > 0) {
+        query = query.not('user_id', 'in', `(${superAdminIds.join(',')})`);
+      }
       
       if (debouncedSearch) {
         query = query.or(`nome.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%`);
