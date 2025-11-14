@@ -84,12 +84,6 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
     enabled: !!institution && activeTab === 'manage',
   });
 
-  // Buscar tenant_id da instituição (opcional)
-  const institutionData = { tenant_id: null };
-
-  // Early return após todos os hooks serem declarados
-  if (!institution) return null;
-
   // Adicionar usuário existente
   const addUserMutation = useMutation({
     mutationFn: async ({ userId, userName, userEmail }: { userId: string; userName: string; userEmail: string }) => {
@@ -199,6 +193,12 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
       });
     },
   });
+
+  // Buscar tenant_id da instituição (opcional)
+  const institutionData = { tenant_id: null };
+
+  // Early return após TODOS os hooks (queries e mutations) serem declarados
+  if (!institution) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
