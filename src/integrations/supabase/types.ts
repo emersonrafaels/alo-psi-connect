@@ -2296,6 +2296,13 @@ export type Database = {
       }
     }
     Functions: {
+      check_user_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       clean_old_chat_sessions: { Args: never; Returns: undefined }
       get_current_tenant_id: { Args: never; Returns: string }
       get_institution_professional_ids: {
@@ -2433,6 +2440,7 @@ export type Database = {
       invoke_blog_analytics_aggregation: { Args: never; Returns: undefined }
       invoke_google_calendar_sync: { Args: never; Returns: undefined }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       normalize_specialties: {
         Args: { raw_specialties: string[] }
         Returns: string[]
