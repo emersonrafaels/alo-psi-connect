@@ -215,15 +215,30 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
       
       if (error) throw error;
       if (!result?.success) throw new Error(result?.error || 'Erro ao vincular usuário');
+      
+      return result;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (result, variables) => {
+      // Invalidar queries para forçar atualização
       if (variables.userType === 'paciente') {
-        queryClient.invalidateQueries({ queryKey: ['institution-patients'] });
+        queryClient.invalidateQueries({ queryKey: ['institution-patients', institution?.id] });
       } else {
-        queryClient.invalidateQueries({ queryKey: ['institution-professionals'] });
+        queryClient.invalidateQueries({ queryKey: ['institution-professionals', institution?.id] });
       }
-      queryClient.invalidateQueries({ queryKey: ['available-users'] });
-      toast({ title: 'Vínculo criado', description: 'Usuário vinculado com sucesso.' });
+      queryClient.invalidateQueries({ queryKey: ['available-users', institution?.id] });
+      
+      // Mensagem apropriada
+      if (result.alreadyLinked) {
+        toast({ 
+          title: 'Usuário já vinculado', 
+          description: 'Este usuário já está vinculado a esta instituição.' 
+        });
+      } else {
+        toast({ 
+          title: 'Vínculo criado', 
+          description: 'Usuário vinculado com sucesso.' 
+        });
+      }
     },
     onError: (error: any) => {
       toast({

@@ -100,6 +100,15 @@ Deno.serve(async (req) => {
         })
 
       if (linkError) {
+        // Se for erro de chave duplicada, retornar sucesso com flag
+        if (linkError.code === '23505') {
+          console.log('⚠️ [Link User] Paciente já vinculado à instituição')
+          return new Response(
+            JSON.stringify({ success: true, message: 'Paciente já vinculado', alreadyLinked: true }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        
         console.error('❌ [Link User] Erro ao vincular paciente:', linkError)
         return new Response(
           JSON.stringify({ error: 'Erro ao vincular paciente' }),
@@ -139,6 +148,15 @@ Deno.serve(async (req) => {
         })
 
       if (linkError) {
+        // Se for erro de chave duplicada, retornar sucesso com flag
+        if (linkError.code === '23505') {
+          console.log('⚠️ [Link User] Profissional já vinculado à instituição')
+          return new Response(
+            JSON.stringify({ success: true, message: 'Profissional já vinculado', alreadyLinked: true }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        
         console.error('❌ [Link User] Erro ao vincular profissional:', linkError)
         return new Response(
           JSON.stringify({ error: 'Erro ao vincular profissional' }),
