@@ -2311,6 +2311,12 @@ export type Database = {
           professional_id: number
         }[]
       }
+      get_patient_institutions_for_institution_admin: {
+        Args: { admin_user_id: string }
+        Returns: {
+          patient_id: string
+        }[]
+      }
       get_professionals_with_filtered_availability: {
         Args: {
           p_date_end?: string
