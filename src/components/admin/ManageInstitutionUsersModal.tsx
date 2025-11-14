@@ -6,11 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Trash2, Mail, Users } from 'lucide-react';
+import { Plus, Trash2, Search, UserPlus, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useUserManagement } from '@/hooks/useUserManagement';
+import { useDebounce } from '@/hooks/useDebounce';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Props {
   institution: { id: string; name: string } | null;
@@ -23,8 +26,9 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
   const queryClient = useQueryClient();
   const { createInstitutionalUser, loading } = useUserManagement();
   
-  const [newUserEmail, setNewUserEmail] = useState('');
-  const [activeTab, setActiveTab] = useState<'view' | 'add' | 'create'>('view');
+  const [activeTab, setActiveTab] = useState<'manage' | 'create'>('manage');
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const [newUserData, setNewUserData] = useState({
     nome: '',
     email: '',
@@ -32,9 +36,11 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
     institutionRole: 'viewer' as 'admin' | 'viewer'
   });
 
+  if (!institution) return null;
+
   // Buscar usuários vinculados
-  const { data: institutionUsers } = useQuery({
-    queryKey: ['institution-users', institution?.id],
+  const { data: institutionUsers, isLoading: loadingLinked } = useQuery({
+    queryKey: ['institution-users', institution.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('institution_users')
@@ -45,7 +51,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
           is_active,
           profiles!inner(nome, email)
         `)
-        .eq('institution_id', institution!.id);
+        .eq('institution_id', institution.id);
 
       if (error) throw error;
       return data;
@@ -53,41 +59,78 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
     enabled: !!institution,
   });
 
-  // Adicionar usuário
-  const addUserMutation = useMutation({
-    mutationFn: async (email: string) => {
-      // 1. Buscar user_id pelo email
-      const { data: profile, error: profileError } = await supabase
+  // Buscar todos os usuários disponíveis (não vinculados)
+  const { data: availableUsers, isLoading: loadingAvailable } = useQuery({
+    queryKey: ['available-users', institution.id, debouncedSearch],
+    queryFn: async () => {
+      let query = supabase
         .from('profiles')
-        .select('user_id')
-        .eq('email', email)
-        .single();
+        .select('id, user_id, nome, email, tipo_usuario')
+        .order('nome');
+      
+      if (debouncedSearch) {
+        query = query.or(`nome.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%`);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      // Filtrar usuários que já estão vinculados
+      const linkedUserIds = institutionUsers?.map(u => u.user_id) || [];
+      return data?.filter(u => !linkedUserIds.includes(u.user_id)) || [];
+    },
+    enabled: !!institution && activeTab === 'manage',
+  });
 
-      if (profileError) throw new Error('Usuário não encontrado');
+  // Buscar tenant_id da instituição (opcional)
+  const institutionData = { tenant_id: null };
 
-      // 2. Adicionar role institution_admin
+  // Adicionar usuário existente
+  const addUserMutation = useMutation({
+    mutationFn: async ({ userId, userName, userEmail }: { userId: string; userName: string; userEmail: string }) => {
+      // 1. Adicionar role institution_admin
       const { error: roleError } = await supabase
         .from('user_roles')
-        .insert({ user_id: profile.user_id, role: 'institution_admin' });
+        .insert({ user_id: userId, role: 'institution_admin' });
 
       if (roleError && !roleError.message.includes('duplicate')) throw roleError;
 
-      // 3. Vincular à instituição
+      // 2. Vincular à instituição
       const { error: institutionError } = await supabase
         .from('institution_users')
         .insert({
-          user_id: profile.user_id,
-          institution_id: institution!.id,
+          user_id: userId,
+          institution_id: institution.id,
           role: 'admin',
         });
 
       if (institutionError) throw institutionError;
+
+      // 3. Enviar email de notificação
+      try {
+        await supabase.functions.invoke('notify-institution-link', {
+          body: {
+            userEmail,
+            userName,
+            institutionName: institution.name,
+            role: 'admin',
+            tenantId: institutionData?.tenant_id,
+          },
+        });
+      } catch (emailError) {
+        console.error('Erro ao enviar email:', emailError);
+        // Não falhar a operação se o email não enviar
+      }
+
+      return { userName, userEmail };
     },
-    onSuccess: () => {
+    onSuccess: ({ userName }) => {
       queryClient.invalidateQueries({ queryKey: ['institution-users'] });
-      toast({ title: 'Usuário adicionado com sucesso' });
-      setNewUserEmail('');
-      setActiveTab('view');
+      queryClient.invalidateQueries({ queryKey: ['available-users'] });
+      toast({ 
+        title: 'Usuário adicionado com sucesso',
+        description: `${userName} foi vinculado à instituição e receberá um email de notificação.`,
+      });
     },
     onError: (error: any) => {
       toast({
@@ -103,7 +146,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
     mutationFn: async () => {
       const result = await createInstitutionalUser({
         ...newUserData,
-        institutionId: institution!.id,
+        institutionId: institution.id,
       });
       if (!result.success) throw new Error(result.error);
       return result.data;
@@ -111,8 +154,13 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['institution-users'] });
       toast({ title: 'Usuário criado e vinculado com sucesso' });
-      setActiveTab('view');
-      setNewUserData({ nome: '', email: '', password: '', institutionRole: 'viewer' });
+      setActiveTab('manage');
+      setNewUserData({
+        nome: '',
+        email: '',
+        password: '',
+        institutionRole: 'viewer'
+      });
     },
     onError: (error: any) => {
       toast({
@@ -125,190 +173,232 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
 
   // Remover usuário
   const removeUserMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (institutionUserId: string) => {
       const { error } = await supabase
         .from('institution_users')
         .delete()
-        .eq('id', id);
+        .eq('id', institutionUserId);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['institution-users'] });
-      toast({ title: 'Usuário removido' });
+      queryClient.invalidateQueries({ queryKey: ['available-users'] });
+      toast({ title: 'Usuário removido com sucesso' });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro ao remover usuário',
+        description: error.message,
+        variant: 'destructive',
+      });
     },
   });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>
-            Gerenciar Usuários - {institution?.name}
-          </DialogTitle>
+          <DialogTitle>Gerenciar Usuários - {institution.name}</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'view' | 'add' | 'create')} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="view">
-              <Users className="h-4 w-4 mr-2" />
-              Ver Usuários
-            </TabsTrigger>
-            <TabsTrigger value="add">
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Existente
-            </TabsTrigger>
-            <TabsTrigger value="create">
-              <Plus className="h-4 w-4 mr-2" />
-              Criar Novo
-            </TabsTrigger>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'manage' | 'create')} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="manage">Gerenciar Usuários</TabsTrigger>
+            <TabsTrigger value="create">Criar Novo</TabsTrigger>
           </TabsList>
 
-          {/* Aba Ver Usuários */}
-          <TabsContent value="view" className="space-y-3">
-            {institutionUsers && institutionUsers.length > 0 && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                <Users className="h-4 w-4" />
-                <span>{institutionUsers.length} usuário{institutionUsers.length !== 1 ? 's' : ''} vinculado{institutionUsers.length !== 1 ? 's' : ''}</span>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              {institutionUsers?.map((user: any) => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{user.profiles.nome}</p>
-                      <p className="text-sm text-muted-foreground">{user.profiles.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge 
-                      variant={user.role === 'admin' ? 'default' : 'secondary'}
-                      className={user.role === 'admin' ? 'bg-primary' : 'bg-muted'}
-                    >
-                      {user.role === 'admin' ? 'Administrador' : 'Visualizador'}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeUserMutation.mutate(user.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {(!institutionUsers || institutionUsers.length === 0) && (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
-                <p className="text-muted-foreground font-medium">Nenhum usuário vinculado</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Use as abas acima para adicionar ou criar usuários
-                </p>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Aba Adicionar Existente */}
-          <TabsContent value="add">
+          {/* TAB: GERENCIAR USUÁRIOS */}
+          <TabsContent value="manage" className="space-y-6">
+            {/* SEÇÃO: Usuários Vinculados */}
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Adicione um usuário já cadastrado no sistema informando seu email:
-              </p>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Email do usuário..."
-                  value={newUserEmail}
-                  onChange={(e) => setNewUserEmail(e.target.value)}
-                />
-                <Button
-                  onClick={() => addUserMutation.mutate(newUserEmail)}
-                  disabled={!newUserEmail || addUserMutation.isPending}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  {addUserMutation.isPending ? 'Adicionando...' : 'Adicionar'}
-                </Button>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Usuários Vinculados {institutionUsers && `(${institutionUsers.length})`}
+                </h3>
               </div>
+
+              {loadingLinked ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : !institutionUsers || institutionUsers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">Nenhum usuário vinculado ainda</p>
+                </div>
+              ) : (
+                <ScrollArea className="h-[200px] rounded-md border">
+                  <div className="p-4 space-y-3">
+                    {institutionUsers.map((user: any) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{user.profiles.nome}</p>
+                          <p className="text-xs text-muted-foreground">{user.profiles.email}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                            {user.role === 'admin' ? 'Admin' : 'Visualizador'}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeUserMutation.mutate(user.id)}
+                            disabled={removeUserMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* SEÇÃO: Adicionar Usuários Existentes */}
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-foreground">Adicionar Usuários Existentes</h3>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nome ou email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {loadingAvailable ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : !availableUsers || availableUsers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">
+                    {debouncedSearch 
+                      ? 'Nenhum usuário encontrado com esse termo'
+                      : 'Todos os usuários já estão vinculados'}
+                  </p>
+                </div>
+              ) : (
+                <ScrollArea className="h-[250px] rounded-md border">
+                  <div className="p-4 space-y-2">
+                    {availableUsers.map((user: any) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{user.nome}</p>
+                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {user.tipo_usuario || 'paciente'}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            onClick={() => addUserMutation.mutate({
+                              userId: user.user_id,
+                              userName: user.nome,
+                              userEmail: user.email
+                            })}
+                            disabled={addUserMutation.isPending}
+                          >
+                            {addUserMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <>
+                                <UserPlus className="h-4 w-4 mr-1" />
+                                Adicionar
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
             </div>
           </TabsContent>
 
-          {/* Aba Criar Novo */}
-          <TabsContent value="create">
-            <div className="space-y-3 border p-4 rounded-lg bg-muted/30">
-              <p className="text-sm text-muted-foreground mb-3">
-                Crie um novo usuário e vincule-o automaticamente a esta instituição:
-              </p>
-              <div>
+          {/* TAB: CRIAR NOVO USUÁRIO */}
+          <TabsContent value="create" className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
                 <Label htmlFor="nome">Nome Completo</Label>
                 <Input
                   id="nome"
-                  placeholder="Ex: João Silva"
                   value={newUserData.nome}
-                  onChange={(e) => setNewUserData(prev => ({ ...prev, nome: e.target.value }))}
+                  onChange={(e) => setNewUserData({ ...newUserData, nome: e.target.value })}
+                  placeholder="Nome do usuário"
                 />
               </div>
-              <div>
+
+              <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="joao@instituicao.edu.br"
                   value={newUserData.email}
-                  onChange={(e) => setNewUserData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+                  placeholder="email@exemplo.com"
                 />
               </div>
-              <div>
+
+              <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Mínimo 8 caracteres"
                   value={newUserData.password}
-                  onChange={(e) => setNewUserData(prev => ({ ...prev, password: e.target.value }))}
+                  onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                  placeholder="Mínimo 6 caracteres"
                 />
               </div>
-              <div>
-                <Label htmlFor="role">Nível de Acesso</Label>
-                <Select 
-                  value={newUserData.institutionRole} 
-                  onValueChange={(value: 'admin' | 'viewer') => 
-                    setNewUserData(prev => ({ ...prev, institutionRole: value }))
+
+              <div className="space-y-2">
+                <Label htmlFor="role">Função na Instituição</Label>
+                <Select
+                  value={newUserData.institutionRole}
+                  onValueChange={(value: 'admin' | 'viewer') =>
+                    setNewUserData({ ...newUserData, institutionRole: value })
                   }
                 >
-                  <SelectTrigger id="role">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="viewer">Visualizador</SelectItem>
                     <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="viewer">Visualizador</SelectItem>
                   </SelectContent>
                 </Select>
-                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  <p><strong>Visualizador:</strong> Pode apenas visualizar profissionais e alunos vinculados à instituição. Acesso somente leitura.</p>
-                  <p><strong>Administrador:</strong> Pode visualizar dados e gerenciar cupons promocionais da instituição (criar, editar, desativar).</p>
-                </div>
               </div>
-              <Button 
+
+              <Button
                 onClick={() => createUserMutation.mutate()}
-                disabled={
-                  createUserMutation.isPending || 
-                  loading ||
-                  !newUserData.nome || 
-                  !newUserData.email || 
-                  !newUserData.password ||
-                  newUserData.password.length < 8
-                }
+                disabled={loading || createUserMutation.isPending || !newUserData.nome || !newUserData.email || !newUserData.password}
                 className="w-full"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                {createUserMutation.isPending || loading ? 'Criando...' : 'Criar e Vincular Usuário'}
+                {(loading || createUserMutation.isPending) ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Criando...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Criar e Vincular Usuário
+                  </>
+                )}
               </Button>
             </div>
           </TabsContent>
