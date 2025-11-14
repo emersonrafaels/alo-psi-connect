@@ -1021,9 +1021,6 @@ export type Database = {
       }
       institution_coupons: {
         Row: {
-          applicable_professional_ids: number[] | null
-          applicable_specialties: string[] | null
-          applies_to: string
           code: string
           created_at: string
           created_by: string | null
@@ -1039,6 +1036,10 @@ export type Database = {
           metadata: Json | null
           minimum_purchase_amount: number | null
           name: string
+          professional_scope: string | null
+          professional_scope_ids: number[] | null
+          target_audience: string | null
+          target_audience_user_ids: string[] | null
           tenant_id: string | null
           updated_at: string
           uses_per_user: number | null
@@ -1046,9 +1047,6 @@ export type Database = {
           valid_until: string | null
         }
         Insert: {
-          applicable_professional_ids?: number[] | null
-          applicable_specialties?: string[] | null
-          applies_to?: string
           code: string
           created_at?: string
           created_by?: string | null
@@ -1064,6 +1062,10 @@ export type Database = {
           metadata?: Json | null
           minimum_purchase_amount?: number | null
           name: string
+          professional_scope?: string | null
+          professional_scope_ids?: number[] | null
+          target_audience?: string | null
+          target_audience_user_ids?: string[] | null
           tenant_id?: string | null
           updated_at?: string
           uses_per_user?: number | null
@@ -1071,9 +1073,6 @@ export type Database = {
           valid_until?: string | null
         }
         Update: {
-          applicable_professional_ids?: number[] | null
-          applicable_specialties?: string[] | null
-          applies_to?: string
           code?: string
           created_at?: string
           created_by?: string | null
@@ -1089,6 +1088,10 @@ export type Database = {
           metadata?: Json | null
           minimum_purchase_amount?: number | null
           name?: string
+          professional_scope?: string | null
+          professional_scope_ids?: number[] | null
+          target_audience?: string | null
+          target_audience_user_ids?: string[] | null
           tenant_id?: string | null
           updated_at?: string
           uses_per_user?: number | null
