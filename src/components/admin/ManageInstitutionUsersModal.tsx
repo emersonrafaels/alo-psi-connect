@@ -31,10 +31,12 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   // Buscar pacientes vinculados
-  const { data: linkedPatients, isLoading: loadingPatients } = useQuery({
+  const { data: linkedPatients, isLoading: loadingPatients, error: patientsError } = useQuery({
     queryKey: ['institution-patients', institution?.id],
     queryFn: async () => {
       if (!institution) return [];
+      
+      console.log('[ManageInstitutionUsersModal] Fetching linked patients for institution:', institution.id);
       
       // Buscar super admins para excluir
       const { data: superAdmins } = await supabase
@@ -58,7 +60,21 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
         `)
         .eq('institution_id', institution.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('[ManageInstitutionUsersModal] Error fetching patients:', {
+          error,
+          message: error.message,
+          code: error.code,
+          hint: error.hint,
+          institutionId: institution.id
+        });
+        throw error;
+      }
+      
+      console.log('[ManageInstitutionUsersModal] Successfully fetched patients:', {
+        count: data?.length || 0,
+        institutionId: institution.id
+      });
       
       // Filtrar super admins e usuários com tipo_usuario = 'admin'
       return data?.filter(p => 
@@ -67,13 +83,16 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
       ) || [];
     },
     enabled: !!institution,
+    retry: 1,
   });
 
   // Buscar profissionais vinculados
-  const { data: linkedProfessionals, isLoading: loadingProfessionals } = useQuery({
+  const { data: linkedProfessionals, isLoading: loadingProfessionals, error: professionalsError } = useQuery({
     queryKey: ['institution-professionals', institution?.id],
     queryFn: async () => {
       if (!institution) return [];
+      
+      console.log('[ManageInstitutionUsersModal] Fetching linked professionals for institution:', institution.id);
       
       // Buscar super admins para excluir
       const { data: superAdmins } = await supabase
@@ -98,7 +117,21 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
         `)
         .eq('institution_id', institution.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('[ManageInstitutionUsersModal] Error fetching professionals:', {
+          error,
+          message: error.message,
+          code: error.code,
+          hint: error.hint,
+          institutionId: institution.id
+        });
+        throw error;
+      }
+      
+      console.log('[ManageInstitutionUsersModal] Successfully fetched professionals:', {
+        count: data?.length || 0,
+        institutionId: institution.id
+      });
       
       // Filtrar super admins e usuários com tipo_usuario = 'admin'
       return data?.filter(p => 
@@ -107,6 +140,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
       ) || [];
     },
     enabled: !!institution,
+    retry: 1,
   });
 
   // Buscar todos os usuários disponíveis (não vinculados)
@@ -269,6 +303,57 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
             Este vínculo permite que eles sejam associados à instituição no sistema.
           </AlertDescription>
         </Alert>
+
+        {/* Error alerts with suggestions */}
+        {(patientsError || professionalsError) && (
+          <Alert variant="destructive" className="mb-4">
+            <Info className="h-4 w-4" />
+            <AlertDescription className="space-y-2">
+              <p className="font-semibold">Erro ao carregar dados:</p>
+              {patientsError && (
+                <p className="text-sm">
+                  Pacientes: {patientsError.message}
+                  {(patientsError as any).code === 'PGRST116' && ' (Possível problema de permissões RLS)'}
+                </p>
+              )}
+              {professionalsError && (
+                <p className="text-sm">
+                  Profissionais: {professionalsError.message}
+                  {(professionalsError as any).code === 'PGRST116' && ' (Possível problema de permissões RLS)'}
+                </p>
+              )}
+              <div className="flex gap-2 mt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    queryClient.invalidateQueries({ queryKey: ['institution-patients'] });
+                    queryClient.invalidateQueries({ queryKey: ['institution-professionals'] });
+                    toast({
+                      title: 'Dados atualizados',
+                      description: 'As consultas foram recarregadas.',
+                    });
+                  }}
+                >
+                  Tentar Novamente
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    toast({
+                      title: 'Ação necessária',
+                      description: 'Por favor, faça logout e login novamente para atualizar suas permissões.',
+                      duration: 5000,
+                    });
+                  }}
+                >
+                  Preciso fazer Logout/Login?
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'patients' | 'professionals' | 'add')} className="w-full flex-1 flex flex-col">
           <TabsList className="grid w-full grid-cols-3">
