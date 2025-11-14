@@ -20,16 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket } from 'lucide-react';
+import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket, Shield } from 'lucide-react';
 import { useInstitutions, EducationalInstitution } from '@/hooks/useInstitutions';
 import { useUncataloguedInstitutions } from '@/hooks/useUncataloguedInstitutions';
 import { EditInstitutionModal } from '@/components/admin/EditInstitutionModal';
-import { InstitutionPatientsModal } from '@/components/admin/InstitutionPatientsModal';
 import { UncataloguedInstitutionsTable } from '@/components/admin/UncataloguedInstitutionsTable';
 import { useInstitutionPatients } from '@/hooks/useInstitutionPatients';
 import { ManageInstitutionUsersModal } from '@/components/admin/ManageInstitutionUsersModal';
+import { ManageInstitutionAdminUsersModal } from '@/components/admin/ManageInstitutionAdminUsersModal';
 import { ManageInstitutionCouponsModal } from '@/components/admin/ManageInstitutionCouponsModal';
-import { ManageInstitutionProfessionalsModal } from '@/components/admin/ManageInstitutionProfessionalsModal';
 
 export default function Institutions() {
   const {
@@ -58,11 +57,10 @@ export default function Institutions() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   
   const [editingInstitution, setEditingInstitution] = useState<EducationalInstitution | null>(null);
-  const [viewingPatients, setViewingPatients] = useState<EducationalInstitution | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [managingUsers, setManagingUsers] = useState<{ id: string; name: string } | null>(null);
+  const [managingAdminUsers, setManagingAdminUsers] = useState<{ id: string; name: string } | null>(null);
   const [managingCoupons, setManagingCoupons] = useState<{ id: string; name: string } | null>(null);
-  const [managingProfessionals, setManagingProfessionals] = useState<{ id: string; name: string } | null>(null);
 
   // Contar pacientes por instituição
   const { patientInstitutions: allPatientInstitutions } = useInstitutionPatients();
@@ -286,7 +284,6 @@ export default function Institutions() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Parceria</TableHead>
-                    <TableHead>Pacientes</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -306,16 +303,6 @@ export default function Institutions() {
                         ) : (
                           <Badge variant="outline">Não</Badge>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setViewingPatients(institution)}
-                        >
-                          <Users className="mr-2 h-4 w-4" />
-                          {getPatientCount(institution.id)}
-                        </Button>
                       </TableCell>
                       <TableCell>
                         <Switch
@@ -340,17 +327,17 @@ export default function Institutions() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setManagingUsers({ id: institution.id, name: institution.name })}
-                            title="Gerenciar Usuários"
+                            title="Vincular Pacientes e Profissionais"
                           >
-                            <UserCog className="h-4 w-4" />
+                            <Users className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => setManagingProfessionals({ id: institution.id, name: institution.name })}
-                            title="Gerenciar Profissionais Vinculados"
+                            onClick={() => setManagingAdminUsers({ id: institution.id, name: institution.name })}
+                            title="Gerenciar Usuários Administrativos"
                           >
-                            <GraduationCap className="h-4 w-4 text-blue-600" />
+                            <Shield className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -394,28 +381,22 @@ export default function Institutions() {
         isSaving={isUpdating}
       />
 
-      <InstitutionPatientsModal
-        institution={viewingPatients}
-        isOpen={!!viewingPatients}
-        onClose={() => setViewingPatients(null)}
-      />
-
       <ManageInstitutionUsersModal
         institution={managingUsers}
         isOpen={!!managingUsers}
         onClose={() => setManagingUsers(null)}
       />
 
+      <ManageInstitutionAdminUsersModal
+        institution={managingAdminUsers}
+        isOpen={!!managingAdminUsers}
+        onClose={() => setManagingAdminUsers(null)}
+      />
+
       <ManageInstitutionCouponsModal
         institution={managingCoupons}
         isOpen={!!managingCoupons}
         onClose={() => setManagingCoupons(null)}
-      />
-
-      <ManageInstitutionProfessionalsModal
-        institution={managingProfessionals}
-        isOpen={!!managingProfessionals}
-        onClose={() => setManagingProfessionals(null)}
       />
     </AdminLayout>
   );
