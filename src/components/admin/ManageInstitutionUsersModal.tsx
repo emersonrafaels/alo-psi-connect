@@ -36,12 +36,12 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
     institutionRole: 'viewer' as 'admin' | 'viewer'
   });
 
-  if (!institution) return null;
-
   // Buscar usuários vinculados
   const { data: institutionUsers, isLoading: loadingLinked } = useQuery({
-    queryKey: ['institution-users', institution.id],
+    queryKey: ['institution-users', institution?.id],
     queryFn: async () => {
+      if (!institution) return [];
+      
       const { data, error } = await supabase
         .from('institution_users')
         .select(`
@@ -61,8 +61,10 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
 
   // Buscar todos os usuários disponíveis (não vinculados)
   const { data: availableUsers, isLoading: loadingAvailable } = useQuery({
-    queryKey: ['available-users', institution.id, debouncedSearch],
+    queryKey: ['available-users', institution?.id, debouncedSearch],
     queryFn: async () => {
+      if (!institution) return [];
+      
       let query = supabase
         .from('profiles')
         .select('id, user_id, nome, email, tipo_usuario')
@@ -84,6 +86,9 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
 
   // Buscar tenant_id da instituição (opcional)
   const institutionData = { tenant_id: null };
+
+  // Early return após todos os hooks serem declarados
+  if (!institution) return null;
 
   // Adicionar usuário existente
   const addUserMutation = useMutation({
