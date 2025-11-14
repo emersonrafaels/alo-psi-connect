@@ -15,9 +15,11 @@ export const useInstitutionPatients = (institutionId?: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: patientInstitutions, isLoading } = useQuery({
+  const { data: patientInstitutions, isLoading, error: queryError } = useQuery({
     queryKey: ['patient-institutions', institutionId],
     queryFn: async () => {
+      console.log('[useInstitutionPatients] Fetching patients for institution:', institutionId);
+      
       let query = supabase
         .from('patient_institutions')
         .select(`
@@ -38,10 +40,30 @@ export const useInstitutionPatients = (institutionId?: string) => {
       
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error('[useInstitutionPatients] Error fetching patients:', {
+          error,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          institutionId
+        });
+        throw error;
+      }
+      
+      console.log('[useInstitutionPatients] Successfully fetched patients:', {
+        count: data?.length || 0,
+        institutionId
+      });
+      
       return data;
     },
     enabled: !!institutionId,
+    retry: 1,
+    meta: {
+      errorMessage: 'Erro ao carregar pacientes vinculados'
+    }
   });
 
   const addPatientMutation = useMutation({
@@ -101,6 +123,7 @@ export const useInstitutionPatients = (institutionId?: string) => {
   return {
     patientInstitutions: patientInstitutions || [],
     isLoading,
+    error: queryError,
     addPatient: addPatientMutation.mutate,
     removePatient: removePatientMutation.mutate,
     isAdding: addPatientMutation.isPending,
