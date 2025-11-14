@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Trash2, Search, UserPlus, Loader2, User, Stethoscope, Info, Shield } from 'lucide-react';
+import { Plus, Trash2, Search, UserPlus, Loader2, User, Stethoscope, Info, Users } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -212,22 +212,22 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            Gerenciar Acesso Administrativo - {institution.name}
+            <Users className="h-5 w-5 text-primary" />
+            Gerenciar Vínculos - {institution.name}
           </DialogTitle>
         </DialogHeader>
         
         <Alert className="mb-4">
           <Info className="h-4 w-4" />
           <AlertDescription>
-            Usuários com acesso administrativo podem gerenciar a instituição no sistema. 
-            Este acesso é diferente do vínculo como profissional ou paciente.
+            Vincule pacientes e profissionais à sua instituição. 
+            Este vínculo permite que eles sejam associados à instituição no sistema.
           </AlertDescription>
         </Alert>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'manage' | 'create')} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="manage">Gerenciar Usuários</TabsTrigger>
+            <TabsTrigger value="manage">Vínculos Ativos</TabsTrigger>
             <TabsTrigger value="create">Criar Novo</TabsTrigger>
           </TabsList>
 
@@ -237,8 +237,8 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-primary" />
-                  Usuários com Acesso Administrativo {institutionUsers && `(${institutionUsers.length})`}
+                  <Users className="h-4 w-4 text-primary" />
+                  Usuários Vinculados {institutionUsers && `(${institutionUsers.length})`}
                 </h3>
               </div>
 
@@ -267,7 +267,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="gap-1">
-                                  <Shield className="h-3 w-3" />
+                                  <Users className="h-3 w-3" />
                                   {user.role === 'admin' ? 'Admin' : 'Visualizador'}
                                 </Badge>
                               </TooltipTrigger>

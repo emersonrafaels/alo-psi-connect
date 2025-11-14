@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket, Shield } from 'lucide-react';
+import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket } from 'lucide-react';
 import { useInstitutions, EducationalInstitution } from '@/hooks/useInstitutions';
 import { useUncataloguedInstitutions } from '@/hooks/useUncataloguedInstitutions';
 import { EditInstitutionModal } from '@/components/admin/EditInstitutionModal';
@@ -337,7 +337,7 @@ export default function Institutions() {
                             onClick={() => setManagingAdminUsers({ id: institution.id, name: institution.name })}
                             title="Gerenciar Usuários Administrativos"
                           >
-                            <Shield className="h-4 w-4" />
+                            <UserCog className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
