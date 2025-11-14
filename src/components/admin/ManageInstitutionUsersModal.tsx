@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Trash2, Search, UserPlus, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Search, UserPlus, Loader2, User, Stethoscope, Info, Shield } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,8 @@ import { useUserManagement } from '@/hooks/useUserManagement';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Props {
   institution: { id: string; name: string } | null;
@@ -28,6 +30,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
   
   const [activeTab, setActiveTab] = useState<'manage' | 'create'>('manage');
   const [searchTerm, setSearchTerm] = useState('');
+  const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'paciente' | 'profissional'>('all');
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [newUserData, setNewUserData] = useState({
     nome: '',
@@ -61,7 +64,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
 
   // Buscar todos os usuários disponíveis (não vinculados)
   const { data: availableUsers, isLoading: loadingAvailable } = useQuery({
-    queryKey: ['available-users', institution?.id, debouncedSearch],
+    queryKey: ['available-users', institution?.id, debouncedSearch, userTypeFilter],
     queryFn: async () => {
       if (!institution) return [];
       
@@ -72,6 +75,10 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
       
       if (debouncedSearch) {
         query = query.or(`nome.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%`);
+      }
+      
+      if (userTypeFilter !== 'all') {
+        query = query.eq('tipo_usuario', userTypeFilter);
       }
       
       const { data, error } = await query;
@@ -202,10 +209,21 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh]">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Gerenciar Usuários - {institution.name}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            Gerenciar Acesso Administrativo - {institution.name}
+          </DialogTitle>
         </DialogHeader>
+        
+        <Alert className="mb-4">
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            Usuários com acesso administrativo podem gerenciar a instituição no sistema. 
+            Este acesso é diferente do vínculo como profissional ou paciente.
+          </AlertDescription>
+        </Alert>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'manage' | 'create')} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -218,8 +236,9 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
             {/* SEÇÃO: Usuários Vinculados */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-foreground">
-                  Usuários Vinculados {institutionUsers && `(${institutionUsers.length})`}
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-primary" />
+                  Usuários com Acesso Administrativo {institutionUsers && `(${institutionUsers.length})`}
                 </h3>
               </div>
 
@@ -244,9 +263,19 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
                           <p className="text-xs text-muted-foreground">{user.profiles.email}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                            {user.role === 'admin' ? 'Admin' : 'Visualizador'}
-                          </Badge>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="gap-1">
+                                  <Shield className="h-3 w-3" />
+                                  {user.role === 'admin' ? 'Admin' : 'Visualizador'}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{user.role === 'admin' ? 'Pode gerenciar usuários e configurações' : 'Pode visualizar dados'}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -269,14 +298,38 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
             <div className="space-y-3">
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-foreground">Adicionar Usuários Existentes</h3>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nome ou email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por nome ou email..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  
+                  <Select value={userTypeFilter} onValueChange={(value: any) => setUserTypeFilter(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filtrar por tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os tipos</SelectItem>
+                      <SelectItem value="paciente">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          Apenas Pacientes
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="profissional">
+                        <div className="flex items-center gap-2">
+                          <Stethoscope className="h-4 w-4" />
+                          Apenas Profissionais
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -301,13 +354,34 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
                         className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{user.nome}</p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-medium text-sm truncate">{user.nome}</p>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="outline" className="gap-1 text-xs">
+                                    {user.tipo_usuario === 'profissional' ? (
+                                      <>
+                                        <Stethoscope className="h-3 w-3" />
+                                        Profissional
+                                      </>
+                                    ) : (
+                                      <>
+                                        <User className="h-3 w-3" />
+                                        Paciente
+                                      </>
+                                    )}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Tipo de usuário no sistema</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
                           <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {user.tipo_usuario || 'paciente'}
-                          </Badge>
                           <Button
                             size="sm"
                             onClick={() => addUserMutation.mutate({
