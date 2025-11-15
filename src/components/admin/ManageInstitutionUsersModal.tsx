@@ -152,18 +152,26 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
         throw error;
       }
       
-      console.log('[ManageInstitutionUsersModal] Successfully fetched professionals:', {
+      console.log('[ManageInstitutionUsersModal] Raw professional data:', {
         count: data?.length || 0,
         institutionId: institution.id,
-        sampleData: data?.[0],
+        fullSampleData: JSON.stringify(data?.[0], null, 2),
         sampleCreatedAt: data?.[0]?.created_at,
+        sampleCreatedAtType: typeof data?.[0]?.created_at,
       });
       
       // Filtrar super admins e usuários com tipo_usuario = 'admin'
-      return data?.filter(p => 
+      const filtered = data?.filter(p => 
         !superAdminIds.includes(p.profissionais.profiles.user_id) &&
         p.profissionais.profiles.tipo_usuario !== 'admin'
       ) || [];
+      
+      console.log('[ManageInstitutionUsersModal] Filtered professional data:', {
+        count: filtered.length,
+        sampleFiltered: JSON.stringify(filtered[0], null, 2),
+      });
+      
+      return filtered;
     },
     enabled: !!institution,
     retry: 1,
