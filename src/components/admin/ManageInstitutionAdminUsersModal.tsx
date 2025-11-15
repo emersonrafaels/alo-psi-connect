@@ -238,7 +238,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                               <TooltipTrigger asChild>
                                 <Badge variant={link.role === 'admin' ? 'default' : 'secondary'} className="gap-1">
                                   <Shield className="h-3 w-3" />
-                                  {link.role === 'admin' ? 'Admin' : 'Viewer'}
+                                  {link.role === 'admin' ? 'Admin' : 'Visualizador'}
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent>
@@ -394,9 +394,13 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Admin (acesso total)</SelectItem>
-                    <SelectItem value="viewer">Viewer (apenas visualização)</SelectItem>
+                    <SelectItem value="viewer">Visualizador (apenas visualização)</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  <strong>Admin:</strong> Pode gerenciar usuários, cupons e profissionais da instituição. 
+                  <strong className="ml-2">Visualizador:</strong> Pode apenas visualizar informações sem permissão de edição.
+                </p>
               </div>
 
               <Button
