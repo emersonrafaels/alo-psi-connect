@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket } from 'lucide-react';
+import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket, Shield, Briefcase } from 'lucide-react';
 import { useInstitutions, EducationalInstitution } from '@/hooks/useInstitutions';
 import { useUncataloguedInstitutions } from '@/hooks/useUncataloguedInstitutions';
 import { EditInstitutionModal } from '@/components/admin/EditInstitutionModal';
@@ -284,6 +284,7 @@ export default function Institutions() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Parceria</TableHead>
+                    <TableHead>Permissões</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -303,6 +304,33 @@ export default function Institutions() {
                         ) : (
                           <Badge variant="outline">Não</Badge>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {institution.can_manage_users && (
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <Users className="h-3 w-3" />
+                              Usuários
+                            </Badge>
+                          )}
+                          {institution.can_manage_coupons && (
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <Ticket className="h-3 w-3" />
+                              Cupons
+                            </Badge>
+                          )}
+                          {institution.can_manage_professionals && (
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <Briefcase className="h-3 w-3" />
+                              Profissionais
+                            </Badge>
+                          )}
+                          {!institution.can_manage_users && 
+                           !institution.can_manage_coupons && 
+                           !institution.can_manage_professionals && (
+                            <span className="text-xs text-muted-foreground">Nenhuma</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Switch

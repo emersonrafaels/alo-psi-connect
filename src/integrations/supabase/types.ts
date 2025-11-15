@@ -874,6 +874,9 @@ export type Database = {
       }
       educational_institutions: {
         Row: {
+          can_manage_coupons: boolean
+          can_manage_professionals: boolean
+          can_manage_users: boolean
           created_at: string
           has_partnership: boolean
           id: string
@@ -883,6 +886,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          can_manage_coupons?: boolean
+          can_manage_professionals?: boolean
+          can_manage_users?: boolean
           created_at?: string
           has_partnership?: boolean
           id?: string
@@ -892,6 +898,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          can_manage_coupons?: boolean
+          can_manage_professionals?: boolean
+          can_manage_users?: boolean
           created_at?: string
           has_partnership?: boolean
           id?: string
@@ -2443,6 +2452,14 @@ export type Database = {
         Returns: boolean
       }
       increment_post_views: { Args: { post_slug: string }; Returns: undefined }
+      institution_has_permission: {
+        Args: {
+          _institution_id: string
+          _permission_type: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       invoke_blog_analytics_aggregation: { Args: never; Returns: undefined }
       invoke_google_calendar_sync: { Args: never; Returns: undefined }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
