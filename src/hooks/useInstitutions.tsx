@@ -8,6 +8,9 @@ export interface EducationalInstitution {
   type: 'public' | 'private';
   has_partnership: boolean;
   is_active: boolean;
+  can_manage_users: boolean;
+  can_manage_coupons: boolean;
+  can_manage_professionals: boolean;
   created_at: string;
   updated_at: string;
 }

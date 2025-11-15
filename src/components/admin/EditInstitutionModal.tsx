@@ -9,12 +9,16 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { EducationalInstitution } from '@/hooks/useInstitutions';
+import { Shield, Users, Ticket, Briefcase } from 'lucide-react';
 
 const institutionSchema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
   type: z.enum(['public', 'private']),
   has_partnership: z.boolean(),
   is_active: z.boolean(),
+  can_manage_users: z.boolean(),
+  can_manage_coupons: z.boolean(),
+  can_manage_professionals: z.boolean(),
 });
 
 type InstitutionForm = z.infer<typeof institutionSchema>;
@@ -48,6 +52,9 @@ export const EditInstitutionModal = ({
       type: 'private',
       has_partnership: false,
       is_active: true,
+      can_manage_users: false,
+      can_manage_coupons: false,
+      can_manage_professionals: false,
     },
   });
 
@@ -59,6 +66,9 @@ export const EditInstitutionModal = ({
         type: institution.type as 'public' | 'private',
         has_partnership: institution.has_partnership,
         is_active: institution.is_active,
+        can_manage_users: institution.can_manage_users ?? false,
+        can_manage_coupons: institution.can_manage_coupons ?? false,
+        can_manage_professionals: institution.can_manage_professionals ?? false,
       });
     } else {
       // Modo criação: valores padrão
@@ -67,6 +77,9 @@ export const EditInstitutionModal = ({
         type: 'private',
         has_partnership: false,
         is_active: true,
+        can_manage_users: false,
+        can_manage_coupons: false,
+        can_manage_professionals: false,
       });
     }
   }, [institution, reset]);
@@ -137,6 +150,69 @@ export const EditInstitutionModal = ({
               checked={watch('is_active')}
               onCheckedChange={(checked) => setValue('is_active', checked)}
             />
+          </div>
+
+          <div className="space-y-4 pt-4 border-t">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-base font-semibold">Permissões de Gestão</Label>
+            </div>
+            <p className="text-xs text-muted-foreground -mt-2">
+              Define o que os <strong>admins desta instituição</strong> podem gerenciar. Super admins sempre têm acesso total.
+            </p>
+
+            <div className="space-y-3 ml-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label className="text-sm font-medium">Gerenciar Usuários</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Criar, editar e remover usuários vinculados à instituição
+                  </p>
+                </div>
+                <Switch
+                  id="can_manage_users"
+                  checked={watch('can_manage_users')}
+                  onCheckedChange={(checked) => setValue('can_manage_users', checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Ticket className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label className="text-sm font-medium">Gerenciar Cupons</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Criar, editar e remover cupons institucionais
+                  </p>
+                </div>
+                <Switch
+                  id="can_manage_coupons"
+                  checked={watch('can_manage_coupons')}
+                  onCheckedChange={(checked) => setValue('can_manage_coupons', checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label className="text-sm font-medium">Gerenciar Profissionais</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Vincular e desvincular profissionais da instituição
+                  </p>
+                </div>
+                <Switch
+                  id="can_manage_professionals"
+                  checked={watch('can_manage_professionals')}
+                  onCheckedChange={(checked) => setValue('can_manage_professionals', checked)}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2">
