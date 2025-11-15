@@ -224,13 +224,13 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
         </Alert>
 
         <Tabs defaultValue="manage" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="manage">Gerenciar Usuários</TabsTrigger>
+            <TabsTrigger value="link">Vincular Usuários</TabsTrigger>
             <TabsTrigger value="create">Criar Novo</TabsTrigger>
           </TabsList>
 
           <TabsContent value="manage" className="space-y-4">
-            {/* Usuários com acesso administrativo */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
@@ -238,7 +238,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                 <Badge variant="secondary">{institutionUsers?.length || 0}</Badge>
               </div>
               
-              <ScrollArea className="h-[200px] rounded-md border p-4">
+              <ScrollArea className="h-[400px] rounded-md border p-4">
                 {loadingUsers ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin" />
@@ -284,12 +284,11 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                 )}
               </ScrollArea>
             </div>
+          </TabsContent>
 
-            <Separator />
-
-            {/* Adicionar usuários existentes */}
+          <TabsContent value="link" className="space-y-4">
             <div className="space-y-3">
-              <h3 className="font-semibold">Adicionar Usuários Existentes</h3>
+              <h3 className="font-semibold">Adicionar Usuários Administrativos</h3>
               
               <div className="flex gap-2">
                 <div className="flex-1 relative">
@@ -303,7 +302,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                 </div>
               </div>
 
-              <ScrollArea className="h-[200px] rounded-md border p-4">
+              <ScrollArea className="h-[400px] rounded-md border p-4">
                 {loadingAvailableUsers ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin" />
