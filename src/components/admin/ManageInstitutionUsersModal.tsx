@@ -51,6 +51,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
         .select(`
           id,
           patient_id,
+          created_at,
           enrollment_date,
           pacientes!inner(
             id,
@@ -389,7 +390,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
                           <p className="font-medium text-sm">{link.pacientes.profiles.nome}</p>
                           <p className="text-xs text-muted-foreground">{link.pacientes.profiles.email}</p>
                           <p className="text-xs text-muted-foreground">
-                            Vinculado em: {new Date(link.enrollment_date).toLocaleDateString('pt-BR')}
+                            Vinculado em: {new Date(link.created_at).toLocaleDateString('pt-BR')}
                           </p>
                         </div>
                         <Button
