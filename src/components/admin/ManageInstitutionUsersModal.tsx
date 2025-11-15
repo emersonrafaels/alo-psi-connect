@@ -30,6 +30,16 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
   const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'paciente' | 'profissional'>('all');
   const debouncedSearch = useDebounce(searchTerm, 300);
 
+  // Função helper para traduzir tipos de relacionamento
+  const getRelationshipTypeLabel = (type: string): string => {
+    const labels: Record<string, string> = {
+      'employee': 'Funcionário',
+      'partner': 'Parceiro',
+      'supervisor': 'Supervisor'
+    };
+    return labels[type] || type;
+  };
+
   // Invalidar cache quando o modal abrir
   useEffect(() => {
     if (isOpen && institution) {
@@ -121,6 +131,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
           id,
           professional_id,
           relationship_type,
+          created_at,
           profissionais!inner(
             id,
             profile_id,
@@ -143,7 +154,9 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
       
       console.log('[ManageInstitutionUsersModal] Successfully fetched professionals:', {
         count: data?.length || 0,
-        institutionId: institution.id
+        institutionId: institution.id,
+        sampleData: data?.[0],
+        sampleCreatedAt: data?.[0]?.created_at,
       });
       
       // Filtrar super admins e usuários com tipo_usuario = 'admin'
@@ -451,9 +464,16 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
                         <div className="flex-1">
                           <p className="font-medium text-sm">{link.profissionais.profiles.nome}</p>
                           <p className="text-xs text-muted-foreground">{link.profissionais.profiles.email}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Vinculado em: {
+                              link.created_at 
+                                ? new Date(link.created_at).toLocaleDateString('pt-BR')
+                                : 'Data não disponível'
+                            }
+                          </p>
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant="outline" className="text-xs">{link.profissionais.profissao}</Badge>
-                            <Badge variant="secondary" className="text-xs">{link.relationship_type}</Badge>
+                            <Badge variant="secondary" className="text-xs">{getRelationshipTypeLabel(link.relationship_type)}</Badge>
                           </div>
                         </div>
                         <Button
