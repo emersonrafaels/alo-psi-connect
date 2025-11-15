@@ -32,7 +32,6 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserName, setNewUserName] = useState('');
   const [newUserRole, setNewUserRole] = useState<'admin' | 'viewer'>('admin');
-  const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'paciente' | 'profissional'>('all');
 
   // Buscar usuários vinculados à instituição
   const { data: institutionUsers, isLoading: loadingUsers } = useQuery({
@@ -61,26 +60,46 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
     enabled: !!institution?.id && isOpen,
   });
 
-  // Buscar usuários disponíveis para adicionar
+  // Buscar usuários disponíveis para adicionar (apenas usuários com roles administrativos)
   const { data: availableUsers, isLoading: loadingAvailableUsers } = useQuery({
-    queryKey: ['available-users', institution?.id, searchTerm, userTypeFilter],
+    queryKey: ['available-admin-users', institution?.id, searchTerm],
     queryFn: async () => {
       if (!institution?.id || !searchTerm) return [];
 
-      let query = supabase
+      // Primeiro, buscar todos os user_ids que têm roles administrativos
+      const { data: userRolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) throw rolesError;
+
+      const adminUserIds = userRolesData?.map(ur => ur.user_id) || [];
+      
+      if (adminUserIds.length === 0) return [];
+
+      // Agora buscar os profiles desses usuários que não estão vinculados à instituição
+      const excludedUserIds = institutionUsers?.map(u => u.user_id) || [];
+      const filteredAdminIds = adminUserIds.filter(id => !excludedUserIds.includes(id));
+
+      if (filteredAdminIds.length === 0) return [];
+
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, user_id, nome, email, tipo_usuario')
+        .in('user_id', filteredAdminIds)
         .ilike('nome', `%${searchTerm}%`)
-        .not('user_id', 'in', `(${institutionUsers?.map(u => `'${u.user_id}'`).join(',') || "''"})`)
         .limit(10);
 
-      if (userTypeFilter !== 'all') {
-        query = query.eq('tipo_usuario', userTypeFilter);
-      }
+      if (profilesError) throw profilesError;
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
+      // Combinar dados de profiles com roles
+      return profilesData?.map(profile => {
+        const userRole = userRolesData?.find(ur => ur.user_id === profile.user_id);
+        return {
+          ...profile,
+          role: userRole?.role || 'admin'
+        };
+      }) || [];
     },
     enabled: !!institution?.id && searchTerm.length > 2 && isOpen,
   });
@@ -276,22 +295,12 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar usuário por nome..."
+                    placeholder="Buscar usuário administrativo por nome..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9"
                   />
                 </div>
-                <Select value={userTypeFilter} onValueChange={(value: any) => setUserTypeFilter(value)}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os tipos</SelectItem>
-                    <SelectItem value="paciente">Apenas Pacientes</SelectItem>
-                    <SelectItem value="profissional">Apenas Profissionais</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <ScrollArea className="h-[200px] rounded-md border p-4">
@@ -306,22 +315,13 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <p className="font-medium">{user.nome}</p>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Badge variant="outline" className="gap-1">
-                                    {user.tipo_usuario === 'profissional' ? (
-                                      <><Stethoscope className="h-3 w-3" /> Profissional</>
-                                    ) : (
-                                      <><User className="h-3 w-3" /> Paciente</>
-                                    )}
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Tipo de usuário no sistema</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <Badge variant="outline" className="gap-1 capitalize">
+                              <Shield className="h-3 w-3" />
+                              {user.role === 'super_admin' ? 'Super Admin' : 
+                               user.role === 'institution_admin' ? 'Admin Institucional' :
+                               user.role === 'admin' ? 'Admin' :
+                               user.role}
+                            </Badge>
                           </div>
                           <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
