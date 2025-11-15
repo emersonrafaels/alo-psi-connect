@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,15 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
   const [searchTerm, setSearchTerm] = useState('');
   const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'paciente' | 'profissional'>('all');
   const debouncedSearch = useDebounce(searchTerm, 300);
+
+  // Invalidar cache quando o modal abrir
+  useEffect(() => {
+    if (isOpen && institution) {
+      console.log('[ManageInstitutionUsersModal] Modal opened, invalidating cache for institution:', institution.id);
+      queryClient.invalidateQueries({ queryKey: ['institution-patients', institution.id] });
+      queryClient.invalidateQueries({ queryKey: ['institution-professionals', institution.id] });
+    }
+  }, [isOpen, institution?.id, queryClient]);
 
   // Buscar pacientes vinculados
   const { data: linkedPatients, isLoading: loadingPatients, error: patientsError } = useQuery({
@@ -74,7 +83,10 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
       
       console.log('[ManageInstitutionUsersModal] Successfully fetched patients:', {
         count: data?.length || 0,
-        institutionId: institution.id
+        institutionId: institution.id,
+        sampleData: data?.[0],
+        sampleCreatedAt: data?.[0]?.created_at,
+        sampleCreatedAtType: typeof data?.[0]?.created_at,
       });
       
       // Filtrar super admins e usuários com tipo_usuario = 'admin'
@@ -390,7 +402,11 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
                           <p className="font-medium text-sm">{link.pacientes.profiles.nome}</p>
                           <p className="text-xs text-muted-foreground">{link.pacientes.profiles.email}</p>
                           <p className="text-xs text-muted-foreground">
-                            Vinculado em: {new Date(link.created_at).toLocaleDateString('pt-BR')}
+                            Vinculado em: {
+                              link.created_at 
+                                ? new Date(link.created_at).toLocaleDateString('pt-BR')
+                                : 'Data não disponível'
+                            }
                           </p>
                         </div>
                         <Button
