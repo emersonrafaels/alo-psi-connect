@@ -64,7 +64,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
   const { data: availableUsers, isLoading: loadingAvailableUsers } = useQuery({
     queryKey: ['available-admin-users', institution?.id, searchTerm],
     queryFn: async () => {
-      if (!institution?.id || !searchTerm) return [];
+      if (!institution?.id) return [];
 
       // Primeiro, buscar todos os user_ids que têm roles administrativos
       const { data: userRolesData, error: rolesError } = await supabase
@@ -83,12 +83,19 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
 
       if (filteredAdminIds.length === 0) return [];
 
-      const { data: profilesData, error: profilesError } = await supabase
+      // Construir query base
+      let query = supabase
         .from('profiles')
         .select('id, user_id, nome, email, tipo_usuario')
-        .in('user_id', filteredAdminIds)
-        .ilike('nome', `%${searchTerm}%`)
-        .limit(10);
+        .in('user_id', filteredAdminIds);
+
+      // Aplicar filtro de busca apenas se houver searchTerm
+      if (searchTerm && searchTerm.trim().length > 0) {
+        query = query.ilike('nome', `%${searchTerm}%`);
+      }
+
+      // Executar query com limite
+      const { data: profilesData, error: profilesError } = await query.limit(20);
 
       if (profilesError) throw profilesError;
 
@@ -101,7 +108,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
         };
       }) || [];
     },
-    enabled: !!institution?.id && searchTerm.length > 2 && isOpen,
+    enabled: !!institution?.id && isOpen,
   });
 
   // Mutation para adicionar usuário existente
@@ -294,7 +301,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar usuário administrativo por nome..."
+                    placeholder="Filtrar usuários por nome (opcional)..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9"
@@ -344,7 +351,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                   </p>
                 ) : (
                   <p className="text-center text-muted-foreground py-8">
-                    Digite pelo menos 3 caracteres para buscar
+                    Nenhum usuário administrativo disponível para vincular
                   </p>
                 )}
               </ScrollArea>
