@@ -69,11 +69,9 @@ export const InstitutionPatientsModal = ({
                       <p className="text-sm text-muted-foreground">
                         {pi.pacientes.profiles.email}
                       </p>
-                      {pi.enrollment_date && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Matrícula: {new Date(pi.enrollment_date).toLocaleDateString('pt-BR')}
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Vinculado em: {new Date(pi.created_at).toLocaleDateString('pt-BR')}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
                       {getStatusBadge(pi.enrollment_status)}
