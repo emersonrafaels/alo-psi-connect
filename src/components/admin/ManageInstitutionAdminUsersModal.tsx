@@ -227,7 +227,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <div className="flex items-center justify-between pr-12">
             <DialogTitle className="flex items-center gap-2">
@@ -261,7 +261,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
             <TabsTrigger value="create">Criar Novo</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="manage" className="space-y-4">
+          <TabsContent value="manage" className="overflow-auto space-y-4">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
@@ -269,7 +269,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                 <Badge variant="secondary">{institutionUsers?.length || 0}</Badge>
               </div>
               
-              <ScrollArea className="h-[400px] rounded-md border p-4">
+              <ScrollArea className="h-[300px] rounded-md border p-4">
                 {loadingUsers ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin" />
@@ -317,7 +317,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
             </div>
           </TabsContent>
 
-          <TabsContent value="link" className="space-y-4">
+          <TabsContent value="link" className="overflow-auto space-y-4">
             <div className="space-y-3">
               <h3 className="font-semibold">Adicionar Usuários Administrativos</h3>
               
@@ -333,7 +333,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                 </div>
               </div>
 
-              <ScrollArea className="h-[400px] rounded-md border p-4">
+              <ScrollArea className="h-[300px] rounded-md border p-4">
                 {loadingAvailableUsers ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin" />
@@ -382,7 +382,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
             </div>
           </TabsContent>
 
-          <TabsContent value="create" className="space-y-4">
+          <TabsContent value="create" className="overflow-auto space-y-4">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="newUserName">Nome completo</Label>

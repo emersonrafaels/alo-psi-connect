@@ -334,7 +334,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <div className="flex items-center justify-between pr-12">
             <DialogTitle className="flex items-center gap-2">
@@ -420,7 +420,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
           </TabsList>
 
           {/* Tab: Pacientes */}
-          <TabsContent value="patients" className="flex-1 space-y-4">
+          <TabsContent value="patients" className="flex-1 overflow-auto space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
@@ -438,7 +438,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
                   <p className="text-sm">Nenhum paciente vinculado</p>
                 </div>
               ) : (
-                <ScrollArea className="h-[400px] rounded-md border">
+                <ScrollArea className="h-[300px] rounded-md border">
                   <div className="p-4 space-y-3">
                     {linkedPatients.map((link) => (
                       <div key={link.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
@@ -470,7 +470,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
           </TabsContent>
 
           {/* Tab: Profissionais */}
-          <TabsContent value="professionals" className="flex-1 space-y-4">
+          <TabsContent value="professionals" className="flex-1 overflow-auto space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
@@ -488,7 +488,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
                   <p className="text-sm">Nenhum profissional vinculado</p>
                 </div>
               ) : (
-                <ScrollArea className="h-[400px] rounded-md border">
+                <ScrollArea className="h-[300px] rounded-md border">
                   <div className="p-4 space-y-3">
                     {linkedProfessionals.map((link) => (
                       <div key={link.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
@@ -524,7 +524,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
           </TabsContent>
 
           {/* Tab: Adicionar Vínculo */}
-          <TabsContent value="add" className="flex-1 space-y-4">
+          <TabsContent value="add" className="flex-1 overflow-auto space-y-4">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <div className="flex-1">
@@ -573,7 +573,7 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
                     <p className="text-xs mt-1">Todos os usuários já estão vinculados ou não há usuários cadastrados</p>
                   </div>
                 ) : (
-                  <ScrollArea className="h-[400px] rounded-md border">
+                  <ScrollArea className="h-[300px] rounded-md border">
                     <div className="p-4 space-y-3">
                       {availableUsers.map((user) => (
                         <div key={user.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
