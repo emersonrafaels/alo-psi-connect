@@ -20,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket, Shield, Briefcase } from 'lucide-react';
+import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket, Shield, Briefcase, FileText } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInstitutions, EducationalInstitution } from '@/hooks/useInstitutions';
 import { useUncataloguedInstitutions } from '@/hooks/useUncataloguedInstitutions';
 import { EditInstitutionModal } from '@/components/admin/EditInstitutionModal';
@@ -29,6 +30,7 @@ import { useInstitutionPatients } from '@/hooks/useInstitutionPatients';
 import { ManageInstitutionUsersModal } from '@/components/admin/ManageInstitutionUsersModal';
 import { ManageInstitutionAdminUsersModal } from '@/components/admin/ManageInstitutionAdminUsersModal';
 import { ManageInstitutionCouponsModal } from '@/components/admin/ManageInstitutionCouponsModal';
+import { InstitutionAuditLog } from '@/components/admin/InstitutionAuditLog';
 
 export default function Institutions() {
   const {
@@ -61,6 +63,7 @@ export default function Institutions() {
   const [managingUsers, setManagingUsers] = useState<{ id: string; name: string } | null>(null);
   const [managingAdminUsers, setManagingAdminUsers] = useState<{ id: string; name: string } | null>(null);
   const [managingCoupons, setManagingCoupons] = useState<{ id: string; name: string } | null>(null);
+  const [selectedInstitutionForAudit, setSelectedInstitutionForAudit] = useState<{ id: string; name: string } | null>(null);
 
   // Contar pacientes por instituição
   const { patientInstitutions: allPatientInstitutions } = useInstitutionPatients();
@@ -115,6 +118,20 @@ export default function Institutions() {
             Nova Instituição
           </Button>
         </div>
+
+        <Tabs defaultValue="institutions" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="institutions">
+              <Building2 className="h-4 w-4 mr-2" />
+              Instituições
+            </TabsTrigger>
+            <TabsTrigger value="audit">
+              <FileText className="h-4 w-4 mr-2" />
+              Auditoria
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="institutions" className="space-y-6">
 
         {/* Cards de Estatísticas */}
         <div className="grid gap-4 md:grid-cols-5">
@@ -370,6 +387,14 @@ export default function Institutions() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => setSelectedInstitutionForAudit({ id: institution.id, name: institution.name })}
+                            title="Ver Histórico de Auditoria"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setEditingInstitution(institution)}
                           >
                             <Edit className="h-4 w-4" />
@@ -390,6 +415,27 @@ export default function Institutions() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="audit" className="space-y-6">
+            {selectedInstitutionForAudit ? (
+              <InstitutionAuditLog
+                institutionId={selectedInstitutionForAudit.id}
+                institutionName={selectedInstitutionForAudit.name}
+              />
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center h-64 text-center">
+                  <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Selecione uma Instituição</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Clique no ícone de auditoria <FileText className="h-4 w-4 inline" /> ao lado de uma instituição para visualizar seu histórico
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Modais */}

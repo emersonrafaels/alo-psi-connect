@@ -74,7 +74,6 @@ export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClo
   const [selectedProfessionalId, setSelectedProfessionalId] = useState<number | null>(null);
   const [relationshipType, setRelationshipType] = useState<string>('employee');
   const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [notes, setNotes] = useState('');
   const [notes, setNotes] = useState<string>('');
 
   // Função para atualizar todas as listas
