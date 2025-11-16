@@ -273,7 +273,7 @@ export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[80vh]">
         <DialogHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pr-12">
             <DialogTitle>
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5 text-primary" />

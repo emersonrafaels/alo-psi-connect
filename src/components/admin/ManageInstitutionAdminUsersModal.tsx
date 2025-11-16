@@ -229,7 +229,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pr-12">
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
               Gerenciar Acesso Administrativo - {institution.name}
