@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { EducationalInstitution } from '@/hooks/useInstitutions';
+import { useInstitutionAudit } from '@/hooks/useInstitutionAudit';
 import { Shield, Users, Ticket, Briefcase } from 'lucide-react';
 
 const institutionSchema = z.object({
@@ -38,6 +39,7 @@ export const EditInstitutionModal = ({
   onSave,
   isSaving,
 }: EditInstitutionModalProps) => {
+  const { logAction } = useInstitutionAudit(institution?.id);
   const {
     register,
     handleSubmit,
@@ -86,10 +88,33 @@ export const EditInstitutionModal = ({
 
   const onSubmit = (data: InstitutionForm) => {
     if (institution) {
-      // Modo edição: incluir ID
+      // Log changes
+      const changes = Object.keys(data).filter(key => {
+        const oldVal = institution[key as keyof typeof institution];
+        const newVal = data[key as keyof typeof data];
+        return oldVal !== newVal;
+      }).map(key => ({
+        field: key,
+        old_value: institution[key as keyof typeof institution],
+        new_value: data[key as keyof typeof data]
+      }));
+      
+      if (changes.length > 0) {
+        logAction({
+          action_type: 'update',
+          entity_type: 'institution',
+          entity_id: institution.id,
+          changes_summary: changes
+        });
+      }
+      
       onSave({ ...data, id: institution.id });
     } else {
-      // Modo criação: sem ID (será gerado pelo banco)
+      logAction({
+        action_type: 'create',
+        entity_type: 'institution',
+        metadata: { name: data.name }
+      });
       onSave(data as any);
     }
     reset();

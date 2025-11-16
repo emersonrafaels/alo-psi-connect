@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useInstitutionAudit } from '@/hooks/useInstitutionAudit';
 import {
   Dialog,
   DialogContent,
@@ -68,10 +69,12 @@ const relationshipTypeLabels: Record<string, string> = {
 export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClose }: Props) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { logAction } = useInstitutionAudit(institution?.id);
   const [activeTab, setActiveTab] = useState('view');
   const [selectedProfessionalId, setSelectedProfessionalId] = useState<number | null>(null);
   const [relationshipType, setRelationshipType] = useState<string>('employee');
   const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [notes, setNotes] = useState('');
   const [notes, setNotes] = useState<string>('');
 
   // Função para atualizar todas as listas
@@ -167,6 +170,10 @@ export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClo
         throw new Error('Dados inválidos');
       }
 
+      // Capturar valores antes da mutação para usar no log
+      const professionalIdForLog = selectedProfessionalId;
+      const relationshipTypeForLog = relationshipType;
+
       const { error } = await supabase
         .from('professional_institutions')
         .insert({
@@ -202,14 +209,27 @@ export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClo
           console.warn('⚠️ Erro ao enviar email (vínculo criado com sucesso):', emailError);
         }
       }
+      
+      return { professionalIdForLog, relationshipTypeForLog };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       toast({
         title: '✅ Profissional vinculado',
         description: 'Profissional vinculado à instituição com sucesso. Um email de confirmação foi enviado.',
       });
       queryClient.invalidateQueries({ queryKey: ['institution-professionals', institution?.id] });
       queryClient.invalidateQueries({ queryKey: ['available-professionals', institution?.id] });
+      
+      // Log action
+      if (result) {
+        logAction({
+          action_type: 'add_professional',
+          entity_type: 'professional',
+          entity_id: result.professionalIdForLog?.toString(),
+          metadata: { relationship_type: result.relationshipTypeForLog }
+        });
+      }
+      
       setSelectedProfessionalId(null);
       setRelationshipType('employee');
       setStartDate(new Date().toISOString().split('T')[0]);

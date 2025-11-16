@@ -14,6 +14,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useInstitutionAudit } from '@/hooks/useInstitutionAudit';
 
 interface Props {
   institution: { id: string; name: string } | null;
@@ -24,6 +25,7 @@ interface Props {
 export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Props) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { logAction } = useInstitutionAudit(institution?.id);
   
   const [activeTab, setActiveTab] = useState<'patients' | 'professionals' | 'add'>('patients');
   const [searchTerm, setSearchTerm] = useState('');
@@ -243,10 +245,18 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
         .eq('id', linkId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, linkId) => {
       queryClient.invalidateQueries({ queryKey: ['institution-patients'] });
       queryClient.invalidateQueries({ queryKey: ['available-users'] });
-      toast({ title: 'Paciente removido', description: 'Vínculo desativado com sucesso.' });
+      toast({ title: 'Paciente removido', description: 'Vínculo removido com sucesso.' });
+      
+      // Log action
+      logAction({
+        action_type: 'unlink_user',
+        entity_type: 'user',
+        entity_id: linkId,
+        metadata: { user_type: 'patient' }
+      });
     },
     onError: (error: any) => {
       toast({
@@ -266,10 +276,17 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
         .eq('id', linkId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, linkId) => {
       queryClient.invalidateQueries({ queryKey: ['institution-professionals'] });
       queryClient.invalidateQueries({ queryKey: ['available-users'] });
       toast({ title: 'Profissional removido', description: 'Vínculo removido com sucesso.' });
+      
+      // Log action
+      logAction({
+        action_type: 'remove_professional',
+        entity_type: 'professional',
+        entity_id: linkId,
+      });
     },
     onError: (error: any) => {
       toast({
