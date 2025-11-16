@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Plus, Trash2, Edit, Ticket, Calendar, Users, TrendingUp, Copy, HelpCircle, Sparkles, Gift, GraduationCap, Tag, Star, UserPlus, MapPin } from 'lucide-react';
 import { useInstitutionCoupons, InstitutionCoupon } from '@/hooks/useInstitutionCoupons';
 import { useTenant } from '@/hooks/useTenant';
+import { useInstitutionAudit } from '@/hooks/useInstitutionAudit';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { UserMultiSelect } from './UserMultiSelect';
@@ -25,6 +26,7 @@ interface Props {
 
 export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: Props) => {
   const { tenant } = useTenant();
+  const { logAction } = useInstitutionAudit(institution?.id);
   const { 
     coupons, 
     isLoading, 
@@ -96,8 +98,19 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
 
     if (editingCoupon) {
       updateCoupon({ id: editingCoupon.id, ...couponData });
+      logAction({
+        action_type: 'update_coupon',
+        entity_type: 'coupon',
+        entity_id: editingCoupon.id,
+        changes_summary: [{ field: 'coupon', old_value: editingCoupon.code, new_value: couponData.code }]
+      });
     } else {
       createCoupon(couponData);
+      logAction({
+        action_type: 'create_coupon',
+        entity_type: 'coupon',
+        metadata: { code: couponData.code }
+      });
     }
 
     setIsCreatingNew(false);
