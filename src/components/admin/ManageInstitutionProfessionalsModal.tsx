@@ -23,7 +23,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Trash2, GraduationCap } from 'lucide-react';
+import { Loader2, Trash2, GraduationCap, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -73,6 +73,17 @@ export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClo
   const [relationshipType, setRelationshipType] = useState<string>('employee');
   const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState<string>('');
+
+  // Função para atualizar todas as listas
+  const handleRefreshAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['institution-professionals', institution?.id] });
+    queryClient.invalidateQueries({ queryKey: ['available-professionals', institution?.id] });
+    
+    toast({
+      title: '🔄 Listas atualizadas',
+      description: 'Todos os dados foram recarregados.',
+    });
+  };
 
   // Fetch linked professionals
   const { data: linkedProfessionals, isLoading: isLoadingLinked } = useQuery({
@@ -239,12 +250,23 @@ export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle>
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-primary" />
-              Gerenciar Profissionais - {institution.name}
-            </div>
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>
+              <div className="flex items-center gap-2">
+                <GraduationCap className="h-5 w-5 text-primary" />
+                Gerenciar Profissionais - {institution.name}
+              </div>
+            </DialogTitle>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefreshAll}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Atualizar
+            </Button>
+          </div>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
