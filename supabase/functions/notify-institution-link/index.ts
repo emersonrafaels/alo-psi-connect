@@ -27,7 +27,7 @@ interface NotifyInstitutionLinkRequest {
   userEmail: string;
   userName: string;
   institutionName: string;
-  role: 'admin' | 'viewer';
+  role: 'admin' | 'viewer' | 'student' | 'professional';
   tenantId?: string;
 }
 
@@ -41,23 +41,55 @@ function generateInstitutionLinkEmailHTML(
   portalUrl: string
 ): string {
   const primaryColor = tenantColor.startsWith('#') ? tenantColor : `hsl(${tenantColor})`;
-  const roleLabel = role === 'admin' ? 'Administrador' : 'Visualizador';
-  const permissions = role === 'admin' 
-    ? `
-      <ul style="margin: 10px 0; padding-left: 20px; color: #4b5563;">
-        <li>Gerenciar cupons de desconto</li>
-        <li>Visualizar e gerenciar alunos vinculados</li>
-        <li>Acessar relatórios e estatísticas</li>
-        <li>Gerenciar outros usuários da instituição</li>
-      </ul>
-    `
-    : `
-      <ul style="margin: 10px 0; padding-left: 20px; color: #4b5563;">
-        <li>Visualizar cupons disponíveis</li>
-        <li>Visualizar alunos vinculados</li>
-        <li>Acessar relatórios e estatísticas</li>
-      </ul>
-    `;
+  
+  let roleLabel = '';
+  let permissions = '';
+  
+  switch(role) {
+    case 'admin':
+      roleLabel = 'Administrador';
+      permissions = `
+        <ul style="margin: 10px 0; padding-left: 20px; color: #4b5563;">
+          <li>Gerenciar cupons de desconto</li>
+          <li>Visualizar e gerenciar alunos vinculados</li>
+          <li>Acessar relatórios e estatísticas</li>
+          <li>Gerenciar outros usuários da instituição</li>
+        </ul>
+      `;
+      break;
+    case 'viewer':
+      roleLabel = 'Visualizador';
+      permissions = `
+        <ul style="margin: 10px 0; padding-left: 20px; color: #4b5563;">
+          <li>Visualizar cupons disponíveis</li>
+          <li>Visualizar alunos vinculados</li>
+          <li>Acessar relatórios e estatísticas</li>
+        </ul>
+      `;
+      break;
+    case 'student':
+      roleLabel = 'Estudante/Paciente';
+      permissions = `
+        <ul style="margin: 10px 0; padding-left: 20px; color: #4b5563;">
+          <li>Utilizar cupons de desconto exclusivos</li>
+          <li>Agendar consultas com profissionais parceiros</li>
+          <li>Acessar recursos educacionais da instituição</li>
+          <li>Receber ofertas e benefícios especiais</li>
+        </ul>
+      `;
+      break;
+    case 'professional':
+      roleLabel = 'Profissional Parceiro';
+      permissions = `
+        <ul style="margin: 10px 0; padding-left: 20px; color: #4b5563;">
+          <li>Receber agendamentos de alunos da instituição</li>
+          <li>Visualizar cupons aplicáveis aos seus serviços</li>
+          <li>Gerenciar sua agenda e disponibilidade</li>
+          <li>Acessar relatórios de atendimentos</li>
+        </ul>
+      `;
+      break;
+  }
 
   return `
     <!DOCTYPE html>

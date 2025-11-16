@@ -179,11 +179,34 @@ export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClo
         });
 
       if (error) throw error;
+
+      // Buscar dados do profissional para enviar email
+      const { data: professional, error: profError } = await supabase
+        .from('profissionais')
+        .select('profile_id, profiles!inner(nome, email)')
+        .eq('id', selectedProfessionalId)
+        .single();
+
+      if (!profError && professional) {
+        try {
+          await supabase.functions.invoke('notify-institution-link', {
+            body: {
+              userEmail: professional.profiles.email,
+              userName: professional.profiles.nome,
+              institutionName: institution.name,
+              role: 'professional',
+            }
+          });
+          console.log('📧 Email de notificação enviado ao profissional');
+        } catch (emailError) {
+          console.warn('⚠️ Erro ao enviar email (vínculo criado com sucesso):', emailError);
+        }
+      }
     },
     onSuccess: () => {
       toast({
-        title: 'Profissional vinculado',
-        description: 'Profissional vinculado à instituição com sucesso.',
+        title: '✅ Profissional vinculado',
+        description: 'Profissional vinculado à instituição com sucesso. Um email de confirmação foi enviado.',
       });
       queryClient.invalidateQueries({ queryKey: ['institution-professionals', institution?.id] });
       queryClient.invalidateQueries({ queryKey: ['available-professionals', institution?.id] });
@@ -195,7 +218,7 @@ export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClo
     },
     onError: (error) => {
       toast({
-        title: 'Erro ao vincular profissional',
+        title: '❌ Erro ao vincular profissional',
         description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
