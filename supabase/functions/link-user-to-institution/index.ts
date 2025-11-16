@@ -117,6 +117,38 @@ Deno.serve(async (req) => {
       }
 
       console.log('✅ [Link User] Paciente vinculado com sucesso')
+      
+      // Enviar notificação por email
+      try {
+        const { data: profile, error: profileError } = await supabaseAdmin
+          .from('profiles')
+          .select('nome, email')
+          .eq('id', profileId)
+          .single()
+
+        if (!profileError && profile) {
+          const { data: institution, error: instError } = await supabaseAdmin
+            .from('educational_institutions')
+            .select('name')
+            .eq('id', institutionId)
+            .single()
+
+          if (!instError && institution) {
+            await supabaseAdmin.functions.invoke('notify-institution-link', {
+              body: {
+                userEmail: profile.email,
+                userName: profile.nome,
+                institutionName: institution.name,
+                role: 'student'
+              }
+            })
+            console.log('📧 [Link User] Email de notificação enviado para paciente')
+          }
+        }
+      } catch (emailError) {
+        console.warn('⚠️ [Link User] Erro ao enviar email (vínculo criado com sucesso):', emailError)
+      }
+      
       return new Response(
         JSON.stringify({ success: true, message: 'Paciente vinculado com sucesso' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -165,6 +197,38 @@ Deno.serve(async (req) => {
       }
 
       console.log('✅ [Link User] Profissional vinculado com sucesso')
+      
+      // Enviar notificação por email
+      try {
+        const { data: profile, error: profileError } = await supabaseAdmin
+          .from('profiles')
+          .select('nome, email')
+          .eq('id', profileId)
+          .single()
+
+        if (!profileError && profile) {
+          const { data: institution, error: instError } = await supabaseAdmin
+            .from('educational_institutions')
+            .select('name')
+            .eq('id', institutionId)
+            .single()
+
+          if (!instError && institution) {
+            await supabaseAdmin.functions.invoke('notify-institution-link', {
+              body: {
+                userEmail: profile.email,
+                userName: profile.nome,
+                institutionName: institution.name,
+                role: 'professional'
+              }
+            })
+            console.log('📧 [Link User] Email de notificação enviado para profissional')
+          }
+        }
+      } catch (emailError) {
+        console.warn('⚠️ [Link User] Erro ao enviar email (vínculo criado com sucesso):', emailError)
+      }
+      
       return new Response(
         JSON.stringify({ success: true, message: 'Profissional vinculado com sucesso' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
