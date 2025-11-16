@@ -46,7 +46,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
           user_id,
           role,
           is_active,
-          profiles!inner(
+          profiles:user_id(
             nome,
             email
           )
