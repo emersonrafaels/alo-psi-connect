@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Trash2, Search, Loader2, User, Stethoscope, Info, Users } from 'lucide-react';
+import { Trash2, Search, Loader2, User, Stethoscope, Info, Users, RefreshCw } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -38,6 +38,18 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
       'supervisor': 'Supervisor'
     };
     return labels[type] || type;
+  };
+
+  // Função para atualizar todas as listas
+  const handleRefreshAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['institution-patients', institution?.id] });
+    queryClient.invalidateQueries({ queryKey: ['institution-professionals', institution?.id] });
+    queryClient.invalidateQueries({ queryKey: ['available-users', institution?.id] });
+    
+    toast({
+      title: '🔄 Listas atualizadas',
+      description: 'Todos os dados foram recarregados.',
+    });
   };
 
   // Invalidar cache quando o modal abrir
@@ -324,10 +336,21 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-primary" />
-            Gerenciar Vínculos - {institution.name}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Gerenciar Vínculos - {institution.name}
+            </DialogTitle>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefreshAll}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Atualizar
+            </Button>
+          </div>
         </DialogHeader>
         
         <Alert className="mb-4">

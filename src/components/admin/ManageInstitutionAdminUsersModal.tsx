@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, X, Search, Shield, User, Stethoscope, Info } from 'lucide-react';
+import { Loader2, X, Search, Shield, User, Stethoscope, Info, RefreshCw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -32,6 +32,17 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserName, setNewUserName] = useState('');
   const [newUserRole, setNewUserRole] = useState<'admin' | 'viewer'>('admin');
+
+  // Função para atualizar todas as listas
+  const handleRefreshAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['institution-users', institution?.id] });
+    queryClient.invalidateQueries({ queryKey: ['available-admin-users', institution?.id] });
+    
+    toast({
+      title: '🔄 Listas atualizadas',
+      description: 'Todos os dados foram recarregados.',
+    });
+  };
 
   // Buscar usuários vinculados à instituição
   const { data: institutionUsers, isLoading: loadingUsers } = useQuery({
@@ -135,7 +146,8 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['institution-users'] });
+      queryClient.invalidateQueries({ queryKey: ['institution-users', institution?.id] });
+      queryClient.invalidateQueries({ queryKey: ['available-admin-users', institution?.id] });
       setSearchTerm('');
       toast({
         title: 'Usuário adicionado',
@@ -195,7 +207,8 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['institution-users'] });
+      queryClient.invalidateQueries({ queryKey: ['institution-users', institution?.id] });
+      queryClient.invalidateQueries({ queryKey: ['available-admin-users', institution?.id] });
       toast({
         title: 'Acesso removido',
         description: 'O acesso administrativo foi removido com sucesso.',
@@ -216,10 +229,21 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Gerenciar Acesso Administrativo - {institution.name}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Gerenciar Acesso Administrativo - {institution.name}
+            </DialogTitle>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefreshAll}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Atualizar
+            </Button>
+          </div>
         </DialogHeader>
 
         <Alert>
