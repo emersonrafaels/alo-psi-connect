@@ -271,7 +271,7 @@ export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[80vh]">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <div className="flex items-center justify-between pr-12">
             <DialogTitle>
@@ -298,8 +298,8 @@ export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClo
             <TabsTrigger value="add">Adicionar</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="view" className="mt-4">
-            <ScrollArea className="h-[400px] pr-4">
+          <TabsContent value="view" className="mt-4 overflow-auto">
+            <ScrollArea className="h-[300px] pr-4">
               {isLoadingLinked ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -387,7 +387,7 @@ export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClo
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="add" className="mt-4">
+          <TabsContent value="add" className="mt-4 overflow-auto">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="professional">Profissional *</Label>
