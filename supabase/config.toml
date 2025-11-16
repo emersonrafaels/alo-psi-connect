@@ -127,3 +127,6 @@ verify_jwt = false
 
 [functions.link-user-to-institution]
 verify_jwt = true
+
+[functions.log-institution-action]
+verify_jwt = true

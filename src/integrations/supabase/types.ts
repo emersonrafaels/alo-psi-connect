@@ -1028,6 +1028,57 @@ export type Database = {
         }
         Relationships: []
       }
+      institution_audit_log: {
+        Row: {
+          action_type: string
+          changes_summary: Json | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          institution_id: string | null
+          metadata: Json | null
+          performed_by: string | null
+        }
+        Insert: {
+          action_type: string
+          changes_summary?: Json | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          institution_id?: string | null
+          metadata?: Json | null
+          performed_by?: string | null
+        }
+        Update: {
+          action_type?: string
+          changes_summary?: Json | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          institution_id?: string | null
+          metadata?: Json | null
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_audit_log_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_audit_log_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_coupons: {
         Row: {
           code: string
@@ -1116,10 +1167,49 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "institution_coupons_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "institution_coupons_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_user_permissions: {
+        Row: {
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          institution_user_id: string | null
+          permission: Database["public"]["Enums"]["institution_permission"]
+        }
+        Insert: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          institution_user_id?: string | null
+          permission: Database["public"]["Enums"]["institution_permission"]
+        }
+        Update: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          institution_user_id?: string | null
+          permission?: Database["public"]["Enums"]["institution_permission"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_user_permissions_institution_user_id_fkey"
+            columns: ["institution_user_id"]
+            isOneToOne: false
+            referencedRelation: "institution_users"
             referencedColumns: ["id"]
           },
         ]
@@ -1164,6 +1254,13 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_users_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
             referencedColumns: ["id"]
           },
           {
@@ -1464,6 +1561,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "patient_institutions_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "patient_institutions_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
@@ -1515,6 +1619,13 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_institutions_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
             referencedColumns: ["id"]
           },
           {
@@ -1894,6 +2005,36 @@ export type Database = {
           },
         ]
       }
+      saved_filters: {
+        Row: {
+          created_at: string | null
+          filter_config: Json
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          filter_config: Json
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          filter_config?: Json
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       system_configurations: {
         Row: {
           category: string
@@ -2234,6 +2375,24 @@ export type Database = {
       }
     }
     Views: {
+      institution_metrics: {
+        Row: {
+          has_partnership: boolean | null
+          id: string | null
+          institution_created_at: string | null
+          is_active: boolean | null
+          last_professional_added: string | null
+          last_user_added: string | null
+          name: string | null
+          total_active_coupons: number | null
+          total_coupon_uses: number | null
+          total_discount_given: number | null
+          total_professionals: number | null
+          total_users: number | null
+          type: string | null
+        }
+        Relationships: []
+      }
       vw_disponibilidades: {
         Row: {
           clinic_id: number | null
@@ -2451,6 +2610,14 @@ export type Database = {
           tenant_id: string
         }[]
       }
+      has_institution_permission: {
+        Args: {
+          _institution_id: string
+          _permission: Database["public"]["Enums"]["institution_permission"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2480,6 +2647,7 @@ export type Database = {
         Returns: string[]
       }
       publish_scheduled_posts: { Args: never; Returns: undefined }
+      refresh_institution_metrics: { Args: never; Returns: undefined }
       user_belongs_to_institution: {
         Args: { _institution_id: string; _user_id: string }
         Returns: boolean
@@ -2525,6 +2693,23 @@ export type Database = {
         | "must_read"
         | "community_favorite"
         | "staff_pick"
+      institution_permission:
+        | "view_users"
+        | "add_users"
+        | "remove_users"
+        | "edit_users"
+        | "view_professionals"
+        | "add_professionals"
+        | "remove_professionals"
+        | "edit_professionals"
+        | "view_coupons"
+        | "create_coupons"
+        | "edit_coupons"
+        | "delete_coupons"
+        | "view_analytics"
+        | "export_data"
+        | "manage_permissions"
+        | "view_audit_log"
       payment_status: "pending_payment" | "paid" | "failed"
     }
     CompositeTypes: {
@@ -2667,6 +2852,24 @@ export const Constants = {
         "must_read",
         "community_favorite",
         "staff_pick",
+      ],
+      institution_permission: [
+        "view_users",
+        "add_users",
+        "remove_users",
+        "edit_users",
+        "view_professionals",
+        "add_professionals",
+        "remove_professionals",
+        "edit_professionals",
+        "view_coupons",
+        "create_coupons",
+        "edit_coupons",
+        "delete_coupons",
+        "view_analytics",
+        "export_data",
+        "manage_permissions",
+        "view_audit_log",
       ],
       payment_status: ["pending_payment", "paid", "failed"],
     },
