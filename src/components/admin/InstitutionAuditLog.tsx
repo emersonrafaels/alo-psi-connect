@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Download, Filter, Search, Calendar, User, FileText, ChevronDown, ChevronUp } from 'lucide-react';
-import { useInstitutionAudit, getActionLabel, getEntityLabel, getActionIcon, AuditLogEntry } from '@/hooks/useInstitutionAudit';
+import { useInstitutionAudit, getActionLabel, getEntityLabel, getActionIcon, getActionDescription, AuditLogEntry } from '@/hooks/useInstitutionAudit';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -235,27 +235,22 @@ export const InstitutionAuditLog = ({ institutionId, institutionName }: Institut
                           <div className="flex-1 min-w-0 space-y-2">
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <Badge variant="secondary">
+                                <p className="font-medium text-sm mb-2">
+                                  {getActionDescription(log.action_type, log.performer, institutionName, log.metadata)}
+                                </p>
+                                <div className="flex items-center gap-2 flex-wrap mt-1">
+                                  <Badge variant="outline" className="text-xs">
                                     {getActionLabel(log.action_type)}
                                   </Badge>
-                                  <Badge variant="outline">
-                                    {getEntityLabel(log.entity_type)}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
-                                  <User className="h-3 w-3" />
-                                  {log.performer?.nome || log.performer?.email || 'Usuário desconhecido'}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="text-right text-xs text-muted-foreground whitespace-nowrap">
-                                  <div className="flex items-center gap-1">
+                                  <span className="text-xs text-muted-foreground flex items-center gap-1">
                                     <Calendar className="h-3 w-3" />
                                     {format(new Date(log.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                                  </div>
+                                  </span>
                                 </div>
-                                {log.changes_summary && log.changes_summary.length > 0 && (
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {(log.changes_summary && log.changes_summary.length > 0) || 
+                                 (log.metadata && (log.metadata.nome || log.metadata.email)) ? (
                                   <CollapsibleTrigger asChild>
                                     <Button
                                       variant="ghost"
@@ -269,21 +264,41 @@ export const InstitutionAuditLog = ({ institutionId, institutionName }: Institut
                                       )}
                                     </Button>
                                   </CollapsibleTrigger>
-                                )}
+                                ) : null}
                               </div>
                             </div>
 
                             <CollapsibleContent>
-                              <div className="pt-2 mt-2 border-t">
-                                {renderChangesSummary(log)}
-                                {log.metadata && Object.keys(log.metadata).length > 0 && (
-                                  <div className="mt-3 pt-3 border-t">
-                                    <p className="text-xs font-medium text-muted-foreground mb-2">
-                                      Metadados:
-                                    </p>
-                                    <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
-                                      {JSON.stringify(log.metadata, null, 2)}
-                                    </pre>
+                              <div className="pt-2 mt-2 border-t space-y-3">
+                                {/* Informações do usuário afetado */}
+                                {log.metadata && (log.metadata.nome || log.metadata.email) && (
+                                  <div className="bg-muted/50 p-3 rounded-lg space-y-1">
+                                    <h4 className="font-medium text-sm mb-2">Usuário afetado:</h4>
+                                    {log.metadata.nome && (
+                                      <p className="text-sm">
+                                        <span className="text-muted-foreground">Nome:</span> {log.metadata.nome}
+                                      </p>
+                                    )}
+                                    {log.metadata.email && (
+                                      <p className="text-sm">
+                                        <span className="text-muted-foreground">Email:</span> {log.metadata.email}
+                                      </p>
+                                    )}
+                                    {log.metadata.role && (
+                                      <p className="text-sm">
+                                        <span className="text-muted-foreground">Papel:</span>{' '}
+                                        <Badge variant="secondary" className="text-xs">
+                                          {log.metadata.role}
+                                        </Badge>
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+
+                                {log.changes_summary && log.changes_summary.length > 0 && (
+                                  <div>
+                                    <h4 className="font-medium text-sm mb-2">Alterações realizadas:</h4>
+                                    {renderChangesSummary(log)}
                                   </div>
                                 )}
                               </div>
