@@ -46,7 +46,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
     });
   };
 
-  // Buscar usuários vinculados à instituição
+  // Buscar usuários vinculados à instituição (ativos e inativos)
   const { data: institutionUsers, isLoading: loadingUsers } = useQuery({
     queryKey: ['institution-users', institution?.id],
     queryFn: async () => {
@@ -65,7 +65,8 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
           )
         `)
         .eq('institution_id', institution.id)
-        .eq('is_active', true);
+        .order('is_active', { ascending: false })
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data || [];
@@ -90,8 +91,15 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
       
       if (adminUserIds.length === 0) return [];
 
-      // Agora buscar os profiles desses usuários que não estão vinculados à instituição
-      const excludedUserIds = institutionUsers?.map(u => u.user_id) || [];
+      // Buscar TODOS os user_ids vinculados (ativos e inativos) para excluir
+      const { data: allLinkedUsers, error: linkedError } = await supabase
+        .from('institution_users')
+        .select('user_id')
+        .eq('institution_id', institution.id);
+
+      if (linkedError) throw linkedError;
+
+      const excludedUserIds = allLinkedUsers?.map(u => u.user_id) || [];
       const filteredAdminIds = adminUserIds.filter(id => !excludedUserIds.includes(id));
 
       if (filteredAdminIds.length === 0) return [];
@@ -230,7 +238,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
     },
   });
 
-  // Mutation para remover usuário
+  // Mutation para remover usuário (desativar)
   const removeUserMutation = useMutation({
     mutationFn: async (linkId: string) => {
       // Buscar dados antes de remover
@@ -274,6 +282,56 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
     onError: (error: any) => {
       toast({
         title: 'Erro ao remover acesso',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Mutation para reativar usuário
+  const reactivateUserMutation = useMutation({
+    mutationFn: async (linkId: string) => {
+      // Buscar dados antes de reativar
+      const { data: linkData } = await supabase
+        .from('institution_users')
+        .select('user_id, role, profiles!institution_users_user_id_fkey(nome, email)')
+        .eq('id', linkId)
+        .single();
+
+      const { error } = await supabase
+        .from('institution_users')
+        .update({ is_active: true })
+        .eq('id', linkId);
+
+      if (error) throw error;
+      
+      return { linkId, linkData };
+    },
+    onSuccess: async (data) => {
+      queryClient.invalidateQueries({ queryKey: ['institution-users', institution?.id] });
+      queryClient.invalidateQueries({ queryKey: ['available-admin-users', institution?.id] });
+      
+      // Log da ação de reativação
+      await logAction({
+        action_type: 'reactivate_admin',
+        entity_type: 'admin_user',
+        entity_id: data.linkId,
+        metadata: {
+          user_id: data.linkData?.user_id,
+          role: data.linkData?.role,
+          nome: data.linkData?.profiles?.nome,
+          email: data.linkData?.profiles?.email,
+        },
+      });
+      
+      toast({
+        title: 'Acesso reativado',
+        description: 'O acesso administrativo foi reativado com sucesso.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro ao reativar acesso',
         description: error.message,
         variant: 'destructive',
       });
@@ -334,9 +392,21 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                 ) : institutionUsers && institutionUsers.length > 0 ? (
                   <div className="space-y-2">
                     {institutionUsers.map((link: any) => (
-                      <div key={link.id} className="flex items-center justify-between p-3 rounded-lg border">
+                      <div 
+                        key={link.id} 
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          !link.is_active ? 'bg-muted/50 opacity-70' : ''
+                        }`}
+                      >
                         <div className="flex-1">
-                          <p className="font-medium">{link.profiles.nome}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{link.profiles.nome}</p>
+                            {!link.is_active && (
+                              <Badge variant="outline" className="gap-1 text-muted-foreground">
+                                Inativo
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground">{link.profiles.email}</p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -353,14 +423,30 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeUserMutation.mutate(link.id)}
-                            disabled={removeUserMutation.isPending}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                          
+                          {link.is_active ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeUserMutation.mutate(link.id)}
+                              disabled={removeUserMutation.isPending}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => reactivateUserMutation.mutate(link.id)}
+                              disabled={reactivateUserMutation.isPending}
+                            >
+                              {reactivateUserMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                'Reativar'
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
