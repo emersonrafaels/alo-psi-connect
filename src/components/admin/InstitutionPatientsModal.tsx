@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Users } from 'lucide-react';
 import { useInstitutionPatients } from '@/hooks/useInstitutionPatients';
 import { EducationalInstitution } from '@/hooks/useInstitutions';
+import { useInstitutionAudit } from '@/hooks/useInstitutionAudit';
 
 interface InstitutionPatientsModalProps {
   institution: EducationalInstitution | null;
@@ -20,6 +21,24 @@ export const InstitutionPatientsModal = ({
   const { patientInstitutions, isLoading, removePatient, isRemoving } = useInstitutionPatients(
     institution?.id
   );
+  const { logAction } = useInstitutionAudit(institution?.id);
+
+  const handleRemovePatient = async (patientInstitutionId: string, patientData: any) => {
+    await removePatient(patientInstitutionId);
+    
+    // Log da ação de remoção
+    await logAction({
+      action_type: 'unlink_patient',
+      entity_type: 'patient',
+      entity_id: patientInstitutionId,
+      metadata: {
+        patient_id: patientData.pacientes.id,
+        nome: patientData.pacientes.profiles.nome,
+        email: patientData.pacientes.profiles.email,
+        enrollment_status: patientData.enrollment_status,
+      },
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -78,7 +97,7 @@ export const InstitutionPatientsModal = ({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => removePatient(pi.id)}
+                        onClick={() => handleRemovePatient(pi.id, pi)}
                         disabled={isRemoving}
                       >
                         <Trash2 className="h-4 w-4" />
