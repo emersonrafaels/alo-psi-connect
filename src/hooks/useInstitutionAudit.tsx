@@ -239,6 +239,12 @@ export const getActionLabel = (action: string): string => {
     create_coupon: 'Criação de Cupom',
     update_coupon: 'Atualização de Cupom',
     delete_coupon: 'Exclusão de Cupom',
+    link_admin: 'Adição de Administrador',
+    unlink_admin: 'Remoção de Administrador',
+    create_admin: 'Criação de Administrador',
+    reactivate_admin: 'Reativação de Administrador',
+    link_patient: 'Vinculação de Paciente',
+    unlink_patient: 'Desvinculação de Paciente',
   };
   return labels[action] || action;
 };
@@ -249,6 +255,8 @@ export const getEntityLabel = (entity: string): string => {
     user: 'Usuário',
     professional: 'Profissional',
     coupon: 'Cupom',
+    admin_user: 'Administrador',
+    patient: 'Paciente',
   };
   return labels[entity] || entity;
 };
@@ -266,6 +274,41 @@ export const getActionIcon = (action: string) => {
     create_coupon: '🎟️',
     update_coupon: '🔄',
     delete_coupon: '❌',
+    link_admin: '👤',
+    unlink_admin: '🚫',
+    create_admin: '✨',
+    reactivate_admin: '🔄',
+    link_patient: '🔗',
+    unlink_patient: '🔓',
   };
   return icons[action] || '📝';
+};
+
+export const getActionDescription = (
+  action: string,
+  performer: { nome: string; email: string } | undefined,
+  institutionName: string,
+  metadata?: Record<string, any>
+): string => {
+  const performerName = performer?.nome || performer?.email || 'Usuário desconhecido';
+  const affectedUser = metadata?.nome || metadata?.email || 'usuário';
+
+  const descriptions: Record<string, string> = {
+    create: `${performerName} criou a instituição ${institutionName}`,
+    update: `${performerName} atualizou as informações da instituição ${institutionName}`,
+    delete: `${performerName} excluiu a instituição ${institutionName}`,
+    link_admin: `${performerName} adicionou ${affectedUser} como administrador na instituição ${institutionName}`,
+    unlink_admin: `${performerName} removeu ${affectedUser} como administrador da instituição ${institutionName}`,
+    create_admin: `${performerName} criou e vinculou ${affectedUser} como administrador na instituição ${institutionName}`,
+    reactivate_admin: `${performerName} reativou ${affectedUser} como administrador na instituição ${institutionName}`,
+    link_patient: `${performerName} vinculou o paciente ${affectedUser} à instituição ${institutionName}`,
+    unlink_patient: `${performerName} desvinculou o paciente ${affectedUser} da instituição ${institutionName}`,
+    add_professional: `${performerName} adicionou o profissional ${affectedUser} à instituição ${institutionName}`,
+    remove_professional: `${performerName} removeu o profissional ${affectedUser} da instituição ${institutionName}`,
+    create_coupon: `${performerName} criou o cupom "${metadata?.coupon_code || 'cupom'}" para a instituição ${institutionName}`,
+    update_coupon: `${performerName} atualizou o cupom "${metadata?.coupon_code || 'cupom'}" da instituição ${institutionName}`,
+    delete_coupon: `${performerName} excluiu o cupom "${metadata?.coupon_code || 'cupom'}" da instituição ${institutionName}`,
+  };
+
+  return descriptions[action] || `${performerName} realizou a ação "${getActionLabel(action)}" na instituição ${institutionName}`;
 };
