@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useInstitutionAudit } from '@/hooks/useInstitutionAudit';
 
 interface Props {
   institution: { id: string; name: string } | null;
@@ -26,6 +27,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { createInstitutionalUser, loading: creatingUser } = useUserManagement();
+  const { logAction } = useInstitutionAudit(institution?.id);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
@@ -125,14 +127,16 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
   // Mutation para adicionar usuário existente
   const addUserMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: 'admin' | 'viewer' }) => {
-      const { error } = await supabase
+      const { data: insertData, error } = await supabase
         .from('institution_users')
         .insert({
           institution_id: institution!.id,
           user_id: userId,
           role,
           is_active: true,
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -144,10 +148,24 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
           institutionName: institution!.name,
         }
       });
+
+      return { insertData, userId, role };
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['institution-users', institution?.id] });
       queryClient.invalidateQueries({ queryKey: ['available-admin-users', institution?.id] });
+      
+      // Log da ação de adição
+      await logAction({
+        action_type: 'link_admin',
+        entity_type: 'admin_user',
+        entity_id: data.insertData.id,
+        metadata: {
+          user_id: data.userId,
+          role: data.role,
+        },
+      });
+      
       setSearchTerm('');
       toast({
         title: 'Usuário adicionado',
@@ -168,16 +186,32 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
     mutationFn: async () => {
       if (!institution) return;
 
-      await createInstitutionalUser({
+      const result = await createInstitutionalUser({
         email: newUserEmail,
         password: newUserPassword,
         nome: newUserName,
         institutionId: institution.id,
         institutionRole: newUserRole,
       });
+
+      return { email: newUserEmail, nome: newUserName, role: newUserRole };
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['institution-users'] });
+      
+      // Log da ação de criação
+      if (data) {
+        await logAction({
+          action_type: 'create_admin',
+          entity_type: 'admin_user',
+          metadata: {
+            email: data.email,
+            nome: data.nome,
+            role: data.role,
+          },
+        });
+      }
+      
       setNewUserEmail('');
       setNewUserPassword('');
       setNewUserName('');
@@ -199,16 +233,39 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
   // Mutation para remover usuário
   const removeUserMutation = useMutation({
     mutationFn: async (linkId: string) => {
+      // Buscar dados antes de remover
+      const { data: linkData } = await supabase
+        .from('institution_users')
+        .select('user_id, role, profiles!institution_users_user_id_fkey(nome, email)')
+        .eq('id', linkId)
+        .single();
+
       const { error } = await supabase
         .from('institution_users')
         .update({ is_active: false })
         .eq('id', linkId);
 
       if (error) throw error;
+      
+      return { linkId, linkData };
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['institution-users', institution?.id] });
       queryClient.invalidateQueries({ queryKey: ['available-admin-users', institution?.id] });
+      
+      // Log da ação de remoção
+      await logAction({
+        action_type: 'unlink_admin',
+        entity_type: 'admin_user',
+        entity_id: data.linkId,
+        metadata: {
+          user_id: data.linkData?.user_id,
+          role: data.linkData?.role,
+          nome: data.linkData?.profiles?.nome,
+          email: data.linkData?.profiles?.email,
+        },
+      });
+      
       toast({
         title: 'Acesso removido',
         description: 'O acesso administrativo foi removido com sucesso.',
