@@ -65,6 +65,7 @@ export default function Institutions() {
   const [managingAdminUsers, setManagingAdminUsers] = useState<{ id: string; name: string } | null>(null);
   const [managingCoupons, setManagingCoupons] = useState<{ id: string; name: string } | null>(null);
   const [selectedInstitutionForAudit, setSelectedInstitutionForAudit] = useState<{ id: string; name: string } | null>(null);
+  const [activeTab, setActiveTab] = useState('institutions');
 
   // Contar pacientes por instituição
   const { patientInstitutions: allPatientInstitutions } = useInstitutionPatients();
@@ -120,7 +121,7 @@ export default function Institutions() {
           </Button>
         </div>
 
-        <Tabs defaultValue="institutions" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="institutions">
               <Building2 className="h-4 w-4 mr-2" />
@@ -392,7 +393,10 @@ export default function Institutions() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => setSelectedInstitutionForAudit({ id: institution.id, name: institution.name })}
+                            onClick={() => {
+                              setSelectedInstitutionForAudit({ id: institution.id, name: institution.name });
+                              setActiveTab('audit');
+                            }}
                             title="Ver Histórico de Auditoria"
                           >
                             <FileText className="h-4 w-4" />
