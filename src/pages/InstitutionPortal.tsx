@@ -56,31 +56,35 @@ export default function InstitutionPortal() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Profissionais</CardTitle>
-            <Users className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{activeProfessionals.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Total de {linkedProfessionals.length} vinculados
-            </p>
-          </CardContent>
-        </Card>
+        <Link to="/portal-institucional/profissionais" className="block transition-transform hover:scale-105">
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Profissionais</CardTitle>
+              <Users className="h-5 w-5 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{activeProfessionals.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total de {linkedProfessionals.length} vinculados
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Alunos</CardTitle>
-            <GraduationCap className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{activeStudents.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Total de {linkedStudents.length} vinculados
-            </p>
-          </CardContent>
-        </Card>
+        <Link to="/portal-institucional/alunos" className="block transition-transform hover:scale-105">
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Alunos</CardTitle>
+              <GraduationCap className="h-5 w-5 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{activeStudents.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total de {linkedStudents.length} vinculados
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -102,37 +106,55 @@ export default function InstitutionPortal() {
 
       {/* Ações Rápidas */}
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <Card className="border-2 hover:border-purple-500/50 transition-all">
           <CardHeader>
-            <CardTitle>Profissionais Vinculados</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/20">
+                <Users className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <CardTitle>Gerenciar Profissionais</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {activeProfessionals.length} ativos de {linkedProfessionals.length} total
+                </p>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Visualize e gerencie os profissionais vinculados à sua instituição
+            <p className="text-sm mb-4">
+              Visualize, busque e acompanhe todos os profissionais vinculados à sua instituição
             </p>
-            <Link to="/portal-institucional/profissionais">
-              <Button className="w-full">
-                <Users className="mr-2 h-4 w-4" />
+            <Button asChild className="w-full" size="lg">
+              <Link to="/portal-institucional/profissionais">
                 Ver Profissionais
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 hover:border-blue-500/50 transition-all">
           <CardHeader>
-            <CardTitle>Alunos Cadastrados</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                <GraduationCap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <CardTitle>Gerenciar Alunos</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {activeStudents.length} matriculados de {linkedStudents.length} total
+                </p>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Acompanhe os alunos cadastrados na plataforma
+            <p className="text-sm mb-4">
+              Visualize, busque e acompanhe todos os alunos vinculados à sua instituição
             </p>
-            <Link to="/portal-institucional/alunos">
-              <Button className="w-full">
-                <GraduationCap className="mr-2 h-4 w-4" />
+            <Button asChild className="w-full" size="lg">
+              <Link to="/portal-institucional/alunos">
                 Ver Alunos
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

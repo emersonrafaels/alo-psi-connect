@@ -3,9 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Search, Mail, Calendar, GraduationCap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, Mail, Calendar, GraduationCap, ArrowLeft } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { format } from 'date-fns';
+import { Link } from 'react-router-dom';
+import Header from '@/components/ui/header';
+import Footer from '@/components/ui/footer';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 export default function InstitutionStudents() {
   const { linkedStudents, isLoading } = useInstitutionAccess();
@@ -34,13 +46,40 @@ export default function InstitutionStudents() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold">Alunos da Instituição</h1>
-        <p className="text-muted-foreground mt-2">
-          {linkedStudents.length} alunos vinculados
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <div className="container mx-auto py-8 px-4">
+        {/* Breadcrumb */}
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/portal-institucional">
+                Portal Institucional
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Alunos</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        {/* Cabeçalho com botão voltar */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold">Alunos da Instituição</h1>
+            <p className="text-muted-foreground mt-2">
+              {linkedStudents.length} alunos vinculados
+            </p>
+          </div>
+          <Button asChild variant="outline" size="lg">
+            <Link to="/portal-institucional">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar ao Portal
+            </Link>
+          </Button>
+        </div>
 
       {/* Busca */}
       <Card className="mb-6">
@@ -104,13 +143,16 @@ export default function InstitutionStudents() {
         ))}
       </div>
 
-      {filteredStudents.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            Nenhum aluno encontrado
-          </CardContent>
-        </Card>
-      )}
+        {filteredStudents.length === 0 && (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              Nenhum aluno encontrado
+            </CardContent>
+          </Card>
+        )}
+      </div>
+      
+      <Footer />
     </div>
   );
 }
