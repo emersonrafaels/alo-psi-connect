@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket, Shield, Briefcase, FileText } from 'lucide-react';
+import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket, Shield, Briefcase, FileText, BarChart3 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInstitutions, EducationalInstitution } from '@/hooks/useInstitutions';
 import { useUncataloguedInstitutions } from '@/hooks/useUncataloguedInstitutions';
@@ -31,6 +31,7 @@ import { ManageInstitutionUsersModal } from '@/components/admin/ManageInstitutio
 import { ManageInstitutionAdminUsersModal } from '@/components/admin/ManageInstitutionAdminUsersModal';
 import { ManageInstitutionCouponsModal } from '@/components/admin/ManageInstitutionCouponsModal';
 import { InstitutionAuditLog } from '@/components/admin/InstitutionAuditLog';
+import { InstitutionMetricsDashboard } from '@/components/admin/InstitutionMetricsDashboard';
 
 export default function Institutions() {
   const {
@@ -124,6 +125,10 @@ export default function Institutions() {
             <TabsTrigger value="institutions">
               <Building2 className="h-4 w-4 mr-2" />
               Instituições
+            </TabsTrigger>
+            <TabsTrigger value="metrics">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Métricas
             </TabsTrigger>
             <TabsTrigger value="audit">
               <FileText className="h-4 w-4 mr-2" />
@@ -415,6 +420,10 @@ export default function Institutions() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="metrics" className="space-y-6">
+            <InstitutionMetricsDashboard />
           </TabsContent>
 
           <TabsContent value="audit" className="space-y-6">
