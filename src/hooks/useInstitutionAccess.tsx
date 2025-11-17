@@ -13,7 +13,7 @@ export const useInstitutionAccess = () => {
     queryFn: async () => {
       if (!user) return null;
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('institution_users')
         .select(`
           id,
@@ -29,8 +29,14 @@ export const useInstitutionAccess = () => {
           )
         `)
         .eq('user_id', user.id)
-        .eq('is_active', true)
-        .eq('tenant_id', tenant?.id);
+        .eq('is_active', true);
+
+      // Filtrar por tenant apenas se tenant estiver definido (fallback para resiliência)
+      if (tenant?.id) {
+        query = query.eq('tenant_id', tenant.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data;
