@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2 } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
 import { useState, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -14,6 +14,7 @@ import { useAdminAuth } from "@/hooks/useAdminAuth"
 import { useUserType } from "@/hooks/useUserType"
 import { useAuthorRole } from "@/hooks/useAuthorRole"
 import { useTenant } from "@/hooks/useTenant"
+import { useUserRole } from "@/hooks/useUserRole"
 import { TenantBranding } from "@/components/TenantBranding"
 import { buildTenantPath } from "@/utils/tenantHelpers"
 import { UnderConstructionModal } from "@/components/UnderConstructionModal"
@@ -32,6 +33,7 @@ const Header = () => {
   const { isProfessional } = useUserType()
   const { isAuthor } = useAuthorRole()
   const { tenant } = useTenant()
+  const { hasRole: isInstitutionAdmin, loading: institutionAdminLoading } = useUserRole('institution_admin')
 
   const tenantSlug = tenant?.slug || 'alopsi'
 
@@ -159,9 +161,16 @@ const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-2 py-1.5 text-sm">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="font-medium truncate">{profile?.nome || user.email}</div>
+                <div className="px-2 py-1.5 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-medium truncate">{profile?.nome || user.email}</div>
+                    <div className="flex items-center gap-1">
+                      {isInstitutionAdmin && !institutionAdminLoading && (
+                        <Badge variant="outline" className="flex items-center gap-1 shrink-0 border-purple-500 text-purple-700 dark:text-purple-300">
+                          <Building2 className="h-3 w-3" />
+                          <span className="text-xs">Instituição</span>
+                        </Badge>
+                      )}
                       {profile?.tipo_usuario === 'profissional' && (
                         <Badge variant="default" className="flex items-center gap-1 shrink-0">
                           <Stethoscope className="h-3 w-3" />
@@ -175,13 +184,21 @@ const Header = () => {
                         </Badge>
                       )}
                     </div>
-                    <div className="text-xs text-muted-foreground truncate">{user.email}</div>
                   </div>
+                  <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                </div>
                   <DropdownMenuSeparator />
+                {isInstitutionAdmin && !institutionAdminLoading ? (
+                  <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/portal-institucional'))}>
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Minha Instituição
+                  </DropdownMenuItem>
+                ) : (
                   <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/agendamentos'))}>
                     <Calendar className="h-4 w-4 mr-2" />
                     Meus Agendamentos
                   </DropdownMenuItem>
+                )}
                   {isProfessional && (
                     <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/professional-profile'))}>
                       <Briefcase className="h-4 w-4 mr-2" />
