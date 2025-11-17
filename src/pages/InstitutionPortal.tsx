@@ -1,11 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, GraduationCap, Building2, TrendingUp } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Users, GraduationCap, Building2, TrendingUp, BarChart3, Briefcase, UserCircle } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { Link } from 'react-router-dom';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
+import { InstitutionAnalyticsDashboard } from '@/components/admin/InstitutionAnalyticsDashboard';
 
 export default function InstitutionPortal() {
   const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
@@ -104,60 +106,89 @@ export default function InstitutionPortal() {
         </Card>
       </div>
 
-      {/* Ações Rápidas */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="border-2 hover:border-purple-500/50 transition-all">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/20">
-                <Users className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <CardTitle>Gerenciar Profissionais</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {activeProfessionals.length} ativos de {linkedProfessionals.length} total
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm mb-4">
-              Visualize, busque e acompanhe todos os profissionais vinculados à sua instituição
-            </p>
-            <Button asChild className="w-full" size="lg">
-              <Link to="/portal-institucional/profissionais">
-                Ver Profissionais
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Tabs: Visão Geral e Métricas */}
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="metrics">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Métricas Avançadas
+          </TabsTrigger>
+        </TabsList>
 
-        <Card className="border-2 hover:border-blue-500/50 transition-all">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/20">
-                <GraduationCap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <CardTitle>Gerenciar Alunos</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {activeStudents.length} matriculados de {linkedStudents.length} total
+        <TabsContent value="overview" className="space-y-6">
+          {/* Ações Rápidas */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="border-2 hover:border-purple-500/50 transition-all">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/20">
+                    <Briefcase className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div>
+                    <CardTitle>Gerenciar Profissionais</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {activeProfessionals.length} ativos de {linkedProfessionals.length} total
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm mb-4">
+                  Visualize, busque e acompanhe todos os profissionais vinculados à sua instituição
                 </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm mb-4">
-              Visualize, busque e acompanhe todos os alunos vinculados à sua instituição
-            </p>
-            <Button asChild className="w-full" size="lg">
-              <Link to="/portal-institucional/alunos">
-                Ver Alunos
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+                <Button asChild className="w-full" size="lg">
+                  <Link to="/portal-institucional/profissionais">
+                    Ver Profissionais
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:border-blue-500/50 transition-all">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                    <UserCircle className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <CardTitle>Gerenciar Alunos</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {activeStudents.length} matriculados de {linkedStudents.length} total
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm mb-4">
+                  Visualize, busque e acompanhe todos os alunos vinculados à sua instituição
+                </p>
+                <Button asChild className="w-full" size="lg">
+                  <Link to="/portal-institucional/alunos">
+                    Ver Alunos
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="metrics">
+          {userInstitutions[0]?.institution_id ? (
+            <InstitutionAnalyticsDashboard 
+              institutionId={userInstitutions[0].institution_id} 
+            />
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <p className="text-muted-foreground">
+                  Nenhuma instituição vinculada para exibir métricas.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
     
     <Footer />

@@ -2480,6 +2480,26 @@ export type Database = {
       }
       clean_old_chat_sessions: { Args: never; Returns: undefined }
       get_current_tenant_id: { Args: never; Returns: string }
+      get_institution_alerts: {
+        Args: { p_institution_id: string }
+        Returns: {
+          count: number
+          message: string
+          severity: string
+        }[]
+      }
+      get_institution_engagement_metrics: {
+        Args: { p_institution_id: string }
+        Returns: Json
+      }
+      get_institution_growth_metrics: {
+        Args: { p_institution_id: string }
+        Returns: {
+          month: string
+          professionals_added: number
+          students_enrolled: number
+        }[]
+      }
       get_institution_metrics: {
         Args: { p_institution_id?: string }
         Returns: {
