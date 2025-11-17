@@ -36,6 +36,7 @@ function generateInstitutionLinkEmailHTML(
   tenantColor: string,
   tenantLogo: string | null,
   userName: string,
+  userEmail: string,
   institutionName: string,
   role: string,
   portalUrl: string
@@ -193,6 +194,7 @@ const handler = async (req: Request): Promise<Response> => {
       tenantColor,
       tenantLogo,
       userName,
+      userEmail,
       institutionName,
       role,
       portalUrl

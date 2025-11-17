@@ -155,12 +155,13 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
         .eq('user_id', userId)
         .single();
 
-      // Buscar dados da instituição para pegar tenant_id
-      const { data: institutionData } = await supabase
-        .from('educational_institutions')
-        .select('tenant_id:institution_users!institution_users_institution_id_fkey(tenant_id)')
-        .eq('id', institution!.id)
-        .single();
+      // Buscar tenant_id da primeira ligação institution_users desta instituição
+      const { data: institutionLink } = await supabase
+        .from('institution_users')
+        .select('tenant_id')
+        .eq('institution_id', institution!.id)
+        .limit(1)
+        .maybeSingle();
 
       // Enviar notificação com dados corretos
       if (userProfile) {
@@ -171,7 +172,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
               userName: userProfile.nome,
               institutionName: institution!.name,
               role: role,
-              tenantId: institutionData?.tenant_id || null,
+              tenantId: institutionLink?.tenant_id || null,
             }
           });
           console.log('📧 Email de notificação enviado para', userProfile.email);
@@ -245,12 +246,13 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
 
         // Enviar email de notificação
         try {
-          // Buscar tenant_id da instituição
-          const { data: institutionData } = await supabase
-            .from('educational_institutions')
-            .select('tenant_id:institution_users!institution_users_institution_id_fkey(tenant_id)')
-            .eq('id', institution!.id)
-            .single();
+          // Buscar tenant_id da primeira ligação institution_users desta instituição
+          const { data: institutionLink } = await supabase
+            .from('institution_users')
+            .select('tenant_id')
+            .eq('institution_id', institution!.id)
+            .limit(1)
+            .maybeSingle();
 
           await supabase.functions.invoke('notify-institution-link', {
             body: {
@@ -258,7 +260,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
               userName: data.nome,
               institutionName: institution!.name,
               role: data.role,
-              tenantId: institutionData?.tenant_id || null,
+              tenantId: institutionLink?.tenant_id || null,
             }
           });
           console.log('📧 Email de notificação enviado para', data.email);
@@ -375,12 +377,13 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
       // Enviar email de notificação de reativação
       if (data.linkData?.profiles) {
         try {
-          // Buscar tenant_id da instituição
-          const { data: institutionData } = await supabase
-            .from('educational_institutions')
-            .select('tenant_id:institution_users!institution_users_institution_id_fkey(tenant_id)')
-            .eq('id', institution!.id)
-            .single();
+          // Buscar tenant_id da primeira ligação institution_users desta instituição
+          const { data: institutionLink } = await supabase
+            .from('institution_users')
+            .select('tenant_id')
+            .eq('institution_id', institution!.id)
+            .limit(1)
+            .maybeSingle();
 
           await supabase.functions.invoke('notify-institution-link', {
             body: {
@@ -388,7 +391,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
               userName: data.linkData.profiles.nome,
               institutionName: institution!.name,
               role: data.linkData.role,
-              tenantId: institutionData?.tenant_id || null,
+              tenantId: institutionLink?.tenant_id || null,
             }
           });
           console.log('📧 Email de reativação enviado para', data.linkData.profiles.email);
