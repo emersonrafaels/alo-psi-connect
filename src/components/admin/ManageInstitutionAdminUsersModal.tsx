@@ -148,14 +148,38 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
 
       if (error) throw error;
 
-      // Enviar notificação
-      await supabase.functions.invoke('notify-institution-link', {
-        body: {
-          userId,
-          institutionId: institution!.id,
-          institutionName: institution!.name,
+      // Buscar dados do usuário para enviar email
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('email, nome')
+        .eq('user_id', userId)
+        .single();
+
+      // Buscar dados da instituição para pegar tenant_id
+      const { data: institutionData } = await supabase
+        .from('educational_institutions')
+        .select('tenant_id:institution_users!institution_users_institution_id_fkey(tenant_id)')
+        .eq('id', institution!.id)
+        .single();
+
+      // Enviar notificação com dados corretos
+      if (userProfile) {
+        try {
+          await supabase.functions.invoke('notify-institution-link', {
+            body: {
+              userEmail: userProfile.email,
+              userName: userProfile.nome,
+              institutionName: institution!.name,
+              role: role,
+              tenantId: institutionData?.tenant_id || null,
+            }
+          });
+          console.log('📧 Email de notificação enviado para', userProfile.email);
+        } catch (emailError) {
+          console.error('Erro ao enviar email:', emailError);
+          // Não bloqueia o fluxo se o email falhar
         }
-      });
+      }
 
       return { insertData, userId, role };
     },
@@ -218,6 +242,30 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
             role: data.role,
           },
         });
+
+        // Enviar email de notificação
+        try {
+          // Buscar tenant_id da instituição
+          const { data: institutionData } = await supabase
+            .from('educational_institutions')
+            .select('tenant_id:institution_users!institution_users_institution_id_fkey(tenant_id)')
+            .eq('id', institution!.id)
+            .single();
+
+          await supabase.functions.invoke('notify-institution-link', {
+            body: {
+              userEmail: data.email,
+              userName: data.nome,
+              institutionName: institution!.name,
+              role: data.role,
+              tenantId: institutionData?.tenant_id || null,
+            }
+          });
+          console.log('📧 Email de notificação enviado para', data.email);
+        } catch (emailError) {
+          console.error('Erro ao enviar email:', emailError);
+          // Não bloqueia o fluxo se o email falhar
+        }
       }
       
       setNewUserEmail('');
@@ -323,6 +371,32 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
           email: data.linkData?.profiles?.email,
         },
       });
+
+      // Enviar email de notificação de reativação
+      if (data.linkData?.profiles) {
+        try {
+          // Buscar tenant_id da instituição
+          const { data: institutionData } = await supabase
+            .from('educational_institutions')
+            .select('tenant_id:institution_users!institution_users_institution_id_fkey(tenant_id)')
+            .eq('id', institution!.id)
+            .single();
+
+          await supabase.functions.invoke('notify-institution-link', {
+            body: {
+              userEmail: data.linkData.profiles.email,
+              userName: data.linkData.profiles.nome,
+              institutionName: institution!.name,
+              role: data.linkData.role,
+              tenantId: institutionData?.tenant_id || null,
+            }
+          });
+          console.log('📧 Email de reativação enviado para', data.linkData.profiles.email);
+        } catch (emailError) {
+          console.error('Erro ao enviar email de reativação:', emailError);
+          // Não bloqueia o fluxo se o email falhar
+        }
+      }
       
       toast({
         title: 'Acesso reativado',
