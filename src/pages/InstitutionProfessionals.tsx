@@ -3,9 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Search, Mail, Briefcase, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, Mail, Briefcase, Calendar, ArrowLeft } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { format } from 'date-fns';
+import { Link } from 'react-router-dom';
+import Header from '@/components/ui/header';
+import Footer from '@/components/ui/footer';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 export default function InstitutionProfessionals() {
   const { linkedProfessionals, isLoading } = useInstitutionAccess();
@@ -25,13 +37,40 @@ export default function InstitutionProfessionals() {
   );
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold">Profissionais da Instituição</h1>
-        <p className="text-muted-foreground mt-2">
-          {linkedProfessionals.length} profissionais vinculados
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <div className="container mx-auto py-8 px-4">
+        {/* Breadcrumb */}
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/portal-institucional">
+                Portal Institucional
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Profissionais</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        {/* Cabeçalho com botão voltar */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold">Profissionais da Instituição</h1>
+            <p className="text-muted-foreground mt-2">
+              {linkedProfessionals.length} profissionais vinculados
+            </p>
+          </div>
+          <Button asChild variant="outline" size="lg">
+            <Link to="/portal-institucional">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar ao Portal
+            </Link>
+          </Button>
+        </div>
 
       {/* Busca */}
       <Card className="mb-6">
@@ -96,13 +135,16 @@ export default function InstitutionProfessionals() {
         ))}
       </div>
 
-      {filteredProfessionals.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            Nenhum profissional encontrado
-          </CardContent>
-        </Card>
-      )}
+        {filteredProfessionals.length === 0 && (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              Nenhum profissional encontrado
+            </CardContent>
+          </Card>
+        )}
+      </div>
+      
+      <Footer />
     </div>
   );
 }
