@@ -1,8 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Users, GraduationCap, Building2, TrendingUp } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { Link } from 'react-router-dom';
+import Header from '@/components/ui/header';
+import Footer from '@/components/ui/footer';
 
 export default function InstitutionPortal() {
   const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
@@ -19,15 +22,24 @@ export default function InstitutionPortal() {
   const activeStudents = linkedStudents.filter(s => s.enrollment_status === 'enrolled');
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold">Portal Institucional</h1>
-        <p className="text-muted-foreground mt-2">
-          {userInstitutions[0]?.educational_institutions?.name 
-            ? `Bem-vindo ao sistema de gestão da ${userInstitutions[0].educational_institutions.name}`
-            : 'Bem-vindo ao portal institucional'}
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <div className="container mx-auto py-8 px-4">
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <h1 className="text-4xl font-bold">Portal Institucional</h1>
+            {userInstitutions[0]?.educational_institutions?.name && (
+              <Badge variant="outline" className="text-lg px-4 py-2 border-purple-500 text-purple-700 dark:text-purple-300">
+                <Building2 className="h-4 w-4 mr-2" />
+                {userInstitutions[0].educational_institutions.name}
+              </Badge>
+            )}
+          </div>
+          <p className="text-muted-foreground text-lg">
+            Gerencie profissionais, alunos e métricas da sua instituição
+          </p>
+        </div>
 
       {/* Cards de Resumo */}
       <div className="grid gap-6 md:grid-cols-4 mb-8">
@@ -125,5 +137,8 @@ export default function InstitutionPortal() {
         </Card>
       </div>
     </div>
+    
+    <Footer />
+  </div>
   );
 }
