@@ -2,15 +2,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, GraduationCap, Building2, TrendingUp, BarChart3, Briefcase, UserCircle } from 'lucide-react';
+import { Users, GraduationCap, Building2, TrendingUp, BarChart3, Briefcase, UserCircle, Ticket } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
+import { useTenant } from '@/hooks/useTenant';
 import { Link } from 'react-router-dom';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { InstitutionAnalyticsDashboard } from '@/components/admin/InstitutionAnalyticsDashboard';
+import { InstitutionCouponsTab } from '@/components/admin/InstitutionCouponsTab';
 
 export default function InstitutionPortal() {
   const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
+  const { tenant } = useTenant();
 
   if (isLoading) {
     return (
@@ -106,10 +109,14 @@ export default function InstitutionPortal() {
         </Card>
       </div>
 
-      {/* Tabs: Visão Geral e Métricas */}
+      {/* Tabs: Visão Geral, Cupons e Métricas */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-3xl grid-cols-3">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="coupons">
+            <Ticket className="h-4 w-4 mr-2" />
+            Cupons
+          </TabsTrigger>
           <TabsTrigger value="metrics">
             <BarChart3 className="h-4 w-4 mr-2" />
             Métricas Avançadas
@@ -173,6 +180,26 @@ export default function InstitutionPortal() {
           </div>
         </TabsContent>
 
+        {/* Tab de Cupons */}
+        <TabsContent value="coupons">
+          {userInstitutions[0]?.institution_id ? (
+            <InstitutionCouponsTab 
+              institutionId={userInstitutions[0].institution_id}
+              institutionName={userInstitutions[0].educational_institutions.name}
+              tenantId={tenant?.id}
+            />
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <p className="text-muted-foreground">
+                  Nenhuma instituição vinculada para exibir cupons.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Tab de Métricas Avançadas */}
         <TabsContent value="metrics">
           {userInstitutions[0]?.institution_id ? (
             <InstitutionAnalyticsDashboard 
