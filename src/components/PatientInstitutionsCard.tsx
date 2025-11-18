@@ -32,6 +32,8 @@ const getInstitutionTypeLabel = (type: string) => {
     'school': 'Escola',
     'clinic': 'Clínica',
     'hospital': 'Hospital',
+    'private': 'Privada',
+    'public': 'Pública',
     'other': 'Outro',
   };
   return labels[type] || type;
