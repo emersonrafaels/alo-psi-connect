@@ -25,7 +25,10 @@ export const useInstitutionAccess = () => {
             name,
             type,
             has_partnership,
-            is_active
+            is_active,
+            can_manage_users,
+            can_manage_coupons,
+            can_manage_professionals
           )
         `)
         .eq('user_id', user.id)

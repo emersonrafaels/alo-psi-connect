@@ -9,13 +9,20 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { InstitutionCoupon } from '@/hooks/useInstitutionCoupons';
 import { ArrowUpDown, Edit, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { CouponDetailsModal } from './CouponDetailsModal';
+import { EditCouponModal } from './EditCouponModal';
 
 interface Props {
   coupons: InstitutionCoupon[];
+  canManageCoupons: boolean;
+  institutionId: string;
+  tenantId?: string;
 }
 
 type SortField = 'code' | 'name' | 'discount' | 'usage' | 'valid_until';
@@ -48,7 +55,11 @@ const getAudienceLabel = (audience: string): string => {
   return labels[audience] || audience;
 };
 
-export const CouponsTableView = ({ coupons }: Props) => {
+export const CouponsTableView = ({ coupons, canManageCoupons, institutionId, tenantId }: Props) => {
+  const [selectedCouponForDetails, setSelectedCouponForDetails] = useState<InstitutionCoupon | null>(null);
+  const [selectedCouponForEdit, setSelectedCouponForEdit] = useState<InstitutionCoupon | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [sortField, setSortField] = useState<SortField>('code');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
@@ -217,6 +228,32 @@ export const CouponsTableView = ({ coupons }: Props) => {
           ))}
         </TableBody>
       </Table>
+
+      <CouponDetailsModal
+        coupon={selectedCouponForDetails}
+        isOpen={isDetailsModalOpen}
+        onClose={() => {
+          setIsDetailsModalOpen(false);
+          setSelectedCouponForDetails(null);
+        }}
+      />
+
+      {canManageCoupons && (
+        <EditCouponModal
+          coupon={selectedCouponForEdit}
+          institutionId={institutionId}
+          tenantId={tenantId}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedCouponForEdit(null);
+          }}
+          onSave={() => {
+            setIsEditModalOpen(false);
+            setSelectedCouponForEdit(null);
+          }}
+        />
+      )}
     </div>
   );
 };

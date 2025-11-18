@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useInstitutionCoupons } from '@/hooks/useInstitutionCoupons';
-import { LayoutGrid, Table as TableIcon, TrendingUp, Ticket, Search } from 'lucide-react';
+import { LayoutGrid, Table as TableIcon, TrendingUp, Ticket, Search, Shield } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { CouponsCardView } from './coupons/CouponsCardView';
 import { CouponsTableView } from './coupons/CouponsTableView';
 import { CouponsAnalyticsView } from './coupons/CouponsAnalyticsView';
@@ -13,6 +14,7 @@ interface Props {
   institutionId: string;
   institutionName: string;
   tenantId?: string;
+  canManageCoupons: boolean;
 }
 
 type ViewMode = 'cards' | 'table' | 'analytics';
@@ -33,7 +35,7 @@ const getStatusFilter = (coupon: any, filter: StatusFilter): boolean => {
   return false;
 };
 
-export const InstitutionCouponsTab = ({ institutionId, institutionName, tenantId }: Props) => {
+export const InstitutionCouponsTab = ({ institutionId, institutionName, tenantId, canManageCoupons }: Props) => {
   const { coupons, couponUsage, isLoading } = useInstitutionCoupons(institutionId, tenantId);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
@@ -77,10 +79,23 @@ export const InstitutionCouponsTab = ({ institutionId, institutionName, tenantId
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Cupons Promocionais</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold">Cupons Promocionais</h2>
+            {!canManageCoupons && (
+              <Badge variant="secondary" className="text-xs">
+                <Shield className="h-3 w-3 mr-1" />
+                Somente Leitura
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground">
             Gerencie e acompanhe os cupons de {institutionName}
           </p>
+          {!canManageCoupons && (
+            <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+              ⚠️ A edição de cupons está desabilitada. Contate o administrador para habilitá-la.
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button 
@@ -135,8 +150,22 @@ export const InstitutionCouponsTab = ({ institutionId, institutionName, tenantId
       </div>
 
       {/* Conteúdo baseado na visualização */}
-      {viewMode === 'cards' && <CouponsCardView coupons={filteredCoupons} />}
-      {viewMode === 'table' && <CouponsTableView coupons={filteredCoupons} />}
+      {viewMode === 'cards' && (
+        <CouponsCardView 
+          coupons={filteredCoupons}
+          canManageCoupons={canManageCoupons}
+          institutionId={institutionId}
+          tenantId={tenantId}
+        />
+      )}
+      {viewMode === 'table' && (
+        <CouponsTableView 
+          coupons={filteredCoupons}
+          canManageCoupons={canManageCoupons}
+          institutionId={institutionId}
+          tenantId={tenantId}
+        />
+      )}
       {viewMode === 'analytics' && (
         <CouponsAnalyticsView 
           coupons={coupons} 
