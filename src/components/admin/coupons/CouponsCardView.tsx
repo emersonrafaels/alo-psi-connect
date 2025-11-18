@@ -1,15 +1,23 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { InstitutionCoupon } from '@/hooks/useInstitutionCoupons';
 import { Ticket, Copy, Users, Calendar, Edit, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { CouponDetailsModal } from './CouponDetailsModal';
+import { EditCouponModal } from './EditCouponModal';
 
 interface Props {
   coupons: InstitutionCoupon[];
+  canManageCoupons: boolean;
+  institutionId: string;
+  tenantId?: string;
 }
 
 const getStatusVariant = (coupon: InstitutionCoupon): 'default' | 'secondary' | 'destructive' | 'outline' => {
@@ -49,7 +57,11 @@ const copyToClipboard = (text: string) => {
   toast.success('Código copiado!');
 };
 
-export const CouponsCardView = ({ coupons }: Props) => {
+export const CouponsCardView = ({ coupons, canManageCoupons, institutionId, tenantId }: Props) => {
+  const [selectedCouponForDetails, setSelectedCouponForDetails] = useState<InstitutionCoupon | null>(null);
+  const [selectedCouponForEdit, setSelectedCouponForEdit] = useState<InstitutionCoupon | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {coupons.map(coupon => (
@@ -141,6 +153,32 @@ export const CouponsCardView = ({ coupons }: Props) => {
           </CardContent>
         </Card>
       ))}
+
+      <CouponDetailsModal
+        coupon={selectedCouponForDetails}
+        isOpen={isDetailsModalOpen}
+        onClose={() => {
+          setIsDetailsModalOpen(false);
+          setSelectedCouponForDetails(null);
+        }}
+      />
+
+      {canManageCoupons && (
+        <EditCouponModal
+          coupon={selectedCouponForEdit}
+          institutionId={institutionId}
+          tenantId={tenantId}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedCouponForEdit(null);
+          }}
+          onSave={() => {
+            setIsEditModalOpen(false);
+            setSelectedCouponForEdit(null);
+          }}
+        />
+      )}
     </div>
   );
 };

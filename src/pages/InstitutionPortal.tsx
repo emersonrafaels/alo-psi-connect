@@ -187,6 +187,7 @@ export default function InstitutionPortal() {
               institutionId={userInstitutions[0].institution_id}
               institutionName={userInstitutions[0].educational_institutions.name}
               tenantId={tenant?.id}
+              canManageCoupons={userInstitutions[0].educational_institutions.can_manage_coupons}
             />
           ) : (
             <Card>
