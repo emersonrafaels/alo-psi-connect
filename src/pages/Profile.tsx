@@ -18,8 +18,10 @@ import { useUserType } from '@/hooks/useUserType';
 import { useGoogleCalendarStatus } from '@/hooks/useGoogleCalendarStatus';
 import { useToast } from '@/hooks/use-toast';
 import { useTenant } from '@/hooks/useTenant';
+import { usePatientInstitutions } from '@/hooks/usePatientInstitutions';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { GoogleCalendarIntegration } from '@/components/GoogleCalendarIntegration';
+import { PatientInstitutionsCard } from '@/components/PatientInstitutionsCard';
 import { ArrowLeft, Camera, Check } from 'lucide-react';
 
 const Profile = () => {
@@ -28,6 +30,7 @@ const Profile = () => {
   const { profile, loading: profileLoading, updateProfile, uploadProfilePhoto } = useProfileManager();
   const { isProfessional } = useUserType();
   const { isConnected: googleCalendarConnected, refetch: refetchGoogleCalendar } = useGoogleCalendarStatus();
+  const { linkedInstitutions, isLoading: loadingInstitutions } = usePatientInstitutions();
   const { toast } = useToast();
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
@@ -379,6 +382,14 @@ const Profile = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Seção de Vínculos Institucionais para pacientes */}
+          {!isProfessional && (
+            <PatientInstitutionsCard
+              institutions={linkedInstitutions}
+              loading={loadingInstitutions}
+            />
+          )}
 
           {/* Seção do Google Calendar para profissionais */}
           {isProfessional && (
