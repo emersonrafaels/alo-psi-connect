@@ -27,17 +27,17 @@ export interface InstitutionCoupon {
   professional_scope_ids: number[] | null;
 }
 
-export const useInstitutionCoupons = (institutionId?: string) => {
+export const useInstitutionCoupons = (institutionId?: string, tenantId?: string | null) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Buscar cupons de uma instituição
   const { data: coupons, isLoading } = useQuery({
-    queryKey: ['institution-coupons', institutionId],
+    queryKey: ['institution-coupons', institutionId, tenantId],
     queryFn: async () => {
       if (!institutionId) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('institution_coupons')
         .select(`
           id,
@@ -63,8 +63,13 @@ export const useInstitutionCoupons = (institutionId?: string) => {
           professional_scope,
           professional_scope_ids
         `)
-        .eq('institution_id', institutionId)
-        .order('created_at', { ascending: false });
+        .eq('institution_id', institutionId);
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching coupons:', error);
