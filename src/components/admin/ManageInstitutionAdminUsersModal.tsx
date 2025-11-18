@@ -21,9 +21,10 @@ interface Props {
   institution: { id: string; name: string } | null;
   isOpen: boolean;
   onClose: () => void;
+  tenantId?: string | null;
 }
 
-export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose }: Props) {
+export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose, tenantId }: Props) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { createInstitutionalUser, loading: creatingUser } = useUserManagement();
@@ -48,11 +49,11 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
 
   // Buscar usuários vinculados à instituição (ativos e inativos)
   const { data: institutionUsers, isLoading: loadingUsers } = useQuery({
-    queryKey: ['institution-users', institution?.id],
+    queryKey: ['institution-users', institution?.id, tenantId],
     queryFn: async () => {
       if (!institution?.id) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('institution_users')
         .select(`
           id,
@@ -64,7 +65,13 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
             email
           )
         `)
-        .eq('institution_id', institution.id)
+        .eq('institution_id', institution.id);
+      
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId);
+      }
+      
+      const { data, error } = await query
         .order('is_active', { ascending: false })
         .order('created_at', { ascending: false });
 
@@ -76,7 +83,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
 
   // Buscar usuários disponíveis para adicionar (apenas usuários com roles administrativos)
   const { data: availableUsers, isLoading: loadingAvailableUsers } = useQuery({
-    queryKey: ['available-admin-users', institution?.id, searchTerm],
+    queryKey: ['available-admin-users', institution?.id, searchTerm, tenantId],
     queryFn: async () => {
       if (!institution?.id) return [];
 
@@ -91,11 +98,17 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
       
       if (adminUserIds.length === 0) return [];
 
-      // Buscar TODOS os user_ids vinculados (ativos e inativos) para excluir
-      const { data: allLinkedUsers, error: linkedError } = await supabase
+      // Buscar TODOS os user_ids vinculados (ativos e inativos) para excluir, filtrando por tenant se fornecido
+      let linkedUsersQuery = supabase
         .from('institution_users')
         .select('user_id')
         .eq('institution_id', institution.id);
+      
+      if (tenantId) {
+        linkedUsersQuery = linkedUsersQuery.eq('tenant_id', tenantId);
+      }
+      
+      const { data: allLinkedUsers, error: linkedError } = await linkedUsersQuery;
 
       if (linkedError) throw linkedError;
 
@@ -142,6 +155,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
           user_id: userId,
           role,
           is_active: true,
+          tenant_id: tenantId,
         })
         .select()
         .single();
@@ -225,6 +239,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose 
         nome: newUserName,
         institutionId: institution.id,
         institutionRole: newUserRole,
+        tenantId: tenantId || undefined,
       });
 
       return { email: newUserEmail, nome: newUserName, role: newUserRole };
