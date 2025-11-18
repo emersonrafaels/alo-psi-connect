@@ -529,6 +529,7 @@ export default function Institutions() {
         institution={managingAdminUsers}
         isOpen={!!managingAdminUsers}
         onClose={() => setManagingAdminUsers(null)}
+        tenantId={selectedTenantId === 'all' ? null : selectedTenantId}
       />
 
       <ManageInstitutionCouponsModal
