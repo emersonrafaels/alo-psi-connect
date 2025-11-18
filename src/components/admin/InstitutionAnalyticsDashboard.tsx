@@ -131,7 +131,7 @@ export function InstitutionAnalyticsDashboard({ institutionId }: InstitutionAnal
                   type="monotone" 
                   dataKey="students_enrolled" 
                   stroke="#3b82f6" 
-                  name="Alunos Matriculados"
+                  name="Alunos Adicionados"
                   strokeWidth={2}
                 />
               </LineChart>
