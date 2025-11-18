@@ -142,13 +142,52 @@ export const CouponsCardView = ({ coupons, canManageCoupons, institutionId, tena
 
             {/* Ações */}
             <div className="flex gap-2 pt-2">
-              <Button variant="outline" size="sm" className="flex-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1"
+                onClick={() => {
+                  setSelectedCouponForDetails(coupon);
+                  setIsDetailsModalOpen(true);
+                }}
+              >
                 <Eye className="h-4 w-4 mr-2" />
                 Ver Detalhes
               </Button>
-              <Button variant="outline" size="icon">
-                <Edit className="h-4 w-4" />
-              </Button>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={!canManageCoupons ? 'cursor-not-allowed' : ''}>
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => {
+                          if (canManageCoupons) {
+                            setSelectedCouponForEdit(coupon);
+                            setIsEditModalOpen(true);
+                          }
+                        }}
+                        disabled={!canManageCoupons}
+                        className={cn(
+                          "transition-all",
+                          !canManageCoupons && "opacity-40 cursor-not-allowed hover:bg-transparent"
+                        )}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!canManageCoupons && (
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p className="text-sm">
+                        <strong>Edição desabilitada</strong><br />
+                        Entre em contato com o administrador do sistema para habilitar a edição de cupons.
+                      </p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </CardContent>
         </Card>
