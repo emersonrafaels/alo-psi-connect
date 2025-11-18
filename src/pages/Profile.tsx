@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
@@ -22,7 +23,8 @@ import { usePatientInstitutions } from '@/hooks/usePatientInstitutions';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { GoogleCalendarIntegration } from '@/components/GoogleCalendarIntegration';
 import { PatientInstitutionsCard } from '@/components/PatientInstitutionsCard';
-import { ArrowLeft, Camera, Check } from 'lucide-react';
+import { PatientCouponsCard } from '@/components/PatientCouponsCard';
+import { ArrowLeft, Camera, Check, User, GraduationCap } from 'lucide-react';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -248,147 +250,302 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          {/* Formulário */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Informações Pessoais</CardTitle>
-            </CardHeader>
-            
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid gap-4">
-                  <div>
-                    <Label htmlFor="nome">Nome completo</Label>
-                    <Input
-                      id="nome"
-                      value={formData.nome}
-                      onChange={(e) => updateFormData('nome', e.target.value)}
-                      placeholder="Seu nome completo"
-                    />
-                  </div>
+          {/* Sistema de Tabs para Pacientes */}
+          {!isProfessional ? (
+            <Tabs defaultValue="personal" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="personal" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Informações Pessoais
+                </TabsTrigger>
+                <TabsTrigger value="institution" className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4" />
+                  Instituição
+                </TabsTrigger>
+              </TabsList>
 
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => updateFormData('email', e.target.value)}
-                      disabled
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Para alterar o email, entre em contato com o suporte
-                    </p>
-                  </div>
+              <TabsContent value="personal" className="space-y-6 mt-0">
+                {/* Formulário de Informações Pessoais */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Informações Pessoais</CardTitle>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <div className="space-y-6">
+                      <div className="grid gap-4">
+                        <div>
+                          <Label htmlFor="nome">Nome completo</Label>
+                          <Input
+                            id="nome"
+                            value={formData.nome}
+                            onChange={(e) => updateFormData('nome', e.target.value)}
+                            placeholder="Seu nome completo"
+                          />
+                        </div>
 
-                  <div>
-                    <Label htmlFor="dataNascimento">Data de nascimento</Label>
-                    <Input
-                      id="dataNascimento"
-                      type="date"
-                      value={formData.data_nascimento}
-                      onChange={(e) => updateFormData('data_nascimento', e.target.value)}
-                    />
-                  </div>
+                        <div>
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => updateFormData('email', e.target.value)}
+                            disabled
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Para alterar o email, entre em contato com o suporte
+                          </p>
+                        </div>
 
-                  <div>
-                    <Label htmlFor="genero">Gênero</Label>
-                    <Select value={formData.genero} onValueChange={(value) => updateFormData('genero', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione seu gênero" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="masculino">Masculino</SelectItem>
-                        <SelectItem value="feminino">Feminino</SelectItem>
-                        <SelectItem value="nao_binario">Não binário</SelectItem>
-                        <SelectItem value="prefiro_nao_dizer">Prefiro não dizer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                        <div>
+                          <Label htmlFor="dataNascimento">Data de nascimento</Label>
+                          <Input
+                            id="dataNascimento"
+                            type="date"
+                            value={formData.data_nascimento}
+                            onChange={(e) => updateFormData('data_nascimento', e.target.value)}
+                          />
+                        </div>
 
-                    <div>
-                    <Label htmlFor="cpf">CPF</Label>
-                    <Input
-                      id="cpf"
-                      value={formData.cpf}
-                      onChange={(e) => {
-                      // Only allow digits and format as XXX.XXX.XXX-XX
-                      let value = e.target.value.replace(/\D/g, '').slice(0, 11);
-                      value = value
-                        .replace(/^(\d{3})(\d)/, '$1.$2')
-                        .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
-                        .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-                      updateFormData('cpf', value);
-                      }}
-                      placeholder="000.000.000-00"
-                      required
-                      maxLength={14}
-                      pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
-                      inputMode="numeric"
-                    />
-                    {formData.cpf && !/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf) && (
-                      <p className="text-sm text-red-500 mt-1">
-                      CPF deve ter 11 dígitos no formato XXX.XXX.XXX-XX
-                      </p>
-                    )}
+                        <div>
+                          <Label htmlFor="genero">Gênero</Label>
+                          <Select value={formData.genero} onValueChange={(value) => updateFormData('genero', value)}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione seu gênero" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="masculino">Masculino</SelectItem>
+                              <SelectItem value="feminino">Feminino</SelectItem>
+                              <SelectItem value="nao_binario">Não binário</SelectItem>
+                              <SelectItem value="prefiro_nao_dizer">Prefiro não dizer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="cpf">CPF</Label>
+                          <Input
+                            id="cpf"
+                            value={formData.cpf}
+                            onChange={(e) => {
+                              // Only allow digits and format as XXX.XXX.XXX-XX
+                              let value = e.target.value.replace(/\D/g, '').slice(0, 11);
+                              value = value
+                                .replace(/^(\d{3})(\d)/, '$1.$2')
+                                .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+                                .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+                              updateFormData('cpf', value);
+                            }}
+                            placeholder="000.000.000-00"
+                            required
+                            maxLength={14}
+                            pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
+                            inputMode="numeric"
+                          />
+                          {formData.cpf && !/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf) && (
+                            <p className="text-sm text-red-500 mt-1">
+                              CPF deve ter 11 dígitos no formato XXX.XXX.XXX-XX
+                            </p>
+                          )}
+                        </div>
+
+                        <Separator />
+
+                        <div>
+                          <Label htmlFor="comoConheceu">Como conheceu o Rede Bem Estar?</Label>
+                          <Select value={formData.como_conheceu} onValueChange={(value) => updateFormData('como_conheceu', value)}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione uma opção" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="google">Google/Busca online</SelectItem>
+                              <SelectItem value="redes_sociais">Redes sociais</SelectItem>
+                              <SelectItem value="indicacao_amigo">Indicação de amigo</SelectItem>
+                              <SelectItem value="indicacao_profissional">Indicação profissional</SelectItem>
+                              <SelectItem value="outro">Outro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end pt-6">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              type="button"
+                              disabled={loading}
+                              className="w-full sm:w-auto"
+                            >
+                              {loading ? 'Salvando...' : 'Salvar Alterações'}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar alterações</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Você tem certeza que deseja salvar as alterações em seu perfil? Esta ação atualizará suas informações pessoais.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleSubmit} disabled={loading}>
+                                {loading ? 'Salvando...' : 'Salvar'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="institution" className="space-y-6 mt-0">
+                <PatientInstitutionsCard
+                  institutions={linkedInstitutions}
+                  loading={loadingInstitutions}
+                />
+                <PatientCouponsCard loading={loadingInstitutions} />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            /* Formulário sem tabs para profissionais */
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Informações Pessoais</CardTitle>
+                </CardHeader>
+                
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="grid gap-4">
+                      <div>
+                        <Label htmlFor="nome">Nome completo</Label>
+                        <Input
+                          id="nome"
+                          value={formData.nome}
+                          onChange={(e) => updateFormData('nome', e.target.value)}
+                          placeholder="Seu nome completo"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => updateFormData('email', e.target.value)}
+                          disabled
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Para alterar o email, entre em contato com o suporte
+                        </p>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="dataNascimento">Data de nascimento</Label>
+                        <Input
+                          id="dataNascimento"
+                          type="date"
+                          value={formData.data_nascimento}
+                          onChange={(e) => updateFormData('data_nascimento', e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="genero">Gênero</Label>
+                        <Select value={formData.genero} onValueChange={(value) => updateFormData('genero', value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione seu gênero" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="masculino">Masculino</SelectItem>
+                            <SelectItem value="feminino">Feminino</SelectItem>
+                            <SelectItem value="nao_binario">Não binário</SelectItem>
+                            <SelectItem value="prefiro_nao_dizer">Prefiro não dizer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="cpf">CPF</Label>
+                        <Input
+                          id="cpf"
+                          value={formData.cpf}
+                          onChange={(e) => {
+                            // Only allow digits and format as XXX.XXX.XXX-XX
+                            let value = e.target.value.replace(/\D/g, '').slice(0, 11);
+                            value = value
+                              .replace(/^(\d{3})(\d)/, '$1.$2')
+                              .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+                              .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+                            updateFormData('cpf', value);
+                          }}
+                          placeholder="000.000.000-00"
+                          required
+                          maxLength={14}
+                          pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
+                          inputMode="numeric"
+                        />
+                        {formData.cpf && !/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf) && (
+                          <p className="text-sm text-red-500 mt-1">
+                            CPF deve ter 11 dígitos no formato XXX.XXX.XXX-XX
+                          </p>
+                        )}
+                      </div>
+
+                      <Separator />
+
+                      <div>
+                        <Label htmlFor="comoConheceu">Como conheceu o Rede Bem Estar?</Label>
+                        <Select value={formData.como_conheceu} onValueChange={(value) => updateFormData('como_conheceu', value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione uma opção" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="google">Google/Busca online</SelectItem>
+                            <SelectItem value="redes_sociais">Redes sociais</SelectItem>
+                            <SelectItem value="indicacao_amigo">Indicação de amigo</SelectItem>
+                            <SelectItem value="indicacao_profissional">Indicação profissional</SelectItem>
+                            <SelectItem value="outro">Outro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
 
-                  <Separator />
-
-                  <div>
-                    <Label htmlFor="comoConheceu">Como conheceu o Rede Bem Estar?</Label>
-                    <Select value={formData.como_conheceu} onValueChange={(value) => updateFormData('como_conheceu', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma opção" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="google">Google/Busca online</SelectItem>
-                        <SelectItem value="redes_sociais">Redes sociais</SelectItem>
-                        <SelectItem value="indicacao_amigo">Indicação de amigo</SelectItem>
-                        <SelectItem value="indicacao_profissional">Indicação profissional</SelectItem>
-                        <SelectItem value="outro">Outro</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex justify-end pt-6">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            type="button"
+                            disabled={loading}
+                            className="w-full sm:w-auto"
+                          >
+                            {loading ? 'Salvando...' : 'Salvar Alterações'}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmar alterações</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Você tem certeza que deseja salvar as alterações em seu perfil? Esta ação atualizará suas informações pessoais.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleSubmit} disabled={loading}>
+                              {loading ? 'Salvando...' : 'Salvar'}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
-                </div>
-
-                <div className="flex justify-end pt-6">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        type="button"
-                        disabled={loading}
-                        className="w-full sm:w-auto"
-                      >
-                        {loading ? 'Salvando...' : 'Salvar Alterações'}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirmar alterações</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Você tem certeza que deseja salvar as alterações em seu perfil? Esta ação atualizará suas informações pessoais.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleSubmit} disabled={loading}>
-                          {loading ? 'Salvando...' : 'Salvar'}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Seção de Vínculos Institucionais para pacientes */}
-          {!isProfessional && (
-            <PatientInstitutionsCard
-              institutions={linkedInstitutions}
-              loading={loadingInstitutions}
-            />
+                </CardContent>
+              </Card>
+            </>
           )}
 
           {/* Seção do Google Calendar para profissionais */}
