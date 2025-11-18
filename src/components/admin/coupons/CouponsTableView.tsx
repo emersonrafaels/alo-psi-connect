@@ -216,12 +216,46 @@ export const CouponsTableView = ({ coupons, canManageCoupons, institutionId, ten
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => {
+                      setSelectedCouponForDetails(coupon);
+                      setIsDetailsModalOpen(true);
+                    }}
+                  >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon">
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className={!canManageCoupons ? 'cursor-not-allowed' : ''}>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => {
+                              if (canManageCoupons) {
+                                setSelectedCouponForEdit(coupon);
+                                setIsEditModalOpen(true);
+                              }
+                            }}
+                            disabled={!canManageCoupons}
+                            className={cn(
+                              !canManageCoupons && "opacity-40 cursor-not-allowed"
+                            )}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      {!canManageCoupons && (
+                        <TooltipContent>
+                          <p className="text-sm">Edição desabilitada pelo administrador</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </TableCell>
             </TableRow>
