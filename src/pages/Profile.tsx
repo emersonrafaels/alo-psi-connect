@@ -238,14 +238,18 @@ const Profile = () => {
                   )}
                 </div>
                 
-                <PhotoUpload
-                  onPhotoSelected={handlePhotoSelected}
-                  onPhotoUrlChange={handlePhotoUrlChange}
-                  selectedFile={selectedFile}
-                  currentPhotoUrl={formData.foto_perfil_url}
-                  label="Alterar Foto"
-                  className="w-auto"
-                />
+                <div className="flex flex-col items-center gap-2">
+                  <PhotoUpload
+                    onPhotoSelected={handlePhotoSelected}
+                    onPhotoUrlChange={handlePhotoUrlChange}
+                    selectedFile={selectedFile}
+                    currentPhotoUrl={formData.foto_perfil_url}
+                    compact={true}
+                  />
+                  <p className="text-sm text-muted-foreground text-center">
+                    Passe o mouse sobre a foto para alterar
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
