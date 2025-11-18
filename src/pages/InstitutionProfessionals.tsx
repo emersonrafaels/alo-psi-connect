@@ -13,6 +13,14 @@ import Footer from '@/components/ui/footer';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const relationshipTypeLabels: Record<string, string> = {
+  employee: 'Funcionário',
+  consultant: 'Consultor',
+  supervisor: 'Supervisor',
+  intern: 'Estagiário',
+  partner: 'Parceiro'
+};
+
 export default function InstitutionProfessionals() {
   const { linkedProfessionals, isLoading } = useInstitutionAccess();
   const [searchTerm, setSearchTerm] = useState('');
@@ -160,7 +168,7 @@ export default function InstitutionProfessionals() {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Briefcase className="h-4 w-4 text-muted-foreground" />
-                  <Badge variant="secondary">{prof.relationship_type}</Badge>
+                  <Badge variant="secondary">{relationshipTypeLabels[prof.relationship_type] || prof.relationship_type}</Badge>
                 </div>
                 {prof.start_date && (
                   <div className="flex items-center gap-2 text-sm">
