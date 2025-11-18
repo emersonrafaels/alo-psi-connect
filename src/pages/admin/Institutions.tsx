@@ -32,8 +32,15 @@ import { ManageInstitutionAdminUsersModal } from '@/components/admin/ManageInsti
 import { ManageInstitutionCouponsModal } from '@/components/admin/ManageInstitutionCouponsModal';
 import { InstitutionAuditLog } from '@/components/admin/InstitutionAuditLog';
 import { InstitutionMetricsDashboard } from '@/components/admin/InstitutionMetricsDashboard';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
+import { AdminTenantSelector } from '@/components/admin/AdminTenantSelector';
+import { useInstitutionUsers } from '@/hooks/useInstitutionUsers';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Institutions() {
+  const { tenantFilter, selectedTenantId, tenants } = useAdminTenant();
+  
   const {
     institutions,
     isLoading,
@@ -54,6 +61,21 @@ export default function Institutions() {
     isLinking,
   } = useUncataloguedInstitutions();
 
+  // Buscar dados filtrados por tenant
+  const { data: institutionUsersData } = useInstitutionUsers(tenantFilter);
+  const { data: institutionCouponsData } = useQuery({
+    queryKey: ['all-institution-coupons', tenantFilter],
+    queryFn: async () => {
+      let query = supabase.from('institution_coupons').select('*');
+      if (tenantFilter) {
+        query = query.eq('tenant_id', tenantFilter);
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'public' | 'private'>('all');
   const [partnershipFilter, setPartnershipFilter] = useState<'all' | 'yes' | 'no'>('all');
@@ -66,6 +88,18 @@ export default function Institutions() {
   const [managingCoupons, setManagingCoupons] = useState<{ id: string; name: string } | null>(null);
   const [selectedInstitutionForAudit, setSelectedInstitutionForAudit] = useState<{ id: string; name: string } | null>(null);
   const [activeTab, setActiveTab] = useState('institutions');
+
+  // Calcular stats filtradas por tenant
+  const filteredStats = {
+    totalAdmins: institutionUsersData?.length || 0,
+    activeCoupons: institutionCouponsData?.filter((c: any) => c.is_active).length || 0,
+    totalCoupons: institutionCouponsData?.length || 0,
+    // Profissionais e alunos continuam globais
+    totalProfessionals: stats.total,
+    totalStudents: uncataloguedStats.affectedPatients,
+  };
+
+  const selectedTenantName = tenants.find(t => t.id === selectedTenantId)?.name;
 
   // Contar pacientes por instituição
   const { patientInstitutions: allPatientInstitutions } = useInstitutionPatients();
@@ -111,14 +145,17 @@ export default function Institutions() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Instituições de Ensino</h1>
-            <p className="text-muted-foreground">
-              Gerencie as instituições de ensino cadastradas no sistema
+            <p className="text-muted-foreground mt-2">
+              Gerencie instituições de ensino, parcerias e vínculos com profissionais e alunos
             </p>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Instituição
-          </Button>
+          <div className="flex items-center gap-4">
+            <AdminTenantSelector />
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Instituição
+            </Button>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -169,14 +206,41 @@ export default function Institutions() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pacientes Afetados</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">
+                Admins Institucionais
+              </CardTitle>
+              <UserCog className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{uncataloguedStats.affectedPatients}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Com instituições não catalogadas
+              <div className="text-2xl font-bold">{filteredStats.totalAdmins}</div>
+              <p className="text-xs text-muted-foreground">
+                Usuários administradores
               </p>
+              {selectedTenantId !== 'all' && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Filtrado: {selectedTenantName}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Cupons Ativos
+              </CardTitle>
+              <Ticket className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{filteredStats.activeCoupons} / {filteredStats.totalCoupons}</div>
+              <p className="text-xs text-muted-foreground">
+                Promoções em andamento
+              </p>
+              {selectedTenantId !== 'all' && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Filtrado: {selectedTenantName}
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -189,19 +253,6 @@ export default function Institutions() {
               <div className="text-2xl font-bold">{stats.withPartnership}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Instituições parceiras
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Ativas</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.active}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Visíveis no cadastro
               </p>
             </CardContent>
           </Card>
@@ -484,6 +535,7 @@ export default function Institutions() {
         institution={managingCoupons}
         isOpen={!!managingCoupons}
         onClose={() => setManagingCoupons(null)}
+        tenantId={tenantFilter}
       />
     </AdminLayout>
   );

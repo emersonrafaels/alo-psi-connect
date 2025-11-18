@@ -22,9 +22,10 @@ interface Props {
   institution: { id: string; name: string } | null;
   isOpen: boolean;
   onClose: () => void;
+  tenantId?: string | null;
 }
 
-export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: Props) => {
+export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose, tenantId }: Props) => {
   const { tenant } = useTenant();
   const { logAction } = useInstitutionAudit(institution?.id);
   const { 
@@ -35,7 +36,7 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose }: 
     deleteCoupon,
     isCreating,
     isUpdating 
-  } = useInstitutionCoupons(institution?.id);
+  } = useInstitutionCoupons(institution?.id, tenantId);
 
   // Early return if no institution selected
   if (!institution) return null;
