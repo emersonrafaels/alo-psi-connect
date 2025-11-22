@@ -291,7 +291,21 @@ const ProfessionalForm = () => {
 
       console.log('✅ Perfil criado com sucesso!');
 
-      // 2️⃣ FAZER LOGIN AUTOMÁTICO
+      // 2️⃣ VERIFICAR SE PRECISA CONFIRMAR EMAIL
+      if (data.isNewUser && data.confirmationEmailSent) {
+        console.log('📧 Email de confirmação enviado, aguardando verificação...');
+        
+        // Limpar dados salvos
+        sessionStorage.removeItem('pendingProfessionalData');
+        sessionStorage.removeItem('continueRegistration');
+        sessionStorage.removeItem('professional-registration-draft');
+        clearSaved();
+        
+        setShowEmailConfirmationModal(true);
+        return; // ❌ NÃO fazer login automático
+      }
+
+      // 3️⃣ FAZER LOGIN AUTOMÁTICO (apenas para usuários existentes ou OAuth)
       console.log('🔐 Autenticando usuário...');
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: formData.email,
@@ -301,7 +315,7 @@ const ProfessionalForm = () => {
       if (signInError) throw signInError;
       console.log('✅ Usuário autenticado!');
 
-      // 3️⃣ AGORA FAZER UPLOAD DA FOTO (se existe)
+      // 4️⃣ AGORA FAZER UPLOAD DA FOTO (se existe)
       if (selectedPhotoFile) {
         console.log('📸 Fazendo upload da foto de perfil...');
         
@@ -310,7 +324,7 @@ const ProfessionalForm = () => {
         if (uploadedPhotoUrl) {
           console.log('✅ Foto carregada, atualizando perfil...');
           
-          // 4️⃣ ATUALIZAR PERFIL E PROFISSIONAL COM A FOTO
+          // 5️⃣ ATUALIZAR PERFIL E PROFISSIONAL COM A FOTO
           const { error: profileUpdateError } = await supabase
             .from('profiles')
             .update({ foto_perfil_url: uploadedPhotoUrl })
@@ -358,46 +372,19 @@ const ProfessionalForm = () => {
       sessionStorage.removeItem('professional-registration-draft');
       clearSaved();
       
-      // Check if this is a new user that needs email confirmation
-      if (data.isNewUser && data.confirmationEmailSent) {
-        setShowEmailConfirmationModal(true);
-      } else {
-        // ✅ Login automático após cadastro bem-sucedido
-        console.log('🔐 Fazendo login automático após cadastro...');
-        
-        try {
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.senha,
-          });
+      // ✅ Redirecionar após cadastro bem-sucedido
+      console.log('🔐 Login automático concluído, redirecionando...');
+      
+      toast({
+        title: "Bem-vindo(a)!",
+        description: "Cadastro concluído com sucesso. Você já está logado!",
+      });
 
-          if (signInError) {
-            console.error('❌ Erro no login automático:', signInError);
-            toast({
-              title: "Cadastro Concluído!",
-              description: "Seu perfil foi criado. Faça login para acessar.",
-            });
-            navigate(buildTenantPath(tenantSlug, '/auth'));
-            return;
-          }
-
-          console.log('✅ Login automático bem-sucedido:', signInData.user?.email);
-          
-          toast({
-            title: "Bem-vindo(a)!",
-            description: "Cadastro concluído com sucesso. Você já está logado!",
-          });
-
-          // Aguardar um momento para o AuthProvider processar a sessão
-          setTimeout(() => {
-            navigate(buildTenantPath(tenantSlug, '/professional-profile'));
-          }, 1000);
-
-        } catch (error) {
-          console.error('❌ Erro inesperado no login:', error);
-          navigate(buildTenantPath(tenantSlug, '/auth'));
-        }
-      }
+      // Aguardar um momento para o AuthProvider processar a sessão
+      setTimeout(() => {
+        navigate(buildTenantPath(tenantSlug, '/professional-profile'));
+      }, 1000);
+      
     } catch (error: any) {
       console.error('Erro detalhado:', error);
       
