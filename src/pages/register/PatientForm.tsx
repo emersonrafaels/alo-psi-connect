@@ -13,7 +13,7 @@ import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Check, Eye, EyeOff, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Eye, EyeOff, X, Camera } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
@@ -24,6 +24,9 @@ import { InstitutionSelector } from '@/components/register/InstitutionSelector';
 import { formatCPF, validateCPF, getCPFErrorMessage } from '@/utils/cpfValidator';
 import { AutoSaveIndicator } from '@/components/register/AutoSaveIndicator';
 import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { PhotoUpload } from '@/components/ui/photo-upload';
+import { useProfileManager } from '@/hooks/useProfileManager';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const PatientForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -34,6 +37,8 @@ const PatientForm = () => {
   const [showEmailConfirmationModal, setShowEmailConfirmationModal] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string>('');
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -41,6 +46,7 @@ const PatientForm = () => {
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
   const googleData = location.state?.googleData || null;
+  const { uploadProfilePhoto } = useProfileManager();
 
   const [formData, setFormData] = useState({
     ehEstudante: '',
@@ -58,7 +64,8 @@ const PatientForm = () => {
     senha: '',
     confirmarSenha: '',
     password: '', // Added for edge function compatibility
-    telefone: '' // Added for edge function compatibility
+    telefone: '', // Added for edge function compatibility
+    fotoPerfilUrl: googleData?.picture || ''
   });
 
   // Auto-save do progresso
@@ -107,8 +114,16 @@ const PatientForm = () => {
       }
     }
   }, [user, toast]);
+
+  // Auto-preencher foto do Google
+  useEffect(() => {
+    if (googleData?.picture && !formData.fotoPerfilUrl && !photoPreviewUrl) {
+      setFormData(prev => ({ ...prev, fotoPerfilUrl: googleData.picture }));
+      setPhotoPreviewUrl(googleData.picture);
+    }
+  }, [googleData, formData.fotoPerfilUrl, photoPreviewUrl]);
   
-  const totalSteps = user ? 3 : 4; // 4 passos se não há usuário logado (inclui senha)
+  const totalSteps = user ? 4 : 5; // +1 passo para foto
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleNext = async () => {
@@ -202,6 +217,34 @@ const PatientForm = () => {
           return;
         }
 
+        // Upload foto após criação do perfil (Google users já estão autenticados)
+        if (selectedPhotoFile && session?.user) {
+          console.log('📸 Fazendo upload da foto de perfil...');
+          
+          try {
+            const uploadedPhotoUrl = await uploadProfilePhoto(selectedPhotoFile);
+            
+            if (uploadedPhotoUrl) {
+              console.log('✅ Foto carregada, atualizando perfil...');
+              
+              // Atualizar profiles
+              await supabase
+                .from('profiles')
+                .update({ foto_perfil_url: uploadedPhotoUrl })
+                .eq('user_id', session.user.id);
+              
+              console.log('✅ Foto atualizada com sucesso!');
+            }
+          } catch (uploadError) {
+            console.error('Erro no upload da foto:', uploadError);
+            toast({
+              title: "Aviso",
+              description: "Não foi possível carregar a foto, mas o cadastro foi concluído.",
+              variant: "default",
+            });
+          }
+        }
+
         toast({
           title: "Cadastro realizado com sucesso!",
           description: "Bem-vindo ao Rede Bem Estar!",
@@ -266,13 +309,45 @@ const PatientForm = () => {
       // Check if this is a new user that needs email confirmation
       if (data.isNewUser && data.confirmationEmailSent) {
         setShowEmailConfirmationModal(true);
-      } else {
-        toast({
-          title: "Cadastro realizado com sucesso!",
-          description: "Bem-vindo ao Rede Bem Estar!",
-        });
-        navigate(buildTenantPath(tenantSlug, '/auth'));
+        // Não fazer upload de foto aqui (usuário não está logado ainda)
+        return;
       }
+      
+      // Upload foto após login/criação de conta bem-sucedida
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
+      if (selectedPhotoFile && currentSession?.user) {
+        console.log('📸 Fazendo upload da foto de perfil...');
+        
+        try {
+          const uploadedPhotoUrl = await uploadProfilePhoto(selectedPhotoFile);
+          
+          if (uploadedPhotoUrl) {
+            console.log('✅ Foto carregada, atualizando perfil...');
+            
+            // Atualizar profiles
+            await supabase
+              .from('profiles')
+              .update({ foto_perfil_url: uploadedPhotoUrl })
+              .eq('user_id', currentSession.user.id);
+            
+            console.log('✅ Foto atualizada com sucesso!');
+          }
+        } catch (uploadError) {
+          console.error('Erro no upload da foto:', uploadError);
+          toast({
+            title: "Aviso",
+            description: "Não foi possível carregar a foto, mas o cadastro foi concluído.",
+            variant: "default",
+          });
+        }
+      }
+      
+      toast({
+        title: "Cadastro realizado com sucesso!",
+        description: "Bem-vindo ao Rede Bem Estar!",
+      });
+      navigate(buildTenantPath(tenantSlug, '/auth'));
 
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -496,6 +571,111 @@ const PatientForm = () => {
     </div>
   );
 
+  const renderStep3_5 = () => {
+    const previewAvatar = selectedPhotoFile 
+      ? URL.createObjectURL(selectedPhotoFile)
+      : photoPreviewUrl || formData.fotoPerfilUrl;
+
+    return (
+      <div className="space-y-6">
+        {/* Avatar Preview */}
+        <div className="flex flex-col items-center gap-3">
+          <Avatar className="h-32 w-32 border-4 border-primary/20">
+            <AvatarImage src={previewAvatar} />
+            <AvatarFallback className="text-2xl">
+              {formData.nome ? formData.nome.slice(0, 2).toUpperCase() : <Camera className="h-8 w-8" />}
+            </AvatarFallback>
+          </Avatar>
+          <div className="text-center">
+            <p className="text-sm font-medium text-foreground">
+              Adicione uma foto de perfil
+            </p>
+            <p className="text-xs text-muted-foreground max-w-[280px] mt-1">
+              {selectedPhotoFile 
+                ? '✓ Foto selecionada. Ela será salva após finalizar o cadastro.' 
+                : 'Esta etapa é opcional, mas ajuda os profissionais a reconhecê-lo'}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <PhotoUpload
+            onPhotoSelected={(file) => {
+              if (!file) return;
+
+              // Validar tipo
+              if (!file.type.startsWith('image/')) {
+                toast({
+                  title: "Erro",
+                  description: "Por favor, selecione apenas arquivos de imagem.",
+                  variant: "destructive",
+                });
+                return;
+              }
+
+              // Validar tamanho (10MB)
+              if (file.size > 10 * 1024 * 1024) {
+                toast({
+                  title: "Erro",
+                  description: "Arquivo muito grande. Máximo 10MB.",
+                  variant: "destructive",
+                });
+                return;
+              }
+
+              // Armazenar arquivo
+              setSelectedPhotoFile(file);
+              
+              // Criar preview
+              const previewUrl = URL.createObjectURL(file);
+              setPhotoPreviewUrl(previewUrl);
+              updateFormData('fotoPerfilUrl', previewUrl);
+              
+              toast({
+                title: "Foto selecionada",
+                description: "A foto será carregada quando finalizar o cadastro.",
+              });
+            }}
+            onPhotoUrlChange={(url) => updateFormData('fotoPerfilUrl', url)}
+            currentPhotoUrl={photoPreviewUrl || formData.fotoPerfilUrl}
+            label="Foto de Perfil"
+          />
+          
+          {googleData?.picture && photoPreviewUrl && (
+            <Badge variant="secondary" className="text-xs">
+              <Check className="h-3 w-3 mr-1" />
+              Foto importada do Google
+            </Badge>
+          )}
+          
+          {selectedPhotoFile && (
+            <Badge variant="secondary" className="text-xs">
+              <Check className="h-3 w-3 mr-1" />
+              {selectedPhotoFile.name}
+            </Badge>
+          )}
+        </div>
+
+        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            💡 <strong>Dica:</strong> Esta etapa é opcional. Você pode pular e adicionar uma foto depois no seu perfil.
+          </p>
+        </div>
+
+        {/* Botão Pular */}
+        <div className="flex justify-center">
+          <Button
+            variant="ghost"
+            onClick={() => setCurrentStep(currentStep + 1)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Pular por enquanto →
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   const renderStep4 = () => (
     <div className="space-y-6">
       <div>
@@ -552,8 +732,9 @@ const PatientForm = () => {
   const canProceedStep1 = formData.estudanteStatus !== '';
   const canProceedStep2 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf;
   const canProceedStep3 = (formData.estudanteStatus === 'formado' || formData.instituicaoEnsino);
+  const canProceedStep3_5 = true; // Foto é sempre opcional
   const canProceedStep4 = user ? true : (formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha);
-  const canSubmit = user ? canProceedStep3 : canProceedStep4;
+  const canSubmit = user ? canProceedStep3_5 : canProceedStep4;
 
   return (
     <div className="min-h-screen bg-background">
@@ -586,12 +767,13 @@ const PatientForm = () => {
                 currentStep={currentStep}
                 totalSteps={totalSteps}
                 onStepClick={handleStepClick}
-                stepTitles={user ? ['Perfil', 'Dados Pessoais', 'Finalização'] : ['Perfil', 'Dados Pessoais', 'Informações', 'Senha']}
+                stepTitles={user ? ['Perfil', 'Dados Pessoais', 'Informações', 'Foto'] : ['Perfil', 'Dados Pessoais', 'Informações', 'Foto', 'Senha']}
               />
               <CardTitle className="text-center text-xl">
                 {currentStep === 1 ? 'Defina seu perfil' :
                  currentStep === 2 ? 'Seus dados pessoais' :
                  currentStep === 3 ? 'Informações adicionais' :
+                 currentStep === 4 ? '📸 Foto de perfil (opcional)' :
                  'Defina sua senha'}
               </CardTitle>
             </CardHeader>
@@ -600,7 +782,8 @@ const PatientForm = () => {
               {currentStep === 1 && renderStep1()}
               {currentStep === 2 && renderStep2()}
               {currentStep === 3 && renderStep3()}
-              {currentStep === 4 && renderStep4()}
+              {currentStep === 4 && renderStep3_5()}
+              {currentStep === 5 && renderStep4()}
 
               <div className="flex justify-between pt-6">
                 <Button
@@ -619,7 +802,8 @@ const PatientForm = () => {
                     disabled={
                       (currentStep === 1 && !canProceedStep1) ||
                       (currentStep === 2 && !canProceedStep2) ||
-                      (currentStep === 3 && !canProceedStep3)
+                      (currentStep === 3 && !canProceedStep3) ||
+                      (currentStep === 4 && !canProceedStep3_5)
                     }
                     className="flex items-center gap-2"
                   >
