@@ -150,10 +150,7 @@ const PatientForm = () => {
   };
 
   const handleStepClick = (step: number) => {
-    // Permitir navegar apenas para passos já completados ou atual
-    if (step <= currentStep) {
-      setCurrentStep(step);
-    }
+    setCurrentStep(step);
   };
 
   const handleSubmit = async () => {
