@@ -117,10 +117,10 @@ serve(async (req) => {
 
     console.log('✅ Using tenant:', tenantSlug);
 
-    // Get tenant data
+    // Get tenant data including admin_email for sender
     const { data: tenantData, error: tenantError } = await supabase
       .from('tenants')
-      .select('id, name, slug, logo_url, primary_color')
+      .select('id, name, slug, logo_url, primary_color, admin_email')
       .eq('slug', tenantSlug)
       .single();
 
@@ -394,6 +394,15 @@ serve(async (req) => {
             const tenantPath = tenantSlug === 'medcos' ? '/medcos' : '';
             const confirmationUrl = `${baseUrl}${tenantPath}/auth?confirm=true&token=${confirmationToken}`;
 
+            console.log('📧 Sending confirmation email:', {
+              tenant: tenantData.name,
+              from: `${tenantData.name} <${tenantData.admin_email}>`,
+              to: email,
+              subject: `Confirme seu email - ${tenantData.name}`,
+              logo: tenantData.logo_url,
+              color: tenantData.primary_color
+            });
+
             const emailResponse = await fetch('https://api.resend.com/emails', {
               method: 'POST',
               headers: {
@@ -401,7 +410,7 @@ serve(async (req) => {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                from: `${tenantData.name} <noreply@alopsi.com.br>`,
+                from: `${tenantData.name} <${tenantData.admin_email}>`,
                 to: [email],
                 subject: `Confirme seu email - ${tenantData.name}`,
                 html: generateConfirmationEmailHTML(
