@@ -1182,6 +1182,112 @@ export type Database = {
           },
         ]
       }
+      institution_link_requests: {
+        Row: {
+          created_at: string | null
+          enrollment_type: string | null
+          id: string
+          institution_id: string
+          metadata: Json | null
+          patient_id: string | null
+          professional_id: number | null
+          profile_id: string | null
+          relationship_type: string | null
+          request_message: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tenant_id: string | null
+          updated_at: string | null
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          enrollment_type?: string | null
+          id?: string
+          institution_id: string
+          metadata?: Json | null
+          patient_id?: string | null
+          professional_id?: number | null
+          profile_id?: string | null
+          relationship_type?: string | null
+          request_message?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string | null
+          user_id: string
+          user_type: string
+        }
+        Update: {
+          created_at?: string | null
+          enrollment_type?: string | null
+          id?: string
+          institution_id?: string
+          metadata?: Json | null
+          patient_id?: string | null
+          professional_id?: number | null
+          profile_id?: string | null
+          relationship_type?: string | null
+          request_message?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_link_requests_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_link_requests_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_link_requests_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_link_requests_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_link_requests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_link_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_user_permissions: {
         Row: {
           granted_at: string | null

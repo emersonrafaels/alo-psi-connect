@@ -24,6 +24,7 @@ import { buildTenantPath } from '@/utils/tenantHelpers';
 import { GoogleCalendarIntegration } from '@/components/GoogleCalendarIntegration';
 import { PatientInstitutionsCard } from '@/components/PatientInstitutionsCard';
 import { PatientCouponsCard } from '@/components/PatientCouponsCard';
+import { InstitutionLinkRequestCard } from '@/components/InstitutionLinkRequestCard';
 import { ArrowLeft, Camera, Check, User, GraduationCap } from 'lucide-react';
 
 const Profile = () => {
@@ -410,6 +411,9 @@ const Profile = () => {
                   institutions={linkedInstitutions}
                   loading={loadingInstitutions}
                 />
+                
+                <InstitutionLinkRequestCard userType="paciente" />
+                
                 <PatientCouponsCard loading={loadingInstitutions} />
               </TabsContent>
             </Tabs>
@@ -578,6 +582,7 @@ const Profile = () => {
                 </CardContent>
               </Card>
 
+              <InstitutionLinkRequestCard userType="profissional" />
             </>
           )}
         </div>
