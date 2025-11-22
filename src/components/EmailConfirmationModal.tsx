@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Mail, Loader2, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEmailResend } from '@/hooks/useEmailResend';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 interface EmailConfirmationModalProps {
   isOpen: boolean;
@@ -13,6 +15,8 @@ interface EmailConfirmationModalProps {
 
 export const EmailConfirmationModal = ({ isOpen, onClose, email }: EmailConfirmationModalProps) => {
   const navigate = useNavigate();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const { loading, resendEmailConfirmation } = useEmailResend();
   const [resendSuccess, setResendSuccess] = useState(false);
 
@@ -26,7 +30,7 @@ export const EmailConfirmationModal = ({ isOpen, onClose, email }: EmailConfirma
 
   const handleGoToLogin = () => {
     onClose();
-    navigate('/auth');
+    navigate(buildTenantPath(tenantSlug, '/auth'));
   };
 
   return (

@@ -30,6 +30,7 @@ const MoodExperience = () => {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const { getShareConfig } = useShareConfig();
   
   const { 
@@ -280,11 +281,11 @@ const MoodExperience = () => {
                     Você já fez {limit} entradas de demonstração. Para continuar usando o diário emocional e acessar recursos exclusivos, faça login ou crie sua conta.
                   </p>
                   <div className="flex gap-3 justify-center flex-wrap">
-                    <Button onClick={() => navigate('/auth')} className="bg-primary hover:bg-primary/90">
+                    <Button onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'))} className="bg-primary hover:bg-primary/90">
                       <Sparkles className="mr-2 h-4 w-4" />
                       Fazer Login
                     </Button>
-                    <Button onClick={() => navigate('/register/user-type')} variant="outline">
+                    <Button onClick={() => navigate(buildTenantPath(tenantSlug, '/cadastro/tipo-usuario'))} variant="outline">
                       Criar Conta Gratuita
                     </Button>
                   </div>
@@ -493,7 +494,7 @@ const MoodExperience = () => {
                       Você já fez {limit} entradas de demonstração.
                     </p>
                     <div className="space-y-2">
-                      <Button onClick={() => navigate('/auth')} className="w-full">
+                      <Button onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'))} className="w-full">
                         <Sparkles className="h-4 w-4 mr-2" />
                         Fazer Login / Cadastro
                       </Button>

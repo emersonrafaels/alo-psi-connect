@@ -12,6 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { User, UserCheck, ArrowRight, Clock, Shield, Calendar } from 'lucide-react';
 import { parseISODateLocal } from '@/lib/utils';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 interface AuthChoiceModalProps {
   isOpen: boolean;
@@ -32,6 +34,8 @@ const AuthChoiceModal: React.FC<AuthChoiceModalProps> = ({
   bookingData
 }) => {
   const navigate = useNavigate();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const [selectedOption, setSelectedOption] = useState<'login' | 'guest' | null>(null);
 
   const handleLoginChoice = () => {
@@ -45,7 +49,7 @@ const AuthChoiceModal: React.FC<AuthChoiceModalProps> = ({
       returnTo: window.location.pathname + window.location.search
     }));
     
-    navigate('/auth');
+    navigate(buildTenantPath(tenantSlug, '/auth'));
   };
 
   const handleGuestChoice = () => {

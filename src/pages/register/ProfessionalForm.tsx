@@ -1019,7 +1019,7 @@ const ProfessionalForm = () => {
             <p className="text-muted-foreground text-sm">
               Caso já possua conta, {' '}
               <button 
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'))}
                 className="text-primary hover:underline font-medium"
               >
                 clique aqui

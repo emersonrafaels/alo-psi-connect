@@ -16,6 +16,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 import { parseISODateLocal } from '@/lib/utils';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 interface QuickSignupModalProps {
   isOpen: boolean;
@@ -37,6 +39,8 @@ const QuickSignupModal: React.FC<QuickSignupModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -169,7 +173,7 @@ const QuickSignupModal: React.FC<QuickSignupModalProps> = ({
       returnTo: window.location.pathname + window.location.search
     }));
     
-    navigate('/auth');
+    navigate(buildTenantPath(tenantSlug, '/auth'));
   };
 
   return (
