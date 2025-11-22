@@ -155,7 +155,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send internal notification email
     const internalEmailResponse = await resend.emails.send({
-      from: `${tenantName} <noreply@alopsi.com.br>`,
+      from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
       subject: `🎉 Nova Consulta Agendada - ${agendamento.profissionais.display_name} - ${dataFormatada}`,
       html: emailHtml,
@@ -164,7 +164,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email to professional
     const professionalEmailHtml = createProfessionalEmail(agendamento, dataFormatada, horarioFormatado, valorFormatado, paymentId, meetLink, tenantName);
     const professionalEmailResponse = await resend.emails.send({
-      from: `${tenantName} <noreply@alopsi.com.br>`,
+      from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [agendamento.profissionais.user_email],
       subject: `📅 Nova Consulta Agendada - ${agendamento.nome_paciente} - ${dataFormatada} às ${horarioFormatado}`,
       html: professionalEmailHtml,
@@ -173,7 +173,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email to patient
     const patientEmailHtml = createPatientEmail(agendamento, dataFormatada, horarioFormatado, valorFormatado, meetLink, tenantName);
     const patientEmailResponse = await resend.emails.send({
-      from: `${tenantName} <noreply@alopsi.com.br>`,
+      from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [agendamento.email_paciente],
       subject: `✅ Consulta Confirmada - ${agendamento.profissionais.display_name} - ${dataFormatada} às ${horarioFormatado}`,
       html: patientEmailHtml,

@@ -40,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (error) throw error;
 
       const emailResponse = await resend.emails.send({
-        from: "Agendamentos <noreply@yourdomain.com>",
+        from: "Agendamentos <noreply@redebemestar.com.br>",
         to: [email],
         subject: "✨ Crie sua conta em 1 clique!",
         html: `
@@ -93,7 +93,7 @@ const handler = async (req: Request): Promise<Response> => {
       const accessUrl = `${supabaseUrl.replace('https://', 'https://').replace('.supabase.co', '')}.vercel.app/agendamento/${token}`;
 
       const emailResponse = await resend.emails.send({
-        from: "Agendamentos <noreply@yourdomain.com>",
+        from: "Agendamentos <noreply@redebemestar.com.br>",
         to: [email],
         subject: "🔗 Acesse seu agendamento",
         html: `
