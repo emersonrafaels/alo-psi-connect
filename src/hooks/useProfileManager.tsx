@@ -65,22 +65,41 @@ export const useProfileManager = () => {
     }
   };
 
+  // Função helper para converter File para base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(',')[1]; // Remove "data:image/...;base64,"
+        resolve(base64);
+      };
+      reader.onerror = reject;
+    });
+  };
+
   const uploadProfilePhoto = async (file: File): Promise<string | null> => {
     if (!user) return null;
 
     try {
       console.log('Starting photo upload for user:', user.id);
       
-      // Criar FormData para enviar para a Edge Function
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('professionalId', user.id); // Usar user.id como identificador
-
-      console.log('Calling upload-to-s3 function...');
+      // Converter arquivo para base64
+      const base64File = await fileToBase64(file);
       
-      // Chamar a Edge Function upload-to-s3
+      // Preparar payload JSON
+      const payload = {
+        file: base64File,
+        fileName: file.name,
+        fileType: file.type,
+        professionalId: user.id
+      };
+
+      console.log('Calling upload-to-s3 function with JSON payload...');
+      
+      // Chamar a Edge Function com JSON
       const { data, error } = await supabase.functions.invoke('upload-to-s3', {
-        body: formData,
+        body: payload,
       });
 
       console.log('Upload response:', { data, error });
