@@ -56,7 +56,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to the company
     const emailResponse = await resend.emails.send({
-      from: `Contato ${tenantName} <onboarding@resend.dev>`,
+      from: `Contato ${tenantName} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
       subject: `Novo contato: ${subject}`,
       html: `
@@ -75,7 +75,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send confirmation email to the user
     const confirmationResponse = await resend.emails.send({
-      from: `${tenantName} <onboarding@resend.dev>`,
+      from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [email],
       subject: `Recebemos sua mensagem - ${tenantName}`,
       html: `

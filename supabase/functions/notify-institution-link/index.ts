@@ -202,7 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Enviar email
     const emailResponse = await resend.emails.send({
-      from: `${tenantName} <noreply@alopsi.com.br>`,
+      from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [userEmail],
       subject: `🎓 Você foi vinculado à ${institutionName}`,
       html: emailHtml,

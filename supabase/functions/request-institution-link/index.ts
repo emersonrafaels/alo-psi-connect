@@ -184,7 +184,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: `${tenant.name} <onboarding@resend.dev>`,
+      from: `${tenant.name} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
       subject: `Nova Solicitação de Vínculo Institucional - ${institution.name}`,
       html: emailHtml,

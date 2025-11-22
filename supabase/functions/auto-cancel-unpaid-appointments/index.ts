@@ -94,7 +94,7 @@ serve(async (req) => {
             const appointmentTime = appointment.horario;
 
             await resend.emails.send({
-              from: "Agendamentos <onboarding@resend.dev>",
+              from: "Agendamentos <noreply@redebemestar.com.br>",
               to: [appointment.email_paciente],
               subject: "Agendamento Cancelado - Falta de Pagamento",
               html: `
