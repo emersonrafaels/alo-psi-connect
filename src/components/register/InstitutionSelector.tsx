@@ -30,10 +30,10 @@ export function InstitutionSelector({ value, onChange, className }: InstitutionS
       });
   }, [institutions]);
 
-  // Convert to combobox options with badges (use NAME as value)
+  // Convert to combobox options with badges (use UUID as value)
   const options: ComboboxOption[] = useMemo(() => {
     return filteredInstitutions.map(inst => ({
-      value: inst.name, // Use name instead of id
+      value: inst.id, // Use UUID instead of name
       label: inst.name,
       badge: (
         <div className="flex items-center gap-1">
@@ -64,9 +64,9 @@ export function InstitutionSelector({ value, onChange, className }: InstitutionS
     }));
   }, [filteredInstitutions]);
 
-  // Check if current value is a custom institution (not in the list)
-  const isCustomInstitution = value && !institutions.find(inst => inst.name === value);
-  const selectedInstitution = institutions.find(inst => inst.name === value);
+  // Check if current value is a custom institution (not in the list by UUID)
+  const isCustomInstitution = value && !institutions.find(inst => inst.id === value);
+  const selectedInstitution = institutions.find(inst => inst.id === value);
 
   const handleCustomSubmit = () => {
     if (customValue.trim()) {
@@ -127,7 +127,7 @@ export function InstitutionSelector({ value, onChange, className }: InstitutionS
         placeholder={
           value
             ? selectedInstitution 
-              ? value
+              ? selectedInstitution.name
               : `✓ ${value}` 
             : "Busque ou selecione sua instituição..."
         }
