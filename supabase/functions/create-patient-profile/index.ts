@@ -322,6 +322,39 @@ serve(async (req) => {
 
     console.log('Patient record processed successfully:', patientData.id);
 
+    // Create institution link if student and institution provided
+    if (ehEstudante && instituicaoEnsino) {
+      console.log('Creating institution link for student:', patientData.id, instituicaoEnsino);
+      
+      // Check if link already exists
+      const { data: existingLink } = await supabase
+        .from('patient_institutions')
+        .select('id')
+        .eq('patient_id', patientData.id)
+        .eq('institution_id', instituicaoEnsino)
+        .maybeSingle();
+
+      if (!existingLink) {
+        // Create new institution link
+        const { error: linkError } = await supabase
+          .from('patient_institutions')
+          .insert({
+            patient_id: patientData.id,
+            institution_id: instituicaoEnsino,
+            enrollment_status: 'enrolled',
+            enrollment_date: new Date().toISOString()
+          });
+
+        if (linkError) {
+          console.error('Error creating institution link:', linkError);
+        } else {
+          console.log('Institution link created successfully');
+        }
+      } else {
+        console.log('Institution link already exists');
+      }
+    }
+
     // Send confirmation email if user was created in this session
     let confirmationEmailSent = false;
     if (isNewUser && !existingUserId) { // Only for new email/password users, not Google users
