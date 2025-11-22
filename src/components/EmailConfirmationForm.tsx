@@ -5,6 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 interface EmailConfirmationFormProps {
   token?: string;
@@ -17,6 +19,8 @@ export const EmailConfirmationForm: React.FC<EmailConfirmationFormProps> = ({ to
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
 
   useEffect(() => {
     const confirmEmail = async () => {
@@ -72,7 +76,7 @@ export const EmailConfirmationForm: React.FC<EmailConfirmationFormProps> = ({ to
             variant="ghost"
             size="sm"
             className="absolute top-2 right-2"
-            onClick={() => navigate('/auth', { replace: true })}
+            onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'), { replace: true })}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -104,7 +108,7 @@ export const EmailConfirmationForm: React.FC<EmailConfirmationFormProps> = ({ to
               </p>
             </div>
             <Button 
-              onClick={() => navigate('/auth', { replace: true })}
+              onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'), { replace: true })}
               className="mt-4"
             >
               Ir para login agora
@@ -125,7 +129,7 @@ export const EmailConfirmationForm: React.FC<EmailConfirmationFormProps> = ({ to
             </div>
             <Button 
               variant="outline"
-              onClick={() => navigate('/auth', { replace: true })}
+              onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'), { replace: true })}
               className="mt-4"
             >
               Voltar ao login

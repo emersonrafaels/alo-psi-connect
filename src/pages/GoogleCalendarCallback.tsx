@@ -2,11 +2,15 @@ import { useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 export default function GoogleCalendarCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
   const processingRef = useRef(false);
 
   useEffect(() => {
@@ -89,7 +93,7 @@ export default function GoogleCalendarCallback() {
           if (isPopup) {
             setTimeout(() => window.close(), 1000);
           } else {
-            navigate('/auth');
+            navigate(buildTenantPath(tenantSlug, '/auth'));
           }
           return;
         }

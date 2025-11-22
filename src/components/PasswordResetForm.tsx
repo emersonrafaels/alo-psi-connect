@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 interface PasswordResetFormProps {
   token?: string;
@@ -22,6 +24,8 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ token }) =
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { tenant } = useTenant();
+  const tenantSlug = tenant?.slug || 'alopsi';
 
   const isPasswordValid = password.length >= 8;
   const doPasswordsMatch = password === confirmPassword && confirmPassword.length > 0;
@@ -88,7 +92,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ token }) =
 
       // Redirecionar para login após 2 segundos
       setTimeout(() => {
-        navigate('/auth', { replace: true });
+        navigate(buildTenantPath(tenantSlug, '/auth'), { replace: true });
       }, 2000);
 
     } catch (error: any) {
