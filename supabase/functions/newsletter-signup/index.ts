@@ -10,6 +10,7 @@ const corsHeaders = {
 interface NewsletterSignupRequest {
   email: string;
   nome?: string;
+  tenantId?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -19,7 +20,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, nome }: NewsletterSignupRequest = await req.json();
+    const { email, nome, tenantId }: NewsletterSignupRequest = await req.json();
 
     if (!email) {
       return new Response(
@@ -82,6 +83,25 @@ const handler = async (req: Request): Promise<Response> => {
       if (insertError) {
         console.error("Error inserting subscription:", insertError);
         throw new Error("Erro ao salvar inscrição");
+      }
+    }
+
+    // Buscar email administrativo do tenant
+    let adminEmail = 'alopsi.host@gmail.com'; // fallback padrão
+    let tenantName = 'Alô, Psi';
+
+    if (tenantId) {
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('admin_email, name')
+        .eq('id', tenantId)
+        .single();
+      
+      if (tenant?.admin_email) {
+        adminEmail = tenant.admin_email;
+      }
+      if (tenant?.name) {
+        tenantName = tenant.name;
       }
     }
 
@@ -170,8 +190,8 @@ const handler = async (req: Request): Promise<Response> => {
     // Send notification email to admin
     try {
       await resend.emails.send({
-        from: "Newsletter Alopsi <alopsi.host@gmail.com>",
-        to: ["alopsi.host@gmail.com"],
+        from: `Newsletter ${tenantName} <${adminEmail}>`,
+        to: [adminEmail],
         subject: "Nova inscrição no newsletter",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTenant } from '@/hooks/useTenant';
 
 interface NewsletterData {
   email: string;
@@ -16,6 +17,7 @@ interface NewsletterResponse {
 export const useNewsletter = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { tenant } = useTenant();
 
   const subscribe = async (data: NewsletterData): Promise<boolean> => {
     setIsLoading(true);
@@ -24,7 +26,10 @@ export const useNewsletter = () => {
       const { data: response, error } = await supabase.functions.invoke(
         'newsletter-signup',
         {
-          body: data
+          body: {
+            ...data,
+            tenantId: tenant?.id
+          }
         }
       );
 
