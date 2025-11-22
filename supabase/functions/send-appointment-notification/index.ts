@@ -39,6 +39,35 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('Sending appointment notifications:', agendamento.id);
 
+    // Initialize Supabase client to fetch tenant info
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Buscar tenant_id do profissional através de professional_tenants
+    let adminEmail = 'alopsi.host@gmail.com'; // fallback padrão
+    let tenantName = 'Alô, Psi';
+
+    const { data: professionalTenant } = await supabase
+      .from('professional_tenants')
+      .select(`
+        tenant_id,
+        tenants!inner (
+          admin_email,
+          name
+        )
+      `)
+      .eq('professional_id', agendamento.professional_id)
+      .single();
+
+    if (professionalTenant?.tenants?.admin_email) {
+      adminEmail = professionalTenant.tenants.admin_email;
+    }
+    if (professionalTenant?.tenants?.name) {
+      tenantName = professionalTenant.tenants.name;
+    }
+
     // Format date and time for email
     const dataFormatada = new Date(agendamento.data_consulta).toLocaleDateString('pt-BR');
     const horarioFormatado = agendamento.horario.substring(0, 5); // Remove seconds
@@ -60,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
             
             <!-- Header -->
             <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 40px 20px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Alô, Psi</h1>
+              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">${tenantName}</h1>
               <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Conectando você ao cuidado mental</p>
             </div>
             
@@ -112,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- Footer -->
             <div style="background-color: #f8fafc; padding: 30px 20px; text-align: center; border-top: 1px solid #e2e8f0;">
               <p style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280;">
-                Email enviado automaticamente pelo sistema <strong>Alô, Psi</strong>
+                Email enviado automaticamente pelo sistema <strong>${tenantName}</strong>
               </p>
               <p style="margin: 0; font-size: 12px; color: #9ca3af;">
                 Data: ${new Date().toLocaleString('pt-BR')}
@@ -124,27 +153,27 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send internal notification email to Alô, Psi
+    // Send internal notification email
     const internalEmailResponse = await resend.emails.send({
-      from: "Alô, Psi <noreply@alopsi.com.br>",
-      to: ["alopsi.host@gmail.com"],
+      from: `${tenantName} <noreply@alopsi.com.br>`,
+      to: [adminEmail],
       subject: `🎉 Nova Consulta Agendada - ${agendamento.profissionais.display_name} - ${dataFormatada}`,
       html: emailHtml,
     });
 
     // Send email to professional
-    const professionalEmailHtml = createProfessionalEmail(agendamento, dataFormatada, horarioFormatado, valorFormatado, paymentId, meetLink);
+    const professionalEmailHtml = createProfessionalEmail(agendamento, dataFormatada, horarioFormatado, valorFormatado, paymentId, meetLink, tenantName);
     const professionalEmailResponse = await resend.emails.send({
-      from: "Alô, Psi <noreply@alopsi.com.br>",
+      from: `${tenantName} <noreply@alopsi.com.br>`,
       to: [agendamento.profissionais.user_email],
       subject: `📅 Nova Consulta Agendada - ${agendamento.nome_paciente} - ${dataFormatada} às ${horarioFormatado}`,
       html: professionalEmailHtml,
     });
 
     // Send email to patient
-    const patientEmailHtml = createPatientEmail(agendamento, dataFormatada, horarioFormatado, valorFormatado, meetLink);
+    const patientEmailHtml = createPatientEmail(agendamento, dataFormatada, horarioFormatado, valorFormatado, meetLink, tenantName);
     const patientEmailResponse = await resend.emails.send({
-      from: "Alô, Psi <noreply@alopsi.com.br>",
+      from: `${tenantName} <noreply@alopsi.com.br>`,
       to: [agendamento.email_paciente],
       subject: `✅ Consulta Confirmada - ${agendamento.profissionais.display_name} - ${dataFormatada} às ${horarioFormatado}`,
       html: patientEmailHtml,
@@ -180,7 +209,7 @@ const handler = async (req: Request): Promise<Response> => {
 };
 
 // Professional email template
-function createProfessionalEmail(agendamento: any, dataFormatada: string, horarioFormatado: string, valorFormatado: string, paymentId: string, meetLink?: string) {
+function createProfessionalEmail(agendamento: any, dataFormatada: string, horarioFormatado: string, valorFormatado: string, paymentId: string, meetLink?: string, tenantName: string = 'Alô, Psi') {
   return `
     <!DOCTYPE html>
     <html>
@@ -194,7 +223,7 @@ function createProfessionalEmail(agendamento: any, dataFormatada: string, horari
           
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 40px 20px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Alô, Psi</h1>
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">${tenantName}</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Nova consulta agendada para você!</p>
           </div>
           
@@ -251,7 +280,7 @@ function createProfessionalEmail(agendamento: any, dataFormatada: string, horari
           <!-- Footer -->
           <div style="background-color: #f8fafc; padding: 30px 20px; text-align: center; border-top: 1px solid #e2e8f0;">
             <p style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280;">
-              Email enviado automaticamente pelo sistema <strong>Alô, Psi</strong>
+              Email enviado automaticamente pelo sistema <strong>${tenantName}</strong>
             </p>
             <p style="margin: 0; font-size: 12px; color: #9ca3af;">
               Data: ${new Date().toLocaleString('pt-BR')}
@@ -265,7 +294,7 @@ function createProfessionalEmail(agendamento: any, dataFormatada: string, horari
 }
 
 // Patient email template
-function createPatientEmail(agendamento: any, dataFormatada: string, horarioFormatado: string, valorFormatado: string, meetLink?: string) {
+function createPatientEmail(agendamento: any, dataFormatada: string, horarioFormatado: string, valorFormatado: string, meetLink?: string, tenantName: string = 'Alô, Psi') {
   return `
     <!DOCTYPE html>
     <html>
@@ -279,7 +308,7 @@ function createPatientEmail(agendamento: any, dataFormatada: string, horarioForm
           
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 40px 20px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Alô, Psi</h1>
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">${tenantName}</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Sua consulta foi confirmada!</p>
           </div>
           
@@ -346,7 +375,7 @@ function createPatientEmail(agendamento: any, dataFormatada: string, horarioForm
           <!-- Footer -->
           <div style="background-color: #f8fafc; padding: 30px 20px; text-align: center; border-top: 1px solid #e2e8f0;">
             <p style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280;">
-              Obrigado por escolher a <strong>Alô, Psi</strong> para cuidar da sua saúde mental! 💙
+              Obrigado por escolher a <strong>${tenantName}</strong> para cuidar da sua saúde mental! 💙
             </p>
             <p style="margin: 0; font-size: 12px; color: #9ca3af;">
               Data: ${new Date().toLocaleString('pt-BR')}

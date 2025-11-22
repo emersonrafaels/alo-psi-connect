@@ -7,6 +7,7 @@ import { MapPin, Phone, Mail, Clock } from "lucide-react"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { useTenant } from "@/hooks/useTenant"
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ const Contact = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { tenant } = useTenant();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -43,7 +45,10 @@ const Contact = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('send-contact-email', {
-        body: formData
+        body: {
+          ...formData,
+          tenantId: tenant?.id
+        }
       });
 
       if (error) throw error;

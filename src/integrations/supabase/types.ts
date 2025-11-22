@@ -2088,6 +2088,7 @@ export type Database = {
           about_autoplay_delay: number | null
           about_images: string[] | null
           accent_color: string
+          admin_email: string | null
           ai_match_button_text: string | null
           base_path: string
           booking_max_days_ahead: number | null
@@ -2165,6 +2166,7 @@ export type Database = {
           about_autoplay_delay?: number | null
           about_images?: string[] | null
           accent_color: string
+          admin_email?: string | null
           ai_match_button_text?: string | null
           base_path: string
           booking_max_days_ahead?: number | null
@@ -2242,6 +2244,7 @@ export type Database = {
           about_autoplay_delay?: number | null
           about_images?: string[] | null
           accent_color?: string
+          admin_email?: string | null
           ai_match_button_text?: string | null
           base_path?: string
           booking_max_days_ahead?: number | null

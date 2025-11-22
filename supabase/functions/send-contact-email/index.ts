@@ -15,6 +15,7 @@ interface ContactFormRequest {
   phone: string;
   subject: string;
   message: string;
+  tenantId?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -24,14 +25,39 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { name, email, phone, subject, message }: ContactFormRequest = await req.json();
+    const { name, email, phone, subject, message, tenantId }: ContactFormRequest = await req.json();
 
     console.log("Sending contact email from:", email);
 
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Buscar email administrativo do tenant
+    let adminEmail = 'alopsi.host@gmail.com'; // fallback padrão
+    let tenantName = 'Alô, Psi';
+
+    if (tenantId) {
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('admin_email, name')
+        .eq('id', tenantId)
+        .single();
+      
+      if (tenant?.admin_email) {
+        adminEmail = tenant.admin_email;
+      }
+      if (tenant?.name) {
+        tenantName = tenant.name;
+      }
+    }
+
     // Send email to the company
     const emailResponse = await resend.emails.send({
-      from: "Contato Alô Psi <onboarding@resend.dev>",
-      to: ["alopsi.host@gmail.com"],
+      from: `Contato ${tenantName} <onboarding@resend.dev>`,
+      to: [adminEmail],
       subject: `Novo contato: ${subject}`,
       html: `
         <h2>Nova mensagem de contato</h2>
@@ -43,15 +69,15 @@ const handler = async (req: Request): Promise<Response> => {
         <p>${message.replace(/\n/g, '<br>')}</p>
         
         <hr>
-        <p><em>Esta mensagem foi enviada através do formulário de contato do site Alô, Psi!</em></p>
+        <p><em>Esta mensagem foi enviada através do formulário de contato do site ${tenantName}!</em></p>
       `,
     });
 
     // Send confirmation email to the user
     const confirmationResponse = await resend.emails.send({
-      from: "Alô, Psi! <onboarding@resend.dev>",
+      from: `${tenantName} <onboarding@resend.dev>`,
       to: [email],
-      subject: "Recebemos sua mensagem - Alô, Psi!",
+      subject: `Recebemos sua mensagem - ${tenantName}`,
       html: `
         <h2>Olá, ${name}!</h2>
         <p>Recebemos sua mensagem e agradecemos pelo contato.</p>
@@ -62,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
         <p><strong>Mensagem:</strong> ${message.replace(/\n/g, '<br>')}</p>
         
         <p>Atenciosamente,<br>
-        Equipe Alô, Psi!</p>
+        Equipe ${tenantName}!</p>
         
         <hr>
         <p><em>Se você não enviou esta mensagem, pode ignorar este email.</em></p>
