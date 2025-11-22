@@ -148,7 +148,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Detectar tenant do usuário
+    // Detectar tenant do usuário e buscar admin_email
     const { data: profile } = await supabase
       .from('profiles')
       .select('tenant_id, nome')
@@ -161,7 +161,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (profile?.tenant_id) {
       const { data: tenant } = await supabase
         .from('tenants')
-        .select('id, name, slug, logo_url, primary_color')
+        .select('id, name, slug, logo_url, primary_color, admin_email')
         .eq('id', profile.tenant_id)
         .single();
 
@@ -171,11 +171,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Fallback para tenant padrão
+    // Fallback para tenant padrão com admin_email
     if (!tenantData) {
       const { data: defaultTenant } = await supabase
         .from('tenants')
-        .select('id, name, slug, logo_url, primary_color')
+        .select('id, name, slug, logo_url, primary_color, admin_email')
         .eq('slug', 'alopsi')
         .single();
       
@@ -183,7 +183,8 @@ const handler = async (req: Request): Promise<Response> => {
         name: 'Alô, Psi',
         slug: 'alopsi',
         logo_url: null,
-        primary_color: '#1e40af'
+        primary_color: '#1e40af',
+        admin_email: 'alopsi.host@gmail.com'
       };
     }
 
@@ -219,11 +220,18 @@ const handler = async (req: Request): Promise<Response> => {
     const tenantPath = tenantSlug === 'medcos' ? '/medcos' : '';
     const confirmationUrl = `${baseUrl}${tenantPath}/auth?confirm=true&token=${confirmationToken}`;
     
-    console.log('Generated confirmation URL:', confirmationUrl);
+    console.log('📧 Email confirmation details:', {
+      tenant: tenantData.name,
+      from: `${tenantData.name} <${tenantData.admin_email}>`,
+      to: email,
+      confirmationUrl,
+      logo: tenantData.logo_url,
+      color: tenantData.primary_color
+    });
 
     // Send custom email via Resend
     const emailResponse = await resend.emails.send({
-      from: `${tenantData.name} <noreply@alopsi.com.br>`,
+      from: `${tenantData.name} <${tenantData.admin_email}>`,
       to: [email],
       subject: `Confirme seu email - ${tenantData.name}`,
       html: generateConfirmationEmailHTML(
