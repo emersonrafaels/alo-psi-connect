@@ -44,7 +44,7 @@ export default function InstitutionStudents() {
   const filteredStudents = sorted;
 
   const getStatusBadge = (status: string) => {
-    const badges = { enrolled: { label: 'Matriculado', variant: 'default' as const }, graduated: { label: 'Formado', variant: 'secondary' as const }, inactive: { label: 'Inativo', variant: 'outline' as const } };
+    const badges = { enrolled: { label: 'Vinculado', variant: 'default' as const }, graduated: { label: 'Formado', variant: 'secondary' as const }, inactive: { label: 'Inativo', variant: 'outline' as const } };
     return badges[status as keyof typeof badges] || badges.enrolled;
   };
 
@@ -53,7 +53,7 @@ export default function InstitutionStudents() {
     const csvData = filteredStudents.map(s => ({
       'Nome': s.pacientes.profiles.nome || '', 'Email': s.pacientes.profiles.email || '',
       'Data de Nascimento': s.pacientes.profiles.data_nascimento ? format(new Date(s.pacientes.profiles.data_nascimento), 'dd/MM/yyyy') : '',
-      'Status': getStatusBadge(s.enrollment_status).label, 'Data de Matrícula': s.enrollment_date ? format(new Date(s.enrollment_date), 'dd/MM/yyyy') : ''
+      'Status': getStatusBadge(s.enrollment_status).label, 'Data de Vínculo': s.enrollment_date ? format(new Date(s.enrollment_date), 'dd/MM/yyyy') : ''
     }));
     const headers = Object.keys(csvData[0]).join(',');
     const rows = csvData.map(row => Object.values(row).map(val => `"${val}"`).join(','));
@@ -105,7 +105,7 @@ export default function InstitutionStudents() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os Status</SelectItem>
-                    <SelectItem value="enrolled">Matriculados</SelectItem>
+                    <SelectItem value="enrolled">Vinculados</SelectItem>
                     <SelectItem value="graduated">Formados</SelectItem>
                     <SelectItem value="inactive">Inativos</SelectItem>
                   </SelectContent>
@@ -117,7 +117,7 @@ export default function InstitutionStudents() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="name">Nome (A-Z)</SelectItem>
-                    <SelectItem value="enrollment_date">Data de Matrícula</SelectItem>
+                    <SelectItem value="enrollment_date">Data de Vínculo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -154,7 +154,7 @@ export default function InstitutionStudents() {
                 {student.enrollment_date && (
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>Matrícula: {format(new Date(student.enrollment_date), 'dd/MM/yyyy')}</span>
+                    <span>Vinculado: {format(new Date(student.enrollment_date), 'dd/MM/yyyy')}</span>
                   </div>
                 )}
                 <Badge variant={getStatusBadge(student.enrollment_status).variant}>{getStatusBadge(student.enrollment_status).label}</Badge>
