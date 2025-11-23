@@ -231,6 +231,9 @@ const PatientForm = () => {
                 .eq('user_id', session.user.id);
               
               console.log('✅ Foto atualizada com sucesso!');
+              
+              // ⭐ Limpar sessionStorage após sucesso (caso tenha sido salvo)
+              sessionStorage.removeItem('pendingProfilePhoto');
             }
           } catch (uploadError) {
             console.error('Erro no upload da foto:', uploadError);
@@ -305,8 +308,22 @@ const PatientForm = () => {
       
       // Check if this is a new user that needs email confirmation
       if (data.isNewUser && data.confirmationEmailSent) {
+        // ⭐ Salvar foto em sessionStorage antes de mostrar modal
+        if (selectedPhotoFile) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            sessionStorage.setItem('pendingProfilePhoto', JSON.stringify({
+              dataUrl: reader.result,
+              fileName: selectedPhotoFile.name,
+              fileType: selectedPhotoFile.type,
+              email: formData.email
+            }));
+            console.log('📸 Foto salva em sessionStorage para upload posterior');
+          };
+          reader.readAsDataURL(selectedPhotoFile);
+        }
+        
         setShowEmailConfirmationModal(true);
-        // Não fazer upload de foto aqui (usuário não está logado ainda)
         return;
       }
       
@@ -329,6 +346,9 @@ const PatientForm = () => {
               .eq('user_id', currentSession.user.id);
             
             console.log('✅ Foto atualizada com sucesso!');
+            
+            // ⭐ Limpar sessionStorage após sucesso
+            sessionStorage.removeItem('pendingProfilePhoto');
           }
         } catch (uploadError) {
           console.error('Erro no upload da foto:', uploadError);

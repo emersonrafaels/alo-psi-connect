@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfileManager } from '@/hooks/useProfileManager';
 import { useUserType } from '@/hooks/useUserType';
 import { useGoogleCalendarStatus } from '@/hooks/useGoogleCalendarStatus';
+import { useFirstLoginPhotoUpload } from '@/hooks/useFirstLoginPhotoUpload';
 import { useToast } from '@/hooks/use-toast';
 import { useTenant } from '@/hooks/useTenant';
 import { usePatientInstitutions } from '@/hooks/usePatientInstitutions';
@@ -34,6 +35,7 @@ const Profile = () => {
   const { isProfessional } = useUserType();
   const { isConnected: googleCalendarConnected, refetch: refetchGoogleCalendar } = useGoogleCalendarStatus();
   const { linkedInstitutions, isLoading: loadingInstitutions } = usePatientInstitutions();
+  const { isUploading: isUploadingPendingPhoto } = useFirstLoginPhotoUpload(); // ⭐ Upload automático de foto pendente
   const { toast } = useToast();
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
@@ -221,12 +223,21 @@ const Profile = () => {
           <Card className="mb-6">
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row items-center gap-6">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage src={formData.foto_perfil_url} alt={formData.nome} />
-                  <AvatarFallback className="text-2xl">
-                    {getInitials(formData.nome || user?.email || 'U')}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={formData.foto_perfil_url} alt={formData.nome} />
+                    <AvatarFallback className="text-2xl">
+                      {getInitials(formData.nome || user?.email || 'U')}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  {/* Indicador de upload de foto pendente */}
+                  {isUploadingPendingPhoto && (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                      <div className="h-8 w-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
                 
                 <div className="flex-1 text-center sm:text-left">
                   <h2 className="text-xl font-semibold">{formData.nome || user?.email}</h2>
