@@ -944,6 +944,56 @@ export type Database = {
         }
         Relationships: []
       }
+      email_test_logs: {
+        Row: {
+          created_at: string
+          custom_html: string | null
+          email_type: string
+          error_message: string | null
+          id: string
+          recipient_email: string
+          resend_email_id: string | null
+          status: string
+          tenant_id: string
+          tested_by: string
+          variables: Json
+        }
+        Insert: {
+          created_at?: string
+          custom_html?: string | null
+          email_type: string
+          error_message?: string | null
+          id?: string
+          recipient_email: string
+          resend_email_id?: string | null
+          status: string
+          tenant_id: string
+          tested_by: string
+          variables?: Json
+        }
+        Update: {
+          created_at?: string
+          custom_html?: string | null
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          recipient_email?: string
+          resend_email_id?: string | null
+          status?: string
+          tenant_id?: string
+          tested_by?: string
+          variables?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_test_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emotion_configurations: {
         Row: {
           color_scheme: Json | null
