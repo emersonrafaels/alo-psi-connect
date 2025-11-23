@@ -154,45 +154,48 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const authHeader = req.headers.get("authorization");
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
     if (!authHeader) {
-      throw new Error("No authorization header");
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // First, verify user with their JWT token using anon key
-    const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      },
-      global: {
-        headers: { authorization: authHeader }
-      }
-    });
+    const token = authHeader.replace('Bearer ', '').trim();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
-    if (userError || !user) {
-      throw new Error("Unauthorized");
+    if (authError || !user) {
+      console.error('[Send Test Email] Auth error:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Check if user is super_admin
-    const { data: roles } = await supabaseAuth
+    const { data: roles, error: rolesError } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .in('role', ['super_admin']);
 
-    if (!roles || roles.length === 0) {
-      throw new Error("Unauthorized - Super admin only");
+    if (rolesError) {
+      console.error('[Send Test Email] Roles error:', rolesError);
+      return new Response(
+        JSON.stringify({ error: 'Error checking permissions' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Now use service role key for database operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
+    const isSuperAdmin = roles?.some(r => r.role === 'super_admin');
+    if (!isSuperAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Permission denied. Super admin access required.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const { emailType, recipientEmail, tenantId, variables, customHtml }: TestEmailRequest = await req.json();
 
