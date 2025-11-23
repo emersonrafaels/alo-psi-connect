@@ -14,7 +14,7 @@ interface PatientInstitutionsCardProps {
 const getStatusBadge = (status: string) => {
   switch (status) {
     case 'enrolled':
-      return <Badge variant="default" className="bg-green-600">Matriculado</Badge>;
+      return <Badge variant="default" className="bg-green-600">Vinculado</Badge>;
     case 'graduated':
       return <Badge variant="default" className="bg-blue-600">Formado</Badge>;
     case 'inactive':
@@ -107,7 +107,7 @@ export function PatientInstitutionsCard({ institutions, loading }: PatientInstit
                       <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-2">
                         <Calendar className="h-4 w-4" />
                         <span>
-                          Matrícula em:{" "}
+                          Vinculado em:{" "}
                           {format(new Date(institution.enrollment_date), "dd/MM/yyyy", {
                             locale: ptBR,
                           })}

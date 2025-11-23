@@ -47,7 +47,7 @@ export const InstitutionPatientsModal = ({
       inactive: 'outline',
     };
     const labels = {
-      enrolled: 'Matriculado',
+      enrolled: 'Vinculado',
       graduated: 'Graduado',
       inactive: 'Inativo',
     };

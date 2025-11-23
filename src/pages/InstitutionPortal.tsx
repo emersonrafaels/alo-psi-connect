@@ -160,8 +160,8 @@ export default function InstitutionPortal() {
                   </div>
                   <div>
                     <CardTitle>Gerenciar Alunos</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {activeStudents.length} matriculados de {linkedStudents.length} total
+                     <p className="text-sm text-muted-foreground mt-1">
+                      {activeStudents.length} vinculados de {linkedStudents.length} total
                     </p>
                   </div>
                 </div>
