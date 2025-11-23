@@ -159,7 +159,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("No authorization header");
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    // First, verify user with their JWT token using anon key
+    const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
@@ -169,13 +170,13 @@ const handler = async (req: Request): Promise<Response> => {
       }
     });
 
-    // Verify user is super_admin
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
     if (userError || !user) {
       throw new Error("Unauthorized");
     }
 
-    const { data: roles } = await supabase
+    // Check if user is super_admin
+    const { data: roles } = await supabaseAuth
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
@@ -184,6 +185,14 @@ const handler = async (req: Request): Promise<Response> => {
     if (!roles || roles.length === 0) {
       throw new Error("Unauthorized - Super admin only");
     }
+
+    // Now use service role key for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
 
     const { emailType, recipientEmail, tenantId, variables, customHtml }: TestEmailRequest = await req.json();
 
