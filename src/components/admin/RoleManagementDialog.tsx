@@ -44,6 +44,7 @@ export const RoleManagementDialog = ({
 
   useEffect(() => {
     if (open && userId) {
+      setSelectedRole(''); // Reset selection
       fetchUserRoles();
     }
   }, [open, userId]);
@@ -72,15 +73,19 @@ export const RoleManagementDialog = ({
   const handleAddRole = async () => {
     if (!selectedRole) return;
 
-    // Check if role already exists in local state
-    if (userRoles.some(ur => ur.role === selectedRole)) {
-      return; // Silently ignore if already exists
+    // Double-check if role already exists (defensive programming)
+    const roleExists = userRoles.some(ur => ur.role === selectedRole);
+    if (roleExists) {
+      console.warn('Role already exists, skipping addition');
+      setSelectedRole(''); // Reset selection
+      return;
     }
 
     const result = await manageUserRole(userId, 'add', selectedRole);
     if (result.success) {
       setSelectedRole('');
-      await fetchUserRoles(); // Refresh the list
+      // Force immediate refresh
+      await fetchUserRoles();
       onRoleUpdated?.();
     }
   };
