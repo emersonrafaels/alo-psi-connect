@@ -10,10 +10,11 @@ import { RoleManagementDialog } from '@/components/admin/RoleManagementDialog';
 import { UserTypeManagementDialog } from '@/components/admin/UserTypeManagementDialog';
 import { UserInstitutionsManager } from '@/components/admin/UserInstitutionsManager';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
 import { useEmailResend } from '@/hooks/useEmailResend';
-import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle, Building2 } from 'lucide-react';
+import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle, Building2, MoreVertical } from 'lucide-react';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -328,35 +329,37 @@ export default function AdminUsers() {
             {users.map((user) => (
               <div
                 key={user.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-4"
               >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-4 mb-2">
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                       <User className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
-                      <p className="font-medium">{user.nome}</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <p className="font-medium">{user.nome}</p>
+                        {user.tipo_usuario === 'paciente' && (
+                          <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+                            <Heart className="h-3 w-3" />
+                            Paciente
+                          </Badge>
+                        )}
+                        {user.tipo_usuario === 'profissional' && (
+                          <Badge variant="default" className="flex items-center gap-1 text-xs">
+                            <Stethoscope className="h-3 w-3" />
+                            Profissional
+                          </Badge>
+                        )}
+                        {user.tipo_usuario === 'admin' && (
+                          <Badge variant="destructive" className="text-xs">Administrador</Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
-                    {user.tipo_usuario === 'paciente' && (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <Heart className="h-3 w-3" />
-                        Paciente
-                      </Badge>
-                    )}
-                    {user.tipo_usuario === 'profissional' && (
-                      <Badge variant="default" className="flex items-center gap-1">
-                        <Stethoscope className="h-3 w-3" />
-                        Profissional
-                      </Badge>
-                    )}
-                    {user.tipo_usuario === 'admin' && (
-                      <Badge variant="destructive">Administrador</Badge>
-                    )}
                   </div>
-                  
-                  <div className="flex items-center gap-2 mb-2 ml-14">
+
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm text-muted-foreground flex items-center gap-1">
                       <Building2 className="h-3 w-3" />
                       Instituições:
@@ -388,141 +391,129 @@ export default function AdminUsers() {
                       )}
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2 mb-2 ml-14">
+
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm text-muted-foreground">Roles Admin:</span>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-wrap">
                       {getRolesBadges(user.roles || [])}
                     </div>
                   </div>
-                  
-                  <div className="flex gap-4 text-sm text-muted-foreground ml-14">
+
+                  <div className="flex gap-4 text-sm text-muted-foreground flex-wrap">
                     <span>Cadastrado em {new Date(user.created_at).toLocaleDateString('pt-BR')}</span>
                     {user.data_nascimento && (
                       <span>Nascimento: {new Date(user.data_nascimento).toLocaleDateString('pt-BR')}</span>
                     )}
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => resendEmailConfirmation(user.email)}
-                    disabled={emailLoading}
-                    className="gap-2"
-                  >
-                    <Mail className="h-4 w-4" />
-                    Reenviar Confirmação
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => resendPasswordReset(user.email)}
-                    disabled={emailLoading}
-                    className="gap-2"
-                  >
-                    <KeyRound className="h-4 w-4" />
-                    Reset Senha
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleRoleManagement(user.user_id || '', user.nome)}
-                    className="gap-2"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Gerenciar Roles
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleTypeManagement(user.user_id || '', user.nome, user.tipo_usuario)}
-                    className="gap-2"
-                  >
-                    <User className="h-4 w-4" />
-                    Gerenciar Tipo
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleManageInstitutions(user)}
-                    className="gap-2"
-                  >
-                    <Building2 className="h-4 w-4" />
-                    Gerenciar Instituições
-                  </Button>
-                  
-                  <AlertDialog>
-                     <AlertDialogTrigger asChild>
-                       <Button 
-                         variant="outline" 
-                         size="sm" 
-                         className="gap-2 text-destructive hover:text-destructive"
-                         onClick={() => fetchDeletionInfo(user)}
-                       >
-                         <Trash2 className="h-4 w-4" />
-                         Deletar
-                       </Button>
-                     </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                       <AlertDialogTitle>Deletar usuário completamente</AlertDialogTitle>
-                         <AlertDialogDescription className="space-y-3">
-                           <div className="font-semibold text-destructive flex items-center gap-2">
-                             <AlertCircle className="h-5 w-5" />
-                             ATENÇÃO: Esta ação é IRREVERSÍVEL
-                           </div>
-                           
-                           <p>
-                             Tem certeza que deseja deletar completamente o usuário <strong>{user.nome}</strong>?
-                           </p>
-                           
-                           <div className="bg-muted p-3 rounded-md space-y-2">
-                             <p className="font-medium">O que será removido:</p>
-                             <ul className="list-disc list-inside space-y-1 text-sm">
-                               <li>Conta de acesso (não poderá mais fazer login)</li>
-                               <li>Dados de perfil completo</li>
-                               {deletionInfo?.isProfessional && (
-                                 <li className="text-orange-600 font-medium">
-                                   Perfil profissional e todas as configurações
-                                 </li>
-                               )}
-                               {deletionInfo && deletionInfo.appointmentsCount > 0 && (
-                                 <li className="text-destructive font-medium">
-                                   {deletionInfo.appointmentsCount} agendamento(s) serão CANCELADOS
-                                   {deletionInfo.isProfessional && deletionInfo.isPatient && " (como paciente e profissional)"}
-                                   {deletionInfo.isProfessional && !deletionInfo.isPatient && " (como profissional)"}
-                                   {!deletionInfo.isProfessional && deletionInfo.isPatient && " (como paciente)"}
-                                 </li>
-                               )}
-                               {user.roles && user.roles.length > 0 && (
-                                 <li>Roles administrativas: {user.roles.join(", ")}</li>
-                               )}
-                             </ul>
-                           </div>
-                           
-                           <p className="text-sm text-muted-foreground">
-                             ℹ️ Os agendamentos serão mantidos no histórico com status "cancelado" para fins de auditoria.
-                           </p>
-                         </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteUser(user.user_id || null, user.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <MoreVertical className="h-4 w-4" />
+                      Ações
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Ações do Usuário</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuItem 
+                      onClick={() => resendEmailConfirmation(user.email)} 
+                      disabled={emailLoading}
+                    >
+                      <Mail className="h-4 w-4 mr-2" />
+                      Reenviar Confirmação
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem 
+                      onClick={() => resendPasswordReset(user.email)} 
+                      disabled={emailLoading}
+                    >
+                      <KeyRound className="h-4 w-4 mr-2" />
+                      Reset Senha
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem onClick={() => handleRoleManagement(user.user_id || '', user.nome)}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Gerenciar Roles
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem onClick={() => handleTypeManagement(user.user_id || '', user.nome, user.tipo_usuario)}>
+                      <User className="h-4 w-4 mr-2" />
+                      Gerenciar Tipo
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem onClick={() => handleManageInstitutions(user)}>
+                      <Building2 className="h-4 w-4 mr-2" />
+                      Gerenciar Instituições
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuSeparator />
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            fetchDeletionInfo(user);
+                          }}
+                          className="text-destructive focus:text-destructive"
                         >
-                          Deletar Completamente
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Deletar Usuário
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar Deleção</AlertDialogTitle>
+                          <AlertDialogDescription className="space-y-2">
+                            <p>Você está prestes a deletar <strong>{user.nome}</strong> ({user.email}).</p>
+                            
+                            {deletionInfo && (
+                              <>
+                                {deletionInfo.appointmentsCount > 0 && (
+                                  <div className="p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md">
+                                    <div className="flex items-start gap-2">
+                                      <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+                                      <div className="text-sm text-amber-800 dark:text-amber-200">
+                                        <p className="font-semibold">Atenção: Agendamentos Ativos</p>
+                                        <p>Este usuário possui <strong>{deletionInfo.appointmentsCount}</strong> agendamento(s) ativo(s). Todos serão cancelados automaticamente.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {(deletionInfo.isProfessional || deletionInfo.isPatient) && (
+                                  <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
+                                    <div className="text-sm text-blue-800 dark:text-blue-200">
+                                      <p className="font-semibold">Perfil Associado:</p>
+                                      <p>
+                                        {deletionInfo.isProfessional && 'Perfil de profissional será deletado.'}
+                                        {deletionInfo.isPatient && 'Perfil de paciente será deletado.'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                            
+                            <p className="text-destructive font-medium mt-3">Esta ação não pode ser desfeita!</p>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteUser(user.user_id || null, user.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Confirmar Deleção
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ))}
           </div>
