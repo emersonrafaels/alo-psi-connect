@@ -12,13 +12,73 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [userTenantSlug, setUserTenantSlug] = useState<string | null>(null);
 
-  // Detectar tenant baseado na URL
+  // Detectar se estamos em rota institucional
+  const isInstitutionalRoute = useMemo(() => {
+    return location.pathname.startsWith('/portal-institucional');
+  }, [location.pathname]);
+
+  // Buscar tenant do usuário logado (para rotas institucionais)
+  useEffect(() => {
+    const fetchUserTenant = async () => {
+      if (!isInstitutionalRoute) {
+        setUserTenantSlug(null);
+        return;
+      }
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          console.log('[TenantContext] No user logged in for institutional route');
+          setUserTenantSlug(null);
+          return;
+        }
+
+        // Buscar o tenant do usuário através da tabela institution_users
+        const { data: institutionUsers, error: fetchError } = await supabase
+          .from('institution_users')
+          .select(`
+            tenant_id,
+            tenants!inner(slug)
+          `)
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .limit(1)
+          .single();
+
+        if (fetchError || !institutionUsers) {
+          console.log('[TenantContext] No institution found for user:', user.id);
+          setUserTenantSlug(null);
+          return;
+        }
+
+        const tenantSlug = (institutionUsers.tenants as any).slug;
+        console.log('[TenantContext] User tenant detected for institutional route:', tenantSlug);
+        setUserTenantSlug(tenantSlug);
+      } catch (err) {
+        console.error('[TenantContext] Error fetching user tenant:', err);
+        setUserTenantSlug(null);
+      }
+    };
+
+    fetchUserTenant();
+  }, [isInstitutionalRoute, location.pathname]);
+
+  // Detectar tenant baseado na URL ou no usuário (para rotas institucionais)
   const currentTenantSlug = useMemo(() => {
+    // Se estamos em rota institucional e temos o tenant do usuário, usar esse
+    if (isInstitutionalRoute && userTenantSlug) {
+      console.log('[TenantContext] Using user tenant for institutional route:', userTenantSlug);
+      return userTenantSlug;
+    }
+
+    // Caso contrário, usar detecção baseada na URL
     const slug = getTenantSlugFromPath(location.pathname);
     console.log('[TenantContext] Detected slug:', slug, 'from path:', location.pathname);
     return slug;
-  }, [location.pathname]);
+  }, [location.pathname, isInstitutionalRoute, userTenantSlug]);
 
   // Função para buscar dados do tenant
   const fetchTenant = useCallback(async (slug: string) => {
