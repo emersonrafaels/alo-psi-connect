@@ -14,12 +14,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
 import { useEmailResend } from '@/hooks/useEmailResend';
-import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle, Building2, MoreVertical, Search } from 'lucide-react';
+import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle, Building2, MoreVertical, Search, Star } from 'lucide-react';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { useToast } from '@/hooks/use-toast';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import { UserSearchBar } from '@/components/admin/UserSearchBar';
-import { UserTenantEditor } from '@/components/admin/UserTenantEditor';
+import { UserTenantsEditor } from '@/components/admin/UserTenantsEditor';
 
 interface UserProfile {
   id: string;
@@ -32,8 +32,10 @@ interface UserProfile {
   user_id?: string;
   roles?: string[];
   institutionLinks?: Array<{ name: string; type: string }>;
-  tenant_id?: string | null;
-  tenant_name?: string;
+  tenant_ids?: string[];
+  tenant_names?: string[];
+  primary_tenant_id?: string;
+  primary_tenant_name?: string;
 }
 
 export default function AdminUsers() {
@@ -86,17 +88,10 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       // Get profiles with their roles, applying tenant filter
-      let profilesQuery = supabase
-        .from('profiles')
-        .select(`
-          *,
-          tenants:tenant_id (
-            id,
-            name,
-            slug
-          )
-        `)
-        .order('created_at', { ascending: false });
+    let profilesQuery = supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
       
       if (tenantFilter) {
         profilesQuery = profilesQuery.eq('tenant_id', tenantFilter);
@@ -117,6 +112,20 @@ export default function AdminUsers() {
       if (rolesError) {
         console.error('Erro ao buscar roles:', rolesError);
       }
+
+      // Buscar associações de tenants para todos os usuários
+      const { data: userTenantsData } = await supabase
+        .from('user_tenants')
+        .select(`
+          user_id,
+          tenant_id,
+          is_primary,
+          tenants:tenant_id (
+            id,
+            name,
+            slug
+          )
+        `);
 
       // Buscar prévia de vínculos institucionais
       const { data: institutionLinks } = await supabase
@@ -152,12 +161,22 @@ export default function AdminUsers() {
           ...profLinksForUser.map((l: any) => ({ name: l.educational_institutions?.name, type: 'professional' }))
         ];
 
+        // Processar tenants do usuário
+        const userTenantLinks = userTenantsData?.filter(ut => ut.user_id === profile.id) || [];
+        const tenantIds = userTenantLinks.map(ut => ut.tenant_id);
+        const tenantNames = userTenantLinks.map(ut => (ut.tenants as any)?.name).filter(Boolean);
+        const primaryLink = userTenantLinks.find(ut => ut.is_primary);
+        const primaryTenantId = primaryLink?.tenant_id || null;
+        const primaryTenantName = (primaryLink?.tenants as any)?.name || null;
+
         return { 
           ...profile, 
           roles: userRoles, 
           institutionLinks: allLinks,
-          tenant_id: profile.tenant_id,
-          tenant_name: (profile as any).tenants?.name || null
+          tenant_ids: tenantIds,
+          tenant_names: tenantNames,
+          primary_tenant_id: primaryTenantId,
+          primary_tenant_name: primaryTenantName,
         };
       });
 
@@ -447,16 +466,25 @@ export default function AdminUsers() {
                     </div>
                   </div>
 
-                  {/* Tenant Badge */}
-                  {user.tenant_name && (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Building2 className="h-3.5 w-3.5" />
-                        Tenant:
-                      </span>
-                      <Badge variant="outline" className="text-xs">
-                        {user.tenant_name}
-                      </Badge>
+                  {/* Tenants Badges */}
+                  {user.tenant_names && user.tenant_names.length > 0 && (
+                    <div className="flex items-start gap-2 text-sm">
+                      <Building2 className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+                      <div className="flex flex-wrap gap-1.5">
+                        {user.tenant_names.map((name, idx) => {
+                          const isPrimary = user.tenant_ids?.[idx] === user.primary_tenant_id;
+                          return (
+                            <Badge
+                              key={idx}
+                              variant={isPrimary ? "default" : "outline"}
+                              className="text-xs gap-1"
+                            >
+                              {name}
+                              {isPrimary && <Star className="h-3 w-3 fill-current" />}
+                            </Badge>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
 
@@ -510,19 +538,20 @@ export default function AdminUsers() {
                       Gerenciar Instituições
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem
-                      onSelect={(e) => {
-                        e.preventDefault();
-                      }}
-                      className="p-0"
-                    >
-                      <UserTenantEditor
-                        userId={user.id}
-                        currentTenantId={user.tenant_id}
-                        userName={user.nome}
-                        onSuccess={fetchUsers}
-                      />
-                    </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={(e) => {
+                              e.preventDefault();
+                            }}
+                            className="p-0"
+                          >
+                            <UserTenantsEditor
+                              userId={user.id}
+                              currentTenantIds={user.tenant_ids || []}
+                              primaryTenantId={user.primary_tenant_id || null}
+                              userName={user.nome}
+                              onSuccess={fetchUsers}
+                            />
+                          </DropdownMenuItem>
                     
                     <DropdownMenuSeparator />
                     
