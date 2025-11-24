@@ -19,6 +19,7 @@ import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { useToast } from '@/hooks/use-toast';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import { UserSearchBar } from '@/components/admin/UserSearchBar';
+import { UserTenantEditor } from '@/components/admin/UserTenantEditor';
 
 interface UserProfile {
   id: string;
@@ -31,6 +32,8 @@ interface UserProfile {
   user_id?: string;
   roles?: string[];
   institutionLinks?: Array<{ name: string; type: string }>;
+  tenant_id?: string | null;
+  tenant_name?: string;
 }
 
 export default function AdminUsers() {
@@ -85,7 +88,14 @@ export default function AdminUsers() {
       // Get profiles with their roles, applying tenant filter
       let profilesQuery = supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          tenants:tenant_id (
+            id,
+            name,
+            slug
+          )
+        `)
         .order('created_at', { ascending: false });
       
       if (tenantFilter) {
@@ -142,7 +152,13 @@ export default function AdminUsers() {
           ...profLinksForUser.map((l: any) => ({ name: l.educational_institutions?.name, type: 'professional' }))
         ];
 
-        return { ...profile, roles: userRoles, institutionLinks: allLinks };
+        return { 
+          ...profile, 
+          roles: userRoles, 
+          institutionLinks: allLinks,
+          tenant_id: profile.tenant_id,
+          tenant_name: (profile as any).tenants?.name || null
+        };
       });
 
       setUsers(usersWithRoles);
@@ -431,6 +447,19 @@ export default function AdminUsers() {
                     </div>
                   </div>
 
+                  {/* Tenant Badge */}
+                  {user.tenant_name && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Building2 className="h-3.5 w-3.5" />
+                        Tenant:
+                      </span>
+                      <Badge variant="outline" className="text-xs">
+                        {user.tenant_name}
+                      </Badge>
+                    </div>
+                  )}
+
                   <div className="flex gap-4 text-sm text-muted-foreground flex-wrap">
                     <span>Cadastrado em {new Date(user.created_at).toLocaleDateString('pt-BR')}</span>
                     {user.data_nascimento && (
@@ -479,6 +508,20 @@ export default function AdminUsers() {
                     <DropdownMenuItem onClick={() => handleManageInstitutions(user)}>
                       <Building2 className="h-4 w-4 mr-2" />
                       Gerenciar Instituições
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onSelect={(e) => {
+                        e.preventDefault();
+                      }}
+                      className="p-0"
+                    >
+                      <UserTenantEditor
+                        userId={user.id}
+                        currentTenantId={user.tenant_id}
+                        userName={user.nome}
+                        onSuccess={fetchUsers}
+                      />
                     </DropdownMenuItem>
                     
                     <DropdownMenuSeparator />
