@@ -38,9 +38,6 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose, te
     isUpdating 
   } = useInstitutionCoupons(institution?.id, tenantId);
 
-  // Early return if no institution selected
-  if (!institution) return null;
-
   const [editingCoupon, setEditingCoupon] = useState<InstitutionCoupon | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
 
@@ -64,6 +61,9 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose, te
   };
 
   const [formData, setFormData] = useState(initialFormState);
+
+  // Early return if no institution selected (AFTER all hooks)
+  if (!institution) return null;
 
   const handleEdit = (coupon: InstitutionCoupon) => {
     setEditingCoupon(coupon);
