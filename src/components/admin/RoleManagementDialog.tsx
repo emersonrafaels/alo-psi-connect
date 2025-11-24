@@ -72,10 +72,15 @@ export const RoleManagementDialog = ({
   const handleAddRole = async () => {
     if (!selectedRole) return;
 
+    // Check if role already exists in local state
+    if (userRoles.some(ur => ur.role === selectedRole)) {
+      return; // Silently ignore if already exists
+    }
+
     const result = await manageUserRole(userId, 'add', selectedRole);
     if (result.success) {
       setSelectedRole('');
-      fetchUserRoles();
+      await fetchUserRoles(); // Refresh the list
       onRoleUpdated?.();
     }
   };
@@ -83,7 +88,7 @@ export const RoleManagementDialog = ({
   const handleRemoveRole = async (role: string) => {
     const result = await manageUserRole(userId, 'remove', role);
     if (result.success) {
-      fetchUserRoles();
+      await fetchUserRoles(); // Refresh the list
       onRoleUpdated?.();
     }
   };
