@@ -165,24 +165,22 @@ const Header = () => {
                   <div className="flex items-center justify-between gap-2">
                     <div className="font-medium truncate">{profile?.nome || user.email}</div>
                     <div className="flex items-center gap-1">
-                      {isInstitutionAdmin && !institutionAdminLoading && (
+                      {isInstitutionAdmin && !institutionAdminLoading ? (
                         <Badge variant="outline" className="flex items-center gap-1 shrink-0 border-purple-500 text-purple-700 dark:text-purple-300">
                           <Building2 className="h-3 w-3" />
                           <span className="text-xs">Instituição</span>
                         </Badge>
-                      )}
-                      {profile?.tipo_usuario === 'profissional' && (
+                      ) : profile?.tipo_usuario === 'profissional' ? (
                         <Badge variant="default" className="flex items-center gap-1 shrink-0">
                           <Stethoscope className="h-3 w-3" />
                           <span className="text-xs">Pro</span>
                         </Badge>
-                      )}
-                      {profile?.tipo_usuario === 'paciente' && (
+                      ) : profile?.tipo_usuario === 'paciente' ? (
                         <Badge variant="secondary" className="flex items-center gap-1 shrink-0">
                           <Heart className="h-3 w-3" />
                           <span className="text-xs">Paciente</span>
                         </Badge>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground truncate">{user.email}</div>
