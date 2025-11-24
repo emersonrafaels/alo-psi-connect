@@ -26,7 +26,7 @@ export function useUserSearch<T extends UserProfile>(users: T[]) {
     institutionName: ''
   });
 
-  const [debouncedSearchTerm] = useDebounce(filters.searchTerm, 300);
+  const debouncedSearchTerm = useDebounce(filters.searchTerm, 300);
 
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
