@@ -132,7 +132,7 @@ export const useUserManagement = () => {
     }
   };
 
-  const updateUserType = async (userId: string, newType: 'paciente' | 'profissional') => {
+  const updateUserType = async (userId: string, newType: 'paciente' | 'profissional' | 'admin') => {
     setLoading(true);
     try {
       // Update the user type in profiles table
