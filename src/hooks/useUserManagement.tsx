@@ -60,6 +60,11 @@ export const useUserManagement = () => {
       }
 
       if (data.error) {
+        // Se a role já existe, retorna sucesso silenciosamente
+        if (data.error === 'User already has this role') {
+          console.log('Role already exists, skipping addition');
+          return { success: true, data: null };
+        }
         throw new Error(data.error);
       }
 
