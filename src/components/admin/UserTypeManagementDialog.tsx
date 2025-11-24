@@ -18,7 +18,8 @@ interface UserTypeManagementDialogProps {
 
 const USER_TYPES = [
   { value: 'paciente', label: 'Paciente' },
-  { value: 'profissional', label: 'Profissional' }
+  { value: 'profissional', label: 'Profissional' },
+  { value: 'admin', label: 'Administrador Institucional' }
 ];
 
 export const UserTypeManagementDialog = ({ 
@@ -39,7 +40,7 @@ export const UserTypeManagementDialog = ({
   const handleUpdateType = async () => {
     if (!selectedType || selectedType === currentType) return;
 
-    const result = await updateUserType(userId, selectedType as 'paciente' | 'profissional');
+    const result = await updateUserType(userId, selectedType as 'paciente' | 'profissional' | 'admin');
     if (result.success) {
       onTypeUpdated?.();
       onOpenChange(false);
@@ -52,6 +53,8 @@ export const UserTypeManagementDialog = ({
         return 'default';
       case 'paciente':
         return 'secondary';
+      case 'admin':
+        return 'destructive';
       default:
         return 'outline';
     }
@@ -99,6 +102,8 @@ export const UserTypeManagementDialog = ({
               <AlertDescription>
                 {selectedType === 'profissional' 
                   ? 'O usuário será convertido para profissional. Um perfil profissional será criado automaticamente.'
+                  : selectedType === 'admin'
+                  ? 'O usuário será convertido para administrador institucional. Lembre-se de atribuir roles apropriadas (institution_admin) na seção "Gerenciar Roles".'
                   : 'O usuário será convertido para paciente. O perfil profissional será desativado se existir.'
                 }
               </AlertDescription>
