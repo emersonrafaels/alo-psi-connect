@@ -8,11 +8,12 @@ import { Button } from '@/components/ui/button';
 import { UserManagementModal } from '@/components/admin/UserManagementModal';
 import { RoleManagementDialog } from '@/components/admin/RoleManagementDialog';
 import { UserTypeManagementDialog } from '@/components/admin/UserTypeManagementDialog';
+import { UserInstitutionsManager } from '@/components/admin/UserInstitutionsManager';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
 import { useEmailResend } from '@/hooks/useEmailResend';
-import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle } from 'lucide-react';
+import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle, Building2 } from 'lucide-react';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,6 +27,7 @@ interface UserProfile {
   genero?: string;
   user_id?: string;
   roles?: string[];
+  institutionLinks?: Array<{ name: string; type: string }>;
 }
 
 export default function AdminUsers() {
@@ -36,6 +38,8 @@ export default function AdminUsers() {
   const [selectedUserType, setSelectedUserType] = useState<string>('');
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
+  const [institutionsModalOpen, setInstitutionsModalOpen] = useState(false);
+  const [selectedUserForInstitutions, setSelectedUserForInstitutions] = useState<UserProfile | null>(null);
   const [deletionInfo, setDeletionInfo] = useState<{
     appointmentsCount: number;
     isProfessional: boolean;
@@ -100,10 +104,41 @@ export default function AdminUsers() {
         console.error('Erro ao buscar roles:', rolesError);
       }
 
-      // Combine profiles with roles
+      // Buscar prévia de vínculos institucionais
+      const { data: institutionLinks } = await supabase
+        .from('institution_users')
+        .select('user_id, educational_institutions(name)');
+
+      const { data: patientLinks } = await supabase
+        .from('patient_institutions')
+        .select(`
+          pacientes!inner(profile_id),
+          educational_institutions(name)
+        `);
+
+      const { data: professionalLinks } = await supabase
+        .from('professional_institutions')
+        .select(`
+          profissionais!inner(profile_id),
+          educational_institutions(name)
+        `);
+
+      // Combine profiles with roles and institution links
       const usersWithRoles = (profiles || []).map(profile => {
         const userRoles = roles?.filter(role => role.user_id === profile.user_id).map(role => role.role) || [];
-        return { ...profile, roles: userRoles };
+        
+        // Mapear vínculos institucionais
+        const adminLinks = institutionLinks?.filter(l => l.user_id === profile.user_id) || [];
+        const patientLinksForUser = patientLinks?.filter((l: any) => l.pacientes?.profile_id === profile.id) || [];
+        const profLinksForUser = professionalLinks?.filter((l: any) => l.profissionais?.profile_id === profile.id) || [];
+
+        const allLinks = [
+          ...adminLinks.map((l: any) => ({ name: l.educational_institutions?.name, type: 'admin' })),
+          ...patientLinksForUser.map((l: any) => ({ name: l.educational_institutions?.name, type: 'patient' })),
+          ...profLinksForUser.map((l: any) => ({ name: l.educational_institutions?.name, type: 'professional' }))
+        ];
+
+        return { ...profile, roles: userRoles, institutionLinks: allLinks };
       });
 
       setUsers(usersWithRoles);
@@ -125,6 +160,11 @@ export default function AdminUsers() {
     setSelectedUserName(userName);
     setSelectedUserType(userType);
     setTypeDialogOpen(true);
+  };
+
+  const handleManageInstitutions = (user: UserProfile) => {
+    setSelectedUserForInstitutions(user);
+    setInstitutionsModalOpen(true);
   };
 
   const handleDeleteUser = async (userId: string | null, profileId: string) => {
@@ -317,6 +357,39 @@ export default function AdminUsers() {
                   </div>
                   
                   <div className="flex items-center gap-2 mb-2 ml-14">
+                    <span className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Building2 className="h-3 w-3" />
+                      Instituições:
+                    </span>
+                    <div className="flex gap-1 flex-wrap">
+                      {!user.institutionLinks || user.institutionLinks.length === 0 ? (
+                        <Badge variant="outline" className="text-xs">Nenhuma</Badge>
+                      ) : (
+                        <>
+                          {user.institutionLinks.slice(0, 2).map((link, idx) => (
+                            <Badge
+                              key={idx}
+                              variant={
+                                link.type === 'admin' ? 'default' :
+                                link.type === 'patient' ? 'secondary' :
+                                'outline'
+                              }
+                              className="text-xs"
+                            >
+                              {link.name}
+                            </Badge>
+                          ))}
+                          {user.institutionLinks.length > 2 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{user.institutionLinks.length - 2} mais
+                            </Badge>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 mb-2 ml-14">
                     <span className="text-sm text-muted-foreground">Roles Admin:</span>
                     <div className="flex gap-1">
                       {getRolesBadges(user.roles || [])}
@@ -372,6 +445,16 @@ export default function AdminUsers() {
                   >
                     <User className="h-4 w-4" />
                     Gerenciar Tipo
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleManageInstitutions(user)}
+                    className="gap-2"
+                  >
+                    <Building2 className="h-4 w-4" />
+                    Gerenciar Instituições
                   </Button>
                   
                   <AlertDialog>
@@ -498,6 +581,25 @@ export default function AdminUsers() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de Gerenciamento de Instituições */}
+      {selectedUserForInstitutions && (
+        <UserInstitutionsManager
+          user={{
+            id: selectedUserForInstitutions.id,
+            userId: selectedUserForInstitutions.user_id || '',
+            nome: selectedUserForInstitutions.nome,
+            email: selectedUserForInstitutions.email,
+            tipo_usuario: selectedUserForInstitutions.tipo_usuario,
+          }}
+          isOpen={institutionsModalOpen}
+          onClose={() => {
+            setInstitutionsModalOpen(false);
+            setSelectedUserForInstitutions(null);
+            fetchUsers(); // Refresh para atualizar badges
+          }}
+        />
+      )}
     </div>
   );
 }
