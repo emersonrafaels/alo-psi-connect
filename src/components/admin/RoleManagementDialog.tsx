@@ -21,7 +21,14 @@ interface RoleManagementDialogProps {
   onRoleUpdated?: () => void;
 }
 
-const AVAILABLE_ROLES = ['author', 'moderator', 'admin', 'super_admin'];
+const AVAILABLE_ROLES = [
+  'author',
+  'super_author',
+  'moderator',
+  'admin',
+  'super_admin',
+  'institution_admin'
+];
 
 export const RoleManagementDialog = ({ 
   open, 
@@ -91,7 +98,11 @@ export const RoleManagementDialog = ({
         return 'destructive';
       case 'admin':
         return 'default';
+      case 'institution_admin':
+        return 'default';
       case 'moderator':
+        return 'secondary';
+      case 'super_author':
         return 'secondary';
       case 'author':
         return 'outline';
