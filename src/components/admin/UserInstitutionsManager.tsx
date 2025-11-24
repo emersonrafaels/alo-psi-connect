@@ -132,6 +132,7 @@ export function UserInstitutionsManager({ user, isOpen, onClose }: UserInstituti
   const availableInstitutions = institutions.map(inst => ({
     value: inst.id,
     label: inst.name,
+    keywords: [inst.name.toLowerCase()],
   }));
 
   return (

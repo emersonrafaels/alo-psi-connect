@@ -21,6 +21,7 @@ export interface ComboboxOption {
   value: string
   label: string
   badge?: React.ReactNode
+  keywords?: string[]
 }
 
 interface ComboboxProps {
@@ -90,6 +91,7 @@ export function Combobox({
                 <CommandItem
                   key={option.value}
                   value={option.value}
+                  keywords={option.keywords}
                   onSelect={(currentValue) => {
                     onValueChange(currentValue === value ? "" : currentValue)
                     setOpen(false)
