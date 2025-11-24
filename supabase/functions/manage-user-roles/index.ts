@@ -94,6 +94,21 @@ serve(async (req) => {
     let result;
 
     if (action === 'add') {
+      // Check if role already exists
+      const { data: existingRole } = await supabaseServiceRole
+        .from('user_roles')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('role', role)
+        .single();
+
+      if (existingRole) {
+        return new Response(
+          JSON.stringify({ error: 'User already has this role' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       // Add role
       const { data, error } = await supabaseServiceRole
         .from('user_roles')
