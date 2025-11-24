@@ -100,7 +100,7 @@ serve(async (req) => {
         .select('id')
         .eq('user_id', userId)
         .eq('role', role)
-        .single();
+        .maybeSingle();
 
       if (existingRole) {
         return new Response(
