@@ -44,8 +44,14 @@ export const RoleManagementDialog = ({
 
   useEffect(() => {
     if (open && userId) {
+      console.log('[RoleManagementDialog] Modal opened, fetching roles for user:', userId);
       setSelectedRole(''); // Reset selection
       fetchUserRoles();
+    } else if (!open) {
+      // Clean up when closing
+      console.log('[RoleManagementDialog] Modal closed, cleaning up state');
+      setUserRoles([]);
+      setSelectedRole('');
     }
   }, [open, userId]);
 
@@ -59,12 +65,13 @@ export const RoleManagementDialog = ({
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching user roles:', error);
+        console.error('[RoleManagementDialog] Error fetching user roles:', error);
       } else {
+        console.log('[RoleManagementDialog] Fetched roles:', data);
         setUserRoles(data || []);
       }
     } catch (error) {
-      console.error('Error fetching user roles:', error);
+      console.error('[RoleManagementDialog] Error fetching user roles:', error);
     } finally {
       setLoadingRoles(false);
     }
@@ -73,15 +80,20 @@ export const RoleManagementDialog = ({
   const handleAddRole = async () => {
     if (!selectedRole) return;
 
+    console.log('[RoleManagementDialog] Attempting to add role:', selectedRole);
+    console.log('[RoleManagementDialog] Current user roles:', userRoles.map(r => r.role));
+
     // Double-check if role already exists (defensive programming)
     const roleExists = userRoles.some(ur => ur.role === selectedRole);
     if (roleExists) {
-      console.warn('Role already exists, skipping addition');
+      console.warn('[RoleManagementDialog] Role already exists locally, skipping API call');
       setSelectedRole(''); // Reset selection
       return;
     }
 
     const result = await manageUserRole(userId, 'add', selectedRole);
+    console.log('[RoleManagementDialog] Add role result:', result);
+    
     if (result.success) {
       setSelectedRole('');
       // Force immediate refresh
