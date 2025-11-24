@@ -2,10 +2,15 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useTenant } from './useTenant';
+import { useLocation } from 'react-router-dom';
 
 export const useInstitutionAccess = () => {
   const { user } = useAuth();
   const { tenant } = useTenant();
+  const location = useLocation();
+  
+  // Detectar se estamos em rota institucional
+  const isInstitutionalRoute = location.pathname.startsWith('/portal-institucional');
 
   // Buscar instituições do usuário
   const { data: userInstitutions, isLoading } = useQuery({
@@ -34,8 +39,9 @@ export const useInstitutionAccess = () => {
         .eq('user_id', user.id)
         .eq('is_active', true);
 
-      // Filtrar por tenant apenas se tenant estiver definido (fallback para resiliência)
-      if (tenant?.id) {
+      // Não filtrar por tenant em rotas institucionais (o user_id já é suficiente)
+      // Em outras rotas, manter o filtro por tenant para compatibilidade
+      if (tenant?.id && !isInstitutionalRoute) {
         query = query.eq('tenant_id', tenant.id);
       }
 
