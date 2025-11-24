@@ -50,7 +50,7 @@ export const useInstitutionAccess = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!user && !!tenant,
+    enabled: !!user && (isInstitutionalRoute || !!tenant),
   });
 
   // Buscar profissionais vinculados
