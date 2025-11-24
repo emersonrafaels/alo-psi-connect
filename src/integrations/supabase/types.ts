@@ -2790,6 +2790,12 @@ export type Database = {
           total_slots_available: number
         }[]
       }
+      get_student_profile_ids_for_institution_admin: {
+        Args: { _user_id: string }
+        Returns: {
+          profile_id: string
+        }[]
+      }
       get_uncatalogued_institutions: {
         Args: never
         Returns: {
