@@ -14,9 +14,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
 import { useEmailResend } from '@/hooks/useEmailResend';
-import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle, Building2, MoreVertical } from 'lucide-react';
+import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle, Building2, MoreVertical, Search } from 'lucide-react';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { useToast } from '@/hooks/use-toast';
+import { useUserSearch } from '@/hooks/useUserSearch';
+import { UserSearchBar } from '@/components/admin/UserSearchBar';
 
 interface UserProfile {
   id: string;
@@ -50,6 +52,7 @@ export default function AdminUsers() {
   const { resendEmailConfirmation, resendPasswordReset, loading: emailLoading } = useEmailResend();
   const { tenantFilter } = useAdminTenant();
   const { toast } = useToast();
+  const { filteredUsers, filters, setFilters, activeFiltersCount } = useUserSearch(users);
 
   useEffect(() => {
     fetchUsers();
@@ -259,9 +262,9 @@ export default function AdminUsers() {
     );
   }
 
-  const pacientes = users.filter(user => user.tipo_usuario === 'paciente');
-  const profissionais = users.filter(user => user.tipo_usuario === 'profissional');
-  const adminsWithRoles = users.filter(user => user.roles && user.roles.length > 0);
+  const pacientes = filteredUsers.filter(user => user.tipo_usuario === 'paciente');
+  const profissionais = filteredUsers.filter(user => user.tipo_usuario === 'profissional');
+  const adminsWithRoles = filteredUsers.filter(user => user.roles && user.roles.length > 0);
 
   return (
     <div className="space-y-6">
@@ -272,6 +275,12 @@ export default function AdminUsers() {
         </p>
       </div>
 
+      <UserSearchBar
+        filters={filters}
+        onFiltersChange={setFilters}
+        activeFiltersCount={activeFiltersCount}
+      />
+
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -280,6 +289,11 @@ export default function AdminUsers() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{users.length}</div>
+            {activeFiltersCount > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {filteredUsers.length} filtrado{filteredUsers.length !== 1 ? 's' : ''}
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -320,13 +334,31 @@ export default function AdminUsers() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Gestão de Usuários</CardTitle>
-          <UserManagementModal onUserCreated={fetchUsers} />
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Gestão de Usuários</CardTitle>
+            <div className="flex items-center gap-3">
+              {activeFiltersCount > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  Exibindo {filteredUsers.length} de {users.length} usuários
+                </span>
+              )}
+              <UserManagementModal onUserCreated={fetchUsers} />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {users.map((user) => (
+            {filteredUsers.length === 0 ? (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-lg font-medium">Nenhum usuário encontrado</p>
+                <p className="text-sm text-muted-foreground">
+                  Tente ajustar os filtros ou termos de pesquisa
+                </p>
+              </div>
+            ) : (
+              filteredUsers.map((user) => (
               <div
                 key={user.id}
                 className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-4"
@@ -515,7 +547,8 @@ export default function AdminUsers() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </CardContent>
       </Card>
