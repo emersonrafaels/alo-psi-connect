@@ -217,6 +217,10 @@ export const GoogleCalendarTenantConfig = () => {
   }
 
   const isConnected = !!(tenantConfig?.google_calendar_token);
+  const hasEmail = !!(tenantConfig?.google_calendar_email);
+  const isFullyConfigured = isConnected && hasEmail;
+  const hasInsufficientScope = tenantConfig?.google_calendar_scope === 'calendar.freebusy' || 
+                               tenantConfig?.google_calendar_scope === 'calendar.readonly';
   const currentMode = tenantConfig?.google_meet_mode || 'professional';
 
   return (
@@ -290,22 +294,40 @@ export const GoogleCalendarTenantConfig = () => {
             <div>
               <div className="font-semibold">Email Configurado</div>
               <div className="text-sm text-muted-foreground">
-                {tenantConfig?.google_calendar_email || 'Nenhum email configurado'}
+                {hasEmail ? (
+                  tenantConfig.google_calendar_email
+                ) : (
+                  <span className="text-orange-600 font-medium">
+                    ⚠️ Nenhum email vinculado - reconecte o Google Calendar
+                  </span>
+                )}
               </div>
             </div>
-            <Badge variant={isConnected ? "default" : "secondary"}>
-              {isConnected ? (
+            <Badge variant={isFullyConfigured ? "default" : "secondary"}>
+              {isFullyConfigured ? (
                 <>
                   <Check className="h-3 w-3 mr-1" />
                   Conectado
                 </>
+              ) : isConnected ? (
+                'Incompleto'
               ) : (
                 'Não Conectado'
               )}
             </Badge>
           </div>
 
-          {isConnected && (
+          {isConnected && hasInsufficientScope && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Escopo insuficiente!</strong> O escopo atual (<code>{tenantConfig.google_calendar_scope}</code>) 
+                não permite criar eventos com Google Meet. Reconecte o Google Calendar para obter as permissões corretas.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {isFullyConfigured && !hasInsufficientScope && (
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-start gap-2">
                 <Check className="h-5 w-5 text-green-600 mt-0.5" />

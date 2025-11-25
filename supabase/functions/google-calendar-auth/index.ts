@@ -129,27 +129,62 @@ const handler = async (req: Request): Promise<Response> => {
         console.log('Profile encontrado:', profileCheck);
 
         // Detect scope from token response or request
-        let detectedScope = 'calendar.readonly'; // Default assumption
+        let detectedScope = 'calendar.events'; // Default assumption for full access
         
         // Test which scope was actually granted by testing API access
         try {
           console.log('Testing granted scope by calling Google Calendar API...');
           
-          // Try calendar.readonly first (events list)
-          const testReadonlyResponse = await fetch(
-            'https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=1',
+          // Try calendar.events (create test event)
+          const testEventsResponse = await fetch(
+            'https://www.googleapis.com/calendar/v3/calendars/primary/events',
             {
+              method: 'POST',
               headers: {
                 'Authorization': `Bearer ${tokenData.access_token}`,
+                'Content-Type': 'application/json',
               },
+              body: JSON.stringify({
+                summary: 'Teste de Permissão - Apagar',
+                start: { 
+                  dateTime: new Date().toISOString(),
+                  timeZone: 'America/Sao_Paulo'
+                },
+                end: { 
+                  dateTime: new Date(Date.now() + 3600000).toISOString(),
+                  timeZone: 'America/Sao_Paulo'
+                },
+                conferenceData: {
+                  createRequest: { 
+                    requestId: 'test-' + Date.now(),
+                    conferenceSolutionKey: { type: 'hangoutsMeet' }
+                  }
+                }
+              })
             }
           );
           
-          if (testReadonlyResponse.ok) {
-            detectedScope = 'calendar.readonly';
-            console.log('✅ Full calendar.readonly scope detected');
-          } else if (testReadonlyResponse.status === 403) {
-            // Try freebusy
+          if (testEventsResponse.ok || testEventsResponse.status === 400) {
+            // 400 can happen with bad request format but scope is valid
+            detectedScope = 'calendar.events';
+            console.log('✅ Full calendar.events scope detected');
+            
+            // Delete test event if created successfully
+            if (testEventsResponse.ok) {
+              const testEvent = await testEventsResponse.json();
+              if (testEvent.id) {
+                await fetch(
+                  `https://www.googleapis.com/calendar/v3/calendars/primary/events/${testEvent.id}`,
+                  {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+                  }
+                );
+                console.log('🗑️ Test event deleted');
+              }
+            }
+          } else if (testEventsResponse.status === 403) {
+            // Try freebusy as fallback
             const testFreeBusyResponse = await fetch(
               'https://www.googleapis.com/calendar/v3/freeBusy',
               {
@@ -168,9 +203,10 @@ const handler = async (req: Request): Promise<Response> => {
             
             if (testFreeBusyResponse.ok) {
               detectedScope = 'calendar.freebusy';
-              console.log('✅ Limited calendar.freebusy scope detected');
+              console.log('⚠️ Limited calendar.freebusy scope detected (insufficient for creating events)');
             } else {
-              console.log('❌ Neither scope seems to work, defaulting to readonly');
+              detectedScope = 'calendar.readonly';
+              console.log('⚠️ Only calendar.readonly scope detected');
             }
           }
         } catch (error) {
@@ -179,6 +215,25 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         console.log('Final detected scope:', detectedScope);
+
+        // Fetch user email from Google
+        let userEmail = '';
+        try {
+          console.log('Fetching user email from Google API...');
+          const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+          });
+          
+          if (userInfoResponse.ok) {
+            const userInfo = await userInfoResponse.json();
+            userEmail = userInfo.email || '';
+            console.log('✅ User email fetched:', userEmail);
+          } else {
+            console.warn('⚠️ Failed to fetch user email, continuing without it');
+          }
+        } catch (error) {
+          console.error('Error fetching user email:', error);
+        }
 
         // Save tokens based on type (tenant or professional)
         if (type === 'tenant' && tenantId) {
@@ -197,6 +252,7 @@ const handler = async (req: Request): Promise<Response> => {
               google_calendar_token: tokenData.access_token,
               google_calendar_refresh_token: tokenData.refresh_token,
               google_calendar_scope: detectedScope,
+              google_calendar_email: userEmail,
             })
             .eq('id', tenantId)
             .select('id, slug, google_calendar_email, google_calendar_token, google_calendar_scope, google_calendar_refresh_token');
@@ -316,8 +372,8 @@ const handler = async (req: Request): Promise<Response> => {
           );
         }
       } else {
-        // Using only freebusy scope for privacy
-        const scope = 'https://www.googleapis.com/auth/calendar.freebusy';
+        // Request calendar.events scope for creating events with Google Meet
+        const scope = 'https://www.googleapis.com/auth/calendar.events';
         const contextState = type === 'tenant' ? 'tenant' : 'professional';
         
         console.log('Generating auth URL with scope:', scope);
