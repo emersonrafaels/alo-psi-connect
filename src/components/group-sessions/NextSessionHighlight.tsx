@@ -1,12 +1,13 @@
 import { GroupSession } from '@/hooks/useGroupSessions';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Users, Flame, Building2 } from 'lucide-react';
+import { Calendar, Clock, Users, Flame, Building2, Check } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SessionCountdown } from './SessionCountdown';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTenant } from '@/hooks/useTenant';
+import { useState, useEffect } from 'react';
 
 interface NextSessionHighlightProps {
   session: GroupSession;
@@ -22,9 +23,19 @@ export const NextSessionHighlight = ({
   isRegistering,
 }: NextSessionHighlightProps) => {
   const { tenant } = useTenant();
+  const [showSuccess, setShowSuccess] = useState(false);
   const sessionDate = parseISO(session.session_date);
   const formattedDate = format(sessionDate, "dd 'de' MMMM", { locale: ptBR });
   const formattedTime = session.start_time.slice(0, 5);
+
+  // Efeito de sucesso temporário
+  useEffect(() => {
+    if (isRegistered && !isRegistering) {
+      setShowSuccess(true);
+      const timer = setTimeout(() => setShowSuccess(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isRegistered, isRegistering]);
   
   const isOrganizedByTenant = session.organizer_type === 'tenant';
   
@@ -115,14 +126,37 @@ export const NextSessionHighlight = ({
 
         {/* CTA Button */}
         <div className="w-full md:w-auto">
-          <Button
-            size="lg"
-            onClick={() => onRegister(session.id)}
-            disabled={isFull || isRegistered || isRegistering}
-            className="w-full md:w-auto bg-accent hover:bg-accent/90 text-accent-foreground font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-          >
-            {isRegistered ? 'Já Inscrito' : isFull ? 'Esgotado' : 'Garantir Minha Vaga'}
-          </Button>
+          <div className="relative">
+            <Button
+              size="lg"
+              onClick={() => onRegister(session.id)}
+              disabled={isFull || isRegistered || isRegistering}
+              className={`
+                w-full md:w-auto font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105
+                ${showSuccess 
+                  ? 'bg-success hover:bg-success text-success-foreground animate-success-bounce' 
+                  : isRegistered 
+                    ? 'bg-muted hover:bg-muted text-muted-foreground' 
+                    : 'bg-accent hover:bg-accent/90 text-accent-foreground'
+                }
+              `}
+            >
+              {showSuccess && <Check className="w-5 h-5 mr-1" />}
+              {showSuccess ? 'Inscrito!' : isRegistered ? 'Já Inscrito' : isRegistering ? 'Inscrevendo...' : isFull ? 'Esgotado' : 'Garantir Minha Vaga'}
+            </Button>
+            
+            {/* Confetti effect */}
+            {showSuccess && (
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="confetti-particle animate-success-confetti" style={{ left: '10%', animationDelay: '0s' }}>🎉</div>
+                <div className="confetti-particle animate-success-confetti" style={{ left: '25%', animationDelay: '0.1s' }}>✨</div>
+                <div className="confetti-particle animate-success-confetti" style={{ left: '40%', animationDelay: '0.2s' }}>🎊</div>
+                <div className="confetti-particle animate-success-confetti" style={{ left: '55%', animationDelay: '0.15s' }}>⭐</div>
+                <div className="confetti-particle animate-success-confetti" style={{ left: '70%', animationDelay: '0.05s' }}>💫</div>
+                <div className="confetti-particle animate-success-confetti" style={{ left: '85%', animationDelay: '0.12s' }}>🌟</div>
+              </div>
+            )}
+          </div>
           {spotsLeft <= 3 && spotsLeft > 0 && (
             <p className="text-xs text-destructive font-semibold mt-2 text-center md:text-left">
               🔥 Últimas {spotsLeft} vagas!

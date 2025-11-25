@@ -94,6 +94,31 @@ export const useGroupSessionRegistration = (sessionId?: string) => {
 
       return data;
     },
+    onMutate: async (sessionId: string) => {
+      // Cancelar queries pendentes para evitar race conditions
+      await queryClient.cancelQueries({ queryKey: ['group-sessions'] });
+      
+      // Salvar estado anterior para rollback em caso de erro
+      const previousSessions = queryClient.getQueryData(['group-sessions']);
+      
+      // Atualizar cache otimisticamente (contador instantâneo)
+      queryClient.setQueriesData(
+        { queryKey: ['group-sessions'] },
+        (old: any) => {
+          if (!old) return old;
+          if (Array.isArray(old)) {
+            return old.map((session: any) => 
+              session.id === sessionId 
+                ? { ...session, current_registrations: (session.current_registrations || 0) + 1 }
+                : session
+            );
+          }
+          return old;
+        }
+      );
+      
+      return { previousSessions };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['group-session-registration'] });
       queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
@@ -103,7 +128,12 @@ export const useGroupSessionRegistration = (sessionId?: string) => {
         description: 'Você receberá um email com o link da sessão.',
       });
     },
-    onError: (error) => {
+    onError: (error, sessionId, context) => {
+      // Rollback: restaurar cache anterior em caso de erro
+      if (context?.previousSessions) {
+        queryClient.setQueryData(['group-sessions'], context.previousSessions);
+      }
+      
       const message = error.message.includes('duplicate key') 
         ? 'Você já está inscrito nesta sessão'
         : error.message;

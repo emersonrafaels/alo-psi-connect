@@ -498,6 +498,61 @@ All colors MUST be HSL.
   
   .scrollbar-thumb-teal\/30::-webkit-scrollbar-thumb {
     background: hsl(var(--teal) / 0.3);
+  }
+
+  /* Confetti particles for success animation */
+  .confetti-particle {
+    @apply absolute text-xl pointer-events-none;
+    top: -20px;
+  }
+
+  /* Success button animations */
+  @keyframes success-bounce {
+    0%, 100% { 
+      transform: scale(1); 
+    }
+    25% { 
+      transform: scale(1.15); 
+    }
+    50% { 
+      transform: scale(0.95); 
+    }
+    75% { 
+      transform: scale(1.05); 
+    }
+  }
+
+  @keyframes success-confetti {
+    0% { 
+      transform: translateY(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% { 
+      transform: translateY(-80px) rotate(360deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes flash-border {
+    0%, 100% { 
+      border-color: hsl(var(--border));
+    }
+    50% { 
+      border-color: hsl(var(--success));
+      box-shadow: 0 0 20px hsl(var(--success) / 0.3);
+    }
+  }
+
+  .animate-success-bounce {
+    animation: success-bounce 0.6s ease-out;
+  }
+
+  .animate-success-confetti {
+    animation: success-confetti 1.5s ease-out forwards;
+  }
+
+  .animate-flash-border {
+    animation: flash-border 0.8s ease-out;
     border-radius: 2px;
   }
   
