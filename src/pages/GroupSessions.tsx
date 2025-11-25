@@ -58,9 +58,14 @@ export default function GroupSessions() {
 
         {/* Calendário de Sessões */}
         <div id="sessions-calendar" className="container mx-auto px-4 py-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">
-            Calendário de Encontros
-          </h2>
+          <div className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-wellz-text-title mb-2">
+              Temas do mês
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Escolha o assunto e entre na conversa
+            </p>
+          </div>
 
           <GroupSessionFilters
             selectedType={selectedType}
