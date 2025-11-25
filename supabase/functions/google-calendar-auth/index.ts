@@ -219,20 +219,51 @@ const handler = async (req: Request): Promise<Response> => {
         // Fetch user email from Google
         let userEmail = '';
         try {
-          console.log('Fetching user email from Google API...');
+          console.log('📧 Fetching user email from Google API...');
+          
           const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
             headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
           });
           
-          if (userInfoResponse.ok) {
-            const userInfo = await userInfoResponse.json();
-            userEmail = userInfo.email || '';
-            console.log('✅ User email fetched:', userEmail);
+          console.log('📧 User info response status:', userInfoResponse.status);
+          console.log('📧 User info response ok:', userInfoResponse.ok);
+          
+          if (!userInfoResponse.ok) {
+            const errorText = await userInfoResponse.text();
+            console.error('❌ Failed to fetch user info:', {
+              status: userInfoResponse.status,
+              statusText: userInfoResponse.statusText,
+              errorBody: errorText
+            });
+            throw new Error(`User info API returned ${userInfoResponse.status}: ${errorText}`);
+          }
+          
+          const userInfo = await userInfoResponse.json();
+          console.log('📧 User info data received:', {
+            hasEmail: !!userInfo.email,
+            email: userInfo.email ? userInfo.email.substring(0, 3) + '***@' + userInfo.email.split('@')[1] : 'none',
+            hasId: !!userInfo.id,
+            hasName: !!userInfo.name,
+            fullDataKeys: Object.keys(userInfo)
+          });
+          
+          userEmail = userInfo.email || '';
+          
+          if (!userEmail) {
+            console.warn('⚠️ WARNING: No email found in user info response despite successful API call');
+            console.log('⚠️ Full user info object:', JSON.stringify(userInfo, null, 2));
           } else {
-            console.warn('⚠️ Failed to fetch user email, continuing without it');
+            console.log('✅ Email extracted successfully:', userEmail);
           }
         } catch (error) {
-          console.error('Error fetching user email:', error);
+          console.error('❌ Error fetching user email:', error);
+          console.error('❌ Error details:', {
+            name: error?.name,
+            message: error?.message,
+            stack: error?.stack
+          });
+          console.warn('⚠️ Continuing without email - tokens will still be saved');
+          // userEmail permanece '' e o fluxo continua normalmente
         }
 
         // Save tokens based on type (tenant or professional)
@@ -372,8 +403,11 @@ const handler = async (req: Request): Promise<Response> => {
           );
         }
       } else {
-        // Request calendar.events scope for creating events with Google Meet
-        const scope = 'https://www.googleapis.com/auth/calendar.events';
+        // Request calendar.events and userinfo.email scopes
+        const scope = [
+          'https://www.googleapis.com/auth/calendar.events',
+          'https://www.googleapis.com/auth/userinfo.email'
+        ].join(' ');
         const contextState = type === 'tenant' ? 'tenant' : 'professional';
         
         console.log('Generating auth URL with scope:', scope);
