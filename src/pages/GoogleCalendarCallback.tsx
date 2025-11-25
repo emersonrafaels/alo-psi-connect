@@ -24,15 +24,31 @@ export default function GoogleCalendarCallback() {
       const code = searchParams.get('code');
       const error = searchParams.get('error');
       const state = searchParams.get('state');
+      
+      console.log('🔍 DEBUG - Parâmetros recebidos da URL:', { 
+        code: code ? 'present' : 'missing',
+        error,
+        state,
+        stateType: typeof state,
+        stateValue: state,
+        fullURL: window.location.href
+      });
 
       // Detect if we're in a popup more reliably
       const isPopup = window.name === 'google-auth' || !!window.opener;
-      console.log('🔍 Callback iniciado:', { 
-        code: !!code, 
-        error, 
+      
+      console.log('🔍 DEBUG - Detecção de popup:', { 
         isPopup,
         windowName: window.name,
-        hasOpener: !!window.opener
+        hasOpener: !!window.opener,
+        openerClosed: window.opener ? window.opener.closed : 'no opener'
+      });
+      
+      console.log('🔍 DEBUG - Avaliação da condição tenant:', {
+        stateIsTenant: state === 'tenant',
+        stateValue: state,
+        isPopup,
+        willProcessAsTenant: state === 'tenant' && isPopup
       });
 
       if (error) {

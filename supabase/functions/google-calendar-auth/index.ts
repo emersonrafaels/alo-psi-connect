@@ -332,6 +332,14 @@ const handler = async (req: Request): Promise<Response> => {
           `prompt=consent&` +
           `state=${contextState}`;
 
+        console.log('🔗 DEBUG - Auth URL gerada:', {
+          hasState: authUrl.includes('state='),
+          stateValue: authUrl.match(/state=([^&]+)/)?.[1],
+          contextState,
+          type,
+          tenantId
+        });
+
         return new Response(
           JSON.stringify({ authUrl }),
           {
