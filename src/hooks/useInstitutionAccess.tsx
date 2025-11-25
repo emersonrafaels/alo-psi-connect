@@ -96,7 +96,11 @@ export const useInstitutionAccess = () => {
             profissao,
             foto_perfil_url,
             user_email,
-            ativo
+            ativo,
+            profile_id,
+            profiles!inner(
+              user_id
+            )
           )
         `)
         .in('institution_id', institutionIds)
@@ -141,7 +145,8 @@ export const useInstitutionAccess = () => {
             profiles!inner(
               nome,
               email,
-              data_nascimento
+              data_nascimento,
+              user_id
             )
           )
         `)

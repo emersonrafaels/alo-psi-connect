@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Search, Mail, Briefcase, Calendar, ArrowLeft, Eye, Download } from 'lucide-react';
+import { Search, Mail, Briefcase, Calendar, ArrowLeft, Eye, Download, TrendingUp } from 'lucide-react';
+import { UserStorytellingModal } from '@/components/admin/UserStorytellingModal';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -27,6 +28,7 @@ export default function InstitutionProfessionals() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [professionFilter, setProfessionFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'profession'>('name');
+  const [selectedProfessional, setSelectedProfessional] = useState<{ userId: string; name: string } | null>(null);
 
   if (isLoading) {
     return (
@@ -184,6 +186,20 @@ export default function InstitutionProfessionals() {
                     <Link to={`/admin/agendamentos?professional_id=${prof.professional_id}`}><Calendar className="h-4 w-4 mr-1" />Agendamentos</Link>
                   </Button>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-2"
+                  onClick={() =>
+                    setSelectedProfessional({
+                      userId: prof.profissionais.profiles?.user_id || '',
+                      name: prof.profissionais.display_name || '',
+                    })
+                  }
+                >
+                  <TrendingUp className="h-4 w-4 mr-1" />
+                  Ver Storytelling
+                </Button>
                 <Badge variant={prof.profissionais.ativo ? 'default' : 'secondary'}>{prof.profissionais.ativo ? 'Ativo' : 'Inativo'}</Badge>
               </CardContent>
             </Card>
@@ -211,6 +227,16 @@ export default function InstitutionProfessionals() {
         </div>
       </div>
       <Footer />
+
+      {selectedProfessional && (
+        <UserStorytellingModal
+          open={!!selectedProfessional}
+          onOpenChange={(open) => !open && setSelectedProfessional(null)}
+          userId={selectedProfessional.userId}
+          userName={selectedProfessional.name}
+          userType="professional"
+        />
+      )}
     </div>
   );
 }
