@@ -64,9 +64,30 @@ export default function GoogleCalendarCallback() {
       }
 
       if (code) {
+        // Se for contexto de tenant (admin panel), apenas enviar code via postMessage
+        if (state === 'tenant' && isPopup) {
+          console.log('🎯 Contexto de tenant detectado, enviando code para componente admin...');
+          
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage(
+              { 
+                type: 'google-calendar-callback',  // Nome que o componente espera
+                code: code 
+              }, 
+              window.location.origin
+            );
+            console.log('✅ Código enviado para componente admin processar');
+          }
+          
+          // Fechar popup
+          setTimeout(() => window.close(), 500);
+          return;
+        }
+        
+        // Caso contrário, processar normalmente (professional context)
         // Marcar como processando IMEDIATAMENTE
         processingRef.current = true;
-        console.log('🔑 Authorization code recebido, marcando como processando...');
+        console.log('🔑 Authorization code recebido (contexto profissional), marcando como processando...');
         
         // Wait for session if not available yet (max 5 seconds)
         let currentSession = null;

@@ -318,7 +318,10 @@ const handler = async (req: Request): Promise<Response> => {
       } else {
         // Using only freebusy scope for privacy
         const scope = 'https://www.googleapis.com/auth/calendar.freebusy';
+        const contextState = type === 'tenant' ? 'tenant' : 'professional';
+        
         console.log('Generating auth URL with scope:', scope);
+        console.log('Context state:', contextState);
         
         const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
           `client_id=${clientId}&` +
@@ -326,7 +329,8 @@ const handler = async (req: Request): Promise<Response> => {
           `response_type=code&` +
           `scope=${encodeURIComponent(scope)}&` +
           `access_type=offline&` +
-          `prompt=consent`;
+          `prompt=consent&` +
+          `state=${contextState}`;
 
         return new Response(
           JSON.stringify({ authUrl }),
