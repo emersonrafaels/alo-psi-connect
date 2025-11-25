@@ -221,14 +221,29 @@ const handler = async (req: Request): Promise<Response> => {
       email: calendarEmail
     });
 
-    // Create event data
-    const dataConsulta = new Date(agendamento.data_consulta);
-    const [hours, minutes] = agendamento.horario.split(':');
-    const startDateTime = new Date(dataConsulta);
-    startDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-    const endDateTime = new Date(startDateTime);
-    endDateTime.setMinutes(endDateTime.getMinutes() + (professionalData.tempo_consulta || 50));
+    // Construir strings de data/hora diretamente no timezone local (evita conversões UTC)
+    const startDateTimeStr = `${agendamento.data_consulta}T${agendamento.horario}:00`;
+    
+    // Calcular hora de término manualmente (evita problemas de timezone)
+    const [startHour, startMin] = agendamento.horario.split(':').map(Number);
+    const durationMinutes = professionalData.tempo_consulta || 50;
+    let endHour = startHour;
+    let endMin = startMin + durationMinutes;
+    
+    // Tratar overflow de minutos para horas
+    while (endMin >= 60) {
+      endHour++;
+      endMin -= 60;
+    }
+    
+    // Formatar hora de término com padding de zeros
+    const endDateTimeStr = `${agendamento.data_consulta}T${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}:00`;
+    
+    console.log('📅 Event times (America/Sao_Paulo):', {
+      start: startDateTimeStr,
+      end: endDateTimeStr,
+      duration: durationMinutes
+    });
 
     const eventData = {
       summary: `Consulta - ${agendamento.nome_paciente}`,
@@ -247,11 +262,11 @@ ${professionalData.telefone ? `• Telefone: ${professionalData.telefone}` : ''}
 ---
 Gerado automaticamente pelo sistema Alô, Psi`,
       start: {
-        dateTime: startDateTime.toISOString(),
+        dateTime: startDateTimeStr,
         timeZone: 'America/Sao_Paulo',
       },
       end: {
-        dateTime: endDateTime.toISOString(),
+        dateTime: endDateTimeStr,
         timeZone: 'America/Sao_Paulo',
       },
       attendees: [
