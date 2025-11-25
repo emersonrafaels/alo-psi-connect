@@ -97,6 +97,13 @@ export const GoogleCalendarTenantConfig = () => {
           if (event.data.type === 'google-calendar-callback') {
             popup?.close();
             
+            console.log('📤 Sending callback to edge function:', {
+              action: 'connect',
+              code: event.data.code ? 'present' : 'missing',
+              type: 'tenant',
+              tenantId: tenant.id
+            });
+
             const { data: callbackData, error: callbackError } = await supabase.functions.invoke(
               'google-calendar-auth',
               {
@@ -109,9 +116,18 @@ export const GoogleCalendarTenantConfig = () => {
               }
             );
 
+            console.log('📊 Callback response:', { 
+              data: callbackData, 
+              error: callbackError,
+              hasError: !!callbackError || !!callbackData?.error
+            });
+
             if (callbackError || callbackData?.error) {
-              throw new Error(callbackError?.message || callbackData?.error);
+              console.error('❌ Error in callback:', callbackError || callbackData?.error);
+              throw new Error(callbackError?.message || callbackData?.error || 'Erro ao conectar Google Calendar');
             }
+
+            console.log('✅ Google Calendar conectado com sucesso!');
 
             toast({
               title: "Sucesso!",
@@ -119,6 +135,7 @@ export const GoogleCalendarTenantConfig = () => {
             });
 
             queryClient.invalidateQueries({ queryKey: ['tenant-google-config'] });
+            queryClient.invalidateQueries({ queryKey: ['tenant-google-config', tenant.id] });
             window.removeEventListener('message', messageHandler);
           }
         };
