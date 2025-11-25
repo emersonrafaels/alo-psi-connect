@@ -12,9 +12,37 @@ export const useUserRegistrations = () => {
       
       const { data, error } = await supabase
         .from('group_session_registrations')
-        .select('session_id, status')
+        .select(`
+          id,
+          session_id,
+          status,
+          payment_status,
+          registered_at,
+          cancelled_at,
+          attended_at,
+          group_sessions (
+            id,
+            title,
+            description,
+            session_date,
+            start_time,
+            duration_minutes,
+            meeting_link,
+            session_type,
+            organizer_type,
+            professional_id,
+            institution_id,
+            tenant_id,
+            featured_image_url,
+            profissionais (
+              id,
+              display_name,
+              foto_perfil_url
+            )
+          )
+        `)
         .eq('user_id', user.id)
-        .eq('status', 'confirmed');
+        .order('registered_at', { ascending: false });
 
       if (error) throw error;
       return data || [];
@@ -23,7 +51,7 @@ export const useUserRegistrations = () => {
   });
 
   const registeredSessionIds = new Set(
-    registrations?.map(r => r.session_id) || []
+    registrations?.filter(r => r.status === 'confirmed').map(r => r.session_id) || []
   );
 
   return {

@@ -22,6 +22,7 @@ import InstitutionPortal from "./pages/InstitutionPortal";
 import InstitutionProfessionals from "./pages/InstitutionProfessionals";
 import InstitutionStudents from "./pages/InstitutionStudents";
 import GroupSessions from "./pages/GroupSessions";
+import MyGroupSessions from "./pages/MyGroupSessions";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
@@ -156,6 +157,7 @@ const AppWithShortcuts = () => {
       
       {/* Rotas de Encontros em Grupo */}
       <Route path="/encontros" element={<GroupSessions />} />
+      <Route path="/meus-encontros" element={<MyGroupSessions />} />
       
       {/* Rotas Medcos (duplicadas com prefixo /medcos) */}
       <Route path="/medcos" element={<Index />} />
@@ -183,6 +185,7 @@ const AppWithShortcuts = () => {
       
       {/* Rotas de Encontros Medcos */}
       <Route path="/medcos/encontros" element={<GroupSessions />} />
+      <Route path="/medcos/meus-encontros" element={<MyGroupSessions />} />
       
       {/* Rotas do Portal Institucional */}
       <Route 

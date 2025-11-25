@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2 } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
 import { useState, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -198,6 +198,10 @@ const Header = () => {
                     Meus Agendamentos
                   </DropdownMenuItem>
                 )}
+                  <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/meus-encontros'))}>
+                    <Users className="h-4 w-4 mr-2" />
+                    Meus Encontros
+                  </DropdownMenuItem>
                   {isProfessional && (
                     <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/professional-profile'))}>
                       <Briefcase className="h-4 w-4 mr-2" />
@@ -290,6 +294,14 @@ const Header = () => {
                   >
                     <Calendar className="h-4 w-4" />
                     Meus Agendamentos
+                  </Link>
+                  <Link
+                    to={buildTenantPath(tenantSlug, '/meus-encontros')}
+                    className="text-sm hover:text-accent transition-colors flex items-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Users className="h-4 w-4" />
+                    Meus Encontros
                   </Link>
                   {isProfessional && (
                     <Link
