@@ -8,6 +8,7 @@ import { GroupSessionFilters } from '@/components/group-sessions/GroupSessionFil
 import { GroupSessionGrid } from '@/components/group-sessions/GroupSessionGrid';
 import { NextSessionHighlight } from '@/components/group-sessions/NextSessionHighlight';
 import { EmptySessionsState } from '@/components/group-sessions/EmptySessionsState';
+import { SessionsCTASection } from '@/components/group-sessions/SessionsCTASection';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Info } from 'lucide-react';
 import { useGroupSessions } from '@/hooks/useGroupSessions';
@@ -136,6 +137,9 @@ export default function GroupSessions() {
             )}
           </div>
         </div>
+
+        {/* CTAs Permanentes */}
+        <SessionsCTASection />
 
         {/* Aviso de Saúde Mental */}
         <div className="container mx-auto px-4 py-8">
