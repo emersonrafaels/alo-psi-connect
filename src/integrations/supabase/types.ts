@@ -1160,6 +1160,50 @@ export type Database = {
           },
         ]
       }
+      group_session_theme_suggestions: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          email: string
+          id: string
+          nome: string | null
+          status: string
+          tema: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          email: string
+          id?: string
+          nome?: string | null
+          status?: string
+          tema: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          email?: string
+          id?: string
+          nome?: string | null
+          status?: string
+          tema?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_session_theme_suggestions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_session_waitlist: {
         Row: {
           created_at: string
