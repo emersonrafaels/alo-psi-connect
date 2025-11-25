@@ -21,6 +21,7 @@ import About from "./pages/About";
 import InstitutionPortal from "./pages/InstitutionPortal";
 import InstitutionProfessionals from "./pages/InstitutionProfessionals";
 import InstitutionStudents from "./pages/InstitutionStudents";
+import GroupSessions from "./pages/GroupSessions";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
@@ -80,6 +81,7 @@ import AdminSystemMaintenance from "@/pages/admin/SystemMaintenance";
 import BulkImport from "@/pages/admin/BulkImport";
 import AdminTests from "@/pages/admin/Tests";
 import GoogleCalendarTests from "@/pages/admin/GoogleCalendarTests";
+import GroupSessionsAdmin from "@/pages/admin/GroupSessionsAdmin";
 
 import "./App.css";
 
@@ -152,6 +154,9 @@ const AppWithShortcuts = () => {
       <Route path="/diario-emocional/analises" element={<MoodAnalytics />} />
       <Route path="/diario-emocional/configurar" element={<EmotionConfigPage />} />
       
+      {/* Rotas de Encontros em Grupo */}
+      <Route path="/encontros" element={<GroupSessions />} />
+      
       {/* Rotas Medcos (duplicadas com prefixo /medcos) */}
       <Route path="/medcos" element={<Index />} />
       <Route path="/medcos/sobre" element={<About />} />
@@ -175,6 +180,9 @@ const AppWithShortcuts = () => {
       <Route path="/medcos/diario-emocional/nova-entrada" element={<MoodEntry />} />
       <Route path="/medcos/diario-emocional/historico" element={<MoodHistory />} />
       <Route path="/medcos/diario-emocional/analises" element={<MoodAnalytics />} />
+      
+      {/* Rotas de Encontros Medcos */}
+      <Route path="/medcos/encontros" element={<GroupSessions />} />
       
       {/* Rotas do Portal Institucional */}
       <Route 
@@ -259,6 +267,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/instituicoes" element={<AdminLayout><AdminInstitutions /></AdminLayout>} />
       <Route path="/admin/bulk-import" element={<AdminLayout><BulkImport /></AdminLayout>} />
       <Route path="/admin/system" element={<AdminLayout><AdminSystemMaintenance /></AdminLayout>} />
+      <Route path="/admin/encontros" element={<AdminLayout><GroupSessionsAdmin /></AdminLayout>} />
       <Route path="/admin/tests" element={<AdminLayout><AdminTests /></AdminLayout>} />
       <Route 
         path="/admin/google-calendar-tests" 

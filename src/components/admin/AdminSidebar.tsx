@@ -89,6 +89,12 @@ const adminMenuGroups = [
         requiredRole: 'admin' as const
       },
       {
+        title: 'Encontros',
+        url: '/admin/encontros',
+        icon: Users,
+        requiredRole: 'admin' as const
+      },
+      {
         title: 'Financeiro',
         url: '/admin/financial',
         icon: DollarSign,
