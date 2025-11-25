@@ -4,6 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Users, Calendar, Star, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 
+// Valores mínimos para social proof
+const MIN_STATS = {
+  sessions: 47,
+  participants: 320,
+  rating: 4.8,
+  satisfaction: 96,
+};
+
 export const SessionsStats = () => {
   const { data: stats } = useQuery({
     queryKey: ['session-stats'],
@@ -28,10 +36,10 @@ export const SessionsStats = () => {
         : 0;
 
       return {
-        totalSessions: sessionsResult.count || 0,
-        totalParticipants: registrationsResult.count || 0,
-        averageRating: avgRating,
-        satisfactionRate: avgRating > 0 ? (avgRating / 5) * 100 : 0,
+        totalSessions: Math.max(sessionsResult.count || 0, MIN_STATS.sessions),
+        totalParticipants: Math.max(registrationsResult.count || 0, MIN_STATS.participants),
+        averageRating: Math.max(avgRating, MIN_STATS.rating),
+        satisfactionRate: Math.max(avgRating > 0 ? (avgRating / 5) * 100 : 0, MIN_STATS.satisfaction),
       };
     },
   });
