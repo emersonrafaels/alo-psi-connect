@@ -9,9 +9,16 @@ import { GroupSessionGrid } from '@/components/group-sessions/GroupSessionGrid';
 import { NextSessionHighlight } from '@/components/group-sessions/NextSessionHighlight';
 import { EmptySessionsState } from '@/components/group-sessions/EmptySessionsState';
 import { SessionsCTASection } from '@/components/group-sessions/SessionsCTASection';
+import { SessionsLoadingSkeleton } from '@/components/group-sessions/SessionsLoadingSkeleton';
+import { HowItWorksSection } from '@/components/group-sessions/HowItWorksSection';
+import { SessionsFAQ } from '@/components/group-sessions/SessionsFAQ';
+import { SessionsTestimonials } from '@/components/group-sessions/SessionsTestimonials';
+import { SessionsStats } from '@/components/group-sessions/SessionsStats';
+import { PastSessionsSection } from '@/components/group-sessions/PastSessionsSection';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Info } from 'lucide-react';
 import { useGroupSessions } from '@/hooks/useGroupSessions';
+import { useUserRegistrations } from '@/hooks/useUserRegistrations';
 import { useGroupSessionRegistration } from '@/hooks/useGroupSessionRegistration';
 import { useNextAvailableMonth } from '@/hooks/useNextAvailableMonth';
 import { useAuth } from '@/hooks/useAuth';
@@ -42,17 +49,10 @@ export default function GroupSessions() {
     status: 'scheduled',
   });
 
+  const { registeredSessionIds } = useUserRegistrations();
   const { register, isRegistering } = useGroupSessionRegistration();
   
-  // Get next upcoming session for highlight
   const nextSession = sessions.length > 0 ? sessions[0] : null;
-
-  // IDs das sessões em que o usuário está inscrito
-  const registeredSessionIds = new Set(
-    sessions
-      .filter(s => s.current_registrations > 0) // Placeholder - seria melhor buscar do banco
-      .map(s => s.id)
-  );
 
   const handleRegister = (sessionId: string) => {
     if (!user) {
@@ -122,9 +122,7 @@ export default function GroupSessions() {
 
           <div className="mt-8">
             {isLoading || isLoadingNext ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Carregando encontros...</p>
-              </div>
+              <SessionsLoadingSkeleton />
             ) : sessions.length === 0 ? (
               <EmptySessionsState hasNoFutureSessions={hasNoFutureSessions} />
             ) : (
@@ -138,9 +136,13 @@ export default function GroupSessions() {
           </div>
         </div>
 
-        {/* CTAs Permanentes */}
+        <HowItWorksSection />
+        <SessionsStats />
+        <SessionsTestimonials />
+        <PastSessionsSection />
+        <SessionsFAQ />
         <SessionsCTASection />
-
+        
         {/* Aviso de Saúde Mental */}
         <div className="container mx-auto px-4 py-8">
           <Alert>
