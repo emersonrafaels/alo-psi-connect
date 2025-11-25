@@ -79,6 +79,7 @@ import AdminInstitutions from "@/pages/admin/Institutions";
 import AdminSystemMaintenance from "@/pages/admin/SystemMaintenance";
 import BulkImport from "@/pages/admin/BulkImport";
 import AdminTests from "@/pages/admin/Tests";
+import GoogleCalendarTests from "@/pages/admin/GoogleCalendarTests";
 
 import "./App.css";
 
@@ -259,6 +260,16 @@ const AppWithShortcuts = () => {
       <Route path="/admin/bulk-import" element={<AdminLayout><BulkImport /></AdminLayout>} />
       <Route path="/admin/system" element={<AdminLayout><AdminSystemMaintenance /></AdminLayout>} />
       <Route path="/admin/tests" element={<AdminLayout><AdminTests /></AdminLayout>} />
+      <Route 
+        path="/admin/google-calendar-tests" 
+        element={
+          <ProtectedRoute requiredRole="super_admin">
+            <AdminLayout>
+              <GoogleCalendarTests />
+            </AdminLayout>
+          </ProtectedRoute>
+        } 
+      />
 
       <Route path="/admin/blog" element={<BlogLayout><BlogManagement /></BlogLayout>} />
       <Route path="/admin/blog/curation" element={<BlogLayout><BlogCuration /></BlogLayout>} />
