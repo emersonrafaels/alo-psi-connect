@@ -153,11 +153,21 @@ export const useUserStorytellingData = (userId: string) => {
       // Criar timeline de eventos
       const timeline: TimelineEvent[] = [];
 
-      // Adicionar agendamentos à timeline
+      // Criar um mapa de cupons por appointment_id para lookup rápido
+      const couponsByAppointment = new Map(
+        (couponsUsed || [])
+          .filter(c => c.appointment_id)
+          .map(c => [c.appointment_id, c])
+      );
+
+      // Adicionar agendamentos à timeline COM cupom incorporado
       (appointments || []).forEach((apt) => {
         const aptDate = new Date(`${apt.data_consulta}T${apt.horario}`);
         const isPast = aptDate < now;
         const isCancelled = apt.status === 'cancelado';
+        
+        // Buscar cupom associado a este agendamento
+        const relatedCoupon = apt.coupon_id ? couponsByAppointment.get(apt.id) : null;
 
         timeline.push({
           id: apt.id,
@@ -176,6 +186,7 @@ export const useUserStorytellingData = (userId: string) => {
             profession: apt.profissionais.profissao,
           },
           appointment: apt,
+          coupon: relatedCoupon || undefined,
           status: isCancelled
             ? 'cancelled'
             : isPast
@@ -183,30 +194,14 @@ export const useUserStorytellingData = (userId: string) => {
             : apt.payment_status === 'paid'
             ? 'confirmed'
             : 'pending',
-          amount: apt.coupon_id
-            ? undefined
-            : {
-                original: apt.valor || 0,
-                discount: 0,
-                final: apt.valor || 0,
-              },
-        });
-      });
-
-      // Adicionar cupons à timeline
-      (couponsUsed || []).forEach((coupon) => {
-        timeline.push({
-          id: coupon.id,
-          type: 'coupon_used',
-          date: new Date(coupon.used_at),
-          title: 'Cupom Utilizado',
-          description: coupon.institution_coupons?.name || '',
-          coupon: coupon,
-          status: 'confirmed',
-          amount: {
-            original: coupon.original_amount,
-            discount: coupon.discount_amount,
-            final: coupon.final_amount,
+          amount: relatedCoupon ? {
+            original: relatedCoupon.original_amount,
+            discount: relatedCoupon.discount_amount,
+            final: relatedCoupon.final_amount,
+          } : {
+            original: apt.valor || 0,
+            discount: 0,
+            final: apt.valor || 0,
           },
         });
       });
