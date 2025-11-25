@@ -16,6 +16,7 @@ import { SessionCountdown } from '@/components/group-sessions/SessionCountdown';
 import { SessionTypeIcon } from '@/components/group-sessions/SessionTypeIcon';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 const MyGroupSessions = () => {
   const { registrations, isLoading } = useUserRegistrations();
@@ -23,6 +24,7 @@ const MyGroupSessions = () => {
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const handleCancelRegistration = async (registrationId: string) => {
     setCancellingId(registrationId);
@@ -33,6 +35,11 @@ const MyGroupSessions = () => {
         .eq('id', registrationId);
 
       if (error) throw error;
+      
+      // Invalidar caches para atualizar a UI
+      queryClient.invalidateQueries({ queryKey: ['user-registrations'] });
+      queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['group-session-registration'] });
       
       toast.success('Inscrição cancelada com sucesso');
     } catch (error) {
