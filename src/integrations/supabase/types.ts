@@ -1081,6 +1081,44 @@ export type Database = {
         }
         Relationships: []
       }
+      group_session_analytics: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          session_id: string
+          session_id_text: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          session_id: string
+          session_id_text?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string
+          session_id_text?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_session_analytics_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "group_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_session_registrations: {
         Row: {
           attended_at: string | null
@@ -1122,6 +1160,53 @@ export type Database = {
           },
         ]
       }
+      group_session_waitlist: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          notified_at: string | null
+          position: number
+          session_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          notified_at?: string | null
+          position: number
+          session_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          notified_at?: string | null
+          position?: number
+          session_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_session_waitlist_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "group_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_sessions: {
         Row: {
           allowed_institution_ids: string[] | null
@@ -1146,6 +1231,7 @@ export type Database = {
           session_type: string
           start_time: string
           status: string | null
+          tags: string[] | null
           tenant_id: string
           title: string
           updated_at: string | null
@@ -1173,6 +1259,7 @@ export type Database = {
           session_type: string
           start_time: string
           status?: string | null
+          tags?: string[] | null
           tenant_id: string
           title: string
           updated_at?: string | null
@@ -1200,6 +1287,7 @@ export type Database = {
           session_type?: string
           start_time?: string
           status?: string | null
+          tags?: string[] | null
           tenant_id?: string
           title?: string
           updated_at?: string | null
@@ -2347,6 +2435,62 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      session_testimonials: {
+        Row: {
+          created_at: string
+          id: string
+          is_approved: boolean | null
+          is_featured: boolean | null
+          rating: number | null
+          session_id: string | null
+          session_title: string
+          session_type: string
+          testimonial_text: string
+          updated_at: string
+          user_avatar_url: string | null
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          rating?: number | null
+          session_id?: string | null
+          session_title: string
+          session_type: string
+          testimonial_text: string
+          updated_at?: string
+          user_avatar_url?: string | null
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          rating?: number | null
+          session_id?: string | null
+          session_title?: string
+          session_type?: string
+          testimonial_text?: string
+          updated_at?: string
+          user_avatar_url?: string | null
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_testimonials_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "group_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_configurations: {
         Row: {
