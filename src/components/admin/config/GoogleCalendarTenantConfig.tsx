@@ -80,18 +80,23 @@ export const GoogleCalendarTenantConfig = () => {
       if (error) throw error;
 
       if (data?.authUrl) {
+        // Salvar contexto no sessionStorage ANTES de abrir popup
+        sessionStorage.setItem('google-calendar-tenant-context', JSON.stringify({
+          type: 'tenant',
+          tenantId: tenant.id,
+          timestamp: Date.now()
+        }));
+        
+        console.log('💾 Contexto do tenant salvo no sessionStorage:', {
+          type: 'tenant',
+          tenantId: tenant.id
+        });
+        
         // Open OAuth popup
         const width = 600;
         const height = 700;
         const left = window.screen.width / 2 - width / 2;
         const top = window.screen.height / 2 - height / 2;
-        
-        console.log('🚀 DEBUG - Abrindo popup com authUrl:', {
-          authUrl: data.authUrl,
-          hasState: data.authUrl.includes('state='),
-          stateInURL: data.authUrl.match(/state=([^&]+)/)?.[1],
-          popupName: 'google-auth'
-        });
         
         const popup = window.open(
           data.authUrl,
@@ -99,21 +104,19 @@ export const GoogleCalendarTenantConfig = () => {
           `width=${width},height=${height},left=${left},top=${top}`
         );
         
-        console.log('🚀 DEBUG - Popup aberto:', {
-          popupExists: !!popup,
-          popupName: popup?.name
-        });
+        console.log('🚀 Popup aberto para OAuth');
 
         // Listen for callback
         const messageHandler = async (event: MessageEvent) => {
           if (event.data.type === 'google-calendar-callback') {
             popup?.close();
             
-            console.log('📤 Sending callback to edge function:', {
-              action: 'connect',
+            // Usar tenantId do postMessage (que veio do sessionStorage no callback)
+            const receivedTenantId = event.data.tenantId;
+            
+            console.log('📤 Callback recebido via postMessage:', {
               code: event.data.code ? 'present' : 'missing',
-              type: 'tenant',
-              tenantId: tenant.id
+              tenantId: receivedTenantId
             });
 
             const { data: callbackData, error: callbackError } = await supabase.functions.invoke(
@@ -123,7 +126,7 @@ export const GoogleCalendarTenantConfig = () => {
                   action: 'connect', 
                   code: event.data.code,
                   type: 'tenant',
-                  tenantId: tenant.id
+                  tenantId: receivedTenantId
                 }
               }
             );
