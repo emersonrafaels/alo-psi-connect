@@ -16,6 +16,7 @@ interface CalendarEventRequest {
     horario: string;
     valor: number;
     observacoes?: string;
+    tenant_id: string;
     profissionais: {
       display_name: string;
       user_email: string;
@@ -25,6 +26,14 @@ interface CalendarEventRequest {
       profile_id: string;
     };
   };
+}
+
+interface TenantGoogleConfig {
+  google_meet_mode: 'professional' | 'tenant';
+  google_calendar_email: string | null;
+  google_calendar_token: string | null;
+  google_calendar_refresh_token: string | null;
+  google_calendar_scope: string | null;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -42,34 +51,98 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get professional's Google Calendar tokens
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('google_calendar_token, google_calendar_refresh_token')
-      .eq('id', agendamento.profissionais.profile_id)
+    // Buscar configuração do tenant
+    console.log('Fetching tenant Google Calendar configuration...');
+    const { data: tenantConfig, error: tenantError } = await supabase
+      .from('tenants')
+      .select('google_meet_mode, google_calendar_email, google_calendar_token, google_calendar_refresh_token, google_calendar_scope')
+      .eq('id', agendamento.tenant_id)
       .single();
 
-    if (profileError || !profile) {
-      console.log('Professional profile not found or no Google Calendar connection');
-      return new Response(JSON.stringify({ 
-        success: false, 
-        message: 'Professional not connected to Google Calendar' 
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
+    if (tenantError) {
+      console.error('Error fetching tenant config:', tenantError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Erro ao buscar configuração do tenant' 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    if (!profile.google_calendar_token) {
-      console.log('Professional does not have Google Calendar connected');
-      return new Response(JSON.stringify({ 
-        success: false, 
-        message: 'Professional Google Calendar not connected' 
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
+    console.log('Tenant Google Meet mode:', tenantConfig.google_meet_mode);
+
+    // Decidir qual credencial usar baseado no modo do tenant
+    let calendarToken = null;
+    let calendarRefreshToken = null;
+    let calendarScope = null;
+    let calendarEmail = null;
+
+    if (tenantConfig.google_meet_mode === 'tenant') {
+      // Usar credenciais do tenant
+      console.log('Using tenant-level Google Calendar credentials');
+      calendarToken = tenantConfig.google_calendar_token;
+      calendarRefreshToken = tenantConfig.google_calendar_refresh_token;
+      calendarScope = tenantConfig.google_calendar_scope;
+      calendarEmail = tenantConfig.google_calendar_email;
+      
+      if (!calendarToken || !calendarRefreshToken) {
+        console.warn('⚠️ Tenant mode selected but no tenant credentials found');
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'Google Calendar do tenant não está conectado. Por favor, conecte nas configurações.',
+            message: 'Google Calendar do tenant não configurado'
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else {
+      // Usar credenciais do profissional (comportamento original)
+      console.log('Using professional-level Google Calendar credentials');
+      
+      const { data: professionalProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('google_calendar_token, google_calendar_refresh_token, google_calendar_scope')
+        .eq('id', agendamento.profissionais.profile_id)
+        .maybeSingle();
+        
+      if (profileError || !professionalProfile?.google_calendar_token) {
+        console.error('Error fetching professional profile:', profileError);
+        
+        // FALLBACK: Tentar usar credenciais do tenant
+        console.log('⚠️ Professional credentials not found, attempting tenant fallback...');
+        
+        if (tenantConfig.google_calendar_token && tenantConfig.google_calendar_refresh_token) {
+          console.log('✅ Using tenant credentials as fallback');
+          calendarToken = tenantConfig.google_calendar_token;
+          calendarRefreshToken = tenantConfig.google_calendar_refresh_token;
+          calendarScope = tenantConfig.google_calendar_scope;
+          calendarEmail = tenantConfig.google_calendar_email;
+        } else {
+          console.error('❌ No credentials available (neither professional nor tenant)');
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: 'Profissional não possui Google Calendar conectado e tenant também não possui credenciais configuradas.',
+              message: 'Google Calendar não configurado'
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else {
+        calendarToken = professionalProfile.google_calendar_token;
+        calendarRefreshToken = professionalProfile.google_calendar_refresh_token;
+        calendarScope = professionalProfile.google_calendar_scope;
+      }
     }
+
+    console.log('Final credentials selected:', {
+      hasToken: !!calendarToken,
+      hasRefreshToken: !!calendarRefreshToken,
+      scope: calendarScope,
+      email: calendarEmail
+    });
 
     // Create event data
     const dataConsulta = new Date(agendamento.data_consulta);
@@ -140,12 +213,13 @@ Gerado automaticamente pelo sistema Alô, Psi`,
     };
 
     // Create calendar event
+    console.log('Creating Google Calendar event...');
     const calendarResponse = await fetch(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1', 
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${profile.google_calendar_token}`,
+          'Authorization': `Bearer ${calendarToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(eventData),
@@ -157,7 +231,7 @@ Gerado automaticamente pelo sistema Alô, Psi`,
       console.error('Google Calendar API error:', errorData);
       
       // Try to refresh token if unauthorized
-      if (calendarResponse.status === 401 && profile.google_calendar_refresh_token) {
+      if (calendarResponse.status === 401 && calendarRefreshToken) {
         console.log('Attempting to refresh Google Calendar token...');
         
         const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -168,7 +242,7 @@ Gerado automaticamente pelo sistema Alô, Psi`,
           body: new URLSearchParams({
             client_id: Deno.env.get('GOOGLE_CALENDAR_CLIENT_ID') ?? '',
             client_secret: Deno.env.get('GOOGLE_CALENDAR_CLIENT_SECRET') ?? '',
-            refresh_token: profile.google_calendar_refresh_token,
+            refresh_token: calendarRefreshToken,
             grant_type: 'refresh_token',
           }),
         });
@@ -176,11 +250,18 @@ Gerado automaticamente pelo sistema Alô, Psi`,
         if (refreshResponse.ok) {
           const tokenData = await refreshResponse.json();
           
-          // Update the token in database
-          await supabase
-            .from('profiles')
-            .update({ google_calendar_token: tokenData.access_token })
-            .eq('id', agendamento.profissionais.profile_id);
+          // Update the token in database (tenant or profile depending on mode)
+          if (tenantConfig.google_meet_mode === 'tenant') {
+            await supabase
+              .from('tenants')
+              .update({ google_calendar_token: tokenData.access_token })
+              .eq('id', agendamento.tenant_id);
+          } else {
+            await supabase
+              .from('profiles')
+              .update({ google_calendar_token: tokenData.access_token })
+              .eq('id', agendamento.profissionais.profile_id);
+          }
 
           // Retry calendar event creation with new token
           const retryResponse = await fetch(
@@ -199,10 +280,12 @@ Gerado automaticamente pelo sistema Alô, Psi`,
             const eventResult = await retryResponse.json();
             console.log('Calendar event created successfully after token refresh');
             
+            const meetLink = eventResult.hangoutLink || eventResult.conferenceData?.entryPoints?.[0]?.uri;
+            
             return new Response(JSON.stringify({ 
               success: true, 
               eventId: eventResult.id,
-              meetLink: eventResult.hangoutLink || eventResult.conferenceData?.entryPoints?.[0]?.uri,
+              meetLink: meetLink,
               message: 'Calendar event created successfully'
             }), {
               status: 200,

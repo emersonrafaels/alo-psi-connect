@@ -18,6 +18,7 @@ interface Appointment {
   observacoes: string | null;
   coupon_id: string | null;
   professional_id: number;
+  meeting_link: string | null;
   profissionais?: Professional;
 }
 
@@ -91,6 +92,7 @@ export const useUserStorytellingData = (userId: string) => {
           observacoes,
           coupon_id,
           professional_id,
+          meeting_link,
           profissionais!inner(
             id,
             display_name,

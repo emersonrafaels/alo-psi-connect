@@ -9,6 +9,8 @@ const corsHeaders = {
 interface GoogleCalendarAuthRequest {
   action: 'connect' | 'disconnect';
   code?: string;
+  type?: 'professional' | 'tenant';
+  tenantId?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -60,7 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Usuário autenticado com sucesso:', user.user.id);
 
-    const { action, code }: GoogleCalendarAuthRequest = await req.json();
+    const { action, code, type, tenantId }: GoogleCalendarAuthRequest = await req.json();
     console.log('Action requested:', action);
 
     const appBaseUrl = Deno.env.get('APP_BASE_URL') || 'https://alopsi.com.br';
@@ -178,23 +180,64 @@ const handler = async (req: Request): Promise<Response> => {
 
         console.log('Final detected scope:', detectedScope);
 
-        // Save tokens to user profile with detected scope
-        console.log('🔄 Iniciando atualização do banco de dados...', {
-          userId: user.user.id,
-          tokenPresent: !!tokenData.access_token,
-          refreshTokenPresent: !!tokenData.refresh_token,
-          scope: detectedScope
-        });
+        // Save tokens based on type (tenant or professional)
+        if (type === 'tenant' && tenantId) {
+          console.log('🔄 Salvando tokens do tenant...', { tenantId, scope: detectedScope });
+          
+          const { data: updateData, error: updateError } = await supabaseClient
+            .from('tenants')
+            .update({
+              google_calendar_token: tokenData.access_token,
+              google_calendar_refresh_token: tokenData.refresh_token,
+              google_calendar_scope: detectedScope,
+            })
+            .eq('id', tenantId)
+            .select('id, slug, google_calendar_email, google_calendar_scope');
 
-        const { data: updateData, error: updateError } = await supabaseClient
-          .from('profiles')
-          .update({
-            google_calendar_token: tokenData.access_token,
-            google_calendar_refresh_token: tokenData.refresh_token,
-            google_calendar_scope: detectedScope,
-          })
-          .eq('user_id', user.user.id)
-          .select('id, user_id, google_calendar_token, google_calendar_scope, google_calendar_refresh_token');
+          if (updateError) {
+            console.error('❌ Error saving tenant Google Calendar tokens:', updateError);
+            throw new Error('Erro ao salvar tokens de acesso do tenant: ' + updateError.message);
+          }
+
+          if (!updateData || updateData.length === 0) {
+            console.error('❌ No tenant records were updated');
+            throw new Error('Nenhum tenant foi atualizado');
+          }
+
+          console.log('✅ Tokens do tenant salvos com sucesso!');
+          
+          const scopeMessage = detectedScope === 'calendar.readonly' 
+            ? 'Google Calendar do tenant conectado com sucesso! (Acesso completo)' 
+            : 'Google Calendar do tenant conectado com sucesso! (Acesso básico - apenas períodos ocupados)';
+
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: scopeMessage,
+              scope: detectedScope
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        } else {
+          // Comportamento original: salvar tokens no perfil do profissional
+          console.log('🔄 Iniciando atualização do banco de dados...', {
+            userId: user.user.id,
+            tokenPresent: !!tokenData.access_token,
+            refreshTokenPresent: !!tokenData.refresh_token,
+            scope: detectedScope
+          });
+
+          const { data: updateData, error: updateError } = await supabaseClient
+            .from('profiles')
+            .update({
+              google_calendar_token: tokenData.access_token,
+              google_calendar_refresh_token: tokenData.refresh_token,
+              google_calendar_scope: detectedScope,
+            })
+            .eq('user_id', user.user.id)
+            .select('id, user_id, google_calendar_token, google_calendar_scope, google_calendar_refresh_token');
 
         console.log('📊 Update response:', {
           error: updateError,
@@ -236,20 +279,21 @@ const handler = async (req: Request): Promise<Response> => {
           });
         }
 
-        const scopeMessage = detectedScope === 'calendar.readonly' 
-          ? 'Google Calendar conectado com sucesso! (Acesso completo)' 
-          : 'Google Calendar conectado com sucesso! (Acesso básico - apenas períodos ocupados)';
+          const scopeMessage = detectedScope === 'calendar.readonly' 
+            ? 'Google Calendar conectado com sucesso! (Acesso completo)' 
+            : 'Google Calendar conectado com sucesso! (Acesso básico - apenas períodos ocupados)';
 
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            message: scopeMessage,
-            scope: detectedScope
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: scopeMessage,
+              scope: detectedScope
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
       } else {
         // Using only freebusy scope for privacy
         const scope = 'https://www.googleapis.com/auth/calendar.freebusy';
@@ -271,18 +315,34 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
     } else if (action === 'disconnect') {
-      // Remove tokens from user profile
-      const { error: updateError } = await supabaseClient
-        .from('profiles')
-        .update({
-          google_calendar_token: null,
-          google_calendar_refresh_token: null,
-          google_calendar_scope: null,
-        })
-        .eq('user_id', user.user.id);
+      if (type === 'tenant' && tenantId) {
+        // Remove tokens do tenant
+        const { error: updateError } = await supabaseClient
+          .from('tenants')
+          .update({
+            google_calendar_token: null,
+            google_calendar_refresh_token: null,
+            google_calendar_scope: null,
+          })
+          .eq('id', tenantId);
 
-      if (updateError) {
-        throw new Error('Erro ao desconectar Google Calendar');
+        if (updateError) {
+          throw new Error('Erro ao desconectar Google Calendar do tenant');
+        }
+      } else {
+        // Comportamento original: remover do perfil
+        const { error: updateError } = await supabaseClient
+          .from('profiles')
+          .update({
+            google_calendar_token: null,
+            google_calendar_refresh_token: null,
+            google_calendar_scope: null,
+          })
+          .eq('user_id', user.user.id);
+
+        if (updateError) {
+          throw new Error('Erro ao desconectar Google Calendar');
+        }
       }
 
       return new Response(

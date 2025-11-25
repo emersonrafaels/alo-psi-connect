@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, Tag, AlertCircle, CheckCircle, XCircle, Clock, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { Calendar, Tag, AlertCircle, CheckCircle, XCircle, Clock, TrendingUp, TrendingDown, Activity, Video, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 interface UserStorytellingModalProps {
@@ -207,6 +207,24 @@ export function UserStorytellingModal({
                                   {event.coupon.institution_coupons?.name}
                                 </p>
                               </div>}
+
+                            {event.appointment?.meeting_link && event.status === 'confirmed' && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  <Video className="h-3 w-3 mr-1" />
+                                  Google Meet Disponível
+                                </Badge>
+                                <a 
+                                  href={event.appointment.meeting_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm text-green-600 hover:underline flex items-center gap-1"
+                                >
+                                  Acessar Link
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </div>
+                            )}
 
                             {event.amount && <div className="flex items-center gap-4 text-sm">
                                 {event.amount.discount > 0 ? <>

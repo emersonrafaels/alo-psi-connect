@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, Clock, DollarSign, User, ArrowLeft, CreditCard, MapPin, Phone, Mail } from "lucide-react"
+import { Calendar, Clock, DollarSign, User, ArrowLeft, CreditCard, MapPin, Phone, Mail, Sparkles } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
 import { useUserProfile } from "@/hooks/useUserProfile"
@@ -24,7 +24,6 @@ import { CouponValidator } from "@/components/CouponValidator"
 import { useCouponTracking } from "@/hooks/useCouponTracking"
 import { AvailableCouponsDisplay } from "@/components/AvailableCouponsDisplay"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Sparkles } from "lucide-react"
 import { useAvailableCoupons } from "@/hooks/useAvailableCoupons"
 
 
@@ -822,6 +821,15 @@ const BookingConfirmation = () => {
                       <CreditCard className="h-5 w-5 text-primary" />
                       Pagamento
                     </h3>
+                    
+                    <Alert className="mb-4 bg-blue-50 border-blue-200">
+                      <Sparkles className="h-4 w-4 text-blue-600" />
+                      <AlertDescription className="text-blue-900">
+                        Após a confirmação do pagamento, um <strong>link do Google Meet</strong> será gerado 
+                        automaticamente e enviado para seu email. Você também poderá acessá-lo em "Meus Agendamentos".
+                      </AlertDescription>
+                    </Alert>
+                    
                     <div className="bg-gradient-to-r from-primary/5 to-teal/5 p-4 rounded-lg border border-primary/10">
                       <p className="text-sm text-muted-foreground mb-3">
                         Você será redirecionado para uma página segura de pagamento.
