@@ -80,22 +80,41 @@ export default function GoogleCalendarCallback() {
       }
 
       if (code) {
-        // Se for contexto de tenant (admin panel), apenas enviar code via postMessage
-        if (state === 'tenant' && isPopup) {
-          console.log('🎯 Contexto de tenant detectado, enviando code para componente admin...');
+        // Tentar recuperar contexto de tenant do sessionStorage
+        const sessionContext = sessionStorage.getItem('google-calendar-tenant-context');
+        const tenantContext = sessionContext ? JSON.parse(sessionContext) : null;
+        
+        console.log('🔍 Verificando contexto do tenant no sessionStorage:', {
+          hasSessionContext: !!sessionContext,
+          tenantContext,
+          state,
+          isPopup
+        });
+        
+        // Se há contexto de tenant E é popup, processar como callback de tenant
+        if (tenantContext && tenantContext.type === 'tenant' && isPopup) {
+          console.log('✅ Contexto de tenant recuperado do sessionStorage:', tenantContext);
           
           if (window.opener && !window.opener.closed) {
+            // Enviar code + tenantId via postMessage
             window.opener.postMessage(
               { 
-                type: 'google-calendar-callback',  // Nome que o componente espera
-                code: code 
+                type: 'google-calendar-callback',
+                code: code,
+                tenantId: tenantContext.tenantId  // ← Agora incluímos o tenantId!
               }, 
               window.location.origin
             );
-            console.log('✅ Código enviado para componente admin processar');
+            console.log('✅ Código + tenantId enviados para componente admin:', {
+              code: code.substring(0, 10) + '...',
+              tenantId: tenantContext.tenantId
+            });
           }
           
-          // Fechar popup
+          // Limpar sessionStorage e fechar popup
+          sessionStorage.removeItem('google-calendar-tenant-context');
+          console.log('🧹 SessionStorage limpo');
+          
           setTimeout(() => window.close(), 500);
           return;
         }
