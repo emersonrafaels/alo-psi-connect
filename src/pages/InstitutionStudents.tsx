@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Search, Mail, Calendar, GraduationCap, ArrowLeft, Download } from 'lucide-react';
+import { Search, Mail, Calendar, GraduationCap, ArrowLeft, Download, TrendingUp } from 'lucide-react';
+import { UserStorytellingModal } from '@/components/admin/UserStorytellingModal';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -18,6 +19,7 @@ export default function InstitutionStudents() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'enrolled' | 'graduated' | 'inactive'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'enrollment_date'>('name');
+  const [selectedStudent, setSelectedStudent] = useState<{ userId: string; name: string } | null>(null);
 
   if (isLoading) {
     return (
@@ -157,6 +159,22 @@ export default function InstitutionStudents() {
                     <span>Vinculado: {format(new Date(student.enrollment_date), 'dd/MM/yyyy')}</span>
                   </div>
                 )}
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() =>
+                      setSelectedStudent({
+                        userId: student.pacientes.profiles.user_id || '',
+                        name: student.pacientes.profiles.nome || '',
+                      })
+                    }
+                  >
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    Ver Histórico
+                  </Button>
+                </div>
                 <Badge variant={getStatusBadge(student.enrollment_status).variant}>{getStatusBadge(student.enrollment_status).label}</Badge>
               </CardContent>
             </Card>
@@ -184,6 +202,16 @@ export default function InstitutionStudents() {
         </div>
       </div>
       <Footer />
+
+      {selectedStudent && (
+        <UserStorytellingModal
+          open={!!selectedStudent}
+          onOpenChange={(open) => !open && setSelectedStudent(null)}
+          userId={selectedStudent.userId}
+          userName={selectedStudent.name}
+          userType="patient"
+        />
+      )}
     </div>
   );
 }
