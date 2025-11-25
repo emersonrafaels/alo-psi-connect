@@ -63,7 +63,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Usuário autenticado com sucesso:', user.user.id);
 
     const { action, code, type, tenantId }: GoogleCalendarAuthRequest = await req.json();
-    console.log('Action requested:', action);
+    console.log('📥 Request received:', { action, code: code ? 'present' : 'missing', type, tenantId });
 
     const appBaseUrl = Deno.env.get('APP_BASE_URL') || 'https://alopsi.com.br';
     const redirectUri = `${appBaseUrl}/google-calendar-callback`;
@@ -182,7 +182,14 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Save tokens based on type (tenant or professional)
         if (type === 'tenant' && tenantId) {
-          console.log('🔄 Salvando tokens do tenant...', { tenantId, scope: detectedScope });
+          console.log('🔄 Iniciando atualização do banco de dados...', {
+            userId: user.user.id,
+            tenantId,
+            tokenPresent: !!tokenData.access_token,
+            refreshTokenPresent: !!tokenData.refresh_token,
+            scope: detectedScope
+          });
+          console.log('🔑 Token salvo (primeiros 20 chars):', tokenData.access_token.substring(0, 20));
           
           const { data: updateData, error: updateError } = await supabaseClient
             .from('tenants')
@@ -192,7 +199,14 @@ const handler = async (req: Request): Promise<Response> => {
               google_calendar_scope: detectedScope,
             })
             .eq('id', tenantId)
-            .select('id, slug, google_calendar_email, google_calendar_scope');
+            .select('id, slug, google_calendar_email, google_calendar_token, google_calendar_scope, google_calendar_refresh_token');
+
+          console.log('📊 Update response:', {
+            error: updateError,
+            dataReceived: !!updateData,
+            recordsAffected: updateData?.length || 0,
+            firstRecord: updateData?.[0]
+          });
 
           if (updateError) {
             console.error('❌ Error saving tenant Google Calendar tokens:', updateError);
@@ -201,10 +215,17 @@ const handler = async (req: Request): Promise<Response> => {
 
           if (!updateData || updateData.length === 0) {
             console.error('❌ No tenant records were updated');
-            throw new Error('Nenhum tenant foi atualizado');
+            throw new Error('Nenhum tenant foi atualizado. Verifique o ID do tenant.');
           }
 
-          console.log('✅ Tokens do tenant salvos com sucesso!');
+          console.log('📋 Dados atualizados:', updateData.length, 'registros afetados');
+          console.log('✅ Tokens salvos com sucesso!');
+          console.log('Verificação dos tokens salvos:', {
+            hasAccessToken: !!updateData[0].google_calendar_token,
+            hasRefreshToken: !!updateData[0].google_calendar_refresh_token,
+            accessTokenLength: updateData[0].google_calendar_token?.length,
+            scope: updateData[0].google_calendar_scope
+          });
           
           const scopeMessage = detectedScope === 'calendar.readonly' 
             ? 'Google Calendar do tenant conectado com sucesso! (Acesso completo)' 
