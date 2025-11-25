@@ -1,0 +1,165 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+export interface GroupSessionRegistration {
+  id: string;
+  session_id: string;
+  user_id: string;
+  status: 'confirmed' | 'cancelled' | 'attended' | 'no_show';
+  payment_status: 'free' | 'pending' | 'paid' | 'refunded';
+  registered_at: string;
+  cancelled_at?: string;
+  attended_at?: string;
+}
+
+export const useGroupSessionRegistration = (sessionId?: string) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Verificar se usuário está inscrito em uma sessão
+  const { data: registration, isLoading } = useQuery({
+    queryKey: ['group-session-registration', sessionId],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !sessionId) return null;
+
+      const { data, error } = await supabase
+        .from('group_session_registrations')
+        .select('*')
+        .eq('session_id', sessionId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as GroupSessionRegistration | null;
+    },
+    enabled: !!sessionId,
+  });
+
+  // Inscrever-se em uma sessão
+  const registerMutation = useMutation({
+    mutationFn: async (sessionId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      // Verificar se sessão tem vagas
+      const { data: session, error: sessionError } = await supabase
+        .from('group_sessions')
+        .select('max_participants, current_registrations')
+        .eq('id', sessionId)
+        .single();
+
+      if (sessionError) throw sessionError;
+
+      if (session.current_registrations >= session.max_participants) {
+        throw new Error('Sessão esgotada');
+      }
+
+      // Criar inscrição
+      const { data, error } = await supabase
+        .from('group_session_registrations')
+        .insert({
+          session_id: sessionId,
+          user_id: user.id,
+          status: 'confirmed',
+          payment_status: 'free',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Incrementar contador de inscrições
+      const { error: updateError } = await supabase
+        .from('group_sessions')
+        .update({ 
+          current_registrations: session.current_registrations + 1 
+        })
+        .eq('id', sessionId);
+
+      if (updateError) throw updateError;
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['group-session-registration'] });
+      queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
+      toast({
+        title: 'Inscrição confirmada!',
+        description: 'Você receberá um email com o link da sessão.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erro ao realizar inscrição',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Cancelar inscrição
+  const cancelMutation = useMutation({
+    mutationFn: async (registrationId: string) => {
+      const { error } = await supabase
+        .from('group_session_registrations')
+        .update({ 
+          status: 'cancelled',
+          cancelled_at: new Date().toISOString(),
+        })
+        .eq('id', registrationId);
+
+      if (error) throw error;
+
+      // Decrementar contador de inscrições
+      const registration = await supabase
+        .from('group_session_registrations')
+        .select('session_id')
+        .eq('id', registrationId)
+        .single();
+
+      if (registration.data) {
+        const { data: session } = await supabase
+          .from('group_sessions')
+          .select('current_registrations')
+          .eq('id', registration.data.session_id)
+          .single();
+
+        if (session) {
+          await supabase
+            .from('group_sessions')
+            .update({ 
+              current_registrations: Math.max(0, session.current_registrations - 1)
+            })
+            .eq('id', registration.data.session_id);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['group-session-registration'] });
+      queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
+      toast({
+        title: 'Inscrição cancelada',
+        description: 'Sua inscrição foi cancelada com sucesso.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erro ao cancelar inscrição',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  return {
+    registration,
+    isLoading,
+    isRegistered: !!registration && registration.status === 'confirmed',
+    register: registerMutation.mutate,
+    cancel: cancelMutation.mutate,
+    isRegistering: registerMutation.isPending,
+    isCancelling: cancelMutation.isPending,
+  };
+};

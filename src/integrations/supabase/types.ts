@@ -1081,6 +1081,160 @@ export type Database = {
         }
         Relationships: []
       }
+      group_session_registrations: {
+        Row: {
+          attended_at: string | null
+          cancelled_at: string | null
+          id: string
+          payment_status: string | null
+          registered_at: string | null
+          session_id: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          attended_at?: string | null
+          cancelled_at?: string | null
+          id?: string
+          payment_status?: string | null
+          registered_at?: string | null
+          session_id: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          attended_at?: string | null
+          cancelled_at?: string | null
+          id?: string
+          payment_status?: string | null
+          registered_at?: string | null
+          session_id?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_session_registrations_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "group_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_sessions: {
+        Row: {
+          allowed_institution_ids: string[] | null
+          audience_type: string | null
+          created_at: string | null
+          created_by: string | null
+          current_registrations: number | null
+          description: string
+          duration_minutes: number | null
+          featured_image_url: string | null
+          google_event_id: string | null
+          has_libras: boolean | null
+          id: string
+          institution_id: string | null
+          is_free: boolean | null
+          max_participants: number | null
+          meeting_link: string | null
+          organizer_type: string
+          price: number | null
+          professional_id: number | null
+          session_date: string
+          session_type: string
+          start_time: string
+          status: string | null
+          tenant_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_institution_ids?: string[] | null
+          audience_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_registrations?: number | null
+          description: string
+          duration_minutes?: number | null
+          featured_image_url?: string | null
+          google_event_id?: string | null
+          has_libras?: boolean | null
+          id?: string
+          institution_id?: string | null
+          is_free?: boolean | null
+          max_participants?: number | null
+          meeting_link?: string | null
+          organizer_type: string
+          price?: number | null
+          professional_id?: number | null
+          session_date: string
+          session_type: string
+          start_time: string
+          status?: string | null
+          tenant_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_institution_ids?: string[] | null
+          audience_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_registrations?: number | null
+          description?: string
+          duration_minutes?: number | null
+          featured_image_url?: string | null
+          google_event_id?: string | null
+          has_libras?: boolean | null
+          id?: string
+          institution_id?: string | null
+          is_free?: boolean | null
+          max_participants?: number | null
+          meeting_link?: string | null
+          organizer_type?: string
+          price?: number | null
+          professional_id?: number | null
+          session_date?: string
+          session_type?: string
+          start_time?: string
+          status?: string | null
+          tenant_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_sessions_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_sessions_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_sessions_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_sessions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_audit_log: {
         Row: {
           action_type: string
