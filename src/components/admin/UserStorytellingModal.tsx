@@ -158,7 +158,7 @@ export function UserStorytellingModal({
                   <div className="space-y-4">
                     {data.timeline.length === 0 ? <p className="text-center text-muted-foreground py-8">
                         Nenhuma atividade registrada
-                      </p> : data.timeline.map(event => <div key={event.id} className="flex gap-4 p-4 rounded-lg border hover:bg-muted/30 transition-colors">
+                      </p> : data.timeline.map(event => <div key={event.id} className="flex gap-4 p-4 rounded-lg border shadow-sm hover:shadow-md hover:-translate-y-1 hover:bg-muted/30 hover:border-primary/20 transition-all duration-300 ease-in-out">
                           <div className="flex-shrink-0 pt-0.5">
                             {getStatusIcon(event.status)}
                           </div>
