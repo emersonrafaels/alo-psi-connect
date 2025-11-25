@@ -14,6 +14,8 @@ import { GoogleCalendarTenantConfig } from '@/components/admin/config/GoogleCale
 import { EducationalInstitutionsConfig } from '@/components/admin/config/EducationalInstitutionsConfig';
 import { NewsletterSubscribersConfig } from '@/components/admin/config/NewsletterSubscribersConfig';
 import { cn } from '@/lib/utils';
+import { AdminTenantProvider } from '@/contexts/AdminTenantContext';
+import { AdminTenantSelector } from '@/components/admin/AdminTenantSelector';
 
 interface ConfigCard {
   id: string;
@@ -164,16 +166,20 @@ export default function Configurations() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Settings className="h-6 w-6" />
-        <div>
-          <h1 className="text-2xl font-bold">Configurações do Sistema</h1>
-          <p className="text-muted-foreground">
-            Gerencie todas as configurações parametrizáveis da plataforma
-          </p>
+    <AdminTenantProvider>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Settings className="h-6 w-6" />
+            <div>
+              <h1 className="text-2xl font-bold">Configurações do Sistema</h1>
+              <p className="text-muted-foreground">
+                Gerencie todas as configurações parametrizáveis da plataforma
+              </p>
+            </div>
+          </div>
+          <AdminTenantSelector />
         </div>
-      </div>
 
       {!selectedConfig ? (
         <div className="space-y-8">
@@ -240,6 +246,7 @@ export default function Configurations() {
           )}
         </div>
       )}
-    </div>
+      </div>
+    </AdminTenantProvider>
   );
 }

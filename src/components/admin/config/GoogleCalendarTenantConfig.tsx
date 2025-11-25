@@ -7,43 +7,45 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Calendar, Check, RefreshCw, Video, AlertCircle, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useTenant } from '@/hooks/useTenant';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const GoogleCalendarTenantConfig = () => {
   const { toast } = useToast();
-  const { tenant } = useTenant();
+  const { tenantFilter, tenants } = useAdminTenant();
   const queryClient = useQueryClient();
   const [connecting, setConnecting] = useState(false);
 
+  const selectedTenant = tenants.find(t => t.id === tenantFilter);
+
   // Fetch tenant Google Calendar configuration
   const { data: tenantConfig, isLoading } = useQuery({
-    queryKey: ['tenant-google-config', tenant?.id],
+    queryKey: ['tenant-google-config', tenantFilter],
     queryFn: async () => {
-      if (!tenant?.id) return null;
+      if (!tenantFilter) return null;
       
       const { data, error } = await supabase
         .from('tenants')
-        .select('google_meet_mode, google_calendar_email, google_calendar_token, google_calendar_scope')
-        .eq('id', tenant.id)
+        .select('id, name, google_meet_mode, google_calendar_email, google_calendar_token, google_calendar_scope')
+        .eq('id', tenantFilter)
         .single();
         
       if (error) throw error;
       return data;
     },
-    enabled: !!tenant?.id
+    enabled: !!tenantFilter
   });
 
   // Update Google Meet mode
   const updateModeMutation = useMutation({
     mutationFn: async (mode: 'professional' | 'tenant') => {
-      if (!tenant?.id) throw new Error('Tenant not found');
+      if (!tenantFilter) throw new Error('Tenant not found');
       
       const { error } = await supabase
         .from('tenants')
         .update({ google_meet_mode: mode })
-        .eq('id', tenant.id);
+        .eq('id', tenantFilter);
         
       if (error) throw error;
     },
@@ -65,7 +67,7 @@ export const GoogleCalendarTenantConfig = () => {
 
   // Connect Google Calendar for tenant
   const handleConnectTenant = async () => {
-    if (!tenant?.id) return;
+    if (!tenantFilter) return;
     
     setConnecting(true);
     try {
@@ -73,7 +75,7 @@ export const GoogleCalendarTenantConfig = () => {
         body: { 
           action: 'connect',
           type: 'tenant',
-          tenantId: tenant.id
+          tenantId: tenantFilter
         }
       });
 
@@ -83,13 +85,13 @@ export const GoogleCalendarTenantConfig = () => {
         // Salvar contexto no sessionStorage ANTES de abrir popup
         sessionStorage.setItem('google-calendar-tenant-context', JSON.stringify({
           type: 'tenant',
-          tenantId: tenant.id,
+          tenantId: tenantFilter,
           timestamp: Date.now()
         }));
         
         console.log('💾 Contexto do tenant salvo no sessionStorage:', {
           type: 'tenant',
-          tenantId: tenant.id
+          tenantId: tenantFilter
         });
         
         // Open OAuth popup
@@ -150,7 +152,7 @@ export const GoogleCalendarTenantConfig = () => {
             });
 
             queryClient.invalidateQueries({ queryKey: ['tenant-google-config'] });
-            queryClient.invalidateQueries({ queryKey: ['tenant-google-config', tenant.id] });
+            queryClient.invalidateQueries({ queryKey: ['tenant-google-config', tenantFilter] });
             window.removeEventListener('message', messageHandler);
           }
         };
@@ -171,13 +173,13 @@ export const GoogleCalendarTenantConfig = () => {
   // Disconnect Google Calendar for tenant
   const disconnectMutation = useMutation({
     mutationFn: async () => {
-      if (!tenant?.id) throw new Error('Tenant not found');
+      if (!tenantFilter) throw new Error('Tenant not found');
       
       const { error } = await supabase.functions.invoke('google-calendar-auth', {
         body: { 
           action: 'disconnect',
           type: 'tenant',
-          tenantId: tenant.id
+          tenantId: tenantFilter
         }
       });
       
@@ -199,6 +201,17 @@ export const GoogleCalendarTenantConfig = () => {
     }
   });
 
+  if (!tenantFilter) {
+    return (
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Selecione um tenant para configurar o Google Calendar
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   if (isLoading) {
     return <div>Carregando configurações...</div>;
   }
@@ -208,6 +221,12 @@ export const GoogleCalendarTenantConfig = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Badge variant="outline" className="text-base">
+          Configurando: {selectedTenant?.name || tenantConfig?.name}
+        </Badge>
+      </div>
+
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -238,7 +257,7 @@ export const GoogleCalendarTenantConfig = () => {
               <Label htmlFor="tenant" className="flex-1 cursor-pointer">
                 <div className="font-semibold">Email Centralizado do Tenant</div>
                 <div className="text-sm text-muted-foreground">
-                  Todos os agendamentos usam a conta Google Calendar centralizada do {tenant?.name} ({tenantConfig?.google_calendar_email || 'não configurado'})
+                  Todos os agendamentos usam a conta Google Calendar centralizada do {selectedTenant?.name || tenantConfig?.name} ({tenantConfig?.google_calendar_email || 'não configurado'})
                 </div>
               </Label>
             </div>

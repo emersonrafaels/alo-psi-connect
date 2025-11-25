@@ -15,7 +15,8 @@ import {
   GraduationCap,
   Wrench,
   FileSpreadsheet,
-  TrendingUp
+  TrendingUp,
+  Video
 } from 'lucide-react';
 import {
   Sidebar,
@@ -154,6 +155,12 @@ const adminMenuGroups = [
         title: 'Testes',
         url: '/admin/tests',
         icon: FlaskConical,
+        requiredRole: 'super_admin' as const
+      },
+      {
+        title: 'Google Calendar',
+        url: '/admin/google-calendar-tests',
+        icon: Video,
         requiredRole: 'super_admin' as const
       }
     ]
