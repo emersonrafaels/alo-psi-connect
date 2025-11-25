@@ -1,27 +1,20 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mail, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useTenant } from '@/hooks/useTenant';
-import { buildTenantPath } from '@/utils/tenantHelpers';
+import { NotifyMeModal } from './NotifyMeModal';
+import { SuggestThemeModal } from './SuggestThemeModal';
 
 export const SessionsCTASection = () => {
-  const navigate = useNavigate();
-  const { tenant } = useTenant();
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
+  const [showSuggestModal, setShowSuggestModal] = useState(false);
 
   const handleNewsletterSignup = () => {
-    // Scroll to newsletter section or redirect to a newsletter page
-    const newsletterSection = document.getElementById('newsletter-section');
-    if (newsletterSection) {
-      newsletterSection.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      // If no newsletter section exists, could open a modal or redirect
-      console.log('Newsletter signup requested');
-    }
+    setShowNotifyModal(true);
   };
 
   const handleSuggestTheme = () => {
-    navigate(buildTenantPath(tenant?.slug || 'alopsi', '/contato'));
+    setShowSuggestModal(true);
   };
 
   return (
@@ -73,6 +66,9 @@ export const SessionsCTASection = () => {
           </div>
         </CardContent>
       </Card>
+
+      <NotifyMeModal open={showNotifyModal} onOpenChange={setShowNotifyModal} />
+      <SuggestThemeModal open={showSuggestModal} onOpenChange={setShowSuggestModal} />
     </div>
   );
 };
