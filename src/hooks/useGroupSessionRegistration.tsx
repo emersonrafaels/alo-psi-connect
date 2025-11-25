@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 export interface GroupSessionRegistration {
   id: string;
@@ -16,6 +17,7 @@ export interface GroupSessionRegistration {
 export const useGroupSessionRegistration = (sessionId?: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [lastRegisteredSessionId, setLastRegisteredSessionId] = useState<string | null>(null);
 
   // Verificar se usuário está inscrito em uma sessão
   const { data: registration, isLoading } = useQuery({
@@ -139,14 +141,18 @@ export const useGroupSessionRegistration = (sessionId?: string) => {
       
       return { previousSessions };
     },
-    onSuccess: () => {
+    onSuccess: (_, sessionId) => {
+      setLastRegisteredSessionId(sessionId);
       queryClient.invalidateQueries({ queryKey: ['group-session-registration'] });
-      queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
+      // NÃO invalidar group-sessions - o optimistic update já atualizou
       queryClient.invalidateQueries({ queryKey: ['user-registrations'] });
       toast({
         title: 'Inscrição confirmada!',
         description: 'Você receberá um email com o link da sessão.',
       });
+      
+      // Limpar após 3 segundos
+      setTimeout(() => setLastRegisteredSessionId(null), 3000);
     },
     onError: (error, sessionId, context) => {
       // Rollback: restaurar cache anterior em caso de erro
@@ -228,5 +234,6 @@ export const useGroupSessionRegistration = (sessionId?: string) => {
     cancel: cancelMutation.mutate,
     isRegistering: registerMutation.isPending,
     isCancelling: cancelMutation.isPending,
+    lastRegisteredSessionId,
   };
 };

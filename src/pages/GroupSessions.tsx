@@ -50,7 +50,7 @@ export default function GroupSessions() {
   });
 
   const { registeredSessionIds } = useUserRegistrations();
-  const { register, isRegistering } = useGroupSessionRegistration();
+  const { register, isRegistering, lastRegisteredSessionId } = useGroupSessionRegistration();
   
   const nextSession = sessions.length > 0 ? sessions[0] : null;
 
@@ -96,6 +96,7 @@ export default function GroupSessions() {
               onRegister={handleRegister}
               isRegistered={registeredSessionIds.has(nextSession.id)}
               isRegistering={isRegistering}
+              justRegisteredSessionId={lastRegisteredSessionId}
             />
           </div>
         )}
@@ -131,6 +132,7 @@ export default function GroupSessions() {
                 onRegister={handleRegister}
                 registeredSessionIds={registeredSessionIds}
                 isRegistering={isRegistering}
+                justRegisteredSessionId={lastRegisteredSessionId}
               />
             )}
           </div>

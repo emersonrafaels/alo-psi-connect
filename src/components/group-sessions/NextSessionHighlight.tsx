@@ -14,6 +14,7 @@ interface NextSessionHighlightProps {
   onRegister: (sessionId: string) => void;
   isRegistered?: boolean;
   isRegistering?: boolean;
+  justRegisteredSessionId?: string | null;
 }
 
 export const NextSessionHighlight = ({
@@ -21,6 +22,7 @@ export const NextSessionHighlight = ({
   onRegister,
   isRegistered,
   isRegistering,
+  justRegisteredSessionId = null,
 }: NextSessionHighlightProps) => {
   const { tenant } = useTenant();
   const [showSuccess, setShowSuccess] = useState(false);
@@ -28,14 +30,14 @@ export const NextSessionHighlight = ({
   const formattedDate = format(sessionDate, "dd 'de' MMMM", { locale: ptBR });
   const formattedTime = session.start_time.slice(0, 5);
 
-  // Efeito de sucesso temporário
+  // Efeito de sucesso temporário - apenas para o card recém-inscrito
   useEffect(() => {
-    if (isRegistered && !isRegistering) {
+    if (justRegisteredSessionId === session.id && isRegistered && !isRegistering) {
       setShowSuccess(true);
       const timer = setTimeout(() => setShowSuccess(false), 2000);
       return () => clearTimeout(timer);
     }
-  }, [isRegistered, isRegistering]);
+  }, [justRegisteredSessionId, session.id, isRegistered, isRegistering]);
   
   const isOrganizedByTenant = session.organizer_type === 'tenant';
   
