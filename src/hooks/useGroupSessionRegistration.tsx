@@ -43,6 +43,18 @@ export const useGroupSessionRegistration = (sessionId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
+      // Verificar se já está inscrito
+      const { data: existingRegistration } = await supabase
+        .from('group_session_registrations')
+        .select('id, status')
+        .eq('session_id', sessionId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingRegistration && existingRegistration.status === 'confirmed') {
+        throw new Error('Você já está inscrito nesta sessão');
+      }
+
       // Verificar se sessão tem vagas
       const { data: session, error: sessionError } = await supabase
         .from('group_sessions')
@@ -85,15 +97,20 @@ export const useGroupSessionRegistration = (sessionId?: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['group-session-registration'] });
       queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['user-registrations'] });
       toast({
         title: 'Inscrição confirmada!',
         description: 'Você receberá um email com o link da sessão.',
       });
     },
     onError: (error) => {
+      const message = error.message.includes('duplicate key') 
+        ? 'Você já está inscrito nesta sessão'
+        : error.message;
+      
       toast({
         title: 'Erro ao realizar inscrição',
-        description: error.message,
+        description: message,
         variant: 'destructive',
       });
     },
