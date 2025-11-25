@@ -87,6 +87,13 @@ All colors MUST be HSL.
     /* Specialty tags colors - light mode (default values) */
     --specialty-tag-bg-light: 199 95% 94%;
     --specialty-tag-text-light: 199 89% 48%;
+
+    /* Wellzcare-inspired colors for Group Sessions */
+    --wellz-purple: 310 55% 20%;      /* Roxo escuro do hero */
+    --wellz-coral: 25 88% 66%;        /* Laranja/coral dos botões */
+    --wellz-pink-light: 330 50% 96%;  /* Rosa claro do background */
+    --wellz-pink-border: 310 35% 70%; /* Rosa da borda das fotos */
+    --wellz-text-title: 270 50% 20%;  /* Roxo dos títulos */
   }
 
   .dark {
@@ -146,6 +153,13 @@ All colors MUST be HSL.
     /* Specialty tags colors - dark mode (default values) */
     --specialty-tag-bg-dark: 217 91% 21%;
     --specialty-tag-text-dark: 199 95% 74%;
+
+    /* Wellzcare-inspired colors for Group Sessions (dark mode) */
+    --wellz-purple: 310 45% 25%;
+    --wellz-coral: 25 88% 66%;
+    --wellz-pink-light: 310 20% 15%;
+    --wellz-pink-border: 310 35% 50%;
+    --wellz-text-title: 270 40% 80%;
   }
 }
 

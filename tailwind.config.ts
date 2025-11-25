@@ -24,6 +24,11 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
+				'wellz-purple': 'hsl(var(--wellz-purple))',
+				'wellz-coral': 'hsl(var(--wellz-coral))',
+				'wellz-pink-light': 'hsl(var(--wellz-pink-light))',
+				'wellz-pink-border': 'hsl(var(--wellz-pink-border))',
+				'wellz-text-title': 'hsl(var(--wellz-text-title))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
