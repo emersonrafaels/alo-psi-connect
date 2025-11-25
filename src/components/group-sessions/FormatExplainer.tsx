@@ -113,7 +113,7 @@ export const FormatExplainer = ({ selectedType, onTypeSelect }: FormatExplainerP
                       w-20 h-20 rounded-full flex items-center justify-center
                       ${colors.iconBg} ${colors.glow} shadow-lg
                       transition-all duration-300
-                      ${isSelected ? 'animate-pulse scale-110' : 'hover:scale-110'}
+                      ${isSelected ? 'scale-110' : 'hover:scale-110'}
                     `}>
                       <SessionTypeIcon 
                         type={format} 
