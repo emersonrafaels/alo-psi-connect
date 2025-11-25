@@ -86,11 +86,23 @@ export const GoogleCalendarTenantConfig = () => {
         const left = window.screen.width / 2 - width / 2;
         const top = window.screen.height / 2 - height / 2;
         
+        console.log('🚀 DEBUG - Abrindo popup com authUrl:', {
+          authUrl: data.authUrl,
+          hasState: data.authUrl.includes('state='),
+          stateInURL: data.authUrl.match(/state=([^&]+)/)?.[1],
+          popupName: 'google-auth'
+        });
+        
         const popup = window.open(
           data.authUrl,
-          'Google Calendar Authorization',
+          'google-auth',
           `width=${width},height=${height},left=${left},top=${top}`
         );
+        
+        console.log('🚀 DEBUG - Popup aberto:', {
+          popupExists: !!popup,
+          popupName: popup?.name
+        });
 
         // Listen for callback
         const messageHandler = async (event: MessageEvent) => {
