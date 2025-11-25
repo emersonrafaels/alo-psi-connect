@@ -3,13 +3,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, Clock, Users, Video, Building2 } from 'lucide-react';
+import { Calendar, Clock, Users, Video, Building2, Check } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getSessionTypeLabel } from './SessionTypeIcon';
 import { SessionTypeIcon } from './SessionTypeIcon';
 import { SessionCountdown } from './SessionCountdown';
 import { useTenant } from '@/hooks/useTenant';
+import { useState, useEffect } from 'react';
 
 interface GroupSessionCardProps {
   session: GroupSession;
@@ -25,8 +26,18 @@ export const GroupSessionCard = ({
   isRegistering = false 
 }: GroupSessionCardProps) => {
   const { tenant } = useTenant();
+  const [showSuccess, setShowSuccess] = useState(false);
   const spotsLeft = (session.max_participants || 0) - (session.current_registrations || 0);
   const isFull = spotsLeft <= 0;
+
+  // Efeito de sucesso temporário
+  useEffect(() => {
+    if (isRegistered && !isRegistering) {
+      setShowSuccess(true);
+      const timer = setTimeout(() => setShowSuccess(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isRegistered, isRegistering]);
   
   const sessionDate = parseISO(session.session_date);
   const formattedDate = format(sessionDate, "dd 'de' MMMM", { locale: ptBR });
@@ -49,7 +60,7 @@ export const GroupSessionCard = ({
   const organizerInitials = organizerName.split(' ').map(n => n[0]).join('').slice(0, 2);
 
   return (
-    <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-primary/20 hover:scale-[1.02] group">
+    <Card className={`overflow-hidden hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-primary/20 hover:scale-[1.02] group ${showSuccess ? 'animate-flash-border' : ''}`}>
       <CardContent className="p-0">
         <div className="flex flex-col md:flex-row gap-6 p-6">
           {/* Organizador - Esquerda */}
@@ -130,13 +141,35 @@ export const GroupSessionCard = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <Button
-                onClick={() => onRegister(session.id)}
-                disabled={isFull || isRegistered || isRegistering}
-                className="bg-accent hover:bg-accent/90 text-accent-foreground transition-all duration-300 hover:scale-105 hover:shadow-lg"
-              >
-                {isRegistered ? 'Já Inscrito' : isFull ? 'Esgotado' : 'Inscrever-me'}
-              </Button>
+              <div className="relative">
+                <Button
+                  onClick={() => onRegister(session.id)}
+                  disabled={isFull || isRegistered || isRegistering}
+                  className={`
+                    transition-all duration-300 hover:scale-105 hover:shadow-lg
+                    ${showSuccess 
+                      ? 'bg-success hover:bg-success text-success-foreground animate-success-bounce' 
+                      : isRegistered 
+                        ? 'bg-muted hover:bg-muted text-muted-foreground' 
+                        : 'bg-accent hover:bg-accent/90 text-accent-foreground'
+                    }
+                  `}
+                >
+                  {showSuccess && <Check className="w-4 h-4 mr-1" />}
+                  {showSuccess ? 'Inscrito!' : isRegistered ? 'Já Inscrito' : isRegistering ? 'Inscrevendo...' : isFull ? 'Esgotado' : 'Inscrever-me'}
+                </Button>
+                
+                {/* Confetti effect */}
+                {showSuccess && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="confetti-particle animate-success-confetti" style={{ left: '10%', animationDelay: '0s' }}>🎉</div>
+                    <div className="confetti-particle animate-success-confetti" style={{ left: '30%', animationDelay: '0.1s' }}>✨</div>
+                    <div className="confetti-particle animate-success-confetti" style={{ left: '50%', animationDelay: '0.2s' }}>🎊</div>
+                    <div className="confetti-particle animate-success-confetti" style={{ left: '70%', animationDelay: '0.15s' }}>⭐</div>
+                    <div className="confetti-particle animate-success-confetti" style={{ left: '90%', animationDelay: '0.05s' }}>💫</div>
+                  </div>
+                )}
+              </div>
               
               {spotsLeft <= 3 && spotsLeft > 0 && (
                 <p className="text-sm text-destructive font-semibold animate-pulse">
