@@ -28,6 +28,26 @@ interface CalendarEventRequest {
   };
 }
 
+interface CalendarEventTestRequest {
+  agendamento: {
+    id: string;
+    nome_paciente: string;
+    email_paciente: string;
+    telefone_paciente?: string;
+    data_consulta: string;
+    horario: string;
+    valor?: number;
+    observacoes?: string;
+    tenant_id: string;
+    professional_id?: number;
+  };
+  professional?: {
+    display_name: string;
+    user_email: string;
+  };
+  duration_minutes?: number;
+}
+
 interface TenantGoogleConfig {
   google_meet_mode: 'professional' | 'tenant';
   google_calendar_email: string | null;
@@ -42,7 +62,54 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { agendamento }: CalendarEventRequest = await req.json();
+    const requestBody = await req.json();
+    const agendamento = requestBody.agendamento;
+
+    // Detectar formato do payload
+    const isTestFormat = !agendamento.profissionais && requestBody.professional;
+    console.log('📦 Payload format detected:', isTestFormat ? 'TEST' : 'PRODUCTION');
+
+    // Normalizar dados do profissional para estrutura unificada
+    const professionalData = isTestFormat ? {
+      display_name: requestBody.professional?.display_name || 'Profissional',
+      user_email: requestBody.professional?.user_email || '',
+      profissao: 'Psicólogo(a)',  // Valor padrão para testes
+      telefone: '',  // Não disponível em formato de teste
+      tempo_consulta: requestBody.duration_minutes || 50,
+      profile_id: agendamento.professional_id || null
+    } : agendamento.profissionais;
+
+    console.log('👤 Professional data normalized:', {
+      name: professionalData.display_name,
+      email: professionalData.user_email,
+      duration: professionalData.tempo_consulta,
+      hasProfileId: !!professionalData.profile_id
+    });
+
+    // Validar campos obrigatórios
+    if (!agendamento.id || !agendamento.nome_paciente || !agendamento.email_paciente || 
+        !agendamento.data_consulta || !agendamento.horario || !agendamento.tenant_id) {
+      console.error('❌ Missing required fields in agendamento');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Dados incompletos: faltam campos obrigatórios do agendamento' 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!professionalData.display_name || !professionalData.user_email) {
+      console.error('❌ Missing required professional fields');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Dados incompletos: faltam informações do profissional' 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log('Creating calendar event for appointment:', agendamento.id);
 
     // Initialize Supabase client
@@ -101,11 +168,21 @@ const handler = async (req: Request): Promise<Response> => {
       // Usar credenciais do profissional (comportamento original)
       console.log('Using professional-level Google Calendar credentials');
       
-      const { data: professionalProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('google_calendar_token, google_calendar_refresh_token, google_calendar_scope')
-        .eq('id', agendamento.profissionais.profile_id)
-        .maybeSingle();
+      // Só buscar credenciais do profissional se tiver profile_id
+      let professionalProfile = null;
+      let profileError = null;
+      
+      if (professionalData.profile_id) {
+        const result = await supabase
+          .from('profiles')
+          .select('google_calendar_token, google_calendar_refresh_token, google_calendar_scope')
+          .eq('id', professionalData.profile_id)
+          .maybeSingle();
+        professionalProfile = result.data;
+        profileError = result.error;
+      } else {
+        console.log('⚠️ No profile_id available (test format), skipping professional credential lookup');
+      }
         
       if (profileError || !professionalProfile?.google_calendar_token) {
         console.error('Error fetching professional profile:', profileError);
@@ -151,25 +228,21 @@ const handler = async (req: Request): Promise<Response> => {
     startDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
     const endDateTime = new Date(startDateTime);
-    endDateTime.setMinutes(endDateTime.getMinutes() + (agendamento.profissionais.tempo_consulta || 50));
+    endDateTime.setMinutes(endDateTime.getMinutes() + (professionalData.tempo_consulta || 50));
 
     const eventData = {
       summary: `Consulta - ${agendamento.nome_paciente}`,
-      description: `Consulta online com ${agendamento.profissionais.display_name}
+      description: `Consulta online com ${professionalData.display_name}
 
 📋 Informações da Consulta:
 • Paciente: ${agendamento.nome_paciente}
 • Email: ${agendamento.email_paciente}
-• Telefone: ${agendamento.telefone_paciente}
-• Valor: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor)}
-
-${agendamento.observacoes ? `📝 Observações do Paciente:\n${agendamento.observacoes}\n\n` : ''}
-
-🎥 Link do Google Meet será gerado automaticamente para esta reunião.
+${agendamento.telefone_paciente ? `• Telefone: ${agendamento.telefone_paciente}\n` : ''}${agendamento.valor ? `• Valor: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor)}\n` : ''}
+${agendamento.observacoes ? `📝 Observações do Paciente:\n${agendamento.observacoes}\n\n` : ''}🎥 Link do Google Meet será gerado automaticamente para esta reunião.
 
 📞 Para dúvidas ou reagendamento, entre em contato:
-• Email: ${agendamento.profissionais.user_email}
-• Telefone: ${agendamento.profissionais.telefone}
+• Email: ${professionalData.user_email}
+${professionalData.telefone ? `• Telefone: ${professionalData.telefone}` : ''}
 
 ---
 Gerado automaticamente pelo sistema Alô, Psi`,
@@ -187,8 +260,8 @@ Gerado automaticamente pelo sistema Alô, Psi`,
           displayName: agendamento.nome_paciente,
         },
         {
-          email: agendamento.profissionais.user_email,
-          displayName: agendamento.profissionais.display_name,
+          email: professionalData.user_email,
+          displayName: professionalData.display_name,
         }
       ],
       conferenceData: {
@@ -256,11 +329,13 @@ Gerado automaticamente pelo sistema Alô, Psi`,
               .from('tenants')
               .update({ google_calendar_token: tokenData.access_token })
               .eq('id', agendamento.tenant_id);
-          } else {
+          } else if (professionalData.profile_id) {
             await supabase
               .from('profiles')
               .update({ google_calendar_token: tokenData.access_token })
-              .eq('id', agendamento.profissionais.profile_id);
+              .eq('id', professionalData.profile_id);
+          } else {
+            console.warn('⚠️ No profile_id available for token update (test format)');
           }
 
           // Retry calendar event creation with new token
