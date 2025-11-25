@@ -68,19 +68,39 @@ export const useGroupSessionRegistration = (sessionId?: string) => {
         throw new Error('Sessão esgotada');
       }
 
-      // Criar inscrição
-      const { data, error } = await supabase
-        .from('group_session_registrations')
-        .insert({
-          session_id: sessionId,
-          user_id: user.id,
-          status: 'confirmed',
-          payment_status: 'free',
-        })
-        .select()
-        .single();
+      let data;
 
-      if (error) throw error;
+      // Se existe registro cancelado, reativar via UPDATE
+      if (existingRegistration && existingRegistration.status === 'cancelled') {
+        const { data: updatedData, error } = await supabase
+          .from('group_session_registrations')
+          .update({
+            status: 'confirmed',
+            cancelled_at: null,
+            registered_at: new Date().toISOString(),
+          })
+          .eq('id', existingRegistration.id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        data = updatedData;
+      } else {
+        // Criar nova inscrição via INSERT
+        const { data: insertedData, error } = await supabase
+          .from('group_session_registrations')
+          .insert({
+            session_id: sessionId,
+            user_id: user.id,
+            status: 'confirmed',
+            payment_status: 'free',
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        data = insertedData;
+      }
 
       // Incrementar contador de inscrições
       const { error: updateError } = await supabase
