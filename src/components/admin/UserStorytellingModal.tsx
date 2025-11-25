@@ -5,21 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Calendar,
-  DollarSign,
-  Tag,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  TrendingUp,
-  TrendingDown,
-  Activity,
-} from 'lucide-react';
+import { Calendar, Tag, AlertCircle, CheckCircle, XCircle, Clock, TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 interface UserStorytellingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,18 +15,18 @@ interface UserStorytellingModalProps {
   userName: string;
   userType: 'patient' | 'professional';
 }
-
 export function UserStorytellingModal({
   open,
   onOpenChange,
   userId,
   userName,
-  userType,
+  userType
 }: UserStorytellingModalProps) {
-  const { data, isLoading } = useUserStorytellingData(userId);
-
+  const {
+    data,
+    isLoading
+  } = useUserStorytellingData(userId);
   if (!open) return null;
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -53,7 +41,6 @@ export function UserStorytellingModal({
         return <Activity className="h-5 w-5 text-muted-foreground" />;
     }
   };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -68,9 +55,7 @@ export function UserStorytellingModal({
         return <Badge variant="outline">{status}</Badge>;
     }
   };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">
@@ -81,20 +66,15 @@ export function UserStorytellingModal({
           </p>
         </DialogHeader>
 
-        {isLoading ? (
-          <div className="space-y-4">
+        {isLoading ? <div className="space-y-4">
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-64 w-full" />
-          </div>
-        ) : !data ? (
-          <div className="py-16 text-center">
+          </div> : !data ? <div className="py-16 text-center">
             <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
               Nenhum dado encontrado para este usuário.
             </p>
-          </div>
-        ) : (
-          <Tabs defaultValue="timeline" className="w-full">
+          </div> : <Tabs defaultValue="timeline" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="timeline">Visão Geral</TabsTrigger>
               <TabsTrigger value="coupons">
@@ -131,11 +111,7 @@ export function UserStorytellingModal({
                           {data.metrics.attendanceRate}%
                         </p>
                       </div>
-                      {data.metrics.attendanceRate >= 80 ? (
-                        <TrendingUp className="h-8 w-8 text-green-500" />
-                      ) : (
-                        <TrendingDown className="h-8 w-8 text-red-500" />
-                      )}
+                      {data.metrics.attendanceRate >= 80 ? <TrendingUp className="h-8 w-8 text-green-500" /> : <TrendingDown className="h-8 w-8 text-red-500" />}
                     </div>
                   </CardContent>
                 </Card>
@@ -151,7 +127,7 @@ export function UserStorytellingModal({
                           R$ {data.metrics.totalSpent.toFixed(2)}
                         </p>
                       </div>
-                      <DollarSign className="h-8 w-8 text-muted-foreground" />
+                      
                     </div>
                   </CardContent>
                 </Card>
@@ -180,16 +156,9 @@ export function UserStorytellingModal({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {data.timeline.length === 0 ? (
-                      <p className="text-center text-muted-foreground py-8">
+                    {data.timeline.length === 0 ? <p className="text-center text-muted-foreground py-8">
                         Nenhuma atividade registrada
-                      </p>
-                    ) : (
-                      data.timeline.map((event) => (
-                        <div
-                          key={event.id}
-                          className="flex gap-4 p-4 rounded-lg border hover:bg-accent transition-colors"
-                        >
+                      </p> : data.timeline.map(event => <div key={event.id} className="flex gap-4 p-4 rounded-lg border hover:bg-accent transition-colors">
                           <div className="flex-shrink-0">
                             {getStatusIcon(event.status)}
                           </div>
@@ -199,23 +168,18 @@ export function UserStorytellingModal({
                                 <h4 className="font-semibold">{event.title}</h4>
                                 <p className="text-sm text-muted-foreground">
                                   {format(event.date, "dd 'de' MMMM 'de' yyyy 'às' HH:mm", {
-                                    locale: ptBR,
-                                  })}
+                            locale: ptBR
+                          })}
                                 </p>
                               </div>
                               {getStatusBadge(event.status)}
                             </div>
 
-                            {event.professional && (
-                              <div className="flex items-center gap-2">
+                            {event.professional && <div className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
-                                  <AvatarImage
-                                    src={event.professional.photo_url || ''}
-                                  />
+                                  <AvatarImage src={event.professional.photo_url || ''} />
                                   <AvatarFallback>
-                                    {event.professional.name
-                                      .slice(0, 2)
-                                      .toUpperCase()}
+                                    {event.professional.name.slice(0, 2).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div>
@@ -226,17 +190,13 @@ export function UserStorytellingModal({
                                     {event.professional.profession}
                                   </p>
                                 </div>
-                              </div>
-                            )}
+                              </div>}
 
-                            {event.description && (
-                              <p className="text-sm text-muted-foreground">
+                            {event.description && <p className="text-sm text-muted-foreground">
                                 {event.description}
-                              </p>
-                            )}
+                              </p>}
 
-                            {event.coupon && (
-                              <div className="p-3 bg-green-50 dark:bg-green-950 rounded-md border border-green-200 dark:border-green-800">
+                            {event.coupon && <div className="p-3 bg-green-50 dark:bg-green-950 rounded-md border border-green-200 dark:border-green-800">
                                 <div className="flex items-center gap-2 mb-1">
                                   <Tag className="h-4 w-4 text-green-600 dark:text-green-400" />
                                   <p className="text-sm font-medium text-green-700 dark:text-green-300">
@@ -246,13 +206,10 @@ export function UserStorytellingModal({
                                 <p className="text-xs text-green-600 dark:text-green-400">
                                   {event.coupon.institution_coupons?.name}
                                 </p>
-                              </div>
-                            )}
+                              </div>}
 
-                            {event.amount && (
-                              <div className="flex items-center gap-4 text-sm">
-                                {event.amount.discount > 0 ? (
-                                  <>
+                            {event.amount && <div className="flex items-center gap-4 text-sm">
+                                {event.amount.discount > 0 ? <>
                                     <span className="line-through text-muted-foreground">
                                       R$ {event.amount.original.toFixed(2)}
                                     </span>
@@ -263,18 +220,12 @@ export function UserStorytellingModal({
                                     <span className="font-semibold text-green-600">
                                       R$ {event.amount.final.toFixed(2)}
                                     </span>
-                                  </>
-                                ) : (
-                                  <span className="font-semibold">
+                                  </> : <span className="font-semibold">
                                     R$ {event.amount.final.toFixed(2)}
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                                  </span>}
+                              </div>}
                           </div>
-                        </div>
-                      ))
-                    )}
+                        </div>)}
                   </div>
                 </CardContent>
               </Card>
@@ -286,17 +237,10 @@ export function UserStorytellingModal({
                   <CardTitle>Cupons Utilizados</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {data.couponsUsed.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
+                  {data.couponsUsed.length === 0 ? <p className="text-center text-muted-foreground py-8">
                       Nenhum cupom utilizado
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {data.couponsUsed.map((coupon) => (
-                        <div
-                          key={coupon.id}
-                          className="flex items-center justify-between p-4 rounded-lg border"
-                        >
+                    </p> : <div className="space-y-4">
+                      {data.couponsUsed.map(coupon => <div key={coupon.id} className="flex items-center justify-between p-4 rounded-lg border">
                           <div className="flex items-center gap-4">
                             <Tag className="h-8 w-8 text-primary" />
                             <div>
@@ -323,10 +267,8 @@ export function UserStorytellingModal({
                               Economia: R$ {coupon.discount_amount.toFixed(2)}
                             </p>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        </div>)}
+                    </div>}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -394,13 +336,7 @@ export function UserStorytellingModal({
                       <span className="text-muted-foreground">
                         Taxa de Comparecimento
                       </span>
-                      <span
-                        className={`font-bold ${
-                          data.metrics.attendanceRate >= 80
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                        }`}
-                      >
+                      <span className={`font-bold ${data.metrics.attendanceRate >= 80 ? 'text-green-600' : 'text-red-600'}`}>
                         {data.metrics.attendanceRate}%
                       </span>
                     </div>
@@ -408,9 +344,7 @@ export function UserStorytellingModal({
                 </Card>
               </div>
             </TabsContent>
-          </Tabs>
-        )}
+          </Tabs>}
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
