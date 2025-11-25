@@ -1,11 +1,12 @@
 import { GroupSession } from '@/hooks/useGroupSessions';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Users, Flame } from 'lucide-react';
+import { Calendar, Clock, Users, Flame, Building2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SessionCountdown } from './SessionCountdown';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useTenant } from '@/hooks/useTenant';
 
 interface NextSessionHighlightProps {
   session: GroupSession;
@@ -20,13 +21,24 @@ export const NextSessionHighlight = ({
   isRegistered,
   isRegistering,
 }: NextSessionHighlightProps) => {
+  const { tenant } = useTenant();
   const sessionDate = parseISO(session.session_date);
   const formattedDate = format(sessionDate, "dd 'de' MMMM", { locale: ptBR });
   const formattedTime = session.start_time.slice(0, 5);
   
-  const professionalName = session.professional?.display_name || 'Profissional';
-  const professionalPhoto = session.professional?.foto_perfil_url;
-  const professionalCRP = session.professional?.crp_crm;
+  const isOrganizedByTenant = session.organizer_type === 'tenant';
+  
+  const organizerName = isOrganizedByTenant 
+    ? tenant?.name || 'Organizador'
+    : session.professional?.display_name || 'Profissional';
+  
+  const organizerPhoto = isOrganizedByTenant
+    ? tenant?.logo_url
+    : session.professional?.foto_perfil_url;
+  
+  const organizerCredentials = isOrganizedByTenant
+    ? null
+    : session.professional?.crp_crm;
 
   const spotsLeft = (session.max_participants || 0) - (session.current_registrations || 0);
   const isFull = spotsLeft <= 0;
@@ -42,11 +54,15 @@ export const NextSessionHighlight = ({
       </div>
 
       <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-        {/* Professional Photo */}
+        {/* Organizer Photo */}
         <Avatar className="w-20 h-20 border-4 border-primary/30 shadow-md">
-          <AvatarImage src={professionalPhoto} alt={professionalName} />
+          <AvatarImage src={organizerPhoto} alt={organizerName} />
           <AvatarFallback className="bg-primary/10 text-primary font-bold text-xl">
-            {professionalName.charAt(0).toUpperCase()}
+            {isOrganizedByTenant ? (
+              <Building2 className="w-8 h-8" />
+            ) : (
+              organizerName.charAt(0).toUpperCase()
+            )}
           </AvatarFallback>
         </Avatar>
 
@@ -63,10 +79,10 @@ export const NextSessionHighlight = ({
 
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <div className="flex items-center gap-1 text-foreground font-medium">
-              <span>Com</span>
-              <span className="font-bold">{professionalName}</span>
-              {professionalCRP && (
-                <span className="text-muted-foreground">· {professionalCRP}</span>
+              <span>{isOrganizedByTenant ? 'Organizado por' : 'Com'}</span>
+              <span className="font-bold">{organizerName}</span>
+              {organizerCredentials && (
+                <span className="text-muted-foreground">· {organizerCredentials}</span>
               )}
             </div>
           </div>

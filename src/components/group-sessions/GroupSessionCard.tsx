@@ -3,12 +3,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, Clock, Users, Video } from 'lucide-react';
+import { Calendar, Clock, Users, Video, Building2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getSessionTypeLabel } from './SessionTypeIcon';
 import { SessionTypeIcon } from './SessionTypeIcon';
 import { SessionCountdown } from './SessionCountdown';
+import { useTenant } from '@/hooks/useTenant';
 
 interface GroupSessionCardProps {
   session: GroupSession;
@@ -23,6 +24,7 @@ export const GroupSessionCard = ({
   isRegistered = false,
   isRegistering = false 
 }: GroupSessionCardProps) => {
+  const { tenant } = useTenant();
   const spotsLeft = (session.max_participants || 0) - (session.current_registrations || 0);
   const isFull = spotsLeft <= 0;
   
@@ -30,28 +32,43 @@ export const GroupSessionCard = ({
   const formattedDate = format(sessionDate, "dd 'de' MMMM", { locale: ptBR });
   const formattedTime = session.start_time.slice(0, 5);
 
-  const professionalName = session.professional?.display_name || 'Profissional';
-  const professionalCRP = session.professional?.crp_crm || '';
-  const professionalPhoto = session.professional?.foto_perfil_url;
-  const professionalInitials = professionalName.split(' ').map(n => n[0]).join('').slice(0, 2);
+  const isOrganizedByTenant = session.organizer_type === 'tenant';
+  
+  const organizerName = isOrganizedByTenant 
+    ? tenant?.name || 'Organizador'
+    : session.professional?.display_name || 'Profissional';
+  
+  const organizerSubtitle = isOrganizedByTenant
+    ? 'Organizado por'
+    : session.professional?.crp_crm || '';
+  
+  const organizerPhoto = isOrganizedByTenant
+    ? tenant?.logo_url
+    : session.professional?.foto_perfil_url;
+  
+  const organizerInitials = organizerName.split(' ').map(n => n[0]).join('').slice(0, 2);
 
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-primary/20 hover:scale-[1.02] group">
       <CardContent className="p-0">
         <div className="flex flex-col md:flex-row gap-6 p-6">
-          {/* Terapeuta - Esquerda */}
+          {/* Organizador - Esquerda */}
           <div className="flex flex-col items-center md:items-start space-y-3 md:w-48 flex-shrink-0">
             <Avatar className="w-24 h-24 border-4 border-primary/30 shadow-md transition-all duration-300 group-hover:scale-110 group-hover:border-primary/50">
-              <AvatarImage src={professionalPhoto} alt={professionalName} />
+              <AvatarImage src={organizerPhoto} alt={organizerName} />
               <AvatarFallback className="bg-primary/10 text-primary font-bold text-2xl">
-                {professionalInitials}
+                {isOrganizedByTenant ? (
+                  <Building2 className="w-10 h-10" />
+                ) : (
+                  organizerInitials
+                )}
               </AvatarFallback>
             </Avatar>
 
             <div className="text-center md:text-left">
-              <p className="font-semibold text-foreground">{professionalName}</p>
-              {professionalCRP && (
-                <p className="text-sm text-muted-foreground">{professionalCRP}</p>
+              <p className="font-semibold text-foreground">{organizerName}</p>
+              {organizerSubtitle && (
+                <p className="text-sm text-muted-foreground">{organizerSubtitle}</p>
               )}
             </div>
           </div>
