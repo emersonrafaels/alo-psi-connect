@@ -56,7 +56,11 @@ export const NextSessionHighlight = ({
       <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
         {/* Organizer Photo */}
         <Avatar className="w-20 h-20 border-4 border-primary/30 shadow-md">
-          <AvatarImage src={organizerPhoto} alt={organizerName} />
+          <AvatarImage 
+            src={organizerPhoto} 
+            alt={organizerName}
+            className={isOrganizedByTenant ? "object-contain p-2" : ""}
+          />
           <AvatarFallback className="bg-primary/10 text-primary font-bold text-xl">
             {isOrganizedByTenant ? (
               <Building2 className="w-8 h-8" />

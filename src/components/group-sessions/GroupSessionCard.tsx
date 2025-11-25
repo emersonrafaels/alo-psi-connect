@@ -55,7 +55,11 @@ export const GroupSessionCard = ({
           {/* Organizador - Esquerda */}
           <div className="flex flex-col items-center md:items-start space-y-3 md:w-48 flex-shrink-0">
             <Avatar className="w-24 h-24 border-4 border-primary/30 shadow-md transition-all duration-300 group-hover:scale-110 group-hover:border-primary/50">
-              <AvatarImage src={organizerPhoto} alt={organizerName} />
+              <AvatarImage 
+                src={organizerPhoto} 
+                alt={organizerName}
+                className={isOrganizedByTenant ? "object-contain p-2" : ""}
+              />
               <AvatarFallback className="bg-primary/10 text-primary font-bold text-2xl">
                 {isOrganizedByTenant ? (
                   <Building2 className="w-10 h-10" />
