@@ -6,13 +6,15 @@ interface GroupSessionGridProps {
   onRegister: (sessionId: string) => void;
   registeredSessionIds?: Set<string>;
   isRegistering?: boolean;
+  justRegisteredSessionId?: string | null;
 }
 
 export const GroupSessionGrid = ({ 
   sessions, 
   onRegister,
   registeredSessionIds = new Set(),
-  isRegistering 
+  isRegistering,
+  justRegisteredSessionId = null
 }: GroupSessionGridProps) => {
   if (sessions.length === 0) {
     return (
@@ -33,6 +35,7 @@ export const GroupSessionGrid = ({
           onRegister={onRegister}
           isRegistered={registeredSessionIds.has(session.id)}
           isRegistering={isRegistering}
+          justRegisteredSessionId={justRegisteredSessionId}
         />
       ))}
     </div>

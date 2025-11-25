@@ -17,27 +17,29 @@ interface GroupSessionCardProps {
   onRegister: (sessionId: string) => void;
   isRegistered?: boolean;
   isRegistering?: boolean;
+  justRegisteredSessionId?: string | null;
 }
 
 export const GroupSessionCard = ({ 
   session, 
   onRegister,
   isRegistered = false,
-  isRegistering = false 
+  isRegistering = false,
+  justRegisteredSessionId = null
 }: GroupSessionCardProps) => {
   const { tenant } = useTenant();
   const [showSuccess, setShowSuccess] = useState(false);
   const spotsLeft = (session.max_participants || 0) - (session.current_registrations || 0);
   const isFull = spotsLeft <= 0;
 
-  // Efeito de sucesso temporário
+  // Efeito de sucesso temporário - apenas para o card recém-inscrito
   useEffect(() => {
-    if (isRegistered && !isRegistering) {
+    if (justRegisteredSessionId === session.id && isRegistered && !isRegistering) {
       setShowSuccess(true);
       const timer = setTimeout(() => setShowSuccess(false), 2000);
       return () => clearTimeout(timer);
     }
-  }, [isRegistered, isRegistering]);
+  }, [justRegisteredSessionId, session.id, isRegistered, isRegistering]);
   
   const sessionDate = parseISO(session.session_date);
   const formattedDate = format(sessionDate, "dd 'de' MMMM", { locale: ptBR });
