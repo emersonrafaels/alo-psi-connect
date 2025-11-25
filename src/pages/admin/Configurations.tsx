@@ -9,7 +9,8 @@ import { CrossTenantNavigationConfig } from '@/components/admin/config/CrossTena
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { Settings, Bot, Webhook, Cog, Shield, Mic, Database, Star, GraduationCap, Link2, ArrowLeft, LucideIcon, Mail } from 'lucide-react';
+import { Settings, Bot, Webhook, Cog, Shield, Mic, Database, Star, GraduationCap, Link2, ArrowLeft, LucideIcon, Mail, Video } from 'lucide-react';
+import { GoogleCalendarTenantConfig } from '@/components/admin/config/GoogleCalendarTenantConfig';
 import { EducationalInstitutionsConfig } from '@/components/admin/config/EducationalInstitutionsConfig';
 import { NewsletterSubscribersConfig } from '@/components/admin/config/NewsletterSubscribersConfig';
 import { cn } from '@/lib/utils';
@@ -56,6 +57,15 @@ export default function Configurations() {
       category: 'ai'
     },
     // Sistema e Integrações
+    {
+      id: 'google-calendar-tenant',
+      title: 'Google Calendar - Tenant',
+      description: 'Configure o Google Calendar centralizado do tenant',
+      icon: Video,
+      component: GoogleCalendarTenantConfig,
+      category: 'system',
+      requiresSuperAdmin: true
+    },
     {
       id: 'n8n',
       title: 'Integrações N8N',

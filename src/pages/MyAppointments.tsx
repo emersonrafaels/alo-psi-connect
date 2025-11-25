@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
-import { Calendar, Clock, User, MapPin, Phone, Mail, DollarSign, CalendarX, RotateCcw, AlertCircle, CheckCircle, XCircle, CreditCard, Timer } from "lucide-react"
+import { Calendar, Clock, User, MapPin, Phone, Mail, DollarSign, CalendarX, RotateCcw, AlertCircle, CheckCircle, XCircle, CreditCard, Timer, Video, ExternalLink } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useUserType } from "@/hooks/useUserType"
 import { useToast } from "@/hooks/use-toast"
@@ -30,6 +30,7 @@ interface Appointment {
   observacoes: string | null
   created_at: string
   mercado_pago_preference_id: string | null
+  meeting_link: string | null
   profissionais?: {
     display_name: string
     profissao: string
@@ -118,10 +119,10 @@ const MyAppointments = () => {
 
             if (professionalError) {
               console.error('Erro ao buscar dados do profissional:', professionalError)
-              return { ...appointment, profissionais: null }
+              return { ...appointment, profissionais: null, meeting_link: appointment.meeting_link || null }
             }
 
-            return { ...appointment, profissionais: professionalData }
+            return { ...appointment, profissionais: professionalData, meeting_link: appointment.meeting_link || null }
           }
         })
       )
@@ -633,6 +634,40 @@ const MyAppointments = () => {
                               </div>
                             </div>
                           </div>
+
+
+                          {/* Google Meet Link */}
+                          {appointment.meeting_link && appointment.status === 'confirmado' && (
+                            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Video className="h-5 w-5 text-green-600" />
+                                <h4 className="font-semibold text-green-900">Link da Consulta Online</h4>
+                              </div>
+                              <p className="text-sm text-gray-600 mb-3">
+                                Sua consulta será realizada via Google Meet. Clique no botão abaixo na hora marcada:
+                              </p>
+                              <a 
+                                href={appointment.meeting_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                              >
+                                <Video className="h-4 w-4" />
+                                Entrar na Consulta
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          )}
+
+                          {!appointment.meeting_link && appointment.status === 'confirmado' && (
+                            <Alert className="mt-4 bg-yellow-50 border-yellow-200">
+                              <AlertCircle className="h-4 w-4 text-yellow-600" />
+                              <AlertDescription className="text-yellow-900">
+                                <strong>Link de consulta não disponível.</strong> O profissional enviará as 
+                                informações de acesso diretamente para o seu email antes da consulta.
+                              </AlertDescription>
+                            </Alert>
+                          )}
 
 
                           {/* Ações */}

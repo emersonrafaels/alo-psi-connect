@@ -55,6 +55,7 @@ export type Database = {
           email_paciente: string
           horario: string
           id: string
+          meeting_link: string | null
           mercado_pago_preference_id: string | null
           nome_paciente: string
           observacoes: string | null
@@ -75,6 +76,7 @@ export type Database = {
           email_paciente: string
           horario: string
           id?: string
+          meeting_link?: string | null
           mercado_pago_preference_id?: string | null
           nome_paciente: string
           observacoes?: string | null
@@ -95,6 +97,7 @@ export type Database = {
           email_paciente?: string
           horario?: string
           id?: string
+          meeting_link?: string | null
           mercado_pago_preference_id?: string | null
           nome_paciente?: string
           observacoes?: string | null
@@ -2280,6 +2283,11 @@ export type Database = {
           footer_text_color_dark: string | null
           footer_text_color_light: string | null
           google_analytics_id: string | null
+          google_calendar_email: string | null
+          google_calendar_refresh_token: string | null
+          google_calendar_scope: string | null
+          google_calendar_token: string | null
+          google_meet_mode: string | null
           google_tag_manager_id: string | null
           header_color: string | null
           header_text_color_dark: string | null
@@ -2358,6 +2366,11 @@ export type Database = {
           footer_text_color_dark?: string | null
           footer_text_color_light?: string | null
           google_analytics_id?: string | null
+          google_calendar_email?: string | null
+          google_calendar_refresh_token?: string | null
+          google_calendar_scope?: string | null
+          google_calendar_token?: string | null
+          google_meet_mode?: string | null
           google_tag_manager_id?: string | null
           header_color?: string | null
           header_text_color_dark?: string | null
@@ -2436,6 +2449,11 @@ export type Database = {
           footer_text_color_dark?: string | null
           footer_text_color_light?: string | null
           google_analytics_id?: string | null
+          google_calendar_email?: string | null
+          google_calendar_refresh_token?: string | null
+          google_calendar_scope?: string | null
+          google_calendar_token?: string | null
+          google_meet_mode?: string | null
           google_tag_manager_id?: string | null
           header_color?: string | null
           header_text_color_dark?: string | null

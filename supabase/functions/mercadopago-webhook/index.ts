@@ -116,9 +116,21 @@ const handler = async (req: Request): Promise<Response> => {
 
               if (calendarResponse.ok) {
                 const calendarResult = await calendarResponse.json();
-                if (calendarResult.success) {
+                if (calendarResult.success && calendarResult.meetLink) {
                   meetLink = calendarResult.meetLink;
-                  console.log('Google Calendar event created successfully with Meet link:', meetLink);
+                  console.log('Google Calendar event created with Meet link:', meetLink);
+                  
+                  // 🆕 SALVAR O LINK NO BANCO DE DADOS
+                  const { error: updateLinkError } = await supabase
+                    .from('agendamentos')
+                    .update({ meeting_link: meetLink })
+                    .eq('id', agendamentoId);
+                  
+                  if (updateLinkError) {
+                    console.error('Error saving meeting link:', updateLinkError);
+                  } else {
+                    console.log('Meeting link saved successfully to database');
+                  }
                 } else {
                   console.log('Calendar event creation skipped:', calendarResult.message);
                 }
