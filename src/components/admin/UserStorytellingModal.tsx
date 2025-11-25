@@ -95,7 +95,7 @@ export function UserStorytellingModal({
                           {data.metrics.totalAppointments}
                         </p>
                       </div>
-                      <Calendar className="h-8 w-8 text-muted-foreground" />
+                      <Calendar className="h-8 w-8 text-muted-foreground flex-shrink-0" />
                     </div>
                   </CardContent>
                 </Card>
@@ -111,7 +111,7 @@ export function UserStorytellingModal({
                           {data.metrics.attendanceRate}%
                         </p>
                       </div>
-                      {data.metrics.attendanceRate >= 80 ? <TrendingUp className="h-8 w-8 text-green-500" /> : <TrendingDown className="h-8 w-8 text-red-500" />}
+                      {data.metrics.attendanceRate >= 80 ? <TrendingUp className="h-8 w-8 text-green-500 flex-shrink-0" /> : <TrendingDown className="h-8 w-8 text-red-500 flex-shrink-0" />}
                     </div>
                   </CardContent>
                 </Card>
@@ -143,7 +143,7 @@ export function UserStorytellingModal({
                           R$ {data.metrics.totalSavings.toFixed(2)}
                         </p>
                       </div>
-                      <Tag className="h-8 w-8 text-green-500" />
+                      <Tag className="h-8 w-8 text-green-500 flex-shrink-0" />
                     </div>
                   </CardContent>
                 </Card>
@@ -242,7 +242,7 @@ export function UserStorytellingModal({
                     </p> : <div className="space-y-4">
                       {data.couponsUsed.map(coupon => <div key={coupon.id} className="flex items-center justify-between p-4 rounded-lg border">
                           <div className="flex items-center gap-4">
-                            <Tag className="h-8 w-8 text-primary" />
+                            <Tag className="h-8 w-8 text-primary flex-shrink-0" />
                             <div>
                               <p className="font-semibold">
                                 {coupon.institution_coupons?.name}
