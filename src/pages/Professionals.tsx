@@ -946,38 +946,45 @@ const Professionals = () => {
                       Faixa de Preço
                     </label>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="relative group/price">
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          value={filters.valorMin}
-                          onChange={(e) => setFilters(prev => ({ ...prev, valorMin: e.target.value }))}
-                          className="h-12 border-2 focus:border-green-500/50 transition-all group-hover/price:border-green-500/30 pl-8 pt-6 pb-2 bg-background/50"
-                        />
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
-                          R$
-                        </span>
-                        <span className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
+                      {/* Input Mínimo */}
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground font-medium">
                           Mínimo
                         </span>
+                        <div className="relative group/price">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
+                            R$
+                          </span>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            value={filters.valorMin}
+                            onChange={(e) => setFilters(prev => ({ ...prev, valorMin: e.target.value }))}
+                            className="h-10 border-2 focus:border-green-500/50 transition-all group-hover/price:border-green-500/30 pl-10 bg-background/50"
+                          />
+                        </div>
                       </div>
-                      <div className="relative group/price">
-                        <Input
-                          type="number"
-                          placeholder="∞"
-                          value={filters.valorMax}
-                          onChange={(e) => setFilters(prev => ({ ...prev, valorMax: e.target.value }))}
-                          className="h-12 border-2 focus:border-green-500/50 transition-all group-hover/price:border-green-500/30 pl-8 pt-6 pb-2 bg-background/50"
-                        />
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
-                          R$
-                        </span>
-                        <span className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
+                      
+                      {/* Input Máximo */}
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground font-medium">
                           Máximo
-                         </span>
-                       </div>
-                     </div>
-                   </div>
+                        </span>
+                        <div className="relative group/price">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
+                            R$
+                          </span>
+                          <Input
+                            type="number"
+                            placeholder="∞"
+                            value={filters.valorMax}
+                            onChange={(e) => setFilters(prev => ({ ...prev, valorMax: e.target.value }))}
+                            className="h-10 border-2 focus:border-green-500/50 transition-all group-hover/price:border-green-500/30 pl-10 bg-background/50"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Coupon Filter - Novo filtro */}
                   {user && linkedInstitutions && linkedInstitutions.length > 0 && (
