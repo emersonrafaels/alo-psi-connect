@@ -7,10 +7,13 @@ import { Plus } from 'lucide-react';
 import { useGroupSessions, GroupSession } from '@/hooks/useGroupSessions';
 import { GroupSessionsTable } from '@/components/group-sessions/admin/GroupSessionsTable';
 import { GroupSessionForm } from '@/components/group-sessions/admin/GroupSessionForm';
+import { SessionRegistrantsModal } from '@/components/group-sessions/admin/SessionRegistrantsModal';
 
 export default function GroupSessionsAdmin() {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isRegistrantsOpen, setIsRegistrantsOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<GroupSession | undefined>();
+  const [selectedSession, setSelectedSession] = useState<GroupSession | null>(null);
 
   const { 
     sessions, 
@@ -52,8 +55,8 @@ export default function GroupSessionsAdmin() {
   };
 
   const handleViewRegistrants = (session: GroupSession) => {
-    // TODO: Implementar modal de inscritos
-    console.log('Ver inscritos:', session);
+    setSelectedSession(session);
+    setIsRegistrantsOpen(true);
   };
 
   return (
@@ -136,6 +139,13 @@ export default function GroupSessionsAdmin() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Inscritos */}
+      <SessionRegistrantsModal
+        session={selectedSession}
+        open={isRegistrantsOpen}
+        onOpenChange={setIsRegistrantsOpen}
+      />
     </AdminLayout>
   );
 }

@@ -48,7 +48,7 @@ export const useGroupSessions = (filters?: {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: sessions, isLoading } = useQuery({
+  const { data: sessions, isLoading, error, refetch } = useQuery({
     queryKey: ['group-sessions', tenant?.id, filters],
     queryFn: async () => {
       let query = supabase
@@ -191,6 +191,8 @@ export const useGroupSessions = (filters?: {
   return {
     sessions: sessions || [],
     isLoading,
+    error,
+    refetch,
     createSession: createMutation.mutate,
     updateSession: updateMutation.mutate,
     deleteSession: deleteMutation.mutate,
