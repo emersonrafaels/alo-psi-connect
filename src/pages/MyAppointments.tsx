@@ -404,11 +404,8 @@ const MyAppointments = () => {
             </AlertDescription>
           </Alert>
 
-          <Tabs defaultValue="all" className="space-y-6">
+          <Tabs defaultValue="upcoming" className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all">
-                Todos ({appointments.length})
-              </TabsTrigger>
               <TabsTrigger value="upcoming">
                 Próximos ({filterAppointments('upcoming').length})
               </TabsTrigger>
@@ -418,9 +415,12 @@ const MyAppointments = () => {
               <TabsTrigger value="cancelled">
                 Cancelados ({filterAppointments('cancelled').length})
               </TabsTrigger>
+              <TabsTrigger value="all">
+                Todos ({appointments.length})
+              </TabsTrigger>
             </TabsList>
 
-            {['all', 'upcoming', 'past', 'cancelled'].map(tab => (
+            {['upcoming', 'past', 'cancelled', 'all'].map(tab => (
               <TabsContent key={tab} value={tab} className="space-y-4">
                 {filterAppointments(tab as any).length === 0 ? (
                   <Card>
