@@ -40,6 +40,7 @@ interface Appointment {
 
 interface Professional {
   id: number
+  user_id: number
   display_name: string
   profissao: string
   preco_consulta: number
@@ -94,7 +95,7 @@ const RescheduleAppointment = () => {
 
   useEffect(() => {
     if (selectedProfessional) {
-      fetchSessions(selectedProfessional.id)
+      fetchSessions(selectedProfessional.user_id)
     }
   }, [selectedProfessional])
 
@@ -170,7 +171,7 @@ const RescheduleAppointment = () => {
     try {
       const { data, error } = await supabase
         .from('profissionais')
-        .select('id, display_name, profissao, preco_consulta, tempo_consulta, resumo_profissional, foto_perfil_url')
+        .select('id, user_id, display_name, profissao, preco_consulta, tempo_consulta, resumo_profissional, foto_perfil_url')
         .eq('ativo', true)
         .order('display_name', { ascending: true })
 
@@ -185,12 +186,12 @@ const RescheduleAppointment = () => {
     }
   }
 
-  const fetchSessions = async (professionalId: number) => {
+  const fetchSessions = async (userIdProfissional: number) => {
     try {
       const { data, error } = await supabase
         .from('profissionais_sessoes')
         .select('*')
-        .eq('user_id', professionalId)
+        .eq('user_id', userIdProfissional)
 
       if (error) {
         console.error('Erro ao buscar sessões:', error)
@@ -218,7 +219,7 @@ const RescheduleAppointment = () => {
     try {
       const { data, error } = await supabase
         .from('profissionais')
-        .select('id, display_name, profissao, preco_consulta, tempo_consulta, resumo_profissional, foto_perfil_url')
+        .select('id, user_id, display_name, profissao, preco_consulta, tempo_consulta, resumo_profissional, foto_perfil_url')
         .eq('id', appointment.professional_id)
         .single()
       
