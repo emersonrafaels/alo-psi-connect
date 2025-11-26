@@ -29,6 +29,7 @@ interface Appointment {
   valor: number
   status: string
   observacoes: string | null
+  professional_id: number
   profissionais?: {
     display_name: string
     profissao: string
@@ -72,6 +73,7 @@ const RescheduleAppointment = () => {
   const [summaryConfirmed, setSummaryConfirmed] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string>("")
   const [selectedTime, setSelectedTime] = useState<string>("")
+  const [loadingKeepSame, setLoadingKeepSame] = useState(false)
   const { user } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
@@ -122,7 +124,7 @@ const RescheduleAppointment = () => {
           description: "Verifique se o ID está correto.",
           variant: "destructive"
         })
-        navigate('/agendamentos')
+        navigate(buildTenantPath(tenantSlug, '/agendamentos'))
         return
       }
 
@@ -142,7 +144,7 @@ const RescheduleAppointment = () => {
           description: "Só é possível reagendar até 24h antes da consulta.",
           variant: "destructive"
         })
-        navigate('/agendamentos')
+        navigate(buildTenantPath(tenantSlug, '/agendamentos'))
         return
       }
 
@@ -152,7 +154,7 @@ const RescheduleAppointment = () => {
           description: "Não é possível reagendar um agendamento cancelado.",
           variant: "destructive"
         })
-        navigate('/agendamentos')
+        navigate(buildTenantPath(tenantSlug, '/agendamentos'))
         return
       }
 
@@ -201,12 +203,45 @@ const RescheduleAppointment = () => {
     }
   }
 
-  const handleKeepSameProfessional = () => {
-    // Find current professional in the list
-    const currentProf = professionals.find(p => p.display_name === appointment?.profissionais?.display_name)
-    if (currentProf) {
-      setSelectedProfessional(currentProf)
+  const handleKeepSameProfessional = async () => {
+    if (!appointment?.professional_id) {
+      toast({
+        title: "Erro",
+        description: "Profissional não identificado.",
+        variant: "destructive"
+      })
+      return
+    }
+    
+    setLoadingKeepSame(true)
+    
+    try {
+      const { data, error } = await supabase
+        .from('profissionais')
+        .select('id, display_name, profissao, preco_consulta, tempo_consulta, resumo_profissional, foto_perfil_url')
+        .eq('id', appointment.professional_id)
+        .single()
+      
+      if (error || !data) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar o profissional.",
+          variant: "destructive"
+        })
+        return
+      }
+      
+      setSelectedProfessional(data)
       setStep('datetime')
+    } catch (error) {
+      console.error('Erro ao buscar profissional:', error)
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro. Tente novamente.",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingKeepSame(false)
     }
   }
 
@@ -438,10 +473,13 @@ const RescheduleAppointment = () => {
                   size="lg"
                   className="h-auto py-6 flex-col gap-2"
                   variant="default"
+                  disabled={loadingKeepSame}
                 >
                   <Repeat className="h-5 w-5" />
                   <div className="text-center">
-                    <div className="font-semibold">Manter Mesmo Profissional</div>
+                    <div className="font-semibold">
+                      {loadingKeepSame ? "Carregando..." : "Manter Mesmo Profissional"}
+                    </div>
                     <div className="text-xs opacity-80 font-normal">Pular para escolha de data</div>
                   </div>
                 </Button>
