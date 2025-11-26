@@ -6,12 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Separator } from "@/components/ui/separator"
-import { Calendar, Clock, User, DollarSign, ArrowLeft, ArrowRight, AlertCircle, CheckCircle } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Calendar, Clock, User, DollarSign, ArrowLeft, Repeat, Users, Search } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { RescheduleCalendar } from "@/components/RescheduleCalendar"
+import { RescheduleStepIndicator } from "@/components/reschedule/RescheduleStepIndicator"
+import { ProfessionalRescheduleCard } from "@/components/reschedule/ProfessionalRescheduleCard"
+import { RescheduleSummary } from "@/components/reschedule/RescheduleSummary"
+import { RescheduleReasonSelect } from "@/components/reschedule/RescheduleReasonSelect"
 import { useTenant } from "@/hooks/useTenant"
 import { buildTenantPath } from "@/utils/tenantHelpers"
 
@@ -41,6 +45,9 @@ interface Professional {
   tempo_consulta: number
   resumo_profissional: string
   foto_perfil_url: string
+  especialidades?: string[]
+  genero?: string
+  raca?: string
 }
 
 interface Session {
@@ -60,6 +67,11 @@ const RescheduleAppointment = () => {
   const [loading, setLoading] = useState(true)
   const [rescheduling, setRescheduling] = useState(false)
   const [step, setStep] = useState<'appointment' | 'professional' | 'datetime'>('appointment')
+  const [rescheduleReason, setRescheduleReason] = useState("")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [summaryConfirmed, setSummaryConfirmed] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<string>("")
+  const [selectedTime, setSelectedTime] = useState<string>("")
   const { user } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
@@ -158,6 +170,7 @@ const RescheduleAppointment = () => {
         .from('profissionais')
         .select('id, display_name, profissao, preco_consulta, tempo_consulta, resumo_profissional, foto_perfil_url')
         .eq('ativo', true)
+        .order('display_name', { ascending: true })
 
       if (error) {
         console.error('Erro ao buscar profissionais:', error)
@@ -188,8 +201,23 @@ const RescheduleAppointment = () => {
     }
   }
 
-  const handleReschedule = async (newDate: string, newTime: string) => {
-    if (!appointment || !selectedProfessional) return
+  const handleKeepSameProfessional = () => {
+    // Find current professional in the list
+    const currentProf = professionals.find(p => p.display_name === appointment?.profissionais?.display_name)
+    if (currentProf) {
+      setSelectedProfessional(currentProf)
+      setStep('datetime')
+    }
+  }
+
+  const handleDateTimeSelect = (newDate: string, newTime: string) => {
+    setSelectedDate(newDate)
+    setSelectedTime(newTime)
+    setSummaryConfirmed(false)
+  }
+
+  const handleReschedule = async () => {
+    if (!appointment || !selectedProfessional || !selectedDate || !selectedTime || !summaryConfirmed) return
 
     setRescheduling(true)
 
@@ -198,10 +226,11 @@ const RescheduleAppointment = () => {
         body: {
           appointmentId: appointment.id,
           newProfessionalId: selectedProfessional.id,
-          newDate,
-          newTime,
+          newDate: selectedDate,
+          newTime: selectedTime,
           originalValue: appointment.valor,
-          newValue: selectedProfessional.preco_consulta
+          newValue: selectedProfessional.preco_consulta,
+          reason: rescheduleReason || null
         }
       })
 
@@ -212,7 +241,7 @@ const RescheduleAppointment = () => {
         description: "Sua consulta foi reagendada com sucesso.",
       })
 
-      navigate('/agendamentos')
+      navigate(buildTenantPath(tenantSlug, '/agendamentos'))
     } catch (error: any) {
       console.error('Erro ao reagendar:', error)
       toast({
@@ -224,6 +253,11 @@ const RescheduleAppointment = () => {
       setRescheduling(false)
     }
   }
+
+  const filteredProfessionals = professionals.filter(prof => 
+    prof.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    prof.profissao.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -328,40 +362,13 @@ const RescheduleAppointment = () => {
           </div>
 
           {/* Steps Indicator */}
-          <div className="flex items-center justify-center mb-8">
-            <div className="flex items-center space-x-4">
-              <div className={`flex items-center ${step === 'appointment' ? 'text-primary' : 'text-muted-foreground'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step === 'appointment' ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                }`}>
-                  1
-                </div>
-                <span className="ml-2">Consulta Atual</span>
-              </div>
-              
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-              
-              <div className={`flex items-center ${step === 'professional' ? 'text-primary' : 'text-muted-foreground'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step === 'professional' ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                }`}>
-                  2
-                </div>
-                <span className="ml-2">Novo Profissional</span>
-              </div>
-              
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-              
-              <div className={`flex items-center ${step === 'datetime' ? 'text-primary' : 'text-muted-foreground'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step === 'datetime' ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                }`}>
-                  3
-                </div>
-                <span className="ml-2">Nova Data/Hora</span>
-              </div>
-            </div>
-          </div>
+          <RescheduleStepIndicator 
+            currentStep={step}
+            onStepClick={(newStep) => {
+              if (newStep === 'appointment') setStep('appointment')
+              if (newStep === 'professional' && selectedProfessional) setStep('professional')
+            }}
+          />
 
           {/* Step 1: Current Appointment */}
           {step === 'appointment' && (
@@ -373,7 +380,7 @@ const RescheduleAppointment = () => {
                     Detalhes da consulta que será reagendada
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
@@ -404,24 +411,52 @@ const RescheduleAppointment = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                        <DollarSign className="h-4 w-4 text-green-600" />
+                      <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                        <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
                         <div>
                           <p className="text-sm font-medium">Valor Pago</p>
-                          <p className="text-lg font-bold text-green-600">
+                          <p className="text-lg font-bold text-green-600 dark:text-green-400">
                             {formatPrice(appointment.valor)}
                           </p>
                         </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* Reschedule Reason */}
+                  <RescheduleReasonSelect 
+                    value={rescheduleReason}
+                    onChange={setRescheduleReason}
+                  />
                 </CardContent>
               </Card>
 
-              <div className="text-center">
-                <Button onClick={() => setStep('professional')} size="lg">
-                  Escolher Novo Profissional
-                  <ArrowRight className="ml-2 h-4 w-4" />
+              {/* Action Buttons */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  onClick={handleKeepSameProfessional}
+                  size="lg"
+                  className="h-auto py-6 flex-col gap-2"
+                  variant="default"
+                >
+                  <Repeat className="h-5 w-5" />
+                  <div className="text-center">
+                    <div className="font-semibold">Manter Mesmo Profissional</div>
+                    <div className="text-xs opacity-80 font-normal">Pular para escolha de data</div>
+                  </div>
+                </Button>
+
+                <Button 
+                  onClick={() => setStep('professional')}
+                  size="lg"
+                  className="h-auto py-6 flex-col gap-2"
+                  variant="outline"
+                >
+                  <Users className="h-5 w-5" />
+                  <div className="text-center">
+                    <div className="font-semibold">Trocar de Profissional</div>
+                    <div className="text-xs opacity-80 font-normal">Ver outros profissionais</div>
+                  </div>
                 </Button>
               </div>
             </div>
@@ -432,83 +467,66 @@ const RescheduleAppointment = () => {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Escolha o Novo Profissional</CardTitle>
-                  <CardDescription>
-                    Selecione um profissional para reagendar sua consulta
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Escolha o Novo Profissional</CardTitle>
+                      <CardDescription>
+                        Selecione um profissional para reagendar sua consulta
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setStep('appointment')}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Voltar
+                    </Button>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {professionals.map((professional) => {
-                      const priceDiff = professional.preco_consulta - appointment.valor
-                      
-                      return (
-                        <Card 
-                          key={professional.id} 
-                          className={`cursor-pointer transition-all ${
-                            selectedProfessional?.id === professional.id 
-                              ? 'ring-2 ring-primary bg-primary/5' 
-                              : 'hover:shadow-md'
-                          }`}
-                          onClick={() => setSelectedProfessional(professional)}
-                        >
-                          <CardContent className="p-4">
-                            <div className="text-center space-y-3">
-                              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                                <User className="h-8 w-8 text-primary" />
-                              </div>
-                              
-                              <div>
-                                <h3 className="font-semibold">{professional.display_name}</h3>
-                                <p className="text-sm text-muted-foreground">{professional.profissao}</p>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <p className="text-lg font-bold">
-                                  {formatPrice(professional.preco_consulta)}
-                                </p>
-                                
-                                {priceDiff !== 0 && (
-                                  <Badge variant={priceDiff > 0 ? "destructive" : "default"}>
-                                    {priceDiff > 0 ? '+' : ''}{formatPrice(priceDiff)}
-                                  </Badge>
-                                )}
-                              </div>
-                              
-                              {professional.resumo_profissional && (
-                                <p className="text-xs text-muted-foreground line-clamp-3">
-                                  {professional.resumo_profissional}
-                                </p>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )
-                    })}
+                <CardContent className="space-y-4">
+                  {/* Search Bar */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar profissional por nome ou profissão..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+
+                  {/* Professional Cards */}
+                  <div className="space-y-3">
+                    {filteredProfessionals.map((professional) => (
+                      <ProfessionalRescheduleCard
+                        key={professional.id}
+                        professional={professional}
+                        currentProfessionalId={professionals.find(p => 
+                          p.display_name === appointment.profissionais?.display_name
+                        )?.id}
+                        originalPrice={appointment.valor}
+                        isSelected={selectedProfessional?.id === professional.id}
+                        onClick={() => setSelectedProfessional(professional)}
+                      />
+                    ))}
+
+                    {filteredProfessionals.length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">
+                          Nenhum profissional encontrado com "{searchTerm}"
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
               {selectedProfessional && (
-                <div className="space-y-4">
-                  <Alert>
-                    <CheckCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Profissional selecionado: <strong>{selectedProfessional.display_name}</strong>
-                      {calculatePriceDifference() !== 0 && (
-                        <span className="ml-2">
-                          (Diferença: {calculatePriceDifference() > 0 ? '+' : ''}{formatPrice(calculatePriceDifference())})
-                        </span>
-                      )}
-                    </AlertDescription>
-                  </Alert>
-
-                  <div className="text-center">
-                    <Button onClick={() => setStep('datetime')} size="lg">
-                      Escolher Data e Hora
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
+                <div className="text-center mt-4">
+                  <Button onClick={() => setStep('datetime')} size="lg">
+                    Escolher Data e Hora →
+                  </Button>
                 </div>
               )}
             </div>
