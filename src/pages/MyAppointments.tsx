@@ -236,8 +236,7 @@ const MyAppointments = () => {
   }
 
   const handleReschedule = (appointmentId: string) => {
-    // Redirecionar para página de reagendamento
-    navigate(`/reagendar/${appointmentId}`)
+    navigate(buildTenantPath(tenantSlug, `/reagendar/${appointmentId}`))
   }
 
   const formatPrice = (price: number) => {
