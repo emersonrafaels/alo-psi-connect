@@ -19,7 +19,7 @@ interface RescheduleCalendarProps {
   sessions: Session[]
   professionalName: string
   price?: string
-  onBooking: (date: string, time: string) => Promise<void>
+  onBooking: (date: string, time: string) => void
   loading?: boolean
 }
 
@@ -134,11 +134,11 @@ export const RescheduleCalendar = ({
     setSelectedTime(time)
   }
 
-  const handleBooking = async () => {
+  const handleBooking = () => {
     if (!selectedDate || !selectedTime) return
     
     const dateString = format(selectedDate, 'yyyy-MM-dd')
-    await onBooking(dateString, selectedTime)
+    onBooking(dateString, selectedTime)
   }
 
   const formatTime = (time: string) => {
@@ -244,9 +244,8 @@ export const RescheduleCalendar = ({
             onClick={handleBooking}
             className="w-full bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
             size="lg"
-            disabled={loading}
           >
-            {loading ? "Processando..." : "✅ Confirmar Reagendamento"}
+            Selecionar Este Horário
           </Button>
         </div>
       )}
