@@ -36,11 +36,7 @@ serve(async (req) => {
         .from('agendamentos')
         .select(`
           id, nome_paciente, email_paciente, telefone_paciente,
-          data_consulta, horario, valor, observacoes, tenant_id,
-          profissionais:professional_id (
-            display_name, user_email, profissao, telefone, 
-            tempo_consulta, profile_id
-          )
+          data_consulta, horario, valor, observacoes, tenant_id, professional_id
         `)
         .eq('id', appointmentId)
         .single();
@@ -55,10 +51,36 @@ serve(async (req) => {
         continue;
       }
 
-      // Normalizar dados do profissional (pode vir como array ou objeto)
-      const professional = Array.isArray(appointment.profissionais) 
-        ? appointment.profissionais[0] 
-        : appointment.profissionais;
+      console.log(`[Generate Meeting Links] Dados do agendamento:`, {
+        id: appointment.id,
+        professional_id: appointment.professional_id,
+        tenant_id: appointment.tenant_id,
+        data_consulta: appointment.data_consulta,
+        horario: appointment.horario
+      });
+
+      // Buscar profissional separadamente
+      const { data: professional, error: profError } = await supabase
+        .from('profissionais')
+        .select('display_name, user_email, profissao, telefone, tempo_consulta, profile_id')
+        .eq('id', appointment.professional_id)
+        .single();
+
+      if (profError || !professional) {
+        console.error(`[Generate Meeting Links] Erro ao buscar profissional ${appointment.professional_id}:`, profError);
+        results.push({ 
+          id: appointmentId, 
+          success: false, 
+          error: 'Profissional não encontrado' 
+        });
+        continue;
+      }
+
+      console.log(`[Generate Meeting Links] Dados do profissional:`, {
+        name: professional.display_name,
+        email: professional.user_email,
+        profile_id: professional.profile_id
+      });
 
       console.log(`[Generate Meeting Links] Chamando create-calendar-event para ${appointmentId}`);
       
@@ -80,7 +102,21 @@ serve(async (req) => {
         }
       );
 
-      const result = await response.json();
+      const responseText = await response.text();
+      console.log(`[Generate Meeting Links] Resposta do create-calendar-event (status ${response.status}):`, responseText);
+
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error(`[Generate Meeting Links] Erro ao parsear resposta:`, parseError);
+        results.push({ 
+          id: appointmentId, 
+          success: false, 
+          error: `Resposta inválida do create-calendar-event: ${responseText}` 
+        });
+        continue;
+      }
       
       if (result.success && result.meetLink) {
         console.log(`[Generate Meeting Links] ✅ Link gerado: ${result.meetLink}`);
