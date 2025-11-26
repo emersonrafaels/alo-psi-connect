@@ -8,12 +8,16 @@ import { useGroupSessions, GroupSession } from '@/hooks/useGroupSessions';
 import { GroupSessionsTable } from '@/components/group-sessions/admin/GroupSessionsTable';
 import { GroupSessionForm } from '@/components/group-sessions/admin/GroupSessionForm';
 import { SessionRegistrantsModal } from '@/components/group-sessions/admin/SessionRegistrantsModal';
+import { AdminTenantSelector } from '@/components/admin/AdminTenantSelector';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 
 export default function GroupSessionsAdmin() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isRegistrantsOpen, setIsRegistrantsOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<GroupSession | undefined>();
   const [selectedSession, setSelectedSession] = useState<GroupSession | null>(null);
+  
+  const { tenantFilter } = useAdminTenant();
 
   const { 
     sessions, 
@@ -23,7 +27,7 @@ export default function GroupSessionsAdmin() {
     deleteSession,
     isCreating,
     isUpdating,
-  } = useGroupSessions();
+  } = useGroupSessions({ tenantId: tenantFilter });
 
   const scheduledSessions = sessions.filter(s => s.status === 'scheduled');
   const completedSessions = sessions.filter(s => s.status === 'completed');
@@ -70,10 +74,14 @@ export default function GroupSessionsAdmin() {
             </p>
           </div>
 
-          <Button onClick={handleCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Encontro
-          </Button>
+          <div className="flex items-center gap-3">
+            <AdminTenantSelector />
+            
+            <Button onClick={handleCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Encontro
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="scheduled">
