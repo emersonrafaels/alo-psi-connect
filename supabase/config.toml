@@ -140,3 +140,6 @@ verify_jwt = false
 [functions.create-group-session-meeting]
 verify_jwt = true
 
+[functions.generate-meeting-links]
+verify_jwt = false
+
