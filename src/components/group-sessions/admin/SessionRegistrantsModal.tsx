@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -38,17 +39,6 @@ export const SessionRegistrantsModal = ({ session, open, onOpenChange }: Session
   const RegistrantCard = ({ registrant }: { registrant: any }) => (
     <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
       <div className="flex items-center gap-4">
-        <Checkbox
-          checked={registrant.status === 'attended'}
-          disabled={registrant.status === 'cancelled' || isMarkingAttendance}
-          onCheckedChange={(checked) => {
-            markAttendance({
-              registrationId: registrant.id,
-              attended: checked as boolean,
-            });
-          }}
-        />
-        
         <Avatar className="h-10 w-10">
           <AvatarImage src={registrant.user_photo} />
           <AvatarFallback>{registrant.user_name.charAt(0).toUpperCase()}</AvatarFallback>
@@ -63,8 +53,31 @@ export const SessionRegistrantsModal = ({ session, open, onOpenChange }: Session
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         {getStatusBadge(registrant.status)}
+        
+        {registrant.status !== 'cancelled' && (
+          <div className="flex items-center gap-2">
+            <Label 
+              htmlFor={`attendance-${registrant.id}`}
+              className="text-sm font-medium cursor-pointer"
+            >
+              Presente
+            </Label>
+            <Switch
+              id={`attendance-${registrant.id}`}
+              checked={registrant.status === 'attended'}
+              disabled={isMarkingAttendance}
+              onCheckedChange={(checked) => {
+                markAttendance({
+                  registrationId: registrant.id,
+                  attended: checked,
+                });
+              }}
+              className="data-[state=checked]:bg-green-600"
+            />
+          </div>
+        )}
       </div>
     </div>
   );
