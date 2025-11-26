@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, Tag, AlertCircle, CheckCircle, XCircle, Clock, TrendingUp, TrendingDown, Activity, Video, ExternalLink } from 'lucide-react';
+import { Calendar, Tag, AlertCircle, CheckCircle, XCircle, Clock, TrendingUp, TrendingDown, Activity, Video, ExternalLink, CalendarCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 interface UserStorytellingModalProps {
@@ -137,13 +137,13 @@ export function UserStorytellingModal({
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-muted-foreground">
-                          Economia
+                          Consultas Futuras
                         </p>
-                        <p className="text-2xl font-bold text-green-600">
-                          R$ {data.metrics.totalSavings.toFixed(2)}
+                        <p className="text-2xl font-bold text-blue-600">
+                          {data.metrics.futureAppointments}
                         </p>
                       </div>
-                      <Tag className="h-8 w-8 text-green-500 flex-shrink-0" />
+                      <CalendarCheck className="h-8 w-8 text-blue-500 flex-shrink-0" />
                     </div>
                   </CardContent>
                 </Card>
