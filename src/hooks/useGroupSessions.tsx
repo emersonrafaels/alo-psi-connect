@@ -43,13 +43,17 @@ export const useGroupSessions = (filters?: {
   sessionType?: string;
   month?: string;
   status?: string;
+  tenantId?: string | null;
 }) => {
   const { tenant } = useTenant();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Use tenantId from filters if provided (for admin), otherwise use current tenant
+  const effectiveTenantId = filters?.tenantId !== undefined ? filters.tenantId : tenant?.id;
+
   const { data: sessions, isLoading, error, refetch } = useQuery({
-    queryKey: ['group-sessions', tenant?.id, filters],
+    queryKey: ['group-sessions', effectiveTenantId, filters],
     queryFn: async () => {
       let query = supabase
         .from('group_sessions')
@@ -58,9 +62,13 @@ export const useGroupSessions = (filters?: {
           professional:profissionais!group_sessions_professional_id_fkey(display_name, crp_crm, foto_perfil_url),
           institution:educational_institutions!group_sessions_institution_id_fkey(name)
         `)
-        .eq('tenant_id', tenant?.id)
         .order('session_date', { ascending: true })
         .order('start_time', { ascending: true });
+
+      // Apply tenant filter only if effectiveTenantId is not null
+      if (effectiveTenantId) {
+        query = query.eq('tenant_id', effectiveTenantId);
+      }
 
       if (filters?.sessionType) {
         query = query.eq('session_type', filters.sessionType);
@@ -82,7 +90,7 @@ export const useGroupSessions = (filters?: {
       if (error) throw error;
       return data as GroupSession[];
     },
-    enabled: !!tenant?.id,
+    enabled: effectiveTenantId !== undefined,
   });
 
   const createMutation = useMutation({
