@@ -10,6 +10,7 @@ import { NextSessionHighlight } from '@/components/group-sessions/NextSessionHig
 import { EmptySessionsState } from '@/components/group-sessions/EmptySessionsState';
 import { SessionsCTASection } from '@/components/group-sessions/SessionsCTASection';
 import { SessionsLoadingSkeleton } from '@/components/group-sessions/SessionsLoadingSkeleton';
+import { SessionsErrorState } from '@/components/group-sessions/SessionsErrorState';
 import { HowItWorksSection } from '@/components/group-sessions/HowItWorksSection';
 import { SessionsFAQ } from '@/components/group-sessions/SessionsFAQ';
 import { SessionsTestimonials } from '@/components/group-sessions/SessionsTestimonials';
@@ -43,7 +44,7 @@ export default function GroupSessions() {
     }
   }, [nextAvailable, selectedMonth]);
 
-  const { sessions, isLoading } = useGroupSessions({
+  const { sessions, isLoading, error, refetch } = useGroupSessions({
     sessionType: selectedType === 'all' ? undefined : selectedType,
     month: selectedMonth ? format(selectedMonth, 'yyyy-MM') : format(new Date(), 'yyyy-MM'),
     status: 'scheduled',
@@ -122,7 +123,9 @@ export default function GroupSessions() {
           )}
 
           <div className="mt-8">
-            {isLoading || isLoadingNext ? (
+            {error ? (
+              <SessionsErrorState onRetry={refetch} />
+            ) : isLoading || isLoadingNext ? (
               <SessionsLoadingSkeleton />
             ) : sessions.length === 0 ? (
               <EmptySessionsState hasNoFutureSessions={hasNoFutureSessions} />
