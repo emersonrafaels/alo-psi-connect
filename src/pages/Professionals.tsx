@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Switch } from "@/components/ui/switch"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { 
   MapPin, 
   Star, 
@@ -27,12 +29,17 @@ import {
   ChevronDown,
   Settings, 
   Bot, 
-  Sparkles 
+  Sparkles,
+  Tag,
+  Percent
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSearchFilters } from "@/hooks/useSearchFilters"
 import { useAIAssistantConfig } from "@/hooks/useAIAssistantConfig"
+import { useAuth } from "@/hooks/useAuth"
+import { useProfessionalsWithCoupons } from "@/hooks/useProfessionalsWithCoupons"
+import { usePatientInstitutions } from "@/hooks/usePatientInstitutions"
 
 import { AIAssistantModal } from "@/components/AIAssistantModal"
 
@@ -82,9 +89,21 @@ const Professionals = () => {
     servico: "",
     especialidades: [] as string[],
     servicos: [] as string[],
-    nome: ""
+    nome: "",
+    comCupom: false
   })
   const professionalsPerPage = 9
+
+  // Auth e instituições
+  const { user } = useAuth()
+  const { linkedInstitutions, isLoading: institutionsLoading } = usePatientInstitutions()
+  
+  // Cupons aplicáveis
+  const professionalIds = professionals.map(p => p.id)
+  const { data: professionalsWithCoupons, isLoading: couponsLoading } = useProfessionalsWithCoupons(
+    professionalIds,
+    150 // Valor base para validação
+  )
 
   // Configurações do assistente IA
   const { aiConfig } = useAIAssistantConfig()
@@ -263,6 +282,13 @@ const Professionals = () => {
     if (filters.servico) {
       filtered = filtered.filter(prof => 
         prof.servicos_raw?.toLowerCase().includes(filters.servico.toLowerCase())
+      )
+    }
+
+    // Coupon filter
+    if (filters.comCupom && professionalsWithCoupons) {
+      filtered = filtered.filter(prof => 
+        professionalsWithCoupons.has(prof.id)
       )
     }
 
@@ -498,7 +524,8 @@ const Professionals = () => {
       servico: "",
       especialidades: [],
       servicos: [],
-      nome: ""
+      nome: "",
+      comCupom: false
     })
     setSearchTerm("")
     clearURLFilters()
@@ -558,8 +585,11 @@ const Professionals = () => {
     if (filters.especialidades.length > 0) count++
     if (filters.servicos.length > 0) count++
     if (filters.nome) count++
+    if (filters.comCupom) count++
     return count
   }
+
+  const professionalsWithCouponsCount = professionalsWithCoupons?.size || 0
 
   // Pagination logic
   const indexOfLastProfessional = currentPage * professionalsPerPage
@@ -696,7 +726,8 @@ const Professionals = () => {
                   </Button>
                 </div>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8 animate-fade-in">
+                {/* Filtros Principais - Linha 1 */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 animate-fade-in">
                   {/* Profession Multiselect */}
                   <div className="space-y-4 group">
                     <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
@@ -791,7 +822,13 @@ const Professionals = () => {
                       </PopoverContent>
                     </Popover>
                   </div>
+                </div>
 
+                {/* Separador Visual */}
+                <div className="my-6 border-t border-border/50"></div>
+
+                {/* Filtros Secundários - Linha 2 */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
                   {/* Time Range Filter */}
                   <div className="space-y-4 group">
                     <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
@@ -941,6 +978,53 @@ const Professionals = () => {
                        </div>
                      </div>
                    </div>
+
+                  {/* Coupon Filter - Novo filtro */}
+                  {user && linkedInstitutions && linkedInstitutions.length > 0 && (
+                    <div className="space-y-4 group">
+                      <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
+                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
+                          <Tag className="h-3 w-3 text-emerald-600" />
+                        </div>
+                        Com Desconto Institucional
+                      </label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center justify-between p-4 rounded-lg border-2 border-border bg-background/50 hover:border-emerald-500/50 transition-all">
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/10">
+                                  <Percent className="h-5 w-5 text-emerald-600" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">
+                                    Cupons Disponíveis
+                                  </p>
+                                  {professionalsWithCouponsCount > 0 && (
+                                    <p className="text-xs text-muted-foreground">
+                                      {professionalsWithCouponsCount} profissiona{professionalsWithCouponsCount === 1 ? 'l' : 'is'} com desconto
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <Switch
+                                checked={filters.comCupom}
+                                onCheckedChange={(checked) => 
+                                  setFilters(prev => ({ ...prev, comCupom: checked }))
+                                }
+                                className="data-[state=checked]:bg-emerald-600"
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <p className="text-sm">
+                              Mostrar apenas profissionais para os quais você tem cupons de desconto disponíveis através de suas instituições vinculadas
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1079,18 +1163,32 @@ const Professionals = () => {
                                 <Badge variant="outline" className="text-primary border-primary/30 bg-primary/5 font-medium dark:text-white/80">
                                   {capitalizeText(professional.profissao)}
                                 </Badge>
-                                {professional.crp_crm && (
-                                  <span className="text-xs text-muted-foreground font-mono dark:text-white/80">
-                                    {professional.crp_crm}
-                                  </span>
-                                )}
-                              </div>
-                              
-                              {professional.resumo_profissional && (
-                                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed max-w-md">
-                                  {professional.resumo_profissional}
-                                </p>
-                              )}
+                               {professional.crp_crm && (
+                                 <span className="text-xs text-muted-foreground font-mono dark:text-white/80">
+                                   {professional.crp_crm}
+                                 </span>
+                               )}
+                             </div>
+
+                             {/* Cupom Badge */}
+                             {professionalsWithCoupons?.has(professional.id) && (
+                               <Badge className="bg-emerald-500 text-white border-0 shadow-md flex items-center gap-1 w-fit">
+                                 <Tag className="h-3 w-3" />
+                                 <span>
+                                   Cupom disponível: até{' '}
+                                   {professionalsWithCoupons.get(professional.id)?.discountType === 'percentage' 
+                                     ? `${professionalsWithCoupons.get(professional.id)?.discountValue}% off`
+                                     : `R$ ${professionalsWithCoupons.get(professional.id)?.discountValue} off`
+                                   }
+                                 </span>
+                               </Badge>
+                             )}
+                             
+                             {professional.resumo_profissional && (
+                               <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed max-w-md">
+                                 {professional.resumo_profissional}
+                               </p>
+                             )}
                             </div>
                           </div>
 
