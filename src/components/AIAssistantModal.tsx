@@ -132,8 +132,13 @@ export const AIAssistantModal = ({
 
       console.log('[AI Assistant] Resposta bruta do N8N:', data);
 
-      // Função para extrair resposta de forma robusta
-      const extractResponse = (responseData: any): string => {
+      // Função para extrair resposta de forma robusta (recursiva)
+      const extractResponse = (responseData: any, depth: number = 0): string => {
+        // Prevenir recursão infinita
+        if (depth > 5) {
+          return 'Sem resposta do assistente.';
+        }
+
         // Se for array, pegar primeiro elemento
         let result = Array.isArray(responseData) ? responseData[0] : responseData;
         
@@ -151,9 +156,23 @@ export const AIAssistantModal = ({
           result = result[0];
         }
         
-        // Extrair a resposta do objeto
+        // Extrair a resposta do objeto (recursivamente)
         if (typeof result === 'object' && result !== null) {
-          return result.response || result.message || result.output || result.text || 'Sem resposta do assistente.';
+          const extracted = result.response || result.message || result.output || result.text;
+          
+          // Se encontrou um valor, verificar se ainda é objeto
+          if (extracted !== undefined) {
+            // Se for string, retornar
+            if (typeof extracted === 'string') {
+              return extracted;
+            }
+            // Se for objeto, continuar extraindo recursivamente
+            if (typeof extracted === 'object') {
+              return extractResponse(extracted, depth + 1);
+            }
+          }
+          
+          return 'Sem resposta do assistente.';
         }
         
         return String(result) || 'Sem resposta do assistente.';
