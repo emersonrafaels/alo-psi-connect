@@ -125,7 +125,12 @@ export const AIAssistantModal = ({
       const data = await response.json();
 
       // N8N deve retornar: { response: "texto da resposta" }
-      const assistantContent = data.response || data.message || data.output || 'Sem resposta do assistente.';
+      let assistantContent = data.response || data.message || data.output || 'Sem resposta do assistente.';
+      
+      // Garantir que o conteúdo seja sempre uma string
+      if (typeof assistantContent !== 'string') {
+        assistantContent = JSON.stringify(assistantContent, null, 2);
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
