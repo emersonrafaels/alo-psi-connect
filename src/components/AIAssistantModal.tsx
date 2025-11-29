@@ -124,13 +124,38 @@ export const AIAssistantModal = ({
 
       const data = await response.json();
 
-      // N8N deve retornar: { response: "texto da resposta" }
-      let assistantContent = data.response || data.message || data.output || 'Sem resposta do assistente.';
-      
-      // Garantir que o conteúdo seja sempre uma string
-      if (typeof assistantContent !== 'string') {
-        assistantContent = JSON.stringify(assistantContent, null, 2);
-      }
+      console.log('[AI Assistant] Resposta bruta do N8N:', data);
+
+      // Função para extrair resposta de forma robusta
+      const extractResponse = (responseData: any): string => {
+        // Se for array, pegar primeiro elemento
+        let result = Array.isArray(responseData) ? responseData[0] : responseData;
+        
+        // Se for string, tentar fazer parse
+        if (typeof result === 'string') {
+          try {
+            result = JSON.parse(result);
+          } catch {
+            return result; // Se não for JSON válido, retornar como está
+          }
+        }
+        
+        // Se ainda for array após parse, pegar primeiro elemento
+        if (Array.isArray(result)) {
+          result = result[0];
+        }
+        
+        // Extrair a resposta do objeto
+        if (typeof result === 'object' && result !== null) {
+          return result.response || result.message || result.output || result.text || 'Sem resposta do assistente.';
+        }
+        
+        return String(result) || 'Sem resposta do assistente.';
+      };
+
+      const assistantContent = extractResponse(data);
+
+      console.log('[AI Assistant] Conteúdo extraído:', assistantContent);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
