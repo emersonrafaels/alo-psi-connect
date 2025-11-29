@@ -9,7 +9,7 @@ import { Bot, Send, User, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAIAssistantConfig } from "@/hooks/useAIAssistantConfig";
-import { useSystemConfig } from "@/hooks/useSystemConfig";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import ReactMarkdown from "react-markdown";
@@ -30,7 +30,7 @@ export const AIAssistantModal = ({
   professionals
 }: AIAssistantModalProps) => {
   const navigate = useNavigate();
-  const { getConfig } = useSystemConfig(['n8n']); // Only for N8N configs
+  const { getConfig } = usePublicConfig(['n8n']); // Public access to N8N chat configs
   const {
     aiConfig
   } = useAIAssistantConfig(); // For AI assistant display configs
