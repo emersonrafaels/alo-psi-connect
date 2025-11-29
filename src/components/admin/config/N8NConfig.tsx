@@ -9,8 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
-import { Save, TestTube2, Webhook, Bot, Activity, Settings, HelpCircle, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Save, TestTube2, Webhook, Bot, Activity, Settings, HelpCircle, CheckCircle, XCircle, Clock, MinusCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { MetricsCard } from './MetricsCard';
 import { UsageChart } from './UsageChart';
 import { ConfigDataTable } from './ConfigDataTable';
@@ -112,55 +113,50 @@ export const N8NConfig = () => {
       { type: 'booking', url: formData.booking_webhook_url },
       { type: 'payment', url: formData.payment_webhook_url },
       { type: 'chat', url: chatUrl }
-    ];
+    ].filter(w => w.url); // Only send webhooks with URLs
 
-    console.log('Checking webhook status for URLs:', webhooks);
+    if (webhooks.length === 0) {
+      console.log('No webhooks configured');
+      setWebhookStatus({ booking: 'not_configured', payment: 'not_configured', chat: 'not_configured' });
+      return;
+    }
 
-    const statusChecks = await Promise.allSettled(
-      webhooks.map(async ({ type, url }) => {
-        if (!url) return { type, status: 'not_configured' };
-        
-        try {
-          // Use GET request with health check parameter and timeout
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-          
-          const response = await fetch(`${url}?health=check`, { 
-            method: 'GET',
-            signal: controller.signal,
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            }
-          });
-          
-          clearTimeout(timeoutId);
-          
-          // Accept any response (200-299) or specific N8N responses
-          if (response.ok || response.status === 404 || response.status === 405) {
-            console.log(`Webhook ${type} is online (status: ${response.status})`);
-            return { type, status: 'online' };
-          } else {
-            console.log(`Webhook ${type} is offline (status: ${response.status})`);
-            return { type, status: 'offline' };
-          }
-        } catch (error) {
-          console.warn(`Webhook status check failed for ${type}:`, error);
-          return { type, status: 'offline' };
-        }
-      })
-    );
+    console.log('[N8NConfig] Checking webhook status via Edge Function:', webhooks);
 
-    const newStatus = { booking: 'unknown', payment: 'unknown', chat: 'unknown' };
-    statusChecks.forEach((result, index) => {
-      if (result.status === 'fulfilled') {
-        const { type, status } = result.value;
-        newStatus[type as keyof typeof newStatus] = status;
+    try {
+      const { data, error } = await supabase.functions.invoke('check-webhook-status', {
+        body: { webhooks }
+      });
+
+      if (error) {
+        console.error('[N8NConfig] Edge Function error:', error);
+        throw error;
       }
-    });
-    
-    console.log('Updated webhook status:', newStatus);
-    setWebhookStatus(newStatus);
+
+      console.log('[N8NConfig] Edge Function response:', data);
+
+      // Build status object from results
+      const newStatus = { booking: 'not_configured', payment: 'not_configured', chat: 'not_configured' };
+      
+      if (data?.results && Array.isArray(data.results)) {
+        data.results.forEach(({ type, status }: { type: string; status: string }) => {
+          newStatus[type as keyof typeof newStatus] = status;
+        });
+      }
+      
+      console.log('[N8NConfig] Updated webhook status:', newStatus);
+      setWebhookStatus(newStatus);
+    } catch (error) {
+      console.error('[N8NConfig] Error checking webhook status:', error);
+      // Set all to unknown on error (avoid false negatives)
+      setWebhookStatus({ booking: 'unknown', payment: 'unknown', chat: 'unknown' });
+      
+      toast({
+        title: "⚠️ Erro ao verificar status",
+        description: "Não foi possível verificar o status dos webhooks. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Check webhook status after configs are loaded and formData is updated
@@ -565,10 +561,16 @@ export const N8NConfig = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'online': return <Badge variant="default" className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Online</Badge>;
-      case 'offline': return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Offline</Badge>;
-      case 'not_configured': return <Badge variant="secondary">Não configurado</Badge>;
-      default: return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />Verificando...</Badge>;
+      case 'online': 
+        return <Badge variant="default" className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Online</Badge>;
+      case 'offline': 
+        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Offline</Badge>;
+      case 'not_configured': 
+        return <Badge variant="secondary"><MinusCircle className="h-3 w-3 mr-1" />Não configurado</Badge>;
+      case 'unknown': 
+        return <Badge variant="outline"><HelpCircle className="h-3 w-3 mr-1" />Verificando...</Badge>;
+      default: 
+        return <Badge variant="outline"><Loader2 className="h-3 w-3 mr-1 animate-spin" />Verificando...</Badge>;
     }
   };
 
