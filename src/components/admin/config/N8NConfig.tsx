@@ -4,18 +4,22 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
-import { Save, TestTube2, Webhook, Bot, Activity, Settings, HelpCircle, CheckCircle, XCircle, Clock, MinusCircle, Loader2 } from 'lucide-react';
+import { Save, TestTube2, Webhook, Bot, Activity, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MetricsCard } from './MetricsCard';
 import { UsageChart } from './UsageChart';
 import { ConfigDataTable } from './ConfigDataTable';
 import { N8NWizard } from './N8NWizard';
+import { WebhookStatusCard } from './WebhookStatusCard';
+import { WebhookFieldBuilder } from './WebhookFieldBuilder';
+import { ChatPayloadBuilder } from './ChatPayloadBuilder';
+import { bookingWebhookFields, paymentWebhookFields } from './webhookFields';
 
 export const N8NConfig = () => {
   const { getConfig, updateConfig, loading, hasPermission, configs } = useSystemConfig(['n8n', 'n8n_chat']);
@@ -30,8 +34,21 @@ export const N8NConfig = () => {
   });
   const [usageData, setUsageData] = useState<any[]>([]);
 
+  // Booking fields state
+  const [bookingSelectedFields, setBookingSelectedFields] = useState<string[]>([
+    'appointment.id', 'appointment.nome_paciente', 'appointment.email_paciente',
+    'appointment.data_consulta', 'appointment.horario', 'appointment.valor',
+    'professional.display_name', 'timestamp', 'event'
+  ]);
+
+  // Payment fields state
+  const [paymentSelectedFields, setPaymentSelectedFields] = useState<string[]>([
+    'appointment.id', 'appointment.payment_status', 'appointment.email_paciente',
+    'timestamp', 'event'
+  ]);
+
   const [formData, setFormData] = useState({
-    // Configurações originais - inicializar com valores padrão
+    // Configurações originais
     booking_webhook_url: '',
     payment_webhook_url: '',
     send_appointment_notifications: true,
@@ -55,12 +72,11 @@ export const N8NConfig = () => {
         patient_email: '{{appointment.email_paciente}}'
       }
     }, null, 2),
-    // Configurações para chat AI (N8N-only)
+    // Configurações para chat AI
     chat_webhook_url_test: 'https://n8n.alopsi.com.br/webhook-test/56ab2ff9-a91c-4f80-9b25-ac74ccba2d88',
     chat_webhook_url_prod: 'https://n8n.alopsi.com.br/webhook/56ab2ff9-a91c-4f80-9b25-ac74ccba2d88',
     chat_enabled: false,
     chat_use_production: false,
-    // Campos adicionais para o payload N8N
     chat_channel: 'medcos_match',
     chat_medcos_match: true
   });
@@ -559,21 +575,6 @@ export const N8NConfig = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'online': 
-        return <Badge variant="default" className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Online</Badge>;
-      case 'offline': 
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Offline</Badge>;
-      case 'not_configured': 
-        return <Badge variant="secondary"><MinusCircle className="h-3 w-3 mr-1" />Não configurado</Badge>;
-      case 'unknown': 
-        return <Badge variant="outline"><HelpCircle className="h-3 w-3 mr-1" />Verificando...</Badge>;
-      default: 
-        return <Badge variant="outline"><Loader2 className="h-3 w-3 mr-1 animate-spin" />Verificando...</Badge>;
-    }
-  };
-
   const totalUsage = usageData.reduce((acc, curr) => acc + curr.booking + curr.payment + curr.chat, 0);
 
   if (loading) {
@@ -636,45 +637,24 @@ export const N8NConfig = () => {
 
       {/* Quick Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Webhook Agendamentos</p>
-                <p className="text-xs text-muted-foreground">
-                  {formData.booking_webhook_url ? 'Configurado' : 'Não configurado'}
-                </p>
-              </div>
-              {getStatusBadge(webhookStatus.booking)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Webhook Pagamentos</p>
-                <p className="text-xs text-muted-foreground">
-                  {formData.payment_webhook_url ? 'Configurado' : 'Não configurado'}
-                </p>
-              </div>
-              {getStatusBadge(webhookStatus.payment)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Chat IA N8N</p>
-                <p className="text-xs text-muted-foreground">
-                  {formData.chat_enabled ? 'Habilitado' : 'Desabilitado'}
-                </p>
-              </div>
-              {getStatusBadge(webhookStatus.chat)}
-            </div>
-          </CardContent>
-        </Card>
+        <WebhookStatusCard
+          title="Webhook Agendamentos"
+          description={formData.booking_webhook_url ? 'Configurado' : 'Não configurado'}
+          status={webhookStatus.booking as any}
+          count={usageData.reduce((acc, curr) => acc + curr.booking, 0)}
+        />
+        <WebhookStatusCard
+          title="Webhook Pagamentos"
+          description={formData.payment_webhook_url ? 'Configurado' : 'Não configurado'}
+          status={webhookStatus.payment as any}
+          count={usageData.reduce((acc, curr) => acc + curr.payment, 0)}
+        />
+        <WebhookStatusCard
+          title="Chat IA N8N"
+          description={formData.chat_enabled ? 'Habilitado' : 'Desabilitado'}
+          status={webhookStatus.chat as any}
+          count={usageData.reduce((acc, curr) => acc + curr.chat, 0)}
+        />
       </div>
 
       {/* Usage Metrics */}
@@ -695,8 +675,8 @@ export const N8NConfig = () => {
         <MetricsCard
           title="Pagamentos"
           value={usageData.reduce((acc, curr) => acc + curr.payment, 0)}
-          description="notificações enviadas"
-          icon={Settings}
+          description="webhooks executados"
+          icon={Webhook}
         />
         <MetricsCard
           title="Chat IA"
@@ -720,31 +700,29 @@ export const N8NConfig = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bot className="h-5 w-5" />
-                Assistente de IA via N8N (Medcos Match)
-                {getStatusBadge(webhookStatus.chat)}
+                Assistente de IA via N8N
               </CardTitle>
               <CardDescription>
                 Configure o fluxo N8N para processar consultas do assistente de IA
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <Alert>
-                <HelpCircle className="h-4 w-4" />
-                <AlertDescription>
-                  O N8N é 100% responsável por consultar o Supabase, manter contexto da conversa e processar com modelos de IA.
-                  O frontend envia apenas: user_id, session_id, tenant_id, tenant_slug, message, timestamp.
-                </AlertDescription>
-              </Alert>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="chat_enabled"
-                  checked={formData.chat_enabled}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, chat_enabled: checked }))}
-                />
-                <Label htmlFor="chat_enabled">
-                  Habilitar Chat via N8N
-                </Label>
+              <div className="flex items-center justify-between p-4 border rounded-lg bg-accent/20">
+                <div className="flex items-center space-x-3">
+                  <Switch
+                    id="chat_enabled"
+                    checked={formData.chat_enabled}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, chat_enabled: checked }))}
+                  />
+                  <div>
+                    <Label htmlFor="chat_enabled" className="text-sm font-medium cursor-pointer">
+                      Habilitar Chat via N8N
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Ativa o processamento de mensagens através do N8N
+                    </p>
+                  </div>
+                </div>
                 <Badge variant={formData.chat_enabled ? "default" : "secondary"}>
                   {formData.chat_enabled ? "Ativo" : "Inativo"}
                 </Badge>
@@ -752,37 +730,31 @@ export const N8NConfig = () => {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="chat_webhook_test">URL de Teste (webhook-test)</Label>
+                  <Label htmlFor="chat_webhook_test">URL de Teste</Label>
                   <Input
                     id="chat_webhook_test"
                     value={formData.chat_webhook_url_test}
                     onChange={(e) => setFormData(prev => ({ ...prev, chat_webhook_url_test: e.target.value }))}
                     placeholder="https://n8n.alopsi.com.br/webhook-test/..."
                   />
-                  <p className="text-sm text-muted-foreground">
-                    URL do webhook de teste do N8N
-                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="chat_webhook_prod">URL de Produção (webhook)</Label>
+                  <Label htmlFor="chat_webhook_prod">URL de Produção</Label>
                   <Input
                     id="chat_webhook_prod"
                     value={formData.chat_webhook_url_prod}
                     onChange={(e) => setFormData(prev => ({ ...prev, chat_webhook_url_prod: e.target.value }))}
                     placeholder="https://n8n.alopsi.com.br/webhook/..."
                   />
-                  <p className="text-sm text-muted-foreground">
-                    URL do webhook de produção do N8N
-                  </p>
                 </div>
 
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <Label htmlFor="chat_use_prod" className="cursor-pointer">
-                      Modo Atual:
+                    <Label htmlFor="chat_use_prod" className="cursor-pointer font-medium">
+                      Modo:
                     </Label>
-                    <Badge variant={formData.chat_use_production ? "default" : "secondary"} className="text-sm">
+                    <Badge variant={formData.chat_use_production ? "default" : "secondary"}>
                       {formData.chat_use_production ? "🚀 Produção" : "🧪 Teste"}
                     </Badge>
                   </div>
@@ -793,113 +765,43 @@ export const N8NConfig = () => {
                   />
                 </div>
 
-                {formData.chat_use_production && (
-                  <Alert>
-                    <AlertDescription className="text-orange-600">
-                      ⚠️ Você está em <strong>modo PRODUÇÃO</strong>. Todas as mensagens do chat serão enviadas para o webhook de produção.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                {!formData.chat_use_production && (
-                  <Alert>
-                    <AlertDescription className="text-blue-600">
-                      🧪 Você está em <strong>modo TESTE</strong>. As mensagens do chat vão para o webhook de teste do N8N.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => testWebhook('chat')}
-                    disabled={testing === 'chat'}
-                  >
-                    {testing === 'chat' ? 'Testando...' : 'Testar Webhook'}
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => testWebhook('chat')}
+                  disabled={testing === 'chat'}
+                >
+                  <TestTube2 className="h-4 w-4 mr-2" />
+                  {testing === 'chat' ? 'Testando...' : 'Testar Webhook'}
+                </Button>
               </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="chat_channel">Canal (channel)</Label>
-                  <Input
-                    id="chat_channel"
-                    value={formData.chat_channel}
-                    onChange={(e) => setFormData(prev => ({ ...prev, chat_channel: e.target.value }))}
-                    placeholder="medcos_match"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Nome do canal para identificação no N8N
-                  </p>
-                </div>
+              <Separator />
 
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="chat_medcos_match"
-                    checked={formData.chat_medcos_match}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, chat_medcos_match: checked }))}
-                  />
-                  <Label htmlFor="chat_medcos_match">
-                    Medcos Match
-                  </Label>
-                  <Badge variant={formData.chat_medcos_match ? "default" : "secondary"}>
-                    {formData.chat_medcos_match ? "Ativo" : "Inativo"}
-                  </Badge>
-                </div>
-              </div>
-
-              <Alert>
-                <Settings className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Payload enviado ao N8N:</strong>
-                  <pre className="mt-2 text-xs bg-muted p-2 rounded overflow-x-auto">
-{`{
-  "user_id": "uuid-do-usuario",
-  "session_id": "uuid-da-sessao",
-  "tenant_id": "uuid-do-tenant",
-  "tenant_slug": "medcos",
-  "message": "texto da mensagem",
-  "timestamp": "2025-11-29T12:00:00.000Z",
-  "channel": "${formData.chat_channel}",
-  "medcos_match": ${formData.chat_medcos_match}
-}`}
-                  </pre>
-                  <strong className="mt-2 block">Resposta esperada do N8N:</strong>
-                  <pre className="mt-2 text-xs bg-muted p-2 rounded">
-{`{
-  "response": "Texto da resposta em Markdown"
-}`}
-                  </pre>
-                </AlertDescription>
-              </Alert>
+              <ChatPayloadBuilder
+                channel={formData.chat_channel}
+                onChannelChange={(value) => setFormData(prev => ({ ...prev, chat_channel: value }))}
+                medcosMatch={formData.chat_medcos_match}
+                onMedcosMatchChange={(value) => setFormData(prev => ({ ...prev, chat_medcos_match: value }))}
+              />
             </CardContent>
           </Card>
 
-          {/* Original N8N Configurations */}
+          {/* Webhooks Configuration */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Webhook className="h-5 w-5" />
-                Webhooks de Agendamentos e Pagamentos
+                Webhook de Agendamentos
               </CardTitle>
               <CardDescription>
-                Configure automações para notificações e integrações de negócio
+                Configure os campos enviados ao webhook quando um agendamento é criado
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <Alert>
-                <Activity className="h-4 w-4" />
-                <AlertDescription>
-                  Estes webhooks são chamados automaticamente quando agendamentos são criados ou pagamentos são processados.
-                  Use para enviar notificações, integrar com CRMs ou outras automações.
-                </AlertDescription>
-              </Alert>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="booking_webhook">URL Webhook - Agendamentos</Label>
+                  <Label htmlFor="booking_webhook">URL do Webhook</Label>
                   <div className="flex gap-2">
                     <Input
                       id="booking_webhook"
@@ -913,83 +815,89 @@ export const N8NConfig = () => {
                       onClick={() => testWebhook('booking')}
                       disabled={testing === 'booking' || !formData.booking_webhook_url}
                     >
+                      <TestTube2 className="h-4 w-4 mr-2" />
                       {testing === 'booking' ? 'Testando...' : 'Testar'}
                     </Button>
                   </div>
-                  {getStatusBadge(webhookStatus.booking)}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="payment_webhook">URL Webhook - Pagamentos</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="payment_webhook"
-                      value={formData.payment_webhook_url}
-                      onChange={(e) => setFormData(prev => ({ ...prev, payment_webhook_url: e.target.value }))}
-                      placeholder="https://seu-n8n.com/webhook/payment"
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-accent/20">
+                  <div className="flex items-center space-x-3">
+                    <Switch
+                      id="send_notifications"
+                      checked={formData.send_appointment_notifications}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, send_appointment_notifications: checked }))}
                     />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => testWebhook('payment')}
-                      disabled={testing === 'payment' || !formData.payment_webhook_url}
-                    >
-                      {testing === 'payment' ? 'Testando...' : 'Testar'}
-                    </Button>
+                    <div>
+                      <Label htmlFor="send_notifications" className="text-sm font-medium cursor-pointer">
+                        Notificações Automáticas
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Enviar webhook automaticamente ao criar agendamento
+                      </p>
+                    </div>
                   </div>
-                  {getStatusBadge(webhookStatus.payment)}
+                  <Badge variant={formData.send_appointment_notifications ? "default" : "secondary"}>
+                    {formData.send_appointment_notifications ? "Ativo" : "Inativo"}
+                  </Badge>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="send_notifications"
-                  checked={formData.send_appointment_notifications}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, send_appointment_notifications: checked }))}
-                />
-                <Label htmlFor="send_notifications">
-                  Enviar notificações automáticas de agendamento
-                </Label>
-                <Badge variant={formData.send_appointment_notifications ? "default" : "secondary"}>
-                  {formData.send_appointment_notifications ? "Ativo" : "Inativo"}
-                </Badge>
-              </div>
+              <Separator />
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="booking_template">Template Payload - Agendamentos</Label>
-                  <Textarea
-                    id="booking_template"
-                    value={formData.booking_payload_template}
-                    onChange={(e) => setFormData(prev => ({ ...prev, booking_payload_template: e.target.value }))}
-                    className="min-h-[150px] font-mono text-sm"
-                    placeholder="Template JSON para webhook de agendamentos"
+              <WebhookFieldBuilder
+                type="booking"
+                availableFields={bookingWebhookFields}
+                selectedFields={bookingSelectedFields}
+                onFieldsChange={setBookingSelectedFields}
+                template={formData.booking_payload_template}
+                onTemplateChange={(template) => setFormData(prev => ({ ...prev, booking_payload_template: template }))}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Webhook className="h-5 w-5" />
+                Webhook de Pagamentos
+              </CardTitle>
+              <CardDescription>
+                Configure os campos enviados ao webhook quando um pagamento é atualizado
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="payment_webhook">URL do Webhook</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="payment_webhook"
+                    value={formData.payment_webhook_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, payment_webhook_url: e.target.value }))}
+                    placeholder="https://seu-n8n.com/webhook/payment"
                   />
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">Dados disponíveis:</Badge>
-                    <code className="text-xs bg-muted px-2 py-1 rounded">
-                      {`{{appointment.*}}, {{professional.*}}`}
-                    </code>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="payment_template">Template Payload - Pagamentos</Label>
-                  <Textarea
-                    id="payment_template"
-                    value={formData.payment_payload_template}
-                    onChange={(e) => setFormData(prev => ({ ...prev, payment_payload_template: e.target.value }))}
-                    className="min-h-[150px] font-mono text-sm"
-                    placeholder="Template JSON para webhook de pagamentos"
-                  />
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">Status disponíveis:</Badge>
-                    <code className="text-xs bg-muted px-2 py-1 rounded">
-                      paid, pending, cancelled, failed
-                    </code>
-                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => testWebhook('payment')}
+                    disabled={testing === 'payment' || !formData.payment_webhook_url}
+                  >
+                    <TestTube2 className="h-4 w-4 mr-2" />
+                    {testing === 'payment' ? 'Testando...' : 'Testar'}
+                  </Button>
                 </div>
               </div>
+
+              <Separator />
+
+              <WebhookFieldBuilder
+                type="payment"
+                availableFields={paymentWebhookFields}
+                selectedFields={paymentSelectedFields}
+                onFieldsChange={setPaymentSelectedFields}
+                template={formData.payment_payload_template}
+                onTemplateChange={(template) => setFormData(prev => ({ ...prev, payment_payload_template: template }))}
+              />
             </CardContent>
           </Card>
 
