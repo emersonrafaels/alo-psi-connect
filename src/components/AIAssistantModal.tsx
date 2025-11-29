@@ -12,6 +12,7 @@ import { useAIAssistantConfig } from "@/hooks/useAIAssistantConfig";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import ReactMarkdown from "react-markdown";
 interface Message {
   id: string;
@@ -38,7 +39,9 @@ export const AIAssistantModal = ({
     user
   } = useAuth();
   const { tenant } = useTenant();
+  const { profile } = useUserProfile();
   const [sessionId] = useState(() => crypto.randomUUID());
+  const [userPhone, setUserPhone] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -59,6 +62,31 @@ export const AIAssistantModal = ({
       }]);
     }
   }, [aiConfig.initialMessage, open]);
+
+  // Fetch phone if user is professional
+  useEffect(() => {
+    const fetchUserPhone = async () => {
+      if (!profile) {
+        setUserPhone(null);
+        return;
+      }
+
+      // If professional, fetch phone from profissionais table
+      if (profile.tipo_usuario === 'profissional') {
+        const { data } = await supabase
+          .from('profissionais')
+          .select('telefone')
+          .eq('profile_id', profile.id)
+          .maybeSingle();
+        
+        setUserPhone(data?.telefone || null);
+      } else {
+        setUserPhone(null);
+      }
+    };
+
+    fetchUserPhone();
+  }, [profile]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({
@@ -102,18 +130,31 @@ export const AIAssistantModal = ({
       // Buscar configurações adicionais do N8N
       const chatChannel = getConfig('n8n', 'chat_channel', 'medcos_match');
       const medcosMatch = getConfig('n8n', 'chat_medcos_match', true);
+      const customFields = getConfig('n8n', 'chat_custom_fields', []) as { key: string; value: string }[];
 
-      // Payload SIMPLIFICADO - N8N busca o resto
-      const payload = {
+      // Payload com dados do usuário
+      const payload: any = {
         user_id: user?.id || null,
         session_id: sessionId,
         tenant_id: tenant?.id,
         tenant_slug: tenant?.slug,
         message: inputMessage,
         timestamp: new Date().toISOString(),
+        // User data (automatic)
+        user_name: profile?.nome || null,
+        user_email: profile?.email || null,
+        user_phone: userPhone || null,
+        // Additional fields
         channel: chatChannel,
         medcos_match: medcosMatch
       };
+
+      // Add custom fields
+      customFields.forEach((field: { key: string; value: string }) => {
+        if (field.key.trim()) {
+          payload[field.key] = field.value;
+        }
+      });
 
       console.log(`[Match] Enviando para N8N (${useProduction ? 'PROD' : 'TEST'}):`, webhookUrl);
       console.log('[Match] Payload:', payload);
