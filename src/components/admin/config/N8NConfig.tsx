@@ -54,51 +54,17 @@ export const N8NConfig = () => {
         patient_email: '{{appointment.email_paciente}}'
       }
     }, null, 2),
-    // Configurações para chat AI com retry
-    chat_webhook_url: '',
+    // Configurações para chat AI (N8N-only)
+    chat_webhook_url_test: 'https://n8n.alopsi.com.br/webhook-test/56ab2ff9-a91c-4f80-9b25-ac74ccba2d88',
+    chat_webhook_url_prod: 'https://n8n.alopsi.com.br/webhook/56ab2ff9-a91c-4f80-9b25-ac74ccba2d88',
     chat_enabled: false,
-    chat_timeout_seconds: 30,
-    chat_fallback_openai: true,
-    chat_max_retries: 3,
-    chat_retry_delay_ms: 1000,
-    chat_retry_backoff_multiplier: 2,
-    chat_payload_template: JSON.stringify({
-      event: "ai_chat_message",
-      timestamp: "{{timestamp}}",
-      session_id: "{{session_id}}",
-      user: {
-        message: "{{user_message}}",
-        context: "{{context}}",
-        page: "{{page}}",
-        filters: "{{filters}}",
-        professionals: "{{professionals}}"
-      },
-      platform: "alopsi"
-    }, null, 2)
+    chat_use_production: false
   });
 
   // Update formData when configs are loaded
   useEffect(() => {
     if (configs.length > 0) {
       console.log('🔧 [N8NConfig] Loading configs:', configs);
-      
-      // Get the payload template as string (try both keys for compatibility)
-      const payloadTemplate = getConfig('n8n', 'chat_payload_template', null) || 
-                              getConfig('n8n_chat', 'payload_template', JSON.stringify({
-        event: "ai_chat_message",
-        timestamp: "{{timestamp}}",
-        session_id: "{{session_id}}",
-        user: {
-          message: "{{user_message}}",
-          context: "{{context}}",
-          page: "{{page}}",
-          filters: "{{filters}}",
-          professionals: "{{professionals}}"
-        },
-        platform: "alopsi"
-      }));
-      
-      console.log('🔧 [N8NConfig] Chat payload template from DB:', payloadTemplate);
       
       setFormData({
         // Configurações originais
@@ -125,49 +91,21 @@ export const N8NConfig = () => {
             patient_email: '{{appointment.email_paciente}}'
           }
         }, null, 2)),
-        // Configurações para chat AI com retry (now using n8n category)
-        chat_webhook_url: getConfig('n8n', 'chat_webhook_url', '') || getConfig('n8n_chat', 'webhook_url', ''),
-        chat_enabled: getConfig('n8n', 'chat_enabled', false) || getConfig('n8n_chat', 'enabled', false),
-        chat_timeout_seconds: parseInt(getConfig('n8n', 'chat_timeout_seconds', '30') || getConfig('n8n_chat', 'timeout_seconds', '30')),
-        chat_fallback_openai: getConfig('n8n', 'chat_fallback_openai', true) && getConfig('n8n_chat', 'fallback_openai', true),
-        chat_max_retries: parseInt(getConfig('n8n', 'chat_max_retries', '3') || getConfig('n8n_chat', 'max_retries', '3')),
-        chat_retry_delay_ms: parseInt(getConfig('n8n', 'chat_retry_delay_ms', '1000') || getConfig('n8n_chat', 'retry_delay_ms', '1000')),
-        chat_retry_backoff_multiplier: parseFloat(getConfig('n8n', 'chat_retry_backoff_multiplier', '2') || getConfig('n8n_chat', 'retry_backoff_multiplier', '2')),
-        // Format template nicely for display if it's a JSON string
-        chat_payload_template: (() => {
-          try {
-            console.log('🔧 [N8NConfig] Processing template for display:', {
-              payloadTemplate,
-              type: typeof payloadTemplate,
-              isObject: typeof payloadTemplate === 'object'
-            });
-            
-            // If it's a JSON object, stringify it nicely
-            if (typeof payloadTemplate === 'object' && payloadTemplate !== null) {
-              const formatted = JSON.stringify(payloadTemplate, null, 2);
-              console.log('🔧 [N8NConfig] Formatted object template:', formatted);
-              return formatted;
-            }
-            // If it's a string, try to parse and reformat
-            const parsed = JSON.parse(payloadTemplate);
-            const formatted = JSON.stringify(parsed, null, 2);
-            console.log('🔧 [N8NConfig] Formatted string template:', formatted);
-            return formatted;
-          } catch (error) {
-            console.log('🔧 [N8NConfig] Template formatting failed:', error, 'using as-is:', payloadTemplate);
-            // If parsing fails, return as-is
-            return payloadTemplate;
-          }
-        })()
+        // Configurações para chat AI (N8N-only, simplified)
+        chat_webhook_url_test: getConfig('n8n', 'chat_webhook_url_test', 'https://n8n.alopsi.com.br/webhook-test/56ab2ff9-a91c-4f80-9b25-ac74ccba2d88'),
+        chat_webhook_url_prod: getConfig('n8n', 'chat_webhook_url_prod', 'https://n8n.alopsi.com.br/webhook/56ab2ff9-a91c-4f80-9b25-ac74ccba2d88'),
+        chat_enabled: getConfig('n8n', 'chat_enabled', false),
+        chat_use_production: getConfig('n8n', 'chat_use_production', false)
       });
     }
   }, [configs, getConfig]);
 
   const checkWebhookStatus = async () => {
+    const chatUrl = formData.chat_use_production ? formData.chat_webhook_url_prod : formData.chat_webhook_url_test;
     const webhooks = [
       { type: 'booking', url: formData.booking_webhook_url },
       { type: 'payment', url: formData.payment_webhook_url },
-      { type: 'chat', url: formData.chat_webhook_url }
+      { type: 'chat', url: chatUrl }
     ];
 
     console.log('Checking webhook status for URLs:', webhooks);
@@ -222,13 +160,14 @@ export const N8NConfig = () => {
   // Check webhook status after configs are loaded and formData is updated
   useEffect(() => {
     if (!loading && hasPermission && configs.length > 0) {
+      const chatUrl = formData.chat_use_production ? formData.chat_webhook_url_prod : formData.chat_webhook_url_test;
       // Wait a bit for formData to be updated with loaded configs
       const timeoutId = setTimeout(() => {
-        if (formData.booking_webhook_url || formData.payment_webhook_url || formData.chat_webhook_url) {
+        if (formData.booking_webhook_url || formData.payment_webhook_url || chatUrl) {
           console.log('Initial webhook status check with URLs:', {
             booking: formData.booking_webhook_url,
             payment: formData.payment_webhook_url,
-            chat: formData.chat_webhook_url
+            chat: chatUrl
           });
           checkWebhookStatus();
         }
@@ -236,7 +175,7 @@ export const N8NConfig = () => {
       
       return () => clearTimeout(timeoutId);
     }
-  }, [loading, hasPermission, configs.length, formData.booking_webhook_url, formData.payment_webhook_url, formData.chat_webhook_url]);
+  }, [loading, hasPermission, configs.length, formData.booking_webhook_url, formData.payment_webhook_url, formData.chat_webhook_url_test, formData.chat_webhook_url_prod, formData.chat_use_production]);
 
   // Generate mock usage data
   useEffect(() => {
@@ -254,23 +193,6 @@ export const N8NConfig = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Validate chat payload template before saving
-      let payloadToSave = formData.chat_payload_template;
-      if (formData.chat_payload_template) {
-        try {
-          // Try to parse and minify the JSON template
-          const parsed = JSON.parse(formData.chat_payload_template);
-          payloadToSave = JSON.stringify(parsed); // Minified version for storage
-        } catch (error) {
-          toast({
-            title: "Erro no template",
-            description: "Template do payload de chat contém JSON inválido",
-            variant: "destructive"
-          });
-          return;
-        }
-      }
-
       await Promise.all([
         // Configurações originais
         updateConfig('n8n', 'booking_webhook_url', formData.booking_webhook_url),
@@ -278,15 +200,11 @@ export const N8NConfig = () => {
         updateConfig('n8n', 'send_appointment_notifications', formData.send_appointment_notifications),
         updateConfig('n8n', 'booking_payload_template', formData.booking_payload_template),
         updateConfig('n8n', 'payment_payload_template', formData.payment_payload_template),
-        // Configurações para chat AI com retry (now saving to n8n category)
-        updateConfig('n8n', 'chat_webhook_url', formData.chat_webhook_url),
+        // Configurações para chat AI (N8N-only, simplified)
+        updateConfig('n8n', 'chat_webhook_url_test', formData.chat_webhook_url_test),
+        updateConfig('n8n', 'chat_webhook_url_prod', formData.chat_webhook_url_prod),
         updateConfig('n8n', 'chat_enabled', formData.chat_enabled),
-        updateConfig('n8n', 'chat_timeout_seconds', formData.chat_timeout_seconds.toString()),
-        updateConfig('n8n', 'chat_fallback_openai', formData.chat_fallback_openai),
-        updateConfig('n8n', 'chat_max_retries', formData.chat_max_retries.toString()),
-        updateConfig('n8n', 'chat_retry_delay_ms', formData.chat_retry_delay_ms.toString()),
-        updateConfig('n8n', 'chat_retry_backoff_multiplier', formData.chat_retry_backoff_multiplier.toString()),
-        updateConfig('n8n', 'chat_payload_template', payloadToSave)
+        updateConfig('n8n', 'chat_use_production', formData.chat_use_production)
       ]);
       
       toast({
@@ -503,8 +421,12 @@ export const N8NConfig = () => {
         url = getConfig('n8n', 'payment_webhook_url', formData.payment_webhook_url);
         template = getConfig('n8n', 'payment_payload_template', formData.payment_payload_template);
       } else if (type === 'chat') {
-        url = getConfig('n8n', 'chat_webhook_url', formData.chat_webhook_url);
-        template = getConfig('n8n', 'chat_payload_template', formData.chat_payload_template);
+        // Use test or prod URL based on current mode
+        const useProduction = getConfig('n8n', 'chat_use_production', formData.chat_use_production);
+        url = useProduction 
+          ? getConfig('n8n', 'chat_webhook_url_prod', formData.chat_webhook_url_prod)
+          : getConfig('n8n', 'chat_webhook_url_test', formData.chat_webhook_url_test);
+        template = null; // No template for chat, using fixed simple payload
       }
       
       if (!url) {
@@ -516,54 +438,56 @@ export const N8NConfig = () => {
         return;
       }
 
-      if (!template) {
-        toast({
-          title: "Template não encontrado",
-          description: `Template do payload de ${type === 'booking' ? 'agendamento' : type === 'payment' ? 'pagamento' : 'chat'} não está configurado`,
-          variant: "destructive"
-        });
-        return;
-      }
-
       // Test payload with comprehensive variable substitution
       let testPayload;
-      try {
-        // Map variables to appropriate test values
-        const testValues: Record<string, any> = {
-          // Appointment related
-          'appointment.id': "test-appointment-123",
-          'appointment.nome_paciente': "João Silva",
-          'appointment.email_paciente': "joao@exemplo.com",
-          'appointment.data_consulta': "2024-01-15",
-          'appointment.horario': "14:30",
-          'appointment.valor': 150.00,
-          'appointment.payment_status': "paid",
-          'professional.display_name': "Dr. Maria Santos",
-          
-          // Chat related
-          'timestamp': new Date().toISOString(),
-          'session_id': `test-session-${Date.now()}`,
-          'user_message': "Olá, preciso de ajuda para encontrar um psicólogo especializado em ansiedade",
-          'context': "busca-profissionais",
-          'page': "/professionals?specialty=psicologia&location=sao-paulo",
-          'filters': {"specialty": "Psicologia", "location": "São Paulo", "price_range": "100-200"},
-          'professionals': [
-            {"id": 1, "name": "Dr. Maria Santos", "specialty": "Psicologia Clínica"},
-            {"id": 2, "name": "Dr. João Silva", "specialty": "Psiquiatria"}
-          ]
+      
+      if (type === 'chat') {
+        // Chat uses a simple fixed payload (no template)
+        testPayload = {
+          user_id: "test-user-123",
+          session_id: `test-session-${Date.now()}`,
+          tenant_id: "test-tenant-456",
+          tenant_slug: "medcos",
+          message: "Olá, preciso de ajuda para encontrar um psicólogo especializado em ansiedade",
+          timestamp: new Date().toISOString()
         };
-        
-        console.log('Testing with values:', testValues);
-        testPayload = createPayloadFromTemplate(template, testValues);
-        
-      } catch (parseError) {
-        console.error('Template parsing error:', parseError);
-        toast({
-          title: "Erro no template",
-          description: `Template payload inválido: ${parseError.message}`,
-          variant: "destructive"
-        });
-        return;
+      } else {
+        // Booking/Payment use templates
+        if (!template) {
+          toast({
+            title: "Template não encontrado",
+            description: `Template do payload de ${type === 'booking' ? 'agendamento' : 'pagamento'} não está configurado`,
+            variant: "destructive"
+          });
+          return;
+        }
+
+        try {
+          // Map variables to appropriate test values
+          const testValues: Record<string, any> = {
+            // Appointment related
+            'appointment.id': "test-appointment-123",
+            'appointment.nome_paciente': "João Silva",
+            'appointment.email_paciente': "joao@exemplo.com",
+            'appointment.data_consulta': "2024-01-15",
+            'appointment.horario': "14:30",
+            'appointment.valor': 150.00,
+            'appointment.payment_status': "paid",
+            'professional.display_name': "Dr. Maria Santos"
+          };
+          
+          console.log('Testing with values:', testValues);
+          testPayload = createPayloadFromTemplate(template, testValues);
+          
+        } catch (parseError) {
+          console.error('Template parsing error:', parseError);
+          toast({
+            title: "Erro no template",
+            description: `Template payload inválido: ${parseError.message}`,
+            variant: "destructive"
+          });
+          return;
+        }
       }
       
       // Define webhook operation with timeout
@@ -785,19 +709,19 @@ export const N8NConfig = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bot className="h-5 w-5" />
-                Assistente de IA via N8N
+                Assistente de IA via N8N (Medcos Match)
                 {getStatusBadge(webhookStatus.chat)}
               </CardTitle>
               <CardDescription>
-                Configure o fluxo N8N para processar consultas do assistente de IA com modelos customizados
+                Configure o fluxo N8N para processar consultas do assistente de IA
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <Alert>
                 <HelpCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Quando habilitado, as consultas do chat IA são enviadas primeiro para seu workflow N8N. 
-                  Se falhar ou estiver desabilitado, usa OpenAI diretamente como fallback.
+                  O N8N é 100% responsável por consultar o Supabase, manter contexto da conversa e processar com modelos de IA.
+                  O frontend envia apenas: user_id, session_id, tenant_id, tenant_slug, message, timestamp.
                 </AlertDescription>
               </Alert>
 
@@ -808,145 +732,106 @@ export const N8NConfig = () => {
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, chat_enabled: checked }))}
                 />
                 <Label htmlFor="chat_enabled">
-                  Usar N8N para assistente de IA
+                  Habilitar Chat via N8N
                 </Label>
                 <Badge variant={formData.chat_enabled ? "default" : "secondary"}>
                   {formData.chat_enabled ? "Ativo" : "Inativo"}
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="chat_webhook">URL Webhook - Chat AI</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="chat_webhook"
-                      value={formData.chat_webhook_url}
-                      onChange={(e) => setFormData(prev => ({ ...prev, chat_webhook_url: e.target.value }))}
-                      placeholder="https://seu-n8n.com/webhook/chat"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => testWebhook('chat')}
-                      disabled={testing === 'chat' || !formData.chat_webhook_url}
-                    >
-                      {testing === 'chat' ? 'Testando...' : 'Testar'}
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    URL do webhook N8N que processará as mensagens do chat
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="chat_timeout">Timeout (segundos)</Label>
+                  <Label htmlFor="chat_webhook_test">URL de Teste (webhook-test)</Label>
                   <Input
-                    id="chat_timeout"
-                    type="number"
-                    value={formData.chat_timeout_seconds}
-                    onChange={(e) => setFormData(prev => ({ ...prev, chat_timeout_seconds: parseInt(e.target.value) }))}
-                    min={5}
-                    max={60}
+                    id="chat_webhook_test"
+                    value={formData.chat_webhook_url_test}
+                    onChange={(e) => setFormData(prev => ({ ...prev, chat_webhook_url_test: e.target.value }))}
+                    placeholder="https://n8n.alopsi.com.br/webhook-test/..."
                   />
                   <p className="text-sm text-muted-foreground">
-                    Tempo limite para resposta do N8N (recomendado: 30s)
+                    URL do webhook de teste do N8N
                   </p>
                 </div>
-              </div>
 
-              {/* Retry Configuration Section */}
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">⚡ Configuração de Retry (Sistema de Tentativas)</Label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="chat_max_retries">Máximo de Tentativas</Label>
-                    <Input
-                      id="chat_max_retries"
-                      type="number"
-                      value={formData.chat_max_retries}
-                      onChange={(e) => setFormData(prev => ({ ...prev, chat_max_retries: parseInt(e.target.value) }))}
-                      min={1}
-                      max={5}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Quantas vezes tentar novamente se falhar (1-5)
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="chat_retry_delay">Delay Inicial (ms)</Label>
-                    <Input
-                      id="chat_retry_delay"
-                      type="number"
-                      value={formData.chat_retry_delay_ms}
-                      onChange={(e) => setFormData(prev => ({ ...prev, chat_retry_delay_ms: parseInt(e.target.value) }))}
-                      min={100}
-                      max={10000}
-                      step={100}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Tempo de espera inicial entre tentativas
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="chat_backoff_multiplier">Multiplicador de Backoff</Label>
-                    <Input
-                      id="chat_backoff_multiplier"
-                      type="number"
-                      value={formData.chat_retry_backoff_multiplier}
-                      onChange={(e) => setFormData(prev => ({ ...prev, chat_retry_backoff_multiplier: parseFloat(e.target.value) }))}
-                      min={1}
-                      max={5}
-                      step={0.1}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Fator de crescimento do delay (2.0 = dobra a cada tentativa)
-                    </p>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="chat_webhook_prod">URL de Produção (webhook)</Label>
+                  <Input
+                    id="chat_webhook_prod"
+                    value={formData.chat_webhook_url_prod}
+                    onChange={(e) => setFormData(prev => ({ ...prev, chat_webhook_url_prod: e.target.value }))}
+                    placeholder="https://n8n.alopsi.com.br/webhook/..."
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    URL do webhook de produção do N8N
+                  </p>
                 </div>
-                <Alert>
-                  <Settings className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Exemplo:</strong> Com 3 tentativas, delay 1000ms e multiplicador 2.0: <br/>
-                    • 1ª tentativa: Imediato <br/>
-                    • 2ª tentativa: Após 1000ms <br/>
-                    • 3ª tentativa: Após 2000ms
-                  </AlertDescription>
-                </Alert>
-              </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="chat_fallback"
-                  checked={formData.chat_fallback_openai}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, chat_fallback_openai: checked }))}
-                />
-                <Label htmlFor="chat_fallback">
-                  Usar OpenAI como fallback se N8N falhar
-                </Label>
-                <Badge variant={formData.chat_fallback_openai ? "default" : "destructive"}>
-                  {formData.chat_fallback_openai ? "Habilitado" : "Desabilitado"}
-                </Badge>
-              </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Label htmlFor="chat_use_prod" className="cursor-pointer">
+                      Modo Atual:
+                    </Label>
+                    <Badge variant={formData.chat_use_production ? "default" : "secondary"} className="text-sm">
+                      {formData.chat_use_production ? "🚀 Produção" : "🧪 Teste"}
+                    </Badge>
+                  </div>
+                  <Switch
+                    id="chat_use_prod"
+                    checked={formData.chat_use_production}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, chat_use_production: checked }))}
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="chat_template">Template Payload - Chat AI</Label>
-                <Textarea
-                  id="chat_template"
-                  value={formData.chat_payload_template}
-                  onChange={(e) => setFormData(prev => ({ ...prev, chat_payload_template: e.target.value }))}
-                  className="min-h-[200px] font-mono text-sm"
-                  placeholder="Template JSON para webhook do chat"
-                />
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">Variáveis disponíveis:</Badge>
-                  <code className="text-xs bg-muted px-2 py-1 rounded">
-                    {`{{user_message}}, {{professionals}}, {{context}}, {{timestamp}}`}
-                  </code>
+                {formData.chat_use_production && (
+                  <Alert>
+                    <AlertDescription className="text-orange-600">
+                      ⚠️ Você está em <strong>modo PRODUÇÃO</strong>. Todas as mensagens do chat serão enviadas para o webhook de produção.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {!formData.chat_use_production && (
+                  <Alert>
+                    <AlertDescription className="text-blue-600">
+                      🧪 Você está em <strong>modo TESTE</strong>. As mensagens do chat vão para o webhook de teste do N8N.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => testWebhook('chat')}
+                    disabled={testing === 'chat'}
+                  >
+                    {testing === 'chat' ? 'Testando...' : 'Testar Webhook'}
+                  </Button>
                 </div>
               </div>
+
+              <Alert>
+                <Settings className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Payload enviado ao N8N:</strong>
+                  <pre className="mt-2 text-xs bg-muted p-2 rounded overflow-x-auto">
+{`{
+  "user_id": "uuid-do-usuario",
+  "session_id": "uuid-da-sessao",
+  "tenant_id": "uuid-do-tenant",
+  "tenant_slug": "medcos",
+  "message": "texto da mensagem",
+  "timestamp": "2025-11-29T12:00:00.000Z"
+}`}
+                  </pre>
+                  <strong className="mt-2 block">Resposta esperada do N8N:</strong>
+                  <pre className="mt-2 text-xs bg-muted p-2 rounded">
+{`{
+  "response": "Texto da resposta em Markdown"
+}`}
+                  </pre>
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
 
