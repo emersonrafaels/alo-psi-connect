@@ -30,9 +30,7 @@ export const AIAssistantModal = ({
   professionals
 }: AIAssistantModalProps) => {
   const navigate = useNavigate();
-  const {
-    getConfig
-  } = useSystemConfig(['n8n_chat']); // Only for N8N configs
+  const { getConfig } = useSystemConfig(['n8n']); // Only for N8N configs
   const {
     aiConfig
   } = useAIAssistantConfig(); // For AI assistant display configs
@@ -71,208 +69,90 @@ export const AIAssistantModal = ({
     scrollToBottom();
   }, [messages]);
 
-  // Utility function to create payload from template
-  const createPayloadFromTemplate = (template: string, variables: Record<string, any>): any => {
-    try {
-      // Process template and substitute variables
-      const processedTemplate = template.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
-        const varName = variable.trim();
-        const value = variables[varName];
-        if (value === undefined) {
-          console.warn(`Template variable ${varName} not found`);
-          return JSON.stringify(null);
-        }
-
-        // For objects and arrays, return as JSON string without quotes
-        if (typeof value === 'object') {
-          return JSON.stringify(value);
-        }
-
-        // For primitives, return as JSON string
-        return JSON.stringify(value);
-      });
-      console.log('Processed template:', processedTemplate);
-      return JSON.parse(processedTemplate);
-    } catch (error) {
-      console.error('Template processing error:', error);
-      throw new Error(`Invalid template: ${error.message}`);
-    }
-  };
-
-  // Retry function with exponential backoff
-  const retryWithBackoff = async (operation: () => Promise<any>, maxRetries: number = 3, baseDelay: number = 1000, backoffMultiplier: number = 2): Promise<any> => {
-    let lastError: Error;
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`N8N attempt ${attempt}/${maxRetries}`);
-        return await operation();
-      } catch (error) {
-        lastError = error as Error;
-        console.warn(`N8N attempt ${attempt} failed:`, error);
-        if (attempt === maxRetries) {
-          break;
-        }
-
-        // Calculate delay with exponential backoff
-        const delay = baseDelay * Math.pow(backoffMultiplier, attempt - 1);
-        console.log(`Waiting ${delay}ms before retry...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-    throw lastError;
-  };
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: inputMessage,
       timestamp: new Date()
     };
+
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
     setIsLoading(true);
+
     try {
-      // Get N8N configurations
-      const n8nEnabled = getConfig('n8n_chat', 'enabled', false);
-      const n8nWebhookUrl = getConfig('n8n_chat', 'webhook_url', '');
-      const fallbackOpenAI = getConfig('n8n_chat', 'fallback_openai', true);
-      const timeoutSeconds = getConfig('n8n_chat', 'timeout_seconds', 30);
-      const maxRetries = parseInt(getConfig('n8n_chat', 'max_retries', '3'));
-      const retryDelay = parseInt(getConfig('n8n_chat', 'retry_delay_ms', '1000'));
-      const backoffMultiplier = parseFloat(getConfig('n8n_chat', 'retry_backoff_multiplier', '2'));
-      const payloadTemplate = getConfig('n8n_chat', 'payload_template', '');
-      let response;
-      let success = false;
+      // Buscar configuração do N8N
+      const n8nEnabled = getConfig('n8n', 'chat_enabled', false);
+      const useProduction = getConfig('n8n', 'chat_use_production', false);
+      const webhookUrl = useProduction 
+        ? getConfig('n8n', 'chat_webhook_url_prod', '')
+        : getConfig('n8n', 'chat_webhook_url_test', '');
 
-      // Try N8N first if enabled
-      if (n8nEnabled && n8nWebhookUrl) {
-        try {
-          console.log('Attempting N8N webhook with retry system...');
-
-          // Prepare variables for template substitution
-          const variables = {
-            timestamp: new Date().toISOString(),
-            session_id: sessionId,
-            user_message: inputMessage,
-            context: "busca de profissionais",
-            page: window.location.pathname + window.location.search,
-            filters: Object.fromEntries(new URLSearchParams(window.location.search)),
-            professionals: professionals || []
-          };
-
-          // Create payload from database template
-          let payload;
-          if (payloadTemplate) {
-            payload = createPayloadFromTemplate(payloadTemplate, variables);
-          } else {
-            // Fallback to hardcoded payload if template not found
-            payload = {
-              event: "ai_chat_message",
-              timestamp: variables.timestamp,
-              session_id: variables.session_id,
-              user: {
-                message: variables.user_message,
-                context: variables.context,
-                page: variables.page,
-                filters: variables.filters
-              },
-              professionals: variables.professionals,
-              platform: "alopsi"
-            };
-          }
-          console.log('N8N payload prepared:', payload);
-
-          // Define the N8N operation with timeout
-          const n8nOperation = async () => {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeoutSeconds * 1000);
-            try {
-              const n8nResponse = await fetch(n8nWebhookUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'User-Agent': 'AloPsi-Chat-Assistant'
-                },
-                body: JSON.stringify(payload),
-                signal: controller.signal
-              });
-              clearTimeout(timeoutId);
-              if (!n8nResponse.ok) {
-                throw new Error(`N8N HTTP ${n8nResponse.status}: ${n8nResponse.statusText}`);
-              }
-              const n8nData = await n8nResponse.json();
-              return n8nData.response || n8nData.message || 'Resposta recebida do N8N';
-            } catch (error) {
-              clearTimeout(timeoutId);
-              throw error;
-            }
-          };
-
-          // Execute with retry
-          response = await retryWithBackoff(n8nOperation, maxRetries, retryDelay, backoffMultiplier);
-          success = true;
-          console.log('N8N responded successfully:', response);
-        } catch (n8nError) {
-          console.error('N8N failed after all retries:', n8nError);
-          if (!fallbackOpenAI) {
-            throw n8nError;
-          }
-          console.log('Using OpenAI as fallback...');
-        }
+      if (!n8nEnabled) {
+        throw new Error('N8N Chat não está habilitado. Configure nas configurações do sistema.');
       }
 
-      // Fallback para OpenAI se N8N falhou ou não está habilitado
-      if (!success) {
-        console.log('Calling AI Assistant with payload:', {
-          message: inputMessage,
-          sessionId: sessionId,
-          userId: user?.id,
-          professionals: professionals
-        });
-        const {
-          data,
-          error
-        } = await supabase.functions.invoke('ai-assistant', {
-          body: {
-            message: inputMessage,
-            sessionId: sessionId,
-            userId: user?.id,
-            tenantId: tenant?.id,
-            professionals: professionals
-          }
-        });
-        if (error) {
-          console.error('Supabase function error:', error);
-          throw error;
-        }
-        console.log('AI Assistant response:', data);
-        if (data && !data.success && data.error) {
-          throw new Error(data.error);
-        }
-        response = data?.response || data;
+      if (!webhookUrl) {
+        throw new Error('URL do webhook N8N não configurada. Configure nas configurações do sistema.');
       }
+
+      // Payload SIMPLIFICADO - N8N busca o resto
+      const payload = {
+        user_id: user?.id || null,
+        session_id: sessionId,
+        tenant_id: tenant?.id,
+        tenant_slug: tenant?.slug,
+        message: inputMessage,
+        timestamp: new Date().toISOString()
+      };
+
+      console.log(`[Match] Enviando para N8N (${useProduction ? 'PROD' : 'TEST'}):`, webhookUrl);
+      console.log('[Match] Payload:', payload);
+
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`N8N respondeu com status ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // N8N deve retornar: { response: "texto da resposta" }
+      const assistantContent = data.response || data.message || data.output || 'Sem resposta do assistente.';
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: response,
+        content: assistantContent,
         timestamp: new Date()
       };
+
       setMessages(prev => [...prev, assistantMessage]);
+
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar a mensagem. Tente novamente.",
-        variant: "destructive"
-      });
+      console.error('[Match] Erro:', error);
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: '❌ Desculpe, ocorreu um erro. Tente novamente em alguns instantes.',
+        content: `❌ Erro ao processar sua mensagem: ${error.message}`,
         timestamp: new Date()
       };
+
       setMessages(prev => [...prev, errorMessage]);
+
+      toast({
+        title: "Erro no assistente",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
