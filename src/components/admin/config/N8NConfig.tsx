@@ -78,7 +78,8 @@ export const N8NConfig = () => {
     chat_enabled: false,
     chat_use_production: false,
     chat_channel: 'medcos_match',
-    chat_medcos_match: true
+    chat_medcos_match: true,
+    chat_custom_fields: [] as { key: string; value: string }[]
   });
 
   // Update formData when configs are loaded
@@ -118,7 +119,8 @@ export const N8NConfig = () => {
         chat_use_production: getConfig('n8n', 'chat_use_production', false),
         // Campos adicionais para o payload N8N
         chat_channel: getConfig('n8n', 'chat_channel', 'medcos_match'),
-        chat_medcos_match: getConfig('n8n', 'chat_medcos_match', true)
+        chat_medcos_match: getConfig('n8n', 'chat_medcos_match', true),
+        chat_custom_fields: getConfig('n8n', 'chat_custom_fields', [])
       });
     }
   }, [configs, getConfig]);
@@ -225,7 +227,8 @@ export const N8NConfig = () => {
         updateConfig('n8n', 'chat_use_production', formData.chat_use_production),
         // Campos adicionais para o payload N8N
         updateConfig('n8n', 'chat_channel', formData.chat_channel),
-        updateConfig('n8n', 'chat_medcos_match', formData.chat_medcos_match)
+        updateConfig('n8n', 'chat_medcos_match', formData.chat_medcos_match),
+        updateConfig('n8n', 'chat_custom_fields', formData.chat_custom_fields)
       ]);
       
       toast({
@@ -783,6 +786,8 @@ export const N8NConfig = () => {
                 onChannelChange={(value) => setFormData(prev => ({ ...prev, chat_channel: value }))}
                 medcosMatch={formData.chat_medcos_match}
                 onMedcosMatchChange={(value) => setFormData(prev => ({ ...prev, chat_medcos_match: value }))}
+                customFields={formData.chat_custom_fields}
+                onCustomFieldsChange={(fields) => setFormData(prev => ({ ...prev, chat_custom_fields: fields }))}
               />
             </CardContent>
           </Card>
