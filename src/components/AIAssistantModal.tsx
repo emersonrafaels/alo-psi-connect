@@ -99,6 +99,10 @@ export const AIAssistantModal = ({
         throw new Error('URL do webhook N8N não configurada. Configure nas configurações do sistema.');
       }
 
+      // Buscar configurações adicionais do N8N
+      const chatChannel = getConfig('n8n', 'chat_channel', 'medcos_match');
+      const medcosMatch = getConfig('n8n', 'chat_medcos_match', true);
+
       // Payload SIMPLIFICADO - N8N busca o resto
       const payload = {
         user_id: user?.id || null,
@@ -106,7 +110,9 @@ export const AIAssistantModal = ({
         tenant_id: tenant?.id,
         tenant_slug: tenant?.slug,
         message: inputMessage,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        channel: chatChannel,
+        medcos_match: medcosMatch
       };
 
       console.log(`[Match] Enviando para N8N (${useProduction ? 'PROD' : 'TEST'}):`, webhookUrl);
