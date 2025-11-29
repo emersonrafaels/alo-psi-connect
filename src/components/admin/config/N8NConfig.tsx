@@ -58,7 +58,10 @@ export const N8NConfig = () => {
     chat_webhook_url_test: 'https://n8n.alopsi.com.br/webhook-test/56ab2ff9-a91c-4f80-9b25-ac74ccba2d88',
     chat_webhook_url_prod: 'https://n8n.alopsi.com.br/webhook/56ab2ff9-a91c-4f80-9b25-ac74ccba2d88',
     chat_enabled: false,
-    chat_use_production: false
+    chat_use_production: false,
+    // Campos adicionais para o payload N8N
+    chat_channel: 'medcos_match',
+    chat_medcos_match: true
   });
 
   // Update formData when configs are loaded
@@ -95,7 +98,10 @@ export const N8NConfig = () => {
         chat_webhook_url_test: getConfig('n8n', 'chat_webhook_url_test', 'https://n8n.alopsi.com.br/webhook-test/56ab2ff9-a91c-4f80-9b25-ac74ccba2d88'),
         chat_webhook_url_prod: getConfig('n8n', 'chat_webhook_url_prod', 'https://n8n.alopsi.com.br/webhook/56ab2ff9-a91c-4f80-9b25-ac74ccba2d88'),
         chat_enabled: getConfig('n8n', 'chat_enabled', false),
-        chat_use_production: getConfig('n8n', 'chat_use_production', false)
+        chat_use_production: getConfig('n8n', 'chat_use_production', false),
+        // Campos adicionais para o payload N8N
+        chat_channel: getConfig('n8n', 'chat_channel', 'medcos_match'),
+        chat_medcos_match: getConfig('n8n', 'chat_medcos_match', true)
       });
     }
   }, [configs, getConfig]);
@@ -204,7 +210,10 @@ export const N8NConfig = () => {
         updateConfig('n8n', 'chat_webhook_url_test', formData.chat_webhook_url_test),
         updateConfig('n8n', 'chat_webhook_url_prod', formData.chat_webhook_url_prod),
         updateConfig('n8n', 'chat_enabled', formData.chat_enabled),
-        updateConfig('n8n', 'chat_use_production', formData.chat_use_production)
+        updateConfig('n8n', 'chat_use_production', formData.chat_use_production),
+        // Campos adicionais para o payload N8N
+        updateConfig('n8n', 'chat_channel', formData.chat_channel),
+        updateConfig('n8n', 'chat_medcos_match', formData.chat_medcos_match)
       ]);
       
       toast({
@@ -810,6 +819,35 @@ export const N8NConfig = () => {
                 </div>
               </div>
 
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="chat_channel">Canal (channel)</Label>
+                  <Input
+                    id="chat_channel"
+                    value={formData.chat_channel}
+                    onChange={(e) => setFormData(prev => ({ ...prev, chat_channel: e.target.value }))}
+                    placeholder="medcos_match"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Nome do canal para identificação no N8N
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="chat_medcos_match"
+                    checked={formData.chat_medcos_match}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, chat_medcos_match: checked }))}
+                  />
+                  <Label htmlFor="chat_medcos_match">
+                    Medcos Match
+                  </Label>
+                  <Badge variant={formData.chat_medcos_match ? "default" : "secondary"}>
+                    {formData.chat_medcos_match ? "Ativo" : "Inativo"}
+                  </Badge>
+                </div>
+              </div>
+
               <Alert>
                 <Settings className="h-4 w-4" />
                 <AlertDescription>
@@ -821,7 +859,9 @@ export const N8NConfig = () => {
   "tenant_id": "uuid-do-tenant",
   "tenant_slug": "medcos",
   "message": "texto da mensagem",
-  "timestamp": "2025-11-29T12:00:00.000Z"
+  "timestamp": "2025-11-29T12:00:00.000Z",
+  "channel": "${formData.chat_channel}",
+  "medcos_match": ${formData.chat_medcos_match}
 }`}
                   </pre>
                   <strong className="mt-2 block">Resposta esperada do N8N:</strong>
