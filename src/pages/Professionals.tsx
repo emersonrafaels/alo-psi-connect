@@ -15,20 +15,20 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Switch } from "@/components/ui/switch"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { 
-  MapPin, 
-  Star, 
-  Clock, 
-  DollarSign, 
-  Search, 
-  ChevronLeft, 
-  ChevronRight, 
-  Filter, 
-  X, 
-  Calendar, 
+import {
+  MapPin,
+  Star,
+  Clock,
+  DollarSign,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  X,
+  Calendar,
   ChevronDown,
-  Settings, 
-  Bot, 
+  Settings,
+  Bot,
   Sparkles,
   Tag,
   Percent,
@@ -36,7 +36,8 @@ import {
   UserCheck,
   TrendingDown,
   Zap,
-  Moon
+  Moon,
+  Check
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -45,10 +46,11 @@ import { useAIAssistantConfig } from "@/hooks/useAIAssistantConfig"
 import { useAuth } from "@/hooks/useAuth"
 import { useProfessionalsWithCoupons } from "@/hooks/useProfessionalsWithCoupons"
 import { usePatientInstitutions } from "@/hooks/usePatientInstitutions"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Slider } from "@/components/ui/slider"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 import { AIAssistantModal } from "@/components/AIAssistantModal"
 import { toast } from "@/hooks/use-toast"
@@ -145,7 +147,7 @@ const Professionals = () => {
         setShowFilters(true)
       }
     }
-  }, [getFiltersFromURL]) // Adicionar dependência
+  }, [getFiltersFromURL])
 
   useEffect(() => {
     if (tenant) {
@@ -416,6 +418,8 @@ const Professionals = () => {
       setLoading(false)
     }
   }
+
+  // Utility functions
 
   const getInitials = (name: string) => {
     return name
@@ -770,485 +774,335 @@ const Professionals = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Render filter content - used in both mobile Sheet and desktop view
-  const renderFilterContent = () => (
-    <>
-      {/* Separador Visual */}
-      <div className="my-6 border-t border-border/50"></div>
+  // Render filter content - Mobile optimized
+  const renderFilterContent = () => {
+    if (isMobile) {
+      return (
+        <>
+          {/* Mobile Quick Presets */}
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+            <Button
+              variant={filters.dias.includes(['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()]) ? "default" : "outline"}
+              onClick={() => {
+                const today = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()]
+                const timeRange = getBrazilTimeRange()
+                if (timeRange) {
+                  setFilters(prev => ({ ...prev, dias: [today], horarioInicio: timeRange.horarioInicio, horarioFim: timeRange.horarioFim }))
+                }
+              }}
+              className="flex-shrink-0 h-11 px-4 rounded-full whitespace-nowrap"
+            >
+              <Zap className="h-4 w-4 mr-1.5" />
+              Disponíveis hoje
+            </Button>
+            <Button
+              variant={filters.horarioInicio === "18:00" ? "default" : "outline"}
+              onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "18:00", horarioFim: "23:59" }))}
+              className="flex-shrink-0 h-11 px-4 rounded-full whitespace-nowrap"
+            >
+              <Moon className="h-4 w-4 mr-1.5" />
+              Horário noturno
+            </Button>
+            <Button
+              variant={filters.dias.includes('saturday') && filters.dias.includes('sunday') ? "default" : "outline"}
+              onClick={() => setFilters(prev => ({ ...prev, dias: ['saturday', 'sunday'] }))}
+              className="flex-shrink-0 h-11 px-4 rounded-full whitespace-nowrap"
+            >
+              <Calendar className="h-4 w-4 mr-1.5" />
+              Fim de semana
+            </Button>
+          </div>
 
-      {/* Quick Filter Presets */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-        {/* Disponíveis agora */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            const today = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()]
-            const timeRange = getBrazilTimeRange()
-            
-            if (timeRange) {
-              setFilters(prev => ({
-                ...prev,
-                dias: [today],
-                horarioInicio: timeRange.horarioInicio,
-                horarioFim: timeRange.horarioFim
-              }))
-              toast({
-                title: "Filtro aplicado",
-                description: `Filtrando a partir de ${timeRange.horarioInicio}`,
-              })
-            } else {
-              const tomorrow = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][(new Date().getDay() + 1) % 7]
-              setFilters(prev => ({
-                ...prev,
-                dias: [tomorrow],
-                horarioInicio: "08:00",
-                horarioFim: "23:59"
-              }))
-              toast({
-                title: "Não há mais horários hoje",
-                description: "Mostrando profissionais disponíveis amanhã.",
-              })
-            }
-          }}
-          className="whitespace-nowrap border-2 hover:border-teal-500 hover:bg-teal-500/15 hover:text-teal-700 dark:hover:text-teal-400 transition-all"
-        >
-          <Zap className="h-4 w-4 mr-1.5" />
-          Disponíveis hoje
-        </Button>
+          {/* Active Filters Mobile */}
+          {getActiveFiltersCount() > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-muted/50 rounded-lg">
+              {filters.profissoes.map(prof => (
+                <Badge key={prof} variant="secondary" className="gap-1 h-8 pl-3 pr-2 cursor-pointer" onClick={() => toggleProfession(prof)}>
+                  {prof} <X className="h-3 w-3" />
+                </Badge>
+              ))}
+              {filters.dias.map(day => (
+                <Badge key={day} variant="secondary" className="gap-1 h-8 pl-3 pr-2 cursor-pointer" onClick={() => toggleDay(day)}>
+                  {getDayAbbrev(day)} <X className="h-3 w-3" />
+                </Badge>
+              ))}
+            </div>
+          )}
 
-        {/* Horário noturno */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setFilters(prev => ({
-              ...prev,
-              horarioInicio: "18:00",
-              horarioFim: "23:59"
-            }))
-          }}
-          className="whitespace-nowrap border-2 hover:border-indigo-500 hover:bg-indigo-500/15 hover:text-indigo-700 dark:hover:text-indigo-400 transition-all"
-        >
-          <Moon className="h-4 w-4 mr-1.5" />
-          Horário noturno
-        </Button>
+          {/* Mobile Filter Cards */}
+          <div className="space-y-3">
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger className="flex w-full items-center justify-between p-4 bg-card rounded-lg border-2">
+                <div className="flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">Profissional</span>
+                </div>
+                <ChevronDown className="h-5 w-5" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-4 pt-3 space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">Profissões</label>
+                  <Select value={filters.profissoes[0] || "all"} onValueChange={(value) => setFilters(prev => ({ ...prev, profissoes: value === "all" ? [] : [value] }))}>
+                    <SelectTrigger className="h-12 border-2"><SelectValue placeholder="Todas profissões" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      {uniqueProfessions.map(prof => (<SelectItem key={prof} value={prof}>{prof}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">Especialidades</label>
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between h-12 border-2">
+                        <span>{filters.especialidadesNormalizadas.length > 0 ? `${filters.especialidadesNormalizadas.length} selecionada${filters.especialidadesNormalizadas.length > 1 ? 's' : ''}` : "Todas"}</span>
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="h-[70vh]">
+                      <SheetHeader><SheetTitle>Especialidades</SheetTitle></SheetHeader>
+                      <ScrollArea className="h-[calc(100%-100px)] mt-4">
+                        {uniqueSpecialties.map(spec => (
+                          <div key={spec} className="flex items-center space-x-3 p-4 rounded-lg hover:bg-muted/70 cursor-pointer">
+                            <Checkbox id={`spec-${spec}`} checked={filters.especialidadesNormalizadas.includes(spec)} onCheckedChange={() => toggleEspecialidade(spec)} className="h-6 w-6 border-2" />
+                            <label htmlFor={`spec-${spec}`} className="text-base font-medium cursor-pointer flex-1">{spec}</label>
+                          </div>
+                        ))}
+                      </ScrollArea>
+                    </SheetContent>
+                  </Sheet>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
 
-        {/* Fim de semana */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setFilters(prev => ({
-              ...prev,
-              dias: ['saturday', 'sunday']
-            }))
-          }}
-          className="whitespace-nowrap border-2 hover:border-orange-500 hover:bg-orange-500/15 hover:text-orange-700 dark:hover:text-orange-400 transition-all"
-        >
-          <Calendar className="h-4 w-4 mr-1.5" />
-          Fim de semana
-        </Button>
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger className="flex w-full items-center justify-between p-4 bg-card rounded-lg border-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-teal-600" />
+                  <span className="font-semibold">Disponibilidade</span>
+                </div>
+                <ChevronDown className="h-5 w-5" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-4 pt-3 space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">Dias úteis</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].map(day => (
+                      <Button key={day} variant={filters.dias.includes(day) ? "default" : "outline"} onClick={() => toggleDay(day)} className="h-12">
+                        {getDayAbbrev(day)}
+                      </Button>
+                    ))}
+                  </div>
+                  <label className="text-xs font-medium text-muted-foreground mt-3 block">Fim de semana</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['saturday', 'sunday'].map(day => (
+                      <Button key={day} variant={filters.dias.includes(day) ? "default" : "outline"} onClick={() => toggleDay(day)} className="h-12">
+                        {getDayLabel(day)}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">Horário</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input type="time" value={filters.horarioInicio} onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))} className="h-12 border-2" />
+                    <Input type="time" value={filters.horarioFim} onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))} className="h-12 border-2" />
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
 
-        {/* Cupom aplicável */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setFilters(prev => ({
-              ...prev,
-              comCupom: true
-            }))
-          }}
-          className="whitespace-nowrap border-2 hover:border-emerald-500 hover:bg-emerald-500/15 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all"
-        >
-          <Tag className="h-4 w-4 mr-1.5" />
-          Cupom aplicável
-        </Button>
-      </div>
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger className="flex w-full items-center justify-between p-4 bg-card rounded-lg border-2">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                  <span className="font-semibold">Investimento</span>
+                </div>
+                <ChevronDown className="h-5 w-5" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-4 pt-3 space-y-4">
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  <Button variant="outline" size="sm" className="flex-shrink-0 rounded-full" onClick={() => setFilters(prev => ({ ...prev, valorMin: "", valorMax: "200" }))}>Até R$ 200</Button>
+                  <Button variant="outline" size="sm" className="flex-shrink-0 rounded-full" onClick={() => setFilters(prev => ({ ...prev, valorMin: "200", valorMax: "400" }))}>R$ 200-400</Button>
+                  <Button variant="outline" size="sm" className="flex-shrink-0 rounded-full" onClick={() => setFilters(prev => ({ ...prev, valorMin: "400", valorMax: "" }))}>Acima de R$ 400</Button>
+                </div>
+                <Slider
+                  value={[Number(filters.valorMin) || 0, Number(filters.valorMax) || maxPrice]}
+                  onValueChange={(values) => setFilters(prev => ({ ...prev, valorMin: values[0].toString(), valorMax: values[1].toString() }))}
+                  min={0}
+                  max={maxPrice}
+                  step={25}
+                  className="[&_[role=slider]]:h-6 [&_[role=slider]]:w-6"
+                />
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        </>
+      )
+    }
 
-      {/* Thematic Filter Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-        {/* Card: Profissional */}
-        <Card className="p-5 border-2 border-border/50 hover:border-primary/30 transition-all duration-300">
-          <CardHeader className="p-0 pb-4">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+    // Desktop UI
+    return (
+      <>
+        <div className="my-6 border-t border-border/50"></div>
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+          <Button variant="outline" size="sm" onClick={() => { const today = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()]; const timeRange = getBrazilTimeRange(); if (timeRange) { setFilters(prev => ({ ...prev, dias: [today], horarioInicio: timeRange.horarioInicio, horarioFim: timeRange.horarioFim })); toast({ title: "Filtro aplicado", description: `Filtrando a partir de ${timeRange.horarioInicio}` }); } }} className="whitespace-nowrap border-2 hover:border-teal-500 hover:bg-teal-500/15">
+            <Zap className="h-4 w-4 mr-1.5" />Disponíveis hoje
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "18:00", horarioFim: "23:59" }))} className="whitespace-nowrap border-2 hover:border-indigo-500 hover:bg-indigo-500/15">
+            <Moon className="h-4 w-4 mr-1.5" />Horário noturno
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setFilters(prev => ({ ...prev, dias: ['saturday', 'sunday'] }))} className="whitespace-nowrap border-2 hover:border-orange-500 hover:bg-orange-500/15">
+            <Calendar className="h-4 w-4 mr-1.5" />Fim de semana
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setFilters(prev => ({ ...prev, comCupom: true }))} className="whitespace-nowrap border-2 hover:border-emerald-500 hover:bg-emerald-500/15">
+            <Tag className="h-4 w-4 mr-1.5" />Cupom aplicável
+          </Button>
+        </div>
+
+        {/* Desktop Filter Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <Card className="p-5 border-2">
+            <CardHeader className="p-0 pb-4">
+              <div className="flex items-center gap-2">
                 <UserCheck className="h-4 w-4 text-primary" />
+                <h4 className="font-semibold text-base">Profissional</h4>
               </div>
-              <h4 className="font-semibold text-base">Profissional</h4>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 space-y-4">
-            {/* Profissões */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">Profissões</label>
-              <Select 
-                value={filters.profissoes[0] || "all"} 
-                onValueChange={(value) => {
-                  if (value === "all") {
-                    setFilters(prev => ({ ...prev, profissoes: [] }))
-                  } else {
-                    setFilters(prev => ({ ...prev, profissoes: [value] }))
-                  }
-                }}
-              >
-                <SelectTrigger className="h-10 border-2 bg-background hover:border-primary/50 transition-colors">
-                  <SelectValue placeholder="Todas profissões" />
-                </SelectTrigger>
-                <SelectContent className="bg-background">
-                  <SelectItem value="all">Todas</SelectItem>
-                  {uniqueProfessions.map(prof => (
-                    <SelectItem key={prof} value={prof}>
-                      {prof}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Especialidades */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">Especialidades</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-between h-10 border-2 hover:border-primary/50 transition-all bg-background"
-                  >
-                    <span className="text-sm">
-                      {filters.especialidadesNormalizadas.length > 0 
-                        ? `${filters.especialidadesNormalizadas.length} selecionada${filters.especialidadesNormalizadas.length > 1 ? 's' : ''}`
-                        : "Todas especialidades"
-                      }
-                    </span>
-                    <ChevronDown className="h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-4 border-2 shadow-lg bg-background pointer-events-auto">
-                  <ScrollArea className="h-64">
-                    <div className="space-y-2 pr-4">
+            </CardHeader>
+            <CardContent className="p-0 space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Profissões</label>
+                <Select value={filters.profissoes[0] || "all"} onValueChange={(value) => setFilters(prev => ({ ...prev, profissoes: value === "all" ? [] : [value] }))}>
+                  <SelectTrigger className="h-10 border-2"><SelectValue placeholder="Todas profissões" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {uniqueProfessions.map(prof => (<SelectItem key={prof} value={prof}>{prof}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Especialidades</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between h-10 border-2">
+                      <span>{filters.especialidadesNormalizadas.length > 0 ? `${filters.especialidadesNormalizadas.length} selecionada${filters.especialidadesNormalizadas.length > 1 ? 's' : ''}` : "Todas"}</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-4 border-2 pointer-events-auto">
+                    <ScrollArea className="h-64">
                       {uniqueSpecialties.map(spec => (
-                        <div key={spec} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/70 transition-all duration-200 cursor-pointer">
-                          <Checkbox
-                            id={`spec-${spec}`}
-                            checked={filters.especialidadesNormalizadas.includes(spec)}
-                            onCheckedChange={() => toggleEspecialidade(spec)}
-                            className="border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                          />
-                          <label
-                            htmlFor={`spec-${spec}`}
-                            className="text-sm font-medium leading-none cursor-pointer flex-1"
-                          >
-                            {spec}
-                          </label>
+                        <div key={spec} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/70 cursor-pointer">
+                          <Checkbox id={`spec-${spec}`} checked={filters.especialidadesNormalizadas.includes(spec)} onCheckedChange={() => toggleEspecialidade(spec)} className="border-2" />
+                          <label htmlFor={`spec-${spec}`} className="text-sm font-medium cursor-pointer flex-1">{spec}</label>
                         </div>
                       ))}
-                    </div>
-                  </ScrollArea>
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Gênero */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">Gênero do Profissional</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-between h-10 border-2 hover:border-primary/50 transition-all bg-background"
-                  >
-                    <span className="text-sm">
-                      {filters.genero.length > 0 
-                        ? filters.genero.map(g => g === 'feminino' ? '♀️' : g === 'masculino' ? '♂️' : '⚧️').join(' ')
-                        : "Qualquer gênero"
-                      }
-                    </span>
-                    <ChevronDown className="h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-4 border-2 shadow-lg bg-background pointer-events-auto">
-                  <div className="space-y-2">
+                    </ScrollArea>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Gênero</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between h-10 border-2">
+                      <span>{filters.genero.length > 0 ? filters.genero.map(g => g === 'feminino' ? '♀️' : g === 'masculino' ? '♂️' : '⚧️').join(' ') : "Qualquer"}</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-4 border-2 pointer-events-auto">
                     {['feminino', 'masculino', 'não-binário'].map(genero => (
-                      <div key={genero} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/70 transition-all duration-200 cursor-pointer">
-                        <Checkbox
-                          id={`genero-${genero}`}
-                          checked={filters.genero.includes(genero)}
-                          onCheckedChange={() => toggleGenero(genero)}
-                          className="border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                        />
-                        <label
-                          htmlFor={`genero-${genero}`}
-                          className="text-sm font-medium leading-none cursor-pointer flex-1"
-                        >
-                          {genero === 'feminino' ? '♀️ Feminino' : genero === 'masculino' ? '♂️ Masculino' : '⚧️ Não-binário'}
+                      <div key={genero} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/70 cursor-pointer">
+                        <Checkbox id={`gen-${genero}`} checked={filters.genero.includes(genero)} onCheckedChange={() => toggleGenero(genero)} className="border-2" />
+                        <label htmlFor={`gen-${genero}`} className="text-sm font-medium cursor-pointer flex-1">
+                          {genero === 'feminino' && '♀️'} {genero === 'masculino' && '♂️'} {genero === 'não-binário' && '⚧️'} {genero.charAt(0).toUpperCase() + genero.slice(1)}
                         </label>
                       </div>
                     ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </CardContent>
-        </Card>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Card: Disponibilidade */}
-        <Card className="p-5 border-2 border-border/50 hover:border-teal-500/30 transition-all duration-300">
+          <Card className="p-5 border-2">
+            <CardHeader className="p-0 pb-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-teal-600" />
+                <h4 className="font-semibold text-base">Disponibilidade</h4>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Dias da Semana</label>
+                <div className="grid grid-cols-7 gap-1">
+                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                    <Button key={day} variant={filters.dias.includes(day) ? "default" : "outline"} size="sm" onClick={() => toggleDay(day)} className="h-10 px-0 text-xs">
+                      {getDayAbbrev(day)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Horário</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input type="time" value={filters.horarioInicio} onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))} className="h-9 border-2" />
+                  <Input type="time" value={filters.horarioFim} onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))} className="h-9 border-2" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="p-5 border-2 mb-4">
           <CardHeader className="p-0 pb-4">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-teal-500/10">
-                <Calendar className="h-4 w-4 text-teal-600" />
-              </div>
-              <h4 className="font-semibold text-base">Disponibilidade</h4>
+              <DollarSign className="h-4 w-4 text-green-600" />
+              <h4 className="font-semibold text-base">Investimento</h4>
             </div>
           </CardHeader>
-          <CardContent className="p-0 space-y-4">
-            {/* Dias da Semana */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">Dias da Semana</label>
-              <div className="grid grid-cols-7 gap-1">
-                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                  <Button
-                    key={day}
-                    variant={filters.dias.includes(day) ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleDay(day)}
-                    className="h-10 px-0 text-xs font-medium"
-                  >
-                    {getDayAbbrev(day)}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Faixa de Horário */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                <Clock className="h-3 w-3" />
-                Faixa de Horário
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="relative">
-                  <Input
-                    type="time"
-                    value={filters.horarioInicio}
-                    onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))}
-                    className="h-9 text-sm border-2 focus:border-teal-500/50 bg-background"
-                  />
-                  {filters.horarioInicio && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "" }))}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
-                <div className="relative">
-                  <Input
-                    type="time"
-                    value={filters.horarioFim}
-                    onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))}
-                    className="h-9 text-sm border-2 focus:border-teal-500/50 bg-background"
-                  />
-                  {filters.horarioFim && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setFilters(prev => ({ ...prev, horarioFim: "" }))}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  )}
+          <CardContent className="p-0 space-y-5">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-medium text-muted-foreground">Faixa de Preço</label>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                  <span>R$ {filters.valorMin || 0}</span><span>-</span><span>R$ {filters.valorMax || maxPrice}</span>
                 </div>
               </div>
-              {filters.horarioInicio && filters.horarioFim && filters.horarioInicio >= filters.horarioFim && (
-                <p className="text-xs text-amber-600 flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  Horário de início deve ser anterior ao fim
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Card: Investimento - Full Width */}
-      <Card className="p-5 border-2 border-border/50 hover:border-green-500/30 transition-all duration-300 mb-4">
-        <CardHeader className="p-0 pb-4">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-500/10">
-              <DollarSign className="h-4 w-4 text-green-600" />
-            </div>
-            <h4 className="font-semibold text-base">Investimento</h4>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0 space-y-5">
-          {/* Price Range Slider */}
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <label className="text-xs font-medium text-muted-foreground">Faixa de Preço</label>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                <span>R$ {filters.valorMin || 0}</span>
-                <span>-</span>
-                <span>R$ {filters.valorMax || maxPrice}</span>
-              </div>
-            </div>
-            <Slider
-              value={[Number(filters.valorMin) || 0, Number(filters.valorMax) || maxPrice]}
-              onValueChange={(values) => {
-                setFilters(prev => ({
-                  ...prev,
-                  valorMin: values[0].toString(),
-                  valorMax: values[1].toString()
-                }))
-              }}
-              min={0}
-              max={maxPrice}
-              step={25}
-              className="w-full"
-            />
-            <div className="flex justify-center">
-              <span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
-                {filteredProfessionals.filter(p => {
-                  const price = p.preco_consulta || 0
-                  const min = Number(filters.valorMin) || 0
-                  const max = Number(filters.valorMax) || maxPrice
-                  return price >= min && price <= max
-                }).length} profissionais nesta faixa
-              </span>
-            </div>
-          </div>
-
-          {/* Coupon Toggle */}
-          {user && linkedInstitutions && linkedInstitutions.length > 0 && (
-            <div className="flex items-center justify-between p-4 rounded-lg border-2 border-border bg-background/50 hover:border-emerald-500/50 transition-all">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/10">
-                  <Tag className="h-5 w-5 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Mostrar apenas com desconto
-                  </p>
-                  {professionalsWithCouponsCount > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      {professionalsWithCouponsCount} profissiona{professionalsWithCouponsCount === 1 ? 'l' : 'is'} com cupom
-                    </p>
-                  )}
-                </div>
-              </div>
-              <Switch
-                checked={filters.comCupom}
-                onCheckedChange={(checked) => 
-                  setFilters(prev => ({ ...prev, comCupom: checked }))
-                }
-                className="data-[state=checked]:bg-emerald-600"
+              <Slider
+                value={[Number(filters.valorMin) || 0, Number(filters.valorMax) || maxPrice]}
+                onValueChange={(values) => setFilters(prev => ({ ...prev, valorMin: values[0].toString(), valorMax: values[1].toString() }))}
+                min={0}
+                max={maxPrice}
+                step={25}
               />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            {user && linkedInstitutions && linkedInstitutions.length > 0 && (
+              <div className="flex items-center justify-between p-4 rounded-lg border-2">
+                <div className="flex items-center gap-3">
+                  <Tag className="h-5 w-5 text-emerald-600" />
+                  <div>
+                    <p className="text-sm font-medium">Com desconto</p>
+                    {professionalsWithCouponsCount > 0 && <p className="text-xs text-muted-foreground">{professionalsWithCouponsCount} profissiona{professionalsWithCouponsCount === 1 ? 'l' : 'is'}</p>}
+                  </div>
+                </div>
+                <Switch checked={filters.comCupom} onCheckedChange={(checked) => setFilters(prev => ({ ...prev, comCupom: checked }))} className="data-[state=checked]:bg-emerald-600" />
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Active Filters Bar */}
-      {getActiveFiltersCount() > 0 && (
-        <div className="flex flex-wrap gap-2 p-4 bg-muted/30 rounded-lg border border-border/30 animate-fade-in">
-          <span className="text-xs text-muted-foreground self-center font-medium">Filtros ativos:</span>
-          
-          {filters.profissoes.map(prof => (
-            <Badge 
-              key={prof}
-              variant="secondary" 
-              className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
-              onClick={() => toggleProfession(prof)}
-            >
-              {prof}
-              <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
-            </Badge>
-          ))}
-
-          {filters.dias.map(day => (
-            <Badge 
-              key={day}
-              variant="secondary" 
-              className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
-              onClick={() => toggleDay(day)}
-            >
-              {getDayAbbrev(day)}
-              <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
-            </Badge>
-          ))}
-
-          {filters.especialidadesNormalizadas.map(spec => (
-            <Badge 
-              key={spec}
-              variant="secondary" 
-              className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
-              onClick={() => toggleEspecialidade(spec)}
-            >
-              {spec}
-              <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
-            </Badge>
-          ))}
-
-          {filters.genero.map(genero => (
-            <Badge 
-              key={genero}
-              variant="secondary" 
-              className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
-              onClick={() => toggleGenero(genero)}
-            >
-              {genero === 'feminino' ? '♀️' : genero === 'masculino' ? '♂️' : '⚧️'} {genero}
-              <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
-            </Badge>
-          ))}
-
-          {(filters.horarioInicio || filters.horarioFim) && (
-            <Badge 
-              variant="secondary" 
-              className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
-              onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "", horarioFim: "" }))}
-            >
-              {filters.horarioInicio && filters.horarioFim 
-                ? `${filters.horarioInicio} - ${filters.horarioFim}`
-                : filters.horarioInicio 
-                  ? `A partir de ${filters.horarioInicio}`
-                  : `Até ${filters.horarioFim}`
-              }
-              <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
-            </Badge>
-          )}
-
-          {(filters.valorMin || filters.valorMax) && (
-            <Badge 
-              variant="secondary" 
-              className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
-              onClick={() => setFilters(prev => ({ ...prev, valorMin: "", valorMax: "" }))}
-            >
-              R$ {filters.valorMin || 0} - R$ {filters.valorMax || maxPrice}
-              <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
-            </Badge>
-          )}
-
-          {filters.comCupom && (
-            <Badge 
-              variant="secondary" 
-              className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
-              onClick={() => setFilters(prev => ({ ...prev, comCupom: false }))}
-            >
-              <Tag className="h-3 w-3" />
-              Com desconto
-              <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
-            </Badge>
-          )}
-        </div>
-      )}
-    </>
-  )
+        {getActiveFiltersCount() > 0 && (
+          <div className="flex flex-wrap gap-2 p-4 bg-muted/30 rounded-lg border">
+            <span className="text-xs text-muted-foreground self-center font-medium">Filtros ativos:</span>
+            {filters.profissoes.map(prof => (<Badge key={prof} variant="secondary" className="gap-1 cursor-pointer" onClick={() => toggleProfession(prof)}>{prof} <X className="h-3 w-3" /></Badge>))}
+            {filters.dias.map(day => (<Badge key={day} variant="secondary" className="gap-1 cursor-pointer" onClick={() => toggleDay(day)}>{getDayAbbrev(day)} <X className="h-3 w-3" /></Badge>))}
+            {filters.especialidadesNormalizadas.map(spec => (<Badge key={spec} variant="secondary" className="gap-1 cursor-pointer" onClick={() => toggleEspecialidade(spec)}>{spec} <X className="h-3 w-3" /></Badge>))}
+          </div>
+        )}
+      </>
+    )
+  }
 
   if (error) {
     return (
@@ -1258,9 +1112,7 @@ const Professionals = () => {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-destructive mb-4">Erro</h1>
             <p className="text-muted-foreground">{error}</p>
-            <Button onClick={fetchProfessionals} className="mt-4">
-              Tentar novamente
-            </Button>
+            <Button onClick={fetchProfessionals} className="mt-4">Tentar novamente</Button>
           </div>
         </main>
         <Footer />
@@ -1271,526 +1123,163 @@ const Professionals = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
       <main className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
         <section className="text-center mb-12">
           <div className="relative">
-            <h1 className="text-5xl font-bold mb-6 text-primary">
-              Nossos Profissionais
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed">
-              Conheça nossa equipe de profissionais especializados em saúde mental, 
-              prontos para oferecer o melhor atendimento para você.
-            </p>
+            <h1 className="text-5xl font-bold mb-6 text-primary">Nossos Profissionais</h1>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-10">Conheça nossa equipe de profissionais especializados em saúde mental.</p>
           </div>
           
-          {/* Search and Filters */}
           <div className="max-w-5xl mx-auto space-y-6">
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative search-modern">
+              <div className="flex-1 relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 z-10" />
-                <Input
-                  type="text"
-                  placeholder="Buscar por nome ou profissão..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 py-3 text-lg border-2 focus:border-primary/50 bg-background/80 backdrop-blur-sm"
-                />
+                <Input type="text" placeholder="Buscar por nome ou profissão..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-12 py-3 text-lg border-2" />
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant={showFilters ? "default" : "outline"}
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2 px-6 py-3 relative"
-                >
-                  <Filter className="h-4 w-4" />
-                  Filtros
-                  {getActiveFiltersCount() > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                      {getActiveFiltersCount()}
-                    </span>
-                  )}
+                <Button variant={showFilters ? "default" : "outline"} onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2 px-6 py-3 relative">
+                  <Filter className="h-4 w-4" />Filtros
+                  {getActiveFiltersCount() > 0 && <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">{getActiveFiltersCount()}</span>}
                 </Button>
                 {aiConfig.enabled && (
-                  <Button
-                    variant="default"
-                    onClick={() => setShowAIAssistant(true)}
-                    className="flex items-center gap-2 btn-gradient shadow-lg"
-                  >
-                    <Bot className="h-4 w-4" />
-                    <Sparkles className="h-3 w-3" />
-                    {aiConfig.title}
-                  </Button>
-                )}
-                {getActiveFiltersCount() > 0 && (
-                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
-                    <X className="h-4 w-4" />
+                  <Button variant="default" onClick={() => setShowAIAssistant(true)} className="flex items-center gap-2">
+                    <Bot className="h-4 w-4" /><Sparkles className="h-3 w-3" />{aiConfig.title}
                   </Button>
                 )}
               </div>
             </div>
-            
-            {/* Active Filters Summary */}
-            {getActiveFiltersCount() > 0 && (
-              <div className="flex flex-wrap gap-2 justify-center">
-                {filters.profissoes.length > 0 && (
-                  <div className="filter-badge">
-                    <span>{filters.profissoes.length} profissão{filters.profissoes.length > 1 ? 'ões' : ''}</span>
-                  </div>
-                )}
-                {filters.dias.length > 0 && (
-                  <div className="filter-badge">
-                    <Calendar className="h-3 w-3" />
-                    <span>{filters.dias.map(getDayAbbrev).join(', ')}</span>
-                  </div>
-                )}
-                {(filters.horarioInicio || filters.horarioFim) && (
-                  <div className="filter-badge">
-                    <Clock className="h-3 w-3" />
-                    <span>{filters.horarioInicio || '00:00'} - {filters.horarioFim || '23:59'}</span>
-                  </div>
-                )}
-                {(filters.valorMin || filters.valorMax) && (
-                  <div className="filter-badge">
-                    <DollarSign className="h-3 w-3" />
-                    <span>R$ {filters.valorMin || '0'} - {filters.valorMax || '∞'}</span>
-                  </div>
-                )}
-              </div>
-            )}
 
-            {/* Advanced Filters */}
             {showFilters && (
               isMobile ? (
                 <Sheet open={showFilters} onOpenChange={setShowFilters}>
-                  <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl">
-                    <SheetHeader>
-                      <SheetTitle className="flex items-center gap-2">
-                        <Filter className="h-5 w-5 text-primary" />
-                        Filtros Avançados
-                      </SheetTitle>
-                    </SheetHeader>
-                    <ScrollArea className="h-[calc(100%-80px)] pr-4 mt-4">
-                      <div className="pb-8">
-                        {renderFilterContent()}
-                        {/* Botões de ação no mobile */}
-                        <div className="flex gap-3 mt-6 sticky bottom-0 bg-background pt-4 border-t">
-                          <Button 
-                            variant="outline" 
-                            onClick={clearFilters} 
-                            className="flex-1"
-                          >
-                            <X className="h-4 w-4 mr-2" />
-                            Limpar
-                          </Button>
-                          <Button 
-                            onClick={() => setShowFilters(false)} 
-                            className="flex-1"
-                          >
-                            Aplicar ({filteredProfessionals.length})
-                          </Button>
-                        </div>
+                  <SheetContent side="bottom" className="h-[90vh] rounded-t-2xl">
+                    <SheetHeader className="border-b pb-4">
+                      <div className="flex items-center justify-between">
+                        <SheetTitle className="flex items-center gap-2">
+                          <Filter className="h-5 w-5 text-primary" />Filtros
+                          {getActiveFiltersCount() > 0 && <Badge variant="secondary">{getActiveFiltersCount()}</Badge>}
+                        </SheetTitle>
+                        <Button variant="ghost" size="sm" onClick={() => setShowFilters(false)}><X className="h-5 w-5" /></Button>
                       </div>
+                      <p className="text-sm text-muted-foreground text-left">{filteredProfessionals.length} profissionais encontrados</p>
+                    </SheetHeader>
+                    <ScrollArea className="h-[calc(100%-140px)] pr-4 mt-4">
+                      <div className="pb-24">{renderFilterContent()}</div>
                     </ScrollArea>
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t shadow-lg">
+                      <div className="flex gap-3">
+                        <Button variant="outline" onClick={clearFilters} className="flex-1 h-12" disabled={getActiveFiltersCount() === 0}>Limpar</Button>
+                        <Button onClick={() => setShowFilters(false)} className="flex-1 h-12">Ver {filteredProfessionals.length} resultados</Button>
+                      </div>
+                    </div>
                   </SheetContent>
                 </Sheet>
               ) : (
-              <div className="bg-gradient-to-br from-card via-muted/30 to-card rounded-xl p-8 shadow-lg border border-border/50 backdrop-blur-sm">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <Filter className="h-5 w-5 text-primary" />
-                    Filtros Avançados
-                  </h3>
-                  <Button variant="outline" size="sm" onClick={clearFilters} className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50">
-                    <X className="h-4 w-4 mr-2" />
-                    Limpar Todos
-                  </Button>
+                <div className="bg-gradient-to-br from-card via-muted/30 to-card rounded-xl p-8 shadow-lg border">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-semibold flex items-center gap-2"><Filter className="h-5 w-5 text-primary" />Filtros Avançados</h3>
+                    <Button variant="outline" size="sm" onClick={clearFilters}><X className="h-4 w-4 mr-2" />Limpar Todos</Button>
+                  </div>
+                  {renderFilterContent()}
                 </div>
-                
-                {renderFilterContent()}
-              </div>
               )
             )}
           </div>
         </section>
 
-        {/* Results Bar with Count and Sort */}
+        {/* Results, Professional Cards, Pagination */}
         {!loading && (
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 p-4 bg-muted/30 rounded-lg border border-border/50">
-            {/* Contagem e Filtros Ativos */}
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p className="font-medium text-foreground">
-                {filteredProfessionals.length} profissiona{filteredProfessionals.length !== 1 ? 'is' : 'l'} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
-              </p>
-              {(filters.profissoes.length > 0 || filters.dias.length > 0 || filters.horarioInicio || filters.horarioFim || filters.valorMin || filters.valorMax || filters.especialidadesNormalizadas.length > 0 || filters.genero.length > 0 || filters.comCupom) && (
-                <p className="text-xs">
-                  Filtros ativos: {[
-                    filters.profissoes.length > 0 && `Profissões (${filters.profissoes.length})`,
-                    filters.dias.length > 0 && `Dias (${filters.dias.length})`,
-                    (filters.horarioInicio || filters.horarioFim) && 'Horário',
-                    (filters.valorMin || filters.valorMax) && 'Preço',
-                    filters.especialidadesNormalizadas.length > 0 && `Especialidades (${filters.especialidadesNormalizadas.length})`,
-                    filters.genero.length > 0 && `Gênero (${filters.genero.length})`,
-                    filters.comCupom && 'Com Desconto'
-                  ].filter(Boolean).join(', ')}
-                </p>
-              )}
-            </div>
-
-            {/* Ordenação + Paginação */}
-            <div className="flex items-center gap-4">
-              {/* Dropdown de Ordenação */}
-              <Select 
-                value={filters.ordenacao} 
-                onValueChange={(value) => setFilters(prev => ({ ...prev, ordenacao: value as any }))}
-              >
-                <SelectTrigger className="w-[180px] h-9 text-sm border bg-background hover:bg-muted/50">
-                  <div className="flex items-center gap-2">
-                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Ordenar" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent className="bg-background">
-                  <SelectItem value="nome">
-                    <span className="flex items-center gap-2">
-                      <span>🔤</span> Nome (A-Z)
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="preco_asc">
-                    <span className="flex items-center gap-2">
-                      <span>💰</span> Menor Preço
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="preco_desc">
-                    <span className="flex items-center gap-2">
-                      <span>💰</span> Maior Preço
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="destaque">
-                    <span className="flex items-center gap-2">
-                      <span>⭐</span> Destaque
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="disponibilidade">
-                    <span className="flex items-center gap-2">
-                      <span>📅</span> Mais Disponibilidade
-                    </span>
-                  </SelectItem>
+          <>
+            <div className="flex justify-between items-center mb-6 p-4 bg-muted/30 rounded-lg border">
+              <div>
+                <p className="font-medium">{filteredProfessionals.length} profissiona{filteredProfessionals.length !== 1 ? 'is' : 'l'} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}</p>
+              </div>
+              <Select value={filters.ordenacao} onValueChange={(value) => setFilters(prev => ({ ...prev, ordenacao: value as any }))}>
+                <SelectTrigger className="w-[180px]"><ArrowUpDown className="h-4 w-4 mr-2" /><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nome">Nome (A-Z)</SelectItem>
+                  <SelectItem value="preco_asc">Menor preço</SelectItem>
+                  <SelectItem value="preco_desc">Maior preço</SelectItem>
+                  <SelectItem value="destaque">Destaque</SelectItem>
+                  <SelectItem value="disponibilidade">Disponibilidade</SelectItem>
                 </SelectContent>
               </Select>
-
-              {/* Paginação */}
-              {totalPages > 1 && (
-                <span className="text-sm text-muted-foreground whitespace-nowrap">
-                  Página {currentPage} de {totalPages}
-                </span>
-              )}
             </div>
-          </div>
-        )}
 
-        {/* Professionals Grid */}
-        <section>
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[...Array(6)].map((_, i) => (
-                <Card key={i} className="overflow-hidden professional-card border-2">
-                  <CardHeader className="p-0 relative">
-                    <div className="skeleton-modern h-56 w-full"></div>
-                    <div className="absolute top-4 right-4">
-                      <div className="skeleton-modern h-8 w-16 rounded-full"></div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-6 space-y-4">
-                    <div className="flex items-center gap-4">
-                      <div className="skeleton-modern h-16 w-16 rounded-full"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="skeleton-modern h-5 w-3/4"></div>
-                        <div className="skeleton-modern h-4 w-1/2"></div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="skeleton-modern h-4 w-full"></div>
-                      <div className="skeleton-modern h-4 w-4/5"></div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <div className="skeleton-modern h-6 w-16 rounded-full"></div>
-                      <div className="skeleton-modern h-6 w-12 rounded-full"></div>
-                      <div className="skeleton-modern h-6 w-20 rounded-full"></div>
-                    </div>
-                    <div className="flex gap-3 pt-4">
-                      <div className="skeleton-modern h-10 flex-1 rounded-lg"></div>
-                      <div className="skeleton-modern h-10 flex-1 rounded-lg"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : filteredProfessionals.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="max-w-md mx-auto">
-                <div className="mb-8">
-                  <Search className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold text-foreground mb-3">
-                    Nenhum profissional encontrado
-                  </h3>
-                  <p className="text-muted-foreground text-lg">
-                    Não encontramos profissionais que correspondam aos seus critérios. 
-                    Que tal tentar ajustar os filtros?
-                  </p>
-                </div>
-                <div className="space-y-3">
-                  <Button onClick={clearFilters} className="btn-gradient px-6 py-3 text-base">
-                    <X className="h-4 w-4 mr-2" />
-                    Limpar todos os filtros
-                  </Button>
-                  <p className="text-sm text-muted-foreground">
-                    ou tente buscar por outros termos
-                  </p>
-                </div>
+            {loading && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{[...Array(6)].map((_, i) => (<Skeleton key={i} className="h-96" />))}</div>}
+            
+            {!loading && currentProfessionals.length === 0 && (
+              <div className="text-center py-16">
+                <p className="text-muted-foreground text-lg mb-4">Nenhum profissional encontrado</p>
+                {getActiveFiltersCount() > 0 && <Button variant="outline" onClick={clearFilters}><X className="h-4 w-4 mr-2" />Limpar Filtros</Button>}
               </div>
-            </div>
-          ) : (
-            <>
-              <div className="space-y-6">
-                {currentProfessionals.map((professional) => (
-                  <Card key={professional.id} className="professional-card border-2 bg-gradient-to-r from-card via-card/95 to-card/90 backdrop-blur-sm overflow-hidden">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col lg:flex-row gap-6">
-                        {/* Professional Info Section */}
-                        <div className="flex flex-col sm:flex-row gap-4 lg:flex-1">
-                          {/* Avatar and Basic Info */}
-                          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 min-w-0">
-                            <div className="relative flex-shrink-0">
-                              {professional.foto_perfil_url ? (
-                                <img 
-                                  src={professional.foto_perfil_url} 
-                                  alt={professional.display_name}
-                                  className="w-20 h-20 rounded-full object-cover border-4 border-white/50 shadow-lg"
-                                />
-                              ) : (
-                                <div 
-                                  className="w-20 h-20 rounded-full avatar-dynamic text-xl font-bold border-4 border-white/50 shadow-lg"
-                                  style={{ backgroundColor: getAvatarColor(professional.display_name) }}
-                                >
-                                  {getInitials(professional.display_name)}
-                                </div>
-                              )}
-                              {professional.preco_consulta && (
-                                <Badge className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground shadow-lg font-bold px-2 py-1">
-                                  {formatPrice(professional.preco_consulta)}
-                                </Badge>
-                              )}
-                            </div>
+            )}
 
-                            {/* Name and Profession */}
-                            <div className="text-center sm:text-left min-w-0 flex-1">
-                              <h3 className="text-xl font-bold text-foreground mb-1 truncate">
-                                {professional.display_name}
-                              </h3>
-                              <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2 mb-2 dark:text-white/80">
-                                <Badge variant="outline" className="text-primary border-primary/30 bg-primary/5 font-medium dark:text-white/80">
-                                  {capitalizeText(professional.profissao)}
-                                </Badge>
-                               {professional.crp_crm && (
-                                 <span className="text-xs text-muted-foreground font-mono dark:text-white/80">
-                                   {professional.crp_crm}
-                                 </span>
-                               )}
-                             </div>
-
-                             {/* Cupom Badge */}
-                             {professionalsWithCoupons?.has(professional.id) && (
-                               <Badge className="bg-emerald-500 text-white border-0 shadow-md flex items-center gap-1 w-fit">
-                                 <Tag className="h-3 w-3" />
-                                 <span>
-                                   Cupom disponível: até{' '}
-                                   {professionalsWithCoupons.get(professional.id)?.discountType === 'percentage' 
-                                     ? `${professionalsWithCoupons.get(professional.id)?.discountValue}% off`
-                                     : `R$ ${professionalsWithCoupons.get(professional.id)?.discountValue} off`
-                                   }
-                                 </span>
-                               </Badge>
-                             )}
-                             
-                             {professional.resumo_profissional && (
-                               <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed max-w-md">
-                                 {professional.resumo_profissional}
-                               </p>
-                             )}
-                            </div>
-                          </div>
-
-                          {/* Specialties */}
-                          {professional.servicos_raw && (
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2 flex items-center gap-1 dark:text-white/80">
-                                <span className="inline-block w-2 h-2 bg-primary rounded-full "></span>
-                                Especialidades
-                              </p>
-                              <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-                                <div className="flex flex-wrap gap-3 pr-2">
-                                  {formatSpecialties(professional.servicos_raw).map((servico, index) => {
-                                    const capitalized = servico.charAt(0).toUpperCase() + servico.slice(1).toLowerCase();
-                                    return (
-                                      <Badge
-                                        key={index}
-                                        variant="secondary"
-                                        className="text-xs specialty-tag px-2 py-1 font-medium bg-[lightgray] text-black hover:bg-[lightgray]/80 border-transparent rounded-full"
-                                      >
-                                        {capitalized}
-                                      </Badge>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Schedule Section */}
-                        <div className="lg:min-w-0 lg:flex-shrink-0 lg:w-80">
-                          {professional.sessions.length > 0 ? (
-                            <div className="bg-gradient-to-br from-teal/5 to-accent/5 rounded-lg border border-teal/10 p-4">
-                              <p className="text-xs font-semibold text-teal mb-3 uppercase tracking-wide flex items-center gap-2">
-                                <Clock className="h-4 w-4" />
-                                Horários Disponíveis - Clique para Agendar
-                              </p>
-                              <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-teal/30 scrollbar-track-transparent">
-                                <div className="space-y-2 pr-2">
-                                  {formatSchedule(professional.sessions).map((schedule, index) => (
-                                    <div key={index} className="space-y-1">
-                                      <div className="text-xs font-medium text-teal/80 flex items-center gap-1">
-                                        <span className="inline-block w-1.5 h-1.5 bg-teal rounded-full"></span>
-                                        {schedule.day}
-                                      </div>
-                                      <div className="flex flex-wrap gap-1 ml-3">
-                                        {schedule.times.map((time, timeIndex) => (
-                                          <button
-                                            key={timeIndex}
-                                            onClick={() => handleTimeSlotClick(professional, schedule.originalDay, time)}
-                                            className="px-2 py-1 text-xs bg-white/80 hover:bg-teal/20 text-teal border border-teal/30 rounded-md transition-all duration-200 hover:shadow-md hover:scale-105 cursor-pointer font-medium"
-                                          >
-                                            {time}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
+            {!loading && currentProfessionals.length > 0 && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                  {currentProfessionals.map(professional => (
+                    <Card key={professional.id} className="border-2 rounded-lg flex flex-col">
+                      <Link to={buildTenantPath(tenantSlug, `/profissional/${professional.id}`)} className="flex flex-col flex-1">
+                        <div className="relative h-48 w-full rounded-t-lg overflow-hidden bg-muted">
+                          {professional.foto_perfil_url ? (
+                            <Avatar>
+                              <AvatarImage src={professional.foto_perfil_url} alt={professional.display_name} />
+                              <AvatarFallback>{getInitials(professional.display_name)}</AvatarFallback>
+                            </Avatar>
                           ) : (
-                            <div className="bg-muted/30 rounded-lg p-4 text-center">
-                              <Clock className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                              <p className="text-sm text-muted-foreground">Horários não informados</p>
+                            <div className="flex items-center justify-center h-full w-full bg-muted text-muted-foreground text-4xl font-bold" style={{ backgroundColor: getAvatarColor(professional.display_name) }}>
+                              {getInitials(professional.display_name)}
                             </div>
                           )}
                         </div>
-
-                        {/* Actions */}
-                        <div className="flex lg:flex-col gap-3 lg:w-32 lg:flex-shrink-0">
-                          <Button variant="outline" size="sm" className="flex-1 lg:flex-none border-2 hover:border-primary/50 hover:bg-primary/5" asChild>
-                            <Link to={buildTenantPath(tenantSlug, `/profissional/${professional.id}`)}>
-                              <Star className="h-4 w-4 mr-2" />
-                              Ver Perfil
-                            </Link>
-                          </Button>
-                          <Button size="sm" className="flex-1 lg:flex-none btn-gradient shadow-lg" asChild>
-                            <Link to={buildTenantPath(tenantSlug, `/agendamento?professionalId=${professional.id}`)}>
-                              <Calendar className="h-4 w-4 mr-2" />
-                              Agendar
-                            </Link>
-                          </Button>
-                        </div>
+                        <CardContent className="flex flex-col flex-1">
+                          <CardTitle className="text-lg font-semibold">{professional.display_name}</CardTitle>
+                          <CardDescription className="text-sm text-muted-foreground mb-2">{professional.profissao || 'Profissional'}</CardDescription>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                            <DollarSign className="h-4 w-4" />
+                            <span>{formatPrice(professional.preco_consulta)}</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {professional.servicos_normalizados?.map(servico => (
+                              <Badge key={servico} variant="secondary" className="text-xs">{servico}</Badge>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Link>
+                      <div className="p-4 border-t flex justify-between items-center">
+                        <Button size="sm" onClick={() => navigate(buildTenantPath(tenantSlug, `/profissional/${professional.id}`))}>Ver Perfil</Button>
+                        <Button size="sm" variant="outline" onClick={() => {
+                          // Navigate to booking page with default first available session
+                          if (professional.sessions.length > 0) {
+                            const session = professional.sessions[0]
+                            handleTimeSlotClick(professional, session.day, `${session.start_time}-${session.end_time}`)
+                          } else {
+                            toast({ title: "Sem horários disponíveis", description: "Este profissional não possui horários disponíveis no momento." })
+                          }
+                        }}>Agendar</Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-12 p-6 bg-muted/30 rounded-xl border border-border/50">
-                  <div className="text-sm text-muted-foreground">
-                    Página {currentPage} de {totalPages} • {filteredProfessionals.length} profissionais
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => goToPage(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="border-2 hover:border-primary/50"
-                    >
-                      <ChevronLeft className="h-4 w-4 mr-1" />
-                      Anterior
-                    </Button>
-                    
-                    <div className="flex space-x-1">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNumber: number
-                        
-                        if (totalPages <= 5) {
-                          pageNumber = i + 1
-                        } else if (currentPage <= 3) {
-                          pageNumber = i + 1
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNumber = totalPages - 4 + i
-                        } else {
-                          pageNumber = currentPage - 2 + i
-                        }
-                        
-                        return (
-                          <Button
-                            key={pageNumber}
-                            variant={currentPage === pageNumber ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => goToPage(pageNumber)}
-                            className={`w-10 h-10 border-2 ${
-                              currentPage === pageNumber 
-                                ? "btn-gradient border-primary shadow-lg" 
-                                : "hover:border-primary/50"
-                            }`}
-                          >
-                            {pageNumber}
-                          </Button>
-                        )
-                      })}
-                    </div>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => goToPage(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="border-2 hover:border-primary/50"
-                    >
-                      Próxima
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                  </div>
+                    </Card>
+                  ))}
                 </div>
-              )}
-            </>
-          )}
-        </section>
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-2">
+                    <Button variant="outline" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}><ChevronLeft className="h-4 w-4" /></Button>
+                    {[...Array(totalPages)].map((_, i) => (
+                      <Button key={i + 1} variant={currentPage === i + 1 ? "default" : "outline"} onClick={() => goToPage(i + 1)}>{i + 1}</Button>
+                    ))}
+                    <Button variant="outline" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}><ChevronRight className="h-4 w-4" /></Button>
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
       </main>
-
       <Footer />
-      
-      {/* AI Assistant Modal */}
-      {aiConfig.enabled && (
-        <AIAssistantModal 
-          open={showAIAssistant}
-          onOpenChange={setShowAIAssistant}
-          professionals={professionals}
-        />
-      )}
+      {aiConfig.enabled && <AIAssistantModal open={showAIAssistant} onOpenChange={setShowAIAssistant} />}
     </div>
-  );
-};
+  )
+}
 
-export default Professionals;
+export default Professionals
