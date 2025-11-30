@@ -1543,33 +1543,6 @@ const Professionals = () => {
                       </div>
                     </CardHeader>
                     <CardContent className="p-0 space-y-4">
-                      {/* Profissões */}
-                      <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Profissões</label>
-                        <Select 
-                          value={filters.profissoes[0] || "all"} 
-                          onValueChange={(value) => {
-                            if (value === "all") {
-                              setFilters(prev => ({ ...prev, profissoes: [] }))
-                            } else {
-                              setFilters(prev => ({ ...prev, profissoes: [value] }))
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="h-10 border-2 bg-background hover:border-primary/50 transition-colors">
-                            <SelectValue placeholder="Todas profissões" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-background">
-                            <SelectItem value="all">Todas</SelectItem>
-                            {uniqueProfessions.map(prof => (
-                              <SelectItem key={prof} value={prof}>
-                                {prof}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
                       {/* Especialidades */}
                       <div className="space-y-2">
                         <label className="text-xs font-medium text-muted-foreground">Especialidades</label>
