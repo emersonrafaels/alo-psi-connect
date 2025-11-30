@@ -35,7 +35,8 @@ import {
   ArrowUpDown,
   UserCheck,
   TrendingDown,
-  Zap
+  Zap,
+  Moon
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -50,6 +51,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { Slider } from "@/components/ui/slider"
 
 import { AIAssistantModal } from "@/components/AIAssistantModal"
+import { toast } from "@/hooks/use-toast"
 
 interface ProfessionalSession {
   day: string
@@ -525,6 +527,35 @@ const Professionals = () => {
     return colors[index]
   }
 
+  const getBrazilTimeRange = () => {
+    // Get current time in Brazil (America/Sao_Paulo timezone)
+    const now = new Date()
+    const brazilTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+    
+    const currentHour = brazilTime.getHours()
+    const currentMinutes = brazilTime.getMinutes()
+    
+    // Round up to next 30-minute interval
+    let startHour = currentHour
+    let startMinutes = currentMinutes < 30 ? 30 : 0
+    
+    if (currentMinutes >= 30) {
+      startHour += 1
+    }
+    
+    // If after 23:30, no more slots today
+    if (startHour >= 24) {
+      return null
+    }
+    
+    const horarioInicio = `${String(startHour).padStart(2, '0')}:${String(startMinutes).padStart(2, '0')}`
+    
+    return {
+      horarioInicio,
+      horarioFim: "23:59"
+    }
+  }
+
   const getUniqueValues = (field: 'profissao' | 'crp_crm' | 'servicos_raw') => {
     const normalizeText = (text: string) => {
       return text
@@ -975,38 +1006,79 @@ const Professionals = () => {
 
                 {/* Quick Filter Presets */}
                 <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setFilters(prev => ({
-                        ...prev,
-                        valorMax: "200",
-                        ordenacao: "preco_asc"
-                      }))
-                    }}
-                    className="whitespace-nowrap border-2 hover:border-primary/50 hover:bg-primary/5 transition-all"
-                  >
-                    <TrendingDown className="h-4 w-4 mr-1.5" />
-                    Mais acessíveis
-                  </Button>
+                  {/* Disponíveis agora */}
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => {
                       const today = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()]
-                      setFilters(prev => ({
-                        ...prev,
-                        dias: [today],
-                        horarioInicio: "08:00",
-                        horarioFim: "22:00"
-                      }))
+                      const timeRange = getBrazilTimeRange()
+                      
+                      if (timeRange) {
+                        setFilters(prev => ({
+                          ...prev,
+                          dias: [today],
+                          horarioInicio: timeRange.horarioInicio,
+                          horarioFim: timeRange.horarioFim
+                        }))
+                        toast({
+                          title: "Filtro aplicado",
+                          description: `Filtrando a partir de ${timeRange.horarioInicio}`,
+                        })
+                      } else {
+                        const tomorrow = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][(new Date().getDay() + 1) % 7]
+                        setFilters(prev => ({
+                          ...prev,
+                          dias: [tomorrow],
+                          horarioInicio: "08:00",
+                          horarioFim: "23:59"
+                        }))
+                        toast({
+                          title: "Não há mais horários hoje",
+                          description: "Mostrando profissionais disponíveis amanhã.",
+                        })
+                      }
                     }}
-                    className="whitespace-nowrap border-2 hover:border-teal-500/50 hover:bg-teal-500/5 transition-all"
+                    className="whitespace-nowrap border-2 hover:border-teal-500 hover:bg-teal-500/15 hover:text-teal-700 dark:hover:text-teal-400 transition-all"
                   >
                     <Zap className="h-4 w-4 mr-1.5" />
-                    Disponíveis hoje
+                    Disponíveis agora
                   </Button>
+
+                  {/* Horário noturno */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFilters(prev => ({
+                        ...prev,
+                        horarioInicio: "18:00",
+                        horarioFim: "23:59"
+                      }))
+                    }}
+                    className="whitespace-nowrap border-2 hover:border-indigo-500 hover:bg-indigo-500/15 hover:text-indigo-700 dark:hover:text-indigo-400 transition-all"
+                  >
+                    <Moon className="h-4 w-4 mr-1.5" />
+                    Horário noturno
+                  </Button>
+
+                  {/* Fim de semana */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFilters(prev => ({
+                        ...prev,
+                        dias: ['saturday', 'sunday']
+                      }))
+                    }}
+                    className="whitespace-nowrap border-2 hover:border-orange-500 hover:bg-orange-500/15 hover:text-orange-700 dark:hover:text-orange-400 transition-all"
+                  >
+                    <Calendar className="h-4 w-4 mr-1.5" />
+                    Fim de semana
+                  </Button>
+
+                  {/* Em destaque */}
                   <Button
                     variant="outline"
                     size="sm"
@@ -1016,11 +1088,13 @@ const Professionals = () => {
                         ordenacao: "destaque"
                       }))
                     }}
-                    className="whitespace-nowrap border-2 hover:border-accent/50 hover:bg-accent/5 transition-all"
+                    className="whitespace-nowrap border-2 hover:border-amber-500 hover:bg-amber-500/15 hover:text-amber-700 dark:hover:text-amber-400 transition-all"
                   >
                     <Star className="h-4 w-4 mr-1.5" />
                     Em destaque
                   </Button>
+
+                  {/* Com desconto */}
                   {user && linkedInstitutions && linkedInstitutions.length > 0 && (
                     <Button
                       variant="outline"
@@ -1031,7 +1105,7 @@ const Professionals = () => {
                           comCupom: true
                         }))
                       }}
-                      className="whitespace-nowrap border-2 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all"
+                      className="whitespace-nowrap border-2 hover:border-emerald-500 hover:bg-emerald-500/15 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all"
                     >
                       <Tag className="h-4 w-4 mr-1.5" />
                       Com desconto
