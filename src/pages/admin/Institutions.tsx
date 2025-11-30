@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket, Shield, Briefcase, FileText, BarChart3 } from 'lucide-react';
+import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket, Shield, Briefcase, FileText, BarChart3, FileCheck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInstitutions, EducationalInstitution } from '@/hooks/useInstitutions';
 import { useUncataloguedInstitutions } from '@/hooks/useUncataloguedInstitutions';
@@ -32,9 +32,11 @@ import { ManageInstitutionAdminUsersModal } from '@/components/admin/ManageInsti
 import { ManageInstitutionCouponsModal } from '@/components/admin/ManageInstitutionCouponsModal';
 import { InstitutionAuditLog } from '@/components/admin/InstitutionAuditLog';
 import { InstitutionMetricsDashboard } from '@/components/admin/InstitutionMetricsDashboard';
+import { InstitutionLinkRequestsTab } from '@/components/admin/InstitutionLinkRequestsTab';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { AdminTenantSelector } from '@/components/admin/AdminTenantSelector';
 import { useInstitutionUsers } from '@/hooks/useInstitutionUsers';
+import { useAdminInstitutionLinkRequests } from '@/hooks/useAdminInstitutionLinkRequests';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -88,6 +90,12 @@ export default function Institutions() {
   const [managingCoupons, setManagingCoupons] = useState<{ id: string; name: string } | null>(null);
   const [selectedInstitutionForAudit, setSelectedInstitutionForAudit] = useState<{ id: string; name: string } | null>(null);
   const [activeTab, setActiveTab] = useState('institutions');
+
+  // Fetch pending link requests count
+  const { stats: linkRequestsStats } = useAdminInstitutionLinkRequests({
+    statusFilter: 'pending',
+    tenantId: tenantFilter || undefined,
+  });
 
   // Calcular stats filtradas por tenant
   const filteredStats = {
@@ -163,6 +171,15 @@ export default function Institutions() {
             <TabsTrigger value="institutions">
               <Building2 className="h-4 w-4 mr-2" />
               Instituições
+            </TabsTrigger>
+            <TabsTrigger value="requests">
+              <FileCheck className="h-4 w-4 mr-2" />
+              Solicitações
+              {linkRequestsStats.pending > 0 && (
+                <Badge className="ml-2 bg-yellow-500 text-white" variant="secondary">
+                  {linkRequestsStats.pending}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="metrics">
               <BarChart3 className="h-4 w-4 mr-2" />
@@ -475,6 +492,10 @@ export default function Institutions() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="requests" className="space-y-6">
+            <InstitutionLinkRequestsTab tenantId={tenantFilter} />
           </TabsContent>
 
           <TabsContent value="metrics" className="space-y-6">
