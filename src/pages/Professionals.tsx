@@ -903,9 +903,9 @@ const Professionals = () => {
                           <p className="text-xs text-muted-foreground">
                             {getActiveFiltersCount()} {getActiveFiltersCount() === 1 ? 'filtro ativo' : 'filtros ativos'}
                           </p>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-6 px-6">
                             {filters.profissoes.map(prof => (
-                              <Badge key={prof} variant="secondary" className="gap-1 pr-1">
+                              <Badge key={prof} variant="secondary" className="gap-1 pr-1 text-xs flex-shrink-0">
                                 {prof}
                                 <button
                                   onClick={() => toggleProfession(prof)}
@@ -916,7 +916,7 @@ const Professionals = () => {
                               </Badge>
                             ))}
                             {filters.dias.map(dia => (
-                              <Badge key={dia} variant="secondary" className="gap-1 pr-1">
+                              <Badge key={dia} variant="secondary" className="gap-1 pr-1 text-xs flex-shrink-0">
                                 {getDayAbbrev(dia)}
                                 <button
                                   onClick={() => toggleDay(dia)}
@@ -927,7 +927,7 @@ const Professionals = () => {
                               </Badge>
                             ))}
                             {filters.especialidadesNormalizadas.map(esp => (
-                              <Badge key={esp} variant="secondary" className="gap-1 pr-1">
+                              <Badge key={esp} variant="secondary" className="gap-1 pr-1 text-xs flex-shrink-0">
                                 {esp}
                                 <button
                                   onClick={() => toggleEspecialidade(esp)}
@@ -938,7 +938,7 @@ const Professionals = () => {
                               </Badge>
                             ))}
                             {filters.genero.map(gen => (
-                              <Badge key={gen} variant="secondary" className="gap-1 pr-1">
+                              <Badge key={gen} variant="secondary" className="gap-1 pr-1 text-xs flex-shrink-0">
                                 {gen === 'feminino' ? '♀️ Feminino' : gen === 'masculino' ? '♂️ Masculino' : '⚧️ Outro'}
                                 <button
                                   onClick={() => toggleGenero(gen)}
@@ -949,7 +949,7 @@ const Professionals = () => {
                               </Badge>
                             ))}
                             {(filters.horarioInicio || filters.horarioFim) && (
-                              <Badge variant="secondary" className="gap-1 pr-1">
+                              <Badge variant="secondary" className="gap-1 pr-1 text-xs flex-shrink-0">
                                 {filters.horarioInicio || '00:00'} - {filters.horarioFim || '23:59'}
                                 <button
                                   onClick={() => setFilters(prev => ({ ...prev, horarioInicio: '', horarioFim: '' }))}
@@ -960,7 +960,7 @@ const Professionals = () => {
                               </Badge>
                             )}
                             {(filters.valorMin || filters.valorMax) && (
-                              <Badge variant="secondary" className="gap-1 pr-1">
+                              <Badge variant="secondary" className="gap-1 pr-1 text-xs flex-shrink-0">
                                 R$ {filters.valorMin || '0'} - {filters.valorMax || '∞'}
                                 <button
                                   onClick={() => setFilters(prev => ({ ...prev, valorMin: '', valorMax: '' }))}
@@ -971,7 +971,7 @@ const Professionals = () => {
                               </Badge>
                             )}
                             {filters.comCupom && (
-                              <Badge variant="secondary" className="gap-1 pr-1">
+                              <Badge variant="secondary" className="gap-1 pr-1 text-xs flex-shrink-0">
                                 🏷️ Com Cupom
                                 <button
                                   onClick={() => setFilters(prev => ({ ...prev, comCupom: false }))}
@@ -988,15 +988,15 @@ const Professionals = () => {
 
                     {/* Content */}
                     <ScrollArea className="flex-1 px-6">
-                      <div className="space-y-4 py-4">
+                      <div className="space-y-3 py-3">
                         {/* Quick Presets */}
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-6 px-6">
+                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-6 px-6 snap-x snap-mandatory">
                           <Button
                             variant={filters.dias.includes('monday') && filters.dias.includes('tuesday') && 
                                     filters.dias.includes('wednesday') && filters.dias.includes('thursday') && 
                                     filters.dias.includes('friday') ? "default" : "outline"}
                             size="sm"
-                            className="shrink-0"
+                            className="shrink-0 snap-center"
                             onClick={() => {
                               const weekDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
                               const allSelected = weekDays.every(d => filters.dias.includes(d))
@@ -1012,7 +1012,7 @@ const Professionals = () => {
                           <Button
                             variant={filters.horarioInicio === '18:00' && filters.horarioFim === '22:00' ? "default" : "outline"}
                             size="sm"
-                            className="shrink-0"
+                            className="shrink-0 snap-center"
                             onClick={() => {
                               setFilters(prev => ({
                                 ...prev,
@@ -1027,7 +1027,7 @@ const Professionals = () => {
                           <Button
                             variant={filters.dias.includes('saturday') && filters.dias.includes('sunday') ? "default" : "outline"}
                             size="sm"
-                            className="shrink-0"
+                            className="shrink-0 snap-center"
                             onClick={() => {
                               const weekendDays = ['saturday', 'sunday']
                               const allSelected = weekendDays.every(d => filters.dias.includes(d))
@@ -1046,7 +1046,7 @@ const Professionals = () => {
                             <Button
                               variant={filters.comCupom ? "default" : "outline"}
                               size="sm"
-                              className="shrink-0"
+                              className="shrink-0 snap-center"
                               onClick={() => setFilters(prev => ({ ...prev, comCupom: !prev.comCupom }))}
                             >
                               <Tag className="h-3 w-3 mr-1" />
@@ -1059,16 +1059,16 @@ const Professionals = () => {
                         <Accordion type="single" collapsible className="w-full">
                           {/* Profissional */}
                           <AccordionItem value="profissional">
-                            <AccordionTrigger className="text-base font-semibold">
+                            <AccordionTrigger className="text-sm font-semibold">
                               <div className="flex items-center gap-2">
                                 <UserCheck className="h-4 w-4 text-primary" />
                                 Profissional
                               </div>
                             </AccordionTrigger>
-                            <AccordionContent className="space-y-4 pt-2">
+                            <AccordionContent className="space-y-2.5 pt-1">
                               {/* Profissão */}
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">Profissão</label>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-medium">Profissão</label>
                                 <Select
                                   value={filters.profissoes[0] || ''}
                                   onValueChange={(value) => {
@@ -1093,14 +1093,14 @@ const Professionals = () => {
                               </div>
 
                               {/* Especialidades */}
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">Especialidades</label>
-                                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-medium">Especialidades</label>
+                                <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
                                   {getAllSpecialties().slice(0, 12).map(especialidade => (
                                     <Badge
                                       key={especialidade}
                                       variant={filters.especialidadesNormalizadas.includes(especialidade) ? "default" : "outline"}
-                                      className="cursor-pointer hover:bg-primary/90"
+                                      className="cursor-pointer hover:bg-primary/90 text-xs h-7"
                                       onClick={() => toggleEspecialidade(especialidade)}
                                     >
                                       {especialidade}
@@ -1115,13 +1115,13 @@ const Professionals = () => {
                               </div>
 
                               {/* Gênero */}
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">Gênero do profissional</label>
-                                <div className="flex gap-2">
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-medium">Gênero do profissional</label>
+                                <div className="grid grid-cols-3 gap-1.5">
                                   <Button
                                     variant={filters.genero.includes('feminino') ? "default" : "outline"}
                                     size="sm"
-                                    className="flex-1"
+                                    className="h-9 text-xs"
                                     onClick={() => toggleGenero('feminino')}
                                   >
                                     ♀️ Feminino
@@ -1129,7 +1129,7 @@ const Professionals = () => {
                                   <Button
                                     variant={filters.genero.includes('masculino') ? "default" : "outline"}
                                     size="sm"
-                                    className="flex-1"
+                                    className="h-9 text-xs"
                                     onClick={() => toggleGenero('masculino')}
                                   >
                                     ♂️ Masculino
@@ -1137,7 +1137,7 @@ const Professionals = () => {
                                   <Button
                                     variant={filters.genero.includes('outro') ? "default" : "outline"}
                                     size="sm"
-                                    className="flex-1"
+                                    className="h-9 text-xs"
                                     onClick={() => toggleGenero('outro')}
                                   >
                                     ⚧️ Outro
@@ -1149,24 +1149,24 @@ const Professionals = () => {
 
                           {/* Disponibilidade */}
                           <AccordionItem value="disponibilidade">
-                            <AccordionTrigger className="text-base font-semibold">
+                            <AccordionTrigger className="text-sm font-semibold">
                               <div className="flex items-center gap-2">
                                 <Clock className="h-4 w-4 text-primary" />
                                 Disponibilidade
                               </div>
                             </AccordionTrigger>
-                            <AccordionContent className="space-y-4 pt-2">
+                            <AccordionContent className="space-y-2.5 pt-1">
                               {/* Dias da semana */}
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">Dias da semana</label>
-                                <div className="grid grid-cols-4 gap-2">
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-medium">Dias da semana</label>
+                                <div className="flex flex-wrap gap-1.5">
                                   {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
                                     <Button
                                       key={day}
                                       variant={filters.dias.includes(day) ? "default" : "outline"}
                                       size="sm"
                                       onClick={() => toggleDay(day)}
-                                      className="h-10"
+                                      className="h-9 min-w-[60px]"
                                     >
                                       {getDayAbbrev(day)}
                                     </Button>
@@ -1175,12 +1175,13 @@ const Professionals = () => {
                               </div>
 
                               {/* Período do dia */}
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">Período do dia</label>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-medium">Período do dia</label>
                                 <div className="grid grid-cols-3 gap-2">
                                   <Button
                                     variant={filters.horarioInicio === '06:00' && filters.horarioFim === '12:00' ? "default" : "outline"}
                                     size="sm"
+                                    className="h-9 text-xs"
                                     onClick={() => {
                                       const isActive = filters.horarioInicio === '06:00' && filters.horarioFim === '12:00'
                                       setFilters(prev => ({
@@ -1195,6 +1196,7 @@ const Professionals = () => {
                                   <Button
                                     variant={filters.horarioInicio === '12:00' && filters.horarioFim === '18:00' ? "default" : "outline"}
                                     size="sm"
+                                    className="h-9 text-xs"
                                     onClick={() => {
                                       const isActive = filters.horarioInicio === '12:00' && filters.horarioFim === '18:00'
                                       setFilters(prev => ({
@@ -1209,6 +1211,7 @@ const Professionals = () => {
                                   <Button
                                     variant={filters.horarioInicio === '18:00' && filters.horarioFim === '23:59' ? "default" : "outline"}
                                     size="sm"
+                                    className="h-9 text-xs"
                                     onClick={() => {
                                       const isActive = filters.horarioInicio === '18:00' && filters.horarioFim === '23:59'
                                       setFilters(prev => ({
@@ -1224,8 +1227,8 @@ const Professionals = () => {
                               </div>
 
                               {/* Horário personalizado */}
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">Horário personalizado</label>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-medium">Horário personalizado</label>
                                 <div className="grid grid-cols-2 gap-2">
                                   <div>
                                     <label className="text-xs text-muted-foreground">Início</label>
@@ -1252,14 +1255,14 @@ const Professionals = () => {
 
                           {/* Valor */}
                           <AccordionItem value="valor">
-                            <AccordionTrigger className="text-base font-semibold">
+                            <AccordionTrigger className="text-sm font-semibold">
                               <div className="flex items-center gap-2">
                                 <DollarSign className="h-4 w-4 text-primary" />
                                 Valor da Consulta
                               </div>
                             </AccordionTrigger>
-                            <AccordionContent className="space-y-4 pt-2">
-                              <div className="space-y-4">
+                            <AccordionContent className="space-y-2.5 pt-1">
+                              <div className="space-y-2.5">
                                 <div className="flex justify-between text-sm">
                                   <span className="font-medium">R$ {filters.valorMin || '0'}</span>
                                   <span className="font-medium">R$ {filters.valorMax || '800+'}</span>
@@ -1281,9 +1284,9 @@ const Professionals = () => {
                                   }}
                                   className="mt-2"
                                 />
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-2 gap-1.5">
                                   <div>
-                                    <label className="text-xs text-muted-foreground">Mínimo</label>
+                                    <label className="text-[10px] text-muted-foreground">Mínimo</label>
                                     <Input
                                       type="number"
                                       placeholder="R$ 0"
@@ -1293,7 +1296,7 @@ const Professionals = () => {
                                     />
                                   </div>
                                   <div>
-                                    <label className="text-xs text-muted-foreground">Máximo</label>
+                                    <label className="text-[10px] text-muted-foreground">Máximo</label>
                                     <Input
                                       type="number"
                                       placeholder="R$ ∞"
@@ -1303,60 +1306,6 @@ const Professionals = () => {
                                     />
                                   </div>
                                 </div>
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-
-                          {/* Ordenação */}
-                          <AccordionItem value="ordenacao">
-                            <AccordionTrigger className="text-base font-semibold">
-                              <div className="flex items-center gap-2">
-                                <ArrowUpDown className="h-4 w-4 text-primary" />
-                                Ordenação
-                              </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="space-y-2 pt-2">
-                              <div className="flex flex-col gap-2">
-                                <Button
-                                  variant={filters.ordenacao === 'nome' ? "default" : "outline"}
-                                  size="sm"
-                                  className="justify-start"
-                                  onClick={() => setFilters(prev => ({ ...prev, ordenacao: 'nome' }))}
-                                >
-                                  Nome (A-Z)
-                                </Button>
-                                <Button
-                                  variant={filters.ordenacao === 'preco_asc' ? "default" : "outline"}
-                                  size="sm"
-                                  className="justify-start"
-                                  onClick={() => setFilters(prev => ({ ...prev, ordenacao: 'preco_asc' }))}
-                                >
-                                  Menor Preço
-                                </Button>
-                                <Button
-                                  variant={filters.ordenacao === 'preco_desc' ? "default" : "outline"}
-                                  size="sm"
-                                  className="justify-start"
-                                  onClick={() => setFilters(prev => ({ ...prev, ordenacao: 'preco_desc' }))}
-                                >
-                                  Maior Preço
-                                </Button>
-                                <Button
-                                  variant={filters.ordenacao === 'disponibilidade' ? "default" : "outline"}
-                                  size="sm"
-                                  className="justify-start"
-                                  onClick={() => setFilters(prev => ({ ...prev, ordenacao: 'disponibilidade' }))}
-                                >
-                                  Mais Disponível
-                                </Button>
-                                <Button
-                                  variant={filters.ordenacao === 'destaque' ? "default" : "outline"}
-                                  size="sm"
-                                  className="justify-start"
-                                  onClick={() => setFilters(prev => ({ ...prev, ordenacao: 'destaque' }))}
-                                >
-                                  Em Destaque
-                                </Button>
                               </div>
                             </AccordionContent>
                           </AccordionItem>
