@@ -944,7 +944,39 @@ const Professionals = () => {
     // Desktop UI
     return (
       <>
-        <div className="my-6 border-t border-border/50"></div>
+        {/* Top Level Selects */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
+            <span className="h-3 w-3 rounded-full bg-green-500 flex-shrink-0"></span>
+            <span className="text-sm font-medium flex-shrink-0">Profissões</span>
+            <Select value={filters.profissoes[0] || "all"} onValueChange={(value) => setFilters(prev => ({ ...prev, profissoes: value === "all" ? [] : [value] }))}>
+              <SelectTrigger className="h-9 flex-1"><SelectValue placeholder="Todas as profissões" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as profissões</SelectItem>
+                {getUniqueValues('profissao').map(prof => (<SelectItem key={prof} value={prof}>{prof}</SelectItem>))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
+            <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <span className="text-sm font-medium flex-shrink-0">Dias da Semana</span>
+            <Select value={filters.dias.length === 1 ? filters.dias[0] : "all"} onValueChange={(value) => setFilters(prev => ({ ...prev, dias: value === "all" ? [] : [value] }))}>
+              <SelectTrigger className="h-9 flex-1"><SelectValue placeholder="Todos os dias" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os dias</SelectItem>
+                <SelectItem value="monday">Segunda-feira</SelectItem>
+                <SelectItem value="tuesday">Terça-feira</SelectItem>
+                <SelectItem value="wednesday">Quarta-feira</SelectItem>
+                <SelectItem value="thursday">Quinta-feira</SelectItem>
+                <SelectItem value="friday">Sexta-feira</SelectItem>
+                <SelectItem value="saturday">Sábado</SelectItem>
+                <SelectItem value="sunday">Domingo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Quick Presets */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
           <Button variant="outline" size="sm" onClick={() => { const today = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()]; const timeRange = getBrazilTimeRange(); if (timeRange) { setFilters(prev => ({ ...prev, dias: [today], horarioInicio: timeRange.horarioInicio, horarioFim: timeRange.horarioFim })); toast({ title: "Filtro aplicado", description: `Filtrando a partir de ${timeRange.horarioInicio}` }); } }} className="whitespace-nowrap border-2 hover:border-teal-500 hover:bg-teal-500/15">
             <Zap className="h-4 w-4 mr-1.5" />Disponíveis hoje
@@ -955,9 +987,11 @@ const Professionals = () => {
           <Button variant="outline" size="sm" onClick={() => setFilters(prev => ({ ...prev, dias: ['saturday', 'sunday'] }))} className="whitespace-nowrap border-2 hover:border-orange-500 hover:bg-orange-500/15">
             <Calendar className="h-4 w-4 mr-1.5" />Fim de semana
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setFilters(prev => ({ ...prev, comCupom: true }))} className="whitespace-nowrap border-2 hover:border-emerald-500 hover:bg-emerald-500/15">
-            <Tag className="h-4 w-4 mr-1.5" />Cupom aplicável
-          </Button>
+          {user && linkedInstitutions && linkedInstitutions.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => setFilters(prev => ({ ...prev, comCupom: !prev.comCupom }))} className="whitespace-nowrap border-2 hover:border-emerald-500 hover:bg-emerald-500/15">
+              <Tag className="h-4 w-4 mr-1.5" />Cupom aplicável
+            </Button>
+          )}
         </div>
 
         {/* Desktop Filter Cards */}
@@ -1003,24 +1037,32 @@ const Professionals = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-medium text-muted-foreground">Gênero</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between h-10 border-2">
-                      <span>{filters.genero.length > 0 ? filters.genero.map(g => g === 'feminino' ? '♀️' : g === 'masculino' ? '♂️' : '⚧️').join(' ') : "Qualquer"}</span>
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80 p-4 border-2 pointer-events-auto">
-                    {['feminino', 'masculino', 'não-binário'].map(genero => (
-                      <div key={genero} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/70 cursor-pointer">
-                        <Checkbox id={`gen-${genero}`} checked={filters.genero.includes(genero)} onCheckedChange={() => toggleGenero(genero)} className="border-2" />
-                        <label htmlFor={`gen-${genero}`} className="text-sm font-medium cursor-pointer flex-1">
-                          {genero === 'feminino' && '♀️'} {genero === 'masculino' && '♂️'} {genero === 'não-binário' && '⚧️'} {genero.charAt(0).toUpperCase() + genero.slice(1)}
-                        </label>
-                      </div>
-                    ))}
-                  </PopoverContent>
-                </Popover>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    variant={filters.genero.includes('feminino') ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => toggleGenero('feminino')}
+                    className="h-9"
+                  >
+                    <span className="text-pink-500 mr-1">♀️</span> Feminino
+                  </Button>
+                  <Button 
+                    variant={filters.genero.includes('masculino') ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => toggleGenero('masculino')}
+                    className="h-9"
+                  >
+                    <span className="text-blue-500 mr-1">♂️</span> Masculino
+                  </Button>
+                  <Button 
+                    variant={filters.genero.includes('não-binário') ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => toggleGenero('não-binário')}
+                    className="h-9"
+                  >
+                    <span className="text-purple-500 mr-1">⚧️</span> Outro
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -1044,7 +1086,36 @@ const Professionals = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Horário</label>
+                <label className="text-xs font-medium text-muted-foreground">Período</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "06:00", horarioFim: "12:00" }))}
+                    className="h-9"
+                  >
+                    🌅 Manhã
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "12:00", horarioFim: "18:00" }))}
+                    className="h-9"
+                  >
+                    ☀️ Tarde
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "18:00", horarioFim: "23:59" }))}
+                    className="h-9"
+                  >
+                    🌙 Noite
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Ou personalizado</label>
                 <div className="grid grid-cols-2 gap-3">
                   <Input type="time" value={filters.horarioInicio} onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))} className="h-9 border-2" />
                   <Input type="time" value={filters.horarioFim} onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))} className="h-9 border-2" />
