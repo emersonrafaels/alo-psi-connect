@@ -182,6 +182,7 @@ const AppWithShortcuts = () => {
       <Route path="/medcos/diario-emocional/nova-entrada" element={<MoodEntry />} />
       <Route path="/medcos/diario-emocional/historico" element={<MoodHistory />} />
       <Route path="/medcos/diario-emocional/analises" element={<MoodAnalytics />} />
+      <Route path="/medcos/diario-emocional/configurar" element={<EmotionConfigPage />} />
       
       {/* Rotas de Encontros Medcos */}
       <Route path="/medcos/encontros" element={<GroupSessions />} />
