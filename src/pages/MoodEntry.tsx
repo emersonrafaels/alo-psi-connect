@@ -566,7 +566,7 @@ const MoodEntry = () => {
                   </p>
                   <Button
                     variant="outline"
-                    onClick={() => navigate('/diario-emocional/configurar')}
+                    onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/configurar'))}
                   >
                     <Settings2 className="h-4 w-4 mr-2" />
                     Configurar Emoções
