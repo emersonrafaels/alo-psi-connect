@@ -1041,9 +1041,9 @@ const Professionals = () => {
                     }}
                     className="whitespace-nowrap border-2 hover:border-teal-500 hover:bg-teal-500/15 hover:text-teal-700 dark:hover:text-teal-400 transition-all"
                   >
-                    <Zap className="h-4 w-4 mr-1.5" />
-                    Disponíveis agora
-                  </Button>
+          <Zap className="h-4 w-4 mr-1.5" />
+          Disponíveis hoje
+        </Button>
 
                   {/* Horário noturno */}
                   <Button
@@ -1078,40 +1078,23 @@ const Professionals = () => {
                     Fim de semana
                   </Button>
 
-                  {/* Em destaque */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setFilters(prev => ({
-                        ...prev,
-                        ordenacao: "destaque"
-                      }))
-                    }}
-                    className="whitespace-nowrap border-2 hover:border-amber-500 hover:bg-amber-500/15 hover:text-amber-700 dark:hover:text-amber-400 transition-all"
-                  >
-                    <Star className="h-4 w-4 mr-1.5" />
-                    Em destaque
-                  </Button>
+        {/* Cupom aplicável */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setFilters(prev => ({
+              ...prev,
+              comCupom: true
+            }))
+          }}
+          className="whitespace-nowrap border-2 hover:border-emerald-500 hover:bg-emerald-500/15 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all"
+        >
+          <Tag className="h-4 w-4 mr-1.5" />
+          Cupom aplicável
+        </Button>
 
-                  {/* Com desconto */}
-                  {user && linkedInstitutions && linkedInstitutions.length > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setFilters(prev => ({
-                          ...prev,
-                          comCupom: true
-                        }))
-                      }}
-                      className="whitespace-nowrap border-2 hover:border-emerald-500 hover:bg-emerald-500/15 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all"
-                    >
-                      <Tag className="h-4 w-4 mr-1.5" />
-                      Com desconto
-                    </Button>
-                  )}
-                </div>
+        </div>
 
                 {/* Thematic Filter Cards */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
