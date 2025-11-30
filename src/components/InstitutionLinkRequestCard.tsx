@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Send, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Building2, Send, Clock, CheckCircle, XCircle, AlertCircle, Star } from 'lucide-react';
 import { useInstitutions } from '@/hooks/useInstitutions';
 import { useInstitutionLinkRequest } from '@/hooks/useInstitutionLinkRequest';
 import { useTenant } from '@/hooks/useTenant';
@@ -27,6 +28,34 @@ export function InstitutionLinkRequestCard({ userType }: InstitutionLinkRequestC
   const [relationshipType, setRelationshipType] = useState<'employee' | 'consultant' | 'supervisor' | 'intern'>('employee');
   const [enrollmentType, setEnrollmentType] = useState<'student' | 'alumni' | 'employee'>('student');
   const [showForm, setShowForm] = useState(false);
+
+  // Create combobox options with badges
+  const institutionOptions: ComboboxOption[] = institutions
+    .sort((a, b) => {
+      // Sort: partnerships first, then alphabetically
+      if (a.has_partnership && !b.has_partnership) return -1;
+      if (!a.has_partnership && b.has_partnership) return 1;
+      return a.name.localeCompare(b.name);
+    })
+    .map(institution => ({
+      value: institution.id,
+      label: institution.name,
+      badge: (
+        <div className="flex items-center gap-1">
+          {institution.has_partnership && (
+            <Badge variant="secondary" className="text-xs gap-1">
+              <Star className="h-3 w-3" />
+              Parceria
+            </Badge>
+          )}
+          <Badge variant="outline" className="text-xs gap-1">
+            <Building2 className="h-3 w-3" />
+            {institution.type === 'public' ? 'Pública' : 'Privada'}
+          </Badge>
+        </div>
+      ),
+      keywords: [institution.name.toLowerCase()],
+    }));
 
   const handleSubmit = () => {
     if (!selectedInstitution || !tenant?.id) return;
@@ -138,22 +167,15 @@ export function InstitutionLinkRequestCard({ userType }: InstitutionLinkRequestC
           <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
             <div>
               <Label htmlFor="institution">Instituição *</Label>
-              <Select
+              <Combobox
+                options={institutionOptions}
                 value={selectedInstitution}
                 onValueChange={setSelectedInstitution}
+                placeholder="Busque ou selecione uma instituição..."
+                searchPlaceholder="Digite para buscar..."
+                emptyText="Nenhuma instituição encontrada."
                 disabled={loadingInstitutions}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma instituição" />
-                </SelectTrigger>
-                <SelectContent>
-                  {institutions.map((inst) => (
-                    <SelectItem key={inst.id} value={inst.id}>
-                      {inst.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
 
             {userType === 'profissional' && (
