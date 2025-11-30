@@ -32,7 +32,10 @@ import {
   Sparkles,
   Tag,
   Percent,
-  ArrowUpDown
+  ArrowUpDown,
+  UserCheck,
+  TrendingDown,
+  Zap
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -41,6 +44,10 @@ import { useAIAssistantConfig } from "@/hooks/useAIAssistantConfig"
 import { useAuth } from "@/hooks/useAuth"
 import { useProfessionalsWithCoupons } from "@/hooks/useProfessionalsWithCoupons"
 import { usePatientInstitutions } from "@/hooks/usePatientInstitutions"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { Slider } from "@/components/ui/slider"
 
 import { AIAssistantModal } from "@/components/AIAssistantModal"
 
@@ -85,6 +92,7 @@ const Professionals = () => {
   const [showFilters, setShowFilters] = useState(false)
   const { getFiltersFromURL, clearFilters: clearURLFilters } = useSearchFilters()
   const { getAIAssistantConfig } = useAIAssistantConfig()
+  const isMobile = useIsMobile()
   
   const [showAIAssistant, setShowAIAssistant] = useState(false)
   const [filters, setFilters] = useState({
@@ -709,6 +717,10 @@ const Professionals = () => {
 
   const professionalsWithCouponsCount = professionalsWithCoupons?.size || 0
 
+  // Derived data for filters
+  const uniqueProfessions = Array.from(new Set(professionals.map(p => p.profissao).filter(Boolean))) as string[]
+  const maxPrice = Math.max(...professionals.map(p => p.preco_consulta || 0), 800)
+
   // Pagination logic
   const indexOfLastProfessional = currentPage * professionalsPerPage
   const indexOfFirstProfessional = indexOfLastProfessional - professionalsPerPage
@@ -832,6 +844,22 @@ const Professionals = () => {
 
             {/* Advanced Filters */}
             {showFilters && (
+              isMobile ? (
+                <Sheet open={showFilters} onOpenChange={setShowFilters}>
+                  <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl">
+                    <SheetHeader>
+                      <SheetTitle>Filtros Avançados</SheetTitle>
+                    </SheetHeader>
+                    <ScrollArea className="h-full pr-4 mt-4">
+                      <div className="space-y-6">
+                        {/* Same filter content as desktop */}
+                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">{/* Presets */}</div>
+                        <div className="space-y-4">{/* Cards */}</div>
+                      </div>
+                    </ScrollArea>
+                  </SheetContent>
+                </Sheet>
+              ) : (
               <div className="bg-gradient-to-br from-card via-muted/30 to-card rounded-xl p-8 shadow-lg border border-border/50 backdrop-blur-sm">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
@@ -945,317 +973,496 @@ const Professionals = () => {
                 {/* Separador Visual */}
                 <div className="my-6 border-t border-border/50"></div>
 
-                {/* Filtros Secundários - Linha 2 */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-                  {/* Time Range Filter */}
-                  <div className="space-y-4 group">
-                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                        <Clock className="h-3 w-3 text-accent" />
-                      </div>
-                      Faixa de Horário
-                    </label>
-                    
-                    {/* Quick time presets */}
-                    <div className="grid grid-cols-1 gap-2 mb-4">
-                      <div className="flex gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "08:00", horarioFim: "12:00" }))}
-                          className="flex-1 text-xs h-9 border-dashed hover:border-accent/50 hover:bg-accent/5 transition-all duration-200"
-                        >
-                          🌅 Manhã
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "13:00", horarioFim: "18:00" }))}
-                          className="flex-1 text-xs h-9 border-dashed hover:border-accent/50 hover:bg-accent/5 transition-all duration-200"
-                        >
-                          ☀️ Tarde
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "18:00", horarioFim: "22:00" }))}
-                          className="flex-1 text-xs h-9 border-dashed hover:border-accent/50 hover:bg-accent/5 transition-all duration-200"
-                        >
-                          🌙 Noite
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="relative group/input">
-                        <Input
-                          type="time"
-                          placeholder="00:00"
-                          value={filters.horarioInicio}
-                          onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))}
-                          className="h-12 border-2 focus:border-accent/50 transition-all group-hover/input:border-accent/30 pt-6 pb-2 bg-background/50"
-                        />
-                        <span className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
-                          Início
-                        </span>
-                        {filters.horarioInicio && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "" }))}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 opacity-70 hover:opacity-100 transition-opacity"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                      
-                      <div className="relative group/input">
-                        <Input
-                          type="time"
-                          placeholder="23:59"
-                          value={filters.horarioFim}
-                          onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))}
-                          className="h-12 border-2 focus:border-accent/50 transition-all group-hover/input:border-accent/30 pt-6 pb-2 bg-background/50"
-                        />
-                        <span className="absolute left-3 top-2 text-xs text-muted-foreground font-medium">
-                          Fim
-                        </span>
-                        {filters.horarioFim && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setFilters(prev => ({ ...prev, horarioFim: "" }))}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 opacity-70 hover:opacity-100 transition-opacity"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Range validation feedback */}
-                    {filters.horarioInicio && filters.horarioFim && filters.horarioInicio >= filters.horarioFim && (
-                      <div className="flex items-center gap-3 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 rounded-lg border border-amber-200 dark:border-amber-800 animate-fade-in">
-                        <Clock className="h-4 w-4 flex-shrink-0" />
-                        <span>O horário de início deve ser anterior ao horário de fim</span>
-                      </div>
-                    )}
-                    
-                    {/* Clear time filters */}
-                    {(filters.horarioInicio || filters.horarioFim) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "", horarioFim: "" }))}
-                        className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        Limpar horários
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Price Range Filter */}
-                  <div className="space-y-4 group">
-                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
-                        <DollarSign className="h-3 w-3 text-green-600" />
-                      </div>
-                      Faixa de Preço
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* Input Mínimo */}
-                      <div className="space-y-1">
-                        <span className="text-xs text-muted-foreground font-medium">
-                          Mínimo
-                        </span>
-                        <div className="relative group/price">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
-                            R$
-                          </span>
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            value={filters.valorMin}
-                            onChange={(e) => setFilters(prev => ({ ...prev, valorMin: e.target.value }))}
-                            className="h-10 border-2 focus:border-green-500/50 transition-all group-hover/price:border-green-500/30 pl-10 bg-background/50"
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Input Máximo */}
-                      <div className="space-y-1">
-                        <span className="text-xs text-muted-foreground font-medium">
-                          Máximo
-                        </span>
-                        <div className="relative group/price">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
-                            R$
-                          </span>
-                          <Input
-                            type="number"
-                            placeholder="∞"
-                            value={filters.valorMax}
-                            onChange={(e) => setFilters(prev => ({ ...prev, valorMax: e.target.value }))}
-                            className="h-10 border-2 focus:border-green-500/50 transition-all group-hover/price:border-green-500/30 pl-10 bg-background/50"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                   {/* Coupon Filter - Novo filtro */}
+                {/* Quick Filter Presets */}
+                <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFilters(prev => ({
+                        ...prev,
+                        valorMax: "200",
+                        ordenacao: "preco_asc"
+                      }))
+                    }}
+                    className="whitespace-nowrap border-2 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                  >
+                    <TrendingDown className="h-4 w-4 mr-1.5" />
+                    Mais acessíveis
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const today = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()]
+                      setFilters(prev => ({
+                        ...prev,
+                        dias: [today],
+                        horarioInicio: "08:00",
+                        horarioFim: "22:00"
+                      }))
+                    }}
+                    className="whitespace-nowrap border-2 hover:border-teal-500/50 hover:bg-teal-500/5 transition-all"
+                  >
+                    <Zap className="h-4 w-4 mr-1.5" />
+                    Disponíveis hoje
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFilters(prev => ({
+                        ...prev,
+                        ordenacao: "destaque"
+                      }))
+                    }}
+                    className="whitespace-nowrap border-2 hover:border-accent/50 hover:bg-accent/5 transition-all"
+                  >
+                    <Star className="h-4 w-4 mr-1.5" />
+                    Em destaque
+                  </Button>
                   {user && linkedInstitutions && linkedInstitutions.length > 0 && (
-                    <div className="space-y-4 group">
-                      <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
-                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
-                          <Tag className="h-3 w-3 text-emerald-600" />
-                        </div>
-                        Com Desconto Institucional
-                      </label>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center justify-between p-4 rounded-lg border-2 border-border bg-background/50 hover:border-emerald-500/50 transition-all">
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/10">
-                                  <Percent className="h-5 w-5 text-emerald-600" />
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-foreground">
-                                    Cupons Disponíveis
-                                  </p>
-                                  {professionalsWithCouponsCount > 0 && (
-                                    <p className="text-xs text-muted-foreground">
-                                      {professionalsWithCouponsCount} profissiona{professionalsWithCouponsCount === 1 ? 'l' : 'is'} com desconto
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                              <Switch
-                                checked={filters.comCupom}
-                                onCheckedChange={(checked) => 
-                                  setFilters(prev => ({ ...prev, comCupom: checked }))
-                                }
-                                className="data-[state=checked]:bg-emerald-600"
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-xs">
-                            <p className="text-sm">
-                              Mostrar apenas profissionais para os quais você tem cupons de desconto disponíveis através de suas instituições vinculadas
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setFilters(prev => ({
+                          ...prev,
+                          comCupom: true
+                        }))
+                      }}
+                      className="whitespace-nowrap border-2 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all"
+                    >
+                      <Tag className="h-4 w-4 mr-1.5" />
+                      Com desconto
+                    </Button>
                   )}
                 </div>
 
-                {/* Separador Visual */}
-                <div className="my-6 border-t border-border/50"></div>
-
-                {/* Filtros Terciários - Linha 3 */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
-                  {/* Especialidades Filter */}
-                  <div className="space-y-4 group">
-                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
-                        <Tag className="h-3 w-3 text-purple-600" />
+                {/* Thematic Filter Cards */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                  {/* Card: Profissional */}
+                  <Card className="p-5 border-2 border-border/50 hover:border-primary/30 transition-all duration-300">
+                    <CardHeader className="p-0 pb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                          <UserCheck className="h-4 w-4 text-primary" />
+                        </div>
+                        <h4 className="font-semibold text-base">Profissional</h4>
                       </div>
-                      Especialidades
-                    </label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-between h-12 border-2 hover:border-purple-500/50 transition-all duration-200 hover:shadow-sm bg-background/50 backdrop-blur-sm"
-                        >
-                          <span className="font-medium">
-                            {filters.especialidadesNormalizadas.length > 0 
-                              ? `${filters.especialidadesNormalizadas.length} selecionada${filters.especialidadesNormalizadas.length > 1 ? 's' : ''}`
-                              : "Todas especialidades"
+                    </CardHeader>
+                    <CardContent className="p-0 space-y-4">
+                      {/* Profissões */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Profissões</label>
+                        <Select 
+                          value={filters.profissoes[0] || "all"} 
+                          onValueChange={(value) => {
+                            if (value === "all") {
+                              setFilters(prev => ({ ...prev, profissoes: [] }))
+                            } else {
+                              setFilters(prev => ({ ...prev, profissoes: [value] }))
                             }
-                          </span>
-                          <ChevronDown className="h-4 w-4 opacity-50 transition-transform group-hover:rotate-180" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-96 p-4 border-2 shadow-lg bg-background/95 backdrop-blur-sm">
-                          <div className="space-y-4">
-                          <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              placeholder="Buscar especialidade..."
-                              value={especialidadeSearch}
-                              onChange={(e) => setEspecialidadeSearch(e.target.value)}
-                              className="pl-10 border-2 focus:border-purple-500/50"
-                            />
-                          </div>
-                          <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
-                            {Object.entries(categorizeSpecialties()).map(([category, specs]) => 
-                              specs.length > 0 && (
-                                <div key={category} className="space-y-2">
-                                  <h4 className="text-xs font-semibold text-muted-foreground px-2">
-                                    {category}
-                                  </h4>
-                                  {specs.map(spec => (
-                                    <div key={spec} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/70 transition-all duration-200 cursor-pointer">
-                                      <Checkbox
-                                        id={`spec-${spec}`}
-                                        checked={filters.especialidadesNormalizadas.includes(spec)}
-                                        onCheckedChange={() => toggleEspecialidade(spec)}
-                                        className="border-2 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                                      />
-                                      <label
-                                        htmlFor={`spec-${spec}`}
-                                        className="text-sm font-medium leading-none cursor-pointer flex-1"
-                                      >
-                                        {spec}
-                                      </label>
-                                    </div>
-                                  ))}
+                          }}
+                        >
+                          <SelectTrigger className="h-10 border-2 bg-background hover:border-primary/50 transition-colors">
+                            <SelectValue placeholder="Todas profissões" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background">
+                            <SelectItem value="all">Todas</SelectItem>
+                            {uniqueProfessions.map(prof => (
+                              <SelectItem key={prof} value={prof}>
+                                {prof}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Especialidades */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Especialidades</label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              className="w-full justify-between h-10 border-2 hover:border-primary/50 transition-all bg-background"
+                            >
+                              <span className="text-sm">
+                                {filters.especialidadesNormalizadas.length > 0 
+                                  ? `${filters.especialidadesNormalizadas.length} selecionada${filters.especialidadesNormalizadas.length > 1 ? 's' : ''}`
+                                  : "Todas especialidades"
+                                }
+                              </span>
+                              <ChevronDown className="h-4 w-4 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-96 p-4 border-2 bg-background">
+                            <div className="space-y-4">
+                              <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                  placeholder="Buscar especialidade..."
+                                  value={especialidadeSearch}
+                                  onChange={(e) => setEspecialidadeSearch(e.target.value)}
+                                  className="pl-10 border-2 focus:border-primary/50"
+                                />
+                              </div>
+                              <ScrollArea className="h-72">
+                                <div className="space-y-4">
+                                  {Object.entries(categorizeSpecialties()).map(([category, specs]) => 
+                                    specs.length > 0 && (
+                                      <div key={category} className="space-y-2">
+                                        <h4 className="text-xs font-semibold text-muted-foreground px-2">
+                                          {category}
+                                        </h4>
+                                        {specs.map(spec => (
+                                          <div key={spec} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/70 transition-all cursor-pointer">
+                                            <Checkbox
+                                              id={`spec-${spec}`}
+                                              checked={filters.especialidadesNormalizadas.includes(spec)}
+                                              onCheckedChange={() => toggleEspecialidade(spec)}
+                                              className="border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                            />
+                                            <label
+                                              htmlFor={`spec-${spec}`}
+                                              className="text-sm font-medium leading-none cursor-pointer flex-1"
+                                            >
+                                              {spec}
+                                            </label>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )
+                                  )}
                                 </div>
-                              )
+                              </ScrollArea>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      {/* Gênero Pills */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Gênero</label>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {[
+                            { value: 'feminino', label: 'Feminino', emoji: '♀️' },
+                            { value: 'masculino', label: 'Masculino', emoji: '♂️' },
+                            { value: 'outro', label: 'Outro', emoji: '⚧️' }
+                          ].map(({ value, label, emoji }) => (
+                            <Badge
+                              key={value}
+                              variant={filters.genero.includes(value) ? "default" : "outline"}
+                              className="cursor-pointer transition-all text-xs px-3 py-1.5 hover:scale-105"
+                              onClick={() => toggleGenero(value)}
+                            >
+                              <span className="mr-1">{emoji}</span>
+                              {label}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Card: Disponibilidade */}
+                  <Card className="p-5 border-2 border-border/50 hover:border-teal-500/30 transition-all duration-300">
+                    <CardHeader className="p-0 pb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-teal-500/10">
+                          <Calendar className="h-4 w-4 text-teal-600" />
+                        </div>
+                        <h4 className="font-semibold text-base">Disponibilidade</h4>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0 space-y-4">
+                      {/* Dias da Semana */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Dias da Semana</label>
+                        <div className="grid grid-cols-4 gap-2">
+                          {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                            <Button
+                              key={day}
+                              variant={filters.dias.includes(day) ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => toggleDay(day)}
+                              className={`text-xs h-9 transition-all ${
+                                filters.dias.includes(day)
+                                  ? 'bg-teal-600 hover:bg-teal-700 text-white'
+                                  : 'hover:border-teal-500/50 hover:bg-teal-500/5'
+                              }`}
+                            >
+                              {getDayAbbrev(day)}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Período do Dia - Quick Presets */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Período</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "08:00", horarioFim: "12:00" }))}
+                            className="text-xs h-9 border-2 hover:border-teal-500/50 hover:bg-teal-500/5 transition-all"
+                          >
+                            🌅 Manhã
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "13:00", horarioFim: "18:00" }))}
+                            className="text-xs h-9 border-2 hover:border-teal-500/50 hover:bg-teal-500/5 transition-all"
+                          >
+                            ☀️ Tarde
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "18:00", horarioFim: "22:00" }))}
+                            className="text-xs h-9 border-2 hover:border-teal-500/50 hover:bg-teal-500/5 transition-all"
+                          >
+                            🌙 Noite
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Horário Personalizado */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Ou personalizado</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="relative">
+                            <Input
+                              type="time"
+                              value={filters.horarioInicio}
+                              onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))}
+                              className="h-9 text-sm border-2 focus:border-teal-500/50 bg-background"
+                            />
+                            {filters.horarioInicio && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "" }))}
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                          <div className="relative">
+                            <Input
+                              type="time"
+                              value={filters.horarioFim}
+                              onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))}
+                              className="h-9 text-sm border-2 focus:border-teal-500/50 bg-background"
+                            />
+                            {filters.horarioFim && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setFilters(prev => ({ ...prev, horarioFim: "" }))}
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
                             )}
                           </div>
                         </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  {/* Gênero Filter */}
-                  <div className="space-y-4 group">
-                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-pink-500/10 group-hover:bg-pink-500/20 transition-colors">
-                        <Badge variant="secondary" className="h-3 w-3 rounded-full p-0 bg-pink-600"></Badge>
+                        {filters.horarioInicio && filters.horarioFim && filters.horarioInicio >= filters.horarioFim && (
+                          <p className="text-xs text-amber-600 flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            Horário de início deve ser anterior ao fim
+                          </p>
+                        )}
                       </div>
-                      Gênero do Profissional
-                    </label>
-                    <div className="flex gap-2">
-                      {['feminino', 'masculino', 'outro'].map(genero => (
-                        <Button
-                          key={genero}
-                          variant={filters.genero.includes(genero) ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => toggleGenero(genero)}
-                          className={`flex-1 transition-all duration-200 ${
-                            filters.genero.includes(genero) 
-                              ? 'bg-pink-600 hover:bg-pink-700 text-white' 
-                              : 'hover:border-pink-500/50 hover:bg-pink-500/5'
-                          }`}
-                        >
-                          {genero === 'feminino' ? '♀️ Feminino' : genero === 'masculino' ? '♂️ Masculino' : '⚧️ Outro'}
-                        </Button>
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground italic">
-                      Alguns pacientes preferem profissionais de gênero específico
-                    </p>
-                  </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
-            )}
 
+                {/* Card: Investimento - Full Width */}
+                <Card className="p-5 border-2 border-border/50 hover:border-green-500/30 transition-all duration-300 mb-4">
+                  <CardHeader className="p-0 pb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-500/10">
+                        <DollarSign className="h-4 w-4 text-green-600" />
+                      </div>
+                      <h4 className="font-semibold text-base">Investimento</h4>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0 space-y-5">
+                    {/* Price Range Slider */}
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-medium text-muted-foreground">Faixa de Preço</label>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                          <span>R$ {filters.valorMin || 0}</span>
+                          <span>-</span>
+                          <span>R$ {filters.valorMax || maxPrice}</span>
+                        </div>
+                      </div>
+                      <Slider
+                        value={[Number(filters.valorMin) || 0, Number(filters.valorMax) || maxPrice]}
+                        onValueChange={(values) => {
+                          setFilters(prev => ({
+                            ...prev,
+                            valorMin: values[0].toString(),
+                            valorMax: values[1].toString()
+                          }))
+                        }}
+                        min={0}
+                        max={maxPrice}
+                        step={25}
+                        className="w-full"
+                      />
+                      <div className="flex justify-center">
+                        <span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
+                          {filteredProfessionals.filter(p => {
+                            const price = p.preco_consulta || 0
+                            const min = Number(filters.valorMin) || 0
+                            const max = Number(filters.valorMax) || maxPrice
+                            return price >= min && price <= max
+                          }).length} profissionais nesta faixa
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Coupon Toggle */}
+                    {user && linkedInstitutions && linkedInstitutions.length > 0 && (
+                      <div className="flex items-center justify-between p-4 rounded-lg border-2 border-border bg-background/50 hover:border-emerald-500/50 transition-all">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/10">
+                            <Tag className="h-5 w-5 text-emerald-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              Mostrar apenas com desconto
+                            </p>
+                            {professionalsWithCouponsCount > 0 && (
+                              <p className="text-xs text-muted-foreground">
+                                {professionalsWithCouponsCount} profissiona{professionalsWithCouponsCount === 1 ? 'l' : 'is'} com cupom
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Switch
+                          checked={filters.comCupom}
+                          onCheckedChange={(checked) => 
+                            setFilters(prev => ({ ...prev, comCupom: checked }))
+                          }
+                          className="data-[state=checked]:bg-emerald-600"
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Active Filters Bar */}
+                {getActiveFiltersCount() > 0 && (
+                  <div className="flex flex-wrap gap-2 p-4 bg-muted/30 rounded-lg border border-border/30 animate-fade-in">
+                    <span className="text-xs text-muted-foreground self-center font-medium">Filtros ativos:</span>
+                    
+                    {filters.profissoes.map(prof => (
+                      <Badge 
+                        key={prof}
+                        variant="secondary" 
+                        className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
+                        onClick={() => toggleProfession(prof)}
+                      >
+                        {prof}
+                        <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
+                      </Badge>
+                    ))}
+
+                    {filters.dias.map(day => (
+                      <Badge 
+                        key={day}
+                        variant="secondary" 
+                        className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
+                        onClick={() => toggleDay(day)}
+                      >
+                        {getDayAbbrev(day)}
+                        <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
+                      </Badge>
+                    ))}
+
+                    {filters.especialidadesNormalizadas.map(spec => (
+                      <Badge 
+                        key={spec}
+                        variant="secondary" 
+                        className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
+                        onClick={() => toggleEspecialidade(spec)}
+                      >
+                        {spec}
+                        <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
+                      </Badge>
+                    ))}
+
+                    {filters.genero.map(genero => (
+                      <Badge 
+                        key={genero}
+                        variant="secondary" 
+                        className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
+                        onClick={() => toggleGenero(genero)}
+                      >
+                        {genero === 'feminino' ? '♀️' : genero === 'masculino' ? '♂️' : '⚧️'} {genero}
+                        <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
+                      </Badge>
+                    ))}
+
+                    {(filters.horarioInicio || filters.horarioFim) && (
+                      <Badge 
+                        variant="secondary" 
+                        className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
+                        onClick={() => setFilters(prev => ({ ...prev, horarioInicio: "", horarioFim: "" }))}
+                      >
+                        {filters.horarioInicio && filters.horarioFim 
+                          ? `${filters.horarioInicio} - ${filters.horarioFim}`
+                          : filters.horarioInicio 
+                            ? `A partir de ${filters.horarioInicio}`
+                            : `Até ${filters.horarioFim}`
+                        }
+                        <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
+                      </Badge>
+                    )}
+
+                    {(filters.valorMin || filters.valorMax) && (
+                      <Badge 
+                        variant="secondary" 
+                        className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
+                        onClick={() => setFilters(prev => ({ ...prev, valorMin: "", valorMax: "" }))}
+                      >
+                        R$ {filters.valorMin || 0} - R$ {filters.valorMax || maxPrice}
+                        <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
+                      </Badge>
+                    )}
+
+                    {filters.comCupom && (
+                      <Badge 
+                        variant="secondary" 
+                        className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
+                        onClick={() => setFilters(prev => ({ ...prev, comCupom: false }))}
+                      >
+                        <Tag className="h-3 w-3" />
+                        Com desconto
+                        <X className="h-3 w-3 group-hover:text-destructive transition-colors" />
+                      </Badge>
+                    )}
+                  </div>
+                )}
+
+                {/* Separador Visual - DEPRECATED: Mantido por compatibilidade */}
+                <div className="hidden"></div>
+
+                {/* Filtros Secundários - REMOVED */}
+                <div className="hidden"></div>
+
+                {/* Filtros Terciários - REMOVED: Substituídos pelos cards temáticos acima */}
+              </div>
+              )
+            )}
           </div>
         </section>
 
