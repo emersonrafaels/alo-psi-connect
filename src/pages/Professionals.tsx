@@ -987,8 +987,8 @@ const Professionals = () => {
                     </div>
 
                     {/* Content */}
-                    <ScrollArea className="flex-1 px-6">
-                      <div className="space-y-3 py-3">
+            <ScrollArea className="flex-1 overflow-hidden">
+              <div className="space-y-3 py-3 px-6 pb-6">
                         {/* Quick Presets */}
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-6 px-6 snap-x snap-mandatory">
                           <Button
