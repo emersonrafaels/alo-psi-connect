@@ -31,7 +31,8 @@ import {
   Bot, 
   Sparkles,
   Tag,
-  Percent
+  Percent,
+  ArrowUpDown
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -643,7 +644,6 @@ const Professionals = () => {
     if (filters.comCupom) count++
     if (filters.especialidadesNormalizadas.length > 0) count++
     if (filters.genero.length > 0) count++
-    if (filters.ordenacao !== 'nome') count++
     return count
   }
 
@@ -1156,32 +1156,7 @@ const Professionals = () => {
                 <div className="my-6 border-t border-border/50"></div>
 
                 {/* Filtros Terciários - Linha 3 */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-                  {/* Ordenação Avançada */}
-                  <div className="space-y-4 group">
-                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
-                        <Settings className="h-3 w-3 text-blue-600" />
-                      </div>
-                      Ordenar por
-                    </label>
-                    <Select 
-                      value={filters.ordenacao} 
-                      onValueChange={(value) => setFilters(prev => ({ ...prev, ordenacao: value as any }))}
-                    >
-                      <SelectTrigger className="w-full h-12 border-2 hover:border-blue-500/50 transition-all duration-200 hover:shadow-sm bg-background/50 backdrop-blur-sm">
-                        <SelectValue placeholder="Selecione a ordenação" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background/95 backdrop-blur-sm">
-                        <SelectItem value="nome">🔤 Nome (A-Z)</SelectItem>
-                        <SelectItem value="preco_asc">💰 Menor Preço</SelectItem>
-                        <SelectItem value="preco_desc">💰 Maior Preço</SelectItem>
-                        <SelectItem value="destaque">⭐ Destaque</SelectItem>
-                        <SelectItem value="disponibilidade">📅 Mais Disponibilidade</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
                   {/* Especialidades Filter */}
                   <div className="space-y-4 group">
                     <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
@@ -1284,31 +1259,78 @@ const Professionals = () => {
           </div>
         </section>
 
-        {/* Results Summary */}
-
-        {/* Results Summary */}
+        {/* Results Bar with Count and Sort */}
         {!loading && (
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 p-4 bg-muted/30 rounded-lg border border-border/50">
+            {/* Contagem e Filtros Ativos */}
             <div className="text-sm text-muted-foreground space-y-1">
-              <p>
-                {filteredProfessionals.length} profissionais encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
+              <p className="font-medium text-foreground">
+                {filteredProfessionals.length} profissional{filteredProfessionals.length !== 1 ? 'is' : ''} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
               </p>
-              {(filters.profissoes.length > 0 || filters.dias.length > 0 || filters.horarioInicio || filters.horarioFim || filters.valorMin || filters.valorMax) && (
+              {(filters.profissoes.length > 0 || filters.dias.length > 0 || filters.horarioInicio || filters.horarioFim || filters.valorMin || filters.valorMax || filters.especialidadesNormalizadas.length > 0 || filters.genero.length > 0 || filters.comCupom) && (
                 <p className="text-xs">
                   Filtros ativos: {[
                     filters.profissoes.length > 0 && `Profissões (${filters.profissoes.length})`,
                     filters.dias.length > 0 && `Dias (${filters.dias.length})`,
                     (filters.horarioInicio || filters.horarioFim) && 'Horário',
-                    (filters.valorMin || filters.valorMax) && 'Preço'
+                    (filters.valorMin || filters.valorMax) && 'Preço',
+                    filters.especialidadesNormalizadas.length > 0 && `Especialidades (${filters.especialidadesNormalizadas.length})`,
+                    filters.genero.length > 0 && `Gênero (${filters.genero.length})`,
+                    filters.comCupom && 'Com Desconto'
                   ].filter(Boolean).join(', ')}
                 </p>
               )}
             </div>
-            {totalPages > 1 && (
-              <p className="text-sm text-muted-foreground">
-                Página {currentPage} de {totalPages}
-              </p>
-            )}
+
+            {/* Ordenação + Paginação */}
+            <div className="flex items-center gap-4">
+              {/* Dropdown de Ordenação */}
+              <Select 
+                value={filters.ordenacao} 
+                onValueChange={(value) => setFilters(prev => ({ ...prev, ordenacao: value as any }))}
+              >
+                <SelectTrigger className="w-[180px] h-9 text-sm border bg-background hover:bg-muted/50">
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Ordenar" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  <SelectItem value="nome">
+                    <span className="flex items-center gap-2">
+                      <span>🔤</span> Nome (A-Z)
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="preco_asc">
+                    <span className="flex items-center gap-2">
+                      <span>💰</span> Menor Preço
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="preco_desc">
+                    <span className="flex items-center gap-2">
+                      <span>💰</span> Maior Preço
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="destaque">
+                    <span className="flex items-center gap-2">
+                      <span>⭐</span> Destaque
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="disponibilidade">
+                    <span className="flex items-center gap-2">
+                      <span>📅</span> Mais Disponibilidade
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Paginação */}
+              {totalPages > 1 && (
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                  Página {currentPage} de {totalPages}
+                </span>
+              )}
+            </div>
           </div>
         )}
 
