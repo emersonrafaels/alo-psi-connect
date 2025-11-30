@@ -242,8 +242,8 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => editor.chain().focus().setSpacer('30px').run()}>
-              Pequeno (30px)
+            <DropdownMenuItem onClick={() => editor.chain().focus().setSpacer('15px').run()}>
+              Pequeno (15px)
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => editor.chain().focus().setSpacer('60px').run()}>
               Médio (60px)
