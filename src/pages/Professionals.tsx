@@ -49,6 +49,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Slider } from "@/components/ui/slider"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 import { AIAssistantModal } from "@/components/AIAssistantModal"
 import { toast } from "@/hooks/use-toast"
@@ -877,17 +878,501 @@ const Professionals = () => {
             {showFilters && (
               isMobile ? (
                 <Sheet open={showFilters} onOpenChange={setShowFilters}>
-                  <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl">
-                    <SheetHeader>
-                      <SheetTitle>Filtros Avançados</SheetTitle>
-                    </SheetHeader>
-                    <ScrollArea className="h-full pr-4 mt-4">
-                      <div className="space-y-6">
-                        {/* Same filter content as desktop */}
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">{/* Presets */}</div>
-                        <div className="space-y-4">{/* Cards */}</div>
+                  <SheetContent side="bottom" className="h-[90vh] rounded-t-2xl flex flex-col p-0">
+                    {/* Header */}
+                    <div className="px-6 pt-6 pb-4 border-b shrink-0">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Filter className="h-5 w-5 text-primary" />
+                          <h3 className="text-lg font-semibold">Filtros Avançados</h3>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={clearFilters}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Limpar
+                        </Button>
+                      </div>
+                      
+                      {/* Active Filters */}
+                      {getActiveFiltersCount() > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-muted-foreground">
+                            {getActiveFiltersCount()} {getActiveFiltersCount() === 1 ? 'filtro ativo' : 'filtros ativos'}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {filters.profissoes.map(prof => (
+                              <Badge key={prof} variant="secondary" className="gap-1 pr-1">
+                                {prof}
+                                <button
+                                  onClick={() => toggleProfession(prof)}
+                                  className="ml-1 hover:bg-background/80 rounded-full p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                            {filters.dias.map(dia => (
+                              <Badge key={dia} variant="secondary" className="gap-1 pr-1">
+                                {getDayAbbrev(dia)}
+                                <button
+                                  onClick={() => toggleDay(dia)}
+                                  className="ml-1 hover:bg-background/80 rounded-full p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                            {filters.especialidadesNormalizadas.map(esp => (
+                              <Badge key={esp} variant="secondary" className="gap-1 pr-1">
+                                {esp}
+                                <button
+                                  onClick={() => toggleEspecialidade(esp)}
+                                  className="ml-1 hover:bg-background/80 rounded-full p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                            {filters.genero.map(gen => (
+                              <Badge key={gen} variant="secondary" className="gap-1 pr-1">
+                                {gen === 'feminino' ? '♀️ Feminino' : gen === 'masculino' ? '♂️ Masculino' : '⚧️ Outro'}
+                                <button
+                                  onClick={() => toggleGenero(gen)}
+                                  className="ml-1 hover:bg-background/80 rounded-full p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                            {(filters.horarioInicio || filters.horarioFim) && (
+                              <Badge variant="secondary" className="gap-1 pr-1">
+                                {filters.horarioInicio || '00:00'} - {filters.horarioFim || '23:59'}
+                                <button
+                                  onClick={() => setFilters(prev => ({ ...prev, horarioInicio: '', horarioFim: '' }))}
+                                  className="ml-1 hover:bg-background/80 rounded-full p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            )}
+                            {(filters.valorMin || filters.valorMax) && (
+                              <Badge variant="secondary" className="gap-1 pr-1">
+                                R$ {filters.valorMin || '0'} - {filters.valorMax || '∞'}
+                                <button
+                                  onClick={() => setFilters(prev => ({ ...prev, valorMin: '', valorMax: '' }))}
+                                  className="ml-1 hover:bg-background/80 rounded-full p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            )}
+                            {filters.comCupom && (
+                              <Badge variant="secondary" className="gap-1 pr-1">
+                                🏷️ Com Cupom
+                                <button
+                                  onClick={() => setFilters(prev => ({ ...prev, comCupom: false }))}
+                                  className="ml-1 hover:bg-background/80 rounded-full p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <ScrollArea className="flex-1 px-6">
+                      <div className="space-y-4 py-4">
+                        {/* Quick Presets */}
+                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-6 px-6">
+                          <Button
+                            variant={filters.dias.includes('monday') && filters.dias.includes('tuesday') && 
+                                    filters.dias.includes('wednesday') && filters.dias.includes('thursday') && 
+                                    filters.dias.includes('friday') ? "default" : "outline"}
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() => {
+                              const weekDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
+                              const allSelected = weekDays.every(d => filters.dias.includes(d))
+                              setFilters(prev => ({
+                                ...prev,
+                                dias: allSelected ? [] : weekDays
+                              }))
+                            }}
+                          >
+                            <Zap className="h-3 w-3 mr-1" />
+                            Dias úteis
+                          </Button>
+                          <Button
+                            variant={filters.horarioInicio === '18:00' && filters.horarioFim === '22:00' ? "default" : "outline"}
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() => {
+                              setFilters(prev => ({
+                                ...prev,
+                                horarioInicio: prev.horarioInicio === '18:00' ? '' : '18:00',
+                                horarioFim: prev.horarioFim === '22:00' ? '' : '22:00'
+                              }))
+                            }}
+                          >
+                            <Moon className="h-3 w-3 mr-1" />
+                            Noturno
+                          </Button>
+                          <Button
+                            variant={filters.dias.includes('saturday') && filters.dias.includes('sunday') ? "default" : "outline"}
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() => {
+                              const weekendDays = ['saturday', 'sunday']
+                              const allSelected = weekendDays.every(d => filters.dias.includes(d))
+                              setFilters(prev => ({
+                                ...prev,
+                                dias: allSelected 
+                                  ? prev.dias.filter(d => !weekendDays.includes(d))
+                                  : [...prev.dias, ...weekendDays.filter(d => !prev.dias.includes(d))]
+                              }))
+                            }}
+                          >
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Fim de semana
+                          </Button>
+                          {user && linkedInstitutions && linkedInstitutions.length > 0 && professionalsWithCouponsCount > 0 && (
+                            <Button
+                              variant={filters.comCupom ? "default" : "outline"}
+                              size="sm"
+                              className="shrink-0"
+                              onClick={() => setFilters(prev => ({ ...prev, comCupom: !prev.comCupom }))}
+                            >
+                              <Tag className="h-3 w-3 mr-1" />
+                              Com Cupom
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Accordion Sections */}
+                        <Accordion type="single" collapsible className="w-full">
+                          {/* Profissional */}
+                          <AccordionItem value="profissional">
+                            <AccordionTrigger className="text-base font-semibold">
+                              <div className="flex items-center gap-2">
+                                <UserCheck className="h-4 w-4 text-primary" />
+                                Profissional
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="space-y-4 pt-2">
+                              {/* Profissão */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Profissão</label>
+                                <Select
+                                  value={filters.profissoes[0] || ''}
+                                  onValueChange={(value) => {
+                                    setFilters(prev => ({
+                                      ...prev,
+                                      profissoes: value ? [value] : []
+                                    }))
+                                  }}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Todas as profissões" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="todas">Todas</SelectItem>
+                                    {uniqueProfessions.map(profession => (
+                                      <SelectItem key={profession} value={profession}>
+                                        {profession}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* Especialidades */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Especialidades</label>
+                                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                                  {getAllSpecialties().slice(0, 12).map(especialidade => (
+                                    <Badge
+                                      key={especialidade}
+                                      variant={filters.especialidadesNormalizadas.includes(especialidade) ? "default" : "outline"}
+                                      className="cursor-pointer hover:bg-primary/90"
+                                      onClick={() => toggleEspecialidade(especialidade)}
+                                    >
+                                      {especialidade}
+                                    </Badge>
+                                  ))}
+                                </div>
+                                {getAllSpecialties().length > 12 && (
+                                  <p className="text-xs text-muted-foreground">
+                                    +{getAllSpecialties().length - 12} especialidades disponíveis
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Gênero */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Gênero do profissional</label>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant={filters.genero.includes('feminino') ? "default" : "outline"}
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={() => toggleGenero('feminino')}
+                                  >
+                                    ♀️ Feminino
+                                  </Button>
+                                  <Button
+                                    variant={filters.genero.includes('masculino') ? "default" : "outline"}
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={() => toggleGenero('masculino')}
+                                  >
+                                    ♂️ Masculino
+                                  </Button>
+                                  <Button
+                                    variant={filters.genero.includes('outro') ? "default" : "outline"}
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={() => toggleGenero('outro')}
+                                  >
+                                    ⚧️ Outro
+                                  </Button>
+                                </div>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+
+                          {/* Disponibilidade */}
+                          <AccordionItem value="disponibilidade">
+                            <AccordionTrigger className="text-base font-semibold">
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-primary" />
+                                Disponibilidade
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="space-y-4 pt-2">
+                              {/* Dias da semana */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Dias da semana</label>
+                                <div className="grid grid-cols-4 gap-2">
+                                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                                    <Button
+                                      key={day}
+                                      variant={filters.dias.includes(day) ? "default" : "outline"}
+                                      size="sm"
+                                      onClick={() => toggleDay(day)}
+                                      className="h-10"
+                                    >
+                                      {getDayAbbrev(day)}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Período do dia */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Período do dia</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                  <Button
+                                    variant={filters.horarioInicio === '06:00' && filters.horarioFim === '12:00' ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => {
+                                      const isActive = filters.horarioInicio === '06:00' && filters.horarioFim === '12:00'
+                                      setFilters(prev => ({
+                                        ...prev,
+                                        horarioInicio: isActive ? '' : '06:00',
+                                        horarioFim: isActive ? '' : '12:00'
+                                      }))
+                                    }}
+                                  >
+                                    Manhã
+                                  </Button>
+                                  <Button
+                                    variant={filters.horarioInicio === '12:00' && filters.horarioFim === '18:00' ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => {
+                                      const isActive = filters.horarioInicio === '12:00' && filters.horarioFim === '18:00'
+                                      setFilters(prev => ({
+                                        ...prev,
+                                        horarioInicio: isActive ? '' : '12:00',
+                                        horarioFim: isActive ? '' : '18:00'
+                                      }))
+                                    }}
+                                  >
+                                    Tarde
+                                  </Button>
+                                  <Button
+                                    variant={filters.horarioInicio === '18:00' && filters.horarioFim === '23:59' ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => {
+                                      const isActive = filters.horarioInicio === '18:00' && filters.horarioFim === '23:59'
+                                      setFilters(prev => ({
+                                        ...prev,
+                                        horarioInicio: isActive ? '' : '18:00',
+                                        horarioFim: isActive ? '' : '23:59'
+                                      }))
+                                    }}
+                                  >
+                                    Noite
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Horário personalizado */}
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Horário personalizado</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="text-xs text-muted-foreground">Início</label>
+                                    <Input
+                                      type="time"
+                                      value={filters.horarioInicio}
+                                      onChange={(e) => setFilters(prev => ({ ...prev, horarioInicio: e.target.value }))}
+                                      className="mt-1"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-xs text-muted-foreground">Fim</label>
+                                    <Input
+                                      type="time"
+                                      value={filters.horarioFim}
+                                      onChange={(e) => setFilters(prev => ({ ...prev, horarioFim: e.target.value }))}
+                                      className="mt-1"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+
+                          {/* Valor */}
+                          <AccordionItem value="valor">
+                            <AccordionTrigger className="text-base font-semibold">
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-primary" />
+                                Valor da Consulta
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="space-y-4 pt-2">
+                              <div className="space-y-4">
+                                <div className="flex justify-between text-sm">
+                                  <span className="font-medium">R$ {filters.valorMin || '0'}</span>
+                                  <span className="font-medium">R$ {filters.valorMax || '800+'}</span>
+                                </div>
+                                <Slider
+                                  min={0}
+                                  max={800}
+                                  step={10}
+                                  value={[
+                                    parseInt(filters.valorMin) || 0,
+                                    parseInt(filters.valorMax) || 800
+                                  ]}
+                                  onValueChange={(values) => {
+                                    setFilters(prev => ({
+                                      ...prev,
+                                      valorMin: values[0].toString(),
+                                      valorMax: values[1] === 800 ? '' : values[1].toString()
+                                    }))
+                                  }}
+                                  className="mt-2"
+                                />
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="text-xs text-muted-foreground">Mínimo</label>
+                                    <Input
+                                      type="number"
+                                      placeholder="R$ 0"
+                                      value={filters.valorMin}
+                                      onChange={(e) => setFilters(prev => ({ ...prev, valorMin: e.target.value }))}
+                                      className="mt-1"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-xs text-muted-foreground">Máximo</label>
+                                    <Input
+                                      type="number"
+                                      placeholder="R$ ∞"
+                                      value={filters.valorMax}
+                                      onChange={(e) => setFilters(prev => ({ ...prev, valorMax: e.target.value }))}
+                                      className="mt-1"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+
+                          {/* Ordenação */}
+                          <AccordionItem value="ordenacao">
+                            <AccordionTrigger className="text-base font-semibold">
+                              <div className="flex items-center gap-2">
+                                <ArrowUpDown className="h-4 w-4 text-primary" />
+                                Ordenação
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="space-y-2 pt-2">
+                              <div className="flex flex-col gap-2">
+                                <Button
+                                  variant={filters.ordenacao === 'nome' ? "default" : "outline"}
+                                  size="sm"
+                                  className="justify-start"
+                                  onClick={() => setFilters(prev => ({ ...prev, ordenacao: 'nome' }))}
+                                >
+                                  Nome (A-Z)
+                                </Button>
+                                <Button
+                                  variant={filters.ordenacao === 'preco_asc' ? "default" : "outline"}
+                                  size="sm"
+                                  className="justify-start"
+                                  onClick={() => setFilters(prev => ({ ...prev, ordenacao: 'preco_asc' }))}
+                                >
+                                  Menor Preço
+                                </Button>
+                                <Button
+                                  variant={filters.ordenacao === 'preco_desc' ? "default" : "outline"}
+                                  size="sm"
+                                  className="justify-start"
+                                  onClick={() => setFilters(prev => ({ ...prev, ordenacao: 'preco_desc' }))}
+                                >
+                                  Maior Preço
+                                </Button>
+                                <Button
+                                  variant={filters.ordenacao === 'disponibilidade' ? "default" : "outline"}
+                                  size="sm"
+                                  className="justify-start"
+                                  onClick={() => setFilters(prev => ({ ...prev, ordenacao: 'disponibilidade' }))}
+                                >
+                                  Mais Disponível
+                                </Button>
+                                <Button
+                                  variant={filters.ordenacao === 'destaque' ? "default" : "outline"}
+                                  size="sm"
+                                  className="justify-start"
+                                  onClick={() => setFilters(prev => ({ ...prev, ordenacao: 'destaque' }))}
+                                >
+                                  Em Destaque
+                                </Button>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
                       </div>
                     </ScrollArea>
+
+                    {/* Footer Sticky */}
+                    <div className="px-6 py-4 border-t shrink-0 bg-background">
+                      <Button 
+                        className="w-full h-12 text-base font-semibold" 
+                        onClick={() => setShowFilters(false)}
+                      >
+                        Ver {filteredProfessionals.length} {filteredProfessionals.length === 1 ? 'profissional' : 'profissionais'}
+                      </Button>
+                    </div>
                   </SheetContent>
                 </Sheet>
               ) : (
