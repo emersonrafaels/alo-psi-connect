@@ -61,6 +61,13 @@ interface Professional {
   user_email: string
   linkedin: string | null
   servicos_raw: string | null
+  servicos_normalizados: string[] | null
+  em_destaque: boolean | null
+  profiles: {
+    genero: string | null
+    raca: string | null
+    sexualidade: string | null
+  } | null
   sessions: ProfessionalSession[]
 }
 
@@ -90,8 +97,12 @@ const Professionals = () => {
     especialidades: [] as string[],
     servicos: [] as string[],
     nome: "",
-    comCupom: false
+    comCupom: false,
+    especialidadesNormalizadas: [] as string[],
+    genero: [] as string[],
+    ordenacao: 'nome' as 'nome' | 'preco_asc' | 'preco_desc' | 'destaque' | 'disponibilidade'
   })
+  const [especialidadeSearch, setEspecialidadeSearch] = useState("")
   const professionalsPerPage = 9
 
   // Auth e instituições
@@ -289,6 +300,42 @@ const Professionals = () => {
       )
     }
 
+    // Especialidades normalizadas filter
+    if (filters.especialidadesNormalizadas.length > 0) {
+      filtered = filtered.filter(prof => {
+        const profSpecialties = prof.servicos_normalizados || []
+        return filters.especialidadesNormalizadas.some(esp => 
+          profSpecialties.includes(esp)
+        )
+      })
+    }
+
+    // Gênero filter
+    if (filters.genero.length > 0) {
+      filtered = filtered.filter(prof => {
+        const profGender = prof.profiles?.genero?.toLowerCase()
+        return profGender && filters.genero.includes(profGender)
+      })
+    }
+
+    // Ordenação
+    switch (filters.ordenacao) {
+      case 'preco_asc':
+        filtered.sort((a, b) => (a.preco_consulta || 999) - (b.preco_consulta || 999))
+        break
+      case 'preco_desc':
+        filtered.sort((a, b) => (b.preco_consulta || 0) - (a.preco_consulta || 0))
+        break
+      case 'destaque':
+        filtered.sort((a, b) => (b.em_destaque ? 1 : 0) - (a.em_destaque ? 1 : 0))
+        break
+      case 'disponibilidade':
+        filtered.sort((a, b) => b.sessions.length - a.sessions.length)
+        break
+      default:
+        filtered.sort((a, b) => a.display_name.localeCompare(b.display_name))
+    }
+
     setFilteredProfessionals(filtered)
     setCurrentPage(1) // Reset to first page when filtering
   }
@@ -314,8 +361,16 @@ const Professionals = () => {
           user_email,
           linkedin,
           servicos_raw,
+          servicos_normalizados,
+          em_destaque,
           user_id,
-          professional_tenants!inner(tenant_id)
+          profile_id,
+          professional_tenants!inner(tenant_id),
+          profiles!profile_id (
+            genero,
+            raca,
+            sexualidade
+          )
         `)
         .eq('ativo', true)
         .eq('professional_tenants.tenant_id', tenant.id)
@@ -522,7 +577,10 @@ const Professionals = () => {
       especialidades: [],
       servicos: [],
       nome: "",
-      comCupom: false
+      comCupom: false,
+      especialidadesNormalizadas: [],
+      genero: [],
+      ordenacao: 'nome'
     })
     setSearchTerm("")
     clearURLFilters()
@@ -583,7 +641,70 @@ const Professionals = () => {
     if (filters.servicos.length > 0) count++
     if (filters.nome) count++
     if (filters.comCupom) count++
+    if (filters.especialidadesNormalizadas.length > 0) count++
+    if (filters.genero.length > 0) count++
+    if (filters.ordenacao !== 'nome') count++
     return count
+  }
+
+  const toggleEspecialidade = (especialidade: string) => {
+    setFilters(prev => ({
+      ...prev,
+      especialidadesNormalizadas: prev.especialidadesNormalizadas.includes(especialidade)
+        ? prev.especialidadesNormalizadas.filter(e => e !== especialidade)
+        : [...prev.especialidadesNormalizadas, especialidade]
+    }))
+  }
+
+  const toggleGenero = (genero: string) => {
+    setFilters(prev => ({
+      ...prev,
+      genero: prev.genero.includes(genero)
+        ? prev.genero.filter(g => g !== genero)
+        : [...prev.genero, genero]
+    }))
+  }
+
+  const getAllSpecialties = () => {
+    const specialtiesSet = new Set<string>()
+    professionals.forEach(prof => {
+      if (prof.servicos_normalizados) {
+        prof.servicos_normalizados.forEach(s => specialtiesSet.add(s))
+      }
+    })
+    return Array.from(specialtiesSet).sort()
+  }
+
+  const categorizeSpecialties = () => {
+    const allSpecialties = getAllSpecialties()
+    
+    // Filter by search term
+    const filteredSpecialties = especialidadeSearch 
+      ? allSpecialties.filter(s => s.toLowerCase().includes(especialidadeSearch.toLowerCase()))
+      : allSpecialties
+    
+    const categories = {
+      'Transtornos': ['Ansiedade', 'Depressão', 'TDAH', 'TOC', 'Bipolaridade', 'Síndrome do Pânico', 'Borderline'],
+      'Relacionamentos': ['Terapia de Casal', 'Terapia Familiar', 'Relacionamentos', 'Orientação Parental'],
+      'Ciclos de Vida': ['Psicologia Infantil', 'Psicologia do Adolescente', 'Psicologia do Idoso', 'Luto'],
+      'Desenvolvimento': ['Autoestima', 'Desenvolvimento Pessoal', 'Estresse', 'Síndrome de Burnout'],
+      'Outros': [] as string[]
+    }
+    
+    filteredSpecialties.forEach(spec => {
+      let categorized = false
+      for (const [category, keywords] of Object.entries(categories)) {
+        if (category !== 'Outros' && keywords.some(k => spec.includes(k) || k.includes(spec))) {
+          categorized = true
+          break
+        }
+      }
+      if (!categorized) {
+        categories.Outros.push(spec)
+      }
+    })
+    
+    return categories
   }
 
   const professionalsWithCouponsCount = professionalsWithCoupons?.size || 0
@@ -983,7 +1104,7 @@ const Professionals = () => {
                     </div>
                   </div>
 
-                  {/* Coupon Filter - Novo filtro */}
+                   {/* Coupon Filter - Novo filtro */}
                   {user && linkedInstitutions && linkedInstitutions.length > 0 && (
                     <div className="space-y-4 group">
                       <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
@@ -1029,6 +1150,133 @@ const Professionals = () => {
                       </TooltipProvider>
                     </div>
                   )}
+                </div>
+
+                {/* Separador Visual */}
+                <div className="my-6 border-t border-border/50"></div>
+
+                {/* Filtros Terciários - Linha 3 */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+                  {/* Ordenação Avançada */}
+                  <div className="space-y-4 group">
+                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
+                        <Settings className="h-3 w-3 text-blue-600" />
+                      </div>
+                      Ordenar por
+                    </label>
+                    <Select 
+                      value={filters.ordenacao} 
+                      onValueChange={(value) => setFilters(prev => ({ ...prev, ordenacao: value as any }))}
+                    >
+                      <SelectTrigger className="w-full h-12 border-2 hover:border-blue-500/50 transition-all duration-200 hover:shadow-sm bg-background/50 backdrop-blur-sm">
+                        <SelectValue placeholder="Selecione a ordenação" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background/95 backdrop-blur-sm">
+                        <SelectItem value="nome">🔤 Nome (A-Z)</SelectItem>
+                        <SelectItem value="preco_asc">💰 Menor Preço</SelectItem>
+                        <SelectItem value="preco_desc">💰 Maior Preço</SelectItem>
+                        <SelectItem value="destaque">⭐ Destaque</SelectItem>
+                        <SelectItem value="disponibilidade">📅 Mais Disponibilidade</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Especialidades Filter */}
+                  <div className="space-y-4 group">
+                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
+                        <Tag className="h-3 w-3 text-purple-600" />
+                      </div>
+                      Especialidades
+                    </label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-between h-12 border-2 hover:border-purple-500/50 transition-all duration-200 hover:shadow-sm bg-background/50 backdrop-blur-sm"
+                        >
+                          <span className="font-medium">
+                            {filters.especialidadesNormalizadas.length > 0 
+                              ? `${filters.especialidadesNormalizadas.length} selecionada${filters.especialidadesNormalizadas.length > 1 ? 's' : ''}`
+                              : "Todas especialidades"
+                            }
+                          </span>
+                          <ChevronDown className="h-4 w-4 opacity-50 transition-transform group-hover:rotate-180" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-96 p-4 border-2 shadow-lg bg-background/95 backdrop-blur-sm">
+                          <div className="space-y-4">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Buscar especialidade..."
+                              value={especialidadeSearch}
+                              onChange={(e) => setEspecialidadeSearch(e.target.value)}
+                              className="pl-10 border-2 focus:border-purple-500/50"
+                            />
+                          </div>
+                          <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
+                            {Object.entries(categorizeSpecialties()).map(([category, specs]) => 
+                              specs.length > 0 && (
+                                <div key={category} className="space-y-2">
+                                  <h4 className="text-xs font-semibold text-muted-foreground px-2">
+                                    {category}
+                                  </h4>
+                                  {specs.map(spec => (
+                                    <div key={spec} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/70 transition-all duration-200 cursor-pointer">
+                                      <Checkbox
+                                        id={`spec-${spec}`}
+                                        checked={filters.especialidadesNormalizadas.includes(spec)}
+                                        onCheckedChange={() => toggleEspecialidade(spec)}
+                                        className="border-2 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                                      />
+                                      <label
+                                        htmlFor={`spec-${spec}`}
+                                        className="text-sm font-medium leading-none cursor-pointer flex-1"
+                                      >
+                                        {spec}
+                                      </label>
+                                    </div>
+                                  ))}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Gênero Filter */}
+                  <div className="space-y-4 group">
+                    <label className="text-sm font-semibold mb-2 block text-foreground flex items-center gap-3">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-pink-500/10 group-hover:bg-pink-500/20 transition-colors">
+                        <Badge variant="secondary" className="h-3 w-3 rounded-full p-0 bg-pink-600"></Badge>
+                      </div>
+                      Gênero do Profissional
+                    </label>
+                    <div className="flex gap-2">
+                      {['feminino', 'masculino', 'outro'].map(genero => (
+                        <Button
+                          key={genero}
+                          variant={filters.genero.includes(genero) ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleGenero(genero)}
+                          className={`flex-1 transition-all duration-200 ${
+                            filters.genero.includes(genero) 
+                              ? 'bg-pink-600 hover:bg-pink-700 text-white' 
+                              : 'hover:border-pink-500/50 hover:bg-pink-500/5'
+                          }`}
+                        >
+                          {genero === 'feminino' ? '♀️ Feminino' : genero === 'masculino' ? '♂️ Masculino' : '⚧️ Outro'}
+                        </Button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground italic">
+                      Alguns pacientes preferem profissionais de gênero específico
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
