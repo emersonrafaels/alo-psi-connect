@@ -403,9 +403,10 @@ const handler = async (req: Request): Promise<Response> => {
           );
         }
       } else {
-        // Request calendar.events and userinfo.email scopes
+        // Request calendar.events, calendar.readonly and userinfo.email scopes
         const scope = [
           'https://www.googleapis.com/auth/calendar.events',
+          'https://www.googleapis.com/auth/calendar.readonly',
           'https://www.googleapis.com/auth/userinfo.email'
         ].join(' ');
         const contextState = type === 'tenant' ? 'tenant' : 'professional';

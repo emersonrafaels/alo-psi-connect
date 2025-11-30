@@ -88,6 +88,12 @@ const handler = async (req: Request): Promise<Response> => {
       const errorText = await calendarResponse.text();
       console.error('Google Calendar API error:', errorText);
       
+      // Check for insufficient scope error (403)
+      if (calendarResponse.status === 403 && errorText.includes('ACCESS_TOKEN_SCOPE_INSUFFICIENT')) {
+        console.error('Permissões do Google Calendar insuficientes');
+        throw new Error('Permissões insuficientes. Por favor, desconecte e reconecte seu Google Calendar para atualizar as permissões.');
+      }
+      
       if (calendarResponse.status === 401) {
         console.log('Token expirado, tentando renovar...');
         // Token expired, try to refresh
