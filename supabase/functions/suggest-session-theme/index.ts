@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Resend } from "npm:resend@2.0.0";
+import { Resend } from "npm:resend@4.0.0";
 
+const MEDCOS_ADMIN_EMAIL = 'medcos.host@gmail.com';
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
@@ -113,10 +114,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send notification to admin
     try {
+      const adminEmail = tenant.admin_email || 'alopsi.host@gmail.com';
       await resend.emails.send({
-        from: `${tenant.name} <${tenant.admin_email}>`,
-        to: [tenant.admin_email],
-        subject: `Nova sugestão de tema - ${tenant.name}`,
+        from: `${tenant.name} <noreply@redebemestar.com.br>`,
+        to: [adminEmail],
+        cc: adminEmail !== MEDCOS_ADMIN_EMAIL ? [MEDCOS_ADMIN_EMAIL] : [],
+        subject: `Nova Sugestão de Tema - Encontros ${tenant.name}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: ${tenant.primary_color || '#4338ca'};">Nova Sugestão de Tema</h1>

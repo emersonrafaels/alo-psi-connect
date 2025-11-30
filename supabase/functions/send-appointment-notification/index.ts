@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
+import { Resend } from "npm:resend@4.0.0";
 
+const MEDCOS_ADMIN_EMAIL = 'medcos.host@gmail.com';
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
@@ -157,6 +158,7 @@ const handler = async (req: Request): Promise<Response> => {
     const internalEmailResponse = await resend.emails.send({
       from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
+      cc: adminEmail !== MEDCOS_ADMIN_EMAIL ? [MEDCOS_ADMIN_EMAIL] : [],
       subject: `🎉 Nova Consulta Agendada - ${agendamento.profissionais.display_name} - ${dataFormatada}`,
       html: emailHtml,
     });

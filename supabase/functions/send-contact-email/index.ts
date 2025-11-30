@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { Resend } from "npm:resend@4.0.0";
 
+const MEDCOS_ADMIN_EMAIL = 'medcos.host@gmail.com';
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
@@ -58,6 +59,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: `Contato ${tenantName} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
+      cc: adminEmail !== MEDCOS_ADMIN_EMAIL ? [MEDCOS_ADMIN_EMAIL] : [],
       subject: `Novo contato: ${subject}`,
       html: `
         <h2>Nova mensagem de contato</h2>
