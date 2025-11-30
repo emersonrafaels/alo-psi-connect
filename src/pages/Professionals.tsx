@@ -227,39 +227,36 @@ const Professionals = () => {
       })
     }
 
-    // Day filter (multiselect)
-    if (filters.dias.length > 0) {
-      filtered = filtered.filter(prof => 
-        prof.sessions.some(session => {
-          const sessionDay = session.day.toLowerCase()
-          return filters.dias.some(filterDay => 
-            sessionDay === filterDay || 
-            sessionDay === filterDay.toLowerCase() ||
-            sessionDay.includes(filterDay.slice(0, 3)) || // Match first 3 letters (mon, tue, etc.)
-            filterDay.includes(sessionDay.slice(0, 3))
-          )
-        })
-      )
-    }
+    // Combined Day + Time filter
+    const hasDayFilter = filters.dias.length > 0
+    const hasTimeFilter = filters.horarioInicio || filters.horarioFim
 
-    // Time range filter
-    if (filters.horarioInicio || filters.horarioFim) {
+    if (hasDayFilter || hasTimeFilter) {
       filtered = filtered.filter(prof => {
         return prof.sessions.some(session => {
-          const sessionStart = session.start_time
-          const sessionEnd = session.end_time
+          // Check DAY (if filter is active)
+          let matchesDay = true
+          if (hasDayFilter) {
+            const sessionDay = session.day.toLowerCase()
+            matchesDay = filters.dias.some(filterDay => 
+              sessionDay === filterDay || 
+              sessionDay === filterDay.toLowerCase() ||
+              sessionDay.includes(filterDay.slice(0, 3)) ||
+              filterDay.includes(sessionDay.slice(0, 3))
+            )
+          }
           
-          let matchesTimeRange = true
-          
+          // Check TIME (if filter is active)
+          let matchesTime = true
           if (filters.horarioInicio) {
-            matchesTimeRange = matchesTimeRange && sessionStart >= filters.horarioInicio
+            matchesTime = matchesTime && session.start_time >= filters.horarioInicio
           }
-          
           if (filters.horarioFim) {
-            matchesTimeRange = matchesTimeRange && sessionEnd <= filters.horarioFim
+            matchesTime = matchesTime && session.end_time <= filters.horarioFim
           }
           
-          return matchesTimeRange
+          // Session must satisfy BOTH criteria
+          return matchesDay && matchesTime
         })
       })
     }
