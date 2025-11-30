@@ -1529,7 +1529,7 @@ const Professionals = () => {
             {/* Contagem e Filtros Ativos */}
             <div className="text-sm text-muted-foreground space-y-1">
               <p className="font-medium text-foreground">
-                {filteredProfessionals.length} profissional{filteredProfessionals.length !== 1 ? 'is' : ''} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
+                {filteredProfessionals.length} profissiona{filteredProfessionals.length !== 1 ? 'is' : 'l'} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
               </p>
               {(filters.profissoes.length > 0 || filters.dias.length > 0 || filters.horarioInicio || filters.horarioFim || filters.valorMin || filters.valorMax || filters.especialidadesNormalizadas.length > 0 || filters.genero.length > 0 || filters.comCupom) && (
                 <p className="text-xs">
