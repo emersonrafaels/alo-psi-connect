@@ -30,8 +30,8 @@ export const Spacer = Node.create<SpacerOptions>({
   addAttributes() {
     return {
       height: {
-        default: '60px',
-        parseHTML: element => element.getAttribute('data-height') || '60px',
+        default: '15px',
+        parseHTML: element => element.getAttribute('data-height') || '15px',
         renderHTML: attributes => {
           return {
             'data-height': attributes.height,
@@ -67,7 +67,7 @@ export const Spacer = Node.create<SpacerOptions>({
   
   addCommands() {
     return {
-      setSpacer: (height = '60px') => ({ commands }) => {
+      setSpacer: (height = '15px') => ({ commands }) => {
         return commands.insertContent({
           type: this.name,
           attrs: { height },
