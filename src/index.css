@@ -228,6 +228,8 @@ All colors MUST be HSL.
 .spacer-block {
   display: block;
   width: 100%;
+    margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Responsivo - reduz altura em mobile */
