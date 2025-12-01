@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
-import { User } from 'lucide-react';
+import { Building2, User } from 'lucide-react';
 import { useTenant } from '@/hooks/useTenant';
 
 interface AuthorCardProps {
@@ -14,10 +14,17 @@ interface AuthorCardProps {
 export const AuthorCard = ({ author }: AuthorCardProps) => {
   const { tenant } = useTenant();
   
-  // Traduzir "Administrador do Sistema" para o nome do tenant
-  const displayName = author.nome === 'Administrador do Sistema'
+  const isSystemAdmin = author.nome === 'Administrador do Sistema';
+  
+  // Respeita o tenant atual - Medcos mostra "Medcos", RBE mostra "Rede Bem Estar"
+  const displayName = isSystemAdmin
     ? (tenant?.name || 'Alô Psi')
     : author.nome;
+  
+  // Usa logo do tenant atual - Medcos mostra logo Medcos, RBE mostra logo RBE
+  const displayPhotoUrl = isSystemAdmin
+    ? tenant?.logo_url
+    : author.foto_perfil_url;
   
   const initials = displayName
     .split(' ')
@@ -30,9 +37,19 @@ export const AuthorCard = ({ author }: AuthorCardProps) => {
     <Card className="p-6 my-8 bg-muted/50">
       <div className="flex items-start gap-4">
         <Avatar className="h-16 w-16 border-2 border-primary/20">
-          <AvatarImage src={author.foto_perfil_url || ''} alt={displayName} />
+          <AvatarImage 
+            src={displayPhotoUrl || ''} 
+            alt={displayName}
+            className={isSystemAdmin ? "object-contain p-2" : ""}
+          />
           <AvatarFallback className="bg-primary/10 text-primary">
-            {author.foto_perfil_url ? <User className="h-8 w-8" /> : initials}
+            {isSystemAdmin ? (
+              <Building2 className="h-8 w-8" />
+            ) : displayPhotoUrl ? (
+              <User className="h-8 w-8" />
+            ) : (
+              initials
+            )}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1">

@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User } from 'lucide-react';
+import { Building2, User } from 'lucide-react';
 import { useTenant } from '@/hooks/useTenant';
 
 interface AuthorBadgeProps {
@@ -11,10 +11,17 @@ interface AuthorBadgeProps {
 export const AuthorBadge = ({ name, photoUrl, className = '' }: AuthorBadgeProps) => {
   const { tenant } = useTenant();
   
-  // Traduzir "Administrador do Sistema" para o nome do tenant
-  const displayName = name === 'Administrador do Sistema' 
+  const isSystemAdmin = name === 'Administrador do Sistema';
+  
+  // Respeita o tenant atual - Medcos mostra "Medcos", RBE mostra "Rede Bem Estar"
+  const displayName = isSystemAdmin 
     ? (tenant?.name || 'Alô Psi')
     : name;
+  
+  // Usa logo do tenant atual - Medcos mostra logo Medcos, RBE mostra logo RBE
+  const displayPhotoUrl = isSystemAdmin 
+    ? tenant?.logo_url 
+    : photoUrl;
   
   const initials = displayName
     .split(' ')
@@ -26,9 +33,19 @@ export const AuthorBadge = ({ name, photoUrl, className = '' }: AuthorBadgeProps
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <Avatar className="h-8 w-8">
-        <AvatarImage src={photoUrl || undefined} alt={displayName} />
+        <AvatarImage 
+          src={displayPhotoUrl || undefined} 
+          alt={displayName}
+          className={isSystemAdmin ? "object-contain p-1" : ""}
+        />
         <AvatarFallback>
-          {photoUrl ? <User className="h-4 w-4" /> : initials}
+          {isSystemAdmin ? (
+            <Building2 className="h-4 w-4" />
+          ) : displayPhotoUrl ? (
+            <User className="h-4 w-4" />
+          ) : (
+            initials
+          )}
         </AvatarFallback>
       </Avatar>
       <span className="font-medium">{displayName}</span>
