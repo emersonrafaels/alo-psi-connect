@@ -26,7 +26,17 @@ const BlogEditor = () => {
               featured_image_url: post.featured_image_url,
               status: post.status === 'archived' ? 'draft' : post.status,
               read_time_minutes: post.read_time_minutes,
-              tags: post.tags
+              tags: post.tags,
+              tenant_id: post.tenant?.id,
+              author_id: post.author_id,
+              display_author_id: post.display_author_id,
+              custom_author_name: post.custom_author_name,
+              custom_author_url: post.custom_author_url,
+              allow_comments: post.allow_comments,
+              allow_ratings: post.allow_ratings,
+              is_featured: post.is_featured,
+              featured_order: post.featured_order,
+              editorial_badge: post.editorial_badge
             }}
           />
         ) : id ? (

@@ -67,6 +67,7 @@ interface BlogPostEditorProps {
     status: 'draft' | 'published';
     read_time_minutes?: number;
     tags?: Array<{ id: string; name: string; slug: string }>;
+    tenant_id?: string;
     allow_comments?: boolean;
     allow_ratings?: boolean;
     comments_count?: number;
@@ -97,7 +98,7 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const [slugExists, setSlugExists] = useState(false);
   const [checkingSlug, setCheckingSlug] = useState(false);
   const [userStartedEditing, setUserStartedEditing] = useState(false);
-  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
+  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(post?.tenant_id || null);
   const [availableTenants, setAvailableTenants] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const [focusModeOpen, setFocusModeOpen] = useState(false);
   
