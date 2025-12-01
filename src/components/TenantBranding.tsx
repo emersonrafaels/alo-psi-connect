@@ -1,14 +1,20 @@
 import { useTenant } from '@/hooks/useTenant';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Link } from 'react-router-dom';
-import { buildTenantPath } from '@/utils/tenantHelpers';
+import { Link, useLocation } from 'react-router-dom';
+import { buildTenantPath, getTenantSlugFromPath } from '@/utils/tenantHelpers';
 import { useState } from 'react';
 
 export const TenantBranding = () => {
   const { tenant, loading } = useTenant();
+  const location = useLocation();
   const [imageError, setImageError] = useState(false);
 
-  if (loading) {
+  // Verificar se o tenant no estado é consistente com a URL
+  const urlTenantSlug = getTenantSlugFromPath(location.pathname);
+  const isConsistent = tenant && tenant.slug === urlTenantSlug;
+
+  // Mostrar skeleton se loading OU se estado inconsistente com URL
+  if (loading || !isConsistent) {
     return <Skeleton className="h-10 w-40" />;
   }
 
