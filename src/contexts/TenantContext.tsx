@@ -409,8 +409,13 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Limpar cache do tenant anterior se houver mudança
     const oldTenantSlug = localStorage.getItem('current_tenant_slug');
     if (oldTenantSlug && oldTenantSlug !== currentTenantSlug) {
-      console.log('[TenantContext] Clearing cache for old tenant:', oldTenantSlug);
+      console.log('[TenantContext] Tenant changed from', oldTenantSlug, 'to', currentTenantSlug);
+      console.log('[TenantContext] Clearing old tenant state immediately');
       localStorage.removeItem(`tenant_${oldTenantSlug}_cache`);
+      
+      // CRÍTICO: Limpar tenant e forçar loading ANTES do fetch para evitar flash de tenant incorreto
+      setTenant(null);
+      setLoading(true);
     }
     localStorage.setItem('current_tenant_slug', currentTenantSlug);
     
