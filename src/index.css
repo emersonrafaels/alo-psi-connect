@@ -235,10 +235,10 @@ All colors MUST be HSL.
   .spacer-block {
     height: calc(attr(data-height number, 60) * 0.6px) !important;
   }
-  
-  .spacer-block[data-height="30px"] { height: 18px !important; }
-  .spacer-block[data-height="60px"] { height: 36px !important; }
-  .spacer-block[data-height="100px"] { height: 60px !important; }
+
+  .spacer-block[data-height="5px"] { height: 5px !important; }
+  .spacer-block[data-height="10px"] { height: 10px !important; }
+  .spacer-block[data-height="15px"] { height: 15px !important; }
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
