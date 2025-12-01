@@ -19,6 +19,7 @@ const corsHeaders = {
 
 interface PasswordResetRequest {
   email: string;
+  tenantId?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -30,7 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log("Password reset request received");
     
-    const { email }: PasswordResetRequest = await req.json();
+    const { email, tenantId }: PasswordResetRequest = await req.json();
     
     if (!email) {
       return new Response(
@@ -41,6 +42,38 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
+
+    // Buscar dados do tenant
+    let tenantData = null;
+    if (tenantId) {
+      const { data: tenant, error: tenantError } = await supabase
+        .from('tenants')
+        .select('id, name, slug, primary_color, logo_url, admin_email, hero_subtitle')
+        .eq('id', tenantId)
+        .single();
+      
+      if (!tenantError && tenant) {
+        tenantData = tenant;
+      }
+    }
+    
+    // Fallback para Rede Bem Estar se não houver tenant
+    if (!tenantData) {
+      const { data: defaultTenant } = await supabase
+        .from('tenants')
+        .select('id, name, slug, primary_color, logo_url, admin_email, hero_subtitle')
+        .eq('slug', 'alopsi')
+        .single();
+      
+      tenantData = defaultTenant;
+    }
+
+    const tenantName = tenantData?.name || 'Alô, Psi';
+    const tenantSlug = tenantData?.slug || 'alopsi';
+    const tenantColor = tenantData?.primary_color || '#1e40af';
+    const tenantLogo = tenantData?.logo_url;
+    const tenantSubtitle = tenantData?.hero_subtitle || 'Conectando você ao cuidado mental';
+    const adminEmail = tenantData?.admin_email || 'noreply@redebemestar.com.br';
 
     // Verificar se o usuário existe
     const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
@@ -81,15 +114,18 @@ const handler = async (req: Request): Promise<Response> => {
       throw tokenError;
     }
 
-    // Criar link de recuperação
+    // Criar link de recuperação com prefixo do tenant
     const baseUrl = Deno.env.get("APP_BASE_URL") || "https://alopsi.com.br";
-    const resetLink = `${baseUrl}/auth?reset=true&token=${token}`;
+    const resetPath = tenantSlug === 'alopsi' 
+      ? '/auth'
+      : `/${tenantSlug}/auth`;
+    const resetLink = `${baseUrl}${resetPath}?reset=true&token=${token}`;
 
-    // Enviar email com template personalizado
+    // Enviar email com template personalizado e dinâmico por tenant
     const emailResponse = await resend.emails.send({
-      from: "Alô, Psi <noreply@redebemestar.com.br>",
+      from: `${tenantName} <${adminEmail}>`,
       to: [email],
-      subject: "Recuperação de senha - Alô, Psi",
+      subject: `Recuperação de senha - ${tenantName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -102,17 +138,17 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(30, 64, 175, 0.1);">
               
               <!-- Header -->
-              <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 40px 20px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Alô, Psi</h1>
-                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Conectando você ao cuidado mental</p>
+              <div style="background: linear-gradient(135deg, ${tenantColor} 0%, ${tenantColor}dd 100%); padding: 40px 20px; text-align: center;">
+                ${tenantLogo ? `<img src="${tenantLogo}" alt="${tenantName}" style="max-width: 200px; height: auto; margin-bottom: 15px;" />` : `<h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">${tenantName}</h1>`}
+                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">${tenantSubtitle}</p>
               </div>
               
               <!-- Content -->
               <div style="padding: 40px 20px;">
-                <h2 style="color: #1e40af; margin: 0 0 20px 0; font-size: 24px;">Recuperação de senha</h2>
+                <h2 style="color: ${tenantColor}; margin: 0 0 20px 0; font-size: 24px;">Recuperação de senha</h2>
                 
                 <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">
-                  Olá! Recebemos uma solicitação para redefinir a senha da sua conta no Alô, Psi.
+                  Olá! Recebemos uma solicitação para redefinir a senha da sua conta no ${tenantName}.
                 </p>
                 
                 <p style="margin: 0 0 30px 0; font-size: 16px; color: #4b5563;">
@@ -122,7 +158,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <!-- CTA Button -->
                 <div style="text-align: center; margin: 30px 0;">
                   <a href="${resetLink}" 
-                     style="display: inline-block; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);">
+                     style="display: inline-block; background: linear-gradient(135deg, ${tenantColor} 0%, ${tenantColor}dd 100%); color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px ${tenantColor}33;">
                     Redefinir senha
                   </a>
                 </div>
@@ -131,7 +167,7 @@ const handler = async (req: Request): Promise<Response> => {
                   Se o botão não funcionar, copie e cole este link no seu navegador:
                 </p>
                 
-                <div style="background-color: #f1f5f9; padding: 15px; border-radius: 6px; border-left: 4px solid #1e40af; margin: 20px 0;">
+                <div style="background-color: #f1f5f9; padding: 15px; border-radius: 6px; border-left: 4px solid ${tenantColor}; margin: 20px 0;">
                   <p style="margin: 0; font-size: 14px; color: #4b5563; word-break: break-all;">
                     ${resetLink}
                   </p>
@@ -151,7 +187,7 @@ const handler = async (req: Request): Promise<Response> => {
               <!-- Footer -->
               <div style="background-color: #f8fafc; padding: 30px 20px; text-align: center; border-top: 1px solid #e2e8f0;">
                 <p style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280;">
-                  Enviado com 💙 pela equipe do <strong>Alô, Psi</strong>
+                  Enviado com 💙 pela equipe ${tenantName === 'Medcos' ? 'da' : 'do'} <strong>${tenantName}</strong>
                 </p>
                 <p style="margin: 0; font-size: 12px; color: #9ca3af;">
                   Este é um email automático, não responda esta mensagem.

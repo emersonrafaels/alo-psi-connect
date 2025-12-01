@@ -153,7 +153,7 @@ const Auth = () => {
                   onClick={async () => {
                     try {
                       await supabase.functions.invoke('send-password-reset', {
-                        body: { email }
+                        body: { email, tenantId: tenant?.id }
                       });
                       toast({
                         title: "Email enviado!",
@@ -396,7 +396,7 @@ const Auth = () => {
                         setLoading(true);
                         
                         const { data, error } = await supabase.functions.invoke('send-password-reset', {
-                          body: { email }
+                          body: { email, tenantId: tenant?.id }
                         });
 
                         if (error) throw error;

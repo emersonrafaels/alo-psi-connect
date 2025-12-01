@@ -50,7 +50,7 @@ export const ExistingAccountModal: React.FC<ExistingAccountModalProps> = ({
       setSendingReset(true);
       
       const { data, error } = await supabase.functions.invoke('send-password-reset', {
-        body: { email }
+        body: { email, tenantId: tenant?.id }
       });
 
       if (error) throw error;

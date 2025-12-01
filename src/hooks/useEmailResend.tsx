@@ -47,11 +47,11 @@ export const useEmailResend = () => {
     }
   };
 
-  const resendPasswordReset = async (email: string) => {
+  const resendPasswordReset = async (email: string, tenantId?: string) => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-password-reset', {
-        body: { email }
+        body: { email, tenantId }
       });
 
       if (error) {
