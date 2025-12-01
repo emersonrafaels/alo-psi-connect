@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Calendar, Clock, Eye, User } from 'lucide-react';
@@ -8,6 +8,7 @@ import { BlogPost } from '@/hooks/useBlogPosts';
 import { highlightText } from '@/utils/highlightHelpers';
 import { extractTextFromHtml } from '@/utils/htmlSanitizer';
 import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath, getTenantSlugFromPath } from '@/utils/tenantHelpers';
 
 interface PostCardProps {
   post: BlogPost;
@@ -16,6 +17,8 @@ interface PostCardProps {
 
 export const PostCard = ({ post, searchTerm }: PostCardProps) => {
   const { tenant } = useTenant();
+  const location = useLocation();
+  const tenantSlug = getTenantSlugFromPath(location.pathname);
   
   const isSystemAdmin = post.author?.nome === 'Administrador do Sistema';
   const displayAuthorName = isSystemAdmin ? (tenant?.name || 'Alô Psi') : post.author?.nome;
@@ -34,7 +37,7 @@ export const PostCard = ({ post, searchTerm }: PostCardProps) => {
   const preview = getPlainTextPreview();
 
   return (
-    <Link to={`/blog/${post.slug}`}>
+    <Link to={buildTenantPath(tenantSlug, `/blog/${post.slug}`)}>
       <Card className="overflow-hidden transition-all hover:shadow-lg h-full">
         {post.featured_image_url && (
           <div className="aspect-video overflow-hidden">
