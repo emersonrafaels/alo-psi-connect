@@ -148,7 +148,7 @@ export default function GroupSessions() {
         <SessionsFAQ />
         <SessionsCTASection />
         
-        {/* Aviso de Saúde Mental */}
+        {/* Aviso de Saúde Emocional */}
         <div className="container mx-auto px-4 py-8">
           <Alert>
             <AlertCircle className="h-4 w-4" />

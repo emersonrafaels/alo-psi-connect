@@ -56,7 +56,7 @@ const WorkWithUs = () => {
     {
       icon: Sparkles,
       title: "Inovação com Propósito",
-      description: "Combinamos tecnologia de ponta com o calor humano, criando uma experiência única de cuidado em saúde mental."
+      description: "Combinamos tecnologia de ponta com o calor humano, criando uma experiência única de cuidado em saúde emocional."
     }
   ]
 
@@ -73,7 +73,7 @@ const WorkWithUs = () => {
               Se Torne um Profissional {platformName}
             </h1>
             <p className="text-xl lg:text-2xl text-muted-foreground mb-4 leading-relaxed">
-              <strong className="text-foreground">Ajude além do rótulo.</strong> Transforme vidas oferecendo cuidado em saúde mental que enxerga a pessoa por completo.
+              <strong className="text-foreground">Ajude além do rótulo.</strong> Transforme vidas oferecendo cuidado em saúde emocional que enxerga a pessoa por completo.
             </p>
             <p className="text-lg text-muted-foreground mb-10 max-w-3xl mx-auto">
               Junte-se a uma comunidade de profissionais que acredita no poder da conexão humana, da escuta ativa e do acolhimento sem julgamentos.
@@ -108,7 +108,7 @@ const WorkWithUs = () => {
         </p>
         <div className="bg-background/80 backdrop-blur-sm p-8 rounded-xl border-2 border-primary/20">
           <p className="text-xl font-medium italic text-gray-800 dark:text-white">
-            "Não somos apenas uma plataforma de saúde mental. Somos um movimento de profissionais comprometidos
+            "Não somos apenas uma plataforma de saúde emocional. Somos um movimento de profissionais comprometidos
             em devolver a dignidade e a esperança para quem mais precisa."
           </p>
         </div>

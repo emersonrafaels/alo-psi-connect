@@ -40,7 +40,7 @@ export const NewsletterCTA = () => {
         </div>
         <h3 className="text-xl font-bold mb-2">Receba conteúdo exclusivo</h3>
         <p className="text-muted-foreground mb-6">
-          Inscreva-se na nossa newsletter e receba artigos sobre saúde mental diretamente no seu e-mail.
+          Inscreva-se na nossa newsletter e receba artigos sobre saúde emocional diretamente no seu e-mail.
         </p>
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input

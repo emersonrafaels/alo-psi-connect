@@ -794,7 +794,7 @@ const Professionals = () => {
               Nossos Profissionais
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed">
-              Conheça nossa equipe de profissionais especializados em saúde mental, 
+              Conheça nossa equipe de profissionais especializados em saúde emocional, 
               prontos para oferecer o melhor atendimento para você.
             </p>
           </div>

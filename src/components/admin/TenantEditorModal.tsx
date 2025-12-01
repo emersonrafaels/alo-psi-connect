@@ -362,7 +362,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         },
         meta_config: {
           title: formData.meta_title || formData.name,
-          description: formData.meta_description || `${formData.name} - Plataforma de Saúde Mental`,
+          description: formData.meta_description || `${formData.name} - Plataforma de Saúde Emocional`,
           favicon: formData.meta_favicon || "/favicon.ico"
         },
         favicon_url: formData.favicon_url || null,

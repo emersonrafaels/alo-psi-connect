@@ -91,7 +91,7 @@ const Index = () => {
                 {tenant?.theme_config?.hero_title || 'Atendimento especializado, online e acessível'}
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
-                {tenant?.theme_config?.hero_subtitle || 'Encontre profissionais especializados em saúde mental com atendimento humanizado e de qualidade.'}
+                {tenant?.theme_config?.hero_subtitle || 'Encontre profissionais especializados em saúde emocional com atendimento humanizado e de qualidade.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button variant="default" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
@@ -191,7 +191,7 @@ const Index = () => {
                   UM A CADA TRÊS ESTUDANTES:
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Tiveram ao menos um problema de saúde mental nos últimos 12 meses.
+                  Tiveram ao menos um problema de saúde emocional nos últimos 12 meses.
                 </p>
               </div>
             </div>
@@ -212,7 +212,7 @@ const Index = () => {
     <div className="text-center mb-12">
       <h2 className="text-4xl font-bold mb-4">Conheça Mais Sobre Nosso Trabalho</h2>
       <p className="text-xl max-w-2xl mx-auto">
-        Descubra como estamos transformando o cuidado da saúde mental para estudantes universitários
+        Descubra como estamos transformando o cuidado da saúde emocional para estudantes universitários
       </p>
     </div>
 
@@ -269,11 +269,11 @@ const Index = () => {
       <div className="relative">
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-lg">
           <div className="aspect-video rounded-xl overflow-hidden">
-            <iframe className="w-full h-full" src="https://www.youtube.com/embed/_5JzohY3G58" title="Vídeo sobre Saúde Mental e Medicina" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
+            <iframe className="w-full h-full" src="https://www.youtube.com/embed/_5JzohY3G58" title="Vídeo sobre Saúde Emocional e Medicina" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
           </div>
           <div className="mt-4 text-center">
             <p className="font-semibold">
-              Saúde Mental na Medicina: Uma Perspectiva Profissional
+              Saúde Emocional na Medicina: Uma Perspectiva Profissional
             </p>
             <p className="text-sm mt-2 text-slate-600">
               Entenda a importância do cuidado psicológico na formação e vida dos profissionais de saúde

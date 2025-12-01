@@ -214,7 +214,7 @@ export default function BlogPost() {
       if (existingSchema) {
         existingSchema.remove();
       }
-      const defaultTitle = tenant?.meta_config?.title || 'Rede Bem Estar - Plataforma de Saúde Mental';
+      const defaultTitle = tenant?.meta_config?.title || 'Rede Bem Estar - Plataforma de Saúde Emocional';
       document.title = defaultTitle;
     };
   }, [post, tenant]);

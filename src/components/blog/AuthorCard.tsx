@@ -56,7 +56,7 @@ export const AuthorCard = ({ author }: AuthorCardProps) => {
           <h3 className="text-lg font-semibold mb-1">Sobre o autor</h3>
           <p className="text-base font-medium text-foreground mb-2">{displayName}</p>
           <p className="text-sm text-muted-foreground">
-            Colaborador do blog, compartilhando conhecimento e experiências na área de saúde mental.
+            Colaborador do blog, compartilhando conhecimento e experiências na área de saúde emocional.
           </p>
         </div>
       </div>
