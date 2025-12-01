@@ -127,7 +127,7 @@ export const AuthorSpotlight = ({ selectedAuthor, onAuthorSelect }: AuthorSpotli
       </CardHeader>
       <CardContent className="space-y-4">
         {topAuthors.map((author, index) => {
-          const isSystemAdmin = author.author_name === 'Administrador do Sistema';
+          const isSystemAdmin = !author.author_name || author.author_name === 'Administrador do Sistema';
           const displayName = isSystemAdmin ? (tenant?.name || 'Alô Psi') : author.author_name;
           const displayPhoto = isSystemAdmin ? tenant?.logo_url : author.author_photo;
           const isSelected = selectedAuthor !== null && selectedAuthor === author.author_id;

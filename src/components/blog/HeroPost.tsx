@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Calendar, Clock, Eye } from "lucide-react";
 import { format } from "date-fns";
@@ -6,6 +6,7 @@ import { ptBR } from "date-fns/locale";
 import { BlogPost } from "@/hooks/useBlogPosts";
 import { extractTextFromHtml } from "@/utils/htmlSanitizer";
 import { useTenant } from "@/hooks/useTenant";
+import { buildTenantPath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 
 interface HeroPostProps {
   post: BlogPost;
@@ -13,6 +14,8 @@ interface HeroPostProps {
 
 export const HeroPost = ({ post }: HeroPostProps) => {
   const { tenant } = useTenant();
+  const location = useLocation();
+  const tenantSlug = getTenantSlugFromPath(location.pathname);
   
   const isSystemAdmin = post.author?.nome === 'Administrador do Sistema';
   const displayAuthorName = isSystemAdmin ? (tenant?.name || 'Alô Psi') : post.author?.nome;
@@ -31,7 +34,7 @@ export const HeroPost = ({ post }: HeroPostProps) => {
 
   return (
     <Link 
-      to={`/blog/${post.slug}`} 
+      to={buildTenantPath(tenantSlug, `/blog/${post.slug}`)} 
       className="block mb-14 group"
     >
       <div className="relative overflow-hidden rounded-2xl shadow-md hover:shadow-lg transition-all duration-500">

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Calendar, Clock, Eye } from "lucide-react";
@@ -8,6 +8,7 @@ import { BlogPost } from "@/hooks/useBlogPosts";
 import { extractTextFromHtml } from "@/utils/htmlSanitizer";
 import { cn } from "@/lib/utils";
 import { useTenant } from "@/hooks/useTenant";
+import { buildTenantPath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 
 interface PostCardVariantProps {
   post: BlogPost;
@@ -17,6 +18,8 @@ interface PostCardVariantProps {
 
 export const PostCardVariant = ({ post, variant = 'default', className }: PostCardVariantProps) => {
   const { tenant } = useTenant();
+  const location = useLocation();
+  const tenantSlug = getTenantSlugFromPath(location.pathname);
   
   const isSystemAdmin = post.author?.nome === 'Administrador do Sistema';
   const displayAuthorName = isSystemAdmin ? (tenant?.name || 'Alô Psi') : post.author?.nome;
@@ -39,7 +42,7 @@ export const PostCardVariant = ({ post, variant = 'default', className }: PostCa
   // Variant: Large (2 columns)
   if (variant === 'large') {
     return (
-      <Link to={`/blog/${post.slug}`} className={cn("block group", className)}>
+      <Link to={buildTenantPath(tenantSlug, `/blog/${post.slug}`)} className={cn("block group", className)}>
         <Card className="overflow-hidden h-full hover:shadow-elegant transition-all duration-300 hover:-translate-y-1">
           {post.featured_image_url && (
             <div className="relative h-64 overflow-hidden">
@@ -100,7 +103,7 @@ export const PostCardVariant = ({ post, variant = 'default', className }: PostCa
   // Variant: Horizontal
   if (variant === 'horizontal') {
     return (
-      <Link to={`/blog/${post.slug}`} className={cn("block group", className)}>
+      <Link to={buildTenantPath(tenantSlug, `/blog/${post.slug}`)} className={cn("block group", className)}>
         <Card className="overflow-hidden h-full hover:shadow-lg transition-all duration-300">
           <div className="flex flex-col sm:flex-row h-full">
             {post.featured_image_url && (
@@ -153,7 +156,7 @@ export const PostCardVariant = ({ post, variant = 'default', className }: PostCa
   // Variant: Minimal (no image)
   if (variant === 'minimal') {
     return (
-      <Link to={`/blog/${post.slug}`} className={cn("block group", className)}>
+      <Link to={buildTenantPath(tenantSlug, `/blog/${post.slug}`)} className={cn("block group", className)}>
         <Card className="h-full hover:shadow-lg transition-all duration-300 hover:border-primary/50">
           <CardContent className="p-6">
             {post.tags && post.tags.length > 0 && (
@@ -180,7 +183,7 @@ export const PostCardVariant = ({ post, variant = 'default', className }: PostCa
   // Variant: Avatar (author spotlight)
   if (variant === 'avatar') {
     return (
-      <Link to={`/blog/${post.slug}`} className={cn("block group", className)}>
+      <Link to={buildTenantPath(tenantSlug, `/blog/${post.slug}`)} className={cn("block group", className)}>
         <Card className="overflow-hidden h-full hover:shadow-lg transition-all duration-300">
           {post.featured_image_url && (
             <div className="relative h-48 overflow-hidden">
@@ -232,7 +235,7 @@ export const PostCardVariant = ({ post, variant = 'default', className }: PostCa
 
   // Default variant
   return (
-    <Link to={`/blog/${post.slug}`} className={cn("block group", className)}>
+    <Link to={buildTenantPath(tenantSlug, `/blog/${post.slug}`)} className={cn("block group", className)}>
       <Card className="overflow-hidden h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
         {post.featured_image_url && (
           <div className="relative h-48 overflow-hidden">

@@ -1,16 +1,20 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flame } from "lucide-react";
 import { BlogPost } from "@/hooks/useBlogPosts";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { buildTenantPath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 
 interface PopularPostsProps {
   posts: BlogPost[];
 }
 
 export const PopularPosts = ({ posts }: PopularPostsProps) => {
+  const location = useLocation();
+  const tenantSlug = getTenantSlugFromPath(location.pathname);
+  
   if (posts.length === 0) return null;
 
   // Ordenar por views (maior primeiro)
@@ -28,7 +32,7 @@ export const PopularPosts = ({ posts }: PopularPostsProps) => {
         {sortedPosts.map((post, index) => (
           <Link 
             key={post.id} 
-            to={`/blog/${post.slug}`}
+            to={buildTenantPath(tenantSlug, `/blog/${post.slug}`)}
             className={cn(
               "flex gap-3 hover:bg-accent/50 p-2 -mx-2 rounded-lg transition-all duration-200 group",
               index === 0 && "bg-primary/5 border border-primary/20"
