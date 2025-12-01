@@ -3,7 +3,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuthorUsers } from '@/hooks/useAuthorUsers';
+import { useAllUsers } from '@/hooks/useAllUsers';
 import { User, ExternalLink } from 'lucide-react';
 import {
   Command,
@@ -47,7 +47,7 @@ export const AuthorSelector = ({
 }: AuthorSelectorProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [open, setOpen] = useState(false);
-  const { data: users = [], isLoading } = useAuthorUsers(searchTerm);
+  const { data: users = [], isLoading } = useAllUsers(searchTerm);
 
   const selectedUser = users.find(u => u.user_id === displayAuthorId);
 
@@ -73,7 +73,7 @@ export const AuthorSelector = ({
               Selecionar Usuário
             </Label>
             <p className="text-sm text-muted-foreground mb-2">
-              Escolha outro autor do sistema
+              Escolha um usuário do sistema
             </p>
             {type === 'user' && (
               <Popover open={open} onOpenChange={setOpen}>
