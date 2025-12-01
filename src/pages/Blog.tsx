@@ -36,7 +36,7 @@ const Blog = () => {
   // SEO: Set meta tags for blog page
   useEffect(() => {
     if (tenant) {
-      document.title = `Blog | ${tenant.name} - Saúde Mental`;
+      document.title = `Blog | ${tenant.name} - Saúde Emocional`;
       
       const metaDescription = document.querySelector('meta[name="description"]');
       if (metaDescription) {
@@ -83,7 +83,7 @@ const Blog = () => {
       <section className="bg-[#5e95e8] py-16">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold text-accent-foreground mb-4">News & Blog</h1>
-          <p className="text-accent-foreground/80">Artigos, dicas e reflexões sobre saúde mental</p>
+          <p className="text-accent-foreground/80">Artigos, dicas e reflexões sobre saúde emocional</p>
         </div>
       </section>
 

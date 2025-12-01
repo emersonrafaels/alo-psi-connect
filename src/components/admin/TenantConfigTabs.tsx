@@ -454,13 +454,13 @@ export const SEOConfigTab = ({ formData, setFormData }: TenantConfigTabsProps) =
         <LabelWithTooltip 
           htmlFor="meta_keywords" 
           label="Keywords (separadas por vírgula)" 
-          tooltip="Palavras-chave para SEO (meta tag). Separe por vírgula. Ex: psicologia, terapia online, saúde mental"
+          tooltip="Palavras-chave para SEO (meta tag). Separe por vírgula. Ex: psicologia, terapia online, saúde emocional"
         />
       <Textarea
         id="meta_keywords"
         value={formData.meta_keywords || ""}
         onChange={(e) => setFormData({ ...formData, meta_keywords: e.target.value })}
-          placeholder="psicologia, terapia online, saúde mental"
+          placeholder="psicologia, terapia online, saúde emocional"
           rows={2}
           />
       </div>

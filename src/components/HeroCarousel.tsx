@@ -87,7 +87,7 @@ export const HeroCarousel = () => {
         ) : (
           <img 
             src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png" 
-            alt="Profissional de saúde mental oferecendo cuidado e acolhimento" 
+            alt="Profissional de saúde emocional oferecendo cuidado e acolhimento"
             className="w-full h-80 object-cover rounded-lg" 
             loading="eager"
             onLoad={() => handleImageLoad("https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png")}
@@ -106,7 +106,7 @@ export const HeroCarousel = () => {
         {!isImageLoaded && <Skeleton className="absolute inset-0 w-full h-80 rounded-lg" />}
         <img 
           src={imageSrc} 
-          alt="Profissional de saúde mental oferecendo cuidado e acolhimento" 
+          alt="Profissional de saúde emocional oferecendo cuidado e acolhimento"
           className={`w-full h-80 object-cover rounded-lg transition-opacity duration-300 ${
             isImageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
@@ -140,7 +140,7 @@ export const HeroCarousel = () => {
                   {!isImageLoaded && <Skeleton className="absolute inset-0 w-full h-80 rounded-lg" />}
                   <img 
                     src={image} 
-                    alt={`Profissional de saúde mental ${index + 1}`} 
+                    alt={`Profissional de saúde emocional ${index + 1}`}
                     className={`w-full h-80 object-cover rounded-lg transition-opacity duration-300 ${
                       isImageLoaded ? 'opacity-100' : 'opacity-0'
                     }`}

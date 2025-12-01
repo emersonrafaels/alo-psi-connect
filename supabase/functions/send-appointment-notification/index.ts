@@ -377,7 +377,7 @@ function createPatientEmail(agendamento: any, dataFormatada: string, horarioForm
           <!-- Footer -->
           <div style="background-color: #f8fafc; padding: 30px 20px; text-align: center; border-top: 1px solid #e2e8f0;">
             <p style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280;">
-              Obrigado por escolher a <strong>${tenantName}</strong> para cuidar da sua saúde mental! 💙
+              Obrigado por escolher a <strong>${tenantName}</strong> para cuidar da sua saúde emocional! 💙
             </p>
             <p style="margin: 0; font-size: 12px; color: #9ca3af;">
               Data: ${new Date().toLocaleString('pt-BR')}

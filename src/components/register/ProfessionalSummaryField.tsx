@@ -17,7 +17,7 @@ const EXAMPLES = [
     text: "Psicólogo clínico com 8 anos de experiência em Terapia Cognitivo-Comportamental. Especializado em tratamento de ansiedade, depressão e transtornos do humor. Atendimento acolhedor e baseado em evidências científicas, focado em resultados práticos e duradouros."
   },
   {
-    title: "Psiquiatra - Saúde Mental",
+    title: "Psiquiatra - Saúde Emocional",
     text: "Médico psiquiatra formado pela USP, com residência em Psiquiatria no HC-FMUSP. Atuo com abordagem integrativa, combinando tratamento medicamentoso e psicoterapia de apoio. Experiência em transtornos de ansiedade, depressão e transtorno bipolar."
   },
   {

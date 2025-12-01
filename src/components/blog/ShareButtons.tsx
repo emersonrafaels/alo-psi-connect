@@ -26,10 +26,10 @@ export const ShareButtons = ({ url, title, description }: ShareButtonsProps) => 
   
   const formatShareMessage = (platform: 'whatsapp' | 'linkedin' | 'email' | 'twitter') => {
     const baseMessage = {
-      whatsapp: `📚 *${title}*\n\n${description ? `${description}\n\n` : ''}Leia o artigo completo:\n${url}\n\n💡 Compartilhe conhecimento sobre saúde mental!`,
-      linkedin: `${title}\n\n${description || ''}\n\nLeia mais em: ${url}\n\n#SaúdeMental #BemEstar #Psicologia #AlôPsi`,
-      email: `Olá!\n\nEncontrei este artigo interessante que pode te interessar:\n\n${title}\n\n${description ? `${description}\n\n` : ''}Leia o artigo completo em:\n${url}\n\n--\nCompartilhado via Alô, Psi! - Sua plataforma de saúde mental`,
-      twitter: `📖 ${title}\n\n${url}\n\n#SaúdeMental #BemEstar`
+      whatsapp: `📚 *${title}*\n\n${description ? `${description}\n\n` : ''}Leia o artigo completo:\n${url}\n\n💡 Compartilhe conhecimento sobre saúde emocional!`,
+      linkedin: `${title}\n\n${description || ''}\n\nLeia mais em: ${url}\n\n#SaúdeEmocional #BemEstar #Psicologia #AlôPsi`,
+      email: `Olá!\n\nEncontrei este artigo interessante que pode te interessar:\n\n${title}\n\n${description ? `${description}\n\n` : ''}Leia o artigo completo em:\n${url}\n\n--\nCompartilhado via Alô, Psi! - Sua plataforma de saúde emocional`,
+      twitter: `📖 ${title}\n\n${url}\n\n#SaúdeEmocional #BemEstar`
     };
     return encodeURIComponent(baseMessage[platform]);
   };

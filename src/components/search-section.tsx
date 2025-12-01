@@ -94,7 +94,7 @@ const servicos = [
   { value: "reabilitacao-neuropsicologica", label: "Reabilitação Neuropsicológica" },
   { value: "relacionamentos-afetivos", label: "Relacionamentos Afetivos" },
   { value: "saude-trabalhador", label: "Saúde do Trabalhador" },
-  { value: "saude-mental", label: "Saúde Mental" },
+  { value: "saude-emocional", label: "Saúde Emocional" },
   { value: "sexologia", label: "Sexologia" },
   { value: "sexualidade", label: "Sexualidade" },
   { value: "sindrome-burnout", label: "Síndrome de Burnout" },
@@ -255,7 +255,7 @@ const SearchSection = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-2 text-foreground">
-            Encontre o melhor profissional para cuidar da sua saúde mental
+            Encontre o melhor profissional para cuidar da sua saúde emocional
           </h2>
           
           <div className="bg-card rounded-lg shadow-lg p-6 mt-8">

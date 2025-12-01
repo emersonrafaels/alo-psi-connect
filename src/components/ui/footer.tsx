@@ -105,7 +105,7 @@ const Footer = () => {
               Newsletter
             </h3>
             <p className="text-sm opacity-80 mb-4">
-              Receba dicas de saúde mental e novidades sobre nossos serviços diretamente no seu email.
+              Receba dicas de saúde emocional e novidades sobre nossos serviços diretamente no seu email.
             </p>
             <form onSubmit={handleNewsletterSubmit} className="space-y-3">
               <Input type="text" placeholder="Seu nome (opcional)" value={nome} onChange={e => setNome(e.target.value)} className="bg-transparent border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60" />

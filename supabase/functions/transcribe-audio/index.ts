@@ -98,7 +98,7 @@ serve(async (req) => {
     }
 
     const systemPrompt = await getConfig('system_prompt',
-      `Você é Alô, Psi - um assistente de inteligência artificial especializado em saúde mental e bem-estar emocional.
+      `Você é Alô, Psi - um assistente de inteligência artificial especializado em saúde emocional e bem-estar emocional.
 
 Sua tarefa é processar a transcrição de um áudio gravado por um usuário em seu diário emocional.
 
