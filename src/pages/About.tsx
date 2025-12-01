@@ -110,7 +110,7 @@ const About = () => {
             description: "Acesso a psicólogos e psiquiatras especializados no contexto universitário médico."
           }, {
             icon: Video,
-            title: "Atendimento Online ou Presencial",
+            title: "Atendimento Online",
             description: "Flexibilidade para escolher o formato que melhor se adapta à sua rotina."
           }, {
             icon: Heart,
