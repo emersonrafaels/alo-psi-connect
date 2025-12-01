@@ -1,16 +1,23 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Eye } from "lucide-react";
+import { Building2, Calendar, Clock, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BlogPost } from "@/hooks/useBlogPosts";
 import { extractTextFromHtml } from "@/utils/htmlSanitizer";
+import { useTenant } from "@/hooks/useTenant";
 
 interface HeroPostProps {
   post: BlogPost;
 }
 
 export const HeroPost = ({ post }: HeroPostProps) => {
+  const { tenant } = useTenant();
+  
+  const isSystemAdmin = post.author?.nome === 'Administrador do Sistema';
+  const displayAuthorName = isSystemAdmin ? (tenant?.name || 'Alô Psi') : post.author?.nome;
+  const displayAuthorPhoto = isSystemAdmin ? tenant?.logo_url : post.author?.foto_perfil_url;
+  
   const getPlainTextPreview = (): string => {
     if (post.excerpt) {
       return extractTextFromHtml(post.excerpt);
@@ -75,18 +82,22 @@ export const HeroPost = ({ post }: HeroPostProps) => {
             {/* Author */}
             {post.author && (
               <div className="flex items-center gap-2">
-                {post.author.foto_perfil_url ? (
+                {displayAuthorPhoto ? (
                   <img
-                    src={post.author.foto_perfil_url}
-                    alt={post.author.nome}
-                    className="w-8 h-8 rounded-full border border-white/50"
+                    src={displayAuthorPhoto}
+                    alt={displayAuthorName}
+                    className={`w-8 h-8 rounded-full border border-white/50 ${isSystemAdmin ? 'object-contain bg-white p-1' : ''}`}
                   />
+                ) : isSystemAdmin ? (
+                  <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center">
+                    <Building2 className="h-4 w-4 text-white" />
+                  </div>
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center font-semibold">
-                    {post.author.nome.charAt(0).toUpperCase()}
+                    {displayAuthorName?.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span>{post.author.nome}</span>
+                <span>{displayAuthorName}</span>
               </div>
             )}
 

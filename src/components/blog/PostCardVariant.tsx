@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Eye } from "lucide-react";
+import { Building2, Calendar, Clock, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BlogPost } from "@/hooks/useBlogPosts";
 import { extractTextFromHtml } from "@/utils/htmlSanitizer";
 import { cn } from "@/lib/utils";
+import { useTenant } from "@/hooks/useTenant";
 
 interface PostCardVariantProps {
   post: BlogPost;
@@ -15,6 +16,12 @@ interface PostCardVariantProps {
 }
 
 export const PostCardVariant = ({ post, variant = 'default', className }: PostCardVariantProps) => {
+  const { tenant } = useTenant();
+  
+  const isSystemAdmin = post.author?.nome === 'Administrador do Sistema';
+  const displayAuthorName = isSystemAdmin ? (tenant?.name || 'Alô Psi') : post.author?.nome;
+  const displayAuthorPhoto = isSystemAdmin ? tenant?.logo_url : post.author?.foto_perfil_url;
+  
   const getPlainTextPreview = (): string => {
     if (post.excerpt) {
       return extractTextFromHtml(post.excerpt);
@@ -59,18 +66,22 @@ export const PostCardVariant = ({ post, variant = 'default', className }: PostCa
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               {post.author && (
                 <div className="flex items-center gap-2">
-                  {post.author.foto_perfil_url ? (
+                  {displayAuthorPhoto ? (
                     <img 
-                      src={post.author.foto_perfil_url} 
-                      alt={post.author.nome}
-                      className="w-6 h-6 rounded-full"
+                      src={displayAuthorPhoto} 
+                      alt={displayAuthorName}
+                      className={`w-6 h-6 rounded-full ${isSystemAdmin ? 'object-contain bg-white p-0.5' : ''}`}
                     />
+                  ) : isSystemAdmin ? (
+                    <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                      <Building2 className="h-3 w-3" />
+                    </div>
                   ) : (
                     <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">
-                      {post.author.nome.charAt(0).toUpperCase()}
+                      {displayAuthorName?.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span>{post.author.nome}</span>
+                  <span>{displayAuthorName}</span>
                 </div>
               )}
               {post.published_at && (
@@ -155,7 +166,7 @@ export const PostCardVariant = ({ post, variant = 'default', className }: PostCa
             </h3>
             <p className="text-muted-foreground text-sm mb-4 line-clamp-3">{preview}</p>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              {post.author && <span>{post.author.nome}</span>}
+              {post.author && <span>{displayAuthorName}</span>}
               {post.published_at && (
                 <span>{format(new Date(post.published_at), "dd/MM/yyyy")}</span>
               )}
@@ -184,19 +195,23 @@ export const PostCardVariant = ({ post, variant = 'default', className }: PostCa
           <CardContent className="p-6">
             {post.author && (
               <div className="flex items-center gap-3 mb-4">
-                {post.author.foto_perfil_url ? (
+                {displayAuthorPhoto ? (
                   <img 
-                    src={post.author.foto_perfil_url} 
-                    alt={post.author.nome}
-                    className="w-12 h-12 rounded-full border-2 border-primary"
+                    src={displayAuthorPhoto} 
+                    alt={displayAuthorName}
+                    className={`w-12 h-12 rounded-full border-2 border-primary ${isSystemAdmin ? 'object-contain bg-white p-1' : ''}`}
                   />
+                ) : isSystemAdmin ? (
+                  <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center border-2 border-primary">
+                    <Building2 className="h-6 w-6" />
+                  </div>
                 ) : (
                   <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg border-2 border-primary">
-                    {post.author.nome.charAt(0).toUpperCase()}
+                    {displayAuthorName?.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div>
-                  <p className="font-semibold text-sm">{post.author.nome}</p>
+                  <p className="font-semibold text-sm">{displayAuthorName}</p>
                   {post.published_at && (
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(post.published_at), "dd/MM/yyyy")}
@@ -242,7 +257,7 @@ export const PostCardVariant = ({ post, variant = 'default', className }: PostCa
           </h3>
           <p className="text-muted-foreground mb-4 line-clamp-3">{preview}</p>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            {post.author && <span className="font-medium">{post.author.nome}</span>}
+            {post.author && <span className="font-medium">{displayAuthorName}</span>}
             {post.published_at && (
               <span className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
