@@ -525,6 +525,9 @@ export type Database = {
           comments_count: number | null
           content: string
           created_at: string | null
+          custom_author_name: string | null
+          custom_author_url: string | null
+          display_author_id: string | null
           editorial_badge: Database["public"]["Enums"]["editorial_badge"] | null
           excerpt: string | null
           featured_image_url: string | null
@@ -551,6 +554,9 @@ export type Database = {
           comments_count?: number | null
           content: string
           created_at?: string | null
+          custom_author_name?: string | null
+          custom_author_url?: string | null
+          display_author_id?: string | null
           editorial_badge?:
             | Database["public"]["Enums"]["editorial_badge"]
             | null
@@ -579,6 +585,9 @@ export type Database = {
           comments_count?: number | null
           content?: string
           created_at?: string | null
+          custom_author_name?: string | null
+          custom_author_url?: string | null
+          display_author_id?: string | null
           editorial_badge?:
             | Database["public"]["Enums"]["editorial_badge"]
             | null

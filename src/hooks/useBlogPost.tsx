@@ -44,17 +44,41 @@ export const useBlogPost = (slug: string | undefined) => {
       }
 
       // Fetch author separately
-      const { data: authorData } = await supabase
-        .from('profiles')
-        .select('nome, foto_perfil_url, email')
-        .eq('user_id', data.author_id)
-        .single();
+      let author;
+      
+      if (data.custom_author_name) {
+        // Custom author takes priority
+        author = {
+          nome: data.custom_author_name,
+          foto_perfil_url: null,
+          email: '',
+          url: data.custom_author_url
+        };
+      } else if (data.display_author_id) {
+        // Display author (selected user)
+        const { data: authorData } = await supabase
+          .from('profiles')
+          .select('nome, foto_perfil_url, email')
+          .eq('user_id', data.display_author_id)
+          .single();
+        
+        author = authorData || { nome: 'Autor não encontrado', foto_perfil_url: null, email: '' };
+      } else {
+        // Original author (creator)
+        const { data: authorData } = await supabase
+          .from('profiles')
+          .select('nome, foto_perfil_url, email')
+          .eq('user_id', data.author_id)
+          .single();
+        
+        author = authorData || { nome: 'Administrador do Sistema', foto_perfil_url: null, email: '' };
+      }
 
       return {
         ...data,
-        author: authorData || { nome: 'Administrador do Sistema', foto_perfil_url: null, email: '' },
+        author,
         tags: data.tags?.map((t: any) => t.tag).filter(Boolean) || []
-      } as BlogPost & { author: { nome: string; foto_perfil_url: string | null; email: string } };
+      } as BlogPost & { author: { nome: string; foto_perfil_url: string | null; email: string; url?: string | null } };
     },
     enabled: !!slug && !!tenant,
     staleTime: 0,

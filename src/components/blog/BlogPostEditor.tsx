@@ -18,7 +18,7 @@ import { useLocalDraft } from '@/hooks/useLocalDraft';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { FileEdit, Eye, Columns, ExternalLink, Building2, Maximize2 } from 'lucide-react';
+import { FileEdit, Eye, Columns, ExternalLink, Building2, Maximize2, User } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 import { EditorMetrics } from './EditorMetrics';
 import { PostTemplates } from './PostTemplates';
@@ -33,6 +33,7 @@ import { normalizeHtmlForEditor } from '@/utils/htmlHelpers';
 import { useBlogTags } from '@/hooks/useBlogTags';
 import { FocusMode } from './FocusMode';
 import { ResponsivePreview } from './ResponsivePreview';
+import { AuthorSelector } from './AuthorSelector';
 
 const postSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -74,6 +75,10 @@ interface BlogPostEditorProps {
     is_featured?: boolean;
     featured_order?: number;
     editorial_badge?: string;
+    author_id?: string;
+    display_author_id?: string | null;
+    custom_author_name?: string | null;
+    custom_author_url?: string | null;
   };
 }
 
@@ -100,6 +105,13 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
   const [isFeatured, setIsFeatured] = useState(post?.is_featured || false);
   const [featuredOrder, setFeaturedOrder] = useState(post?.featured_order?.toString() || '');
   const [editorialBadge, setEditorialBadge] = useState(post?.editorial_badge || 'none');
+
+  // Author selection fields
+  const [authorType, setAuthorType] = useState<'original' | 'user' | 'custom'>('original');
+  const [displayAuthorId, setDisplayAuthorId] = useState<string | null>(null);
+  const [customAuthorName, setCustomAuthorName] = useState('');
+  const [customAuthorUrl, setCustomAuthorUrl] = useState('');
+  const [originalAuthorName, setOriginalAuthorName] = useState('Autor Original');
 
   // Local draft management
   const {
@@ -151,6 +163,41 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
     
     fetchTenants();
   }, []);
+
+  // Initialize author fields when editing post
+  useEffect(() => {
+    const initializeAuthor = async () => {
+      if (post) {
+        // Fetch original author name
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: authorProfile } = await supabase
+            .from('profiles')
+            .select('nome')
+            .eq('user_id', post.author_id || user.id)
+            .single();
+          
+          if (authorProfile) {
+            setOriginalAuthorName(authorProfile.nome);
+          }
+        }
+
+        // Set author fields based on post data
+        if (post.custom_author_name) {
+          setAuthorType('custom');
+          setCustomAuthorName(post.custom_author_name);
+          setCustomAuthorUrl(post.custom_author_url || '');
+        } else if (post.display_author_id) {
+          setAuthorType('user');
+          setDisplayAuthorId(post.display_author_id);
+        } else {
+          setAuthorType('original');
+        }
+      }
+    };
+
+    initializeAuthor();
+  }, [post]);
 
   // Recuperar rascunho se aceito
   useEffect(() => {
@@ -309,6 +356,9 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
       is_featured: isSuperAuthor ? isFeatured : undefined,
       featured_order: isSuperAuthor && isFeatured && featuredOrder ? parseInt(featuredOrder) : undefined,
       editorial_badge: isSuperAuthor && editorialBadge !== 'none' ? editorialBadge : undefined,
+      display_author_id: authorType === 'user' ? displayAuthorId : null,
+      custom_author_name: authorType === 'custom' ? customAuthorName : null,
+      custom_author_url: authorType === 'custom' ? customAuthorUrl : null,
     } as any;
 
     if (post) {
@@ -561,6 +611,29 @@ export const BlogPostEditor = ({ post }: BlogPostEditorProps) => {
                       ? 'Post será criado para o site selecionado' 
                       : 'Post será criado para o site atual'}
                   </p>
+                </CardContent>
+              </Card>
+
+              {/* Author Selection */}
+              <Card className="border-border/40 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Autor do Post
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AuthorSelector
+                    type={authorType}
+                    onTypeChange={setAuthorType}
+                    displayAuthorId={displayAuthorId}
+                    onDisplayAuthorIdChange={setDisplayAuthorId}
+                    customName={customAuthorName}
+                    onCustomNameChange={setCustomAuthorName}
+                    customUrl={customAuthorUrl}
+                    onCustomUrlChange={setCustomAuthorUrl}
+                    originalAuthorName={originalAuthorName}
+                  />
                 </CardContent>
               </Card>
 
