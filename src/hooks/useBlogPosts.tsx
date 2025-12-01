@@ -81,7 +81,12 @@ export const useBlogPosts = (options: UseBlogPostsOptions = {}) => {
       }
 
       if (options.authorId) {
-        query = query.eq('author_id', options.authorId);
+        if (options.authorId.startsWith('custom_')) {
+          const customName = options.authorId.replace('custom_', '');
+          query = query.eq('custom_author_name', customName);
+        } else {
+          query = query.or(`author_id.eq.${options.authorId},display_author_id.eq.${options.authorId}`);
+        }
       }
 
       if (options.searchTerm) {

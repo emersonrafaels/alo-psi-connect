@@ -90,7 +90,7 @@ export const AuthorSpotlight = ({ selectedAuthor, onAuthorSelect }: AuthorSpotli
       // Converter para array e ordenar
       const authorsArray: Author[] = Array.from(authorMap.entries())
         .map(([key, data]) => ({
-          author_id: data.isCustom ? null : key,
+          author_id: key,  // Usar a key para todos (que já é `custom_${nome}` para customizados)
           author_name: data.name,
           author_photo: data.photo,
           post_count: data.count,
@@ -130,7 +130,7 @@ export const AuthorSpotlight = ({ selectedAuthor, onAuthorSelect }: AuthorSpotli
           const isSystemAdmin = author.author_name === 'Administrador do Sistema';
           const displayName = isSystemAdmin ? (tenant?.name || 'Alô Psi') : author.author_name;
           const displayPhoto = isSystemAdmin ? tenant?.logo_url : author.author_photo;
-          const isSelected = selectedAuthor === author.author_id;
+          const isSelected = selectedAuthor !== null && selectedAuthor === author.author_id;
 
           return (
             <div 
@@ -147,8 +147,10 @@ export const AuthorSpotlight = ({ selectedAuthor, onAuthorSelect }: AuthorSpotli
                 <img 
                   src={displayPhoto} 
                   alt={displayName}
-                  className={`w-12 h-12 rounded-full border-2 border-primary object-cover ${
-                    isSystemAdmin ? 'object-contain p-1 bg-white' : ''
+                  className={`rounded-full border-2 border-primary ${
+                    isSystemAdmin 
+                      ? 'w-14 h-14 object-contain p-2 bg-white' 
+                      : 'w-12 h-12 object-cover'
                   }`}
                 />
               ) : isSystemAdmin ? (
