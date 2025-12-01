@@ -1,35 +1,28 @@
-import Header from "@/components/ui/header"
-import Footer from "@/components/ui/footer"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { AboutImageSection } from "@/components/AboutImageSection"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useNavigate } from "react-router-dom"
-import { useTenant } from "@/hooks/useTenant"
-import { buildTenantPath, DEFAULT_TENANT_SLUG } from "@/utils/tenantHelpers"
-import { useProfessionals } from "@/hooks/useProfessionals"
-import { getIllustrativeAvatar } from "@/utils/avatarHelpers"
-import { 
-  Target, Eye, Lightbulb, ClipboardList, UserCheck, Video, 
-  Heart, BarChart3, ShieldCheck, GraduationCap, Users, Building2,
-  Focus, Hospital, Zap, AlertTriangle, Link2, Lock, TrendingUp,
-  Calendar, HelpCircle, ArrowRight
-} from "lucide-react"
-
+import Header from "@/components/ui/header";
+import Footer from "@/components/ui/footer";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { AboutImageSection } from "@/components/AboutImageSection";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "react-router-dom";
+import { useTenant } from "@/hooks/useTenant";
+import { buildTenantPath, DEFAULT_TENANT_SLUG } from "@/utils/tenantHelpers";
+import { useProfessionals } from "@/hooks/useProfessionals";
+import { getIllustrativeAvatar } from "@/utils/avatarHelpers";
+import { Target, Eye, Lightbulb, ClipboardList, UserCheck, Video, Heart, BarChart3, ShieldCheck, GraduationCap, Users, Building2, Focus, Hospital, Zap, AlertTriangle, Link2, Lock, TrendingUp, Calendar, HelpCircle, ArrowRight } from "lucide-react";
 const About = () => {
   const navigate = useNavigate();
-  const { tenant } = useTenant();
+  const {
+    tenant
+  } = useTenant();
   const tenantSlug = tenant?.slug || DEFAULT_TENANT_SLUG;
-
   const getTenantName = () => {
     return tenant?.slug === 'medcos' ? 'A MEDCOS' : 'A Rede Bem-Estar';
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Header />
       
       {/* SEÇÃO 1: Hero/Intro */}
@@ -39,8 +32,8 @@ const About = () => {
             <AboutImageSection />
             <div>
               <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-primary">
-                Cuidando de Quem <br />
-                Cuida da Saúde
+                Cuidando de  <br />
+                Quem cuida  
               </h1>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
                 {getTenantName()} é uma plataforma de bem-estar universitário focada em médicos e 
@@ -48,21 +41,12 @@ const About = () => {
                 apoio e dados agregados para fortalecer aprendizagem, permanência e clima acadêmico.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  variant="default" 
-                  size="lg"
-                  onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}
-                  className="group"
-                >
+                <Button variant="default" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))} className="group">
                   <Calendar className="mr-2 h-5 w-5" />
                   Agendar Atendimento
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}
-                >
+                <Button variant="outline" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}>
                   <Building2 className="mr-2 h-5 w-5" />
                   Sou de uma Faculdade
                 </Button>
@@ -76,29 +60,24 @@ const About = () => {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {[
-              {
-                icon: Target,
-                title: "Missão",
-                description: "Tornar o cuidado emocional parte do cotidiano de quem forma e pratica a medicina.",
-                color: "from-primary/20 to-primary/30"
-              },
-              {
-                icon: Eye,
-                title: "Visão",
-                description: "Universidades com ambientes mais humanos, alunos presentes e professores sustentados.",
-                color: "from-accent/20 to-accent/30"
-              },
-              {
-                icon: Lightbulb,
-                title: "Por Quê Existimos",
-                description: "A graduação concentra pressão, longas jornadas e alto custo emocional. Cuidar disso muda trajetórias e melhora resultados acadêmicos.",
-                color: "from-secondary/20 to-secondary/30"
-              }
-            ].map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <Card key={index} className="text-center hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/30 group">
+            {[{
+            icon: Target,
+            title: "Missão",
+            description: "Tornar o cuidado emocional parte do cotidiano de quem forma e pratica a medicina.",
+            color: "from-primary/20 to-primary/30"
+          }, {
+            icon: Eye,
+            title: "Visão",
+            description: "Universidades com ambientes mais humanos, alunos presentes e professores sustentados.",
+            color: "from-accent/20 to-accent/30"
+          }, {
+            icon: Lightbulb,
+            title: "Por Quê Existimos",
+            description: "A graduação concentra pressão, longas jornadas e alto custo emocional. Cuidar disso muda trajetórias e melhora resultados acadêmicos.",
+            color: "from-secondary/20 to-secondary/30"
+          }].map((item, index) => {
+            const Icon = item.icon;
+            return <Card key={index} className="text-center hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/30 group">
                   <CardHeader>
                     <div className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center bg-gradient-to-br ${item.color} group-hover:scale-110 transition-transform`}>
                       <Icon className="w-10 h-10 text-primary" />
@@ -110,9 +89,8 @@ const About = () => {
                       {item.description}
                     </p>
                   </CardContent>
-                </Card>
-              );
-            })}
+                </Card>;
+          })}
           </div>
         </div>
       </section>
@@ -122,37 +100,30 @@ const About = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-16">Como Funciona</h2>
           <div className="max-w-4xl mx-auto space-y-8">
-            {[
-              {
-                icon: ClipboardList,
-                title: "Triagem Rápida",
-                description: "Avaliação inicial para entender suas necessidades e direcionar para o melhor suporte."
-              },
-              {
-                icon: UserCheck,
-                title: "Escolha de Profissional",
-                description: "Acesso a psicólogos e psiquiatras especializados no contexto universitário médico."
-              },
-              {
-                icon: Video,
-                title: "Atendimento Online ou Presencial",
-                description: "Flexibilidade para escolher o formato que melhor se adapta à sua rotina."
-              },
-              {
-                icon: Heart,
-                title: "Planos de Autocuidado e Grupos Temáticos",
-                description: "Trilhas personalizadas e grupos de apoio para diferentes necessidades."
-              },
-              {
-                icon: BarChart3,
-                title: "Relatórios Institucionais",
-                description: "Para a instituição: dados agregados e anônimos que orientam ações de prevenção."
-              }
-            ].map((item, index) => {
-              const Icon = item.icon;
-              const isLast = index === 4;
-              return (
-                <div key={index} className="relative">
+            {[{
+            icon: ClipboardList,
+            title: "Triagem Rápida",
+            description: "Avaliação inicial para entender suas necessidades e direcionar para o melhor suporte."
+          }, {
+            icon: UserCheck,
+            title: "Escolha de Profissional",
+            description: "Acesso a psicólogos e psiquiatras especializados no contexto universitário médico."
+          }, {
+            icon: Video,
+            title: "Atendimento Online ou Presencial",
+            description: "Flexibilidade para escolher o formato que melhor se adapta à sua rotina."
+          }, {
+            icon: Heart,
+            title: "Planos de Autocuidado e Grupos Temáticos",
+            description: "Trilhas personalizadas e grupos de apoio para diferentes necessidades."
+          }, {
+            icon: BarChart3,
+            title: "Relatórios Institucionais",
+            description: "Para a instituição: dados agregados e anônimos que orientam ações de prevenção."
+          }].map((item, index) => {
+            const Icon = item.icon;
+            const isLast = index === 4;
+            return <div key={index} className="relative">
                   <div className="flex items-start gap-6">
                     <div className="flex-shrink-0">
                       <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary">
@@ -166,12 +137,9 @@ const About = () => {
                       </CardHeader>
                     </Card>
                   </div>
-                  {!isLast && (
-                    <div className="absolute left-8 top-16 w-0.5 h-8 bg-primary/30" />
-                  )}
-                </div>
-              );
-            })}
+                  {!isLast && <div className="absolute left-8 top-16 w-0.5 h-8 bg-primary/30" />}
+                </div>;
+          })}
           </div>
         </div>
       </section>
@@ -187,30 +155,32 @@ const About = () => {
                 auditoria de qualidade. Dados assistenciais ficam sob sigilo, relatórios 
                 institucionais são sempre agregados e anonimizados.
               </p>
-              <Button 
-                variant="outline"
-                onClick={() => navigate(buildTenantPath(tenantSlug, '/termos-de-servico'))}
-              >
+              <Button variant="outline" onClick={() => navigate(buildTenantPath(tenantSlug, '/termos-de-servico'))}>
                 Ver Termos de Serviço
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              {[
-                { icon: ShieldCheck, label: "Profissionais Habilitados" },
-                { icon: ClipboardList, label: "Protocolos Clínicos" },
-                { icon: Lock, label: "Sigilo Profissional" },
-                { icon: ShieldCheck, label: "LGPD Compliant" }
-              ].map((item, index) => {
-                const Icon = item.icon;
-                return (
-                  <Card key={index} className="text-center p-6 hover:shadow-lg transition-all border-2 hover:border-primary/50">
+              {[{
+              icon: ShieldCheck,
+              label: "Profissionais Habilitados"
+            }, {
+              icon: ClipboardList,
+              label: "Protocolos Clínicos"
+            }, {
+              icon: Lock,
+              label: "Sigilo Profissional"
+            }, {
+              icon: ShieldCheck,
+              label: "LGPD Compliant"
+            }].map((item, index) => {
+              const Icon = item.icon;
+              return <Card key={index} className="text-center p-6 hover:shadow-lg transition-all border-2 hover:border-primary/50">
                     <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-primary/10 flex items-center justify-center">
                       <Icon className="w-6 h-6 text-primary" />
                     </div>
                     <p className="text-sm font-medium">{item.label}</p>
-                  </Card>
-                );
-              })}
+                  </Card>;
+            })}
             </div>
           </div>
         </div>
@@ -221,32 +191,27 @@ const About = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-16">Para Quem É</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {[
-              {
-                icon: GraduationCap,
-                title: "Estudantes",
-                description: "Acesso rápido a psicólogos e psiquiatras, trilhas e grupos de apoio.",
-                color: "border-t-primary",
-                bgColor: "from-primary/10 to-primary/20"
-              },
-              {
-                icon: Users,
-                title: "Docentes",
-                description: "Suporte individual e orientação para manejo de turma e bem-estar.",
-                color: "border-t-accent",
-                bgColor: "from-accent/10 to-accent/20"
-              },
-              {
-                icon: Building2,
-                title: "Instituições",
-                description: "Visão consolidada por painéis anônimos que apoiam decisões, acolhimento e permanência.",
-                color: "border-t-secondary",
-                bgColor: "from-secondary/10 to-secondary/20"
-              }
-            ].map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <Card key={index} className={`border-t-4 ${item.color} hover:shadow-xl transition-all group`}>
+            {[{
+            icon: GraduationCap,
+            title: "Estudantes",
+            description: "Acesso rápido a psicólogos e psiquiatras, trilhas e grupos de apoio.",
+            color: "border-t-primary",
+            bgColor: "from-primary/10 to-primary/20"
+          }, {
+            icon: Users,
+            title: "Docentes",
+            description: "Suporte individual e orientação para manejo de turma e bem-estar.",
+            color: "border-t-accent",
+            bgColor: "from-accent/10 to-accent/20"
+          }, {
+            icon: Building2,
+            title: "Instituições",
+            description: "Visão consolidada por painéis anônimos que apoiam decisões, acolhimento e permanência.",
+            color: "border-t-secondary",
+            bgColor: "from-secondary/10 to-secondary/20"
+          }].map((item, index) => {
+            const Icon = item.icon;
+            return <Card key={index} className={`border-t-4 ${item.color} hover:shadow-xl transition-all group`}>
                   <CardHeader className="text-center">
                     <div className={`w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center bg-gradient-to-br ${item.bgColor} group-hover:scale-110 transition-transform`}>
                       <Icon className="w-12 h-12 text-primary" />
@@ -258,9 +223,8 @@ const About = () => {
                       {item.description}
                     </p>
                   </CardContent>
-                </Card>
-              );
-            })}
+                </Card>;
+          })}
           </div>
         </div>
       </section>
@@ -270,17 +234,33 @@ const About = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-16">Nossos Diferenciais</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {[
-              { icon: Focus, title: "Foco exclusivo em medicina", description: "Especialização no contexto universitário médico" },
-              { icon: Hospital, title: "Curadoria clínica", description: "Profissionais selecionados e supervisionados" },
-              { icon: Zap, title: "Início rápido", description: "Tempo médio reduzido para primeira sessão" },
-              { icon: AlertTriangle, title: "Fluxos de risco definidos", description: "Protocolos claros para situações críticas" },
-              { icon: Link2, title: "Integração com campanhas", description: "Alinhamento com ações institucionais" },
-              { icon: Lock, title: "LGPD e confidencialidade", description: "Proteção total de dados e privacidade" }
-            ].map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <div key={index} className="flex items-start gap-4 p-6 bg-card rounded-lg hover:shadow-lg transition-all border border-border hover:border-primary/50">
+            {[{
+            icon: Focus,
+            title: "Foco exclusivo em medicina",
+            description: "Especialização no contexto universitário médico"
+          }, {
+            icon: Hospital,
+            title: "Curadoria clínica",
+            description: "Profissionais selecionados e supervisionados"
+          }, {
+            icon: Zap,
+            title: "Início rápido",
+            description: "Tempo médio reduzido para primeira sessão"
+          }, {
+            icon: AlertTriangle,
+            title: "Fluxos de risco definidos",
+            description: "Protocolos claros para situações críticas"
+          }, {
+            icon: Link2,
+            title: "Integração com campanhas",
+            description: "Alinhamento com ações institucionais"
+          }, {
+            icon: Lock,
+            title: "LGPD e confidencialidade",
+            description: "Proteção total de dados e privacidade"
+          }].map((item, index) => {
+            const Icon = item.icon;
+            return <div key={index} className="flex items-start gap-4 p-6 bg-card rounded-lg hover:shadow-lg transition-all border border-border hover:border-primary/50">
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                     <Icon className="w-6 h-6 text-primary" />
                   </div>
@@ -288,9 +268,8 @@ const About = () => {
                     <h4 className="font-semibold mb-1">{item.title}</h4>
                     <p className="text-sm text-muted-foreground">{item.description}</p>
                   </div>
-                </div>
-              );
-            })}
+                </div>;
+          })}
           </div>
         </div>
       </section>
@@ -306,25 +285,14 @@ const About = () => {
                 decisões baseadas em dados reais:
               </p>
               <ul className="space-y-3 mb-8">
-                {[
-                  "Adesão por turmas e períodos",
-                  "Temas mais buscados",
-                  "Correlações com calendário acadêmico",
-                  "Engajamento em trilhas e grupos"
-                ].map((item, index) => (
-                  <li key={index} className="flex items-center gap-3 group">
+                {["Adesão por turmas e períodos", "Temas mais buscados", "Correlações com calendário acadêmico", "Engajamento em trilhas e grupos"].map((item, index) => <li key={index} className="flex items-center gap-3 group">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
                       <TrendingUp className="w-5 h-5 flex-shrink-0 text-primary" />
                     </div>
                     <span className="group-hover:translate-x-1 transition-transform">{item}</span>
-                  </li>
-                ))}
+                  </li>)}
               </ul>
-              <Button 
-                variant="default"
-                size="lg"
-                onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}
-              >
+              <Button variant="default" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}>
                 Quero Ver um Exemplo de Painel
               </Button>
             </div>
@@ -336,10 +304,18 @@ const About = () => {
                 </h3>
                 <div className="space-y-4">
                   <div className="flex items-end gap-2 h-40 bg-primary/5 rounded-lg p-4">
-                    <div className="w-full bg-primary/60 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '65%' }}></div>
-                    <div className="w-full bg-primary/70 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '85%' }}></div>
-                    <div className="w-full bg-primary/50 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '55%' }}></div>
-                    <div className="w-full bg-primary/65 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '75%' }}></div>
+                    <div className="w-full bg-primary/60 hover:bg-primary rounded-t transition-all cursor-pointer" style={{
+                    height: '65%'
+                  }}></div>
+                    <div className="w-full bg-primary/70 hover:bg-primary rounded-t transition-all cursor-pointer" style={{
+                    height: '85%'
+                  }}></div>
+                    <div className="w-full bg-primary/50 hover:bg-primary rounded-t transition-all cursor-pointer" style={{
+                    height: '55%'
+                  }}></div>
+                    <div className="w-full bg-primary/65 hover:bg-primary rounded-t transition-all cursor-pointer" style={{
+                    height: '75%'
+                  }}></div>
                   </div>
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
@@ -380,11 +356,7 @@ const About = () => {
           </p>
           <TeamSection navigate={navigate} tenantSlug={tenantSlug} />
           <div className="text-center mt-12">
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}
-            >
+            <Button variant="outline" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
               Ver Todos os Profissionais
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -400,33 +372,25 @@ const About = () => {
             Tire suas dúvidas sobre {getTenantName()}
           </p>
           <Accordion type="single" collapsible className="max-w-3xl mx-auto">
-            {[
-              {
-                question: "Como funciona a confidencialidade?",
-                answer: "Todos os atendimentos seguem o sigilo profissional previsto nos códigos de ética da Psicologia e Medicina. Dados assistenciais individuais não são compartilhados com a instituição. Apenas relatórios agregados e anônimos são gerados para orientar ações institucionais."
-              },
-              {
-                question: "Como são os relatórios institucionais?",
-                answer: "Os relatórios são sempre agregados e anonimizados, mostrando tendências gerais como temas mais buscados, períodos de maior demanda e correlações com o calendário acadêmico. Nenhum dado individual é identificável nesses relatórios."
-              },
-              {
-                question: "Há cobertura de planos ou bolsas?",
-                answer: "Sim, trabalhamos com diferentes modelos: convênio institucional (custeado pela faculdade), planos de saúde parceiros e programa de bolsas para estudantes em situação de vulnerabilidade. Consulte sua instituição sobre as opções disponíveis."
-              },
-              {
-                question: "Qual o tempo médio para iniciar?",
-                answer: "Após a triagem inicial, o tempo médio para o primeiro atendimento é de 3 a 5 dias úteis. Em casos de urgência identificados na triagem, priorizamos o atendimento em até 24 horas."
-              },
-              {
-                question: "Como faço para agendar?",
-                answer: "Basta clicar em 'Agendar Atendimento' no topo da página, preencher o formulário de triagem inicial e escolher o profissional e horário que melhor se adequam à sua rotina. Você receberá confirmação por e-mail e SMS."
-              },
-              {
-                question: "Como minha instituição pode entrar?",
-                answer: "Entre em contato através do botão 'Sou de uma Faculdade' para agendar uma reunião com nosso time. Faremos uma apresentação personalizada, demonstração da plataforma e discussão sobre modelos de implementação adequados à sua instituição."
-              }
-            ].map((item, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
+            {[{
+            question: "Como funciona a confidencialidade?",
+            answer: "Todos os atendimentos seguem o sigilo profissional previsto nos códigos de ética da Psicologia e Medicina. Dados assistenciais individuais não são compartilhados com a instituição. Apenas relatórios agregados e anônimos são gerados para orientar ações institucionais."
+          }, {
+            question: "Como são os relatórios institucionais?",
+            answer: "Os relatórios são sempre agregados e anonimizados, mostrando tendências gerais como temas mais buscados, períodos de maior demanda e correlações com o calendário acadêmico. Nenhum dado individual é identificável nesses relatórios."
+          }, {
+            question: "Há cobertura de planos ou bolsas?",
+            answer: "Sim, trabalhamos com diferentes modelos: convênio institucional (custeado pela faculdade), planos de saúde parceiros e programa de bolsas para estudantes em situação de vulnerabilidade. Consulte sua instituição sobre as opções disponíveis."
+          }, {
+            question: "Qual o tempo médio para iniciar?",
+            answer: "Após a triagem inicial, o tempo médio para o primeiro atendimento é de 3 a 5 dias úteis. Em casos de urgência identificados na triagem, priorizamos o atendimento em até 24 horas."
+          }, {
+            question: "Como faço para agendar?",
+            answer: "Basta clicar em 'Agendar Atendimento' no topo da página, preencher o formulário de triagem inicial e escolher o profissional e horário que melhor se adequam à sua rotina. Você receberá confirmação por e-mail e SMS."
+          }, {
+            question: "Como minha instituição pode entrar?",
+            answer: "Entre em contato através do botão 'Sou de uma Faculdade' para agendar uma reunião com nosso time. Faremos uma apresentação personalizada, demonstração da plataforma e discussão sobre modelos de implementação adequados à sua instituição."
+          }].map((item, index) => <AccordionItem key={index} value={`item-${index}`}>
                 <AccordionTrigger className="text-left hover:text-primary">
                   <div className="flex items-center gap-3">
                     <HelpCircle className="w-5 h-5 text-primary flex-shrink-0" />
@@ -436,35 +400,35 @@ const About = () => {
                 <AccordionContent className="text-muted-foreground leading-relaxed pl-8">
                   {item.answer}
                 </AccordionContent>
-              </AccordionItem>
-            ))}
+              </AccordionItem>)}
           </Accordion>
         </div>
       </section>
 
       <Footer />
-    </div>
-  )
-}
+    </div>;
+};
 
 // Component: Team Section with Real Data
-const TeamSection = ({ navigate, tenantSlug }: { navigate: any; tenantSlug: string }) => {
-  const { data: professionals, isLoading } = useProfessionals(6);
-
+const TeamSection = ({
+  navigate,
+  tenantSlug
+}: {
+  navigate: any;
+  tenantSlug: string;
+}) => {
+  const {
+    data: professionals,
+    isLoading
+  } = useProfessionals(6);
   const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map(n => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
-
   if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <Card key={index} className="text-center">
+    return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {Array.from({
+        length: 6
+      }).map((_, index) => <Card key={index} className="text-center">
             <CardContent className="pt-8">
               <Skeleton className="w-24 h-24 rounded-full mx-auto mb-4" />
               <Skeleton className="h-6 w-3/4 mx-auto mb-2" />
@@ -475,34 +439,20 @@ const TeamSection = ({ navigate, tenantSlug }: { navigate: any; tenantSlug: stri
                 <Skeleton className="h-6 w-20" />
               </div>
             </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+          </Card>)}
+      </div>;
   }
-
   if (!professionals || professionals.length === 0) {
-    return (
-      <div className="text-center text-muted-foreground py-8">
+    return <div className="text-center text-muted-foreground py-8">
         <p>Nenhum profissional disponível no momento.</p>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-      {professionals.map((professional) => {
-        const photoUrl = professional.foto_perfil_url || getIllustrativeAvatar(
-          null,
-          null,
-          professional.display_name
-        );
-        const specialties = professional.servicos_normalizados || [];
-        const bio = professional.resumo_profissional || 
-          `Profissional qualificado com registro ${professional.crp_crm || 'ativo'}.`;
-
-        return (
-          <Card key={professional.id} className="text-center hover:shadow-xl transition-all group">
+  return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      {professionals.map(professional => {
+      const photoUrl = professional.foto_perfil_url || getIllustrativeAvatar(null, null, professional.display_name);
+      const specialties = professional.servicos_normalizados || [];
+      const bio = professional.resumo_profissional || `Profissional qualificado com registro ${professional.crp_crm || 'ativo'}.`;
+      return <Card key={professional.id} className="text-center hover:shadow-xl transition-all group">
             <CardContent className="pt-8">
               <Avatar className="w-24 h-24 mx-auto mb-4 ring-4 ring-primary/10 group-hover:ring-primary/30 transition-all">
                 <AvatarImage src={photoUrl} alt={professional.display_name} />
@@ -517,21 +467,14 @@ const TeamSection = ({ navigate, tenantSlug }: { navigate: any; tenantSlug: stri
               <p className="text-xs text-muted-foreground mb-4 leading-relaxed line-clamp-3">
                 {bio}
               </p>
-              {specialties.length > 0 && (
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {specialties.slice(0, 3).map((specialty, idx) => (
-                    <Badge key={idx} variant="secondary" className="text-xs">
+              {specialties.length > 0 && <div className="flex flex-wrap gap-2 justify-center">
+                  {specialties.slice(0, 3).map((specialty, idx) => <Badge key={idx} variant="secondary" className="text-xs">
                       {specialty}
-                    </Badge>
-                  ))}
-                </div>
-              )}
+                    </Badge>)}
+                </div>}
             </CardContent>
-          </Card>
-        );
-      })}
-    </div>
-  );
+          </Card>;
+    })}
+    </div>;
 };
-
-export default About
+export default About;
