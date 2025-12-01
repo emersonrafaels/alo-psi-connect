@@ -185,8 +185,8 @@ const handler = async (req: Request): Promise<Response> => {
     // URL do portal institucional
     const baseUrl = Deno.env.get("APP_BASE_URL") || "https://alopsi.com.br";
     const portalUrl = tenantSlug === 'alopsi' 
-      ? `${baseUrl}/instituicao-portal`
-      : `${baseUrl}/${tenantSlug}/instituicao-portal`;
+      ? `${baseUrl}/portal-institucional`
+      : `${baseUrl}/${tenantSlug}/portal-institucional`;
 
     // Gerar HTML do email
     const emailHtml = generateInstitutionLinkEmailHTML(
