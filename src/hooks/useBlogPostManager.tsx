@@ -19,6 +19,9 @@ interface CreatePostData {
   is_featured?: boolean;
   featured_order?: number;
   editorial_badge?: string;
+  display_author_id?: string | null;
+  custom_author_name?: string | null;
+  custom_author_url?: string | null;
 }
 
 interface UpdatePostData extends CreatePostData {
@@ -78,7 +81,10 @@ export const useBlogPostManager = () => {
           allow_ratings: data.allow_ratings ?? true,
           is_featured: data.is_featured ?? false,
           featured_order: data.featured_order,
-          editorial_badge: data.editorial_badge as any
+          editorial_badge: data.editorial_badge as any,
+          display_author_id: data.display_author_id,
+          custom_author_name: data.custom_author_name,
+          custom_author_url: data.custom_author_url
         } as any)
         .select()
         .single();
@@ -152,7 +158,10 @@ export const useBlogPostManager = () => {
           allow_ratings: data.allow_ratings ?? true,
           is_featured: data.is_featured ?? false,
           featured_order: data.featured_order,
-          editorial_badge: data.editorial_badge as any
+          editorial_badge: data.editorial_badge as any,
+          display_author_id: data.display_author_id,
+          custom_author_name: data.custom_author_name,
+          custom_author_url: data.custom_author_url
         } as any)
         .eq('id', data.id)
         .select()
