@@ -31,10 +31,10 @@ const About = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <AboutImageSection />
             <div>
-              <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-primary">
-                Cuidando de  <br />
-                Quem cuida  
-              </h1>
+          <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-primary">
+            Cuidando de<br />
+            Quem Cuida
+          </h1>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
                 {getTenantName()} é uma plataforma de bem-estar universitário focada em médicos e 
                 estudantes de medicina. Unimos atendimento clínico qualificado, fluxos de 
@@ -74,7 +74,7 @@ const About = () => {
             icon: Lightbulb,
             title: "Por Quê Existimos",
             description: "A graduação concentra pressão, longas jornadas e alto custo emocional. Cuidar disso muda trajetórias e melhora resultados acadêmicos.",
-            color: "from-secondary/20 to-secondary/30"
+            color: "from-primary/20 to-primary/30"
           }].map((item, index) => {
             const Icon = item.icon;
             return <Card key={index} className="text-center hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/30 group">
@@ -207,8 +207,8 @@ const About = () => {
             icon: Building2,
             title: "Instituições",
             description: "Visão consolidada por painéis anônimos que apoiam decisões, acolhimento e permanência.",
-            color: "border-t-secondary",
-            bgColor: "from-secondary/10 to-secondary/20"
+            color: "border-t-primary",
+            bgColor: "from-primary/10 to-primary/20"
           }].map((item, index) => {
             const Icon = item.icon;
             return <Card key={index} className={`border-t-4 ${item.color} hover:shadow-xl transition-all group`}>
