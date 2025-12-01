@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Eye, User } from 'lucide-react';
+import { Building2, Calendar, Clock, Eye, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BlogPost } from '@/hooks/useBlogPosts';
 import { highlightText } from '@/utils/highlightHelpers';
 import { extractTextFromHtml } from '@/utils/htmlSanitizer';
+import { useTenant } from '@/hooks/useTenant';
 
 interface PostCardProps {
   post: BlogPost;
@@ -14,6 +15,11 @@ interface PostCardProps {
 }
 
 export const PostCard = ({ post, searchTerm }: PostCardProps) => {
+  const { tenant } = useTenant();
+  
+  const isSystemAdmin = post.author?.nome === 'Administrador do Sistema';
+  const displayAuthorName = isSystemAdmin ? (tenant?.name || 'Alô Psi') : post.author?.nome;
+  
   const getPlainTextPreview = (): string => {
     if (post.excerpt) {
       return extractTextFromHtml(post.excerpt);
@@ -62,8 +68,8 @@ export const PostCard = ({ post, searchTerm }: PostCardProps) => {
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
             {post.author && (
               <div className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                <span>{post.author.nome}</span>
+                {isSystemAdmin ? <Building2 className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                <span>{displayAuthorName}</span>
               </div>
             )}
             {post.published_at && (
