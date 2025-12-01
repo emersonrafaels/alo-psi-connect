@@ -16,7 +16,7 @@ import { useAuthorRole } from "@/hooks/useAuthorRole"
 import { useTenant } from "@/hooks/useTenant"
 import { useUserRole } from "@/hooks/useUserRole"
 import { TenantBranding } from "@/components/TenantBranding"
-import { buildTenantPath } from "@/utils/tenantHelpers"
+import { buildTenantPath, getTenantSlugFromPath } from "@/utils/tenantHelpers"
 import { UnderConstructionModal } from "@/components/UnderConstructionModal"
 import { supabase } from "@/integrations/supabase/client"
 import { Tenant } from "@/types/tenant"
@@ -35,7 +35,8 @@ const Header = () => {
   const { tenant } = useTenant()
   const { hasRole: isInstitutionAdmin, loading: institutionAdminLoading } = useUserRole('institution_admin')
 
-  const tenantSlug = tenant?.slug || 'alopsi'
+  // Usar o slug da URL para navegação (sempre consistente com a rota atual)
+  const tenantSlug = getTenantSlugFromPath(location.pathname)
 
   // Fetch target tenant config when needed
   const handleTenantNavigation = async (targetSlug: string, targetPath: string) => {
