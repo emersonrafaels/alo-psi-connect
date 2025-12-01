@@ -26,7 +26,9 @@ const Blog = () => {
   const { tenant } = useTenant();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('recent');
+  const [displayLimit, setDisplayLimit] = useState(10);
   
   // Debounce search term
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -51,6 +53,7 @@ const Blog = () => {
   
   const { data: posts = [], isLoading } = useBlogPosts({
     status: 'published',
+    authorId: selectedAuthor || undefined,
     searchTerm: debouncedSearchTerm || undefined,
     tagSlug: selectedTag || undefined,
     sortBy
@@ -65,6 +68,7 @@ const Blog = () => {
   const handleClearFilters = () => {
     setSearchTerm('');
     setSelectedTag(null);
+    setSelectedAuthor(null);
   };
   
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -106,6 +110,15 @@ const Blog = () => {
                 <X 
                   className="h-3 w-3 cursor-pointer hover:text-destructive" 
                   onClick={() => setSelectedTag(null)}
+                />
+              </Badge>
+            )}
+            {selectedAuthor && (
+              <Badge variant="secondary" className="text-sm gap-1">
+                Autor filtrado
+                <X 
+                  className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                  onClick={() => setSelectedAuthor(null)}
                 />
               </Badge>
             )}
@@ -181,7 +194,10 @@ const Blog = () => {
                   )}
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {(debouncedSearchTerm || selectedTag ? posts : posts.slice(7)).map((post, index) => {
+                    {(debouncedSearchTerm || selectedTag || selectedAuthor 
+                      ? posts.slice(0, displayLimit)
+                      : posts.slice(7, 7 + displayLimit)
+                    ).map((post, index) => {
                       // Variação de layouts
                       const variant = index % 5 === 0 ? 'horizontal' : index % 7 === 0 ? 'minimal' : 'default';
                       return (
@@ -194,6 +210,25 @@ const Blog = () => {
                       );
                     })}
                   </div>
+
+                  {/* Botão Carregar Mais */}
+                  {((debouncedSearchTerm || selectedTag || selectedAuthor) 
+                    ? posts.length > displayLimit
+                    : posts.length > 7 + displayLimit
+                  ) && (
+                    <div className="flex justify-center mt-8">
+                      <Button 
+                        variant="outline"
+                        onClick={() => setDisplayLimit(prev => prev + 10)}
+                      >
+                        Carregar mais ({
+                          (debouncedSearchTerm || selectedTag || selectedAuthor)
+                            ? posts.length - displayLimit
+                            : posts.length - (7 + displayLimit)
+                        } restantes)
+                      </Button>
+                    </div>
+                  )}
                 </section>
               </>
             )}
@@ -243,7 +278,10 @@ const Blog = () => {
             <NewsletterCTA />
 
             {/* Author Spotlight */}
-            <AuthorSpotlight />
+            <AuthorSpotlight 
+              selectedAuthor={selectedAuthor}
+              onAuthorSelect={setSelectedAuthor}
+            />
 
             {/* Tags */}
             <Card className="shadow-card hover:shadow-card-hover transition-shadow">
