@@ -249,17 +249,6 @@ const Contact = () => {
               </div>
             </div>
 
-            {/* Map Placeholder */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Localização</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <span className="text-muted-foreground">Mapa interativo</span>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
