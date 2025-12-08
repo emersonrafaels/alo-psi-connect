@@ -118,6 +118,8 @@ export function ReviewLinkRequestModal({
       school: 'Escola',
       institute: 'Instituto',
       other: 'Outro',
+      private: 'Privada',
+      public: 'Pública',
     };
     return labels[type.toLowerCase()] || type;
   };
