@@ -98,7 +98,7 @@ export const useInstitutionAccess = () => {
             user_email,
             ativo,
             profile_id,
-            profiles!inner(
+            profiles(
               user_id
             )
           )

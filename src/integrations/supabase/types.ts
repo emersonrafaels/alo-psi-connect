@@ -3100,6 +3100,12 @@ export type Database = {
           patient_id: string
         }[]
       }
+      get_professional_profile_ids_for_institution_admin: {
+        Args: { _user_id: string }
+        Returns: {
+          profile_id: string
+        }[]
+      }
       get_professionals_with_filtered_availability: {
         Args: {
           p_date_end?: string
