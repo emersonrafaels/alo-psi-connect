@@ -21,9 +21,11 @@ import { useFirstLoginPhotoUpload } from '@/hooks/useFirstLoginPhotoUpload';
 import { useToast } from '@/hooks/use-toast';
 import { useTenant } from '@/hooks/useTenant';
 import { usePatientInstitutions } from '@/hooks/usePatientInstitutions';
+import { useCurrentProfessionalInstitutions } from '@/hooks/useCurrentProfessionalInstitutions';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { GoogleCalendarIntegration } from '@/components/GoogleCalendarIntegration';
 import { PatientInstitutionsCard } from '@/components/PatientInstitutionsCard';
+import { ProfessionalInstitutionsCard } from '@/components/ProfessionalInstitutionsCard';
 import { PatientCouponsCard } from '@/components/PatientCouponsCard';
 import { InstitutionLinkRequestCard } from '@/components/InstitutionLinkRequestCard';
 import { ArrowLeft, Camera, Check, User, GraduationCap, Briefcase } from 'lucide-react';
@@ -35,6 +37,7 @@ const Profile = () => {
   const { isProfessional } = useUserType();
   const { isConnected: googleCalendarConnected, refetch: refetchGoogleCalendar } = useGoogleCalendarStatus();
   const { linkedInstitutions, isLoading: loadingInstitutions } = usePatientInstitutions();
+  const { linkedInstitutions: professionalLinkedInstitutions, isLoading: loadingProfessionalInstitutions } = useCurrentProfessionalInstitutions();
   const { isUploading: isUploadingPendingPhoto } = useFirstLoginPhotoUpload(); // ⭐ Upload automático de foto pendente
   const { toast } = useToast();
   const { tenant } = useTenant();
@@ -614,6 +617,10 @@ const Profile = () => {
               </TabsContent>
 
               <TabsContent value="institution" className="space-y-6 mt-0">
+                <ProfessionalInstitutionsCard 
+                  institutions={professionalLinkedInstitutions} 
+                  loading={loadingProfessionalInstitutions} 
+                />
                 <InstitutionLinkRequestCard userType="profissional" />
               </TabsContent>
             </Tabs>
