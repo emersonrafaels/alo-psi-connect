@@ -23,11 +23,28 @@ export const useCurrentProfessionalInstitutions = () => {
     queryFn: async () => {
       if (!user?.id) return [];
 
-      // First get the professional_id for this user
+      // First get the profile.id for this user (user.id is auth.uid(), but profissionais.profile_id stores profiles.id)
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('[useCurrentProfessionalInstitutions] Error fetching profile:', profileError);
+        throw profileError;
+      }
+
+      if (!profile) {
+        console.log('[useCurrentProfessionalInstitutions] No profile found for user');
+        return [];
+      }
+
+      // Now get the professional_id using the correct profile.id
       const { data: professional, error: profError } = await supabase
         .from('profissionais')
         .select('id')
-        .eq('profile_id', user.id)
+        .eq('profile_id', profile.id)
         .maybeSingle();
 
       if (profError) {
