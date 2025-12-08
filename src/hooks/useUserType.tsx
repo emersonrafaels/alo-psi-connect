@@ -4,6 +4,9 @@ import { useUserProfile } from './useUserProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocalStorage } from './useLocalStorage';
 
+// Increment this when cache structure changes to invalidate old caches
+const CACHE_VERSION = 2;
+
 interface UserTypeInfo {
   isProfessional: boolean;           // Has a professional profile (active OR inactive)
   isActiveProfessional: boolean;     // Is actively visible on the site
@@ -20,6 +23,7 @@ export const useUserType = (): UserTypeInfo => {
   // Cache professional status in session storage for each user
   const cacheKey = `professional_status_${user?.id || 'anonymous'}`;
   const [cachedStatus, setCachedStatus] = useLocalStorage<{
+    version: number;
     isProfessional: boolean;
     isActiveProfessional: boolean;
     professionalId: string | null;
@@ -27,44 +31,34 @@ export const useUserType = (): UserTypeInfo => {
     timestamp: number;
   } | null>(cacheKey, null);
 
+  const isCacheValid = (cache: typeof cachedStatus) => {
+    if (!cache || !profile?.id) return false;
+    if (cache.version !== CACHE_VERSION) return false;
+    if (cache.profileId !== profile.id) return false;
+    return Date.now() - cache.timestamp < 30 * 60 * 1000;
+  };
+
   const [isProfessional, setIsProfessional] = useState(() => {
-    // Initialize from cache if available and recent (within 30 minutes)
-    if (cachedStatus && profile?.id === cachedStatus.profileId) {
-      const isRecent = Date.now() - cachedStatus.timestamp < 30 * 60 * 1000;
-      return isRecent ? cachedStatus.isProfessional : false;
-    }
-    return false;
+    return isCacheValid(cachedStatus) ? cachedStatus!.isProfessional : false;
   });
 
   const [isActiveProfessional, setIsActiveProfessional] = useState(() => {
-    if (cachedStatus && profile?.id === cachedStatus.profileId) {
-      const isRecent = Date.now() - cachedStatus.timestamp < 30 * 60 * 1000;
-      return isRecent ? cachedStatus.isActiveProfessional : false;
-    }
-    return false;
+    return isCacheValid(cachedStatus) ? cachedStatus!.isActiveProfessional : false;
   });
-  
+
   const [professionalId, setProfessionalId] = useState<string | null>(() => {
-    if (cachedStatus && profile?.id === cachedStatus.profileId) {
-      const isRecent = Date.now() - cachedStatus.timestamp < 30 * 60 * 1000;
-      return isRecent ? cachedStatus.professionalId : null;
-    }
-    return null;
+    return isCacheValid(cachedStatus) ? cachedStatus!.professionalId : null;
   });
   
   const [loading, setLoading] = useState(() => {
-    // Don't show loading if we have recent cached data
-    if (cachedStatus && profile?.id === cachedStatus.profileId) {
-      const isRecent = Date.now() - cachedStatus.timestamp < 30 * 60 * 1000;
-      return !isRecent;
-    }
-    return true;
+    return !isCacheValid(cachedStatus);
   });
 
   // Update cache when status changes
   const updateCache = useCallback((professional: boolean, activeProfessional: boolean, profId: string | null) => {
     if (profile?.id) {
       setCachedStatus({
+        version: CACHE_VERSION,
         isProfessional: professional,
         isActiveProfessional: activeProfessional,
         professionalId: profId,
@@ -91,16 +85,13 @@ export const useUserType = (): UserTypeInfo => {
       return; // Keep loading until profile loads
     }
 
-    // Check if we have recent cached data for this profile
-    if (cachedStatus && cachedStatus.profileId === profile.id) {
-      const isRecent = Date.now() - cachedStatus.timestamp < 30 * 60 * 1000; // 30 minutes
-      if (isRecent) {
-        setIsProfessional(cachedStatus.isProfessional);
-        setIsActiveProfessional(cachedStatus.isActiveProfessional);
-        setProfessionalId(cachedStatus.professionalId);
-        setLoading(false);
-        return;
-      }
+    // Check if we have valid cached data for this profile
+    if (isCacheValid(cachedStatus)) {
+      setIsProfessional(cachedStatus!.isProfessional);
+      setIsActiveProfessional(cachedStatus!.isActiveProfessional);
+      setProfessionalId(cachedStatus!.professionalId);
+      setLoading(false);
+      return;
     }
 
     // Quick check: if profile type is not 'profissional', skip database query
