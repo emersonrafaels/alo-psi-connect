@@ -58,7 +58,7 @@ serve(async (req) => {
 
     console.log('Processing review request:', { requestId, action, reviewNotes });
 
-    // Fetch the request details
+    // Fetch the request details with tenant info
     const { data: request, error: fetchError } = await supabase
       .from('institution_link_requests')
       .select(`
@@ -69,11 +69,16 @@ serve(async (req) => {
           user_id
         ),
         educational_institutions!inner (
-          name
+          name,
+          type,
+          has_partnership
         ),
         tenants (
           name,
-          admin_email
+          admin_email,
+          primary_color,
+          logo_url,
+          slug
         )
       `)
       .eq('id', requestId)
@@ -146,7 +151,7 @@ serve(async (req) => {
       }
     }
 
-    // Send email notification to user
+    // Send email notification to user with tenant branding
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (resendApiKey) {
       const userEmail = request.profiles.email;
@@ -154,30 +159,85 @@ serve(async (req) => {
       const institutionName = request.educational_institutions.name;
       const tenantName = request.tenants?.name || 'Rede Bem Estar';
       const tenantEmail = request.tenants?.admin_email || 'alopsi.host@gmail.com';
+      const tenantColor = request.tenants?.primary_color || '#7c3aed';
+      const tenantLogo = request.tenants?.logo_url || '';
+      const tenantSlug = request.tenants?.slug || '';
 
-      const emailSubject =
-        action === 'approve'
-          ? `Solicitação de vínculo aprovada - ${tenantName}`
-          : `Solicitação de vínculo não aprovada - ${tenantName}`;
+      const statusLabel = action === 'approve' ? 'Aprovada' : 'Não Aprovada';
+      const statusColor = action === 'approve' ? '#22c55e' : '#ef4444';
+      const statusIcon = action === 'approve' ? '✅' : '❌';
 
-      const emailHtml =
-        action === 'approve'
-          ? `
-        <h2>Solicitação Aprovada! 🎉</h2>
-        <p>Olá, ${userName}!</p>
-        <p>Sua solicitação de vínculo com <strong>${institutionName}</strong> foi aprovada.</p>
-        <p>Agora você tem acesso aos benefícios e recursos desta instituição na plataforma ${tenantName}.</p>
-        ${reviewNotes ? `<p><strong>Observações:</strong><br/>${reviewNotes}</p>` : ''}
-        <p>Qualquer dúvida, entre em contato conosco.</p>
-        <p>Atenciosamente,<br/>Equipe ${tenantName}</p>
-      `
-          : `
-        <h2>Solicitação Não Aprovada</h2>
-        <p>Olá, ${userName}!</p>
-        <p>Infelizmente, sua solicitação de vínculo com <strong>${institutionName}</strong> não foi aprovada neste momento.</p>
-        ${reviewNotes ? `<p><strong>Motivo:</strong><br/>${reviewNotes}</p>` : ''}
-        <p>Se você tiver dúvidas ou acredita que houve um engano, entre em contato conosco.</p>
-        <p>Atenciosamente,<br/>Equipe ${tenantName}</p>
+      const emailSubject = `Solicitação de vínculo ${statusLabel.toLowerCase()} - ${tenantName}`;
+
+      const emailHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f5;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+            <!-- Header -->
+            <div style="background-color: ${tenantColor}; padding: 24px; text-align: center;">
+              ${tenantLogo ? `<img src="${tenantLogo}" alt="${tenantName}" style="max-height: 50px; margin-bottom: 16px;" />` : ''}
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px;">${tenantName}</h1>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 32px 24px;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">${statusIcon}</div>
+                <h2 style="color: ${statusColor}; margin: 0; font-size: 28px;">Solicitação ${statusLabel}!</h2>
+              </div>
+              
+              <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+                Olá, <strong>${userName}</strong>!
+              </p>
+              
+              <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+                ${action === 'approve' 
+                  ? `Sua solicitação de vínculo com <strong>${institutionName}</strong> foi <span style="color: ${statusColor}; font-weight: bold;">aprovada</span>! Agora você tem acesso aos benefícios e recursos desta instituição na plataforma.`
+                  : `Infelizmente, sua solicitação de vínculo com <strong>${institutionName}</strong> <span style="color: ${statusColor}; font-weight: bold;">não foi aprovada</span> neste momento.`
+                }
+              </p>
+              
+              ${reviewNotes ? `
+                <div style="background-color: #f9fafb; border-left: 4px solid ${tenantColor}; padding: 16px; margin: 24px 0; border-radius: 0 8px 8px 0;">
+                  <p style="margin: 0 0 8px 0; font-weight: 600; color: #374151;">
+                    ${action === 'approve' ? 'Observações:' : 'Motivo:'}
+                  </p>
+                  <p style="margin: 0; color: #6b7280; white-space: pre-wrap;">${reviewNotes}</p>
+                </div>
+              ` : ''}
+              
+              ${action === 'approve' ? `
+                <div style="text-align: center; margin: 32px 0;">
+                  <a href="https://alopsi.com.br${tenantSlug ? `/${tenantSlug}` : ''}/perfil" 
+                     style="display: inline-block; background-color: ${tenantColor}; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                    Acessar Meu Perfil
+                  </a>
+                </div>
+              ` : `
+                <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                  Se você tiver dúvidas ou acredita que houve um engano, entre em contato conosco respondendo a este email.
+                </p>
+              `}
+            </div>
+            
+            <!-- Footer -->
+            <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; color: #9ca3af; font-size: 14px;">
+                Atenciosamente,<br/>
+                <strong>Equipe ${tenantName}</strong>
+              </p>
+              <p style="margin: 16px 0 0 0; color: #d1d5db; font-size: 12px;">
+                Este é um email automático. Por favor, não responda diretamente.
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
       `;
 
       try {
@@ -199,10 +259,10 @@ serve(async (req) => {
           const errorText = await res.text();
           console.error('Failed to send email:', errorText);
         } else {
-          console.log('Email notification sent successfully');
+          console.log('Email notification sent successfully to user');
         }
       } catch (emailError) {
-        console.error('Error sending email:', emailError);
+        console.error('Error sending email to user:', emailError);
         // Don't throw - email is not critical
       }
     }

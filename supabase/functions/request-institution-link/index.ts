@@ -59,8 +59,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     const [profileData, tenantData, institutionData] = await Promise.all([
       supabaseClient.from('profiles').select('*').eq('user_id', user.id).single(),
-      supabaseClient.from('tenants').select('admin_email, name').eq('id', tenantId).single(),
-      supabaseClient.from('educational_institutions').select('name, type').eq('id', institutionId).single(),
+      supabaseClient.from('tenants').select('admin_email, name, primary_color, logo_url, slug').eq('id', tenantId).single(),
+      supabaseClient.from('educational_institutions').select('name, type, has_partnership').eq('id', institutionId).single(),
     ]);
 
     if (!profileData.data || !tenantData.data || !institutionData.data) {
@@ -133,8 +133,26 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Request created successfully:', newRequest.id);
 
+    // Fetch institution admins to notify
+    const { data: institutionAdmins } = await supabaseClient
+      .from('institution_users')
+      .select(`
+        id,
+        user_id,
+        profiles!inner (
+          email,
+          nome
+        )
+      `)
+      .eq('institution_id', institutionId)
+      .eq('role', 'admin')
+      .eq('is_active', true);
+
     const adminEmail = tenant.admin_email || 'alopsi.host@gmail.com';
-    const userTypeLabel = userType === 'paciente' ? 'Paciente' : 'Profissional';
+    const tenantColor = tenant.primary_color || '#7c3aed';
+    const tenantLogo = tenant.logo_url || '';
+    const tenantSlug = tenant.slug || '';
+    const userTypeLabel = userType === 'paciente' ? 'Paciente/Aluno' : 'Profissional';
     
     const relationshipLabels: Record<string, string> = {
       employee: 'Funcionário',
@@ -149,41 +167,105 @@ const handler = async (req: Request): Promise<Response> => {
       employee: 'Funcionário',
     };
     
+    // Enhanced email template with tenant branding
     const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Nova Solicitação de Vínculo Institucional</h2>
-        
-        <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="margin-top: 0; color: #666;">Detalhes da Solicitação</h3>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f5;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+          <!-- Header -->
+          <div style="background-color: ${tenantColor}; padding: 24px; text-align: center;">
+            ${tenantLogo ? `<img src="${tenantLogo}" alt="${tenant.name}" style="max-height: 50px; margin-bottom: 16px;" />` : ''}
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px;">${tenant.name}</h1>
+          </div>
           
-          <p><strong>Tipo de usuário:</strong> ${userTypeLabel}</p>
-          <p><strong>Nome:</strong> ${profile.nome}</p>
-          <p><strong>Email:</strong> ${profile.email}</p>
-          <p><strong>Instituição solicitada:</strong> ${institution.name}</p>
-          
-          ${relationshipType ? `<p><strong>Tipo de vínculo:</strong> ${relationshipLabels[relationshipType]}</p>` : ''}
-          ${enrollmentType ? `<p><strong>Tipo de matrícula:</strong> ${enrollmentLabels[enrollmentType]}</p>` : ''}
-          
-          ${requestMessage ? `
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
-              <strong>Mensagem do usuário:</strong>
-              <p style="white-space: pre-wrap;">${requestMessage}</p>
+          <!-- Content -->
+          <div style="padding: 32px 24px;">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">🔔</div>
+              <h2 style="color: #374151; margin: 0; font-size: 24px;">Nova Solicitação de Vínculo</h2>
             </div>
-          ` : ''}
+            
+            <p style="color: #6b7280; font-size: 16px; line-height: 1.6; text-align: center;">
+              Um usuário solicitou vínculo com uma instituição educacional.
+            </p>
+            
+            <!-- Request Details Card -->
+            <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 24px 0;">
+              <h3 style="margin: 0 0 16px 0; color: #374151; font-size: 18px;">Detalhes da Solicitação</h3>
+              
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Tipo de usuário:</td>
+                  <td style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: 600;">${userTypeLabel}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Nome:</td>
+                  <td style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: 600;">${profile.nome}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Email:</td>
+                  <td style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: 600;">${profile.email}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Instituição:</td>
+                  <td style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: 600;">
+                    ${institution.name}
+                    ${institution.has_partnership ? '<span style="background-color: #8b5cf6; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">Parceira</span>' : ''}
+                  </td>
+                </tr>
+                ${relationshipType ? `
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Tipo de vínculo:</td>
+                  <td style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: 600;">${relationshipLabels[relationshipType]}</td>
+                </tr>
+                ` : ''}
+                ${enrollmentType ? `
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Tipo de matrícula:</td>
+                  <td style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: 600;">${enrollmentLabels[enrollmentType]}</td>
+                </tr>
+                ` : ''}
+              </table>
+              
+              ${requestMessage ? `
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px;">Mensagem do usuário:</p>
+                  <div style="background-color: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <p style="margin: 0; color: #374151; font-size: 14px; white-space: pre-wrap;">${requestMessage}</p>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+            
+            <!-- CTA Button -->
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="https://alopsi.com.br${tenantSlug ? `/${tenantSlug}` : ''}/admin/instituicoes" 
+                 style="display: inline-block; background-color: ${tenantColor}; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                Revisar Solicitação
+              </a>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0; color: #9ca3af; font-size: 14px;">
+              Esta é uma notificação automática do sistema <strong>${tenant.name}</strong>.
+            </p>
+            <p style="margin: 16px 0 0 0; color: #d1d5db; font-size: 12px;">
+              Acesse o painel administrativo para aprovar ou rejeitar esta solicitação.
+            </p>
+          </div>
         </div>
-        
-        <p style="color: #666; font-size: 14px;">
-          Para analisar e aprovar/rejeitar esta solicitação, acesse o painel administrativo da plataforma.
-        </p>
-        
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;" />
-        
-        <p style="color: #999; font-size: 12px;">
-          Esta é uma notificação automática do sistema ${tenant.name}.
-        </p>
-      </div>
+      </body>
+      </html>
     `;
 
+    // Send to tenant admin
     const emailResponse = await resend.emails.send({
       from: `${tenant.name} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
@@ -192,7 +274,29 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log('Email sent successfully:', emailResponse);
+    console.log('Email sent to tenant admin:', emailResponse);
+
+    // Send to institution admins if any exist
+    if (institutionAdmins && institutionAdmins.length > 0) {
+      const institutionAdminEmails = institutionAdmins
+        .map((admin: any) => admin.profiles?.email)
+        .filter((email: string | undefined) => email && email !== adminEmail);
+
+      if (institutionAdminEmails.length > 0) {
+        try {
+          await resend.emails.send({
+            from: `${tenant.name} <noreply@redebemestar.com.br>`,
+            to: institutionAdminEmails,
+            subject: `Nova Solicitação de Vínculo - ${institution.name}`,
+            html: emailHtml,
+          });
+          console.log('Email sent to institution admins:', institutionAdminEmails);
+        } catch (instEmailError) {
+          console.error('Failed to send to institution admins:', instEmailError);
+          // Don't throw - this is not critical
+        }
+      }
+    }
 
     return new Response(
       JSON.stringify({
