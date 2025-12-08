@@ -22,13 +22,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useTenant } from '@/hooks/useTenant';
 import { usePatientInstitutions } from '@/hooks/usePatientInstitutions';
 import { useCurrentProfessionalInstitutions } from '@/hooks/useCurrentProfessionalInstitutions';
+import { useAdminInstitutions } from '@/hooks/useAdminInstitutions';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { GoogleCalendarIntegration } from '@/components/GoogleCalendarIntegration';
 import { PatientInstitutionsCard } from '@/components/PatientInstitutionsCard';
 import { ProfessionalInstitutionsCard } from '@/components/ProfessionalInstitutionsCard';
+import { AdminInstitutionsCard } from '@/components/AdminInstitutionsCard';
 import { PatientCouponsCard } from '@/components/PatientCouponsCard';
 import { InstitutionLinkRequestCard } from '@/components/InstitutionLinkRequestCard';
-import { ArrowLeft, Camera, Check, User, GraduationCap, Briefcase } from 'lucide-react';
+import { ArrowLeft, Camera, Check, User, GraduationCap, Briefcase, Shield } from 'lucide-react';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -38,10 +40,14 @@ const Profile = () => {
   const { isConnected: googleCalendarConnected, refetch: refetchGoogleCalendar } = useGoogleCalendarStatus();
   const { linkedInstitutions, isLoading: loadingInstitutions } = usePatientInstitutions();
   const { linkedInstitutions: professionalLinkedInstitutions, isLoading: loadingProfessionalInstitutions } = useCurrentProfessionalInstitutions();
+  const { institutions: adminInstitutions, isLoading: loadingAdminInstitutions } = useAdminInstitutions();
   const { isUploading: isUploadingPendingPhoto } = useFirstLoginPhotoUpload(); // ⭐ Upload automático de foto pendente
   const { toast } = useToast();
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
+  
+  // Verificar se usuário é admin institucional
+  const isAdmin = profile?.tipo_usuario === 'admin';
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -269,8 +275,96 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          {/* Sistema de Tabs para Pacientes */}
-          {!isProfessional ? (
+          {/* Sistema de Tabs para Admins Institucionais */}
+          {isAdmin ? (
+            <Tabs defaultValue="personal" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="personal" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Informações Pessoais
+                </TabsTrigger>
+                <TabsTrigger value="institution" className="flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Instituição
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="personal" className="space-y-6 mt-0">
+                {/* Formulário de Informações Pessoais - mesmo para admins */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Informações Pessoais</CardTitle>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <div className="space-y-6">
+                      <div className="grid gap-4">
+                        <div>
+                          <Label htmlFor="nome">Nome completo</Label>
+                          <Input
+                            id="nome"
+                            value={formData.nome}
+                            onChange={(e) => updateFormData('nome', e.target.value)}
+                            placeholder="Seu nome completo"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => updateFormData('email', e.target.value)}
+                            disabled
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Para alterar o email, entre em contato com o suporte
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end pt-6">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              type="button"
+                              disabled={loading}
+                              className="w-full sm:w-auto"
+                            >
+                              {loading ? 'Salvando...' : 'Salvar Alterações'}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar alterações</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Você tem certeza que deseja salvar as alterações em seu perfil? Esta ação atualizará suas informações pessoais.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleSubmit} disabled={loading}>
+                                {loading ? 'Salvando...' : 'Salvar'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="institution" className="space-y-6 mt-0">
+                <AdminInstitutionsCard
+                  institutions={adminInstitutions}
+                  loading={loadingAdminInstitutions}
+                />
+              </TabsContent>
+            </Tabs>
+          ) : !isProfessional ? (
+            /* Sistema de Tabs para Pacientes */
             <Tabs defaultValue="personal" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="personal" className="flex items-center gap-2">
