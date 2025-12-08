@@ -50,6 +50,30 @@ export function ReviewLinkRequestModal({
     return <Badge variant="outline"><Briefcase className="w-3 h-3 mr-1" />Profissional</Badge>;
   };
 
+  const getRelationshipTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      employee: 'Funcionário',
+      consultant: 'Consultor',
+      supervisor: 'Supervisor',
+      intern: 'Estagiário',
+      partner: 'Parceiro',
+      contractor: 'Prestador de Serviço',
+    };
+    return labels[type.toLowerCase()] || type;
+  };
+
+  const getEnrollmentTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      student: 'Estudante',
+      alumni: 'Ex-Aluno',
+      employee: 'Funcionário',
+      enrolled: 'Matriculado',
+      graduated: 'Formado',
+      inactive: 'Inativo',
+    };
+    return labels[type.toLowerCase()] || type;
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -126,14 +150,14 @@ export function ReviewLinkRequestModal({
               {request.relationship_type && (
                 <div className="text-sm">
                   <span className="font-medium">Tipo de relacionamento:</span>{' '}
-                  <span className="text-muted-foreground capitalize">{request.relationship_type}</span>
+                  <span className="text-muted-foreground">{getRelationshipTypeLabel(request.relationship_type)}</span>
                 </div>
               )}
 
               {request.enrollment_type && (
                 <div className="text-sm">
                   <span className="font-medium">Tipo de matrícula:</span>{' '}
-                  <span className="text-muted-foreground capitalize">{request.enrollment_type}</span>
+                  <span className="text-muted-foreground">{getEnrollmentTypeLabel(request.enrollment_type)}</span>
                 </div>
               )}
 
