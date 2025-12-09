@@ -50,7 +50,7 @@ export const CouponValidator = ({
         setError(null);
 
         try {
-          const result = await validateCoupon(autoApplyCode.toUpperCase(), professionalId, amount, tenantId);
+          const result = await validateCoupon(autoApplyCode.toUpperCase(), professionalId, amount, tenantId) as any;
 
           if (result.is_valid) {
             const couponData = {
@@ -64,7 +64,7 @@ export const CouponValidator = ({
             onCouponApplied(couponData);
             setError(null);
           } else {
-            setError(result.error_message || 'Cupom inválido');
+            setError(result.message || result.error_message || 'Cupom inválido');
             setAppliedCoupon(null);
           }
         } catch (err: any) {
@@ -84,7 +84,7 @@ export const CouponValidator = ({
     setError(null);
 
     try {
-      const result = await validateCoupon(couponCode.toUpperCase(), professionalId, amount, tenantId);
+      const result = await validateCoupon(couponCode.toUpperCase(), professionalId, amount, tenantId) as any;
 
       if (result.is_valid) {
         const couponData = {
@@ -98,7 +98,7 @@ export const CouponValidator = ({
         onCouponApplied(couponData);
         setError(null);
       } else {
-        setError(result.error_message || 'Cupom inválido');
+        setError(result.message || result.error_message || 'Cupom inválido');
         setAppliedCoupon(null);
       }
     } catch (err: any) {

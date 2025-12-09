@@ -27,21 +27,28 @@ export const useProfessionalsWithCoupons = (professionalIds: number[], amount: n
       }
 
       try {
-        // 1. Buscar instituições vinculadas ao paciente
+        // 1. Buscar perfil e paciente em uma query
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (!profileData) {
+          return couponMap;
+        }
+
         const { data: patientData } = await supabase
           .from('pacientes')
           .select('id')
-          .eq('profile_id', (await supabase
-            .from('profiles')
-            .select('id')
-            .eq('user_id', user.id)
-            .single()).data?.id)
-          .single();
+          .eq('profile_id', profileData.id)
+          .maybeSingle();
 
         if (!patientData) {
           return couponMap;
         }
 
+        // 2. Buscar instituições vinculadas ao paciente
         const { data: linkedInstitutions } = await supabase
           .from('patient_institutions')
           .select('institution_id, enrollment_status')
@@ -51,14 +58,13 @@ export const useProfessionalsWithCoupons = (professionalIds: number[], amount: n
           .filter(link => link.enrollment_status === 'enrolled')
           .map(link => link.institution_id);
 
-        // 2. Buscar cupons ativos do tenant
+        // 3. Buscar cupons ativos do tenant
         const { data: coupons } = await supabase
           .from('institution_coupons')
           .select(`
             id,
             code,
             name,
-            description,
             discount_type,
             discount_value,
             max_discount_amount,
@@ -78,45 +84,58 @@ export const useProfessionalsWithCoupons = (professionalIds: number[], amount: n
           return couponMap;
         }
 
-        // 3. Para cada profissional, verificar se há cupons aplicáveis
+        // 4. Buscar profissionais vinculados a instituições (batch)
+        const institutionProfessionalIds = coupons
+          .filter(c => c.professional_scope === 'institution_professionals')
+          .map(c => c.institution_id);
+
+        let profInstitutionMap = new Map<string, Set<number>>();
+        
+        if (institutionProfessionalIds.length > 0) {
+          const { data: profInstitutions } = await supabase
+            .from('professional_institutions')
+            .select('professional_id, institution_id')
+            .in('institution_id', institutionProfessionalIds)
+            .eq('is_active', true);
+
+          (profInstitutions || []).forEach(pi => {
+            if (!profInstitutionMap.has(pi.institution_id)) {
+              profInstitutionMap.set(pi.institution_id, new Set());
+            }
+            profInstitutionMap.get(pi.institution_id)!.add(pi.professional_id);
+          });
+        }
+
+        // 5. Pré-filtrar cupons elegíveis para o usuário
+        const eligibleCoupons = coupons.filter(coupon => {
+          if (coupon.target_audience === 'all') return true;
+          if (coupon.target_audience === 'institution_students') {
+            return enrolledInstitutionIds.includes(coupon.institution_id);
+          }
+          if (coupon.target_audience === 'specific_users') {
+            return coupon.target_audience_user_ids?.includes(user.id) || false;
+          }
+          if (coupon.target_audience === 'non_students') {
+            return !enrolledInstitutionIds.includes(coupon.institution_id);
+          }
+          return true;
+        });
+
+        if (eligibleCoupons.length === 0) {
+          return couponMap;
+        }
+
+        // 6. Para cada profissional, verificar cupons elegíveis (sem RPC individual)
         for (const professionalId of professionalIds) {
-          for (const coupon of coupons) {
-            // Verificar elegibilidade do paciente (target_audience)
-            let isEligible = false;
-
-            if (coupon.target_audience === 'all') {
-              isEligible = true;
-            } else if (coupon.target_audience === 'institution_students') {
-              // Paciente deve estar matriculado na instituição do cupom
-              isEligible = enrolledInstitutionIds.includes(coupon.institution_id);
-            } else if (coupon.target_audience === 'specific_users') {
-              isEligible = coupon.target_audience_user_ids?.includes(user.id) || false;
-            } else if (coupon.target_audience === 'non_students') {
-              // Paciente NÃO deve estar matriculado na instituição
-              isEligible = !enrolledInstitutionIds.includes(coupon.institution_id);
-            }
-
-            if (!isEligible) {
-              continue;
-            }
-
-            // Verificar se o profissional está no escopo (professional_scope)
+          for (const coupon of eligibleCoupons) {
+            // Verificar escopo do profissional
             let isProfessionalInScope = false;
 
-            // 'all_tenant' = todos profissionais do tenant, 'all' (legado) = mesma coisa
-            if (coupon.professional_scope === 'all_tenant' || coupon.professional_scope === 'all') {
+            if (coupon.professional_scope === 'all_tenant' || coupon.professional_scope === 'all' || !coupon.professional_scope) {
               isProfessionalInScope = true;
             } else if (coupon.professional_scope === 'institution_professionals') {
-              // Verificar se o profissional está vinculado à instituição do cupom
-              const { data: profInstitution } = await supabase
-                .from('professional_institutions')
-                .select('professional_id')
-                .eq('professional_id', professionalId)
-                .eq('institution_id', coupon.institution_id)
-                .eq('is_active', true)
-                .single();
-
-              isProfessionalInScope = !!profInstitution;
+              const institutionProfs = profInstitutionMap.get(coupon.institution_id);
+              isProfessionalInScope = institutionProfs?.has(professionalId) || false;
             } else if (coupon.professional_scope === 'specific_professionals') {
               isProfessionalInScope = coupon.professional_scope_ids?.includes(professionalId) || false;
             }
@@ -125,35 +144,32 @@ export const useProfessionalsWithCoupons = (professionalIds: number[], amount: n
               continue;
             }
 
-            // Validar cupom usando a RPC function
-            try {
-              const { data: validationResult } = await supabase.rpc('validate_coupon', {
-                _code: coupon.code,
-                _user_id: user.id,
-                _professional_id: professionalId,
-                _amount: amount,
-                _tenant_id: tenant.id,
-              });
-
-              if (validationResult && validationResult[0]?.is_valid) {
-                // Se já existe um cupom para este profissional, manter o de maior desconto
-                const existingCoupon = couponMap.get(professionalId);
-                const currentDiscount = validationResult[0].discount_amount;
-
-                if (!existingCoupon || currentDiscount > existingCoupon.potentialDiscount) {
-                  couponMap.set(professionalId, {
-                    couponId: coupon.id,
-                    code: coupon.code,
-                    name: coupon.name,
-                    discountType: coupon.discount_type,
-                    discountValue: coupon.discount_value,
-                    potentialDiscount: currentDiscount,
-                    finalAmount: validationResult[0].final_amount,
-                  });
-                }
+            // Calcular desconto localmente (evitar RPC para cada combo)
+            let discountAmount: number;
+            if (coupon.discount_type === 'percentage') {
+              discountAmount = (amount * coupon.discount_value) / 100;
+              if (coupon.max_discount_amount && discountAmount > coupon.max_discount_amount) {
+                discountAmount = coupon.max_discount_amount;
               }
-            } catch (err) {
-              console.error('Error validating coupon:', err);
+            } else {
+              discountAmount = coupon.discount_value;
+            }
+
+            const finalAmount = Math.max(amount - discountAmount, 0);
+
+            // Se já existe um cupom para este profissional, manter o de maior desconto
+            const existingCoupon = couponMap.get(professionalId);
+
+            if (!existingCoupon || discountAmount > existingCoupon.potentialDiscount) {
+              couponMap.set(professionalId, {
+                couponId: coupon.id,
+                code: coupon.code,
+                name: coupon.name,
+                discountType: coupon.discount_type,
+                discountValue: coupon.discount_value,
+                potentialDiscount: discountAmount,
+                finalAmount: finalAmount,
+              });
             }
           }
         }

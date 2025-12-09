@@ -1994,9 +1994,16 @@ const Professionals = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 p-4 bg-muted/30 rounded-lg border border-border/50">
             {/* Contagem e Filtros Ativos */}
             <div className="text-sm text-muted-foreground space-y-1">
-              <p className="font-medium text-foreground">
-                {filteredProfessionals.length} profissiona{filteredProfessionals.length !== 1 ? 'is' : 'l'} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
-              </p>
+              {filters.comCupom && couponsLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="font-medium text-foreground">Verificando cupons aplicáveis...</span>
+                </div>
+              ) : (
+                <p className="font-medium text-foreground">
+                  {filteredProfessionals.length} profissiona{filteredProfessionals.length !== 1 ? 'is' : 'l'} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
+                </p>
+              )}
               {(filters.profissoes.length > 0 || filters.dias.length > 0 || filters.horarioInicio || filters.horarioFim || filters.valorMin || filters.valorMax || filters.especialidadesNormalizadas.length > 0 || filters.genero.length > 0 || filters.comCupom) && (
                 <p className="text-xs">
                   Filtros ativos: {[
