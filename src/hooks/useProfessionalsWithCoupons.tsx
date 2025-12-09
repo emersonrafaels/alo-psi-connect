@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useTenant } from './useTenant';
 
-interface CouponInfo {
+export interface CouponInfo {
   couponId: string;
   code: string;
   name: string;
@@ -13,16 +13,25 @@ interface CouponInfo {
   finalAmount: number;
 }
 
+export interface ProfessionalCouponData {
+  bestCoupon: CouponInfo;
+  allCoupons: CouponInfo[];
+}
+
 export const useProfessionalsWithCoupons = (professionals: { id: number; price: number }[]) => {
   const professionalIds = professionals.map(p => p.id);
   const priceMap = new Map(professionals.map(p => [p.id, p.price]));
   const { user } = useAuth();
   const { tenant } = useTenant();
 
+  // Criar hash único que inclui IDs e preços para detectar mudanças
+  const pricesHash = professionals.map(p => `${p.id}:${p.price}`).join(',');
+  const hasValidPrices = professionals.some(p => p.price > 0);
+
   return useQuery({
-    queryKey: ['professionals-with-coupons', professionalIds, tenant?.id, user?.id],
-    queryFn: async (): Promise<Map<number, CouponInfo>> => {
-      const couponMap = new Map<number, CouponInfo>();
+    queryKey: ['professionals-with-coupons', pricesHash, tenant?.id, user?.id],
+    queryFn: async (): Promise<Map<number, ProfessionalCouponData>> => {
+      const couponMap = new Map<number, ProfessionalCouponData>();
 
       if (!user || !tenant || professionalIds.length === 0) {
         return couponMap;
@@ -127,8 +136,10 @@ export const useProfessionalsWithCoupons = (professionals: { id: number; price: 
           return couponMap;
         }
 
-        // 6. Para cada profissional, verificar cupons elegíveis (sem RPC individual)
+        // 6. Para cada profissional, coletar TODOS os cupons elegíveis
         for (const professionalId of professionalIds) {
+          const professionalCoupons: CouponInfo[] = [];
+
           for (const coupon of eligibleCoupons) {
             // Verificar escopo do profissional
             let isProfessionalInScope = false;
@@ -160,20 +171,26 @@ export const useProfessionalsWithCoupons = (professionals: { id: number; price: 
 
             const finalAmount = Math.max(professionalPrice - discountAmount, 0);
 
-            // Se já existe um cupom para este profissional, manter o de maior desconto
-            const existingCoupon = couponMap.get(professionalId);
+            // Adicionar cupom à lista
+            professionalCoupons.push({
+              couponId: coupon.id,
+              code: coupon.code,
+              name: coupon.name,
+              discountType: coupon.discount_type,
+              discountValue: coupon.discount_value,
+              potentialDiscount: discountAmount,
+              finalAmount: finalAmount,
+            });
+          }
 
-            if (!existingCoupon || discountAmount > existingCoupon.potentialDiscount) {
-              couponMap.set(professionalId, {
-                couponId: coupon.id,
-                code: coupon.code,
-                name: coupon.name,
-                discountType: coupon.discount_type,
-                discountValue: coupon.discount_value,
-                potentialDiscount: discountAmount,
-                finalAmount: finalAmount,
-              });
-            }
+          // Se há cupons, ordenar por desconto (maior primeiro) e salvar
+          if (professionalCoupons.length > 0) {
+            professionalCoupons.sort((a, b) => b.potentialDiscount - a.potentialDiscount);
+            
+            couponMap.set(professionalId, {
+              bestCoupon: professionalCoupons[0],
+              allCoupons: professionalCoupons,
+            });
           }
         }
 
@@ -183,7 +200,7 @@ export const useProfessionalsWithCoupons = (professionals: { id: number; price: 
         return couponMap;
       }
     },
-    enabled: !!user && !!tenant && professionalIds.length > 0,
+    enabled: !!user && !!tenant && professionalIds.length > 0 && hasValidPrices,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };

@@ -43,9 +43,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useSearchFilters } from "@/hooks/useSearchFilters"
 import { useAIAssistantConfig } from "@/hooks/useAIAssistantConfig"
 import { useAuth } from "@/hooks/useAuth"
-import { useProfessionalsWithCoupons } from "@/hooks/useProfessionalsWithCoupons"
+import { useProfessionalsWithCoupons, CouponInfo } from "@/hooks/useProfessionalsWithCoupons"
 import { usePatientInstitutions } from "@/hooks/usePatientInstitutions"
-import { CouponBadgeWithDetails } from "@/components/professionals/CouponBadgeWithDetails"
+import { CouponSelector } from "@/components/professionals/CouponSelector"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -130,6 +130,25 @@ const Professionals = () => {
   const { data: professionalsWithCoupons, isLoading: couponsLoading } = useProfessionalsWithCoupons(
     professionalsWithPrices
   )
+  
+  // Estado para rastrear cupons selecionados por profissional
+  const [selectedCoupons, setSelectedCoupons] = useState<Map<number, CouponInfo>>(new Map());
+  
+  // Função para obter o cupom selecionado (ou o melhor como padrão)
+  const getSelectedCoupon = (professionalId: number): CouponInfo | null => {
+    const couponData = professionalsWithCoupons?.get(professionalId);
+    if (!couponData) return null;
+    return selectedCoupons.get(professionalId) || couponData.bestCoupon;
+  };
+  
+  // Função para alterar o cupom selecionado
+  const handleCouponChange = (professionalId: number, coupon: CouponInfo) => {
+    setSelectedCoupons(prev => {
+      const newMap = new Map(prev);
+      newMap.set(professionalId, coupon);
+      return newMap;
+    });
+  };
 
   // Configurações do assistente IA
   const { aiConfig } = useAIAssistantConfig()
@@ -350,8 +369,8 @@ const Professionals = () => {
       case 'maior_desconto':
         // Ordenar por maior desconto disponível
         filtered.sort((a, b) => {
-          const discountA = professionalsWithCoupons?.get(a.id)?.potentialDiscount || 0
-          const discountB = professionalsWithCoupons?.get(b.id)?.potentialDiscount || 0
+          const discountA = professionalsWithCoupons?.get(a.id)?.bestCoupon?.potentialDiscount || 0
+          const discountB = professionalsWithCoupons?.get(b.id)?.bestCoupon?.potentialDiscount || 0
           return discountB - discountA
         })
         break
@@ -2017,7 +2036,7 @@ const Professionals = () => {
                   </p>
                   {/* Indicador de economia máxima */}
                   {professionalsWithCoupons && professionalsWithCoupons.size > 0 && !filters.comCupom && (() => {
-                    const maxDiscount = Math.max(...Array.from(professionalsWithCoupons.values()).map(c => c.potentialDiscount))
+                    const maxDiscount = Math.max(...Array.from(professionalsWithCoupons.values()).map(c => c.bestCoupon.potentialDiscount))
                     if (maxDiscount > 0) {
                       return (
                         <Badge 
@@ -2268,34 +2287,42 @@ const Professionals = () => {
                              {/* Preço e Cupom - Mostrado diretamente */}
                              {professional.preco_consulta && (
                                <>
-                                 {professionalsWithCoupons?.has(professional.id) ? (
-                                   <div className="bg-gradient-to-r from-emerald-50/90 to-green-50/90 dark:from-emerald-950/40 dark:to-green-950/40 border border-emerald-200/60 dark:border-emerald-800/60 rounded-lg p-2.5 mb-2">
-                                     <div className="flex items-center justify-between gap-2 mb-1.5">
-                                       <div className="flex items-center gap-2">
-                                         <span className="text-sm text-muted-foreground line-through">
-                                           {formatPrice(professional.preco_consulta)}
-                                         </span>
-                                         <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                                           {formatPrice(Math.max(professional.preco_consulta - professionalsWithCoupons.get(professional.id)!.potentialDiscount, 0))}
-                                         </span>
-                                       </div>
-                                       <CouponBadgeWithDetails
-                                         coupon={professionalsWithCoupons.get(professional.id)!}
-                                         originalPrice={professional.preco_consulta}
-                                       />
-                                     </div>
-                                     <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400">
-                                       <Tag className="h-3 w-3 flex-shrink-0" />
-                                       <span className="font-medium truncate">{professionalsWithCoupons.get(professional.id)!.name}</span>
-                                     </div>
-                                   </div>
-                                 ) : (
-                                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                                     <span className="text-lg font-bold text-primary">
-                                       {formatPrice(professional.preco_consulta)}
-                                     </span>
-                                   </div>
-                                 )}
+                                 {professionalsWithCoupons?.has(professional.id) ? (() => {
+                                    const couponData = professionalsWithCoupons.get(professional.id)!;
+                                    const selectedCoupon = getSelectedCoupon(professional.id)!;
+                                    const finalPrice = Math.max(professional.preco_consulta - selectedCoupon.potentialDiscount, 0);
+                                    
+                                    return (
+                                      <div className="bg-gradient-to-r from-emerald-50/90 to-green-50/90 dark:from-emerald-950/40 dark:to-green-950/40 border border-emerald-200/60 dark:border-emerald-800/60 rounded-lg p-2.5 mb-2">
+                                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-sm text-muted-foreground line-through">
+                                              {formatPrice(professional.preco_consulta)}
+                                            </span>
+                                            <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                              {formatPrice(finalPrice)}
+                                            </span>
+                                          </div>
+                                          <CouponSelector
+                                            couponData={couponData}
+                                            selectedCoupon={selectedCoupon}
+                                            originalPrice={professional.preco_consulta}
+                                            onCouponChange={(coupon) => handleCouponChange(professional.id, coupon)}
+                                          />
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400">
+                                          <Tag className="h-3 w-3 flex-shrink-0" />
+                                          <span className="font-medium truncate">{selectedCoupon.name}</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })() : (
+                                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                                      <span className="text-lg font-bold text-primary">
+                                        {formatPrice(professional.preco_consulta)}
+                                      </span>
+                                    </div>
+                                  )}
                                </>
                              )}
                              
@@ -2385,9 +2412,9 @@ const Professionals = () => {
                           <Button size="sm" className="flex-1 lg:flex-none btn-gradient shadow-lg" asChild>
                             <Link to={buildTenantPath(tenantSlug, `/agendamento?professionalId=${professional.id}${
                               (() => {
-                                const couponInfo = professionalsWithCoupons?.get(professional.id);
-                                if (couponInfo) {
-                                  return `&couponCode=${couponInfo.code}&couponName=${encodeURIComponent(couponInfo.name)}&couponDiscount=${couponInfo.potentialDiscount}&couponFinal=${couponInfo.finalAmount}`;
+                                const selectedCoupon = getSelectedCoupon(professional.id);
+                                if (selectedCoupon) {
+                                  return `&couponCode=${selectedCoupon.code}&couponName=${encodeURIComponent(selectedCoupon.name)}&couponDiscount=${selectedCoupon.potentialDiscount}&couponFinal=${selectedCoupon.finalAmount}`;
                                 }
                                 return '';
                               })()
