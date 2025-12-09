@@ -41,7 +41,7 @@ function generateInstitutionLinkEmailHTML(
   userEmail: string,
   institutionName: string,
   role: string,
-  portalUrl: string,
+  homepageUrl: string,
   loginUrl: string,
   isNewUser: boolean = false,
   temporaryPassword?: string
@@ -159,8 +159,12 @@ function generateInstitutionLinkEmailHTML(
             
             <div style="text-align: center; margin: 30px 0;">
               <a href="${loginUrl}" style="display: inline-block; background: ${primaryColor}; color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); margin-right: 10px;">🔑 Fazer Login</a>
-              <a href="${portalUrl}" style="display: inline-block; background: transparent; color: ${primaryColor}; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; border: 2px solid ${primaryColor};">🚀 Acessar Portal</a>
+              <a href="${homepageUrl}" style="display: inline-block; background: transparent; color: ${primaryColor}; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; border: 2px solid ${primaryColor};">🌐 Conhecer a Plataforma</a>
             </div>
+            
+            <p style="margin: 15px 0; font-size: 13px; color: #6b7280; text-align: center;">
+              📌 Após fazer login, acesse o <strong>Portal Institucional</strong> pelo menu do usuário.
+            </p>
             
             ${loginTipSection}
             
@@ -239,10 +243,10 @@ const handler = async (req: Request): Promise<Response> => {
       ? `${baseUrl}/auth`
       : `${baseUrl}/${tenantSlug}/auth`;
     
-    // URL do portal institucional
-    const portalUrl = tenantSlug === 'alopsi' 
-      ? `${baseUrl}/portal-institucional`
-      : `${baseUrl}/${tenantSlug}/portal-institucional`;
+    // URL da homepage do tenant
+    const homepageUrl = tenantSlug === 'alopsi' 
+      ? baseUrl
+      : `${baseUrl}/${tenantSlug}`;
 
     // Gerar HTML do email
     const emailHtml = generateInstitutionLinkEmailHTML(
@@ -253,7 +257,7 @@ const handler = async (req: Request): Promise<Response> => {
       userEmail,
       institutionName,
       role,
-      portalUrl,
+      homepageUrl,
       loginUrl,
       isNewUser,
       temporaryPassword
