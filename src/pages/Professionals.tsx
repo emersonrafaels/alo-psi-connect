@@ -2230,16 +2230,17 @@ const Professionals = () => {
                                   {getInitials(professional.display_name)}
                                 </div>
                               )}
-                              {professional.preco_consulta && (
-                                <Badge className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground shadow-lg font-bold px-2 py-1">
-                                  {formatPrice(professional.preco_consulta)}
-                                </Badge>
+                              {/* Badge de cupom no avatar quando disponível */}
+                              {professionalsWithCoupons?.has(professional.id) && (
+                                <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-1 shadow-lg">
+                                  <Tag className="h-3.5 w-3.5" />
+                                </div>
                               )}
                             </div>
 
                             {/* Name and Profession */}
                             <div className="text-center sm:text-left min-w-0 flex-1">
-                              <h3 className="text-xl font-bold text-foreground mb-1 truncate">
+                              <h3 className="text-xl font-bold text-foreground mb-1 line-clamp-2">
                                 {professional.display_name}
                               </h3>
                               <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2 mb-2 dark:text-white/80">
@@ -2253,12 +2254,28 @@ const Professionals = () => {
                                )}
                              </div>
 
-                             {/* Cupom Badge - Com Preview de Preço */}
-                             {professionalsWithCoupons?.has(professional.id) && (
-                               <CouponBadgeWithDetails
-                                 coupon={professionalsWithCoupons.get(professional.id)!}
-                                 originalPrice={professional.preco_consulta}
-                               />
+                             {/* Preço e Cupom - Mostrado diretamente */}
+                             {professional.preco_consulta && (
+                               <div className="flex flex-wrap items-center gap-2 mb-2">
+                                 {professionalsWithCoupons?.has(professional.id) ? (
+                                   <>
+                                     <span className="text-sm text-muted-foreground line-through">
+                                       {formatPrice(professional.preco_consulta)}
+                                     </span>
+                                     <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                       {formatPrice(Math.max(professional.preco_consulta - professionalsWithCoupons.get(professional.id)!.potentialDiscount, 0))}
+                                     </span>
+                                     <CouponBadgeWithDetails
+                                       coupon={professionalsWithCoupons.get(professional.id)!}
+                                       originalPrice={professional.preco_consulta}
+                                     />
+                                   </>
+                                 ) : (
+                                   <span className="text-lg font-bold text-primary">
+                                     {formatPrice(professional.preco_consulta)}
+                                   </span>
+                                 )}
+                               </div>
                              )}
                              
                              {professional.resumo_profissional && (
