@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Sparkles, Percent, Tag, Copy, Check } from "lucide-react"
+import { Sparkles, Copy, Check } from "lucide-react"
 import { useState } from "react"
 
 interface CouponInfo {
@@ -43,8 +43,8 @@ export const CouponBadgeWithDetails = ({ coupon, originalPrice }: CouponBadgeWit
 
   const isPercentage = coupon.discountType === 'percentage';
   const discountText = isPercentage 
-    ? `${coupon.discountValue}% OFF` 
-    : `R$ ${coupon.discountValue} OFF`;
+    ? `-${coupon.discountValue}%` 
+    : `-R$ ${coupon.discountValue}`;
 
   // Calculate final price based on original price if available
   const calculatedFinalPrice = originalPrice 
@@ -55,22 +55,17 @@ export const CouponBadgeWithDetails = ({ coupon, originalPrice }: CouponBadgeWit
     <TooltipProvider>
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>
-          <div className="animate-pulse-subtle cursor-pointer">
-            <Badge 
-              className={`
-                ${isPercentage 
-                  ? 'bg-gradient-to-r from-emerald-500 to-green-600' 
-                  : 'bg-gradient-to-r from-amber-500 to-orange-500'
-                } 
-                text-white border-0 shadow-lg flex items-center gap-1.5 px-3 py-1.5 w-fit hover:scale-105 transition-transform
-              `}
-            >
-              {isPercentage ? <Percent className="h-3.5 w-3.5" /> : <Tag className="h-3.5 w-3.5" />}
-              <span className="font-semibold">
-                🎉 {discountText}
-              </span>
-            </Badge>
-          </div>
+          <Badge 
+            className={`
+              ${isPercentage 
+                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' 
+                : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
+              } 
+              border-0 cursor-pointer hover:opacity-80 transition-opacity text-xs font-semibold
+            `}
+          >
+            {discountText}
+          </Badge>
         </TooltipTrigger>
         <TooltipContent 
           side="top" 
