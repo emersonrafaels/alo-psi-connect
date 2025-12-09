@@ -156,7 +156,7 @@ const Professionals = () => {
 
   useEffect(() => {
     filterProfessionals()
-  }, [professionals, searchTerm, filters])
+  }, [professionals, searchTerm, filters, professionalsWithCoupons])
 
   const filterProfessionals = () => {
     let filtered = professionals
@@ -991,62 +991,88 @@ const Professionals = () => {
               <div className="space-y-3 py-3 px-6 pb-6">
                         {/* Quick Presets */}
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-6 px-6 snap-x snap-mandatory">
-                          <Button
-                            variant={filters.dias.includes('monday') && filters.dias.includes('tuesday') && 
-                                    filters.dias.includes('wednesday') && filters.dias.includes('thursday') && 
-                                    filters.dias.includes('friday') ? "default" : "outline"}
-                            size="sm"
-                            className="shrink-0 snap-center"
-                            onClick={() => {
-                              const weekDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
-                              const allSelected = weekDays.every(d => filters.dias.includes(d))
-                              setFilters(prev => ({
-                                ...prev,
-                                dias: allSelected ? [] : weekDays
-                              }))
-                            }}
-                          >
-                            <Zap className="h-3 w-3 mr-1" />
-                            Dias úteis
-                          </Button>
-                          <Button
-                            variant={filters.horarioInicio === '18:00' && filters.horarioFim === '22:00' ? "default" : "outline"}
-                            size="sm"
-                            className="shrink-0 snap-center"
-                            onClick={() => {
-                              setFilters(prev => ({
-                                ...prev,
-                                horarioInicio: prev.horarioInicio === '18:00' ? '' : '18:00',
-                                horarioFim: prev.horarioFim === '22:00' ? '' : '22:00'
-                              }))
-                            }}
-                          >
-                            <Moon className="h-3 w-3 mr-1" />
-                            Noturno
-                          </Button>
-                          <Button
-                            variant={filters.dias.includes('saturday') && filters.dias.includes('sunday') ? "default" : "outline"}
-                            size="sm"
-                            className="shrink-0 snap-center"
-                            onClick={() => {
-                              const weekendDays = ['saturday', 'sunday']
-                              const allSelected = weekendDays.every(d => filters.dias.includes(d))
-                              setFilters(prev => ({
-                                ...prev,
-                                dias: allSelected 
-                                  ? prev.dias.filter(d => !weekendDays.includes(d))
-                                  : [...prev.dias, ...weekendDays.filter(d => !prev.dias.includes(d))]
-                              }))
-                            }}
-                          >
-                            <Calendar className="h-3 w-3 mr-1" />
-                            Fim de semana
-                          </Button>
-                          {user && linkedInstitutions && linkedInstitutions.length > 0 && professionalsWithCouponsCount > 0 && (
+                          {/* Dias úteis */}
+                          {(() => {
+                            const weekDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
+                            const isActive = weekDays.every(d => filters.dias.includes(d))
+                            return (
+                              <Button
+                                variant={isActive ? "default" : "outline"}
+                                size="sm"
+                                className={`shrink-0 snap-center transition-all ${
+                                  isActive ? "bg-teal-500 text-white border-teal-500" : ""
+                                }`}
+                                onClick={() => {
+                                  setFilters(prev => ({
+                                    ...prev,
+                                    dias: isActive ? [] : weekDays
+                                  }))
+                                }}
+                              >
+                                <Zap className="h-3 w-3 mr-1" />
+                                Dias úteis
+                              </Button>
+                            )
+                          })()}
+                          
+                          {/* Noturno */}
+                          {(() => {
+                            const isActive = filters.horarioInicio === '18:00' && filters.horarioFim === '22:00'
+                            return (
+                              <Button
+                                variant={isActive ? "default" : "outline"}
+                                size="sm"
+                                className={`shrink-0 snap-center transition-all ${
+                                  isActive ? "bg-indigo-500 text-white border-indigo-500" : ""
+                                }`}
+                                onClick={() => {
+                                  setFilters(prev => ({
+                                    ...prev,
+                                    horarioInicio: isActive ? '' : '18:00',
+                                    horarioFim: isActive ? '' : '22:00'
+                                  }))
+                                }}
+                              >
+                                <Moon className="h-3 w-3 mr-1" />
+                                Noturno
+                              </Button>
+                            )
+                          })()}
+                          
+                          {/* Fim de semana */}
+                          {(() => {
+                            const weekendDays = ['saturday', 'sunday']
+                            const isActive = weekendDays.every(d => filters.dias.includes(d))
+                            return (
+                              <Button
+                                variant={isActive ? "default" : "outline"}
+                                size="sm"
+                                className={`shrink-0 snap-center transition-all ${
+                                  isActive ? "bg-orange-500 text-white border-orange-500" : ""
+                                }`}
+                                onClick={() => {
+                                  setFilters(prev => ({
+                                    ...prev,
+                                    dias: isActive 
+                                      ? prev.dias.filter(d => !weekendDays.includes(d))
+                                      : [...prev.dias.filter(d => !weekendDays.includes(d)), ...weekendDays]
+                                  }))
+                                }}
+                              >
+                                <Calendar className="h-3 w-3 mr-1" />
+                                Fim de semana
+                              </Button>
+                            )
+                          })()}
+                          
+                          {/* Com Cupom */}
+                          {user && linkedInstitutions && linkedInstitutions.length > 0 && (
                             <Button
                               variant={filters.comCupom ? "default" : "outline"}
                               size="sm"
-                              className="shrink-0 snap-center"
+                              className={`shrink-0 snap-center transition-all ${
+                                filters.comCupom ? "bg-emerald-500 text-white border-emerald-500" : ""
+                              }`}
                               onClick={() => setFilters(prev => ({ ...prev, comCupom: !prev.comCupom }))}
                             >
                               <Tag className="h-3 w-3 mr-1" />
@@ -1440,95 +1466,128 @@ const Professionals = () => {
 
                 {/* Quick Filter Presets */}
                 <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-                  {/* Disponíveis agora */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const today = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()]
-                      const timeRange = getBrazilTimeRange()
-                      
-                      if (timeRange) {
-                        setFilters(prev => ({
-                          ...prev,
-                          dias: [today],
-                          horarioInicio: timeRange.horarioInicio,
-                          horarioFim: timeRange.horarioFim
-                        }))
-                        toast({
-                          title: "Filtro aplicado",
-                          description: `Filtrando a partir de ${timeRange.horarioInicio}`,
-                        })
-                      } else {
-                        const tomorrow = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][(new Date().getDay() + 1) % 7]
-                        setFilters(prev => ({
-                          ...prev,
-                          dias: [tomorrow],
-                          horarioInicio: "08:00",
-                          horarioFim: "23:59"
-                        }))
-                        toast({
-                          title: "Não há mais horários hoje",
-                          description: "Mostrando profissionais disponíveis amanhã.",
-                        })
-                      }
-                    }}
-                    className="whitespace-nowrap border-2 hover:border-teal-500 hover:bg-teal-500/15 hover:text-teal-700 dark:hover:text-teal-400 transition-all"
-                  >
-          <Zap className="h-4 w-4 mr-1.5" />
-          Disponíveis hoje
-        </Button>
+                  {/* Disponíveis hoje */}
+                  {(() => {
+                    const today = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()]
+                    const isActive = filters.dias.includes(today) && filters.dias.length === 1
+                    return (
+                      <Button
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          if (isActive) {
+                            // Toggle off
+                            setFilters(prev => ({ ...prev, dias: [], horarioInicio: '', horarioFim: '' }))
+                          } else {
+                            const timeRange = getBrazilTimeRange()
+                            if (timeRange) {
+                              setFilters(prev => ({
+                                ...prev,
+                                dias: [today],
+                                horarioInicio: timeRange.horarioInicio,
+                                horarioFim: timeRange.horarioFim
+                              }))
+                              toast({
+                                title: "Filtro aplicado",
+                                description: `Filtrando a partir de ${timeRange.horarioInicio}`,
+                              })
+                            } else {
+                              const tomorrow = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][(new Date().getDay() + 1) % 7]
+                              setFilters(prev => ({
+                                ...prev,
+                                dias: [tomorrow],
+                                horarioInicio: "08:00",
+                                horarioFim: "23:59"
+                              }))
+                              toast({
+                                title: "Não há mais horários hoje",
+                                description: "Mostrando profissionais disponíveis amanhã.",
+                              })
+                            }
+                          }
+                        }}
+                        className={`whitespace-nowrap border-2 transition-all ${
+                          isActive 
+                            ? "bg-teal-500 text-white border-teal-500 hover:bg-teal-600" 
+                            : "hover:border-teal-500 hover:bg-teal-500/15 hover:text-teal-700 dark:hover:text-teal-400"
+                        }`}
+                      >
+                        <Zap className="h-4 w-4 mr-1.5" />
+                        Disponíveis hoje
+                      </Button>
+                    )
+                  })()}
 
                   {/* Horário noturno */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setFilters(prev => ({
-                        ...prev,
-                        horarioInicio: "18:00",
-                        horarioFim: "23:59"
-                      }))
-                    }}
-                    className="whitespace-nowrap border-2 hover:border-indigo-500 hover:bg-indigo-500/15 hover:text-indigo-700 dark:hover:text-indigo-400 transition-all"
-                  >
-                    <Moon className="h-4 w-4 mr-1.5" />
-                    Horário noturno
-                  </Button>
+                  {(() => {
+                    const isActive = filters.horarioInicio === '18:00' && filters.horarioFim === '23:59'
+                    return (
+                      <Button
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          if (isActive) {
+                            setFilters(prev => ({ ...prev, horarioInicio: '', horarioFim: '' }))
+                          } else {
+                            setFilters(prev => ({ ...prev, horarioInicio: "18:00", horarioFim: "23:59" }))
+                          }
+                        }}
+                        className={`whitespace-nowrap border-2 transition-all ${
+                          isActive 
+                            ? "bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600" 
+                            : "hover:border-indigo-500 hover:bg-indigo-500/15 hover:text-indigo-700 dark:hover:text-indigo-400"
+                        }`}
+                      >
+                        <Moon className="h-4 w-4 mr-1.5" />
+                        Horário noturno
+                      </Button>
+                    )
+                  })()}
 
                   {/* Fim de semana */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setFilters(prev => ({
-                        ...prev,
-                        dias: ['saturday', 'sunday']
-                      }))
-                    }}
-                    className="whitespace-nowrap border-2 hover:border-orange-500 hover:bg-orange-500/15 hover:text-orange-700 dark:hover:text-orange-400 transition-all"
-                  >
-                    <Calendar className="h-4 w-4 mr-1.5" />
-                    Fim de semana
-                  </Button>
+                  {(() => {
+                    const isActive = filters.dias.includes('saturday') && filters.dias.includes('sunday') && filters.dias.length === 2
+                    return (
+                      <Button
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          if (isActive) {
+                            setFilters(prev => ({ ...prev, dias: [] }))
+                          } else {
+                            setFilters(prev => ({ ...prev, dias: ['saturday', 'sunday'] }))
+                          }
+                        }}
+                        className={`whitespace-nowrap border-2 transition-all ${
+                          isActive 
+                            ? "bg-orange-500 text-white border-orange-500 hover:bg-orange-600" 
+                            : "hover:border-orange-500 hover:bg-orange-500/15 hover:text-orange-700 dark:hover:text-orange-400"
+                        }`}
+                      >
+                        <Calendar className="h-4 w-4 mr-1.5" />
+                        Fim de semana
+                      </Button>
+                    )
+                  })()}
 
-        {/* Cupom aplicável */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setFilters(prev => ({
-              ...prev,
-              comCupom: true
-            }))
-          }}
-          className="whitespace-nowrap border-2 hover:border-emerald-500 hover:bg-emerald-500/15 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all"
-        >
-          <Tag className="h-4 w-4 mr-1.5" />
-          Cupom aplicável
-        </Button>
-
-        </div>
+                  {/* Cupom aplicável */}
+                  {user && linkedInstitutions && linkedInstitutions.length > 0 && (
+                    <Button
+                      variant={filters.comCupom ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setFilters(prev => ({ ...prev, comCupom: !prev.comCupom }))}
+                      className={`whitespace-nowrap border-2 transition-all ${
+                        filters.comCupom 
+                          ? "bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600" 
+                          : "hover:border-emerald-500 hover:bg-emerald-500/15 hover:text-emerald-700 dark:hover:text-emerald-400"
+                      }`}
+                    >
+                      <Tag className="h-4 w-4 mr-1.5" />
+                      Cupom aplicável
+                      {couponsLoading && <span className="ml-1 animate-pulse">...</span>}
+                    </Button>
+                  )}
+                </div>
 
                 {/* Thematic Filter Cards */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
