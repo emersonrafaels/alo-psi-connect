@@ -29,6 +29,8 @@ interface NotifyInstitutionLinkRequest {
   institutionName: string;
   role: 'admin' | 'viewer' | 'student' | 'professional';
   tenantId?: string;
+  isNewUser?: boolean;
+  temporaryPassword?: string;
 }
 
 function generateInstitutionLinkEmailHTML(
@@ -39,7 +41,10 @@ function generateInstitutionLinkEmailHTML(
   userEmail: string,
   institutionName: string,
   role: string,
-  portalUrl: string
+  portalUrl: string,
+  loginUrl: string,
+  isNewUser: boolean = false,
+  temporaryPassword?: string
 ): string {
   const primaryColor = tenantColor.startsWith('#') ? tenantColor : `hsl(${tenantColor})`;
   
@@ -92,6 +97,35 @@ function generateInstitutionLinkEmailHTML(
       break;
   }
 
+  // Seção de credenciais para novos usuários
+  const credentialsSection = isNewUser && temporaryPassword ? `
+    <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 30px 0;">
+      <p style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; color: #92400e;">🔑 Seus dados de acesso:</p>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 5px 0; color: #4b5563; font-size: 14px;">Email:</td>
+          <td style="padding: 5px 0; font-weight: bold; color: #1f2937; font-size: 14px;">${userEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 0; color: #4b5563; font-size: 14px;">Senha:</td>
+          <td style="padding: 5px 0; font-weight: bold; color: #1f2937; font-size: 14px; font-family: monospace; background: #fff; padding: 4px 8px; border-radius: 4px;">${temporaryPassword}</td>
+        </tr>
+      </table>
+      <p style="margin: 15px 0 0 0; font-size: 12px; color: #92400e;">
+        ⚠️ Por segurança, recomendamos que você altere sua senha após o primeiro acesso.
+      </p>
+    </div>
+  ` : '';
+
+  // Dica para usuários existentes (não mostra se for novo usuário com credenciais)
+  const loginTipSection = !isNewUser ? `
+    <div style="background-color: #e0f2fe; padding: 15px; border-radius: 6px; border-left: 4px solid #0284c7; margin: 30px 0;">
+      <p style="margin: 0; font-size: 14px; color: #075985;">
+        <strong>💡 Dica:</strong> Faça login na plataforma com o mesmo email (${userEmail}) para acessar o portal institucional.
+      </p>
+    </div>
+  ` : '';
+
   return `
     <!DOCTYPE html>
     <html>
@@ -115,16 +149,21 @@ function generateInstitutionLinkEmailHTML(
             <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">
               Você foi adicionado como <strong>${roleLabel}</strong> da instituição <strong>${institutionName}</strong> na plataforma ${tenantName}.
             </p>
+            
+            ${credentialsSection}
+            
             <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid ${primaryColor};">
               <p style="margin: 0 0 10px 0; font-size: 16px; color: #4b5563; font-weight: bold;">📋 Como ${roleLabel}, você pode:</p>
               ${permissions}
             </div>
+            
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${portalUrl}" style="display: inline-block; background: ${primaryColor}; color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">🚀 Acessar Portal</a>
+              <a href="${loginUrl}" style="display: inline-block; background: ${primaryColor}; color: white; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); margin-right: 10px;">🔑 Fazer Login</a>
+              <a href="${portalUrl}" style="display: inline-block; background: transparent; color: ${primaryColor}; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; font-size: 16px; border: 2px solid ${primaryColor};">🚀 Acessar Portal</a>
             </div>
-            <div style="background-color: #e0f2fe; padding: 15px; border-radius: 6px; border-left: 4px solid #0284c7; margin: 30px 0;">
-              <p style="margin: 0; font-size: 14px; color: #075985;"><strong>💡 Dica:</strong> Faça login na plataforma com o mesmo email (${userEmail}) para acessar o portal institucional.</p>
-            </div>
+            
+            ${loginTipSection}
+            
             <p style="margin: 20px 0; font-size: 14px; color: #6b7280;">Se você não esperava esta mensagem ou tem dúvidas, entre em contato com a administração da instituição.</p>
             <div style="border-top: 2px solid #e5e7eb; margin-top: 30px; padding-top: 20px;">
               <p style="margin: 0; font-size: 14px; color: #6b7280; text-align: center;">
@@ -151,14 +190,24 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { userEmail, userName, institutionName, role, tenantId }: NotifyInstitutionLinkRequest = await req.json();
+    const { 
+      userEmail, 
+      userName, 
+      institutionName, 
+      role, 
+      tenantId,
+      isNewUser = false,
+      temporaryPassword
+    }: NotifyInstitutionLinkRequest = await req.json();
 
     console.log('📧 Enviando notificação de vínculo institucional:', {
       userEmail,
       userName,
       institutionName,
       role,
-      tenantId
+      tenantId,
+      isNewUser,
+      hasPassword: !!temporaryPassword
     });
 
     // Buscar dados do tenant
@@ -182,8 +231,15 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // URL do portal institucional
+    // URL base
     const baseUrl = Deno.env.get("APP_BASE_URL") || "https://alopsi.com.br";
+    
+    // URL de login baseada no tenant
+    const loginUrl = tenantSlug === 'alopsi' 
+      ? `${baseUrl}/auth`
+      : `${baseUrl}/${tenantSlug}/auth`;
+    
+    // URL do portal institucional
     const portalUrl = tenantSlug === 'alopsi' 
       ? `${baseUrl}/portal-institucional`
       : `${baseUrl}/${tenantSlug}/portal-institucional`;
@@ -197,7 +253,10 @@ const handler = async (req: Request): Promise<Response> => {
       userEmail,
       institutionName,
       role,
-      portalUrl
+      portalUrl,
+      loginUrl,
+      isNewUser,
+      temporaryPassword
     );
 
     // Enviar email

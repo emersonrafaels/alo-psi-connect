@@ -275,7 +275,9 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
               userName: data.nome,
               institutionName: institution!.name,
               role: data.role,
-              tenantId: institutionLink?.tenant_id || null,
+              tenantId: institutionLink?.tenant_id || tenantId || null,
+              isNewUser: true,
+              temporaryPassword: newUserPassword,
             }
           });
           console.log('📧 Email de notificação enviado para', data.email);
