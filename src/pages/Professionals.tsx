@@ -122,11 +122,13 @@ const Professionals = () => {
   const { user } = useAuth()
   const { linkedInstitutions, isLoading: institutionsLoading } = usePatientInstitutions()
   
-  // Cupons aplicáveis
-  const professionalIds = professionals.map(p => p.id)
+  // Cupons aplicáveis - usando o preço real de cada profissional
+  const professionalsWithPrices = professionals.map(p => ({ 
+    id: p.id, 
+    price: p.preco_consulta || 0 
+  }));
   const { data: professionalsWithCoupons, isLoading: couponsLoading } = useProfessionalsWithCoupons(
-    professionalIds,
-    150 // Valor base para validação
+    professionalsWithPrices
   )
 
   // Configurações do assistente IA
