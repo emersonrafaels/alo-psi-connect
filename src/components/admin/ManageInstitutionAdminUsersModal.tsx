@@ -242,7 +242,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
         tenantId: tenantId || undefined,
       });
 
-      return { email: newUserEmail, nome: newUserName, role: newUserRole };
+      return { email: newUserEmail, nome: newUserName, role: newUserRole, password: newUserPassword };
     },
     onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['institution-users'] });
@@ -277,7 +277,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
               role: data.role,
               tenantId: institutionLink?.tenant_id || tenantId || null,
               isNewUser: true,
-              temporaryPassword: newUserPassword,
+              temporaryPassword: data.password,
             }
           });
           console.log('📧 Email de notificação enviado para', data.email);
