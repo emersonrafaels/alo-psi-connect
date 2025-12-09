@@ -19,6 +19,7 @@ interface CouponValidatorProps {
   }) => void;
   onCouponRemoved: () => void;
   autoApplyCode?: string; // Código para aplicar automaticamente
+  hideWhenApplied?: boolean; // Ocultar quando cupom já está aplicado (para evitar duplicação)
 }
 
 export const CouponValidator = ({
@@ -28,6 +29,7 @@ export const CouponValidator = ({
   onCouponApplied,
   onCouponRemoved,
   autoApplyCode,
+  hideWhenApplied = false,
 }: CouponValidatorProps) => {
   const { validateCoupon } = useInstitutionCoupons();
   const [couponCode, setCouponCode] = useState('');
@@ -116,6 +118,25 @@ export const CouponValidator = ({
     onCouponRemoved();
   };
 
+  // Se hideWhenApplied e cupom já está aplicado, mostrar versão compacta apenas para trocar/remover
+  if (hideWhenApplied && appliedCoupon) {
+    return (
+      <Card>
+        <CardContent className="py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Ticket className="h-4 w-4" />
+              <span>Cupom aplicado</span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleRemove} className="text-xs">
+              Trocar cupom
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -155,16 +176,16 @@ export const CouponValidator = ({
             )}
           </>
         ) : (
-          <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <Alert className="border-emerald-500 bg-emerald-50 dark:bg-emerald-950">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
             <AlertDescription className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="font-semibold text-green-900 dark:text-green-100">
+                <p className="font-semibold text-emerald-900 dark:text-emerald-100">
                   Cupom aplicado com sucesso!
                 </p>
                 <div className="flex items-center gap-2">
                   <Badge variant="default">{appliedCoupon.code}</Badge>
-                  <span className="text-sm text-green-700 dark:text-green-300">
+                  <span className="text-sm text-emerald-700 dark:text-emerald-300">
                     Economia: R$ {appliedCoupon.discountAmount.toFixed(2)}
                   </span>
                 </div>
@@ -183,7 +204,7 @@ export const CouponValidator = ({
           </div>
           {appliedCoupon && (
             <>
-              <div className="flex justify-between text-green-600">
+              <div className="flex justify-between text-emerald-600">
                 <span>Desconto:</span>
                 <span className="font-medium">- R$ {appliedCoupon.discountAmount.toFixed(2)}</span>
               </div>
