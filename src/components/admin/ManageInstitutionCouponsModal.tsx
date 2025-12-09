@@ -13,7 +13,9 @@ import { FieldWithTooltip } from './coupons/FieldWithTooltip';
 import { DiscountValueInput } from './coupons/DiscountValueInput';
 import { useInstitutionCoupons, InstitutionCoupon } from '@/hooks/useInstitutionCoupons';
 import { useTenant } from '@/hooks/useTenant';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { useInstitutionAudit } from '@/hooks/useInstitutionAudit';
+import { TenantScopeSelector } from './coupons/TenantScopeSelector';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { UserMultiSelect } from './UserMultiSelect';
@@ -28,6 +30,7 @@ interface Props {
 
 export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose, tenantId }: Props) => {
   const { tenant } = useTenant();
+  const { tenants } = useAdminTenant();
   const { logAction } = useInstitutionAudit(institution?.id);
   const { 
     coupons, 
@@ -59,6 +62,7 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose, te
     target_audience_user_ids: null as string[] | null,
     professional_scope: 'institution_professionals' as 'all_tenant' | 'institution_professionals',
     professional_scope_ids: null as number[] | null,
+    tenant_id: tenantId || tenant?.id || null as string | null,
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -85,6 +89,7 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose, te
       target_audience_user_ids: coupon.target_audience_user_ids,
       professional_scope: coupon.professional_scope,
       professional_scope_ids: coupon.professional_scope_ids,
+      tenant_id: coupon.tenant_id,
     });
     setIsCreatingNew(true);
   };
@@ -95,7 +100,7 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose, te
     const couponData = {
       ...formData,
       institution_id: institution!.id,
-      tenant_id: tenant?.id || null,
+      // tenant_id já está no formData, selecionado pelo TenantScopeSelector
     };
 
     if (editingCoupon) {
@@ -323,6 +328,17 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose, te
                   />
                 </FieldWithTooltip>
               </div>
+
+              <FieldWithTooltip
+                label="Onde o Cupom é Válido *"
+                tooltip="Selecione em qual(is) plataforma(s) este cupom poderá ser utilizado. 'Todos os Sites' torna o cupom global."
+              >
+                <TenantScopeSelector
+                  selectedTenantId={formData.tenant_id}
+                  tenants={tenants}
+                  onChange={(selectedTenantId) => setFormData({ ...formData, tenant_id: selectedTenantId })}
+                />
+              </FieldWithTooltip>
 
               <FieldWithTooltip
                 label="Descrição"
