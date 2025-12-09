@@ -2115,18 +2115,20 @@ const Professionals = () => {
                                )}
                              </div>
 
-                             {/* Cupom Badge */}
+                             {/* Cupom Badge - Chamativo */}
                              {professionalsWithCoupons?.has(professional.id) && (
-                               <Badge className="bg-emerald-500 text-white border-0 shadow-md flex items-center gap-1 w-fit">
-                                 <Tag className="h-3 w-3" />
-                                 <span>
-                                   Cupom disponível: até{' '}
-                                   {professionalsWithCoupons.get(professional.id)?.discountType === 'percentage' 
-                                     ? `${professionalsWithCoupons.get(professional.id)?.discountValue}% off`
-                                     : `R$ ${professionalsWithCoupons.get(professional.id)?.discountValue} off`
-                                   }
-                                 </span>
-                               </Badge>
+                               <div className="animate-pulse-subtle">
+                                 <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 shadow-lg flex items-center gap-1.5 px-3 py-1.5 w-fit">
+                                   <Sparkles className="h-3.5 w-3.5" />
+                                   <span className="font-semibold">
+                                     🎉 Cupom:{' '}
+                                     {professionalsWithCoupons.get(professional.id)?.discountType === 'percentage' 
+                                       ? `${professionalsWithCoupons.get(professional.id)?.discountValue}% OFF`
+                                       : `R$ ${professionalsWithCoupons.get(professional.id)?.discountValue} OFF`
+                                     }
+                                   </span>
+                                 </Badge>
+                               </div>
                              )}
                              
                              {professional.resumo_profissional && (
