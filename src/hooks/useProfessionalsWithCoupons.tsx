@@ -13,12 +13,14 @@ interface CouponInfo {
   finalAmount: number;
 }
 
-export const useProfessionalsWithCoupons = (professionalIds: number[], amount: number = 150) => {
+export const useProfessionalsWithCoupons = (professionals: { id: number; price: number }[]) => {
+  const professionalIds = professionals.map(p => p.id);
+  const priceMap = new Map(professionals.map(p => [p.id, p.price]));
   const { user } = useAuth();
   const { tenant } = useTenant();
 
   return useQuery({
-    queryKey: ['professionals-with-coupons', professionalIds, amount, tenant?.id, user?.id],
+    queryKey: ['professionals-with-coupons', professionalIds, tenant?.id, user?.id],
     queryFn: async (): Promise<Map<number, CouponInfo>> => {
       const couponMap = new Map<number, CouponInfo>();
 
@@ -144,10 +146,11 @@ export const useProfessionalsWithCoupons = (professionalIds: number[], amount: n
               continue;
             }
 
-            // Calcular desconto localmente (evitar RPC para cada combo)
+            // Calcular desconto localmente usando o preço real do profissional
+            const professionalPrice = priceMap.get(professionalId) || 0;
             let discountAmount: number;
             if (coupon.discount_type === 'percentage') {
-              discountAmount = (amount * coupon.discount_value) / 100;
+              discountAmount = (professionalPrice * coupon.discount_value) / 100;
               if (coupon.max_discount_amount && discountAmount > coupon.max_discount_amount) {
                 discountAmount = coupon.max_discount_amount;
               }
@@ -155,7 +158,7 @@ export const useProfessionalsWithCoupons = (professionalIds: number[], amount: n
               discountAmount = coupon.discount_value;
             }
 
-            const finalAmount = Math.max(amount - discountAmount, 0);
+            const finalAmount = Math.max(professionalPrice - discountAmount, 0);
 
             // Se já existe um cupom para este profissional, manter o de maior desconto
             const existingCoupon = couponMap.get(professionalId);
