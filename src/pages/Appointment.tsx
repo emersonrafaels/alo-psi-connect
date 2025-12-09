@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ArrowLeft, DollarSign, Clock, MapPin, Star } from "lucide-react"
+import { ArrowLeft, DollarSign, Clock, MapPin, Star, Tag, Sparkles } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useTenant } from '@/hooks/useTenant'
@@ -47,6 +47,12 @@ const Appointment = () => {
   const [loading, setLoading] = useState(true)
 
   const professionalId = searchParams.get('professionalId')
+  
+  // Dados do cupom vindos da listagem
+  const couponCode = searchParams.get('couponCode')
+  const couponName = searchParams.get('couponName')
+  const couponDiscount = searchParams.get('couponDiscount')
+  const couponFinal = searchParams.get('couponFinal')
 
   useEffect(() => {
     if (!professionalId) {
@@ -264,12 +270,6 @@ const Appointment = () => {
                       
                       {/* Price and Duration */}
                       <div className="flex items-center gap-4 text-sm">
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4 text-green-600" />
-                          <span className="font-semibold text-primary">
-                            {formatPrice(professional.preco_consulta)}
-                          </span>
-                        </div>
                         {professional.tempo_consulta && (
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4 text-blue-600" />
@@ -281,6 +281,43 @@ const Appointment = () => {
                           <span>5.0</span>
                         </div>
                       </div>
+                      
+                      {/* Coupon Applied Box */}
+                      {couponCode && couponDiscount && professional.preco_consulta ? (
+                        <div className="mt-4 bg-gradient-to-r from-emerald-50/90 to-green-50/90 dark:from-emerald-950/40 dark:to-green-950/40 border border-emerald-200/60 dark:border-emerald-800/60 rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                              Cupom aplicado automaticamente
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className="text-muted-foreground line-through text-sm">
+                                {formatPrice(professional.preco_consulta)}
+                              </span>
+                              <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                                {formatPrice(parseFloat(couponFinal || '0'))}
+                              </span>
+                            </div>
+                            <Badge className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+                              -R$ {couponDiscount}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-2 text-xs text-emerald-600 dark:text-emerald-400">
+                            <Tag className="h-3.5 w-3.5" />
+                            <span className="font-medium">{couponName}</span>
+                            <span className="text-emerald-500">({couponCode})</span>
+                          </div>
+                        </div>
+                      ) : professional.preco_consulta ? (
+                        <div className="flex items-center gap-1 mt-4">
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          <span className="font-semibold text-primary">
+                            {formatPrice(professional.preco_consulta)}
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 </CardHeader>
@@ -324,6 +361,10 @@ const Appointment = () => {
                     professionalId={professional.id.toString()}
                     professionalName={professional.display_name}
                     price={professional.preco_consulta?.toString()}
+                    couponCode={couponCode || undefined}
+                    couponName={couponName || undefined}
+                    couponDiscount={couponDiscount ? parseFloat(couponDiscount) : undefined}
+                    couponFinal={couponFinal ? parseFloat(couponFinal) : undefined}
                   />
                 </CardContent>
               </Card>

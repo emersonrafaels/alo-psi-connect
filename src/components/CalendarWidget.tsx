@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Clock } from "lucide-react"
+import { Clock, Tag, Sparkles } from "lucide-react"
 import { format, addDays, startOfDay, isSameDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { useNavigate } from "react-router-dom"
@@ -24,10 +24,14 @@ interface CalendarWidgetProps {
   professionalId: string
   professionalName: string
   price?: string
+  couponCode?: string
+  couponName?: string
+  couponDiscount?: number
+  couponFinal?: number
   onDateTimeSelect?: (date: Date | null, time: string | null) => void
 }
 
-export const CalendarWidget = ({ sessions, professionalId, professionalName, price, onDateTimeSelect }: CalendarWidgetProps) => {
+export const CalendarWidget = ({ sessions, professionalId, professionalName, price, couponCode, couponName, couponDiscount, couponFinal, onDateTimeSelect }: CalendarWidgetProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [selectedTime, setSelectedTime] = useState<string>()
   const [availableTimes, setAvailableTimes] = useState<any[]>([])
@@ -269,6 +273,12 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
       price: price || '0'
     })
     
+    // Propagar dados do cupom para a confirmação
+    if (couponCode) params.set('couponCode', couponCode)
+    if (couponName) params.set('couponName', couponName)
+    if (couponDiscount) params.set('couponDiscount', couponDiscount.toString())
+    if (couponFinal) params.set('couponFinal', couponFinal.toString())
+    
     navigate(buildTenantPath(tenantSlug, `/confirmacao-agendamento?${params.toString()}`))
   }
 
@@ -416,9 +426,23 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
                 <p className="font-medium text-primary">
                   🕒 {formatTime(selectedTime)}
                 </p>
-                {price && (
+                {price && couponFinal ? (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground line-through">
+                      💰 R$ {parseFloat(price).toFixed(0)}
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      <p className="text-sm font-bold text-emerald-600">
+                        💰 R$ {couponFinal.toFixed(0)}
+                      </p>
+                      <Badge className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs">
+                        -R$ {couponDiscount}
+                      </Badge>
+                    </div>
+                  </div>
+                ) : price && (
                   <p className="text-sm text-muted-foreground">
-                    💰 {price}
+                    💰 R$ {parseFloat(price).toFixed(0)}
                   </p>
                 )}
               </div>
