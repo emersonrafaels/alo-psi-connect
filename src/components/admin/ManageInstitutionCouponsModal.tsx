@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, Trash2, Edit, Ticket, Calendar, Users, TrendingUp, Copy, HelpCircle, Sparkles, Gift, GraduationCap, Tag, Star, UserPlus, MapPin } from 'lucide-react';
+import { Plus, Trash2, Edit, Ticket, Calendar, Users, TrendingUp, Copy, Sparkles, Gift, GraduationCap, Tag, Star, UserPlus, MapPin } from 'lucide-react';
+import { FieldWithTooltip } from './coupons/FieldWithTooltip';
+import { DiscountValueInput } from './coupons/DiscountValueInput';
 import { useInstitutionCoupons, InstitutionCoupon } from '@/hooks/useInstitutionCoupons';
 import { useTenant } from '@/hooks/useTenant';
 import { useInstitutionAudit } from '@/hooks/useInstitutionAudit';
@@ -219,28 +220,10 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose, te
     toast.success('Template aplicado! Ajuste os campos conforme necessário.');
   };
 
-  const FieldWithTooltip = ({ label, tooltip, children }: { label: string; tooltip: string; children: React.ReactNode }) => (
-    <div>
-      <Label className="flex items-center gap-2">
-        {label}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger type="button" className="cursor-help">
-              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              <p>{tooltip}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </Label>
-      {children}
-    </div>
-  );
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <TooltipProvider delayDuration={300}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Ticket className="h-5 w-5" />
@@ -374,19 +357,11 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose, te
                   </Select>
                 </FieldWithTooltip>
 
-                <FieldWithTooltip
-                  label="Valor do Desconto *"
-                  tooltip="Digite o valor do desconto. Para percentual, use números de 1 a 100. Para valor fixo, use valores em reais."
-                >
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.discount_value}
-                    onChange={(e) => setFormData({ ...formData, discount_value: parseFloat(e.target.value) })}
-                    placeholder={formData.discount_type === 'percentage' ? '10' : '50.00'}
-                    required
-                  />
-                </FieldWithTooltip>
+                <DiscountValueInput
+                  discountType={formData.discount_type}
+                  value={formData.discount_value}
+                  onChange={(value) => setFormData({ ...formData, discount_value: value })}
+                />
 
                 {formData.discount_type === 'percentage' && (
                   <FieldWithTooltip
@@ -713,6 +688,7 @@ export const ManageInstitutionCouponsModal = ({ institution, isOpen, onClose, te
             )}
           </div>
         </div>
+        </TooltipProvider>
       </DialogContent>
     </Dialog>
   );
