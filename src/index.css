@@ -92,6 +92,10 @@ All colors MUST be HSL.
     --wellz-purple: 310 55% 20%;      /* Roxo escuro do hero */
     --wellz-coral: 25 88% 66%;        /* Laranja/coral dos botões */
     --wellz-pink-light: 330 50% 96%;  /* Rosa claro do background */
+    
+    /* Coupon badge colors */
+    --coupon-from: 160 84% 39%;       /* Emerald */
+    --coupon-to: 142 71% 45%;         /* Green */
     --wellz-pink-border: 310 35% 70%; /* Rosa da borda das fotos */
     --wellz-text-title: 270 50% 20%;  /* Roxo dos títulos */
   }
@@ -962,6 +966,22 @@ All colors MUST be HSL.
 @keyframes skeleton-loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* Coupon badge pulse animation */
+@keyframes pulse-subtle {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+  50% { 
+    opacity: 0.9; 
+    transform: scale(1.02); 
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
 }
 
 /* Garantir que Command List tenha altura máxima e scroll */

@@ -103,7 +103,8 @@ export const useProfessionalsWithCoupons = (professionalIds: number[], amount: n
             // Verificar se o profissional está no escopo (professional_scope)
             let isProfessionalInScope = false;
 
-            if (coupon.professional_scope === 'all') {
+            // 'all_tenant' = todos profissionais do tenant, 'all' (legado) = mesma coisa
+            if (coupon.professional_scope === 'all_tenant' || coupon.professional_scope === 'all') {
               isProfessionalInScope = true;
             } else if (coupon.professional_scope === 'institution_professionals') {
               // Verificar se o profissional está vinculado à instituição do cupom
