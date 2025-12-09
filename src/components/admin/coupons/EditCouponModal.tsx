@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Loader2 } from 'lucide-react';
 import { useInstitutionCoupons, InstitutionCoupon } from '@/hooks/useInstitutionCoupons';
-import { useAdminTenant } from '@/contexts/AdminTenantContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { UserMultiSelect } from '../UserMultiSelect';
 import { ProfessionalMultiSelect } from '../ProfessionalMultiSelect';
 import { FieldWithTooltip } from './FieldWithTooltip';
@@ -28,7 +29,21 @@ interface Props {
 
 export const EditCouponModal = ({ coupon, institutionId, tenantId, isOpen, onClose, onSave }: Props) => {
   const { updateCoupon, isUpdating } = useInstitutionCoupons(institutionId, tenantId);
-  const { tenants } = useAdminTenant();
+  
+  // Fetch tenants directly instead of relying on AdminTenantProvider
+  const { data: tenants = [] } = useQuery({
+    queryKey: ['tenants-for-coupon-edit'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tenants')
+        .select('id, name, slug')
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 
   const initialFormState = {
     code: '',
