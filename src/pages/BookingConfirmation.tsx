@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, Clock, DollarSign, User, ArrowLeft, CreditCard, MapPin, Phone, Mail, Sparkles } from "lucide-react"
+import { Calendar, Clock, DollarSign, User, ArrowLeft, CreditCard, MapPin, Phone, Mail, Sparkles, Tag } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
 import { useUserProfile } from "@/hooks/useUserProfile"
@@ -69,6 +69,12 @@ const BookingConfirmation = () => {
     const date = searchParams.get('date')
     const time = searchParams.get('time')
     const price = searchParams.get('price')
+    
+    // Dados do cupom vindos da URL
+    const couponCodeFromUrl = searchParams.get('couponCode')
+    const couponNameFromUrl = searchParams.get('couponName')
+    const couponDiscountFromUrl = searchParams.get('couponDiscount')
+    const couponFinalFromUrl = searchParams.get('couponFinal')
 
     if (professionalId && professionalName && date && time && price) {
       setBookingData({
@@ -78,6 +84,19 @@ const BookingConfirmation = () => {
         time,
         price
       })
+      
+      // Auto-aplicar cupom se vier da URL
+      if (couponCodeFromUrl && couponDiscountFromUrl && couponFinalFromUrl) {
+        setAppliedCoupon({
+          couponId: '', // será buscado pelo CouponValidator se necessário
+          code: couponCodeFromUrl,
+          discountAmount: parseFloat(couponDiscountFromUrl),
+          finalAmount: parseFloat(couponFinalFromUrl)
+        })
+        
+        // Configurar para validação completa do cupom
+        setAutoApplyCode(couponCodeFromUrl)
+      }
 
       // Verificar se há dados de agendamento pendente (usuário retornou após login)
       const pendingBooking = sessionStorage.getItem('pendingBooking')
@@ -598,6 +617,20 @@ const BookingConfirmation = () => {
           <span>›</span>
           <span className="text-foreground">Confirmar Agendamento</span>
         </div>
+        
+        {/* Banner de Cupom Auto-Aplicado */}
+        {appliedCoupon && searchParams.get('couponCode') && (
+          <Alert className="mb-6 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/40 dark:to-green-950/40 border-emerald-200 dark:border-emerald-800">
+            <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <AlertDescription className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+              <Tag className="h-4 w-4" />
+              <span>
+                Cupom <strong>{searchParams.get('couponName')}</strong> ({appliedCoupon.code}) aplicado automaticamente.
+                <span className="ml-1 font-semibold">Economia de R$ {appliedCoupon.discountAmount.toFixed(0)}!</span>
+              </span>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Resumo do Agendamento */}

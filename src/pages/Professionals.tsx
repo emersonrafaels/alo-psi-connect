@@ -2381,7 +2381,15 @@ const Professionals = () => {
                             </Link>
                           </Button>
                           <Button size="sm" className="flex-1 lg:flex-none btn-gradient shadow-lg" asChild>
-                            <Link to={buildTenantPath(tenantSlug, `/agendamento?professionalId=${professional.id}`)}>
+                            <Link to={buildTenantPath(tenantSlug, `/agendamento?professionalId=${professional.id}${
+                              (() => {
+                                const couponInfo = professionalsWithCoupons?.get(professional.id);
+                                if (couponInfo) {
+                                  return `&couponCode=${couponInfo.code}&couponName=${encodeURIComponent(couponInfo.name)}&couponDiscount=${couponInfo.potentialDiscount}&couponFinal=${couponInfo.finalAmount}`;
+                                }
+                                return '';
+                              })()
+                            }`)}>
                               <Calendar className="h-4 w-4 mr-2" />
                               Agendar
                             </Link>
