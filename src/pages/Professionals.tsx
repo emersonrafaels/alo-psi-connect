@@ -45,6 +45,7 @@ import { useAIAssistantConfig } from "@/hooks/useAIAssistantConfig"
 import { useAuth } from "@/hooks/useAuth"
 import { useProfessionalsWithCoupons } from "@/hooks/useProfessionalsWithCoupons"
 import { usePatientInstitutions } from "@/hooks/usePatientInstitutions"
+import { CouponBadgeWithDetails } from "@/components/professionals/CouponBadgeWithDetails"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -112,7 +113,7 @@ const Professionals = () => {
     comCupom: false,
     especialidadesNormalizadas: [] as string[],
     genero: [] as string[],
-    ordenacao: 'nome' as 'nome' | 'preco_asc' | 'preco_desc' | 'destaque' | 'disponibilidade'
+    ordenacao: 'nome' as 'nome' | 'preco_asc' | 'preco_desc' | 'destaque' | 'disponibilidade' | 'maior_desconto'
   })
   const [especialidadeSearch, setEspecialidadeSearch] = useState("")
   const professionalsPerPage = 9
@@ -343,6 +344,14 @@ const Professionals = () => {
         break
       case 'disponibilidade':
         filtered.sort((a, b) => b.sessions.length - a.sessions.length)
+        break
+      case 'maior_desconto':
+        // Ordenar por maior desconto disponível
+        filtered.sort((a, b) => {
+          const discountA = professionalsWithCoupons?.get(a.id)?.potentialDiscount || 0
+          const discountB = professionalsWithCoupons?.get(b.id)?.potentialDiscount || 0
+          return discountB - discountA
+        })
         break
       default:
         filtered.sort((a, b) => a.display_name.localeCompare(b.display_name))
@@ -622,7 +631,7 @@ const Professionals = () => {
       especialidadesNormalizadas: [],
       genero: [],
       ordenacao: 'nome'
-    })
+    } as typeof filters)
     setSearchTerm("")
     clearURLFilters()
   }
@@ -2000,9 +2009,28 @@ const Professionals = () => {
                   <span className="font-medium text-foreground">Verificando cupons aplicáveis...</span>
                 </div>
               ) : (
-                <p className="font-medium text-foreground">
-                  {filteredProfessionals.length} profissiona{filteredProfessionals.length !== 1 ? 'is' : 'l'} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
-                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="font-medium text-foreground">
+                    {filteredProfessionals.length} profissiona{filteredProfessionals.length !== 1 ? 'is' : 'l'} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
+                  </p>
+                  {/* Indicador de economia máxima */}
+                  {professionalsWithCoupons && professionalsWithCoupons.size > 0 && !filters.comCupom && (() => {
+                    const maxDiscount = Math.max(...Array.from(professionalsWithCoupons.values()).map(c => c.potentialDiscount))
+                    if (maxDiscount > 0) {
+                      return (
+                        <Badge 
+                          variant="outline" 
+                          className="bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
+                          onClick={() => setFilters(prev => ({ ...prev, comCupom: true }))}
+                        >
+                          <Sparkles className="h-3 w-3 mr-1" />
+                          Até R$ {maxDiscount.toFixed(0)} de economia disponível
+                        </Badge>
+                      )
+                    }
+                    return null
+                  })()}
+                </div>
               )}
               {(filters.profissoes.length > 0 || filters.dias.length > 0 || filters.horarioInicio || filters.horarioFim || filters.valorMin || filters.valorMax || filters.especialidadesNormalizadas.length > 0 || filters.genero.length > 0 || filters.comCupom) && (
                 <p className="text-xs">
@@ -2058,6 +2086,13 @@ const Professionals = () => {
                       <span>📅</span> Mais Disponibilidade
                     </span>
                   </SelectItem>
+                  {professionalsWithCouponsCount > 0 && (
+                    <SelectItem value="maior_desconto">
+                      <span className="flex items-center gap-2">
+                        <span>🏷️</span> Maior Desconto
+                      </span>
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
 
@@ -2111,25 +2146,62 @@ const Professionals = () => {
           ) : filteredProfessionals.length === 0 ? (
             <div className="text-center py-16">
               <div className="max-w-md mx-auto">
-                <div className="mb-8">
-                  <Search className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold text-foreground mb-3">
-                    Nenhum profissional encontrado
-                  </h3>
-                  <p className="text-muted-foreground text-lg">
-                    Não encontramos profissionais que correspondam aos seus critérios. 
-                    Que tal tentar ajustar os filtros?
-                  </p>
-                </div>
-                <div className="space-y-3">
-                  <Button onClick={clearFilters} className="btn-gradient px-6 py-3 text-base">
-                    <X className="h-4 w-4 mr-2" />
-                    Limpar todos os filtros
-                  </Button>
-                  <p className="text-sm text-muted-foreground">
-                    ou tente buscar por outros termos
-                  </p>
-                </div>
+                {/* Empty state específico para filtro de cupom */}
+                {filters.comCupom ? (
+                  <div className="mb-8">
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                      <Tag className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-foreground mb-3">
+                      Nenhum profissional com cupom disponível
+                    </h3>
+                    <p className="text-muted-foreground text-lg mb-4">
+                      No momento, não há profissionais com cupons aplicáveis para você.
+                    </p>
+                    <div className="bg-muted/50 rounded-lg p-4 text-left space-y-2 mb-6">
+                      <p className="text-sm font-medium text-foreground">Isso pode acontecer porque:</p>
+                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>Sua instituição ainda não possui cupons ativos</li>
+                        <li>Os cupons não são aplicáveis aos profissionais cadastrados</li>
+                        <li>Os cupons existentes podem ter expirado</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-3">
+                      <Button 
+                        onClick={() => setFilters(prev => ({ ...prev, comCupom: false }))} 
+                        className="btn-gradient px-6 py-3 text-base"
+                      >
+                        <Search className="h-4 w-4 mr-2" />
+                        Ver todos os profissionais
+                      </Button>
+                      <p className="text-sm text-muted-foreground">
+                        {professionals.length} profissionais disponíveis na plataforma
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-8">
+                    <Search className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
+                    <h3 className="text-2xl font-bold text-foreground mb-3">
+                      Nenhum profissional encontrado
+                    </h3>
+                    <p className="text-muted-foreground text-lg">
+                      Não encontramos profissionais que correspondam aos seus critérios. 
+                      Que tal tentar ajustar os filtros?
+                    </p>
+                  </div>
+                )}
+                {!filters.comCupom && (
+                  <div className="space-y-3">
+                    <Button onClick={clearFilters} className="btn-gradient px-6 py-3 text-base">
+                      <X className="h-4 w-4 mr-2" />
+                      Limpar todos os filtros
+                    </Button>
+                    <p className="text-sm text-muted-foreground">
+                      ou tente buscar por outros termos
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -2181,20 +2253,12 @@ const Professionals = () => {
                                )}
                              </div>
 
-                             {/* Cupom Badge - Chamativo */}
+                             {/* Cupom Badge - Com Preview de Preço */}
                              {professionalsWithCoupons?.has(professional.id) && (
-                               <div className="animate-pulse-subtle">
-                                 <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 shadow-lg flex items-center gap-1.5 px-3 py-1.5 w-fit">
-                                   <Sparkles className="h-3.5 w-3.5" />
-                                   <span className="font-semibold">
-                                     🎉 Cupom:{' '}
-                                     {professionalsWithCoupons.get(professional.id)?.discountType === 'percentage' 
-                                       ? `${professionalsWithCoupons.get(professional.id)?.discountValue}% OFF`
-                                       : `R$ ${professionalsWithCoupons.get(professional.id)?.discountValue} OFF`
-                                     }
-                                   </span>
-                                 </Badge>
-                               </div>
+                               <CouponBadgeWithDetails
+                                 coupon={professionalsWithCoupons.get(professional.id)!}
+                                 originalPrice={professional.preco_consulta}
+                               />
                              )}
                              
                              {professional.resumo_profissional && (
