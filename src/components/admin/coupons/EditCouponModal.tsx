@@ -9,10 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Loader2 } from 'lucide-react';
 import { useInstitutionCoupons, InstitutionCoupon } from '@/hooks/useInstitutionCoupons';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { UserMultiSelect } from '../UserMultiSelect';
 import { ProfessionalMultiSelect } from '../ProfessionalMultiSelect';
 import { FieldWithTooltip } from './FieldWithTooltip';
 import { DiscountValueInput } from './DiscountValueInput';
+import { TenantScopeSelector } from './TenantScopeSelector';
 import { toast } from 'sonner';
 
 interface Props {
@@ -26,6 +28,7 @@ interface Props {
 
 export const EditCouponModal = ({ coupon, institutionId, tenantId, isOpen, onClose, onSave }: Props) => {
   const { updateCoupon, isUpdating } = useInstitutionCoupons(institutionId, tenantId);
+  const { tenants } = useAdminTenant();
 
   const initialFormState = {
     code: '',
@@ -44,6 +47,7 @@ export const EditCouponModal = ({ coupon, institutionId, tenantId, isOpen, onClo
     target_audience_user_ids: null as string[] | null,
     professional_scope: 'institution_professionals' as 'all_tenant' | 'institution_professionals',
     professional_scope_ids: null as number[] | null,
+    tenant_id: tenantId || null as string | null,
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -67,6 +71,7 @@ export const EditCouponModal = ({ coupon, institutionId, tenantId, isOpen, onClo
         target_audience_user_ids: coupon.target_audience_user_ids,
         professional_scope: coupon.professional_scope || 'institution_professionals',
         professional_scope_ids: coupon.professional_scope_ids,
+        tenant_id: coupon.tenant_id,
       });
     }
   }, [coupon]);
@@ -127,6 +132,18 @@ export const EditCouponModal = ({ coupon, institutionId, tenantId, isOpen, onClo
                 />
               </FieldWithTooltip>
             </div>
+
+            {/* Onde o Cupom é Válido */}
+            <FieldWithTooltip
+              label="Onde o Cupom é Válido *"
+              tooltip="Selecione em qual(is) plataforma(s) este cupom poderá ser utilizado. 'Todos os Sites' torna o cupom global."
+            >
+              <TenantScopeSelector
+                selectedTenantId={formData.tenant_id}
+                tenants={tenants}
+                onChange={(selectedTenantId) => setFormData({ ...formData, tenant_id: selectedTenantId })}
+              />
+            </FieldWithTooltip>
 
             {/* Descrição */}
             <div className="space-y-2">
