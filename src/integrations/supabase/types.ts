@@ -3280,24 +3280,43 @@ export type Database = {
         Args: { _professional_id: number; _user_id: string }
         Returns: boolean
       }
-      validate_coupon: {
-        Args: {
-          _amount: number
-          _code: string
-          _professional_id: number
-          _tenant_id: string
-          _user_id: string
-        }
-        Returns: {
-          coupon_id: string
-          discount_amount: number
-          discount_type: string
-          discount_value: number
-          error_message: string
-          final_amount: number
-          is_valid: boolean
-        }[]
-      }
+      validate_coupon:
+        | {
+            Args: {
+              _amount: number
+              _code: string
+              _professional_id: number
+              _tenant_id?: string
+              _user_id: string
+            }
+            Returns: {
+              coupon_id: string
+              coupon_name: string
+              discount_amount: number
+              final_amount: number
+              is_valid: boolean
+              message: string
+              original_amount: number
+            }[]
+          }
+        | {
+            Args: {
+              _amount: number
+              _code: string
+              _professional_id: number
+              _tenant_id: string
+              _user_id: string
+            }
+            Returns: {
+              coupon_id: string
+              discount_amount: number
+              discount_type: string
+              discount_value: number
+              error_message: string
+              final_amount: number
+              is_valid: boolean
+            }[]
+          }
     }
     Enums: {
       app_role:
