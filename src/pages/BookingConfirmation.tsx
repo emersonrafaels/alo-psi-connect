@@ -709,6 +709,17 @@ const BookingConfirmation = () => {
 
                 {/* Total */}
                 <div className="border-t pt-4">
+                  {appliedCoupon && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <Tag className="h-3.5 w-3.5 text-emerald-600" />
+                      <code className="text-xs font-mono bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                        {appliedCoupon.code}
+                      </code>
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400">
+                        -{formatPrice(appliedCoupon.discountAmount.toString())}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Total a Pagar</span>
                     <span className="text-xl font-bold text-primary">
@@ -719,7 +730,7 @@ const BookingConfirmation = () => {
                     </span>
                   </div>
                   {appliedCoupon && (
-                    <p className="text-xs text-green-600 text-right mt-1">
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 text-right mt-1">
                       Você economizou {formatPrice(appliedCoupon.discountAmount.toString())}!
                     </p>
                   )}
@@ -748,6 +759,7 @@ const BookingConfirmation = () => {
                 onCouponApplied={handleCouponApplied}
                 onCouponRemoved={handleCouponRemoved}
                 autoApplyCode={autoApplyCode}
+                hideWhenApplied={!!searchParams.get('couponCode')}
               />
             )}
           </div>
