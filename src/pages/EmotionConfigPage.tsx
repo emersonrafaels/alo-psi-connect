@@ -43,8 +43,30 @@ const EmotionConfigPage = () => {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [previewValues, setPreviewValues] = useState<Record<string, number>>({});
   const [customEmotionName, setCustomEmotionName] = useState('');
-  const [customScale, setCustomScale] = useState<{ min: number; max: number }>({ min: 1, max: 10 });
   const [applyingTemplate, setApplyingTemplate] = useState<string | null>(null);
+
+  // Fixed 1-5 scale with gradual emojis and colors
+  const scaleEmojis: Record<number, string> = {
+    1: '😢',
+    2: '😔', 
+    3: '😐',
+    4: '😊',
+    5: '🤩',
+  };
+
+  const scaleColors: Record<number, string> = {
+    1: '#ef4444',
+    2: '#f97316',
+    3: '#eab308',
+    4: '#22c55e',
+    5: '#059669',
+  };
+
+  const popularEmotions = [
+    'Criatividade', 'Foco', 'Relaxamento', 'Motivação',
+    'Confiança', 'Produtividade', 'Paciência', 'Gratidão',
+    'Clareza', 'Disposição', 'Calma', 'Inspiração'
+  ];
 
   const handleAddEmotion = async (emotionType: string) => {
     try {
@@ -97,20 +119,26 @@ const EmotionConfigPage = () => {
       return;
     }
 
+    // Check for duplicate names
+    const existingNames = userConfigs.map(c => c.display_name.toLowerCase());
+    if (existingNames.includes(customEmotionName.trim().toLowerCase())) {
+      toast.error('Já existe uma emoção com este nome');
+      return;
+    }
+
     try {
-      // Generate basic emoji set and color scheme
+      // Generate 5-level emoji set and color scheme
       const emojiSet: Record<string, string> = {};
       const colorScheme: Record<string, string> = {};
       
-      for (let i = customScale.min; i <= customScale.max; i++) {
-        emojiSet[i.toString()] = i <= Math.floor((customScale.max + customScale.min) / 2) ? '😔' : '😊';
-        colorScheme[i.toString()] = i <= Math.floor((customScale.max + customScale.min) / 2) ? '#ef4444' : '#22c55e';
+      for (let i = 1; i <= 5; i++) {
+        emojiSet[i.toString()] = scaleEmojis[i];
+        colorScheme[i.toString()] = scaleColors[i];
       }
 
-      await addCustomEmotion(customEmotionName, customScale.min, customScale.max, emojiSet, colorScheme);
+      await addCustomEmotion(customEmotionName, 1, 5, emojiSet, colorScheme);
       toast.success('Emoção personalizada criada!');
       setCustomEmotionName('');
-      setCustomScale({ min: 1, max: 10 });
       setAddDialogOpen(false);
     } catch (error: any) {
       toast.error(error.message || 'Erro ao criar emoção personalizada');
@@ -374,96 +402,56 @@ const EmotionConfigPage = () => {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="scale-min">Valor Mínimo</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="scale-min"
-                          type="text"
-                          inputMode="numeric"
-                          value={customScale.min}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, '');
-                            const num = val ? parseInt(val) : 1;
-                            setCustomScale(prev => ({ ...prev, min: Math.min(num, prev.max - 1) }));
-                          }}
-                          onBlur={(e) => {
-                            const num = parseInt(e.target.value) || 1;
-                            setCustomScale(prev => ({ ...prev, min: Math.max(1, Math.min(num, prev.max - 1)) }));
-                          }}
-                          className="flex-1"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => setCustomScale(prev => ({ ...prev, min: Math.max(1, prev.min - 1) }))}
+                  {/* Popular Suggestions */}
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Sugestões populares:</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {popularEmotions.map(name => (
+                        <Badge 
+                          key={name} 
+                          variant="outline" 
+                          className="cursor-pointer hover:bg-primary/10 hover:border-primary transition-colors"
+                          onClick={() => setCustomEmotionName(name)}
                         >
-                          -
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => setCustomScale(prev => ({ ...prev, min: Math.min(prev.max - 1, prev.min + 1) }))}
-                        >
-                          +
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="scale-max">Valor Máximo</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="scale-max"
-                          type="text"
-                          inputMode="numeric"
-                          value={customScale.max}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, '');
-                            const num = val ? parseInt(val) : 10;
-                            setCustomScale(prev => ({ ...prev, max: Math.max(num, prev.min + 1) }));
-                          }}
-                          onBlur={(e) => {
-                            const num = parseInt(e.target.value) || 10;
-                            setCustomScale(prev => ({ ...prev, max: Math.min(20, Math.max(prev.min + 1, num)) }));
-                          }}
-                          className="flex-1"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => setCustomScale(prev => ({ ...prev, max: Math.max(prev.min + 1, prev.max - 1) }))}
-                        >
-                          -
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => setCustomScale(prev => ({ ...prev, max: Math.min(20, prev.max + 1) }))}
-                        >
-                          +
-                        </Button>
-                      </div>
+                          {name}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Preview da escala: {customScale.min} a {customScale.max}
-                    </p>
-                    <div className="flex gap-2">
-                      {Array.from({ length: customScale.max - customScale.min + 1 }, (_, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 h-8 rounded bg-primary/20 flex items-center justify-center text-xs font-medium"
-                        >
-                          {customScale.min + i}
-                        </div>
-                      ))}
+                  {/* Fixed Scale Info */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label>Escala de medição</Label>
+                      <Badge variant="secondary" className="text-xs">1 a 5 (padrão)</Badge>
+                    </div>
+                    
+                    {/* Visual Scale Preview */}
+                    <div className="p-4 rounded-xl border bg-gradient-to-br from-muted/30 to-muted/60">
+                      <div className="grid grid-cols-5 gap-2">
+                        {[1, 2, 3, 4, 5].map((value) => (
+                          <div
+                            key={value}
+                            className="flex flex-col items-center gap-1 p-3 rounded-lg transition-transform hover:scale-105"
+                            style={{
+                              backgroundColor: scaleColors[value] + '15',
+                              borderWidth: 1,
+                              borderColor: scaleColors[value] + '40',
+                            }}
+                          >
+                            <span className="text-2xl">{scaleEmojis[value]}</span>
+                            <span 
+                              className="text-sm font-semibold"
+                              style={{ color: scaleColors[value] }}
+                            >
+                              {value}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-center text-muted-foreground mt-3">
+                        Você poderá avaliar sua {customEmotionName || 'emoção'} de 1 a 5 diariamente
+                      </p>
                     </div>
                   </div>
 
