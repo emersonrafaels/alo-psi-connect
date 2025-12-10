@@ -143,7 +143,7 @@ export const PredictiveInsightsPanel: React.FC<PredictiveInsightsPanelProps> = (
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold">Inteligência Medcos</h3>
+            <h3 className="font-semibold">Inteligência MEDCOS</h3>
             {predictions.length > 0 && !hasNewData && (<Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-500/30 bg-emerald-500/10"><CheckCircle2 className="h-3 w-3" />Atualizado</Badge>)}
             {hasNewData && (<Badge className="gap-1 bg-primary text-primary-foreground"><Database className="h-3 w-3" />{newEntriesCount} novos</Badge>)}
           </div>
