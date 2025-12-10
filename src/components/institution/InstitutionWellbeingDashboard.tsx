@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -14,16 +15,19 @@ import {
   AlertTriangle,
   Users,
   FileText,
+  LineChart as LineChartIcon,
 } from 'lucide-react';
 import { useInstitutionWellbeing } from '@/hooks/useInstitutionWellbeing';
 import { LGPDNotice } from './LGPDNotice';
+import { WellbeingTimelineCharts } from './WellbeingTimelineCharts';
 
 interface InstitutionWellbeingDashboardProps {
   institutionId: string;
 }
 
 export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWellbeingDashboardProps) => {
-  const { data: metrics, isLoading } = useInstitutionWellbeing(institutionId);
+  const [periodDays, setPeriodDays] = useState(30);
+  const { data: metrics, isLoading } = useInstitutionWellbeing(institutionId, periodDays);
 
   if (isLoading) {
     return (
@@ -220,7 +224,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
       <Card>
         <CardHeader>
           <CardTitle>Resumo do Período</CardTitle>
-          <CardDescription>Últimos 30 dias comparados ao período anterior</CardDescription>
+          <CardDescription>Últimos {periodDays} dias comparados ao período anterior</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
@@ -262,6 +266,26 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Gráficos de Linha do Tempo */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <LineChartIcon className="h-5 w-5 text-primary" />
+            Evolução Temporal
+          </CardTitle>
+          <CardDescription>
+            Acompanhe a evolução do bem-estar emocional dos alunos ao longo do tempo
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <WellbeingTimelineCharts
+            dailyEntries={metrics.daily_entries || []}
+            periodDays={periodDays}
+            onPeriodChange={setPeriodDays}
+          />
         </CardContent>
       </Card>
     </div>
