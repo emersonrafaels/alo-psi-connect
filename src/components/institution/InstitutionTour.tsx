@@ -8,20 +8,35 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { useInstitutionTour, TOUR_STEPS } from '@/hooks/useInstitutionTour';
+import { TOUR_STEPS } from '@/hooks/useInstitutionTour';
 import { ChevronLeft, ChevronRight, X, Sparkles } from 'lucide-react';
 
-export const InstitutionTour = () => {
-  const {
-    showTour,
-    currentStep,
-    totalSteps,
-    currentStepData,
-    nextStep,
-    prevStep,
-    skipTour,
-  } = useInstitutionTour();
+interface TourStep {
+  id: string;
+  title: string;
+  description: string;
+  target?: string;
+}
 
+interface InstitutionTourProps {
+  showTour: boolean;
+  currentStep: number;
+  totalSteps: number;
+  currentStepData: TourStep | undefined;
+  nextStep: () => void;
+  prevStep: () => void;
+  skipTour: () => void;
+}
+
+export const InstitutionTour = ({
+  showTour,
+  currentStep,
+  totalSteps,
+  currentStepData,
+  nextStep,
+  prevStep,
+  skipTour,
+}: InstitutionTourProps) => {
   if (!showTour || !currentStepData) return null;
 
   const progress = ((currentStep + 1) / totalSteps) * 100;

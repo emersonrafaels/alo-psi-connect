@@ -9,8 +9,8 @@ export const useInstitutionAccess = () => {
   const { tenant } = useTenant();
   const location = useLocation();
   
-  // Detectar se estamos em rota institucional
-  const isInstitutionalRoute = location.pathname.startsWith('/portal-institucional');
+  // Detectar se estamos em rota institucional (suporta rotas multi-tenant como /medcos/portal-institucional)
+  const isInstitutionalRoute = location.pathname.includes('/portal-institucional');
 
   // Buscar instituições do usuário
   const { data: userInstitutions, isLoading } = useQuery({
