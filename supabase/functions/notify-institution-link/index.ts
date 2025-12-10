@@ -232,6 +232,11 @@ const handler = async (req: Request): Promise<Response> => {
         tenantColor = tenant.primary_color || tenantColor;
         tenantLogo = tenant.logo_url;
         tenantSlug = tenant.slug;
+        
+        // Normalizar nome para MEDCOS em uppercase
+        if (tenantSlug === 'medcos') {
+          tenantName = 'MEDCOS';
+        }
       }
     }
 
