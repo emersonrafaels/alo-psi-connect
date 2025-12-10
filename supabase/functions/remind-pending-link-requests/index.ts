@@ -94,9 +94,14 @@ const handler = async (req: Request): Promise<Response> => {
     for (const [tenantSlug, requests] of requestsByTenant) {
       const tenant = requests[0].tenants;
       const adminEmail = tenant?.admin_email || 'alopsi.host@gmail.com';
-      const tenantName = tenant?.name || 'Rede Bem Estar';
+      let tenantName = tenant?.name || 'Rede Bem Estar';
       const tenantColor = tenant?.primary_color || '#7c3aed';
       const tenantLogo = tenant?.logo_url || '';
+
+      // Normalizar nome para MEDCOS em uppercase
+      if (tenant?.slug === 'medcos') {
+        tenantName = 'MEDCOS';
+      }
 
       // Check reminder count for each request
       const requestsToRemind = requests.filter((req: any) => {

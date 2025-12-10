@@ -137,6 +137,12 @@ serve(async (req) => {
 
     const tenantId = tenantData.id;
 
+    // Normalizar nome para MEDCOS em uppercase
+    let normalizedTenantName = tenantData.name;
+    if (tenantSlug === 'medcos') {
+      normalizedTenantName = 'MEDCOS';
+    }
+
     let userId;
     let isNewUser = false; // Track if we're creating a new user
 
@@ -395,10 +401,10 @@ serve(async (req) => {
             const confirmationUrl = `${baseUrl}${tenantPath}/auth?confirm=true&token=${confirmationToken}`;
 
             console.log('📧 Sending confirmation email:', {
-              tenant: tenantData.name,
-              from: `${tenantData.name} <${tenantData.admin_email}>`,
+              tenant: normalizedTenantName,
+              from: `${normalizedTenantName} <${tenantData.admin_email}>`,
               to: email,
-              subject: `Confirme seu email - ${tenantData.name}`,
+              subject: `Confirme seu email - ${normalizedTenantName}`,
               logo: tenantData.logo_url,
               color: tenantData.primary_color
             });
@@ -410,11 +416,11 @@ serve(async (req) => {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                from: `${tenantData.name} <${tenantData.admin_email}>`,
+                from: `${normalizedTenantName} <${tenantData.admin_email}>`,
                 to: [email],
-                subject: `Confirme seu email - ${tenantData.name}`,
+                subject: `Confirme seu email - ${normalizedTenantName}`,
                 html: generateConfirmationEmailHTML(
-                  tenantData.name,
+                  normalizedTenantName,
                   tenantData.primary_color,
                   tenantData.logo_url,
                   nome,

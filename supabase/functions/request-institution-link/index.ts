@@ -71,6 +71,12 @@ const handler = async (req: Request): Promise<Response> => {
     const tenant = tenantData.data;
     const institution = institutionData.data;
 
+    // Normalizar nome para MEDCOS em uppercase
+    let normalizedTenantName = tenant.name;
+    if (tenant.slug === 'medcos') {
+      normalizedTenantName = 'MEDCOS';
+    }
+
     let professionalId = null;
     let patientId = null;
 
@@ -179,8 +185,8 @@ const handler = async (req: Request): Promise<Response> => {
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
           <!-- Header -->
           <div style="background-color: ${tenantColor}; padding: 24px; text-align: center;">
-            ${tenantLogo ? `<img src="${tenantLogo}" alt="${tenant.name}" style="max-height: 50px; margin-bottom: 16px;" />` : ''}
-            <h1 style="color: #ffffff; margin: 0; font-size: 24px;">${tenant.name}</h1>
+            ${tenantLogo ? `<img src="${tenantLogo}" alt="${normalizedTenantName}" style="max-height: 50px; margin-bottom: 16px;" />` : ''}
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px;">${normalizedTenantName}</h1>
           </div>
           
           <!-- Content -->
@@ -254,7 +260,7 @@ const handler = async (req: Request): Promise<Response> => {
           <!-- Footer -->
           <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
             <p style="margin: 0; color: #9ca3af; font-size: 14px;">
-              Esta é uma notificação automática do sistema <strong>${tenant.name}</strong>.
+              Esta é uma notificação automática do sistema <strong>${normalizedTenantName}</strong>.
             </p>
             <p style="margin: 16px 0 0 0; color: #d1d5db; font-size: 12px;">
               Acesse o painel administrativo para aprovar ou rejeitar esta solicitação.
@@ -267,7 +273,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send to tenant admin
     const emailResponse = await resend.emails.send({
-      from: `${tenant.name} <noreply@redebemestar.com.br>`,
+      from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
       cc: adminEmail !== MEDCOS_ADMIN_EMAIL ? [MEDCOS_ADMIN_EMAIL] : [],
       subject: `Nova Solicitação de Vínculo Institucional - ${institution.name}`,
@@ -285,7 +291,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (institutionAdminEmails.length > 0) {
         try {
           await resend.emails.send({
-            from: `${tenant.name} <noreply@redebemestar.com.br>`,
+            from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
             to: institutionAdminEmails,
             subject: `Nova Solicitação de Vínculo - ${institution.name}`,
             html: emailHtml,

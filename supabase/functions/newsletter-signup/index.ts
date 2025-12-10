@@ -95,7 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (tenantId) {
       const { data: tenant } = await supabase
         .from('tenants')
-        .select('admin_email, name')
+        .select('admin_email, name, slug')
         .eq('id', tenantId)
         .single();
       
@@ -104,6 +104,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
       if (tenant?.name) {
         tenantName = tenant.name;
+        
+        // Normalizar nome para MEDCOS em uppercase
+        if (tenant?.slug === 'medcos') {
+          tenantName = 'MEDCOS';
+        }
       }
     }
 

@@ -68,8 +68,13 @@ const handler = async (req: Request): Promise<Response> => {
       tenantData = defaultTenant;
     }
 
-    const tenantName = tenantData?.name || 'Alô, Psi';
+    let tenantName = tenantData?.name || 'Alô, Psi';
     const tenantSlug = tenantData?.slug || 'alopsi';
+    
+    // Normalizar nome para MEDCOS em uppercase
+    if (tenantSlug === 'medcos') {
+      tenantName = 'MEDCOS';
+    }
     const tenantColor = tenantData?.primary_color || '#1e40af';
     const tenantLogo = tenantData?.logo_url;
     const tenantSubtitle = tenantData?.hero_subtitle || 'Conectando você ao cuidado mental';

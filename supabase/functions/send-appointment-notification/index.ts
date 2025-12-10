@@ -56,7 +56,8 @@ const handler = async (req: Request): Promise<Response> => {
         tenant_id,
         tenants!inner (
           admin_email,
-          name
+          name,
+          slug
         )
       `)
       .eq('professional_id', agendamento.professional_id)
@@ -67,6 +68,12 @@ const handler = async (req: Request): Promise<Response> => {
     }
     if (professionalTenant?.tenants?.name) {
       tenantName = professionalTenant.tenants.name;
+      
+      // Normalizar nome para MEDCOS em uppercase
+      const tenantSlug = professionalTenant.tenants?.slug;
+      if (tenantSlug === 'medcos') {
+        tenantName = 'MEDCOS';
+      }
     }
 
     // Format date and time for email
