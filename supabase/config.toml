@@ -151,3 +151,6 @@ verify_jwt = false
 
 [functions.remind-pending-link-requests]
 verify_jwt = false
+
+[functions.fetch-institution-logos]
+verify_jwt = true

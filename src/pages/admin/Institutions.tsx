@@ -20,7 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket, Shield, Briefcase, FileText, BarChart3, FileCheck } from 'lucide-react';
+import { Plus, Search, Edit, Users, Trash2, GraduationCap, Building2, Handshake, AlertTriangle, UserCog, Ticket, Shield, Briefcase, FileText, BarChart3, FileCheck, Image, Loader2 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInstitutions, EducationalInstitution } from '@/hooks/useInstitutions';
 import { useUncataloguedInstitutions } from '@/hooks/useUncataloguedInstitutions';
@@ -42,6 +44,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 export default function Institutions() {
   const { tenantFilter, selectedTenantId, tenants } = useAdminTenant();
+  const { toast } = useToast();
+  const [isFetchingLogos, setIsFetchingLogos] = useState(false);
   
   const {
     institutions,
@@ -145,6 +149,39 @@ export default function Institutions() {
       id: institution.id,
       is_active: !institution.is_active,
     });
+  };
+
+  const handleFetchAllLogos = async () => {
+    setIsFetchingLogos(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('Não autenticado');
+      }
+
+      const response = await supabase.functions.invoke('fetch-institution-logos', {
+        body: { fetchAll: true },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const { summary } = response.data;
+      toast({
+        title: 'Busca de logos concluída',
+        description: `${summary.found} logos encontrados, ${summary.notFound} não encontrados.`,
+      });
+    } catch (error) {
+      console.error('Error fetching logos:', error);
+      toast({
+        title: 'Erro ao buscar logos',
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsFetchingLogos(false);
+    }
   };
 
   return (
@@ -362,8 +399,21 @@ export default function Institutions() {
 
         {/* Tabela de Instituições Catalogadas */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Instituições Catalogadas</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleFetchAllLogos}
+              disabled={isFetchingLogos}
+            >
+              {isFetchingLogos ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Image className="mr-2 h-4 w-4" />
+              )}
+              {isFetchingLogos ? 'Buscando...' : 'Buscar Logos Automaticamente'}
+            </Button>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -372,6 +422,7 @@ export default function Institutions() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12"></TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Parceria</TableHead>
@@ -383,6 +434,14 @@ export default function Institutions() {
                 <TableBody>
                   {filteredInstitutions.map((institution) => (
                     <TableRow key={institution.id}>
+                      <TableCell>
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={institution.logo_url || undefined} alt={institution.name} />
+                          <AvatarFallback className="bg-muted">
+                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                          </AvatarFallback>
+                        </Avatar>
+                      </TableCell>
                       <TableCell className="font-medium">{institution.name}</TableCell>
                       <TableCell>
                         <Badge variant={institution.type === 'public' ? 'default' : 'secondary'}>
