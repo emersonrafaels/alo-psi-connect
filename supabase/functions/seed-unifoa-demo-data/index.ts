@@ -10,62 +10,62 @@ const UNIFOA_ID = "33b11baa-2679-4673-a72e-b705c76c73f1";
 const DEFAULT_TENANT_ID = "472db0ac-0f45-4998-97da-490bc579efb1"; // Rede Bem Estar
 const DEMO_MARKER = "[DEMO-UNIFOA]";
 
-// Professional data
+// Professional data - corrected fields
 const PROFESSIONALS = [
   {
     nome: "Dr. Ricardo Alves Monteiro",
     email: "ricardo.monteiro@unifoa.edu.br",
     telefone: "(24) 99999-0001",
     profissao: "Psicólogo",
-    especialidades: ["TCC", "Ansiedade", "Depressão"],
-    preco: 180,
+    servicos_normalizados: ["TCC", "Ansiedade", "Depressão"],
+    preco_consulta: 180,
     crp: "CRP 05/12345",
     relationship_type: "supervisor",
-    bio: "Psicólogo clínico com especialização em Terapia Cognitivo-Comportamental. Professor e supervisor de estágio na UniFOA.",
+    resumo: "Psicólogo clínico com especialização em Terapia Cognitivo-Comportamental. Professor e supervisor de estágio na UniFOA.",
   },
   {
     nome: "Dra. Fernanda Lima Santos",
     email: "fernanda.lima@unifoa.edu.br",
     telefone: "(24) 99999-0002",
     profissao: "Psicólogo",
-    especialidades: ["Psicanálise", "Luto", "Trauma"],
-    preco: 200,
+    servicos_normalizados: ["Psicanálise", "Luto", "Trauma"],
+    preco_consulta: 200,
     crp: "CRP 05/23456",
     relationship_type: "supervisor",
-    bio: "Psicóloga com formação psicanalítica. Especialista em luto e trauma. Coordenadora do núcleo de atendimento psicológico da UniFOA.",
+    resumo: "Psicóloga com formação psicanalítica. Especialista em luto e trauma. Coordenadora do núcleo de atendimento psicológico da UniFOA.",
   },
   {
     nome: "Dr. Carlos Eduardo Martins",
     email: "carlos.martins@unifoa.edu.br",
     telefone: "(24) 99999-0003",
     profissao: "Psicólogo",
-    especialidades: ["Neuropsicologia", "TDAH", "Avaliação Psicológica"],
-    preco: 220,
+    servicos_normalizados: ["Neuropsicologia", "TDAH", "Avaliação Psicológica"],
+    preco_consulta: 220,
     crp: "CRP 05/34567",
     relationship_type: "affiliated",
-    bio: "Neuropsicólogo especializado em avaliação e reabilitação cognitiva. Atende crianças, adolescentes e adultos.",
+    resumo: "Neuropsicólogo especializado em avaliação e reabilitação cognitiva. Atende crianças, adolescentes e adultos.",
   },
   {
     nome: "Dra. Patricia Rocha Silva",
     email: "patricia.rocha@unifoa.edu.br",
     telefone: "(24) 99999-0004",
     profissao: "Psicoterapeuta",
-    especialidades: ["Terapia de Casal", "Terapia Familiar", "Mediação de Conflitos"],
-    preco: 190,
+    servicos_normalizados: ["Terapia de Casal", "Terapia Familiar", "Mediação de Conflitos"],
+    preco_consulta: 190,
     crp: "CRP 05/45678",
     relationship_type: "affiliated",
-    bio: "Psicoterapeuta sistêmica especializada em relações familiares e conjugais. Experiência de 15 anos em clínica.",
+    resumo: "Psicoterapeuta sistêmica especializada em relações familiares e conjugais. Experiência de 15 anos em clínica.",
   },
   {
     nome: "Dr. André Luiz Ferreira",
     email: "andre.ferreira@unifoa.edu.br",
     telefone: "(24) 99999-0005",
     profissao: "Psicólogo",
-    especialidades: ["Psicologia Esportiva", "Alta Performance", "Motivação"],
-    preco: 170,
+    servicos_normalizados: ["Psicologia Esportiva", "Alta Performance", "Motivação"],
+    preco_consulta: 170,
     crp: "CRP 05/56789",
     relationship_type: "affiliated",
-    bio: "Psicólogo esportivo com experiência em equipes de alto rendimento. Trabalha com atletas profissionais e amadores.",
+    resumo: "Psicólogo esportivo com experiência em equipes de alto rendimento. Trabalha com atletas profissionais e amadores.",
   },
 ];
 
@@ -81,7 +81,7 @@ const STUDENTS = [
   { nome: "Isabela Martins Costa", email: "isabela.martins@unifoa.edu.br", telefone: "(24) 98888-0008", periodo: "10º", status: "inactive" },
 ];
 
-// Coupon data
+// Coupon data - corrected enum values
 const COUPONS = [
   {
     code: "UNIFOA20",
@@ -90,17 +90,17 @@ const COUPONS = [
     discount_type: "percentage",
     discount_value: 20,
     target_audience: "institution_students",
-    professional_scope: "all_professionals",
+    professional_scope: "all_tenant",
     maximum_uses: null,
   },
   {
     code: "UNIFOA50PRIMEIRA",
     name: "R$50 Primeira Consulta",
     description: "Desconto de R$50 na primeira consulta para novos pacientes",
-    discount_type: "fixed",
+    discount_type: "fixed_amount",
     discount_value: 50,
-    target_audience: "non_enrolled_patients",
-    professional_scope: "all_professionals",
+    target_audience: "other_patients",
+    professional_scope: "all_tenant",
     maximum_uses: 100,
   },
   {
@@ -119,8 +119,8 @@ const COUPONS = [
     description: "Desconto de 15% válido para todos os usuários",
     discount_type: "percentage",
     discount_value: 15,
-    target_audience: "all_patients",
-    professional_scope: "all_professionals",
+    target_audience: "all",
+    professional_scope: "all_tenant",
     maximum_uses: 200,
   },
 ];
@@ -148,12 +148,45 @@ function formatTime(hour: number, minute: number = 0): string {
   return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}:00`;
 }
 
+// Check for existing demo data
+async function checkExistingDemoData(supabase: any): Promise<{
+  professionals: number;
+  students: number;
+  coupons: number;
+}> {
+  const { count: professionals } = await supabase
+    .from("profissionais")
+    .select("*", { count: "exact", head: true })
+    .like("resumo", `%${DEMO_MARKER}%`);
+
+  const { count: students } = await supabase
+    .from("profiles")
+    .select("*", { count: "exact", head: true })
+    .like("email", "%@unifoa.edu.br")
+    .eq("tipo_usuario", "paciente");
+
+  const { count: coupons } = await supabase
+    .from("institution_coupons")
+    .select("*", { count: "exact", head: true })
+    .like("description", `%${DEMO_MARKER}%`);
+
+  return { 
+    professionals: professionals || 0, 
+    students: students || 0, 
+    coupons: coupons || 0 
+  };
+}
+
 // Seed functions
 async function seedProfessionals(supabase: any): Promise<{ created: number; ids: number[] }> {
   console.log("[Seed] Creating professionals...");
   const createdIds: number[] = [];
 
-  for (const prof of PROFESSIONALS) {
+  for (let i = 0; i < PROFESSIONALS.length; i++) {
+    const prof = PROFESSIONALS[i];
+    const demoUserId = 99990 + i;
+    const userLogin = prof.email.split("@")[0];
+
     // Create profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
@@ -172,22 +205,27 @@ async function seedProfessionals(supabase: any): Promise<{ created: number; ids:
       continue;
     }
 
-    // Create professional record
+    // Create professional record with correct fields
     const { data: professional, error: profError } = await supabase
       .from("profissionais")
       .insert({
         profile_id: profile.id,
         display_name: prof.nome,
         first_name: prof.nome.split(" ")[0],
+        last_name: prof.nome.split(" ").slice(1).join(" "),
         email_secundario: prof.email,
+        telefone: prof.telefone,
         crp_crm: prof.crp,
         profissao: prof.profissao,
-        especialidades: prof.especialidades,
-        preco: prof.preco,
-        bio: prof.bio + ` ${DEMO_MARKER}`,
+        servicos_normalizados: prof.servicos_normalizados,
+        preco_consulta: prof.preco_consulta,
+        resumo: `${prof.resumo} ${DEMO_MARKER}`,
+        resumo_profissional: prof.resumo,
         ativo: true,
         em_destaque: false,
-        user_id: null,
+        user_id: demoUserId,
+        user_login: userLogin,
+        user_email: prof.email,
       })
       .select("id")
       .single();
@@ -242,13 +280,13 @@ async function seedStudents(supabase: any): Promise<{ created: number; ids: stri
       continue;
     }
 
-    // Create patient record
+    // Create patient record - NO instituicao_ensino (link via patient_institutions only)
     const { data: patient, error: patientError } = await supabase
       .from("pacientes")
       .insert({
         profile_id: profile.id,
         eh_estudante: true,
-        instituicao_ensino: `UniFOA - ${student.periodo} período ${DEMO_MARKER}`,
+        instituicao_ensino: null, // No free text - link via patient_institutions only
         tenant_id: DEFAULT_TENANT_ID,
       })
       .select("id")
@@ -286,7 +324,7 @@ async function seedCoupons(supabase: any): Promise<{ created: number; ids: strin
         tenant_id: DEFAULT_TENANT_ID,
         code: coupon.code,
         name: coupon.name,
-        description: coupon.description + ` ${DEMO_MARKER}`,
+        description: `${coupon.description} ${DEMO_MARKER}`,
         discount_type: coupon.discount_type,
         discount_value: coupon.discount_value,
         target_audience: coupon.target_audience,
@@ -376,11 +414,11 @@ async function seedMoodEntries(supabase: any): Promise<{ created: number }> {
 async function seedAppointments(supabase: any): Promise<{ created: number; past: number; cancelled: number; future: number }> {
   console.log("[Seed] Creating appointments...");
 
-  // Get professionals and students
+  // Get professionals and students - using resumo instead of bio
   const { data: professionals } = await supabase
     .from("profissionais")
-    .select("id, preco, display_name")
-    .like("bio", `%${DEMO_MARKER}%`);
+    .select("id, preco_consulta, display_name")
+    .like("resumo", `%${DEMO_MARKER}%`);
 
   const { data: studentProfiles } = await supabase
     .from("profiles")
@@ -445,7 +483,7 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
       telefone_paciente: "(24) 98888-0000",
       data_consulta: formatDate(date),
       horario: formatTime(randomInt(9, 18)),
-      valor: prof.preco,
+      valor: prof.preco_consulta,
       status: "realizado",
       payment_status: "paid",
       coupon_id: coupon?.id || null,
@@ -476,7 +514,7 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
       telefone_paciente: "(24) 98888-0000",
       data_consulta: formatDate(date),
       horario: formatTime(randomInt(9, 18)),
-      valor: prof.preco,
+      valor: prof.preco_consulta,
       status: "cancelado",
       payment_status: "refunded",
       observacoes: `Cancelado: ${apt.reason} ${DEMO_MARKER}`,
@@ -516,7 +554,7 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
       telefone_paciente: "(24) 98888-0000",
       data_consulta: formatDate(date),
       horario: formatTime(randomInt(9, 18)),
-      valor: prof.preco,
+      valor: prof.preco_consulta,
       status: apt.status,
       payment_status: apt.status === "confirmado" ? "paid" : "pending_payment",
       coupon_id: coupon?.id || null,
@@ -555,34 +593,43 @@ async function cleanup(supabase: any): Promise<{ deleted: any }> {
     .like("description", `%${DEMO_MARKER}%`);
   deleted.coupons = coupons || 0;
 
-  // Get patient IDs before deleting
-  const { data: patients } = await supabase
-    .from("pacientes")
+  // Get patient IDs via email (more reliable than instituicao_ensino)
+  const { data: patientProfiles } = await supabase
+    .from("profiles")
     .select("id")
-    .like("instituicao_ensino", `%${DEMO_MARKER}%`);
+    .like("email", "%@unifoa.edu.br")
+    .eq("tipo_usuario", "paciente");
 
-  if (patients?.length) {
-    // Delete patient_institutions
-    for (const patient of patients) {
-      await supabase
-        .from("patient_institutions")
-        .delete()
-        .eq("patient_id", patient.id);
+  if (patientProfiles?.length) {
+    // Get patient records via profile_id
+    const { data: patients } = await supabase
+      .from("pacientes")
+      .select("id")
+      .in("profile_id", patientProfiles.map((p: any) => p.id));
+
+    if (patients?.length) {
+      // Delete patient_institutions
+      for (const patient of patients) {
+        await supabase
+          .from("patient_institutions")
+          .delete()
+          .eq("patient_id", patient.id);
+      }
+
+      // Delete patients
+      const { count: patientsCount } = await supabase
+        .from("pacientes")
+        .delete({ count: "exact" })
+        .in("id", patients.map((p: any) => p.id));
+      deleted.patients = patientsCount || 0;
     }
   }
 
-  // Delete patients
-  const { count: patientsCount } = await supabase
-    .from("pacientes")
-    .delete({ count: "exact" })
-    .like("instituicao_ensino", `%${DEMO_MARKER}%`);
-  deleted.patients = patientsCount || 0;
-
-  // Get professional IDs before deleting
+  // Get professional IDs using resumo instead of bio
   const { data: professionals } = await supabase
     .from("profissionais")
-    .select("id")
-    .like("bio", `%${DEMO_MARKER}%`);
+    .select("id, profile_id")
+    .like("resumo", `%${DEMO_MARKER}%`);
 
   if (professionals?.length) {
     // Delete professional_institutions and professional_tenants
@@ -596,14 +643,14 @@ async function cleanup(supabase: any): Promise<{ deleted: any }> {
         .delete()
         .eq("professional_id", prof.id);
     }
-  }
 
-  // Delete professionals
-  const { count: professionalsCount } = await supabase
-    .from("profissionais")
-    .delete({ count: "exact" })
-    .like("bio", `%${DEMO_MARKER}%`);
-  deleted.professionals = professionalsCount || 0;
+    // Delete professionals
+    const { count: professionalsCount } = await supabase
+      .from("profissionais")
+      .delete({ count: "exact" })
+      .like("resumo", `%${DEMO_MARKER}%`);
+    deleted.professionals = professionalsCount || 0;
+  }
 
   // Delete profiles
   const { count: profiles } = await supabase
@@ -633,6 +680,13 @@ Deno.serve(async (req) => {
 
     switch (action) {
       case "seed_all":
+        // Auto-cleanup before seeding to prevent duplicates
+        const existing = await checkExistingDemoData(supabase);
+        if (existing.professionals > 0 || existing.students > 0 || existing.coupons > 0) {
+          console.log("[Seed] Existing demo data found, cleaning up first...", existing);
+          await cleanup(supabase);
+        }
+
         const profs = await seedProfessionals(supabase);
         const students = await seedStudents(supabase);
         const coupons = await seedCoupons(supabase);
