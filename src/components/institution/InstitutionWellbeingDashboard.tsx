@@ -301,10 +301,10 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
             <Layers className="h-4 w-4" />
             <span className="hidden sm:inline">Multi-Camadas</span>
           </TabsTrigger>
-          <TabsTrigger value="predictive" className="gap-2">
-            <Sparkles className="h-4 w-4" />
-            <span className="hidden sm:inline">Preditivo (ML)</span>
-          </TabsTrigger>
+        <TabsTrigger value="predictive" className="gap-2">
+          <Sparkles className="h-4 w-4" />
+          <span className="hidden sm:inline">Inteligência Medcos</span>
+        </TabsTrigger>
         </TabsList>
 
         <TabsContent value="charts" className="mt-4">

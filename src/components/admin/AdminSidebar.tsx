@@ -17,7 +17,8 @@ import {
   FileSpreadsheet,
   TrendingUp,
   Video,
-  Database
+  Database,
+  Brain
 } from 'lucide-react';
 import {
   Sidebar,
@@ -145,6 +146,12 @@ const adminMenuGroups = [
         title: 'Tenants',
         url: '/admin/tenants',
         icon: Building2,
+        requiredRole: 'super_admin' as const
+      },
+      {
+        title: 'Gestão de IAs',
+        url: '/admin/ai-management',
+        icon: Brain,
         requiredRole: 'super_admin' as const
       }
     ]
