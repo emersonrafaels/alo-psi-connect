@@ -4,6 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Heart,
   Brain,
@@ -16,11 +17,16 @@ import {
   Users,
   FileText,
   LineChart as LineChartIcon,
+  Layers,
+  Sparkles,
 } from 'lucide-react';
 import { useInstitutionWellbeing } from '@/hooks/useInstitutionWellbeing';
+import { usePredictiveInsights } from '@/hooks/usePredictiveInsights';
 import { LGPDNotice } from './LGPDNotice';
 import { WellbeingTimelineCharts } from './WellbeingTimelineCharts';
 import { WellbeingInsights } from './WellbeingInsights';
+import { WellbeingLayeredChart } from './WellbeingLayeredChart';
+import { PredictiveInsightsPanel } from './PredictiveInsightsPanel';
 
 interface InstitutionWellbeingDashboardProps {
   institutionId: string;
@@ -29,6 +35,15 @@ interface InstitutionWellbeingDashboardProps {
 export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWellbeingDashboardProps) => {
   const [periodDays, setPeriodDays] = useState(30);
   const { data: metrics, isLoading } = useInstitutionWellbeing(institutionId, periodDays);
+  
+  const {
+    predictions,
+    forecast,
+    generatedAt,
+    isGenerating,
+    hasSufficientData,
+    generatePredictions,
+  } = usePredictiveInsights(institutionId, metrics?.daily_entries || [], metrics);
 
   if (isLoading) {
     return (
@@ -275,27 +290,66 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
         </CardContent>
       </Card>
 
-      {/* Gráficos de Linha do Tempo */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <LineChartIcon className="h-5 w-5 text-primary" />
-            Evolução Temporal
-          </CardTitle>
-          <CardDescription>
-            Acompanhe a evolução do bem-estar emocional dos alunos ao longo do tempo
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <WellbeingTimelineCharts
+      {/* Tabs para Gráficos e Insights Preditivos */}
+      <Tabs defaultValue="charts" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-grid">
+          <TabsTrigger value="charts" className="gap-2">
+            <LineChartIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">Evolução</span>
+          </TabsTrigger>
+          <TabsTrigger value="layered" className="gap-2">
+            <Layers className="h-4 w-4" />
+            <span className="hidden sm:inline">Multi-Camadas</span>
+          </TabsTrigger>
+          <TabsTrigger value="predictive" className="gap-2">
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Preditivo (ML)</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="charts" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <LineChartIcon className="h-5 w-5 text-primary" />
+                Evolução Temporal
+              </CardTitle>
+              <CardDescription>
+                Acompanhe a evolução do bem-estar emocional dos alunos ao longo do tempo
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <WellbeingTimelineCharts
+                dailyEntries={metrics.daily_entries || []}
+                periodDays={periodDays}
+                onPeriodChange={setPeriodDays}
+                avgMood={metrics.avg_mood_score}
+                avgAnxiety={metrics.avg_anxiety_level}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="layered" className="mt-4">
+          <WellbeingLayeredChart
             dailyEntries={metrics.daily_entries || []}
-            periodDays={periodDays}
-            onPeriodChange={setPeriodDays}
+            predictions={forecast}
             avgMood={metrics.avg_mood_score}
             avgAnxiety={metrics.avg_anxiety_level}
           />
-        </CardContent>
-      </Card>
+        </TabsContent>
+
+        <TabsContent value="predictive" className="mt-4">
+          <PredictiveInsightsPanel
+            predictions={predictions}
+            forecast={forecast}
+            generatedAt={generatedAt}
+            isGenerating={isGenerating}
+            hasSufficientData={hasSufficientData}
+            onGenerate={generatePredictions}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
