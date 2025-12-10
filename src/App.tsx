@@ -84,6 +84,7 @@ import AdminTests from "@/pages/admin/Tests";
 import GoogleCalendarTests from "@/pages/admin/GoogleCalendarTests";
 import GroupSessionsAdmin from "@/pages/admin/GroupSessionsAdmin";
 import DemoData from "@/pages/admin/DemoData";
+import AIManagement from "@/pages/admin/AIManagement";
 
 import "./App.css";
 
@@ -275,6 +276,16 @@ const AppWithShortcuts = () => {
       <Route path="/admin/encontros" element={<AdminLayout><GroupSessionsAdmin /></AdminLayout>} />
       <Route path="/admin/tests" element={<AdminLayout><AdminTests /></AdminLayout>} />
       <Route path="/admin/demo-data" element={<AdminLayout><DemoData /></AdminLayout>} />
+      <Route 
+        path="/admin/ai-management" 
+        element={
+          <ProtectedRoute requiredRole="super_admin">
+            <AdminLayout>
+              <AIManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        } 
+      />
       <Route
         path="/admin/google-calendar-tests" 
         element={
