@@ -317,6 +317,16 @@ async function seedCoupons(supabase: any): Promise<{ created: number; ids: strin
   const createdIds: string[] = [];
 
   for (const coupon of COUPONS) {
+    // Delete existing coupon with same code first (UNIQUE constraint)
+    const { error: deleteError } = await supabase
+      .from("institution_coupons")
+      .delete()
+      .eq("code", coupon.code);
+    
+    if (deleteError) {
+      console.log(`[Seed] Note: Could not delete existing coupon ${coupon.code}:`, deleteError.message);
+    }
+
     const { data, error } = await supabase
       .from("institution_coupons")
       .insert({
@@ -338,7 +348,7 @@ async function seedCoupons(supabase: any): Promise<{ created: number; ids: strin
       .single();
 
     if (error) {
-      console.error(`[Seed] Error creating coupon ${coupon.code}:`, error);
+      console.error(`[Seed] Error creating coupon ${coupon.code}:`, JSON.stringify(error));
       continue;
     }
 
@@ -414,6 +424,22 @@ async function seedMoodEntries(supabase: any): Promise<{ created: number }> {
 async function seedAppointments(supabase: any): Promise<{ created: number; past: number; cancelled: number; future: number }> {
   console.log("[Seed] Creating appointments...");
 
+  // Get a real user_id from the system (required due to FK constraint on auth.users)
+  const { data: realUser, error: userError } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .not("user_id", "is", null)
+    .limit(1)
+    .single();
+
+  if (userError || !realUser?.user_id) {
+    console.error("[Seed] No valid user_id found for appointments - FK constraint requires real auth.users reference");
+    return { created: 0, past: 0, cancelled: 0, future: 0 };
+  }
+
+  const DEMO_USER_ID = realUser.user_id;
+  console.log(`[Seed] Using real user_id for appointments: ${DEMO_USER_ID}`);
+
   // Get professionals and students - using resumo instead of bio
   const { data: professionals } = await supabase
     .from("profissionais")
@@ -436,7 +462,6 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
     return { created: 0, past: 0, cancelled: 0, future: 0 };
   }
 
-  const DUMMY_USER_ID = "11111111-1111-1111-1111-111111111111";
   let past = 0, cancelled = 0, future = 0;
 
   // Past appointments (25)
@@ -476,7 +501,7 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
 
     const { error } = await supabase.from("agendamentos").insert({
       professional_id: prof.id,
-      user_id: DUMMY_USER_ID,
+      user_id: DEMO_USER_ID,
       tenant_id: DEFAULT_TENANT_ID,
       nome_paciente: student.nome,
       email_paciente: student.email,
@@ -490,7 +515,11 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
       observacoes: `Consulta demo realizada ${DEMO_MARKER}`,
     });
 
-    if (!error) past++;
+    if (error) {
+      console.error(`[Seed] Error creating past appointment:`, JSON.stringify(error));
+    } else {
+      past++;
+    }
   }
 
   // Cancelled appointments (3)
@@ -507,7 +536,7 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
 
     const { error } = await supabase.from("agendamentos").insert({
       professional_id: prof.id,
-      user_id: DUMMY_USER_ID,
+      user_id: DEMO_USER_ID,
       tenant_id: DEFAULT_TENANT_ID,
       nome_paciente: student.nome,
       email_paciente: student.email,
@@ -520,7 +549,11 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
       observacoes: `Cancelado: ${apt.reason} ${DEMO_MARKER}`,
     });
 
-    if (!error) cancelled++;
+    if (error) {
+      console.error(`[Seed] Error creating cancelled appointment:`, JSON.stringify(error));
+    } else {
+      cancelled++;
+    }
   }
 
   // Future appointments (12)
@@ -547,7 +580,7 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
 
     const { error } = await supabase.from("agendamentos").insert({
       professional_id: prof.id,
-      user_id: DUMMY_USER_ID,
+      user_id: DEMO_USER_ID,
       tenant_id: DEFAULT_TENANT_ID,
       nome_paciente: student.nome,
       email_paciente: student.email,
@@ -561,7 +594,11 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
       observacoes: `Consulta demo agendada ${DEMO_MARKER}`,
     });
 
-    if (!error) future++;
+    if (error) {
+      console.error(`[Seed] Error creating future appointment:`, JSON.stringify(error));
+    } else {
+      future++;
+    }
   }
 
   console.log(`[Seed] Created appointments - Past: ${past}, Cancelled: ${cancelled}, Future: ${future}`);
