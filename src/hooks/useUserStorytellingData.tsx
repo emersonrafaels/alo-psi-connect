@@ -73,11 +73,117 @@ export interface UserStorytellingData {
   timeline: TimelineEvent[];
 }
 
-export const useUserStorytellingData = (userId?: string, profileId?: string) => {
+export const useUserStorytellingData = (userId?: string, profileId?: string, professionalId?: number) => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['user-storytelling', userId, profileId],
+    queryKey: ['user-storytelling', userId, profileId, professionalId],
     queryFn: async () => {
-      // Determinar o user_id correto para buscar
+      // Para profissionais, buscar agendamentos por professional_id
+      if (professionalId) {
+        const { data: appointments, error: appointmentsError } = await supabase
+          .from('agendamentos')
+          .select(`
+            id,
+            data_consulta,
+            horario,
+            status,
+            payment_status,
+            valor,
+            observacoes,
+            coupon_id,
+            professional_id,
+            meeting_link,
+            profissionais!inner(
+              id,
+              display_name,
+              foto_perfil_url,
+              profissao
+            )
+          `)
+          .eq('professional_id', professionalId)
+          .order('data_consulta', { ascending: false })
+          .order('horario', { ascending: false });
+
+        if (appointmentsError) throw appointmentsError;
+
+        const now = new Date();
+        const completed = (appointments || []).filter(
+          (a) => new Date(a.data_consulta) < now && a.status === 'confirmado' && a.payment_status === 'paid'
+        );
+        const future = (appointments || []).filter(
+          (a) => new Date(a.data_consulta) >= now
+        );
+        const cancelled = (appointments || []).filter(
+          (a) => a.status === 'cancelado'
+        );
+
+        const totalReceived = (appointments || [])
+          .filter((a) => a.payment_status === 'paid')
+          .reduce((sum, a) => sum + (a.valor || 0), 0);
+
+        const attendanceRate =
+          completed.length + cancelled.length > 0
+            ? (completed.length / (completed.length + cancelled.length)) * 100
+            : 0;
+
+        // Criar timeline de eventos para profissionais
+        const timeline: TimelineEvent[] = [];
+
+        (appointments || []).forEach((apt) => {
+          const aptDate = new Date(`${apt.data_consulta}T${apt.horario}`);
+          const isPast = aptDate < now;
+          const isCancelled = apt.status === 'cancelado';
+
+          timeline.push({
+            id: apt.id,
+            type: isCancelled ? 'cancellation' : 'appointment',
+            date: aptDate,
+            title: isCancelled
+              ? 'Consulta Cancelada'
+              : isPast
+              ? 'Consulta Realizada'
+              : 'Consulta Agendada',
+            description: apt.observacoes || '',
+            professional: {
+              id: apt.profissionais.id,
+              name: apt.profissionais.display_name,
+              photo_url: apt.profissionais.foto_perfil_url,
+              profession: apt.profissionais.profissao,
+            },
+            appointment: apt,
+            status: isCancelled
+              ? 'cancelled'
+              : isPast
+              ? 'completed'
+              : apt.payment_status === 'paid'
+              ? 'confirmed'
+              : 'pending',
+            amount: {
+              original: apt.valor || 0,
+              discount: 0,
+              final: apt.valor || 0,
+            },
+          });
+        });
+
+        timeline.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+        return {
+          appointments: appointments || [],
+          couponsUsed: [],
+          metrics: {
+            totalAppointments: (appointments || []).length,
+            futureAppointments: future.length,
+            completedAppointments: completed.length,
+            cancelledAppointments: cancelled.length,
+            attendanceRate: Math.round(attendanceRate),
+            totalSpent: totalReceived, // Para profissionais, é o total recebido
+            totalSavings: 0,
+          },
+          timeline,
+        } as UserStorytellingData;
+      }
+
+      // Lógica original para pacientes (user_id ou profile_id)
       let effectiveUserId = userId;
       
       // Se não temos userId mas temos profileId, buscar o user_id via profile
@@ -242,7 +348,7 @@ export const useUserStorytellingData = (userId?: string, profileId?: string) => 
 
       return storytellingData;
     },
-    enabled: !!(userId || profileId),
+    enabled: !!(userId || profileId || professionalId),
   });
 
   return {
