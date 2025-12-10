@@ -16,7 +16,8 @@ import {
   Wrench,
   FileSpreadsheet,
   TrendingUp,
-  Video
+  Video,
+  Database
 } from 'lucide-react';
 import {
   Sidebar,
@@ -167,6 +168,12 @@ const adminMenuGroups = [
         title: 'Google Calendar',
         url: '/admin/google-calendar-tests',
         icon: Video,
+        requiredRole: 'super_admin' as const
+      },
+      {
+        title: 'Dados Demo',
+        url: '/admin/demo-data',
+        icon: Database,
         requiredRole: 'super_admin' as const
       }
     ]
