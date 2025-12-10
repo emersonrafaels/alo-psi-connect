@@ -13,9 +13,12 @@ import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 export default function InstitutionStudents() {
   const { linkedStudents, isLoading } = useInstitutionAccess();
+  const { tenant } = useTenant();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'enrolled' | 'graduated' | 'inactive'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'enrollment_date'>('name');
@@ -73,7 +76,11 @@ export default function InstitutionStudents() {
       <div className="container mx-auto py-8 px-4">
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
-            <BreadcrumbItem><BreadcrumbLink href="/portal-institucional">Portal Institucional</BreadcrumbLink></BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={buildTenantPath(tenant?.slug, '/portal-institucional')}>Portal Institucional</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem><BreadcrumbPage>Alunos</BreadcrumbPage></BreadcrumbItem>
           </BreadcrumbList>
@@ -85,7 +92,7 @@ export default function InstitutionStudents() {
             <p className="text-muted-foreground mt-2">{linkedStudents.length} alunos vinculados</p>
           </div>
           <Button asChild variant="outline" size="lg">
-            <Link to="/portal-institucional"><ArrowLeft className="h-4 w-4 mr-2" />Voltar ao Portal</Link>
+            <Link to={buildTenantPath(tenant?.slug, '/portal-institucional')}><ArrowLeft className="h-4 w-4 mr-2" />Voltar ao Portal</Link>
           </Button>
         </div>
 
