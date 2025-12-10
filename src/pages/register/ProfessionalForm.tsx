@@ -37,7 +37,7 @@ import { AutoSaveIndicator } from '@/components/register/AutoSaveIndicator';
 import { formatCPF, validateCPF, getCPFErrorMessage } from '@/utils/cpfValidator';
 import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { useTenant } from '@/hooks/useTenant';
-import { buildTenantPath } from '@/utils/tenantHelpers';
+import { buildTenantPath, getTenantDisplayName } from '@/utils/tenantHelpers';
 
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
@@ -62,7 +62,7 @@ const ProfessionalForm = () => {
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
   
-  const platformName = tenant?.name || "Rede Bem Estar";
+  const platformName = getTenantDisplayName(tenant);
   const googleData = location.state?.googleData || null;
 
   const [formData, setFormData] = useState({
