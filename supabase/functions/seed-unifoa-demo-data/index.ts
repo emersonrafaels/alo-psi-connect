@@ -7,7 +7,7 @@ const corsHeaders = {
 
 // Constants
 const UNIFOA_ID = "33b11baa-2679-4673-a72e-b705c76c73f1";
-const DEFAULT_TENANT_ID = "472db0ac-0f45-4998-97da-490bc579efb1"; // Rede Bem Estar
+const MEDCOS_TENANT_ID = "3a9ae5ec-50a9-4674-b808-7735e5f0afb5"; // Medcos
 const DEMO_MARKER = "[DEMO-UNIFOA]";
 
 // Professional data - corrected fields
@@ -194,7 +194,7 @@ async function seedProfessionals(supabase: any): Promise<{ created: number; ids:
         nome: prof.nome,
         email: prof.email,
         tipo_usuario: "profissional",
-        tenant_id: DEFAULT_TENANT_ID,
+        tenant_id: MEDCOS_TENANT_ID,
         user_id: null, // Demo profiles don't have auth users
       })
       .select("id")
@@ -246,7 +246,7 @@ async function seedProfessionals(supabase: any): Promise<{ created: number; ids:
     // Link to tenant
     await supabase.from("professional_tenants").insert({
       professional_id: professional.id,
-      tenant_id: DEFAULT_TENANT_ID,
+      tenant_id: MEDCOS_TENANT_ID,
       is_featured: false,
     });
 
@@ -269,7 +269,7 @@ async function seedStudents(supabase: any): Promise<{ created: number; ids: stri
         nome: student.nome,
         email: student.email,
         tipo_usuario: "paciente",
-        tenant_id: DEFAULT_TENANT_ID,
+        tenant_id: MEDCOS_TENANT_ID,
         user_id: null,
       })
       .select("id")
@@ -287,7 +287,7 @@ async function seedStudents(supabase: any): Promise<{ created: number; ids: stri
         profile_id: profile.id,
         eh_estudante: true,
         instituicao_ensino: null, // No free text - link via patient_institutions only
-        tenant_id: DEFAULT_TENANT_ID,
+        tenant_id: MEDCOS_TENANT_ID,
       })
       .select("id")
       .single();
@@ -331,7 +331,7 @@ async function seedCoupons(supabase: any): Promise<{ created: number; ids: strin
       .from("institution_coupons")
       .insert({
         institution_id: UNIFOA_ID,
-        tenant_id: DEFAULT_TENANT_ID,
+        tenant_id: MEDCOS_TENANT_ID,
         code: coupon.code,
         name: coupon.name,
         description: `${coupon.description} ${DEMO_MARKER}`,
@@ -402,7 +402,7 @@ async function seedMoodEntries(supabase: any): Promise<{ created: number }> {
       const { error } = await supabase.from("mood_entries").insert({
         profile_id: student.id,
         user_id: student.user_id,
-        tenant_id: DEFAULT_TENANT_ID,
+        tenant_id: MEDCOS_TENANT_ID,
         date: formatDate(date),
         mood_score: moodScore,
         energy_level: energyLevel,
@@ -502,7 +502,7 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
     const { error } = await supabase.from("agendamentos").insert({
       professional_id: prof.id,
       user_id: DEMO_USER_ID,
-      tenant_id: DEFAULT_TENANT_ID,
+      tenant_id: MEDCOS_TENANT_ID,
       nome_paciente: student.nome,
       email_paciente: student.email,
       telefone_paciente: "(24) 98888-0000",
@@ -537,7 +537,7 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
     const { error } = await supabase.from("agendamentos").insert({
       professional_id: prof.id,
       user_id: DEMO_USER_ID,
-      tenant_id: DEFAULT_TENANT_ID,
+      tenant_id: MEDCOS_TENANT_ID,
       nome_paciente: student.nome,
       email_paciente: student.email,
       telefone_paciente: "(24) 98888-0000",
@@ -581,7 +581,7 @@ async function seedAppointments(supabase: any): Promise<{ created: number; past:
     const { error } = await supabase.from("agendamentos").insert({
       professional_id: prof.id,
       user_id: DEMO_USER_ID,
-      tenant_id: DEFAULT_TENANT_ID,
+      tenant_id: MEDCOS_TENANT_ID,
       nome_paciente: student.nome,
       email_paciente: student.email,
       telefone_paciente: "(24) 98888-0000",
