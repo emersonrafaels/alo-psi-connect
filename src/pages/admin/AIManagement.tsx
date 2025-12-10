@@ -74,7 +74,7 @@ const AI_CONFIGS: Omit<AIConfig, 'enabled' | 'model' | 'temperature' | 'maxToken
   },
   {
     id: 'predictive-wellbeing',
-    name: 'Inteligência Medcos',
+    name: 'Inteligência MEDCOS',
     description: 'Análise preditiva de bem-estar institucional com Machine Learning',
     icon: Sparkles,
     configKey: 'predictive_wellbeing',
@@ -187,7 +187,7 @@ export default function AIManagement() {
         <div>
           <h1 className="text-2xl font-bold">Gestão de Inteligência Artificial</h1>
           <p className="text-muted-foreground">
-            Gerencie todas as IAs da plataforma Medcos
+            Gerencie todas as IAs da plataforma MEDCOS
           </p>
         </div>
       </div>

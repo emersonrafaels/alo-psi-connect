@@ -694,7 +694,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  O tenant define em qual plataforma (Rede Bem Estar, Medcos, etc.) o usuário terá acesso.
+                  O tenant define em qual plataforma (Rede Bem Estar, MEDCOS, etc.) o usuário terá acesso.
                 </p>
               </div>
 

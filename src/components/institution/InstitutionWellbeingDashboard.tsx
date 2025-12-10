@@ -373,7 +373,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
               </TabsTrigger>
               <TabsTrigger value="predictive" className="gap-2">
                 <Sparkles className="h-4 w-4" />
-                <span className="hidden sm:inline">Inteligência Medcos</span>
+                <span className="hidden sm:inline">Inteligência MEDCOS</span>
               </TabsTrigger>
             </TabsList>
 
