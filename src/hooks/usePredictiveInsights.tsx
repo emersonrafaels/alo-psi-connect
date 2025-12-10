@@ -53,7 +53,7 @@ interface WellbeingMetrics {
 const CACHE_KEY = 'predictive-insights';
 const CACHE_TTL = 60 * 60 * 1000;
 const COOLDOWN_MS = 15 * 60 * 1000;
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 
 interface CachedData {
   data: PredictiveResponse;
