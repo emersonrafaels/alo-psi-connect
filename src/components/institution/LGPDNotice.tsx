@@ -3,8 +3,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Shield, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 export const LGPDNotice = () => {
+  const { tenant } = useTenant();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -32,7 +35,7 @@ export const LGPDNotice = () => {
               Os alunos consentiram em compartilhar estatísticas anônimas de bem-estar com sua instituição.
             </p>
             <Link 
-              to="/politica-de-privacidade" 
+              to={buildTenantPath(tenant?.slug || 'alopsi', '/politica-privacidade')} 
               target="_blank" 
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline mt-2"

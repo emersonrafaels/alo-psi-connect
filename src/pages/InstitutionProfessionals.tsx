@@ -189,8 +189,20 @@ export default function InstitutionProfessionals() {
                   <Button asChild variant="outline" size="sm" className="flex-1">
                     <Link to={buildTenantPath(tenant?.slug, `/profissional/${prof.professional_id}`)}><Eye className="h-4 w-4 mr-1" />Ver Perfil</Link>
                   </Button>
-                  <Button asChild variant="outline" size="sm" className="flex-1">
-                    <Link to={buildTenantPath(tenant?.slug, `/admin/agendamentos?professional_id=${prof.professional_id}`)}><Calendar className="h-4 w-4 mr-1" />Agendamentos</Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() =>
+                      setSelectedProfessional({
+                        userId: prof.profissionais.profiles?.user_id || undefined,
+                        profileId: prof.profissionais.profile_id || undefined,
+                        professionalId: prof.profissionais.id,
+                        name: prof.profissionais.display_name || '',
+                      })
+                    }
+                  >
+                    <Calendar className="h-4 w-4 mr-1" />Agendamentos
                   </Button>
                 </div>
                 <Button
