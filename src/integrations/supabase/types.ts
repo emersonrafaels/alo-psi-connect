@@ -893,6 +893,7 @@ export type Database = {
           has_partnership: boolean
           id: string
           is_active: boolean
+          logo_url: string | null
           name: string
           type: string
           updated_at: string
@@ -905,6 +906,7 @@ export type Database = {
           has_partnership?: boolean
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           name: string
           type: string
           updated_at?: string
@@ -917,6 +919,7 @@ export type Database = {
           has_partnership?: boolean
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           name?: string
           type?: string
           updated_at?: string
@@ -1375,6 +1378,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ignored_uncatalogued_institutions: {
+        Row: {
+          created_at: string | null
+          first_mention: string | null
+          id: string
+          ignored_at: string | null
+          ignored_by: string | null
+          institution_name: string
+          last_mention: string | null
+          patient_count: number | null
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          first_mention?: string | null
+          id?: string
+          ignored_at?: string | null
+          ignored_by?: string | null
+          institution_name: string
+          last_mention?: string | null
+          patient_count?: number | null
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          first_mention?: string | null
+          id?: string
+          ignored_at?: string | null
+          ignored_by?: string | null
+          institution_name?: string
+          last_mention?: string | null
+          patient_count?: number | null
+          reason?: string | null
+        }
+        Relationships: []
       }
       institution_audit_log: {
         Row: {

@@ -11,6 +11,7 @@ export interface EducationalInstitution {
   can_manage_users: boolean;
   can_manage_coupons: boolean;
   can_manage_professionals: boolean;
+  logo_url: string | null;
   created_at: string;
   updated_at: string;
 }

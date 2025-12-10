@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import * as z from 'zod';
 import { EducationalInstitution } from '@/hooks/useInstitutions';
 import { useInstitutionAudit } from '@/hooks/useInstitutionAudit';
 import { Shield, Users, Ticket, Briefcase } from 'lucide-react';
+import { InstitutionLogoUpload } from './InstitutionLogoUpload';
 
 const institutionSchema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
@@ -40,6 +41,7 @@ export const EditInstitutionModal = ({
   isSaving,
 }: EditInstitutionModalProps) => {
   const { logAction } = useInstitutionAudit(institution?.id);
+  const [logoUrl, setLogoUrl] = useState<string | null>(institution?.logo_url || null);
   const {
     register,
     handleSubmit,
@@ -72,6 +74,7 @@ export const EditInstitutionModal = ({
         can_manage_coupons: institution.can_manage_coupons ?? false,
         can_manage_professionals: institution.can_manage_professionals ?? false,
       });
+      setLogoUrl(institution.logo_url || null);
     } else {
       // Modo criação: valores padrão
       reset({
@@ -83,20 +86,24 @@ export const EditInstitutionModal = ({
         can_manage_coupons: false,
         can_manage_professionals: false,
       });
+      setLogoUrl(null);
     }
   }, [institution, reset]);
 
   const onSubmit = (data: InstitutionForm) => {
+    const dataWithLogo = { ...data, logo_url: logoUrl };
+    
     if (institution) {
       // Log changes
-      const changes = Object.keys(data).filter(key => {
+      const allData = { ...data, logo_url: logoUrl };
+      const changes = Object.keys(allData).filter(key => {
         const oldVal = institution[key as keyof typeof institution];
-        const newVal = data[key as keyof typeof data];
+        const newVal = allData[key as keyof typeof allData];
         return oldVal !== newVal;
       }).map(key => ({
         field: key,
         old_value: institution[key as keyof typeof institution],
-        new_value: data[key as keyof typeof data]
+        new_value: allData[key as keyof typeof allData]
       }));
       
       if (changes.length > 0) {
@@ -108,16 +115,17 @@ export const EditInstitutionModal = ({
         });
       }
       
-      onSave({ ...data, id: institution.id });
+      onSave({ ...dataWithLogo, id: institution.id });
     } else {
       logAction({
         action_type: 'create',
         entity_type: 'institution',
         metadata: { name: data.name }
       });
-      onSave(data as any);
+      onSave(dataWithLogo as any);
     }
     reset();
+    setLogoUrl(null);
     onClose();
   };
 
@@ -131,6 +139,12 @@ export const EditInstitutionModal = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <InstitutionLogoUpload
+            currentLogo={logoUrl}
+            institutionId={institution?.id}
+            onLogoChange={setLogoUrl}
+          />
+          
           <div className="space-y-2">
             <Label htmlFor="name">Nome da Instituição</Label>
             <Input
