@@ -20,6 +20,7 @@ import {
 import { useInstitutionWellbeing } from '@/hooks/useInstitutionWellbeing';
 import { LGPDNotice } from './LGPDNotice';
 import { WellbeingTimelineCharts } from './WellbeingTimelineCharts';
+import { WellbeingInsights } from './WellbeingInsights';
 
 interface InstitutionWellbeingDashboardProps {
   institutionId: string;
@@ -94,13 +95,18 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
           <AlertTriangle className="h-4 w-4 text-orange-600" />
           <AlertTitle className="text-orange-700 dark:text-orange-400">Atenção</AlertTitle>
           <AlertDescription className="text-orange-600/80 dark:text-orange-300/80">
-            <strong>{metrics.students_with_low_mood}</strong> aluno(s) reportaram humor abaixo de 3 nos últimos 30 dias.
+            <strong>{metrics.students_with_low_mood}</strong> aluno(s) reportaram humor abaixo de 3 nos últimos {periodDays} dias.
             <br />
             <span className="text-sm">
               Considere ações de acolhimento e suporte emocional.
             </span>
           </AlertDescription>
         </Alert>
+      )}
+
+      {/* Insights Inteligentes */}
+      {metrics.insights && metrics.insights.length > 0 && (
+        <WellbeingInsights insights={metrics.insights} />
       )}
 
       {/* Métricas de Participação */}
@@ -113,7 +119,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
           <CardContent>
             <div className="text-3xl font-bold">{metrics.students_with_entries}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Com registros nos últimos 30 dias
+              Com registros nos últimos {periodDays} dias
             </p>
           </CardContent>
         </Card>
@@ -285,6 +291,8 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
             dailyEntries={metrics.daily_entries || []}
             periodDays={periodDays}
             onPeriodChange={setPeriodDays}
+            avgMood={metrics.avg_mood_score}
+            avgAnxiety={metrics.avg_anxiety_level}
           />
         </CardContent>
       </Card>
