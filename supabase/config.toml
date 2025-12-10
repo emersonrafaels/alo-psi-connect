@@ -157,3 +157,6 @@ verify_jwt = true
 
 [functions.seed-unifoa-demo-data]
 verify_jwt = true
+
+[functions.generate-predictive-wellbeing-insights]
+verify_jwt = true
