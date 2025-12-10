@@ -9,36 +9,26 @@ interface MoodSliderProps {
 }
 
 const moodEmojis = {
-  1: "😭",
-  2: "😢", 
-  3: "😔",
-  4: "😐",
-  5: "😐",
-  6: "🙂",
-  7: "😊",
-  8: "😄",
-  9: "😆",
-  10: "🤩"
+  1: "😢",
+  2: "😔", 
+  3: "😐",
+  4: "😊",
+  5: "🤩"
 }
 
 const moodLabels = {
   1: "Muito Triste",
   2: "Triste",
-  3: "Desanimado",
-  4: "Preocupado", 
-  5: "Neutro",
-  6: "Ok",
-  7: "Bem",
-  8: "Feliz",
-  9: "Muito Feliz",
-  10: "Radiante"
+  3: "Neutro",
+  4: "Bem",
+  5: "Muito Bem"
 }
 
 const getMoodColor = (value: number) => {
-  if (value <= 2) return "hsl(var(--destructive))"
-  if (value <= 4) return "hsl(var(--warning))"
-  if (value <= 6) return "hsl(var(--muted-foreground))"
-  if (value <= 8) return "hsl(var(--primary))"
+  if (value <= 1) return "hsl(var(--destructive))"
+  if (value <= 2) return "hsl(var(--warning))"
+  if (value <= 3) return "hsl(var(--muted-foreground))"
+  if (value <= 4) return "hsl(var(--primary))"
   return "hsl(var(--success))"
 }
 
@@ -46,7 +36,7 @@ export const MoodSlider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
   MoodSliderProps
 >(({ className, value, onValueChange, ...props }, ref) => {
-  const currentValue = value[0] || 5
+  const currentValue = value[0] || 3
   const currentEmoji = moodEmojis[currentValue as keyof typeof moodEmojis]
   const currentLabel = moodLabels[currentValue as keyof typeof moodLabels]
   const currentColor = getMoodColor(currentValue)
@@ -59,7 +49,7 @@ export const MoodSlider = React.forwardRef<
         </span>
         <div className="text-center">
           <div className="text-lg font-medium" style={{ color: currentColor }}>
-            {currentValue}/10
+            {currentValue}/5
           </div>
           <div className="text-sm text-muted-foreground">
             {currentLabel}
@@ -76,7 +66,7 @@ export const MoodSlider = React.forwardRef<
         value={value}
         onValueChange={onValueChange}
         min={1}
-        max={10}
+        max={5}
         step={1}
         {...props}
       >
@@ -95,9 +85,9 @@ export const MoodSlider = React.forwardRef<
       </SliderPrimitive.Root>
       
       <div className="flex justify-between text-xs text-muted-foreground px-1">
-        <span>😭 Muito Triste</span>
+        <span>😢 Muito Triste</span>
         <span>😐 Neutro</span>
-        <span>🤩 Radiante</span>
+        <span>🤩 Muito Bem</span>
       </div>
     </div>
   )
