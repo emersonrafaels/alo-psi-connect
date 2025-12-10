@@ -22,7 +22,7 @@ export default function InstitutionStudents() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'enrolled' | 'graduated' | 'inactive'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'enrollment_date'>('name');
-  const [selectedStudent, setSelectedStudent] = useState<{ userId: string; name: string } | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<{ userId?: string; profileId: string; name: string } | null>(null);
 
   if (isLoading) {
     return (
@@ -173,7 +173,8 @@ export default function InstitutionStudents() {
                     className="flex-1"
                     onClick={() =>
                       setSelectedStudent({
-                        userId: student.pacientes.profiles.user_id || '',
+                        userId: student.pacientes.profiles.user_id || undefined,
+                        profileId: student.pacientes.profile_id,
                         name: student.pacientes.profiles.nome || '',
                       })
                     }
@@ -215,6 +216,7 @@ export default function InstitutionStudents() {
           open={!!selectedStudent}
           onOpenChange={(open) => !open && setSelectedStudent(null)}
           userId={selectedStudent.userId}
+          profileId={selectedStudent.profileId}
           userName={selectedStudent.name}
           userType="patient"
         />
