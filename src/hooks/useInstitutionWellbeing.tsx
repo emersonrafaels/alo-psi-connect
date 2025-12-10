@@ -182,15 +182,27 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
       // Gerar insights inteligentes
       const insights: WellbeingInsight[] = [];
 
-      // Insight: Tendência de humor
-      if (changePercent > 10) {
+      // INSIGHT SEMPRE PRESENTE: Resumo geral de bem-estar
+      if (totalEntries > 0 && avgMood !== null) {
+        const moodStatus = avgMood >= 4 ? 'excelente' : avgMood >= 3.5 ? 'bom' : avgMood >= 2.5 ? 'moderado' : 'baixo';
+        const moodType = avgMood >= 3.5 ? 'positive' : avgMood >= 2.5 ? 'info' : 'warning';
+        insights.push({
+          type: moodType,
+          icon: avgMood >= 4 ? '😊' : avgMood >= 3.5 ? '🙂' : avgMood >= 2.5 ? '😐' : '😟',
+          title: `Bem-estar ${moodStatus}`,
+          description: `Média de humor: ${avgMood.toFixed(1)}/5 com ${totalEntries} registros de ${uniqueStudents} aluno${uniqueStudents > 1 ? 's' : ''}.`,
+        });
+      }
+
+      // Insight: Tendência de humor (limiar reduzido de 10% para 5%)
+      if (changePercent > 5 && previousAvg > 0) {
         insights.push({
           type: 'positive',
           icon: '📈',
           title: 'Humor em alta',
           description: `O humor médio dos alunos melhorou ${Math.abs(changePercent).toFixed(0)}% em relação ao período anterior.`,
         });
-      } else if (changePercent < -10) {
+      } else if (changePercent < -5 && previousAvg > 0) {
         insights.push({
           type: 'warning',
           icon: '📉',
@@ -199,13 +211,20 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         });
       }
 
-      // Insight: Ansiedade alta
-      if (avgAnxiety !== null && avgAnxiety > 3.5) {
+      // Insight: Ansiedade (limiar reduzido de 3.5 para 3.0)
+      if (avgAnxiety !== null && avgAnxiety > 3.0) {
         insights.push({
           type: 'warning',
           icon: '⚠️',
           title: 'Ansiedade elevada',
           description: `A média de ansiedade está em ${avgAnxiety.toFixed(1)}/5. Considere ações preventivas.`,
+        });
+      } else if (avgAnxiety !== null && avgAnxiety <= 2.0) {
+        insights.push({
+          type: 'positive',
+          icon: '🧘',
+          title: 'Ansiedade controlada',
+          description: `A média de ansiedade está baixa (${avgAnxiety.toFixed(1)}/5), indicando bom equilíbrio emocional.`,
         });
       }
 
@@ -229,10 +248,10 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         }
       }
 
-      // Insight: Alunos com humor baixo
-      if (lowMoodStudents > 0) {
+      // Insight: Alunos com humor baixo (limiar reduzido de 30% para 20%)
+      if (lowMoodStudents > 0 && uniqueStudents > 0) {
         const percentage = (lowMoodStudents / uniqueStudents) * 100;
-        if (percentage > 30) {
+        if (percentage > 20) {
           insights.push({
             type: 'warning',
             icon: '🚨',
@@ -242,38 +261,39 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         }
       }
 
-      // Insight: Participação
+      // Insight: Participação (limiares ajustados: 50% para positivo, 50% para info)
       const participationRate = students.length > 0 ? (uniqueStudents / students.length) * 100 : 0;
-      if (participationRate >= 70) {
+      if (participationRate >= 50) {
         insights.push({
           type: 'positive',
           icon: '🎯',
-          title: 'Alta participação',
+          title: 'Boa participação',
           description: `${participationRate.toFixed(0)}% dos alunos registraram seu bem-estar no período.`,
         });
-      } else if (participationRate < 30) {
+      } else if (participationRate > 0 && participationRate < 50) {
         insights.push({
           type: 'info',
           icon: '📊',
-          title: 'Baixa participação',
-          description: `Apenas ${participationRate.toFixed(0)}% dos alunos registraram seu bem-estar. Considere incentivar o uso.`,
+          title: 'Participação moderada',
+          description: `${participationRate.toFixed(0)}% dos alunos registraram seu bem-estar. Considere incentivar o uso.`,
         });
       }
 
-      // Insight: Melhor dia
-      if (dailyEntries.length >= 7) {
-        const bestDay = dailyEntries
-          .filter(d => d.avg_mood !== null)
-          .sort((a, b) => (b.avg_mood || 0) - (a.avg_mood || 0))[0];
-        
-        if (bestDay && bestDay.avg_mood !== null) {
-          const dayName = new Date(bestDay.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long' });
-          insights.push({
-            type: 'info',
-            icon: '⭐',
-            title: 'Melhor dia',
-            description: `${dayName.charAt(0).toUpperCase() + dayName.slice(1)} teve a melhor média de humor: ${bestDay.avg_mood.toFixed(1)}/5.`,
-          });
+      // Insight: Melhor dia (mínimo reduzido de 7 para 3 dias)
+      if (dailyEntries.length >= 3) {
+        const daysWithMood = dailyEntries.filter(d => d.avg_mood !== null);
+        if (daysWithMood.length >= 2) {
+          const bestDay = daysWithMood.sort((a, b) => (b.avg_mood || 0) - (a.avg_mood || 0))[0];
+          
+          if (bestDay && bestDay.avg_mood !== null) {
+            const dayName = new Date(bestDay.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long' });
+            insights.push({
+              type: 'info',
+              icon: '⭐',
+              title: 'Melhor dia',
+              description: `${dayName.charAt(0).toUpperCase() + dayName.slice(1)} teve a melhor média de humor: ${bestDay.avg_mood.toFixed(1)}/5.`,
+            });
+          }
         }
       }
 

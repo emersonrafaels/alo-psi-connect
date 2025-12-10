@@ -97,12 +97,13 @@ interface CustomTooltipProps {
 const CustomTooltip = ({ active, payload, label, avgValue, metricName }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const entryData = payload[0]?.payload;
-    const value = payload[0]?.value;
+    // Usar a data original do entry, não o label formatado
+    const originalDate = entryData?.date || '';
     
     return (
       <div className="bg-card border border-border rounded-lg p-3 shadow-lg min-w-48">
         <p className="font-medium text-sm mb-2 capitalize">
-          {formatFullDate(label || '')}
+          {formatFullDate(originalDate)}
         </p>
         <div className="space-y-1.5">
           {payload.map((entry: any, index: number) => (
