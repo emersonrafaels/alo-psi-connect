@@ -18,10 +18,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Heart, Brain, Moon, Zap, TrendingUp, TrendingDown, Layers, Minus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Heart, Brain, Moon, Zap, TrendingUp, TrendingDown, Layers, Minus, CalendarDays, BarChart3 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 interface DailyEntry {
   date: string;
   avg_mood: number | null;
@@ -333,6 +334,21 @@ export const WellbeingLayeredChart = ({
     );
   }
 
+  // Format predictions for table display
+  const formattedPredictions = useMemo(() => {
+    if (!predictions || predictions.length === 0) return [];
+    return predictions.map(pred => ({
+      date: format(parseISO(pred.date), 'dd/MM', { locale: ptBR }),
+      fullDate: format(parseISO(pred.date), "EEEE, dd 'de' MMMM", { locale: ptBR }),
+      mood: pred.predicted_mood?.toFixed(1) || '-',
+      anxiety: pred.predicted_anxiety?.toFixed(1) || '-',
+      sleep: pred.predicted_sleep?.toFixed(1) || '-',
+      energy: pred.predicted_energy?.toFixed(1) || '-',
+      confidence_low: pred.confidence_low?.toFixed(1) || '-',
+      confidence_high: pred.confidence_high?.toFixed(1) || '-',
+    }));
+  }, [predictions]);
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -366,6 +382,19 @@ export const WellbeingLayeredChart = ({
       </CardHeader>
 
       <CardContent className="space-y-4">
+        <Tabs defaultValue="chart" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-md mb-4">
+            <TabsTrigger value="chart" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Gráfico
+            </TabsTrigger>
+            <TabsTrigger value="forecast" className="gap-2">
+              <CalendarDays className="h-4 w-4" />
+              Previsão
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="chart" className="mt-0 space-y-4">
         {/* Layer Controls */}
         <div className="flex flex-wrap items-center gap-3 pb-2 border-b">
           {layers.map(layer => {
@@ -558,27 +587,119 @@ export const WellbeingLayeredChart = ({
           </ResponsiveContainer>
         </div>
 
-        {/* Legend Help */}
-        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pt-2 border-t">
-          <div className="flex items-center gap-1">
-            <div className="w-6 h-0.5 bg-muted-foreground" style={{ borderTop: '2px dashed' }} />
-            <span>Linha de tendência (média móvel)</span>
-          </div>
-          {predictions.length > 0 && (
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-0.5 border-t-2 border-dashed" style={{ borderColor: metricColors.mood.color }} />
-              <span>Previsão ML</span>
+            {/* Legend Help */}
+            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pt-2 border-t">
+              <div className="flex items-center gap-1">
+                <div className="w-6 h-0.5 bg-muted-foreground" style={{ borderTop: '2px dashed' }} />
+                <span>Linha de tendência (média móvel)</span>
+              </div>
+              {predictions.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <div className="w-6 h-0.5 border-t-2 border-dashed" style={{ borderColor: metricColors.mood.color }} />
+                  <span>Previsão ML</span>
+                </div>
+              )}
+              <div className="flex items-center gap-1">
+                <div className="w-4 h-0.5" style={{ backgroundColor: '#22C55E' }} />
+                <span>Zona saudável (≥4)</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-4 h-0.5" style={{ backgroundColor: '#EF4444' }} />
+                <span>Zona de atenção (≤2)</span>
+              </div>
             </div>
-          )}
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-0.5" style={{ backgroundColor: '#22C55E' }} />
-            <span>Zona saudável (≥4)</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-0.5" style={{ backgroundColor: '#EF4444' }} />
-            <span>Zona de atenção (≤2)</span>
-          </div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="forecast" className="mt-0">
+            {formattedPredictions.length > 0 ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CalendarDays className="h-4 w-4" />
+                  <span>Previsão para os próximos {predictions.length} dias</span>
+                </div>
+                
+                <div className="rounded-lg border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="font-medium">Data</TableHead>
+                        <TableHead className="font-medium">
+                          <div className="flex items-center gap-1.5">
+                            <Heart className="h-3.5 w-3.5 text-rose-500" />
+                            Humor
+                          </div>
+                        </TableHead>
+                        <TableHead className="font-medium">
+                          <div className="flex items-center gap-1.5">
+                            <Brain className="h-3.5 w-3.5 text-purple-500" />
+                            Ansiedade
+                          </div>
+                        </TableHead>
+                        <TableHead className="font-medium">
+                          <div className="flex items-center gap-1.5">
+                            <Moon className="h-3.5 w-3.5 text-indigo-500" />
+                            Sono
+                          </div>
+                        </TableHead>
+                        <TableHead className="font-medium">
+                          <div className="flex items-center gap-1.5">
+                            <Zap className="h-3.5 w-3.5 text-amber-500" />
+                            Energia
+                          </div>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {formattedPredictions.map((pred, idx) => (
+                        <TableRow key={idx} className="hover:bg-muted/30">
+                          <TableCell className="font-medium">
+                            <div className="flex flex-col">
+                              <span>{pred.date}</span>
+                              <span className="text-xs text-muted-foreground capitalize">{pred.fullDate.split(',')[0]}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`font-semibold ${pred.mood !== '-' ? 'text-rose-600' : 'text-muted-foreground'}`}>
+                              {pred.mood}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`font-semibold ${pred.anxiety !== '-' ? 'text-purple-600' : 'text-muted-foreground'}`}>
+                              {pred.anxiety}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`font-semibold ${pred.sleep !== '-' ? 'text-indigo-600' : 'text-muted-foreground'}`}>
+                              {pred.sleep}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`font-semibold ${pred.energy !== '-' ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                              {pred.energy}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg text-xs text-muted-foreground">
+                  <CalendarDays className="h-4 w-4 shrink-0 mt-0.5" />
+                  <p>Previsões são baseadas em padrões históricos e podem variar conforme novos dados forem registrados.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <CalendarDays className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground font-medium mb-1">Nenhuma previsão disponível</p>
+                <p className="text-sm text-muted-foreground">
+                  Gere insights na aba <strong>"Inteligência Medcos"</strong> para ver previsões aqui.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

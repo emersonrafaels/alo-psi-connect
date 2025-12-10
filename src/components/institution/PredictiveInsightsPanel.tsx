@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Sparkles, RefreshCw, TrendingUp, AlertTriangle, BarChart3, Lightbulb, Link2, Clock, CheckCircle2, Loader2, Database, Timer, Info, Heart, Brain, Moon, Zap } from 'lucide-react';
+import { Sparkles, RefreshCw, TrendingUp, AlertTriangle, BarChart3, Lightbulb, Link2, Clock, CheckCircle2, Loader2, Database, Timer, Info, Heart, Brain, Moon, Zap, HelpCircle } from 'lucide-react';
 import { PredictiveInsight, ForecastPoint } from '@/hooks/usePredictiveInsights';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 interface PredictiveInsightsPanelProps {
   predictions: PredictiveInsight[];
   forecast: ForecastPoint[];
@@ -97,6 +97,16 @@ const normalizeConfidence = (confidence: number): number => {
   return Math.round(confidence * 100);
 };
 
+// Function to format description with better readability - split into sentences
+const formatDescriptionSentences = (text: string): string[] => {
+  if (!text) return [];
+  // Split by period followed by space, keeping meaningful sentences
+  return text
+    .split(/(?<=\.)\s+/)
+    .filter(s => s.trim().length > 3)
+    .map(s => s.trim());
+};
+
 export const PredictiveInsightsPanel: React.FC<PredictiveInsightsPanelProps> = ({
   predictions, forecast, generatedAt, isGenerating, hasSufficientData, onGenerate,
   canUpdate = true, hasNewData = false, isCooldownActive = false, cooldownRemainingMs = 0, newEntriesCount = 0
@@ -180,37 +190,76 @@ export const PredictiveInsightsPanel: React.FC<PredictiveInsightsPanelProps> = (
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground leading-relaxed">{p.description}</p>
+                  {/* Description with better formatting - split into paragraphs */}
+                  <div className="space-y-2">
+                    {formatDescriptionSentences(p.description).map((sentence, idx) => (
+                      <p 
+                        key={idx} 
+                        className="text-sm text-muted-foreground leading-relaxed"
+                        dangerouslySetInnerHTML={{
+                          __html: sentence
+                            .replace(/(\d+[,.]?\d*%)/g, '<strong class="text-foreground font-semibold">$1</strong>')
+                            .replace(/(\d+\/\d+)/g, '<strong class="text-foreground font-semibold">$1</strong>')
+                            .replace(/(\d+[,.]?\d*\s*(?:pontos?|dias?|alunos?|estudantes?|semanas?))/gi, '<strong class="text-foreground font-semibold">$1</strong>')
+                        }}
+                      />
+                    ))}
+                  </div>
                   
-                  <div className="h-px bg-border" />
+                  <Separator className="my-4" />
                   
-                  <div className="flex flex-wrap items-center gap-3">
-                    {/* Visual confidence bar */}
-                    <div className="flex items-center gap-2">
-                      <Progress value={confidence} className="h-2 w-20" />
-                      <span className="text-xs text-muted-foreground font-medium">{confidence}%</span>
-                    </div>
+                  {/* Confidence and Timeframe with labels and tooltips */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <TooltipProvider>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-muted-foreground font-medium">Nível de confiança</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-[220px]">
+                              <p className="font-medium">O quanto a IA está confiante nesta previsão</p>
+                              <p className="text-xs text-muted-foreground mt-1">Baseado na quantidade e consistência dos dados analisados.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Progress value={confidence} className="h-2 w-24" />
+                          <span className="text-xs text-muted-foreground font-semibold">{confidence}%</span>
+                        </div>
+                      </div>
+                    </TooltipProvider>
                     
-                    {/* Timeframe badge */}
                     {p.timeframe_days && (
-                      <Badge variant="outline" className="gap-1 text-xs bg-blue-50 text-blue-600 border-blue-200">
-                        📅 Próximos {p.timeframe_days} dias
-                      </Badge>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="outline" className="gap-1.5 text-xs bg-blue-50 text-blue-600 border-blue-200 cursor-help hover:bg-blue-100 transition-colors">
+                              📅 Próximos {p.timeframe_days} dias
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[200px]">
+                            <p>Período para o qual esta previsão é válida.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </div>
                   
                   {p.action_items?.length > 0 && (
                     <>
-                      <div className="h-px bg-border" />
+                      <Separator className="my-4" />
                       <div>
                         <p className="text-xs font-medium mb-2 flex items-center gap-1">
                           <Lightbulb className="h-3 w-3 text-amber-500" />
                           Ações sugeridas:
                         </p>
-                        <ul className="space-y-1">
+                        <ul className="space-y-1.5">
                           {p.action_items.map((a, j) => (
                             <li key={j} className="text-xs text-muted-foreground flex items-start gap-2">
-                              <span className="text-primary">•</span>{a}
+                              <span className="text-primary mt-0.5">•</span>
+                              <span>{a}</span>
                             </li>
                           ))}
                         </ul>
