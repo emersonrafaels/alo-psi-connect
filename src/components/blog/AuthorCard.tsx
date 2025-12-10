@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Building2, User } from 'lucide-react';
 import { useTenant } from '@/hooks/useTenant';
+import { getTenantDisplayName } from '@/utils/tenantHelpers';
 
 interface AuthorCardProps {
   author: {
@@ -16,9 +17,9 @@ export const AuthorCard = ({ author }: AuthorCardProps) => {
   
   const isSystemAdmin = author.nome === 'Administrador do Sistema';
   
-  // Respeita o tenant atual - Medcos mostra "Medcos", RBE mostra "Rede Bem Estar"
+  // Respeita o tenant atual - Medcos mostra "MEDCOS", RBE mostra "Rede Bem Estar"
   const displayName = isSystemAdmin
-    ? (tenant?.name || 'Alô Psi')
+    ? getTenantDisplayName(tenant, 'Alô Psi')
     : author.nome;
   
   // Usa logo do tenant atual - Medcos mostra logo Medcos, RBE mostra logo RBE

@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Building2, User } from 'lucide-react';
 import { useTenant } from '@/hooks/useTenant';
+import { getTenantDisplayName } from '@/utils/tenantHelpers';
 
 interface AuthorBadgeProps {
   name: string;
@@ -13,9 +14,9 @@ export const AuthorBadge = ({ name, photoUrl, className = '' }: AuthorBadgeProps
   
   const isSystemAdmin = name === 'Administrador do Sistema';
   
-  // Respeita o tenant atual - Medcos mostra "Medcos", RBE mostra "Rede Bem Estar"
+  // Respeita o tenant atual - Medcos mostra "MEDCOS", RBE mostra "Rede Bem Estar"
   const displayName = isSystemAdmin 
-    ? (tenant?.name || 'Alô Psi')
+    ? getTenantDisplayName(tenant, 'Alô Psi')
     : name;
   
   // Usa logo do tenant atual - Medcos mostra logo Medcos, RBE mostra logo RBE

@@ -3,6 +3,27 @@ import { DEFAULT_TENANT_SLUG } from '@/types/tenant';
 export { DEFAULT_TENANT_SLUG };
 
 /**
+ * Retorna o nome do tenant para exibição ao usuário
+ * Normaliza "Medcos" para "MEDCOS" em uppercase
+ * @param tenant - Objeto do tenant ou undefined
+ * @param fallback - Nome padrão caso tenant seja undefined
+ * @returns Nome normalizado para exibição
+ */
+export const getTenantDisplayName = (
+  tenant: { slug?: string; name?: string } | null | undefined,
+  fallback: string = 'Rede Bem Estar'
+): string => {
+  if (!tenant?.name) return fallback;
+  
+  // Normalizar MEDCOS para uppercase
+  if (tenant.slug === 'medcos') {
+    return 'MEDCOS';
+  }
+  
+  return tenant.name;
+};
+
+/**
  * Detecta o slug do tenant baseado no pathname
  * @param pathname - window.location.pathname
  * @returns 'alopsi' ou 'medcos'

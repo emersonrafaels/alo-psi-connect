@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
 import { useTenant } from '@/hooks/useTenant';
-import { buildTenantPath } from '@/utils/tenantHelpers';
+import { buildTenantPath, getTenantDisplayName } from '@/utils/tenantHelpers';
 import { BirthDateInput } from '@/components/register/BirthDateInput';
 import { InstitutionSelector } from '@/components/register/InstitutionSelector';
 import { formatCPF, validateCPF, getCPFErrorMessage } from '@/utils/cpfValidator';
@@ -247,7 +247,7 @@ const PatientForm = () => {
 
         toast({
           title: "Cadastro realizado com sucesso!",
-          description: "Bem-vindo ao Rede Bem Estar!",
+          description: `Bem-vindo ${tenant?.slug === 'medcos' ? 'à' : 'ao'} ${getTenantDisplayName(tenant)}!`,
         });
         navigate(buildTenantPath(tenantSlug, '/'));
         return;
@@ -362,7 +362,7 @@ const PatientForm = () => {
       
       toast({
         title: "Cadastro realizado com sucesso!",
-        description: "Bem-vindo ao Rede Bem Estar!",
+        description: `Bem-vindo ${tenant?.slug === 'medcos' ? 'à' : 'ao'} ${getTenantDisplayName(tenant)}!`,
       });
       navigate(buildTenantPath(tenantSlug, '/auth'));
 
@@ -571,7 +571,7 @@ const PatientForm = () => {
       />
 
       <div>
-        <Label htmlFor="comoConheceu">Como conheceu o {tenant?.name || "Rede Bem Estar"}?</Label>
+        <Label htmlFor="comoConheceu">Como conheceu {tenant?.slug === 'medcos' ? 'a' : 'o'} {getTenantDisplayName(tenant)}?</Label>
         <Select value={formData.comoConheceu} onValueChange={(value) => updateFormData('comoConheceu', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione uma opção" />

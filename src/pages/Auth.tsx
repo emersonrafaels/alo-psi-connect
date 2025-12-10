@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTenant } from '@/hooks/useTenant';
-import { buildTenantPath } from '@/utils/tenantHelpers';
+import { buildTenantPath, getTenantDisplayName } from '@/utils/tenantHelpers';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -305,7 +305,7 @@ const Auth = () => {
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Bem-vindo {tenant?.slug === 'medcos' ? 'à' : 'ao'} {tenant?.name || 'Rede Bem Estar'}!
+              Bem-vindo {tenant?.slug === 'medcos' ? 'à' : 'ao'} {getTenantDisplayName(tenant)}!
             </h1>
             <p className="text-muted-foreground">
               Entre ou crie sua conta para continuar
