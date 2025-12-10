@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Sparkles, RefreshCw, TrendingUp, AlertTriangle, BarChart3, Lightbulb, Link2, Clock, CheckCircle2, Loader2, Database, Timer, Info } from 'lucide-react';
+import { Sparkles, RefreshCw, TrendingUp, AlertTriangle, BarChart3, Lightbulb, Link2, Clock, CheckCircle2, Loader2, Database, Timer, Info, Heart, Brain, Moon, Zap } from 'lucide-react';
 import { PredictiveInsight, ForecastPoint } from '@/hooks/usePredictiveInsights';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -45,12 +45,12 @@ const getTypeLabel = (type: PredictiveInsight['type']) => {
   }
 };
 
-const getSeverityColor = (severity: PredictiveInsight['severity']) => {
+const getSeverityConfig = (severity: PredictiveInsight['severity']) => {
   switch (severity) {
-    case 'high': return 'bg-rose-500/10 text-rose-600 border-rose-500/30';
-    case 'medium': return 'bg-amber-500/10 text-amber-600 border-amber-500/30';
-    case 'low': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30';
-    default: return 'bg-muted text-muted-foreground';
+    case 'high': return { bg: 'bg-rose-500/10 text-rose-600 border-rose-500/30', emoji: '🔴', label: 'Alta' };
+    case 'medium': return { bg: 'bg-amber-500/10 text-amber-600 border-amber-500/30', emoji: '🟡', label: 'Média' };
+    case 'low': return { bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30', emoji: '🟢', label: 'Baixa' };
+    default: return { bg: 'bg-muted text-muted-foreground', emoji: '⚪', label: severity };
   }
 };
 
@@ -65,9 +65,36 @@ const getTypeColor = (type: PredictiveInsight['type']) => {
   }
 };
 
+const getMetricIcon = (metric: string) => {
+  switch (metric?.toLowerCase()) {
+    case 'mood': 
+    case 'humor': 
+      return <Heart className="h-4 w-4 text-pink-500" />;
+    case 'anxiety': 
+    case 'ansiedade': 
+      return <Brain className="h-4 w-4 text-purple-500" />;
+    case 'sleep': 
+    case 'sono': 
+      return <Moon className="h-4 w-4 text-indigo-500" />;
+    case 'energy': 
+    case 'energia': 
+      return <Zap className="h-4 w-4 text-amber-500" />;
+    default: 
+      return <Sparkles className="h-4 w-4 text-primary" />;
+  }
+};
+
 const formatTimeRemaining = (ms: number): string => {
   const mins = Math.ceil(ms / 60000);
   return mins <= 1 ? 'menos de 1 min' : `${mins} min`;
+};
+
+// Normalize confidence to 0-100 (handles both 0-1 and 0-100 inputs)
+const normalizeConfidence = (confidence: number): number => {
+  if (confidence > 1) {
+    return Math.min(100, Math.round(confidence));
+  }
+  return Math.round(confidence * 100);
 };
 
 export const PredictiveInsightsPanel: React.FC<PredictiveInsightsPanelProps> = ({
@@ -127,31 +154,73 @@ export const PredictiveInsightsPanel: React.FC<PredictiveInsightsPanelProps> = (
         <Card className="border-dashed"><CardContent className="flex flex-col items-center justify-center py-12"><Sparkles className="h-12 w-12 text-primary/50 mb-4" /><p className="text-muted-foreground text-center">Clique em <strong>"Gerar Análise"</strong> para obter insights.</p></CardContent></Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {predictions.map((p, i) => (
-            <Card key={i} className="overflow-hidden hover:shadow-md transition-all">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className={`p-2 rounded-lg ${getSeverityColor(p.severity)}`}><span className={getTypeColor(p.type)}>{getTypeIcon(p.type)}</span></div>
-                    <div><Badge variant="secondary" className="text-xs mb-1">{getTypeLabel(p.type)}</Badge><CardTitle className="text-sm">{p.title}</CardTitle></div>
+          {predictions.map((p, i) => {
+            const severityCfg = getSeverityConfig(p.severity);
+            const confidence = normalizeConfidence(p.confidence);
+            
+            return (
+              <Card key={i} className="overflow-hidden hover:shadow-md transition-all">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`p-2 rounded-lg ${severityCfg.bg}`}>
+                        <span className={getTypeColor(p.type)}>{getTypeIcon(p.type)}</span>
+                      </div>
+                      <div>
+                        <Badge variant="secondary" className="text-xs mb-1">{getTypeLabel(p.type)}</Badge>
+                        <CardTitle className="text-sm flex items-center gap-1.5">
+                          {getMetricIcon(p.metric)}
+                          {p.title}
+                        </CardTitle>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className={`text-xs shrink-0 ${severityCfg.bg}`}>
+                      {severityCfg.emoji} {severityCfg.label}
+                    </Badge>
                   </div>
-                  <Badge variant="outline" className={`text-xs shrink-0 ${getSeverityColor(p.severity)}`}>{p.severity === 'high' ? 'Alta' : p.severity === 'medium' ? 'Média' : 'Baixa'}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">{p.description}</p>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><BarChart3 className="h-3 w-3" />{Math.round(p.confidence * 100)}% confiança</span>
-                  {p.timeframe_days && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{p.timeframe_days} dias</span>}
-                </div>
-                {p.action_items?.length > 0 && (
-                  <div className="pt-3 border-t border-border"><p className="text-xs font-medium mb-2 flex items-center gap-1"><Lightbulb className="h-3 w-3 text-amber-500" />Ações sugeridas:</p>
-                    <ul className="space-y-1">{p.action_items.map((a, j) => <li key={j} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-primary">•</span>{a}</li>)}</ul>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground leading-relaxed">{p.description}</p>
+                  
+                  <div className="h-px bg-border" />
+                  
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* Visual confidence bar */}
+                    <div className="flex items-center gap-2">
+                      <Progress value={confidence} className="h-2 w-20" />
+                      <span className="text-xs text-muted-foreground font-medium">{confidence}%</span>
+                    </div>
+                    
+                    {/* Timeframe badge */}
+                    {p.timeframe_days && (
+                      <Badge variant="outline" className="gap-1 text-xs bg-blue-50 text-blue-600 border-blue-200">
+                        📅 Próximos {p.timeframe_days} dias
+                      </Badge>
+                    )}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  
+                  {p.action_items?.length > 0 && (
+                    <>
+                      <div className="h-px bg-border" />
+                      <div>
+                        <p className="text-xs font-medium mb-2 flex items-center gap-1">
+                          <Lightbulb className="h-3 w-3 text-amber-500" />
+                          Ações sugeridas:
+                        </p>
+                        <ul className="space-y-1">
+                          {p.action_items.map((a, j) => (
+                            <li key={j} className="text-xs text-muted-foreground flex items-start gap-2">
+                              <span className="text-primary">•</span>{a}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

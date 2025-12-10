@@ -56,12 +56,47 @@ serve(async (req) => {
     const systemPrompt = `Você é um analista de dados de bem-estar estudantil especializado em análise preditiva.
 Analise os dados de bem-estar emocional de uma instituição educacional e gere insights preditivos.
 
+ESCALA DE MÉTRICAS (1-5):
+Todas as métricas usam escala de 1 a 5:
+- 1 = Muito baixo/ruim
+- 2 = Baixo/ruim
+- 3 = Neutro/médio
+- 4 = Bom/alto
+- 5 = Excelente/ótimo
+
+Para ANSIEDADE, a interpretação é INVERTIDA:
+- 1 = Calmo, sem ansiedade
+- 5 = Muito ansioso, altos níveis de estresse
+
 Tipos de análise:
 1. TREND: Previsões de tendência (como métricas devem evoluir nos próximos 7-14 dias)
 2. ALERT: Alertas antecipados (riscos ou situações que precisam de atenção)
 3. PATTERN: Padrões detectados (correlações, ciclos semanais, etc.)
 4. RECOMMENDATION: Recomendações acionáveis baseadas nos dados
 5. CORRELATION: Correlações entre métricas (sono x humor, etc.)
+
+REGRAS DE LINGUAGEM (OBRIGATÓRIO):
+- Escreva SEMPRE em português brasileiro.
+- NÃO use termos técnicos em inglês. Use apenas terminologia em português.
+- Use linguagem amigável e acessível para educadores e gestores institucionais.
+
+Substituições obrigatórias:
+- "stable" → "estável"
+- "trend" → "tendência"  
+- "increasing" → "em alta" ou "crescente"
+- "decreasing" → "em queda" ou "decrescente"
+- "baseline" → "linha de base" ou "referência"
+- "peak" → "pico"
+- "low" → "baixo" ou "reduzido"
+- "high" → "alto" ou "elevado"
+- "average" → "média"
+- "outlier" → "valor atípico"
+- "correlation" → "correlação" ou "relação"
+
+Exemplos corretos:
+✅ "A tendência geral está estável"
+✅ "Observamos uma tendência de aumento na ansiedade"
+✅ "A média de humor está em queda"
 
 Considere:
 - Tendências recentes e históricas
@@ -71,7 +106,9 @@ Considere:
 - Contexto educacional (provas, feriados, etc.)
 
 Seja específico, quantitativo e acionável. Use porcentagens e valores concretos.
-Priorize insights que permitam ação preventiva.`;
+Priorize insights que permitam ação preventiva.
+Mantenha descrições entre 50-100 palavras. Seja direto e objetivo.
+Use linguagem empática e construtiva, focando em soluções.`;
 
     const userPrompt = `Analise estes dados de bem-estar estudantil e gere insights preditivos:
 
@@ -83,12 +120,13 @@ RESUMO GERAL:
 - Média de energia: ${dataSummary.avgEnergy?.toFixed(1) || 'N/A'}/5
 - Alunos participando: ${dataSummary.studentsWithEntries || 0}
 - Alunos com humor baixo: ${dataSummary.studentsWithLowMood || 0}
-- Tendência atual: ${dataSummary.moodTrend} (${dataSummary.changePercent?.toFixed(1) || 0}%)
+- Tendência atual: ${dataSummary.moodTrend === 'up' ? 'em alta' : dataSummary.moodTrend === 'down' ? 'em queda' : 'estável'} (${dataSummary.changePercent?.toFixed(1) || 0}%)
 
 DADOS DOS ÚLTIMOS 14 DIAS:
 ${JSON.stringify(dataSummary.recentDays, null, 2)}
 
-Gere 3-5 insights preditivos relevantes usando a função generate_predictions.`;
+Gere 3-5 insights preditivos relevantes usando a função generate_predictions.
+IMPORTANTE: Use APENAS português brasileiro, sem termos em inglês.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -137,7 +175,7 @@ Gere 3-5 insights preditivos relevantes usando a função generate_predictions.`
                         },
                         confidence: {
                           type: "number",
-                          description: "Nível de confiança da previsão (0-100)",
+                          description: "Nível de confiança da previsão como decimal (0.0 a 1.0, onde 1.0 = 100%)",
                         },
                         timeframe_days: {
                           type: "number",
@@ -145,16 +183,16 @@ Gere 3-5 insights preditivos relevantes usando a função generate_predictions.`
                         },
                         title: {
                           type: "string",
-                          description: "Título curto e claro do insight",
+                          description: "Título curto e claro do insight em português",
                         },
                         description: {
                           type: "string",
-                          description: "Descrição detalhada do insight com dados específicos",
+                          description: "Descrição detalhada do insight com dados específicos, em português (50-100 palavras)",
                         },
                         action_items: {
                           type: "array",
                           items: { type: "string" },
-                          description: "Lista de ações recomendadas",
+                          description: "Lista de ações recomendadas em português",
                         },
                       },
                       required: ["type", "severity", "metric", "confidence", "title", "description"],
