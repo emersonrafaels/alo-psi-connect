@@ -435,7 +435,7 @@ export default function Institutions() {
                   {filteredInstitutions.map((institution) => (
                     <TableRow key={institution.id}>
                       <TableCell>
-                        <Avatar className="h-8 w-8">
+                        <Avatar className={`h-8 w-8 ${institution.logo_url ? 'bg-slate-800' : ''}`}>
                           <AvatarImage src={institution.logo_url || undefined} alt={institution.name} />
                           <AvatarFallback className="bg-muted">
                             <Building2 className="h-4 w-4 text-muted-foreground" />
