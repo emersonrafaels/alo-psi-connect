@@ -37,7 +37,10 @@ export const ManageInstitutionUsersModal = ({ institution, isOpen, onClose }: Pr
     const labels: Record<string, string> = {
       'employee': 'Funcionário',
       'partner': 'Parceiro',
-      'supervisor': 'Supervisor'
+      'supervisor': 'Supervisor',
+      'consultant': 'Consultor',
+      'intern': 'Estagiário',
+      'affiliated': 'Afiliado',
     };
     return labels[type] || type;
   };
