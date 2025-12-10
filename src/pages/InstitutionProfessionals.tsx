@@ -31,7 +31,7 @@ export default function InstitutionProfessionals() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [professionFilter, setProfessionFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'profession'>('name');
-  const [selectedProfessional, setSelectedProfessional] = useState<{ userId: string; name: string } | null>(null);
+  const [selectedProfessional, setSelectedProfessional] = useState<{ userId?: string; profileId?: string; name: string } | null>(null);
 
   if (isLoading) {
     return (
@@ -199,7 +199,8 @@ export default function InstitutionProfessionals() {
                   className="w-full mt-2"
                   onClick={() =>
                     setSelectedProfessional({
-                      userId: prof.profissionais.profiles?.user_id || '',
+                      userId: prof.profissionais.profiles?.user_id || undefined,
+                      profileId: prof.profissionais.profile_id || undefined,
                       name: prof.profissionais.display_name || '',
                     })
                   }
@@ -240,6 +241,7 @@ export default function InstitutionProfessionals() {
           open={!!selectedProfessional}
           onOpenChange={(open) => !open && setSelectedProfessional(null)}
           userId={selectedProfessional.userId}
+          profileId={selectedProfessional.profileId}
           userName={selectedProfessional.name}
           userType="professional"
         />

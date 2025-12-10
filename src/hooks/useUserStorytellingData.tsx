@@ -73,11 +73,25 @@ export interface UserStorytellingData {
   timeline: TimelineEvent[];
 }
 
-export const useUserStorytellingData = (userId: string) => {
+export const useUserStorytellingData = (userId?: string, profileId?: string) => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['user-storytelling', userId],
+    queryKey: ['user-storytelling', userId, profileId],
     queryFn: async () => {
-      if (!userId) throw new Error('userId is required');
+      // Determinar o user_id correto para buscar
+      let effectiveUserId = userId;
+      
+      // Se não temos userId mas temos profileId, buscar o user_id via profile
+      if (!effectiveUserId && profileId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('id', profileId)
+          .single();
+        
+        effectiveUserId = profile?.user_id || undefined;
+      }
+      
+      if (!effectiveUserId) throw new Error('userId or profileId is required');
 
       // Buscar agendamentos
       const { data: appointments, error: appointmentsError } = await supabase
@@ -100,7 +114,7 @@ export const useUserStorytellingData = (userId: string) => {
             profissao
           )
         `)
-        .eq('user_id', userId)
+        .eq('user_id', effectiveUserId)
         .order('data_consulta', { ascending: false })
         .order('horario', { ascending: false });
 
@@ -122,7 +136,7 @@ export const useUserStorytellingData = (userId: string) => {
             name
           )
         `)
-        .eq('user_id', userId)
+        .eq('user_id', effectiveUserId)
         .order('used_at', { ascending: false });
 
       if (couponsError) throw couponsError;
@@ -228,7 +242,7 @@ export const useUserStorytellingData = (userId: string) => {
 
       return storytellingData;
     },
-    enabled: !!userId,
+    enabled: !!(userId || profileId),
   });
 
   return {

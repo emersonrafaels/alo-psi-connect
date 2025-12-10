@@ -11,7 +11,8 @@ import { ptBR } from 'date-fns/locale';
 interface UserStorytellingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  userId: string;
+  userId?: string;
+  profileId?: string;
   userName: string;
   userType: 'patient' | 'professional';
 }
@@ -19,13 +20,14 @@ export function UserStorytellingModal({
   open,
   onOpenChange,
   userId,
+  profileId,
   userName,
   userType
 }: UserStorytellingModalProps) {
   const {
     data,
     isLoading
-  } = useUserStorytellingData(userId);
+  } = useUserStorytellingData(userId, profileId);
   if (!open) return null;
   const getStatusIcon = (status: string) => {
     switch (status) {
