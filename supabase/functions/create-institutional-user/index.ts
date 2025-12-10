@@ -56,8 +56,25 @@ serve(async (req) => {
       user_metadata: { nome }
     });
 
-    if (authError || !userData.user) {
-      throw new Error(authError?.message || 'Failed to create user');
+    if (authError) {
+      // Handle specific error cases with appropriate status codes
+      if (authError.message?.includes('already been registered') || authError.message?.includes('already exists')) {
+        return new Response(
+          JSON.stringify({ error: 'Este email já está cadastrado. Use a opção de vincular usuário existente.' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      return new Response(
+        JSON.stringify({ error: authError.message || 'Falha ao criar usuário' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!userData.user) {
+      return new Response(
+        JSON.stringify({ error: 'Falha ao criar usuário - dados não retornados' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const userId = userData.user.id;
