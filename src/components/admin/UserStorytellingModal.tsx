@@ -13,6 +13,7 @@ interface UserStorytellingModalProps {
   onOpenChange: (open: boolean) => void;
   userId?: string;
   profileId?: string;
+  professionalId?: number;
   userName: string;
   userType: 'patient' | 'professional';
 }
@@ -21,13 +22,14 @@ export function UserStorytellingModal({
   onOpenChange,
   userId,
   profileId,
+  professionalId,
   userName,
   userType
 }: UserStorytellingModalProps) {
   const {
     data,
     isLoading
-  } = useUserStorytellingData(userId, profileId);
+  } = useUserStorytellingData(userId, profileId, professionalId);
   if (!open) return null;
   const getStatusIcon = (status: string) => {
     switch (status) {
