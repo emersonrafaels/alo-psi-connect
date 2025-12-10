@@ -14,6 +14,7 @@ interface UserStorytellingModalProps {
   userId?: string;
   profileId?: string;
   professionalId?: number;
+  patientName?: string;
   userName: string;
   userType: 'patient' | 'professional';
 }
@@ -23,13 +24,14 @@ export function UserStorytellingModal({
   userId,
   profileId,
   professionalId,
+  patientName,
   userName,
   userType
 }: UserStorytellingModalProps) {
   const {
     data,
     isLoading
-  } = useUserStorytellingData(userId, profileId, professionalId);
+  } = useUserStorytellingData(userId, profileId, professionalId, patientName);
   if (!open) return null;
   const getStatusIcon = (status: string) => {
     switch (status) {
