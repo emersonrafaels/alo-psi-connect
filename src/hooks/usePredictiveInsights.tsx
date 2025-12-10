@@ -105,17 +105,18 @@ export const usePredictiveInsights = (institutionId: string | null, dailyEntries
 
   const cacheStatus = useMemo(() => {
     const cached = cachedResult;
-    if (!cached) return { hasCache: false, isCacheValid: false, hasNewData: false, isCooldownActive: false, cooldownRemainingMs: 0, newEntriesCount: 0, lastGeneratedAt: null as string | null };
+    if (!cached || !cached.data) return { hasCache: false, isCacheValid: false, hasNewData: false, isCooldownActive: false, cooldownRemainingMs: 0, newEntriesCount: 0, lastGeneratedAt: null as string | null };
     const now = Date.now();
     const timeSince = now - cached.timestamp;
+    const generatedAt = cached.data?.generated_at || null;
     return {
       hasCache: true,
       isCacheValid: timeSince < CACHE_TTL,
       hasNewData: cached.dataHash !== currentDataHash,
       isCooldownActive: timeSince < COOLDOWN_MS,
       cooldownRemainingMs: Math.max(0, COOLDOWN_MS - timeSince),
-      newEntriesCount: cached.data.generated_at ? countNewEntriesSince(dailyEntries, cached.data.generated_at) : 0,
-      lastGeneratedAt: cached.data.generated_at,
+      newEntriesCount: generatedAt ? countNewEntriesSince(dailyEntries, generatedAt) : 0,
+      lastGeneratedAt: generatedAt,
     };
   }, [cachedResult, currentDataHash, dailyEntries]);
 
