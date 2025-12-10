@@ -10,6 +10,13 @@ interface DailyEntry {
   entries_count: number;
 }
 
+interface WellbeingInsight {
+  type: 'positive' | 'warning' | 'info';
+  icon: string;
+  title: string;
+  description: string;
+}
+
 interface WellbeingMetrics {
   avg_mood_score: number | null;
   avg_anxiety_level: number | null;
@@ -25,6 +32,7 @@ interface WellbeingMetrics {
     change_percent: number;
   };
   daily_entries: DailyEntry[];
+  insights: WellbeingInsight[];
 }
 
 export const useInstitutionWellbeing = (institutionId: string | undefined, days: number = 30) => {
@@ -33,8 +41,6 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
     queryFn: async (): Promise<WellbeingMetrics | null> => {
       if (!institutionId) return null;
 
-      // Buscar dados agregados dos mood_entries dos alunos da instituição
-      // Fazemos isso via query direta com agregações para garantir anonimidade
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
@@ -64,18 +70,20 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
             change_percent: 0,
           },
           daily_entries: [],
+          insights: [],
         };
       }
 
       const profileIds = students.map(s => s.pacientes.profile_id);
 
-      // Buscar mood entries agregados do período atual
-      const { data: currentPeriodEntries } = await supabase
+      // Buscar mood entries com data do período atual
+      const { data: entriesWithDate } = await supabase
         .from('mood_entries')
-        .select('mood_score, anxiety_level, sleep_quality, energy_level, profile_id')
+        .select('date, mood_score, anxiety_level, sleep_quality, energy_level, profile_id')
         .in('profile_id', profileIds)
         .gte('date', startDate.toISOString().split('T')[0])
-        .lte('date', endDate.toISOString().split('T')[0]);
+        .lte('date', endDate.toISOString().split('T')[0])
+        .order('date', { ascending: true });
 
       // Buscar mood entries do período anterior para comparação
       const { data: previousPeriodEntries } = await supabase
@@ -85,27 +93,32 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         .gte('date', previousStartDate.toISOString().split('T')[0])
         .lt('date', startDate.toISOString().split('T')[0]);
 
-      // Calcular métricas agregadas
-      const entries = currentPeriodEntries || [];
+      const entries = entriesWithDate || [];
       const previousEntries = previousPeriodEntries || [];
 
       const totalEntries = entries.length;
       const uniqueStudents = new Set(entries.map(e => e.profile_id)).size;
       
-      const avgMood = entries.length > 0
-        ? entries.reduce((sum, e) => sum + (e.mood_score || 0), 0) / entries.filter(e => e.mood_score !== null).length
+      // Calcular médias com tratamento de nulls
+      const moodEntries = entries.filter(e => e.mood_score !== null);
+      const anxietyEntries = entries.filter(e => e.anxiety_level !== null);
+      const sleepEntries = entries.filter(e => e.sleep_quality !== null);
+      const energyEntries = entries.filter(e => e.energy_level !== null);
+
+      const avgMood = moodEntries.length > 0
+        ? moodEntries.reduce((sum, e) => sum + (e.mood_score || 0), 0) / moodEntries.length
         : null;
       
-      const avgAnxiety = entries.length > 0
-        ? entries.reduce((sum, e) => sum + (e.anxiety_level || 0), 0) / entries.filter(e => e.anxiety_level !== null).length
+      const avgAnxiety = anxietyEntries.length > 0
+        ? anxietyEntries.reduce((sum, e) => sum + (e.anxiety_level || 0), 0) / anxietyEntries.length
         : null;
       
-      const avgSleep = entries.length > 0
-        ? entries.reduce((sum, e) => sum + (e.sleep_quality || 0), 0) / entries.filter(e => e.sleep_quality !== null).length
+      const avgSleep = sleepEntries.length > 0
+        ? sleepEntries.reduce((sum, e) => sum + (e.sleep_quality || 0), 0) / sleepEntries.length
         : null;
 
-      const avgEnergy = entries.length > 0
-        ? entries.reduce((sum, e) => sum + (e.energy_level || 0), 0) / entries.filter(e => e.energy_level !== null).length
+      const avgEnergy = energyEntries.length > 0
+        ? energyEntries.reduce((sum, e) => sum + (e.energy_level || 0), 0) / energyEntries.length
         : null;
 
       // Contar alunos com humor baixo (<=3)
@@ -115,8 +128,9 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
 
       // Calcular tendência
       const currentAvg = avgMood || 0;
-      const previousAvg = previousEntries.length > 0
-        ? previousEntries.reduce((sum, e) => sum + (e.mood_score || 0), 0) / previousEntries.filter(e => e.mood_score !== null).length
+      const prevMoodEntries = previousEntries.filter(e => e.mood_score !== null);
+      const previousAvg = prevMoodEntries.length > 0
+        ? prevMoodEntries.reduce((sum, e) => sum + (e.mood_score || 0), 0) / prevMoodEntries.length
         : 0;
 
       let trend: 'up' | 'down' | 'stable' = 'stable';
@@ -125,38 +139,7 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
       if (changePercent > 5) trend = 'up';
       else if (changePercent < -5) trend = 'down';
 
-      // Agrupar entries por dia para gráficos de linha do tempo
-      const entriesByDate = new Map<string, {
-        moods: number[];
-        anxieties: number[];
-        sleeps: number[];
-        energies: number[];
-      }>();
-
-      entries.forEach(e => {
-        // Assumir que temos uma data no formato correto
-        const dateStr = new Date().toISOString().split('T')[0]; // fallback
-        const entryDate = dateStr; // Usar data atual como fallback
-
-        if (!entriesByDate.has(entryDate)) {
-          entriesByDate.set(entryDate, { moods: [], anxieties: [], sleeps: [], energies: [] });
-        }
-        const dayData = entriesByDate.get(entryDate)!;
-        if (e.mood_score !== null) dayData.moods.push(e.mood_score);
-        if (e.anxiety_level !== null) dayData.anxieties.push(e.anxiety_level);
-        if (e.sleep_quality !== null) dayData.sleeps.push(e.sleep_quality);
-        if (e.energy_level !== null) dayData.energies.push(e.energy_level);
-      });
-
-      // Buscar entries com data para agrupar corretamente
-      const { data: entriesWithDate } = await supabase
-        .from('mood_entries')
-        .select('date, mood_score, anxiety_level, sleep_quality, energy_level')
-        .in('profile_id', profileIds)
-        .gte('date', startDate.toISOString().split('T')[0])
-        .lte('date', endDate.toISOString().split('T')[0])
-        .order('date', { ascending: true });
-
+      // Agrupar entries por dia para gráficos
       const dailyMap = new Map<string, {
         moods: number[];
         anxieties: number[];
@@ -164,7 +147,10 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         energies: number[];
       }>();
 
-      (entriesWithDate || []).forEach(e => {
+      entries.forEach(e => {
+        // Validar que a data existe e é válida
+        if (!e.date || typeof e.date !== 'string') return;
+        
         const dateStr = e.date;
         if (!dailyMap.has(dateStr)) {
           dailyMap.set(dateStr, { moods: [], anxieties: [], sleeps: [], energies: [] });
@@ -179,15 +165,117 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
       const calcAvg = (arr: number[]) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
 
       const dailyEntries: DailyEntry[] = Array.from(dailyMap.entries())
+        .filter(([date]) => {
+          // Validar formato de data YYYY-MM-DD
+          return /^\d{4}-\d{2}-\d{2}$/.test(date);
+        })
         .map(([date, data]) => ({
           date,
           avg_mood: calcAvg(data.moods),
           avg_anxiety: calcAvg(data.anxieties),
           avg_sleep: calcAvg(data.sleeps),
           avg_energy: calcAvg(data.energies),
-          entries_count: data.moods.length + data.anxieties.length + data.sleeps.length + data.energies.length,
+          entries_count: Math.max(data.moods.length, data.anxieties.length, data.sleeps.length, data.energies.length),
         }))
         .sort((a, b) => a.date.localeCompare(b.date));
+
+      // Gerar insights inteligentes
+      const insights: WellbeingInsight[] = [];
+
+      // Insight: Tendência de humor
+      if (changePercent > 10) {
+        insights.push({
+          type: 'positive',
+          icon: '📈',
+          title: 'Humor em alta',
+          description: `O humor médio dos alunos melhorou ${Math.abs(changePercent).toFixed(0)}% em relação ao período anterior.`,
+        });
+      } else if (changePercent < -10) {
+        insights.push({
+          type: 'warning',
+          icon: '📉',
+          title: 'Queda no humor',
+          description: `O humor médio dos alunos caiu ${Math.abs(changePercent).toFixed(0)}% em relação ao período anterior.`,
+        });
+      }
+
+      // Insight: Ansiedade alta
+      if (avgAnxiety !== null && avgAnxiety > 3.5) {
+        insights.push({
+          type: 'warning',
+          icon: '⚠️',
+          title: 'Ansiedade elevada',
+          description: `A média de ansiedade está em ${avgAnxiety.toFixed(1)}/5. Considere ações preventivas.`,
+        });
+      }
+
+      // Insight: Sono x Energia correlação
+      if (avgSleep !== null && avgEnergy !== null) {
+        const sleepEnergyDiff = Math.abs(avgSleep - avgEnergy);
+        if (sleepEnergyDiff < 0.5) {
+          insights.push({
+            type: 'info',
+            icon: '🔗',
+            title: 'Correlação sono-energia',
+            description: 'Qualidade de sono e energia estão alinhadas, indicando bom descanso.',
+          });
+        } else if (avgSleep > avgEnergy + 1) {
+          insights.push({
+            type: 'info',
+            icon: '💤',
+            title: 'Energia abaixo do sono',
+            description: 'Apesar de boa qualidade de sono, os níveis de energia estão baixos.',
+          });
+        }
+      }
+
+      // Insight: Alunos com humor baixo
+      if (lowMoodStudents > 0) {
+        const percentage = (lowMoodStudents / uniqueStudents) * 100;
+        if (percentage > 30) {
+          insights.push({
+            type: 'warning',
+            icon: '🚨',
+            title: 'Atenção requerida',
+            description: `${lowMoodStudents} aluno${lowMoodStudents > 1 ? 's' : ''} (${percentage.toFixed(0)}%) apresentou humor baixo no período.`,
+          });
+        }
+      }
+
+      // Insight: Participação
+      const participationRate = students.length > 0 ? (uniqueStudents / students.length) * 100 : 0;
+      if (participationRate >= 70) {
+        insights.push({
+          type: 'positive',
+          icon: '🎯',
+          title: 'Alta participação',
+          description: `${participationRate.toFixed(0)}% dos alunos registraram seu bem-estar no período.`,
+        });
+      } else if (participationRate < 30) {
+        insights.push({
+          type: 'info',
+          icon: '📊',
+          title: 'Baixa participação',
+          description: `Apenas ${participationRate.toFixed(0)}% dos alunos registraram seu bem-estar. Considere incentivar o uso.`,
+        });
+      }
+
+      // Insight: Melhor dia
+      if (dailyEntries.length >= 7) {
+        const bestDay = dailyEntries
+          .filter(d => d.avg_mood !== null)
+          .sort((a, b) => (b.avg_mood || 0) - (a.avg_mood || 0))[0];
+        
+        if (bestDay && bestDay.avg_mood !== null) {
+          const dayName = new Date(bestDay.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long' });
+          insights.push({
+            type: 'info',
+            icon: '⭐',
+            title: 'Melhor dia',
+            description: `${dayName.charAt(0).toUpperCase() + dayName.slice(1)} teve a melhor média de humor: ${bestDay.avg_mood.toFixed(1)}/5.`,
+          });
+        }
+      }
 
       return {
         avg_mood_score: avgMood ? Number(avgMood.toFixed(1)) : null,
@@ -204,9 +292,10 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
           change_percent: Number(changePercent.toFixed(1)),
         },
         daily_entries: dailyEntries,
+        insights,
       };
     },
     enabled: !!institutionId,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000,
   });
 };
