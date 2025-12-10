@@ -29,8 +29,8 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'wellbeing',
-    title: 'Bem-Estar dos Alunos',
-    description: 'Acompanhe métricas agregadas e anônimas sobre o bem-estar emocional dos alunos vinculados.',
+    title: 'Diário Emocional dos Alunos',
+    description: 'Acompanhe métricas agregadas e anônimas sobre os diários emocionais dos alunos vinculados.',
     target: '[data-tour="wellbeing-tab"]',
   },
   {

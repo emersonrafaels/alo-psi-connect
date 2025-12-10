@@ -22,7 +22,7 @@ import {
   UserCircle, 
   Ticket, 
   Heart,
-  RotateCcw 
+  Compass 
 } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
@@ -43,7 +43,16 @@ export default function InstitutionPortal() {
   const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
   const { tenant } = useTenant();
   const [activeTab, setActiveTab] = useState('overview');
-  const { resetTour } = useInstitutionTour();
+  const { 
+    showTour, 
+    currentStep, 
+    totalSteps, 
+    currentStepData, 
+    nextStep, 
+    prevStep, 
+    skipTour, 
+    resetTour 
+  } = useInstitutionTour();
 
   // Atalhos de teclado
   useInstitutionKeyboardShortcuts({ setActiveTab });
@@ -63,7 +72,15 @@ export default function InstitutionPortal() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <InstitutionTour />
+      <InstitutionTour 
+        showTour={showTour}
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        currentStepData={currentStepData}
+        nextStep={nextStep}
+        prevStep={prevStep}
+        skipTour={skipTour}
+      />
       
       <div className="container mx-auto py-6 md:py-8 px-4">
         {/* Breadcrumb */}
@@ -115,7 +132,7 @@ export default function InstitutionPortal() {
                     onClick={resetTour}
                     title="Reiniciar tour guiado"
                   >
-                    <RotateCcw className="h-4 w-4" />
+                    <Compass className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -232,7 +249,7 @@ export default function InstitutionPortal() {
               data-tour="wellbeing-tab"
             >
               <Heart className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              Bem-Estar
+              Diário Emocional
             </TabsTrigger>
           </TabsList>
 
@@ -330,7 +347,7 @@ export default function InstitutionPortal() {
             )}
           </TabsContent>
 
-          {/* Tab de Bem-Estar */}
+          {/* Tab de Diário Emocional */}
           <TabsContent value="wellbeing">
             {userInstitutions[0]?.institution_id ? (
               <InstitutionWellbeingDashboard 
@@ -341,7 +358,7 @@ export default function InstitutionPortal() {
                 <CardContent className="py-12 text-center">
                   <Heart className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
                   <p className="text-muted-foreground">
-                    Nenhuma instituição vinculada para exibir dados de bem-estar.
+                    Nenhuma instituição vinculada para exibir dados do diário emocional.
                   </p>
                 </CardContent>
               </Card>
