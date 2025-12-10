@@ -2,7 +2,7 @@ import Header from "@/components/ui/header";
 import { Footer } from "@/components/ui/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Mail, Lock, User, Calendar, Database, Eye, FileText } from "lucide-react";
+import { Shield, Mail, Lock, User, Calendar, Database, Eye, FileText, Heart } from "lucide-react";
 
 const PrivacyPolicy = () => {
   return (
@@ -160,8 +160,35 @@ const PrivacyPolicy = () => {
 
               <section className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
+                  <Heart className="w-5 h-5 text-primary" />
+                  <h2 className="text-xl font-semibold">8. Diário Emocional e Dados de Bem-Estar</h2>
+                </div>
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  O Diário Emocional permite registrar informações sobre seu estado emocional, 
+                  níveis de ansiedade, qualidade do sono e energia. Em conformidade com a LGPD:
+                </p>
+                <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                  <li><strong>Registros Pessoais:</strong> Seus registros são privados e acessíveis apenas por você</li>
+                  <li><strong>Estatísticas Agregadas:</strong> Com seu consentimento explícito, estatísticas agregadas e anônimas podem ser compartilhadas com instituições de ensino vinculadas</li>
+                  <li><strong>Anonimização:</strong> Nenhuma informação individual identificável é revelada às instituições</li>
+                  <li><strong>Revogação:</strong> Você pode revogar o consentimento de compartilhamento a qualquer momento</li>
+                  <li><strong>Dados Agregados:</strong> Incluem apenas médias e tendências, nunca registros individuais</li>
+                </ul>
+                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    <strong>Base Legal (LGPD Art. 7º e Art. 11):</strong> O tratamento de dados do Diário 
+                    Emocional é realizado mediante consentimento do titular. Dados sensíveis 
+                    relacionados à saúde são tratados com medidas especiais de segurança.
+                  </p>
+                </div>
+              </section>
+
+              <Separator className="my-6" />
+
+              <section className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
                   <Mail className="w-5 h-5 text-primary" />
-                  <h2 className="text-xl font-semibold">8. Contato</h2>
+                  <h2 className="text-xl font-semibold">9. Contato</h2>
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
                   Para exercer seus direitos ou esclarecer dúvidas sobre esta Política de Privacidade, 
