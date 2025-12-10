@@ -16,6 +16,7 @@ import {
   TrendingDown,
   Minus,
   AlertTriangle,
+  CheckCircle2,
   Users,
   FileText,
   LineChart as LineChartIcon,
@@ -149,11 +150,8 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
         </div>
       </div>
 
-      {/* LGPD Notice */}
-      <LGPDNotice />
-
-      {/* Alertas - Condicional */}
-      {metrics.students_with_low_mood > 0 && (
+      {/* Status Cards - Condicional (antes do LGPD Notice) */}
+      {metrics.students_with_low_mood > 0 ? (
         <Alert variant="destructive" className="border-orange-500/30 bg-orange-50/50 dark:bg-orange-950/20">
           <AlertTriangle className="h-4 w-4 text-orange-600" />
           <AlertTitle className="text-orange-700 dark:text-orange-400">Atenção Necessária</AlertTitle>
@@ -165,7 +163,18 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
             </span>
           </AlertDescription>
         </Alert>
-      )}
+      ) : overallStatus.status === 'good' ? (
+        <Alert className="border-green-500/30 bg-green-50/50 dark:bg-green-950/20">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <AlertTitle className="text-green-700 dark:text-green-400">Tudo Bem por Aqui! ✨</AlertTitle>
+          <AlertDescription className="text-green-600/80 dark:text-green-300/80">
+            Nenhum alerta identificado. Os indicadores de bem-estar estão dentro dos parâmetros saudáveis.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {/* LGPD Notice - Colapsável */}
+      <LGPDNotice />
 
       {/* Seção: Visão Geral */}
       <Card>
