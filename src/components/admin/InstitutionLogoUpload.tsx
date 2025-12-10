@@ -114,7 +114,7 @@ export function InstitutionLogoUpload({
       <Label>Logo da Instituição (opcional)</Label>
       
       <div className="flex items-center gap-4">
-        <Avatar className="h-16 w-16 border">
+        <Avatar className={`h-16 w-16 border ${currentLogo ? 'bg-slate-800' : ''}`}>
           <AvatarImage src={currentLogo || undefined} alt="Logo" />
           <AvatarFallback className="bg-muted">
             <Building2 className="h-8 w-8 text-muted-foreground" />
