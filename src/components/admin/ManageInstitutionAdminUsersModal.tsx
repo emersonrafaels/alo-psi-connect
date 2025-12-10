@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, X, Search, Shield, User, Stethoscope, Info, RefreshCw } from 'lucide-react';
+import { Loader2, X, Search, Shield, User, Stethoscope, Info, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -36,6 +36,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
   const [newUserName, setNewUserName] = useState('');
   const [newUserRole, setNewUserRole] = useState<'admin' | 'viewer'>('admin');
   const [selectedTenantId, setSelectedTenantId] = useState<string>(tenantId || '');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Fetch tenants list
   const { data: tenants } = useQuery({
@@ -185,15 +186,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
         .eq('user_id', userId)
         .single();
 
-      // Buscar tenant_id da primeira ligação institution_users desta instituição
-      const { data: institutionLink } = await supabase
-        .from('institution_users')
-        .select('tenant_id')
-        .eq('institution_id', institution!.id)
-        .limit(1)
-        .maybeSingle();
-
-      // Enviar notificação com dados corretos
+      // Enviar notificação com dados corretos usando tenantId prop
       if (userProfile) {
         try {
           await supabase.functions.invoke('notify-institution-link', {
@@ -202,7 +195,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
               userName: userProfile.nome,
               institutionName: institution!.name,
               role: role,
-              tenantId: institutionLink?.tenant_id || null,
+              tenantId: tenantId || null,
             }
           });
           console.log('📧 Email de notificação enviado para', userProfile.email);
@@ -275,23 +268,15 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
           },
         });
 
-        // Enviar email de notificação
+        // Enviar email de notificação usando selectedTenantId ou tenantId prop
         try {
-          // Buscar tenant_id da primeira ligação institution_users desta instituição
-          const { data: institutionLink } = await supabase
-            .from('institution_users')
-            .select('tenant_id')
-            .eq('institution_id', institution!.id)
-            .limit(1)
-            .maybeSingle();
-
           await supabase.functions.invoke('notify-institution-link', {
             body: {
               userEmail: data.email,
               userName: data.nome,
               institutionName: institution!.name,
               role: data.role,
-              tenantId: institutionLink?.tenant_id || tenantId || null,
+              tenantId: selectedTenantId || tenantId || null,
               isNewUser: true,
               temporaryPassword: data.password,
             }
@@ -407,24 +392,16 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
         },
       });
 
-      // Enviar email de notificação de reativação
+      // Enviar email de notificação de reativação usando tenantId prop
       if (data.linkData?.profiles) {
         try {
-          // Buscar tenant_id da primeira ligação institution_users desta instituição
-          const { data: institutionLink } = await supabase
-            .from('institution_users')
-            .select('tenant_id')
-            .eq('institution_id', institution!.id)
-            .limit(1)
-            .maybeSingle();
-
           await supabase.functions.invoke('notify-institution-link', {
             body: {
               userEmail: data.linkData.profiles.email,
               userName: data.linkData.profiles.nome,
               institutionName: institution!.name,
               role: data.linkData.role,
-              tenantId: institutionLink?.tenant_id || null,
+              tenantId: tenantId || null,
             }
           });
           console.log('📧 Email de reativação enviado para', data.linkData.profiles.email);
@@ -452,7 +429,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between pr-12">
             <DialogTitle className="flex items-center gap-2">
@@ -660,13 +637,29 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
 
               <div className="space-y-2">
                 <Label htmlFor="newUserPassword">Senha</Label>
-                <Input
-                  id="newUserPassword"
-                  type="password"
-                  value={newUserPassword}
-                  onChange={(e) => setNewUserPassword(e.target.value)}
-                  placeholder="Senha segura"
-                />
+                <div className="relative">
+                  <Input
+                    id="newUserPassword"
+                    type={showPassword ? "text" : "password"}
+                    value={newUserPassword}
+                    onChange={(e) => setNewUserPassword(e.target.value)}
+                    placeholder="Senha segura"
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2">
