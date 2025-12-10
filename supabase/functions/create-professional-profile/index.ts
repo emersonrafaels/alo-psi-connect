@@ -320,6 +320,12 @@ serve(async (req) => {
     
     detectedTenant = tenant;
 
+    // Normalizar nome para MEDCOS em uppercase
+    let normalizedTenantName = tenant.name;
+    if (tenantSlug === 'medcos') {
+      normalizedTenantName = 'MEDCOS';
+    }
+
     // ✅ NOVO: Criar usuário via Admin API se userId não foi fornecido
     let finalUserId = userId;
     let authUserId = userId; // ✅ UUID do auth.users (separado do ID sequencial)
@@ -767,11 +773,11 @@ serve(async (req) => {
 
               console.log('🔗 Confirmation URL:', confirmationUrl);
               console.log('📨 Sending to:', profileData.email);
-              console.log('🏢 Tenant:', tenant.name, '| Slug:', tenantSlug);
+              console.log('🏢 Tenant:', normalizedTenantName, '| Slug:', tenantSlug);
               console.log('📧 Email details:', {
-                from: `${tenant.name} <${tenant.admin_email}>`,
+                from: `${normalizedTenantName} <${tenant.admin_email}>`,
                 to: profileData.email,
-                subject: `Bem-vindo à ${tenant.name} - Confirme seu email`,
+                subject: `Bem-vindo à ${normalizedTenantName} - Confirme seu email`,
                 logo: tenant.logo_url,
                 color: tenant.primary_color
               });
@@ -783,11 +789,11 @@ serve(async (req) => {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  from: `${tenant.name} <${tenant.admin_email}>`,
+                  from: `${normalizedTenantName} <${tenant.admin_email}>`,
                   to: [profileData.email],
-                  subject: `Bem-vindo à ${tenant.name} - Confirme seu email`,
+                  subject: `Bem-vindo à ${normalizedTenantName} - Confirme seu email`,
                   html: generateConfirmationEmailHTML(
-                    tenant.name,
+                    normalizedTenantName,
                     tenant.primary_color,
                     tenant.logo_url,
                     profileData.nome,

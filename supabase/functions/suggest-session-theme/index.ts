@@ -48,7 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Fetch tenant info
     const { data: tenant, error: tenantError } = await supabase
       .from("tenants")
-      .select("name, admin_email, logo_url, primary_color")
+      .select("name, admin_email, logo_url, primary_color, slug")
       .eq("id", tenantId)
       .single();
 
@@ -61,6 +61,12 @@ const handler = async (req: Request): Promise<Response> => {
         }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
+    }
+
+    // Normalizar nome para MEDCOS em uppercase
+    let normalizedTenantName = tenant.name;
+    if (tenant.slug === 'medcos') {
+      normalizedTenantName = 'MEDCOS';
     }
 
     // Save suggestion to database
@@ -89,12 +95,12 @@ const handler = async (req: Request): Promise<Response> => {
     // Send confirmation email to user
     try {
       await resend.emails.send({
-        from: `${tenant.name} <${tenant.admin_email}>`,
+        from: `${normalizedTenantName} <${tenant.admin_email}>`,
         to: [email],
-        subject: `Sua sugestão foi recebida - ${tenant.name}`,
+        subject: `Sua sugestão foi recebida - ${normalizedTenantName}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            ${tenant.logo_url ? `<img src="${tenant.logo_url}" alt="${tenant.name}" style="width: 150px; margin-bottom: 20px;">` : ''}
+            ${tenant.logo_url ? `<img src="${tenant.logo_url}" alt="${normalizedTenantName}" style="width: 150px; margin-bottom: 20px;">` : ''}
             <h1 style="color: ${tenant.primary_color || '#4338ca'};">Obrigado pela sua sugestão!</h1>
             <p>Olá${nome ? ` ${nome}` : ''},</p>
             <p>Recebemos sua sugestão de tema para um encontro em grupo:</p>
@@ -104,7 +110,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <p>Sua sugestão está sendo analisada pela nossa equipe e em breve poderemos incluí-la em nossa programação de encontros.</p>
             <p>Fique atento ao seu email para receber notificações sobre nossos próximos encontros!</p>
-            <p>Atenciosamente,<br><strong>${tenant.name}</strong></p>
+            <p>Atenciosamente,<br><strong>${normalizedTenantName}</strong></p>
           </div>
         `,
       });
@@ -116,10 +122,10 @@ const handler = async (req: Request): Promise<Response> => {
     try {
       const adminEmail = tenant.admin_email || 'alopsi.host@gmail.com';
       await resend.emails.send({
-        from: `${tenant.name} <noreply@redebemestar.com.br>`,
+        from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
         to: [adminEmail],
         cc: adminEmail !== MEDCOS_ADMIN_EMAIL ? [MEDCOS_ADMIN_EMAIL] : [],
-        subject: `Nova Sugestão de Tema - Encontros ${tenant.name}`,
+        subject: `Nova Sugestão de Tema - Encontros ${normalizedTenantName}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: ${tenant.primary_color || '#4338ca'};">Nova Sugestão de Tema</h1>
@@ -128,7 +134,7 @@ const handler = async (req: Request): Promise<Response> => {
               <p style="margin: 0;"><strong>De:</strong> ${nome || 'Não informado'} (${email})</p>
               <p style="margin: 10px 0 0 0;"><strong>Tema:</strong> ${tema}</p>
               ${descricao ? `<p style="margin: 10px 0 0 0;"><strong>Descrição:</strong> ${descricao}</p>` : ''}
-              <p style="margin: 10px 0 0 0;"><strong>Tenant:</strong> ${tenant.name}</p>
+              <p style="margin: 10px 0 0 0;"><strong>Tenant:</strong> ${normalizedTenantName}</p>
             </div>
             <p>Acesse o painel administrativo para gerenciar esta sugestão.</p>
           </div>

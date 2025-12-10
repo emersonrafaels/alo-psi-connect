@@ -157,11 +157,16 @@ serve(async (req) => {
       const userEmail = request.profiles.email;
       const userName = request.profiles.nome;
       const institutionName = request.educational_institutions.name;
-      const tenantName = request.tenants?.name || 'Rede Bem Estar';
+      let tenantName = request.tenants?.name || 'Rede Bem Estar';
       const tenantEmail = request.tenants?.admin_email || 'alopsi.host@gmail.com';
       const tenantColor = request.tenants?.primary_color || '#7c3aed';
       const tenantLogo = request.tenants?.logo_url || '';
       const tenantSlug = request.tenants?.slug || '';
+
+      // Normalizar nome para MEDCOS em uppercase
+      if (tenantSlug === 'medcos') {
+        tenantName = 'MEDCOS';
+      }
 
       const statusLabel = action === 'approve' ? 'Aprovada' : 'Não Aprovada';
       const statusColor = action === 'approve' ? '#22c55e' : '#ef4444';

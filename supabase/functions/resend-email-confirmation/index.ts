@@ -168,6 +168,11 @@ const handler = async (req: Request): Promise<Response> => {
       if (tenant) {
         tenantData = tenant;
         tenantSlug = tenant.slug;
+        
+        // Normalizar nome para MEDCOS em uppercase
+        if (tenantSlug === 'medcos') {
+          tenantData.name = 'MEDCOS';
+        }
       }
     }
 
