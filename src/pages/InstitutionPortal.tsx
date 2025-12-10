@@ -106,17 +106,26 @@ export default function InstitutionPortal() {
         {/* Header com Logo e Nome */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            {/* Logo da Instituição */}
+            {/* Logo da Instituição - Melhorado */}
             {currentInstitution?.logo_url ? (
-              <Avatar className="h-14 w-14 border-2 border-primary/20">
-                <AvatarImage src={currentInstitution.logo_url} alt={currentInstitution.name} />
-                <AvatarFallback>
-                  <Building2 className="h-6 w-6" />
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 rounded-2xl blur-sm opacity-75 group-hover:opacity-100 transition-opacity" />
+                <div className="relative h-20 w-20 rounded-xl bg-white dark:bg-card border border-border/50 shadow-lg flex items-center justify-center p-2 overflow-hidden">
+                  <img 
+                    src={currentInstitution.logo_url} 
+                    alt={currentInstitution.name}
+                    className="max-h-full max-w-full object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                  <Building2 className="h-8 w-8 text-muted-foreground hidden" />
+                </div>
+              </div>
             ) : (
-              <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-primary" />
+              <div className="h-20 w-20 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
+                <Building2 className="h-8 w-8 text-primary" />
               </div>
             )}
             

@@ -1,6 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+interface DailyEntry {
+  date: string;
+  avg_mood: number | null;
+  avg_anxiety: number | null;
+  avg_sleep: number | null;
+  avg_energy: number | null;
+  entries_count: number;
+}
+
 interface WellbeingMetrics {
   avg_mood_score: number | null;
   avg_anxiety_level: number | null;
@@ -15,6 +24,7 @@ interface WellbeingMetrics {
     previous_avg: number;
     change_percent: number;
   };
+  daily_entries: DailyEntry[];
 }
 
 export const useInstitutionWellbeing = (institutionId: string | undefined, days: number = 30) => {
@@ -53,6 +63,7 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
             previous_avg: 0,
             change_percent: 0,
           },
+          daily_entries: [],
         };
       }
 
@@ -114,6 +125,70 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
       if (changePercent > 5) trend = 'up';
       else if (changePercent < -5) trend = 'down';
 
+      // Agrupar entries por dia para gráficos de linha do tempo
+      const entriesByDate = new Map<string, {
+        moods: number[];
+        anxieties: number[];
+        sleeps: number[];
+        energies: number[];
+      }>();
+
+      entries.forEach(e => {
+        // Assumir que temos uma data no formato correto
+        const dateStr = new Date().toISOString().split('T')[0]; // fallback
+        const entryDate = dateStr; // Usar data atual como fallback
+
+        if (!entriesByDate.has(entryDate)) {
+          entriesByDate.set(entryDate, { moods: [], anxieties: [], sleeps: [], energies: [] });
+        }
+        const dayData = entriesByDate.get(entryDate)!;
+        if (e.mood_score !== null) dayData.moods.push(e.mood_score);
+        if (e.anxiety_level !== null) dayData.anxieties.push(e.anxiety_level);
+        if (e.sleep_quality !== null) dayData.sleeps.push(e.sleep_quality);
+        if (e.energy_level !== null) dayData.energies.push(e.energy_level);
+      });
+
+      // Buscar entries com data para agrupar corretamente
+      const { data: entriesWithDate } = await supabase
+        .from('mood_entries')
+        .select('date, mood_score, anxiety_level, sleep_quality, energy_level')
+        .in('profile_id', profileIds)
+        .gte('date', startDate.toISOString().split('T')[0])
+        .lte('date', endDate.toISOString().split('T')[0])
+        .order('date', { ascending: true });
+
+      const dailyMap = new Map<string, {
+        moods: number[];
+        anxieties: number[];
+        sleeps: number[];
+        energies: number[];
+      }>();
+
+      (entriesWithDate || []).forEach(e => {
+        const dateStr = e.date;
+        if (!dailyMap.has(dateStr)) {
+          dailyMap.set(dateStr, { moods: [], anxieties: [], sleeps: [], energies: [] });
+        }
+        const dayData = dailyMap.get(dateStr)!;
+        if (e.mood_score !== null) dayData.moods.push(e.mood_score);
+        if (e.anxiety_level !== null) dayData.anxieties.push(e.anxiety_level);
+        if (e.sleep_quality !== null) dayData.sleeps.push(e.sleep_quality);
+        if (e.energy_level !== null) dayData.energies.push(e.energy_level);
+      });
+
+      const calcAvg = (arr: number[]) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+
+      const dailyEntries: DailyEntry[] = Array.from(dailyMap.entries())
+        .map(([date, data]) => ({
+          date,
+          avg_mood: calcAvg(data.moods),
+          avg_anxiety: calcAvg(data.anxieties),
+          avg_sleep: calcAvg(data.sleeps),
+          avg_energy: calcAvg(data.energies),
+          entries_count: data.moods.length + data.anxieties.length + data.sleeps.length + data.energies.length,
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
       return {
         avg_mood_score: avgMood ? Number(avgMood.toFixed(1)) : null,
         avg_anxiety_level: avgAnxiety ? Number(avgAnxiety.toFixed(1)) : null,
@@ -128,6 +203,7 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
           previous_avg: Number(previousAvg.toFixed(1)),
           change_percent: Number(changePercent.toFixed(1)),
         },
+        daily_entries: dailyEntries,
       };
     },
     enabled: !!institutionId,
