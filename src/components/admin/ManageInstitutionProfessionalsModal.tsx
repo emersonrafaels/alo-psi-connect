@@ -64,6 +64,8 @@ const relationshipTypeLabels: Record<string, string> = {
   consultant: 'Consultor',
   supervisor: 'Supervisor',
   intern: 'Estagiário',
+  affiliated: 'Afiliado',
+  partner: 'Parceiro',
 };
 
 export function ManageInstitutionProfessionalsModal({ institution, isOpen, onClose }: Props) {

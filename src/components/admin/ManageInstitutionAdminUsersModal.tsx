@@ -35,6 +35,22 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserName, setNewUserName] = useState('');
   const [newUserRole, setNewUserRole] = useState<'admin' | 'viewer'>('admin');
+  const [selectedTenantId, setSelectedTenantId] = useState<string>(tenantId || '');
+
+  // Fetch tenants list
+  const { data: tenants } = useQuery({
+    queryKey: ['tenants-list-for-admin-creation'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tenants')
+        .select('id, name, slug')
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: isOpen,
+  });
 
   // Função para atualizar todas as listas
   const handleRefreshAll = () => {
@@ -239,7 +255,7 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
         nome: newUserName,
         institutionId: institution.id,
         institutionRole: newUserRole,
-        tenantId: tenantId || undefined,
+        tenantId: selectedTenantId || tenantId || undefined,
       });
 
       return { email: newUserEmail, nome: newUserName, role: newUserRole, password: newUserPassword };
@@ -670,9 +686,28 @@ export function ManageInstitutionAdminUsersModal({ institution, isOpen, onClose,
                 </p>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="newUserTenant">Tenant *</Label>
+                <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
+                  <SelectTrigger id="newUserTenant">
+                    <SelectValue placeholder="Selecione o tenant" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tenants?.map((tenant) => (
+                      <SelectItem key={tenant.id} value={tenant.id}>
+                        {tenant.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  O tenant define em qual plataforma (Rede Bem Estar, Medcos, etc.) o usuário terá acesso.
+                </p>
+              </div>
+
               <Button
                 onClick={() => createUserMutation.mutate()}
-                disabled={!newUserEmail || !newUserPassword || !newUserName || createUserMutation.isPending || creatingUser}
+                disabled={!newUserEmail || !newUserPassword || !newUserName || !selectedTenantId || createUserMutation.isPending || creatingUser}
                 className="w-full"
               >
                 {createUserMutation.isPending || creatingUser ? (

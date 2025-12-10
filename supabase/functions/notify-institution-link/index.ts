@@ -108,7 +108,7 @@ function generateInstitutionLinkEmailHTML(
         </tr>
         <tr>
           <td style="padding: 5px 0; color: #4b5563; font-size: 14px;">Senha:</td>
-          <td style="padding: 5px 0; font-weight: bold; color: #1f2937; font-size: 14px; font-family: monospace; background: #fff; padding: 4px 8px; border-radius: 4px;">${temporaryPassword}</td>
+          <td style="padding: 5px 0; font-weight: bold; color: #1f2937; font-size: 14px; font-family: monospace; background: #fff; padding: 4px 8px; border-radius: 4px; text-transform: none; letter-spacing: normal;">${temporaryPassword}</td>
         </tr>
       </table>
       <p style="margin: 15px 0 0 0; font-size: 12px; color: #92400e;">
