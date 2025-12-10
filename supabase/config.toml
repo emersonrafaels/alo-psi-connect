@@ -154,3 +154,6 @@ verify_jwt = false
 
 [functions.fetch-institution-logos]
 verify_jwt = true
+
+[functions.seed-unifoa-demo-data]
+verify_jwt = true
