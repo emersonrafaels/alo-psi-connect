@@ -13,6 +13,8 @@ import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 
 const relationshipTypeLabels: Record<string, string> = {
   employee: 'Funcionário',
@@ -24,6 +26,7 @@ const relationshipTypeLabels: Record<string, string> = {
 
 export default function InstitutionProfessionals() {
   const { linkedProfessionals, isLoading } = useInstitutionAccess();
+  const { tenant } = useTenant();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [professionFilter, setProfessionFilter] = useState<string>('all');
@@ -79,7 +82,11 @@ export default function InstitutionProfessionals() {
       <div className="container mx-auto py-8 px-4">
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
-            <BreadcrumbItem><BreadcrumbLink href="/portal-institucional">Portal Institucional</BreadcrumbLink></BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={buildTenantPath(tenant?.slug, '/portal-institucional')}>Portal Institucional</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem><BreadcrumbPage>Profissionais</BreadcrumbPage></BreadcrumbItem>
           </BreadcrumbList>
@@ -91,7 +98,7 @@ export default function InstitutionProfessionals() {
             <p className="text-muted-foreground mt-2">{linkedProfessionals.length} profissionais vinculados</p>
           </div>
           <Button asChild variant="outline" size="lg">
-            <Link to="/portal-institucional"><ArrowLeft className="h-4 w-4 mr-2" />Voltar ao Portal</Link>
+            <Link to={buildTenantPath(tenant?.slug, '/portal-institucional')}><ArrowLeft className="h-4 w-4 mr-2" />Voltar ao Portal</Link>
           </Button>
         </div>
 
@@ -180,10 +187,10 @@ export default function InstitutionProfessionals() {
                 )}
                 <div className="flex gap-2 mt-4 mb-3">
                   <Button asChild variant="outline" size="sm" className="flex-1">
-                    <Link to={`/profissional/${prof.professional_id}`}><Eye className="h-4 w-4 mr-1" />Ver Perfil</Link>
+                    <Link to={buildTenantPath(tenant?.slug, `/profissional/${prof.professional_id}`)}><Eye className="h-4 w-4 mr-1" />Ver Perfil</Link>
                   </Button>
                   <Button asChild variant="outline" size="sm" className="flex-1">
-                    <Link to={`/admin/agendamentos?professional_id=${prof.professional_id}`}><Calendar className="h-4 w-4 mr-1" />Agendamentos</Link>
+                    <Link to={buildTenantPath(tenant?.slug, `/admin/agendamentos?professional_id=${prof.professional_id}`)}><Calendar className="h-4 w-4 mr-1" />Agendamentos</Link>
                   </Button>
                 </div>
                 <Button
