@@ -12,7 +12,7 @@ import {
   Area,
   ReferenceLine,
 } from 'recharts';
-import { Heart, Brain, Moon, Zap, Activity } from 'lucide-react';
+import { Heart, Brain, Moon, Zap, Activity, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface DailyEntry {
   date: string;
@@ -54,16 +54,41 @@ const formatDate = (dateStr: string) => {
   } catch { return ''; }
 };
 
-const getValueStatus = (value: number | null, isAnxiety = false) => {
-  if (value === null) return { emoji: '', color: 'text-muted-foreground' };
+// Emojis granulares para escala 1-5
+const getValueEmoji = (value: number | null, isAnxiety = false): { emoji: string; color: string; label: string } => {
+  if (value === null) return { emoji: '', color: 'text-muted-foreground', label: '' };
+  
   if (isAnxiety) {
-    if (value <= 2) return { emoji: '😌', color: 'text-emerald-500' };
-    if (value <= 3.5) return { emoji: '😐', color: 'text-amber-500' };
-    return { emoji: '😰', color: 'text-rose-500' };
+    // Para ansiedade: menor é melhor (invertido)
+    if (value <= 1) return { emoji: '😌', color: 'text-emerald-600', label: 'Tranquilo' };
+    if (value <= 2) return { emoji: '🙂', color: 'text-emerald-500', label: 'Calmo' };
+    if (value <= 3) return { emoji: '😐', color: 'text-amber-500', label: 'Moderado' };
+    if (value <= 4) return { emoji: '😟', color: 'text-orange-500', label: 'Elevado' };
+    return { emoji: '😰', color: 'text-rose-500', label: 'Alto' };
   }
-  if (value >= 4) return { emoji: '😊', color: 'text-emerald-500' };
-  if (value >= 3) return { emoji: '😐', color: 'text-amber-500' };
-  return { emoji: '😔', color: 'text-rose-500' };
+  
+  // Para métricas normais: maior é melhor
+  if (value >= 5) return { emoji: '🤩', color: 'text-emerald-600', label: 'Excelente' };
+  if (value >= 4) return { emoji: '😊', color: 'text-emerald-500', label: 'Bom' };
+  if (value >= 3) return { emoji: '😐', color: 'text-amber-500', label: 'Neutro' };
+  if (value >= 2) return { emoji: '😔', color: 'text-orange-500', label: 'Baixo' };
+  return { emoji: '😢', color: 'text-rose-500', label: 'Crítico' };
+};
+
+// Cor da barra de progresso
+const getProgressBarColor = (value: number, isAnxiety = false): string => {
+  if (isAnxiety) {
+    if (value <= 1) return '#10B981'; // emerald
+    if (value <= 2) return '#22C55E'; // green
+    if (value <= 3) return '#F59E0B'; // amber
+    if (value <= 4) return '#F97316'; // orange
+    return '#EF4444'; // red
+  }
+  if (value >= 5) return '#10B981';
+  if (value >= 4) return '#22C55E';
+  if (value >= 3) return '#F59E0B';
+  if (value >= 2) return '#F97316';
+  return '#EF4444';
 };
 
 const CustomDot = ({ cx, cy, payload, dataKey, metricType }: any) => {
@@ -98,35 +123,91 @@ const CustomActiveDot = ({ cx, cy, payload, dataKey, metricType }: any) => {
   );
 };
 
-const CustomTooltip = ({ active, payload, label, metrics }: any) => {
-  if (!active || !payload?.length) return null;
+// Componente de tendência ↑↓
+const TrendIndicator = ({ current, previous, isAnxiety = false }: { current: number | null; previous: number | null; isAnxiety?: boolean }) => {
+  if (current === null || previous === null) return null;
+  
+  const diff = current - previous;
+  if (Math.abs(diff) < 0.1) return <Minus className="h-3 w-3 text-muted-foreground" />;
+  
+  // Para ansiedade: diminuir é bom (verde), aumentar é ruim (vermelho)
+  // Para outras métricas: aumentar é bom (verde), diminuir é ruim (vermelho)
+  const isPositive = isAnxiety ? diff < 0 : diff > 0;
+  const color = isPositive ? 'text-emerald-500' : 'text-rose-500';
+  const bgColor = isPositive ? 'bg-emerald-500/10' : 'bg-rose-500/10';
+  
   return (
-    <div className="bg-popover/95 backdrop-blur-sm border border-border rounded-lg shadow-xl p-3 min-w-[200px]">
+    <div className={`flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full ${bgColor} ${color}`}>
+      {diff > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+      <span className="font-medium">{diff > 0 ? '+' : ''}{diff.toFixed(1)}</span>
+    </div>
+  );
+};
+
+const CustomTooltip = ({ active, payload, label, metrics, chartData }: any) => {
+  if (!active || !payload?.length) return null;
+  
+  // Encontrar dados do dia anterior para comparação
+  const currentDate = payload[0]?.payload?.date;
+  const currentIndex = chartData?.findIndex((d: DailyEntry) => d.date === currentDate);
+  const previousEntry = currentIndex > 0 ? chartData[currentIndex - 1] : null;
+  
+  return (
+    <div className="bg-popover/95 backdrop-blur-sm border border-border rounded-lg shadow-xl p-3 min-w-[220px]">
       <p className="text-sm font-medium mb-2 pb-2 border-b border-border">{label}</p>
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {metrics?.map((m: any) => {
           const dp = payload.find((p: any) => p.dataKey === m.key);
           const val = dp?.value;
           const cfg = metricColors[m.type as keyof typeof metricColors];
           const IconComponent = cfg.icon;
-          const st = getValueStatus(val, m.isAnxiety);
+          const st = getValueEmoji(val, m.isAnxiety);
+          const prevVal = previousEntry ? previousEntry[m.key as keyof DailyEntry] : null;
+          const barColor = val != null ? getProgressBarColor(val, m.isAnxiety) : '#888';
+          
           return (
-            <div key={m.key} className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <div className={`p-1 rounded ${cfg.bgClass}`}><IconComponent className={`h-3 w-3 ${cfg.textClass}`} /></div>
-                <span className="text-xs text-muted-foreground">{m.name}</span>
+            <div key={m.key} className="space-y-1">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className={`p-1 rounded ${cfg.bgClass}`}>
+                    <IconComponent className={`h-3 w-3 ${cfg.textClass}`} />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{m.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {val != null ? (
+                    <>
+                      <span className="text-lg">{st.emoji}</span>
+                      <span className={`text-sm font-bold ${st.color}`}>{val.toFixed(1)}</span>
+                      <TrendIndicator 
+                        current={val} 
+                        previous={typeof prevVal === 'number' ? prevVal : null} 
+                        isAnxiety={m.isAnxiety} 
+                      />
+                    </>
+                  ) : <span className="text-xs text-muted-foreground">—</span>}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                {val != null ? (<><span className={`text-sm font-semibold ${st.color}`}>{val.toFixed(1)}</span><span>{st.emoji}</span>
-                  <div className="w-10 h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full rounded-full" style={{ width: `${(val/5)*100}%`, backgroundColor: cfg.primary }} /></div>
-                </>) : <span className="text-xs text-muted-foreground">—</span>}
-              </div>
+              {val != null && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full transition-all duration-300" 
+                      style={{ 
+                        width: `${Math.min(100, (val / 5) * 100)}%`, 
+                        backgroundColor: barColor 
+                      }} 
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground w-10 text-right">{st.label}</span>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
       {payload[0]?.payload?.entries_count != null && (
-        <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border flex items-center gap-1">
+        <p className="text-xs text-muted-foreground mt-3 pt-2 border-t border-border flex items-center gap-1">
           <Activity className="h-3 w-3" />{payload[0].payload.entries_count} registro{payload[0].payload.entries_count !== 1 ? 's' : ''}
         </p>
       )}
@@ -156,7 +237,7 @@ export const WellbeingTimelineCharts: React.FC<WellbeingTimelineChartsProps> = (
                 <defs><linearGradient id="moodGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={metricColors.mood.primary} stopOpacity={0.4} /><stop offset="95%" stopColor={metricColors.mood.primary} stopOpacity={0.05} /></linearGradient></defs>
                 <XAxis dataKey="formattedDate" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
                 <YAxis domain={[0, 5]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} ticks={[1,2,3,4,5]} />
-                <Tooltip content={<CustomTooltip metrics={[{ key: 'avg_mood', name: 'Humor', type: 'mood' }]} />} />
+                <Tooltip content={<CustomTooltip metrics={[{ key: 'avg_mood', name: 'Humor', type: 'mood' }]} chartData={chartData} />} />
                 <ReferenceLine y={3.5} stroke={metricColors.mood.primary} strokeDasharray="3 3" strokeOpacity={0.5} />
                 <Area type="monotone" dataKey="avg_mood" stroke={metricColors.mood.primary} strokeWidth={3} fill="url(#moodGradient)" dot={(p) => <CustomDot {...p} metricType="mood" />} activeDot={(p) => <CustomActiveDot {...p} metricType="mood" />} connectNulls />
               </AreaChart>
@@ -171,7 +252,7 @@ export const WellbeingTimelineCharts: React.FC<WellbeingTimelineChartsProps> = (
                 <defs><linearGradient id="anxietyGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={metricColors.anxiety.primary} stopOpacity={0.4} /><stop offset="95%" stopColor={metricColors.anxiety.primary} stopOpacity={0.05} /></linearGradient></defs>
                 <XAxis dataKey="formattedDate" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
                 <YAxis domain={[0, 5]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} ticks={[1,2,3,4,5]} />
-                <Tooltip content={<CustomTooltip metrics={[{ key: 'avg_anxiety', name: 'Ansiedade', type: 'anxiety', isAnxiety: true }]} />} />
+                <Tooltip content={<CustomTooltip metrics={[{ key: 'avg_anxiety', name: 'Ansiedade', type: 'anxiety', isAnxiety: true }]} chartData={chartData} />} />
                 <ReferenceLine y={3.5} stroke={metricColors.anxiety.primary} strokeDasharray="3 3" strokeOpacity={0.5} />
                 <Area type="monotone" dataKey="avg_anxiety" stroke={metricColors.anxiety.primary} strokeWidth={3} fill="url(#anxietyGradient)" dot={(p) => <CustomDot {...p} metricType="anxiety" />} activeDot={(p) => <CustomActiveDot {...p} metricType="anxiety" />} connectNulls />
               </AreaChart>
@@ -185,7 +266,7 @@ export const WellbeingTimelineCharts: React.FC<WellbeingTimelineChartsProps> = (
               <LineChart data={chartData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
                 <XAxis dataKey="formattedDate" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
                 <YAxis domain={[0, 5]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} ticks={[1,2,3,4,5]} />
-                <Tooltip content={<CustomTooltip metrics={[{ key: 'avg_sleep', name: 'Sono', type: 'sleep' }, { key: 'avg_energy', name: 'Energia', type: 'energy' }]} />} />
+                <Tooltip content={<CustomTooltip metrics={[{ key: 'avg_sleep', name: 'Sono', type: 'sleep' }, { key: 'avg_energy', name: 'Energia', type: 'energy' }]} chartData={chartData} />} />
                 <ReferenceLine y={3} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" strokeOpacity={0.3} />
                 <Line type="monotone" dataKey="avg_sleep" stroke={metricColors.sleep.primary} strokeWidth={3} dot={(p) => <CustomDot {...p} metricType="sleep" />} activeDot={(p) => <CustomActiveDot {...p} metricType="sleep" />} connectNulls />
                 <Line type="monotone" dataKey="avg_energy" stroke={metricColors.energy.primary} strokeWidth={3} dot={(p) => <CustomDot {...p} metricType="energy" />} activeDot={(p) => <CustomActiveDot {...p} metricType="energy" />} connectNulls />

@@ -45,7 +45,7 @@ export const formatEmotionValue = (
   entry: EmotionEntry,
   emotionKey: string,
   legacyField?: keyof EmotionEntry,
-  maxScale: number = 10
+  maxScale: number = 5
 ): string => {
   const value = getEmotionValue(entry, emotionKey, legacyField);
   if (value === null) return 'N/A';
@@ -159,7 +159,7 @@ export const formatAverage = (values: (number | null | undefined)[]): string => 
 /**
  * Get color class for an emotion value based on scale
  */
-export const getEmotionColor = (value: number, scale: number = 10): string => {
+export const getEmotionColor = (value: number, scale: number = 5): string => {
   const percentage = (value / scale) * 100;
   if (percentage >= 80) return 'bg-emerald-500';
   if (percentage >= 60) return 'bg-yellow-500';
@@ -170,7 +170,7 @@ export const getEmotionColor = (value: number, scale: number = 10): string => {
 /**
  * Get label for an emotion value based on scale
  */
-export const getEmotionLabel = (value: number, scale: number = 10): string => {
+export const getEmotionLabel = (value: number, scale: number = 5): string => {
   const percentage = (value / scale) * 100;
   if (percentage >= 80) return 'Excelente';
   if (percentage >= 60) return 'Bom';
@@ -205,7 +205,7 @@ export const getAllEmotions = (
   // Fallback para campos legados se emotion_values estiver vazio
   if (emotions.length === 0) {
     const legacyFields: Array<{ key: keyof EmotionEntry; name: string; maxScale: number }> = [
-      { key: 'mood_score', name: 'Humor', maxScale: 10 },
+      { key: 'mood_score', name: 'Humor', maxScale: 5 },
       { key: 'energy_level', name: 'Energia', maxScale: 5 },
       { key: 'anxiety_level', name: 'Ansiedade', maxScale: 5 },
     ];

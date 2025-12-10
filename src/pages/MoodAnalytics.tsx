@@ -58,13 +58,13 @@ const MoodAnalytics = () => {
     sleep: calculateAverage('sleep_quality'),
   };
 
-  // Mood distribution
+  // Mood distribution (escala 1-5)
   const moodDistribution = [
-    { range: '1-2', count: entries.filter(e => e.mood_score <= 2).length, color: '#ef4444' },
-    { range: '3-4', count: entries.filter(e => e.mood_score >= 3 && e.mood_score <= 4).length, color: '#f97316' },
-    { range: '5-6', count: entries.filter(e => e.mood_score >= 5 && e.mood_score <= 6).length, color: '#eab308' },
-    { range: '7-8', count: entries.filter(e => e.mood_score >= 7 && e.mood_score <= 8).length, color: '#84cc16' },
-    { range: '9-10', count: entries.filter(e => e.mood_score >= 9).length, color: '#22c55e' },
+    { range: '1', count: entries.filter(e => e.mood_score === 1).length, color: '#ef4444', label: '😢' },
+    { range: '2', count: entries.filter(e => e.mood_score === 2).length, color: '#f97316', label: '😔' },
+    { range: '3', count: entries.filter(e => e.mood_score === 3).length, color: '#eab308', label: '😐' },
+    { range: '4', count: entries.filter(e => e.mood_score === 4).length, color: '#84cc16', label: '😊' },
+    { range: '5', count: entries.filter(e => e.mood_score === 5).length, color: '#22c55e', label: '🤩' },
   ];
 
   // Weekly trends
@@ -175,9 +175,9 @@ const MoodAnalytics = () => {
                     <Heart className="h-4 w-4 text-primary dark:text-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{averages.mood}/10</div>
+                    <div className="text-2xl font-bold">{averages.mood}/5</div>
                     <p className="text-xs text-muted-foreground">
-                      {averages.mood >= 7 ? 'Excelente' : averages.mood >= 5 ? 'Bom' : 'Precisa atenção'}
+                      {averages.mood >= 4 ? 'Excelente' : averages.mood >= 3 ? 'Bom' : 'Precisa atenção'}
                     </p>
                   </CardContent>
                 </Card>
@@ -342,7 +342,7 @@ const MoodAnalytics = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3 text-sm">
-                      {averages.mood >= 7 && (
+                      {averages.mood >= 4 && (
                         <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
                           <p className="text-green-700 dark:text-green-300">
                             🎉 Seu humor tem estado consistentemente bom! Continue com as práticas que estão funcionando.
