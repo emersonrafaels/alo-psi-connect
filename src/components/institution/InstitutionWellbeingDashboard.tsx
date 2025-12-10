@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Heart,
   Brain,
@@ -19,6 +21,11 @@ import {
   LineChart as LineChartIcon,
   Layers,
   Sparkles,
+  ChevronDown,
+  BarChart3,
+  Calendar,
+  Lightbulb,
+  Activity,
 } from 'lucide-react';
 import { useInstitutionWellbeing } from '@/hooks/useInstitutionWellbeing';
 import { usePredictiveInsights } from '@/hooks/usePredictiveInsights';
@@ -34,6 +41,7 @@ interface InstitutionWellbeingDashboardProps {
 
 export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWellbeingDashboardProps) => {
   const [periodDays, setPeriodDays] = useState(30);
+  const [insightsOpen, setInsightsOpen] = useState(true);
   const { data: metrics, isLoading } = useInstitutionWellbeing(institutionId, periodDays);
   
   const {
@@ -100,15 +108,55 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
     return 'Baixo';
   };
 
+  // Calculate overall status
+  const getOverallStatus = () => {
+    if (metrics.students_with_low_mood > 0 || (metrics.avg_mood_score && metrics.avg_mood_score < 2.5)) {
+      return { status: 'alert', label: 'Alerta', variant: 'destructive' as const };
+    }
+    if (metrics.avg_mood_score && metrics.avg_mood_score < 3.5) {
+      return { status: 'warning', label: 'Atenção Necessária', variant: 'secondary' as const };
+    }
+    return { status: 'good', label: 'Bem-estar Saudável', variant: 'default' as const };
+  };
+
+  const overallStatus = getOverallStatus();
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header with Period Selector and Status Badge */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Badge variant={overallStatus.variant} className="text-sm px-3 py-1">
+            {overallStatus.status === 'good' && '✅ '}
+            {overallStatus.status === 'warning' && '⚠️ '}
+            {overallStatus.status === 'alert' && '🔴 '}
+            {overallStatus.label}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <Select value={periodDays.toString()} onValueChange={(v) => setPeriodDays(Number(v))}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Últimos 7 dias</SelectItem>
+              <SelectItem value="14">Últimos 14 dias</SelectItem>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="90">Últimos 90 dias</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* LGPD Notice */}
       <LGPDNotice />
 
-      {/* Alertas */}
+      {/* Alertas - Condicional */}
       {metrics.students_with_low_mood > 0 && (
         <Alert variant="destructive" className="border-orange-500/30 bg-orange-50/50 dark:bg-orange-950/20">
           <AlertTriangle className="h-4 w-4 text-orange-600" />
-          <AlertTitle className="text-orange-700 dark:text-orange-400">Atenção</AlertTitle>
+          <AlertTitle className="text-orange-700 dark:text-orange-400">Atenção Necessária</AlertTitle>
           <AlertDescription className="text-orange-600/80 dark:text-orange-300/80">
             <strong>{metrics.students_with_low_mood}</strong> aluno(s) reportaram humor abaixo de 3 nos últimos {periodDays} dias.
             <br />
@@ -119,206 +167,208 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
         </Alert>
       )}
 
-      {/* Insights Inteligentes */}
-      {metrics.insights && metrics.insights.length > 0 && (
-        <WellbeingInsights insights={metrics.insights} />
-      )}
-
-      {/* Métricas de Participação */}
-      <div className="grid gap-4 grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Alunos Participantes</CardTitle>
-            <Users className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{metrics.students_with_entries}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Com registros nos últimos {periodDays} dias
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total de Registros</CardTitle>
-            <FileText className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{metrics.total_entries}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Diários emocionais
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Métricas de Bem-Estar */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Humor Médio</CardTitle>
-            <Heart className={`h-5 w-5 ${getMoodColor(metrics.avg_mood_score).replace('bg-', 'text-')}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <div className="text-2xl font-bold">
-                {metrics.avg_mood_score?.toFixed(1) || 'N/A'}
-              </div>
-              <Badge variant="outline" className="text-xs">
-                {getMoodLabel(metrics.avg_mood_score)}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-1 mt-2">
-              {getTrendIcon(metrics.mood_trend)}
-              <span className="text-xs text-muted-foreground">
-                {metrics.period_comparison.change_percent > 0 ? '+' : ''}
-                {metrics.period_comparison.change_percent}% vs período anterior
-              </span>
-            </div>
-            <Progress
-              value={(metrics.avg_mood_score || 0) * 20}
-              className={`h-1.5 mt-2 ${getMoodColor(metrics.avg_mood_score)}`}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Nível de Ansiedade</CardTitle>
-            <Brain className="h-5 w-5 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {metrics.avg_anxiety_level?.toFixed(1) || 'N/A'}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Média dos registros (1-5)
-            </p>
-            <Progress
-              value={(metrics.avg_anxiety_level || 0) * 20}
-              className="h-1.5 mt-2"
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Qualidade do Sono</CardTitle>
-            <Moon className="h-5 w-5 text-indigo-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {metrics.avg_sleep_quality?.toFixed(1) || 'N/A'}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Média dos registros (1-5)
-            </p>
-            <Progress
-              value={(metrics.avg_sleep_quality || 0) * 20}
-              className="h-1.5 mt-2"
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Nível de Energia</CardTitle>
-            <Zap className="h-5 w-5 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {metrics.avg_energy_level?.toFixed(1) || 'N/A'}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Média dos registros (1-5)
-            </p>
-            <Progress
-              value={(metrics.avg_energy_level || 0) * 20}
-              className="h-1.5 mt-2"
-            />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Resumo */}
+      {/* Seção: Visão Geral */}
       <Card>
-        <CardHeader>
-          <CardTitle>Resumo do Período</CardTitle>
-          <CardDescription>Últimos {periodDays} dias comparados ao período anterior</CardDescription>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            <CardTitle>Visão Geral</CardTitle>
+          </div>
+          <CardDescription>Participação e engajamento nos últimos {periodDays} dias</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                <Users className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{metrics.students_with_entries}</p>
+                <p className="text-xs text-muted-foreground">Participantes</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+              <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                <FileText className="h-5 w-5 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{metrics.total_entries}</p>
+                <p className="text-xs text-muted-foreground">Registros</p>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
               <div className={`p-3 rounded-full ${metrics.mood_trend === 'up' ? 'bg-green-100 dark:bg-green-900/30' : metrics.mood_trend === 'down' ? 'bg-red-100 dark:bg-red-900/30' : 'bg-muted'}`}>
                 {getTrendIcon(metrics.mood_trend)}
               </div>
               <div>
-                <p className="font-medium">Tendência de Humor</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm font-medium">
                   {metrics.mood_trend === 'up' ? 'Em melhora' : metrics.mood_trend === 'down' ? 'Em queda' : 'Estável'}
                 </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
-                <Users className="h-4 w-4 text-blue-500" />
-              </div>
-              <div>
-                <p className="font-medium">Engajamento</p>
-                <p className="text-sm text-muted-foreground">
-                  {metrics.students_with_entries} alunos registrando
-                </p>
+                <p className="text-xs text-muted-foreground">Tendência</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
               <div className={`p-3 rounded-full ${metrics.students_with_low_mood > 0 ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-green-100 dark:bg-green-900/30'}`}>
-                <AlertTriangle className={`h-4 w-4 ${metrics.students_with_low_mood > 0 ? 'text-orange-500' : 'text-green-500'}`} />
+                <AlertTriangle className={`h-5 w-5 ${metrics.students_with_low_mood > 0 ? 'text-orange-500' : 'text-green-500'}`} />
               </div>
               <div>
-                <p className="font-medium">Alertas</p>
-                <p className="text-sm text-muted-foreground">
-                  {metrics.students_with_low_mood > 0
-                    ? `${metrics.students_with_low_mood} precisam de atenção`
-                    : 'Nenhum alerta'}
-                </p>
+                <p className="text-2xl font-bold">{metrics.students_with_low_mood}</p>
+                <p className="text-xs text-muted-foreground">Alertas</p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Tabs para Gráficos e Insights Preditivos */}
-      <Tabs defaultValue="charts" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-grid">
-          <TabsTrigger value="charts" className="gap-2">
-            <LineChartIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">Evolução</span>
-          </TabsTrigger>
-          <TabsTrigger value="layered" className="gap-2">
-            <Layers className="h-4 w-4" />
-            <span className="hidden sm:inline">Multi-Camadas</span>
-          </TabsTrigger>
-        <TabsTrigger value="predictive" className="gap-2">
-          <Sparkles className="h-4 w-4" />
-          <span className="hidden sm:inline">Inteligência Medcos</span>
-        </TabsTrigger>
-        </TabsList>
+      {/* Seção: Métricas de Bem-Estar */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            <CardTitle>Métricas de Bem-Estar</CardTitle>
+          </div>
+          <CardDescription>Indicadores agregados do período selecionado</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+            <div className="p-4 rounded-lg border bg-card">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-muted-foreground">Humor Médio</span>
+                <Heart className={`h-5 w-5 ${getMoodColor(metrics.avg_mood_score).replace('bg-', 'text-')}`} />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold">
+                  {metrics.avg_mood_score?.toFixed(1) || 'N/A'}
+                </span>
+                <Badge variant="outline" className="text-xs">
+                  {getMoodLabel(metrics.avg_mood_score)}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-1 mt-2">
+                {getTrendIcon(metrics.mood_trend)}
+                <span className="text-xs text-muted-foreground">
+                  {metrics.period_comparison.change_percent > 0 ? '+' : ''}
+                  {metrics.period_comparison.change_percent}%
+                </span>
+              </div>
+              <Progress
+                value={(metrics.avg_mood_score || 0) * 20}
+                className={`h-1.5 mt-2 ${getMoodColor(metrics.avg_mood_score)}`}
+              />
+            </div>
 
-        <TabsContent value="charts" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <LineChartIcon className="h-5 w-5 text-primary" />
-                Evolução Temporal
-              </CardTitle>
-              <CardDescription>
-                Acompanhe a evolução do bem-estar emocional dos alunos ao longo do tempo
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            <div className="p-4 rounded-lg border bg-card">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-muted-foreground">Ansiedade</span>
+                <Brain className="h-5 w-5 text-purple-500" />
+              </div>
+              <span className="text-2xl font-bold">
+                {metrics.avg_anxiety_level?.toFixed(1) || 'N/A'}
+              </span>
+              <p className="text-xs text-muted-foreground mt-1">
+                Média (1-5)
+              </p>
+              <Progress
+                value={(metrics.avg_anxiety_level || 0) * 20}
+                className="h-1.5 mt-2"
+              />
+            </div>
+
+            <div className="p-4 rounded-lg border bg-card">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-muted-foreground">Qualidade do Sono</span>
+                <Moon className="h-5 w-5 text-indigo-500" />
+              </div>
+              <span className="text-2xl font-bold">
+                {metrics.avg_sleep_quality?.toFixed(1) || 'N/A'}
+              </span>
+              <p className="text-xs text-muted-foreground mt-1">
+                Média (1-5)
+              </p>
+              <Progress
+                value={(metrics.avg_sleep_quality || 0) * 20}
+                className="h-1.5 mt-2"
+              />
+            </div>
+
+            <div className="p-4 rounded-lg border bg-card">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-muted-foreground">Energia</span>
+                <Zap className="h-5 w-5 text-yellow-500" />
+              </div>
+              <span className="text-2xl font-bold">
+                {metrics.avg_energy_level?.toFixed(1) || 'N/A'}
+              </span>
+              <p className="text-xs text-muted-foreground mt-1">
+                Média (1-5)
+              </p>
+              <Progress
+                value={(metrics.avg_energy_level || 0) * 20}
+                className="h-1.5 mt-2"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Seção: Insights Inteligentes - Recolhível */}
+      {metrics.insights && metrics.insights.length > 0 && (
+        <Card>
+          <Collapsible open={insightsOpen} onOpenChange={setInsightsOpen}>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="h-5 w-5 text-amber-500" />
+                    <CardTitle>Insights Inteligentes</CardTitle>
+                    <Badge variant="secondary" className="ml-2">
+                      {metrics.insights.length}
+                    </Badge>
+                  </div>
+                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${insightsOpen ? 'rotate-180' : ''}`} />
+                </div>
+                <CardDescription>Padrões identificados automaticamente</CardDescription>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0">
+                <WellbeingInsights insights={metrics.insights} />
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
+      )}
+
+      {/* Seção: Análise Visual */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <LineChartIcon className="h-5 w-5 text-primary" />
+            <CardTitle>Análise Visual</CardTitle>
+          </div>
+          <CardDescription>Visualize a evolução do bem-estar ao longo do tempo</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="charts" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-grid mb-4">
+              <TabsTrigger value="charts" className="gap-2">
+                <LineChartIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Evolução</span>
+              </TabsTrigger>
+              <TabsTrigger value="layered" className="gap-2">
+                <Layers className="h-4 w-4" />
+                <span className="hidden sm:inline">Multi-Camadas</span>
+              </TabsTrigger>
+              <TabsTrigger value="predictive" className="gap-2">
+                <Sparkles className="h-4 w-4" />
+                <span className="hidden sm:inline">Inteligência Medcos</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="charts" className="mt-0">
               <WellbeingTimelineCharts
                 dailyEntries={metrics.daily_entries || []}
                 periodDays={periodDays}
@@ -326,30 +376,30 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
                 avgMood={metrics.avg_mood_score}
                 avgAnxiety={metrics.avg_anxiety_level}
               />
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </TabsContent>
 
-        <TabsContent value="layered" className="mt-4">
-          <WellbeingLayeredChart
-            dailyEntries={metrics.daily_entries || []}
-            predictions={forecast}
-            avgMood={metrics.avg_mood_score}
-            avgAnxiety={metrics.avg_anxiety_level}
-          />
-        </TabsContent>
+            <TabsContent value="layered" className="mt-0">
+              <WellbeingLayeredChart
+                dailyEntries={metrics.daily_entries || []}
+                predictions={forecast}
+                avgMood={metrics.avg_mood_score}
+                avgAnxiety={metrics.avg_anxiety_level}
+              />
+            </TabsContent>
 
-        <TabsContent value="predictive" className="mt-4">
-          <PredictiveInsightsPanel
-            predictions={predictions}
-            forecast={forecast}
-            generatedAt={generatedAt}
-            isGenerating={isGenerating}
-            hasSufficientData={hasSufficientData}
-            onGenerate={generatePredictions}
-          />
-        </TabsContent>
-      </Tabs>
+            <TabsContent value="predictive" className="mt-0">
+              <PredictiveInsightsPanel
+                predictions={predictions}
+                forecast={forecast}
+                generatedAt={generatedAt}
+                isGenerating={isGenerating}
+                hasSufficientData={hasSufficientData}
+                onGenerate={generatePredictions}
+              />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

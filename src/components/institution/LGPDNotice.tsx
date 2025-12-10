@@ -1,6 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Shield, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 export const LGPDNotice = () => {
   return (
@@ -17,10 +17,15 @@ export const LGPDNotice = () => {
         <p className="text-sm">
           Os alunos consentiram em compartilhar estatísticas anônimas de bem-estar com sua instituição.
         </p>
-        <Button variant="link" size="sm" className="p-0 h-auto mt-2 text-blue-600">
-          <ExternalLink className="h-3 w-3 mr-1" />
+        <Link 
+          to="/politica-de-privacidade" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline mt-2"
+        >
+          <ExternalLink className="h-3 w-3" />
           Ver Política de Privacidade
-        </Button>
+        </Link>
       </AlertDescription>
     </Alert>
   );
