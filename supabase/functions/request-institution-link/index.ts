@@ -250,7 +250,7 @@ const handler = async (req: Request): Promise<Response> => {
             
             <!-- CTA Button -->
             <div style="text-align: center; margin: 32px 0;">
-              <a href="https://alopsi.com.br${tenantSlug ? `/${tenantSlug}` : ''}/admin/instituicoes" 
+              <a href="https://redebemestar.com.br/admin/instituicoes" 
                  style="display: inline-block; background-color: ${tenantColor}; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                 Revisar Solicitação
               </a>
