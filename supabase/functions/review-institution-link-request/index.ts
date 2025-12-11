@@ -120,7 +120,7 @@ serve(async (req) => {
           .insert({
             patient_id: request.patient_id,
             institution_id: request.institution_id,
-            enrollment_status: request.enrollment_type || 'student',
+            enrollment_status: request.enrollment_type || 'enrolled',
             enrollment_date: new Date().toISOString(),
           });
 
@@ -148,6 +148,24 @@ serve(async (req) => {
         }
 
         console.log('Professional-institution link created successfully');
+      }
+
+      // Create user_tenants link to ensure user has access to the tenant
+      if (request.tenant_id && request.profile_id) {
+        const { error: tenantLinkError } = await supabase
+          .from('user_tenants')
+          .upsert({
+            user_id: request.profile_id, // user_tenants.user_id references profiles.id
+            tenant_id: request.tenant_id,
+            is_primary: false
+          }, { onConflict: 'user_id,tenant_id' });
+          
+        if (tenantLinkError) {
+          console.error('Error creating user-tenant link:', tenantLinkError);
+          // Don't fail - it's less critical than the institutional link
+        } else {
+          console.log('User-tenant link created/updated successfully');
+        }
       }
     }
 
