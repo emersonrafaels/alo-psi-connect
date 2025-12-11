@@ -22,6 +22,54 @@ interface CouponValidatorProps {
   hideWhenApplied?: boolean; // Ocultar quando cupom já está aplicado (para evitar duplicação)
 }
 
+// Função para traduzir erros técnicos em mensagens amigáveis
+const getErrorMessage = (error: any): string => {
+  const errorMsg = error?.message || String(error) || '';
+  
+  // Erro de função ambígua do PostgreSQL
+  if (errorMsg.includes('Could not choose the best candidate function') || errorMsg.includes('ambiguous')) {
+    return 'Erro ao processar o cupom. Por favor, tente novamente ou entre em contato com o suporte.';
+  }
+  
+  // Erro de conexão
+  if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('Failed to fetch')) {
+    return 'Erro de conexão. Verifique sua internet e tente novamente.';
+  }
+  
+  // Erro de autenticação
+  if (errorMsg.includes('não autenticado') || errorMsg.includes('not authenticated') || errorMsg.includes('JWT')) {
+    return 'Você precisa estar logado para aplicar cupons.';
+  }
+  
+  // Cupom não encontrado
+  if (errorMsg.includes('not found') || errorMsg.includes('não encontrado')) {
+    return 'Cupom não encontrado. Verifique se digitou o código corretamente.';
+  }
+  
+  // Cupom expirado
+  if (errorMsg.includes('expired') || errorMsg.includes('expirado') || errorMsg.includes('validade')) {
+    return 'Este cupom está expirado e não pode mais ser utilizado.';
+  }
+  
+  // Limite de uso atingido
+  if (errorMsg.includes('limit') || errorMsg.includes('limite') || errorMsg.includes('máximo')) {
+    return 'Você já utilizou este cupom o número máximo de vezes permitido.';
+  }
+  
+  // Valor mínimo não atingido
+  if (errorMsg.includes('minimum') || errorMsg.includes('mínimo')) {
+    return 'O valor da compra não atinge o mínimo necessário para este cupom.';
+  }
+  
+  // Erro genérico - não mostrar mensagem técnica
+  if (errorMsg.includes('public.') || errorMsg.includes('function') || errorMsg.includes('_') || errorMsg.length > 100) {
+    return 'Não foi possível aplicar o cupom. Tente novamente ou utilize outro código.';
+  }
+  
+  // Se a mensagem parecer amigável, retorná-la
+  return errorMsg || 'Erro ao validar cupom. Tente novamente.';
+};
+
 export const CouponValidator = ({
   professionalId,
   amount,
@@ -70,7 +118,7 @@ export const CouponValidator = ({
             setAppliedCoupon(null);
           }
         } catch (err: any) {
-          setError(err.message || 'Erro ao validar cupom');
+          setError(getErrorMessage(err));
           setAppliedCoupon(null);
         } finally {
           setIsValidating(false);
@@ -104,7 +152,7 @@ export const CouponValidator = ({
         setAppliedCoupon(null);
       }
     } catch (err: any) {
-      setError(err.message || 'Erro ao validar cupom');
+      setError(getErrorMessage(err));
       setAppliedCoupon(null);
     } finally {
       setIsValidating(false);
