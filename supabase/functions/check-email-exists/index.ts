@@ -48,8 +48,10 @@ const handler = async (req: Request): Promise<Response> => {
       throw authError;
     }
 
-    // Filtrar por email específico
-    const existingUser = authUser.users.find(user => user.email === email);
+    // Filtrar por email específico (case-insensitive)
+    const existingUser = authUser.users.find(user => 
+      user.email?.toLowerCase() === email.toLowerCase()
+    );
     
     if (existingUser) {
       // Verificar se tem perfil e se é profissional
