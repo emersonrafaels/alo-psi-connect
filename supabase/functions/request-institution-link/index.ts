@@ -2,7 +2,6 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@4.0.0";
 
-const MEDCOS_ADMIN_EMAIL = 'medcos.host@gmail.com';
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
@@ -275,7 +274,6 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
-      cc: adminEmail !== MEDCOS_ADMIN_EMAIL ? [MEDCOS_ADMIN_EMAIL] : [],
       subject: `Nova Solicitação de Vínculo Institucional - ${institution.name}`,
       html: emailHtml,
     });

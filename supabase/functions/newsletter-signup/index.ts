@@ -2,8 +2,6 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@4.0.0";
 
-const MEDCOS_ADMIN_EMAIL = 'medcos.host@gmail.com';
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -199,7 +197,6 @@ const handler = async (req: Request): Promise<Response> => {
       await resend.emails.send({
         from: `Newsletter ${tenantName} <noreply@redebemestar.com.br>`,
         to: [adminEmail],
-        cc: adminEmail !== MEDCOS_ADMIN_EMAIL ? [MEDCOS_ADMIN_EMAIL] : [],
         subject: "Nova inscrição no newsletter",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
