@@ -120,7 +120,7 @@ const Header = () => {
                 title="Ir para MEDCOS"
               >
                 <img 
-                  src="https://medcos.app.br/wp-content/uploads/elementor/thumbs/LogoMEDCOS-r5pr2yuqprrdwsv0thbrcgimoe2po47c2w2agtjnao.png"
+                  src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/logo/logo_medcos.png"
                   alt="MEDCOS"
                   className="h-8 w-auto object-contain"
                 />
