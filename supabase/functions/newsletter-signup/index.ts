@@ -89,8 +89,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Buscar email administrativo do tenant
-    let adminEmail = 'alopsi.host@gmail.com'; // fallback padrão
-    let tenantName = 'Alô, Psi';
+    let adminEmail = 'redebemestar1@gmail.com'; // fallback padrão
+    let tenantName = 'Rede Bem Estar';
 
     if (tenantId) {
       const { data: tenant } = await supabase

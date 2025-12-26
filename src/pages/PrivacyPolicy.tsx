@@ -3,8 +3,11 @@ import { Footer } from "@/components/ui/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Shield, Mail, Lock, User, Calendar, Database, Eye, FileText, Heart } from "lucide-react";
+import { useTenant } from "@/hooks/useTenant";
 
 const PrivacyPolicy = () => {
+  const { tenant } = useTenant();
+  
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -196,7 +199,7 @@ const PrivacyPolicy = () => {
                 </p>
                 <div className="mt-4 p-4 bg-muted rounded-lg">
                   <p className="font-medium">Rede Bem Estar</p>
-                  <p className="text-muted-foreground">E-mail: alopsi.host@gmail.com</p>
+                  <p className="text-muted-foreground">E-mail: {tenant?.admin_email || 'redebemestar1@gmail.com'}</p>
                   <p className="text-muted-foreground">Telefone: (11) 97587-2447</p>
                   <p className="text-muted-foreground">
                     Endereço: R. Joaquim Távora, 1240 - Vila Mariana, São Paulo - SP

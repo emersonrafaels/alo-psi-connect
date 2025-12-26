@@ -220,7 +220,7 @@ const Contact = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold mb-2">E-mail</h3>
-                        <p className="text-muted-foreground">alopsi.host@gmail.com</p>
+                        <p className="text-muted-foreground">{tenant?.admin_email || 'redebemestar1@gmail.com'}</p>
                       </div>
                     </div>
                   </CardContent>
