@@ -120,7 +120,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send notification to admin
     try {
-      const adminEmail = tenant.admin_email || 'alopsi.host@gmail.com';
+      const adminEmail = tenant.admin_email || 'redebemestar1@gmail.com';
       await resend.emails.send({
         from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
         to: [adminEmail],

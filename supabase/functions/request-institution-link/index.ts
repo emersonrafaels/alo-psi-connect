@@ -154,7 +154,7 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('role', 'admin')
       .eq('is_active', true);
 
-    const adminEmail = tenant.admin_email || 'alopsi.host@gmail.com';
+    const adminEmail = tenant.admin_email || 'redebemestar1@gmail.com';
     const tenantColor = tenant.primary_color || '#7c3aed';
     const tenantLogo = tenant.logo_url || '';
     const tenantSlug = tenant.slug || '';
