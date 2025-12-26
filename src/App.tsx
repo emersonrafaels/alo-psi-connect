@@ -97,8 +97,8 @@ const queryClient = new QueryClient({
   },
 });
 
-const AppWithShortcuts = () => {
-  useGlobalCacheShortcut();
+// Componente separado para ThemeProvider com tenant
+const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
   const { tenant } = useTenant();
   const [storageKey, setStorageKey] = useState("alopsi-theme");
 
@@ -107,10 +107,20 @@ const AppWithShortcuts = () => {
       setStorageKey(`${tenant.slug}-theme`);
     }
   }, [tenant?.slug]);
-  
+
   return (
     <ThemeProvider defaultTheme="light" storageKey={storageKey}>
-    <Routes>
+      {children}
+    </ThemeProvider>
+  );
+};
+
+const AppWithShortcuts = () => {
+  useGlobalCacheShortcut();
+  
+  return (
+    <ThemeWrapper>
+      <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/sobre" element={<About />} />
           <Route path="/blog" element={<Blog />} />
@@ -306,7 +316,7 @@ const AppWithShortcuts = () => {
       
       <Route path="*" element={<NotFound />} />
     </Routes>
-    </ThemeProvider>
+    </ThemeWrapper>
   );
 };
 
