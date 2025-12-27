@@ -108,7 +108,6 @@ const Professionals = () => {
     horarioFim: "",
     servico: "",
     especialidades: [] as string[],
-    servicos: [] as string[],
     nome: "",
     comCupom: false,
     especialidadesNormalizadas: [] as string[],
@@ -156,15 +155,15 @@ const Professionals = () => {
   // Aplicar filtros da URL ao carregar a página
   useEffect(() => {
     const urlFilters = getFiltersFromURL()
-    if (urlFilters.especialidades.length > 0 || urlFilters.servicos.length > 0 || urlFilters.nome) {
+    if (urlFilters.profissoes.length > 0 || urlFilters.especialidades.length > 0 || urlFilters.nome) {
       setFilters(prev => ({
         ...prev,
-        especialidades: urlFilters.especialidades,
-        servicos: urlFilters.servicos,
+        profissoes: [...prev.profissoes, ...urlFilters.profissoes.filter(p => !prev.profissoes.includes(p))],
+        especialidades: [...prev.especialidades, ...urlFilters.especialidades.filter(e => !prev.especialidades.includes(e))],
         nome: urlFilters.nome
       }))
       setSearchTerm(urlFilters.nome)
-      if (urlFilters.especialidades.length > 0 || urlFilters.servicos.length > 0 || urlFilters.nome) {
+      if (urlFilters.profissoes.length > 0 || urlFilters.especialidades.length > 0 || urlFilters.nome) {
         setShowFilters(true)
       }
     }
@@ -201,51 +200,46 @@ const Professionals = () => {
       
     }
 
-    // Especialidades filter (from URL) - procurar tanto na profissão quanto nos serviços
-    if (filters.especialidades.length > 0) {
+    // Profissões filter (from URL) - procurar na profissão do profissional
+    if (filters.profissoes.length > 0) {
       filtered = filtered.filter(prof => {
-        const match = filters.especialidades.some(esp => {
-          const espNormalized = normalizeText(esp)
+        const match = filters.profissoes.some(profissao => {
+          const profissaoNormalized = normalizeText(profissao)
           // Verificar na profissão (com normalização de acentos)
-          const profissaoNormalized = prof.profissao ? normalizeText(prof.profissao) : ''
-          const profissaoMatch = profissaoNormalized.includes(espNormalized)
-          // Verificar nos serviços (com normalização de acentos)
-          const servicosNormalized = prof.servicos_raw ? normalizeText(prof.servicos_raw) : ''
-          const servicosMatch = servicosNormalized.includes(espNormalized)
+          const profProfissaoNormalized = prof.profissao ? normalizeText(prof.profissao) : ''
           
-          // Mapeamento específico para cada especialidade
-          const especialidadeMap: { [key: string]: string[] } = {
+          // Mapeamento específico para cada profissão
+          const profissaoMap: { [key: string]: string[] } = {
             'psicologia': ['psicologo', 'psicologa', 'psicologia'],
             'psicoterapia': ['psicoterapeuta', 'psicoterapia'],
             'psiquiatria': ['psiquiatra', 'psiquiatria']
           }
           
-          const variations = especialidadeMap[espNormalized] || [espNormalized]
+          const variations = profissaoMap[profissaoNormalized] || [profissaoNormalized]
           const variationMatch = variations.some(variation => 
-            profissaoNormalized.includes(variation) || 
-            servicosNormalized.includes(variation)
+            profProfissaoNormalized.includes(variation)
           )
           
-          return profissaoMatch || servicosMatch || variationMatch
+          return variationMatch
         })
         return match
       })
     }
 
-    // Serviços filter (from URL) - verifica tanto servicos_raw quanto servicos_normalizados
-    if (filters.servicos.length > 0) {
+    // Especialidades filter (from URL) - verifica tanto servicos_raw quanto servicos_normalizados
+    if (filters.especialidades.length > 0) {
       filtered = filtered.filter(prof => {
         // Verificar em servicos_raw (string)
         const servicosRawNormalized = prof.servicos_raw ? normalizeText(prof.servicos_raw) : ''
-        const matchRaw = filters.servicos.some(serv => 
-          servicosRawNormalized.includes(normalizeText(serv))
+        const matchRaw = filters.especialidades.some(esp => 
+          servicosRawNormalized.includes(normalizeText(esp))
         )
         
         // Verificar também em servicos_normalizados (array) para consistência
-        const matchNormalized = filters.servicos.some(serv => {
-          const servNormalized = normalizeText(serv)
+        const matchNormalized = filters.especialidades.some(esp => {
+          const espNormalized = normalizeText(esp)
           return prof.servicos_normalizados?.some(s => 
-            normalizeText(s).includes(servNormalized) || servNormalized.includes(normalizeText(s))
+            normalizeText(s).includes(espNormalized) || espNormalized.includes(normalizeText(s))
           ) || false
         })
         
@@ -729,7 +723,7 @@ const Professionals = () => {
     if (filters.valorMin || filters.valorMax) count++
     if (filters.servico) count++
     if (filters.especialidades.length > 0) count++
-    if (filters.servicos.length > 0) count++
+    
     if (filters.nome) count++
     if (filters.comCupom) count++
     if (filters.especialidadesNormalizadas.length > 0) count++

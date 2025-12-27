@@ -4,8 +4,8 @@ import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 
 export interface SearchFilters {
+  profissoes: string[];
   especialidades: string[];
-  servicos: string[];
   nome: string;
 }
 
@@ -16,13 +16,13 @@ export const useSearchFilters = () => {
 
   // Função para obter filtros da URL
   const getFiltersFromURL = useCallback((): SearchFilters => {
+    const profissoes = searchParams.get('profissoes')?.split(',').filter(Boolean) || [];
     const especialidades = searchParams.get('especialidades')?.split(',').filter(Boolean) || [];
-    const servicos = searchParams.get('servicos')?.split(',').filter(Boolean) || [];
     const nome = searchParams.get('nome') || '';
 
     return {
+      profissoes,
       especialidades,
-      servicos,
       nome
     };
   }, [searchParams]);
@@ -31,12 +31,12 @@ export const useSearchFilters = () => {
   const searchProfessionals = useCallback((filters: SearchFilters) => {
     const params = new URLSearchParams();
     
-    if (filters.especialidades.length > 0) {
-      params.set('especialidades', filters.especialidades.join(','));
+    if (filters.profissoes.length > 0) {
+      params.set('profissoes', filters.profissoes.join(','));
     }
     
-    if (filters.servicos.length > 0) {
-      params.set('servicos', filters.servicos.join(','));
+    if (filters.especialidades.length > 0) {
+      params.set('especialidades', filters.especialidades.join(','));
     }
     
     if (filters.nome.trim()) {

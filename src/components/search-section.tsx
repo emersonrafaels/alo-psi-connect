@@ -7,13 +7,13 @@ import { Search, Check, ChevronsUpDown, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
-const especialidades = [
+const profissoes = [
   { value: "psicologia", label: "Psicologia" },
   { value: "psicoterapia", label: "Psicoterapia" },
   { value: "psiquiatria", label: "Psiquiatria" }
 ];
 
-const servicos = [
+const especialidades = [
   { value: "acompanhamento-terapeutico", label: "Acompanhamento Terapêutico" },
   { value: "adocao-filhos", label: "Adoção de Filhos" },
   { value: "adolescencia", label: "Adolescência" },
@@ -237,15 +237,15 @@ const MultiSelectCombobox = ({
 };
 
 const SearchSection = () => {
+  const [selectedProfissoes, setSelectedProfissoes] = useState<string[]>([]);
   const [selectedEspecialidades, setSelectedEspecialidades] = useState<string[]>([]);
-  const [selectedServicos, setSelectedServicos] = useState<string[]>([]);
   const [nome, setNome] = useState("");
   const { searchProfessionals } = useSearchFilters();
 
   const handleSearch = () => {
     searchProfessionals({
+      profissoes: selectedProfissoes,
       especialidades: selectedEspecialidades,
-      servicos: selectedServicos,
       nome
     });
   };
@@ -262,25 +262,25 @@ const SearchSection = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium mb-2 text-card-foreground">
-                  🔵 Especialidade Desejada
+                  🔵 Profissão
+                </label>
+                <MultiSelectCombobox
+                  options={profissoes}
+                  placeholder="Selecione profissões"
+                  selectedValues={selectedProfissoes}
+                  onSelectionChange={setSelectedProfissoes}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2 text-card-foreground">
+                  🔵 Especialidades
                 </label>
                 <MultiSelectCombobox
                   options={especialidades}
                   placeholder="Selecione especialidades"
                   selectedValues={selectedEspecialidades}
                   onSelectionChange={setSelectedEspecialidades}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2 text-card-foreground">
-                  🔵 Serviços
-                </label>
-                <MultiSelectCombobox
-                  options={servicos}
-                  placeholder="Selecione serviços"
-                  selectedValues={selectedServicos}
-                  onSelectionChange={setSelectedServicos}
                 />
               </div>
               
