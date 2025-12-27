@@ -232,15 +232,24 @@ const Professionals = () => {
       })
     }
 
-    // Serviços filter (from URL) - com normalização de acentos
+    // Serviços filter (from URL) - verifica tanto servicos_raw quanto servicos_normalizados
     if (filters.servicos.length > 0) {
       filtered = filtered.filter(prof => {
-        if (!prof.servicos_raw) return false
-        const servicosNormalized = normalizeText(prof.servicos_raw)
-        const match = filters.servicos.some(serv => 
-          servicosNormalized.includes(normalizeText(serv))
+        // Verificar em servicos_raw (string)
+        const servicosRawNormalized = prof.servicos_raw ? normalizeText(prof.servicos_raw) : ''
+        const matchRaw = filters.servicos.some(serv => 
+          servicosRawNormalized.includes(normalizeText(serv))
         )
-        return match
+        
+        // Verificar também em servicos_normalizados (array) para consistência
+        const matchNormalized = filters.servicos.some(serv => {
+          const servNormalized = normalizeText(serv)
+          return prof.servicos_normalizados?.some(s => 
+            normalizeText(s).includes(servNormalized) || servNormalized.includes(normalizeText(s))
+          ) || false
+        })
+        
+        return matchRaw || matchNormalized
       })
     }
 
