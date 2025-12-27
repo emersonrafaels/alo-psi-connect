@@ -183,6 +183,14 @@ const Professionals = () => {
   const filterProfessionals = () => {
     let filtered = professionals
 
+    // Helper function to normalize text (remove accents and convert to lowercase)
+    const normalizeText = (text: string): string => {
+      return text
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+    }
+
     // Search term filter (both from search term and nome filter)
     const nameSearch = searchTerm || filters.nome
     if (nameSearch) {
@@ -197,11 +205,13 @@ const Professionals = () => {
     if (filters.especialidades.length > 0) {
       filtered = filtered.filter(prof => {
         const match = filters.especialidades.some(esp => {
-          const espLower = esp.toLowerCase()
-          // Verificar na profissão
-          const profissaoMatch = prof.profissao?.toLowerCase().includes(espLower) || false
-          // Verificar nos serviços
-          const servicosMatch = prof.servicos_raw?.toLowerCase().includes(espLower) || false
+          const espNormalized = normalizeText(esp)
+          // Verificar na profissão (com normalização de acentos)
+          const profissaoNormalized = prof.profissao ? normalizeText(prof.profissao) : ''
+          const profissaoMatch = profissaoNormalized.includes(espNormalized)
+          // Verificar nos serviços (com normalização de acentos)
+          const servicosNormalized = prof.servicos_raw ? normalizeText(prof.servicos_raw) : ''
+          const servicosMatch = servicosNormalized.includes(espNormalized)
           
           // Mapeamento específico para cada especialidade
           const especialidadeMap: { [key: string]: string[] } = {
@@ -210,10 +220,10 @@ const Professionals = () => {
             'psiquiatria': ['psiquiatra', 'psiquiatria']
           }
           
-          const variations = especialidadeMap[espLower] || [espLower]
+          const variations = especialidadeMap[espNormalized] || [espNormalized]
           const variationMatch = variations.some(variation => 
-            prof.profissao?.toLowerCase().includes(variation) || 
-            prof.servicos_raw?.toLowerCase().includes(variation)
+            profissaoNormalized.includes(variation) || 
+            servicosNormalized.includes(variation)
           )
           
           return profissaoMatch || servicosMatch || variationMatch
@@ -222,12 +232,13 @@ const Professionals = () => {
       })
     }
 
-    // Serviços filter (from URL)
+    // Serviços filter (from URL) - com normalização de acentos
     if (filters.servicos.length > 0) {
       filtered = filtered.filter(prof => {
         if (!prof.servicos_raw) return false
+        const servicosNormalized = normalizeText(prof.servicos_raw)
         const match = filters.servicos.some(serv => 
-          prof.servicos_raw?.toLowerCase().includes(serv.toLowerCase())
+          servicosNormalized.includes(normalizeText(serv))
         )
         return match
       })
