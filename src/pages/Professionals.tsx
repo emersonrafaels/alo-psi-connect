@@ -208,11 +208,27 @@ const Professionals = () => {
           // Verificar na profissão (com normalização de acentos)
           const profProfissaoNormalized = prof.profissao ? normalizeText(prof.profissao) : ''
           
-          // Mapeamento específico para cada profissão
+          // Mapeamento específico para cada profissão (inclui valores da homepage e da UI local)
           const profissaoMap: { [key: string]: string[] } = {
+            // Valores vindos da homepage (slug)
             'psicologia': ['psicologo', 'psicologa', 'psicologia'],
             'psicoterapia': ['psicoterapeuta', 'psicoterapia'],
-            'psiquiatria': ['psiquiatra', 'psiquiatria']
+            'psiquiatria': ['psiquiatra', 'psiquiatria'],
+            // Valores vindos da UI local (standardized/normalized)
+            'psicologoa': ['psicologo', 'psicologa', 'psicologia'],
+            'psicologo': ['psicologo', 'psicologa', 'psicologia'],
+            'psicologa': ['psicologo', 'psicologa', 'psicologia'],
+            'psicoterapeutaa': ['psicoterapeuta', 'psicoterapia'],
+            'psicoterapeuta': ['psicoterapeuta', 'psicoterapia'],
+            'psiquiatraa': ['psiquiatra', 'psiquiatria'],
+            'psiquiatra': ['psiquiatra', 'psiquiatria'],
+            'terapeutaa': ['terapeuta'],
+            'terapeuta': ['terapeuta'],
+            'psicopedagogoa': ['psicopedagogo', 'psicopedagoga'],
+            'psicopedagogo': ['psicopedagogo', 'psicopedagoga'],
+            'psicopedagoga': ['psicopedagogo', 'psicopedagoga'],
+            'neurologista': ['neurologista'],
+            'terapeuta ocupacional': ['terapeuta ocupacional', 'terapia ocupacional']
           }
           
           const variations = profissaoMap[profissaoNormalized] || [profissaoNormalized]
