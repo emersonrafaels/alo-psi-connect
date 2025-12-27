@@ -182,12 +182,14 @@ const Professionals = () => {
   const filterProfessionals = () => {
     let filtered = professionals
 
-    // Helper function to normalize text (remove accents and convert to lowercase)
+    // Helper function to normalize text (remove accents, special chars and convert to lowercase)
     const normalizeText = (text: string): string => {
       return text
         .toLowerCase()
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[\u0300-\u036f]/g, '') // Remove accents
+        .replace(/[^\w\s]/g, '') // Remove special characters like ()
+        .trim()
     }
 
     // Search term filter (both from search term and nome filter)
@@ -1121,7 +1123,7 @@ const Professionals = () => {
                                   onValueChange={(value) => {
                                     setFilters(prev => ({
                                       ...prev,
-                                      profissoes: value ? [value] : []
+                                      profissoes: value && value !== 'todas' ? [value] : []
                                     }))
                                   }}
                                 >
