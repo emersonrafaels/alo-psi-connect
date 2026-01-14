@@ -33,6 +33,13 @@ interface WellbeingMetrics {
   };
   daily_entries: DailyEntry[];
   insights: WellbeingInsight[];
+  // New fields for data range detection
+  hasDataInPeriod: boolean;
+  availableDataRange?: {
+    oldest: string;
+    newest: string;
+  };
+  totalStudentsLinked: number;
 }
 
 export const useInstitutionWellbeing = (institutionId: string | undefined, days: number = 30) => {
@@ -43,16 +50,28 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
 
       const endDate = new Date();
       const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
+      
+      // Handle "all time" option (9999 days)
+      if (days >= 9999) {
+        startDate.setFullYear(2020, 0, 1); // Start from Jan 1, 2020
+      } else {
+        startDate.setDate(startDate.getDate() - days);
+      }
 
       const previousStartDate = new Date(startDate);
-      previousStartDate.setDate(previousStartDate.getDate() - days);
+      if (days >= 9999) {
+        previousStartDate.setFullYear(2019, 0, 1); // Previous period from 2019
+      } else {
+        previousStartDate.setDate(previousStartDate.getDate() - days);
+      }
 
       // Buscar alunos vinculados à instituição
       const { data: students } = await supabase
         .from('patient_institutions')
         .select('pacientes!inner(profile_id)')
         .eq('institution_id', institutionId);
+
+      const totalStudentsLinked = students?.length || 0;
 
       if (!students || students.length === 0) {
         return {
@@ -71,6 +90,8 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
           },
           daily_entries: [],
           insights: [],
+          hasDataInPeriod: false,
+          totalStudentsLinked: 0,
         };
       }
 
@@ -98,6 +119,23 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
 
       const totalEntries = entries.length;
       const uniqueStudents = new Set(entries.map(e => e.profile_id)).size;
+
+      // If no entries in current period, check if there's data in other periods
+      let availableDataRange: { oldest: string; newest: string } | undefined;
+      if (totalEntries === 0) {
+        const { data: allTimeRange } = await supabase
+          .from('mood_entries')
+          .select('date')
+          .in('profile_id', profileIds)
+          .order('date', { ascending: true });
+
+        if (allTimeRange && allTimeRange.length > 0) {
+          availableDataRange = {
+            oldest: allTimeRange[0].date,
+            newest: allTimeRange[allTimeRange.length - 1].date,
+          };
+        }
+      }
       
       // Calcular médias com tratamento de nulls
       const moodEntries = entries.filter(e => e.mood_score !== null);
@@ -313,6 +351,9 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         },
         daily_entries: dailyEntries,
         insights,
+        hasDataInPeriod: totalEntries > 0,
+        availableDataRange,
+        totalStudentsLinked,
       };
     },
     enabled: !!institutionId,

@@ -41,7 +41,7 @@ interface InstitutionWellbeingDashboardProps {
 }
 
 export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWellbeingDashboardProps) => {
-  const [periodDays, setPeriodDays] = useState(30);
+  const [periodDays, setPeriodDays] = useState(90);
   const [insightsOpen, setInsightsOpen] = useState(true);
   const { data: metrics, isLoading } = useInstitutionWellbeing(institutionId, periodDays);
   
@@ -68,16 +68,45 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
   }
 
   if (!metrics || metrics.total_entries === 0) {
+    // Check if there's data available in another period
+    const hasDataElsewhere = metrics?.availableDataRange;
+    
     return (
       <div className="space-y-6">
         <LGPDNotice />
         <Card>
           <CardContent className="py-12 text-center">
-            <Heart className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-            <p className="text-lg font-medium mb-2">Nenhum dado disponível</p>
-            <p className="text-muted-foreground">
-              Ainda não há registros de diários emocionais dos alunos vinculados.
-            </p>
+            {hasDataElsewhere ? (
+              <>
+                <Calendar className="h-12 w-12 mx-auto text-amber-500/70 mb-4" />
+                <p className="text-lg font-medium mb-2">Nenhum registro no período selecionado</p>
+                <p className="text-muted-foreground mb-4">
+                  Existem registros entre{' '}
+                  <span className="font-medium text-foreground">
+                    {new Date(hasDataElsewhere.oldest + 'T12:00:00').toLocaleDateString('pt-BR')}
+                  </span>{' '}
+                  e{' '}
+                  <span className="font-medium text-foreground">
+                    {new Date(hasDataElsewhere.newest + 'T12:00:00').toLocaleDateString('pt-BR')}
+                  </span>
+                </p>
+                <button
+                  onClick={() => setPeriodDays(9999)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Ver todo o período
+                </button>
+              </>
+            ) : (
+              <>
+                <Heart className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-lg font-medium mb-2">Nenhum dado disponível</p>
+                <p className="text-muted-foreground">
+                  Ainda não há registros de diários emocionais dos alunos vinculados.
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -145,6 +174,8 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
               <SelectItem value="14">Últimos 14 dias</SelectItem>
               <SelectItem value="30">Últimos 30 dias</SelectItem>
               <SelectItem value="90">Últimos 90 dias</SelectItem>
+              <SelectItem value="365">Último ano</SelectItem>
+              <SelectItem value="9999">Todo o período</SelectItem>
             </SelectContent>
           </Select>
         </div>
