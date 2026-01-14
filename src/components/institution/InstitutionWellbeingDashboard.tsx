@@ -214,7 +214,12 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
             <BarChart3 className="h-5 w-5 text-primary" />
             <CardTitle>Visão Geral</CardTitle>
           </div>
-          <CardDescription>Participação e engajamento nos últimos {periodDays} dias</CardDescription>
+          <CardDescription>
+            {periodDays >= 9999 && metrics.daily_entries && metrics.daily_entries.length > 0
+              ? `Participação e engajamento considerando todo o período (primeiro diário emocional registrado em ${new Date(metrics.daily_entries[0].date + 'T12:00:00').toLocaleDateString('pt-BR')})`
+              : `Participação e engajamento nos últimos ${periodDays} dias`
+            }
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
