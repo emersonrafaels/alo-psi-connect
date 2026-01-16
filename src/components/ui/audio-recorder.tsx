@@ -5,6 +5,8 @@ import { Mic, MicOff, Play, Pause, Trash2, Upload } from 'lucide-react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { useTenant } from '@/hooks/useTenant';
+import { getTenantDisplayName } from '@/utils/tenantHelpers';
 
 interface AudioRecorderProps {
   onAudioUploaded?: (audioUrl: string) => void;
@@ -39,6 +41,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     mediaRecorderRef
   } = useAudioRecorder();
   
+  const { tenant } = useTenant();
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [isTranscribing, setIsTranscribing] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement>(null);
@@ -238,7 +241,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
             <div className="bg-primary/10 rounded-lg p-3 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                <span className="text-sm font-medium text-primary">Transcrevendo com Alô, Psi...</span>
+                <span className="text-sm font-medium text-primary">Transcrevendo com a Inteligência {getTenantDisplayName(tenant, 'Rede Bem Estar')}...</span>
               </div>
               <p className="text-xs text-muted-foreground">Aguarde enquanto a IA processa seu áudio</p>
             </div>
