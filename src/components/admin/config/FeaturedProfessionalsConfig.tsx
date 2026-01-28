@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useTenant } from '@/hooks/useTenant';
 import { Users, Star, Eye, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface Professional {
@@ -27,6 +28,7 @@ export const FeaturedProfessionalsConfig = () => {
   const [updating, setUpdating] = useState<number | null>(null);
   const { toast } = useToast();
   const { hasRole } = useAdminAuth();
+  const { tenant } = useTenant();
 
   // Check permissions
   const hasPermission = hasRole('admin') || hasRole('super_admin');
@@ -80,6 +82,7 @@ export const FeaturedProfessionalsConfig = () => {
         finalOrder = [1, 2, 3].find(num => !usedOrders.includes(num)) || 1;
       }
 
+      // Update profissionais table (legacy compatibility)
       const { error } = await supabase
         .from('profissionais')
         .update({
@@ -89,6 +92,22 @@ export const FeaturedProfessionalsConfig = () => {
         .eq('id', professionalId);
 
       if (error) throw error;
+
+      // Also update professional_tenants table for homepage visibility
+      if (tenant?.id) {
+        const { error: ptError } = await supabase
+          .from('professional_tenants')
+          .update({
+            is_featured: featured,
+            featured_order: featured ? finalOrder : null
+          })
+          .eq('professional_id', professionalId)
+          .eq('tenant_id', tenant.id);
+
+        if (ptError) {
+          console.error('Error updating professional_tenants:', ptError);
+        }
+      }
 
       // Update local state
       setProfessionals(prev => prev.map(p => 
@@ -127,12 +146,26 @@ export const FeaturedProfessionalsConfig = () => {
         return;
       }
 
+      // Update profissionais table (legacy compatibility)
       const { error } = await supabase
         .from('profissionais')
         .update({ ordem_destaque: newOrder })
         .eq('id', professionalId);
 
       if (error) throw error;
+
+      // Also update professional_tenants table for homepage visibility
+      if (tenant?.id) {
+        const { error: ptError } = await supabase
+          .from('professional_tenants')
+          .update({ featured_order: newOrder })
+          .eq('professional_id', professionalId)
+          .eq('tenant_id', tenant.id);
+
+        if (ptError) {
+          console.error('Error updating professional_tenants order:', ptError);
+        }
+      }
 
       // Update local state
       setProfessionals(prev => prev.map(p => 
