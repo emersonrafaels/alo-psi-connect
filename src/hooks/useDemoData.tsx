@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 export type DemoDataAction = 
+  | "create_institution"
   | "seed_all" 
   | "seed_professionals" 
   | "seed_students" 
@@ -11,12 +12,25 @@ export type DemoDataAction =
   | "seed_appointments" 
   | "cleanup";
 
+export interface DemoDataParams {
+  action: DemoDataAction;
+  institutionId?: string;
+  institutionName?: string;
+  institutionType?: "public" | "private";
+  professionalsCount?: number;
+  studentsCount?: number;
+  moodEntriesPerStudent?: number;
+  tenantId?: string;
+}
+
 export interface DemoDataResult {
   action: DemoDataAction;
   success: boolean;
   message: string;
   details?: any;
   timestamp: string;
+  institutionId?: string;
+  institutionName?: string;
 }
 
 export const useDemoData = () => {
@@ -32,21 +46,30 @@ export const useDemoData = () => {
     setResults([]);
   }, []);
 
-  const executeAction = useCallback(async (action: DemoDataAction) => {
+  const executeAction = useCallback(async (params: DemoDataParams) => {
     setIsLoading(true);
-    setCurrentAction(action);
+    setCurrentAction(params.action);
 
     try {
-      console.log(`[DemoData] Executing action: ${action}`);
+      console.log(`[DemoData] Executing action: ${params.action}`, params);
 
-      const { data, error } = await supabase.functions.invoke("seed-unifoa-demo-data", {
-        body: { action },
+      const { data, error } = await supabase.functions.invoke("seed-demo-data", {
+        body: {
+          action: params.action,
+          institution_id: params.institutionId,
+          institution_name: params.institutionName,
+          institution_type: params.institutionType,
+          professionals_count: params.professionalsCount,
+          students_count: params.studentsCount,
+          mood_entries_per_student: params.moodEntriesPerStudent,
+          tenant_id: params.tenantId,
+        },
       });
 
       if (error) {
         console.error(`[DemoData] Error:`, error);
         addResult({
-          action,
+          action: params.action,
           success: false,
           message: error.message || "Erro desconhecido",
         });
@@ -55,25 +78,29 @@ export const useDemoData = () => {
           description: error.message || "Falha ao executar ação",
           variant: "destructive",
         });
-        return;
+        return null;
       }
 
       console.log(`[DemoData] Success:`, data);
       addResult({
-        action,
+        action: params.action,
         success: true,
         message: data?.message || "Ação executada com sucesso",
         details: data?.details,
+        institutionId: data?.institution_id,
+        institutionName: data?.institution_name,
       });
 
       toast({
         title: "Sucesso",
         description: data?.message || "Ação executada com sucesso",
       });
+
+      return data;
     } catch (err: any) {
       console.error(`[DemoData] Exception:`, err);
       addResult({
-        action,
+        action: params.action,
         success: false,
         message: err.message || "Erro inesperado",
       });
@@ -82,6 +109,7 @@ export const useDemoData = () => {
         description: err.message || "Erro inesperado",
         variant: "destructive",
       });
+      return null;
     } finally {
       setIsLoading(false);
       setCurrentAction(null);
