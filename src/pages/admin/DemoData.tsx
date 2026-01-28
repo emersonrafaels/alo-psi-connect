@@ -3,110 +3,388 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Users, 
   GraduationCap, 
-  Ticket, 
-  Calendar, 
-  Heart, 
   Play, 
   Trash2, 
   Loader2,
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Building2
+  Building2,
+  Plus,
+  Sparkles,
+  Heart
 } from "lucide-react";
-import { useDemoData, DemoDataAction } from "@/hooks/useDemoData";
+import { useDemoData, DemoDataParams } from "@/hooks/useDemoData";
+import { useInstitutions } from "@/hooks/useInstitutions";
+import { useTenant } from "@/hooks/useTenant";
+
+const TENANT_OPTIONS = [
+  { id: "3a9ae5ec-50a9-4674-b808-7735e5f0afb5", name: "Medcos" },
+  { id: "472db0ac-0f45-4998-97da-490bc579efb1", name: "Rede Bem Estar" },
+];
 
 const DemoData = () => {
-  const { 
-    executeAction, 
-    isLoading, 
-    currentAction,
-    results,
-    clearResults 
-  } = useDemoData();
+  const { tenant } = useTenant();
+  const { executeAction, isLoading, currentAction, results, clearResults } = useDemoData();
+  const { institutions, isLoading: loadingInstitutions } = useInstitutions();
 
-  const actions: { 
-    action: DemoDataAction; 
-    title: string; 
-    description: string; 
-    icon: React.ReactNode;
-    count?: string;
-    variant?: "default" | "destructive";
-  }[] = [
-    {
+  // Form state for new institution
+  const [institutionName, setInstitutionName] = useState("");
+  const [institutionType, setInstitutionType] = useState<"public" | "private">("private");
+  const [professionalsCount, setProfessionalsCount] = useState(5);
+  const [studentsCount, setStudentsCount] = useState(10);
+  const [moodEntriesPerStudent, setMoodEntriesPerStudent] = useState(12);
+  const [selectedTenant, setSelectedTenant] = useState(
+    tenant?.id || TENANT_OPTIONS[0].id
+  );
+
+  // State for existing institution actions
+  const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
+  const [addDataProfCount, setAddDataProfCount] = useState(5);
+  const [addDataStudentCount, setAddDataStudentCount] = useState(10);
+  const [addDataMoodCount, setAddDataMoodCount] = useState(12);
+
+  const handleCreateInstitution = async () => {
+    if (!institutionName.trim()) return;
+
+    await executeAction({
+      action: "create_institution",
+      institutionName: institutionName.trim(),
+      institutionType,
+      professionalsCount,
+      studentsCount,
+      moodEntriesPerStudent,
+      tenantId: selectedTenant,
+    });
+
+    setInstitutionName("");
+  };
+
+  const handleAddDataToInstitution = async (institutionId: string) => {
+    await executeAction({
       action: "seed_all",
-      title: "Criar Cenário Completo",
-      description: "Gera profissionais, alunos, cupons, diários emocionais e agendamentos de uma vez",
-      icon: <Play className="h-5 w-5" />,
-      count: "~160 registros",
-    },
-    {
-      action: "seed_professionals",
-      title: "Criar Profissionais",
-      description: "5 profissionais fictícios da UniFOA com perfis completos e horários",
-      icon: <Users className="h-5 w-5" />,
-      count: "5 profissionais",
-    },
-    {
-      action: "seed_students",
-      title: "Criar Alunos",
-      description: "8 alunos fictícios representando estudantes de Psicologia",
-      icon: <GraduationCap className="h-5 w-5" />,
-      count: "8 alunos",
-    },
-    {
-      action: "seed_coupons",
-      title: "Criar Cupons",
-      description: "4 cupons institucionais com diferentes configurações (válidos até 31/12/2026)",
-      icon: <Ticket className="h-5 w-5" />,
-      count: "4 cupons",
-    },
-    {
-      action: "seed_mood_entries",
-      title: "Criar Diários Emocionais",
-      description: "~100 entradas de humor dos últimos 30 dias para cada aluno",
-      icon: <Heart className="h-5 w-5" />,
-      count: "~100 entradas",
-    },
-    {
-      action: "seed_appointments",
-      title: "Criar Agendamentos",
-      description: "40 agendamentos: 25 realizados, 3 cancelados e 12 futuros",
-      icon: <Calendar className="h-5 w-5" />,
-      count: "40 agendamentos",
-    },
-    {
+      institutionId,
+      professionalsCount: addDataProfCount,
+      studentsCount: addDataStudentCount,
+      moodEntriesPerStudent: addDataMoodCount,
+      tenantId: selectedTenant,
+    });
+    setSelectedInstitutionId(null);
+  };
+
+  const handleCleanup = async (institutionId: string) => {
+    await executeAction({
       action: "cleanup",
-      title: "Limpar Dados Demo",
-      description: "Remove todos os dados demo identificáveis (@unifoa.edu.br)",
-      icon: <Trash2 className="h-5 w-5" />,
-      variant: "destructive",
-    },
-  ];
+      institutionId,
+    });
+  };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Dados Demo</h1>
+        <h1 className="text-3xl font-bold">Gerador de Dados Demo</h1>
         <p className="text-muted-foreground mt-2">
-          Gerar dados de demonstração para showroom e testes
+          Crie instituições e popule com dados fictícios para demonstrações
         </p>
       </div>
 
-      {/* Institution Info */}
-      <Alert>
-        <Building2 className="h-4 w-4" />
-        <AlertDescription>
-          <strong>Instituição alvo:</strong> Centro Universitário de Volta Redonda (UniFOA)
-          <br />
-          <span className="text-muted-foreground text-sm">
-            Todos os dados criados serão identificáveis por emails @unifoa.edu.br e marcações [DEMO-UNIFOA]
-          </span>
-        </AlertDescription>
-      </Alert>
+      {/* Create New Institution Form */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Plus className="h-5 w-5 text-primary" />
+            <CardTitle>Criar Nova Instituição com Dados Demo</CardTitle>
+          </div>
+          <CardDescription>
+            Crie uma instituição e popule automaticamente com profissionais, alunos e diários emocionais
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Institution Name */}
+            <div className="space-y-2">
+              <Label htmlFor="institution-name">Nome da Instituição *</Label>
+              <Input
+                id="institution-name"
+                placeholder="Ex: Universidade Federal de São Paulo (UNIFESP)"
+                value={institutionName}
+                onChange={(e) => setInstitutionName(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Use parênteses para a sigla: o domínio de email será gerado automaticamente
+              </p>
+            </div>
+
+            {/* Institution Type */}
+            <div className="space-y-2">
+              <Label>Tipo de Instituição</Label>
+              <RadioGroup
+                value={institutionType}
+                onValueChange={(v) => setInstitutionType(v as "public" | "private")}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="public" id="type-public" />
+                  <Label htmlFor="type-public" className="cursor-pointer">Pública</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="private" id="type-private" />
+                  <Label htmlFor="type-private" className="cursor-pointer">Privada</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+
+          {/* Quantity Controls */}
+          <div className="space-y-4">
+            <Label className="text-base font-medium">Quantidade de Dados</Label>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Professionals */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Profissionais
+                  </Label>
+                  <Badge variant="secondary">{professionalsCount}</Badge>
+                </div>
+                <Slider
+                  value={[professionalsCount]}
+                  onValueChange={([v]) => setProfessionalsCount(v)}
+                  min={1}
+                  max={20}
+                  step={1}
+                />
+                <p className="text-xs text-muted-foreground">1 a 20 profissionais</p>
+              </div>
+
+              {/* Students */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4" />
+                    Alunos/Pacientes
+                  </Label>
+                  <Badge variant="secondary">{studentsCount}</Badge>
+                </div>
+                <Slider
+                  value={[studentsCount]}
+                  onValueChange={([v]) => setStudentsCount(v)}
+                  min={1}
+                  max={50}
+                  step={1}
+                />
+                <p className="text-xs text-muted-foreground">1 a 50 alunos</p>
+              </div>
+
+              {/* Mood Entries */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <Heart className="h-4 w-4" />
+                    Diários por Aluno
+                  </Label>
+                  <Badge variant="secondary">{moodEntriesPerStudent}</Badge>
+                </div>
+                <Slider
+                  value={[moodEntriesPerStudent]}
+                  onValueChange={([v]) => setMoodEntriesPerStudent(v)}
+                  min={5}
+                  max={30}
+                  step={1}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Total: ~{studentsCount * moodEntriesPerStudent} entradas
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tenant Selection */}
+          <div className="space-y-2">
+            <Label>Tenant Alvo</Label>
+            <Select value={selectedTenant} onValueChange={setSelectedTenant}>
+              <SelectTrigger className="w-[250px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TENANT_OPTIONS.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Create Button */}
+          <Button
+            onClick={handleCreateInstitution}
+            disabled={isLoading || !institutionName.trim()}
+            className="w-full md:w-auto"
+            size="lg"
+          >
+            {isLoading && currentAction === "create_institution" ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Criando...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Criar Instituição e Dados Demo
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Existing Institutions */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-primary" />
+            <CardTitle>Instituições Existentes</CardTitle>
+          </div>
+          <CardDescription>
+            Adicione dados demo ou limpe dados existentes
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingInstitutions ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : institutions.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">
+              Nenhuma instituição cadastrada
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {institutions.map((inst) => (
+                <Card key={inst.id} className="relative">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-base">{inst.name}</CardTitle>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant={inst.type === "public" ? "default" : "secondary"}>
+                            {inst.type === "public" ? "Pública" : "Privada"}
+                          </Badge>
+                          {inst.has_partnership && (
+                            <Badge variant="outline" className="text-xs">
+                              Parceira
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {selectedInstitutionId === inst.id ? (
+                      <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
+                        <p className="text-sm font-medium">Configurar dados:</p>
+                        
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <Label className="text-xs">Profs</Label>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={20}
+                              value={addDataProfCount}
+                              onChange={(e) => setAddDataProfCount(Number(e.target.value))}
+                              className="h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Alunos</Label>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={50}
+                              value={addDataStudentCount}
+                              onChange={(e) => setAddDataStudentCount(Number(e.target.value))}
+                              className="h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Diários</Label>
+                            <Input
+                              type="number"
+                              min={5}
+                              max={30}
+                              value={addDataMoodCount}
+                              onChange={(e) => setAddDataMoodCount(Number(e.target.value))}
+                              className="h-8"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => handleAddDataToInstitution(inst.id)}
+                            disabled={isLoading}
+                          >
+                            {isLoading && currentAction === "seed_all" ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Play className="h-3 w-3 mr-1" />
+                            )}
+                            Criar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setSelectedInstitutionId(null)}
+                          >
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedInstitutionId(inst.id)}
+                          disabled={isLoading}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Adicionar Dados
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleCleanup(inst.id)}
+                          disabled={isLoading}
+                        >
+                          {isLoading && currentAction === "cleanup" ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3 mr-1" />
+                          )}
+                          Limpar
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Results Log */}
       {results.length > 0 && (
@@ -135,6 +413,9 @@ const DemoData = () => {
                 <div className="flex-1">
                   <span className="font-medium">{result.action}:</span>{" "}
                   {result.message}
+                  {result.institutionName && (
+                    <span className="text-muted-foreground"> ({result.institutionName})</span>
+                  )}
                   {result.details && (
                     <pre className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">
                       {JSON.stringify(result.details, null, 2)}
@@ -150,61 +431,12 @@ const DemoData = () => {
         </Card>
       )}
 
-      {/* Action Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {actions.map((item) => {
-          const isCurrentlyLoading = isLoading && currentAction === item.action;
-          
-          return (
-            <Card key={item.action} className={item.variant === "destructive" ? "border-destructive/50" : ""}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {item.icon}
-                    <CardTitle className="text-base">{item.title}</CardTitle>
-                  </div>
-                  {item.count && (
-                    <Badge variant="secondary" className="text-xs">
-                      {item.count}
-                    </Badge>
-                  )}
-                </div>
-                <CardDescription className="text-sm">
-                  {item.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={() => executeAction(item.action)}
-                  disabled={isLoading}
-                  variant={item.variant || "default"}
-                  className="w-full"
-                >
-                  {isCurrentlyLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Executando...
-                    </>
-                  ) : (
-                    <>
-                      {item.icon}
-                      <span className="ml-2">Executar</span>
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
       {/* Warning */}
       <Alert variant="destructive" className="bg-destructive/5">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
           <strong>Atenção:</strong> Dados demo são destinados apenas para testes e demonstrações. 
-          Não use em produção com dados reais. Todos os emails terminam em @unifoa.edu.br para 
-          facilitar identificação e limpeza.
+          Todos os registros criados são identificados com marcadores [DEMO-*] para facilitar limpeza.
         </AlertDescription>
       </Alert>
     </div>
