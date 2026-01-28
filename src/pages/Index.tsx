@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { useTenant } from "@/hooks/useTenant";
 import { buildTenantPath } from "@/utils/tenantHelpers";
+
 interface FeaturedProfessional {
   id: number;
   display_name: string;
@@ -19,17 +20,15 @@ interface FeaturedProfessional {
   preco_consulta: number | null;
   foto_perfil_url: string | null;
 }
+
 const Index = () => {
   const navigate = useNavigate();
-  const {
-    tenant
-  } = useTenant();
+  const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
   const [featuredProfessionals, setFeaturedProfessionals] = useState<FeaturedProfessional[]>([]);
   const [loading, setLoading] = useState(true);
-  const {
-    getConfig
-  } = usePublicConfig(['homepage']);
+  const { getConfig } = usePublicConfig(['homepage']);
+
   useEffect(() => {
     if (tenant) {
       fetchFeaturedProfessionals();
@@ -37,27 +36,31 @@ const Index = () => {
     preloadCriticalImages();
   }, [tenant]);
 
-  // Preload critical hero images for faster loading
   const preloadCriticalImages = () => {
     const heroImages = getConfig('homepage', 'hero_images', []);
-    const imagesToPreload = ["https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png", ...(Array.isArray(heroImages) ? heroImages.slice(0, 2) : [heroImages]).filter(Boolean)];
+    const imagesToPreload = [
+      "https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/homepage/Hero.png",
+      ...(Array.isArray(heroImages) ? heroImages.slice(0, 2) : [heroImages]).filter(Boolean)
+    ];
     imagesToPreload.forEach(src => {
       if (src) {
         const link = document.createElement('link');
         link.rel = 'preload';
         link.as = 'image';
-        link.href = src.startsWith('s3://') ? src.replace(/^s3:\/\/([^\/]+)\/(.+)$/, 'https://$1.s3.us-east-1.amazonaws.com/$2') : src;
+        link.href = src.startsWith('s3://') 
+          ? src.replace(/^s3:\/\/([^\/]+)\/(.+)$/, 'https://$1.s3.us-east-1.amazonaws.com/$2') 
+          : src;
         document.head.appendChild(link);
       }
     });
   };
+
   const fetchFeaturedProfessionals = async () => {
     if (!tenant) return;
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('profissionais').select(`
+      const { data, error } = await supabase
+        .from('profissionais')
+        .select(`
           id, 
           display_name, 
           profissao, 
@@ -66,7 +69,13 @@ const Index = () => {
           preco_consulta, 
           foto_perfil_url,
           professional_tenants!inner(tenant_id, is_featured, featured_order)
-        `).eq('ativo', true).eq('professional_tenants.tenant_id', tenant.id).eq('professional_tenants.is_featured', true).not('preco_consulta', 'is', null).order('display_name').limit(3);
+        `)
+        .eq('ativo', true)
+        .eq('professional_tenants.tenant_id', tenant.id)
+        .eq('professional_tenants.is_featured', true)
+        .not('preco_consulta', 'is', null)
+        .order('display_name')
+        .limit(3);
       if (error) throw error;
       setFeaturedProfessionals(data || []);
     } catch (error) {
@@ -75,11 +84,14 @@ const Index = () => {
       setLoading(false);
     }
   };
+
   const formatSpecialties = (servicos: string | null) => {
     if (!servicos) return [];
-    return servicos.split(',').map(s => s.trim()).filter(s => s.length > 0).slice(0, 3); // Mostrar apenas as 3 primeiras especialidades
+    return servicos.split(',').map(s => s.trim()).filter(s => s.length > 0).slice(0, 3);
   };
-  return <div className="min-h-screen bg-background">
+
+  return (
+    <div className="min-h-screen bg-background">
       <Header />
       
       {/* Hero Section */}
@@ -97,9 +109,9 @@ const Index = () => {
                 <Button variant="default" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
                   Encontrar Profissional
                 </Button>
-              <Button variant="tenant-primary" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
-                Agendar Consulta
-              </Button>
+                <Button variant="tenant-primary" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
+                  Agendar Consulta
+                </Button>
               </div>
             </div>
             <HeroCarousel />
@@ -121,76 +133,68 @@ const Index = () => {
       </section>
 
       {/* University Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-muted/50">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-16 text-gray-900">
+          <h2 className="text-4xl font-bold text-center mb-16 text-foreground">
             Voltada Exclusivamente Para Estudantes Universitários
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Card 1 */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
+            <div className="bg-card rounded-2xl p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-center animate-fade-in">
               <div className="relative w-24 h-24 mx-auto mb-6">
                 <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 36 36">
-                  <path d="M18 2.0845
-                      a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="2" />
-                  <path d="M18 2.0845
-                      a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray="83, 100" />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="hsl(var(--muted))" strokeWidth="2" />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="83, 100" />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-gray-900">83%</span>
+                  <span className="text-2xl font-bold text-foreground">83%</span>
                 </div>
               </div>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 Dos estudantes universitários apresentam dificuldades emocionais em seus percursos acadêmicos.
               </p>
             </div>
 
             {/* Card 2 */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
+            <div className="bg-card rounded-2xl p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-center animate-fade-in" style={{ animationDelay: '0.1s' }}>
               <div className="relative w-24 h-24 mx-auto mb-6">
                 <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 36 36">
-                  <path d="M18 2.0845
-                      a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="2" />
-                  <path d="M18 2.0845
-                      a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" strokeWidth="2" strokeDasharray="53, 100" />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="hsl(var(--muted))" strokeWidth="2" />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" strokeDasharray="53, 100" />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-gray-900">53%</span>
+                  <span className="text-2xl font-bold text-foreground">53%</span>
                 </div>
               </div>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 Dos estudantes universitários já apresentam sintomas de ansiedade e estresse.
               </p>
             </div>
 
             {/* Card 3 */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
+            <div className="bg-card rounded-2xl p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
               <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
                 <div className="relative">
                   <div className="flex items-center justify-center">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-1">
-                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center mr-1">
+                      <div className="w-3 h-3 bg-primary-foreground rounded-full"></div>
                     </div>
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+                      <div className="w-3 h-3 bg-accent-foreground rounded-full"></div>
                     </div>
                   </div>
                   <div className="flex items-center justify-center mt-1">
-                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
+                      <div className="w-3 h-3 bg-secondary-foreground rounded-full"></div>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
                   UM A CADA TRÊS ESTUDANTES:
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed">
                   Tiveram ao menos um problema de saúde emocional nos últimos 12 meses.
                 </p>
               </div>
@@ -199,92 +203,99 @@ const Index = () => {
         </div>
       </section>
 
-    {/* Video Section */}
-    <section className="py-20 bg-hsla(0, 0%, 100%, 1.00) text-gray-800 relative overflow-hidden">
-  {/* Background Pattern: bloco branco com “furos” */}
-  <div className="absolute inset-0">
-    <div className="absolute inset-0 opacity-40" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='60' height='60' fill='%23ffffff'/%3E%3Ccircle cx='30' cy='30' r='1.5' fill='transparent'/%3E%3C/svg%3E")`
-        }} />
-  </div>
-
-  <div className="container mx-auto px-4 relative">
-    <div className="text-center mb-12">
-      <h2 className="text-4xl font-bold mb-4">Conheça Mais Sobre Nosso Trabalho</h2>
-      <p className="text-xl max-w-2xl mx-auto">
-        Descubra como estamos transformando o cuidado da saúde emocional para estudantes universitários
-      </p>
-    </div>
-
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-      {/* Statistics Cards */}
-      <div className="space-y-6">
-        <div className="bg-white shadow-lg p-8 rounded-2xl border border-slate-200 hover:shadow-xl transition">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
-              <span className="text-2xl">👨‍⚕️</span>
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold">30+</h3>
-              <p>Profissionais Cadastrados</p>
-            </div>
-          </div>
-          <p className="text-sm text-slate-600">
-            Profissionais qualificados e especializados no atendimento a estudantes universitários desde 2022
-          </p>
-        </div>
-
-        <div className="bg-white shadow-lg p-8 rounded-2xl border border-slate-200 hover:shadow-xl transition">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
-              <span className="text-2xl">🎓</span>
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold">500+</h3>
-              <p>Estudantes Atendidos</p>
-            </div>
-          </div>
-          <p className="text-sm text-slate-600">
-            Universitários que encontraram apoio e transformaram suas vidas através do nosso cuidado especializado
-          </p>
-        </div>
-
-        <div className="bg-white shadow-lg p-8 rounded-2xl border border-slate-200 hover:shadow-xl transition">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
-              <span className="text-2xl">❤️</span>
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold">96%</h3>
-              <p>Satisfação</p>
-            </div>
-          </div>
-          <p className="text-sm text-slate-600">
-            Taxa de satisfação dos nossos pacientes com o atendimento recebido
-          </p>
-        </div>
-      </div>
-
-      {/* YouTube Video Player */}
-      <div className="relative">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-lg">
-          <div className="aspect-video rounded-xl overflow-hidden">
-            <iframe className="w-full h-full" src="https://www.youtube.com/embed/_5JzohY3G58" title="Vídeo sobre Saúde Emocional e Medicina" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
-          </div>
-          <div className="mt-4 text-center">
-            <p className="font-semibold">
-              Saúde Emocional na Medicina: Uma Perspectiva Profissional
-            </p>
-            <p className="text-sm mt-2 text-slate-600">
-              Entenda a importância do cuidado psicológico na formação e vida dos profissionais de saúde
+      {/* Video Section */}
+      <section className="py-20 bg-background text-foreground relative overflow-hidden">
+        <div className="container mx-auto px-4 relative">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4 text-foreground">Conheça Mais Sobre Nosso Trabalho</h2>
+            <p className="text-xl max-w-2xl mx-auto text-muted-foreground">
+              Descubra como estamos transformando o cuidado da saúde emocional para estudantes universitários
             </p>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-    </section>
 
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Statistics Cards */}
+            <div className="space-y-6">
+              <div className="bg-card shadow-lg p-8 rounded-2xl border border-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-3xl font-bold text-foreground">30+</h3>
+                    <p className="text-muted-foreground">Profissionais Cadastrados</p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Profissionais qualificados e especializados no atendimento a estudantes universitários desde 2022
+                </p>
+              </div>
+
+              <div className="bg-card shadow-lg p-8 rounded-2xl border border-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                      <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-3xl font-bold text-foreground">500+</h3>
+                    <p className="text-muted-foreground">Estudantes Atendidos</p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Universitários que encontraram apoio e transformaram suas vidas através do nosso cuidado especializado
+                </p>
+              </div>
+
+              <div className="bg-card shadow-lg p-8 rounded-2xl border border-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-3xl font-bold text-foreground">96%</h3>
+                    <p className="text-muted-foreground">Satisfação</p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Taxa de satisfação dos nossos pacientes com o atendimento recebido
+                </p>
+              </div>
+            </div>
+
+            {/* YouTube Video Player */}
+            <div className="relative">
+              <div className="bg-card p-4 rounded-2xl border border-border shadow-lg">
+                <div className="aspect-video rounded-xl overflow-hidden">
+                  <iframe 
+                    className="w-full h-full" 
+                    src="https://www.youtube.com/embed/_5JzohY3G58" 
+                    title="Vídeo sobre Saúde Emocional e Medicina" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowFullScreen 
+                  />
+                </div>
+                <div className="mt-4 text-center">
+                  <p className="font-semibold text-foreground">
+                    Saúde Emocional na Medicina: Uma Perspectiva Profissional
+                  </p>
+                  <p className="text-sm mt-2 text-muted-foreground">
+                    Entenda a importância do cuidado psicológico na formação e vida dos profissionais de saúde
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Featured Professionals */}
       <section className="py-20 bg-gradient-to-br from-background to-muted/30">
@@ -298,11 +309,9 @@ const Index = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {loading ?
-          // Loading skeleton
-          Array.from({
-            length: 3
-          }).map((_, index) => <div key={index} className="bg-card p-6 rounded-xl border shadow-sm animate-pulse">
+            {loading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="bg-card p-6 rounded-xl border shadow-sm animate-pulse">
                   <div className="h-6 bg-muted rounded mb-3 w-3/4"></div>
                   <div className="h-4 bg-muted rounded mb-2 w-1/2"></div>
                   <div className="space-y-2">
@@ -314,11 +323,28 @@ const Index = () => {
                     <div className="h-6 bg-muted rounded w-20"></div>
                     <div className="h-6 bg-muted rounded w-18"></div>
                   </div>
-                </div>) : featuredProfessionals.length > 0 ? featuredProfessionals.map(professional => <ProfessionalCard key={professional.id} id={professional.id} name={professional.display_name} title={`${professional.profissao || 'Profissional'} - ${professional.crp_crm || 'CRP/CRM'}`} image={professional.foto_perfil_url} specialties={formatSpecialties(professional.servicos_raw)} consultationPrice={professional.preco_consulta} isCompactView />) : <div className="col-span-full text-center py-12">
+                </div>
+              ))
+            ) : featuredProfessionals.length > 0 ? (
+              featuredProfessionals.map(professional => (
+                <ProfessionalCard
+                  key={professional.id}
+                  id={professional.id}
+                  name={professional.display_name}
+                  title={`${professional.profissao || 'Profissional'} - ${professional.crp_crm || 'CRP/CRM'}`}
+                  image={professional.foto_perfil_url}
+                  specialties={formatSpecialties(professional.servicos_raw)}
+                  consultationPrice={professional.preco_consulta}
+                  isCompactView
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
                 <p className="text-muted-foreground text-lg">
                   Nenhum profissional disponível no momento
                 </p>
-              </div>}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -337,6 +363,8 @@ const Index = () => {
       </section>
 
       <Footer />
-    </div>;
+    </div>
+  );
 };
+
 export default Index;

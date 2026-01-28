@@ -95,7 +95,7 @@ const Footer = () => {
     useful: usefulLinks,
     navigation: navigationLinks
   };
-  return <footer className="bg-gray-800 text-primary-foreground">
+  return <footer className="bg-[hsl(var(--footer-bg))] text-[hsl(var(--footer-text))]">
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Newsletter */}
@@ -213,8 +213,14 @@ const Footer = () => {
 
         {/* Bottom */}
         <div className="border-t border-primary-foreground/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm opacity-60">Copyright © Rede Bem-Estar | Todos os direitos reservados</p>
-          <div className="w-16 h-16 bg-accent rounded-full mt-4 md:mt-0"></div>
+          <p className="text-sm opacity-60">Copyright © {tenant?.name || 'Rede Bem-Estar'} | Todos os direitos reservados</p>
+          {tenant?.logo_url && (
+            <img 
+              src={tenant.logo_url} 
+              alt={tenant?.name || 'Logo'} 
+              className="h-12 w-auto mt-4 md:mt-0 opacity-80" 
+            />
+          )}
         </div>
       </div>
     </footer>;
