@@ -18,6 +18,7 @@ export const TenantBrandingConfig = () => {
   const [selectedTenantId, setSelectedTenantId] = useState<string>('');
   const [branding, setBranding] = useState<TenantBrandingData>({
     logo_url: '',
+    logo_url_dark: '',
     favicon_url: '',
     hero_title: '',
     hero_subtitle: '',
@@ -30,6 +31,7 @@ export const TenantBrandingConfig = () => {
     hero_autoplay_delay: 5000,
   });
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const [uploadingLogoDark, setUploadingLogoDark] = useState(false);
 
   const { toast } = useToast();
 
@@ -189,6 +191,110 @@ export const TenantBrandingConfig = () => {
                   <img 
                     src={branding.logo_url} 
                     alt="Logo preview" 
+                    className="h-16 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Logo para Dark Mode</CardTitle>
+              <CardDescription>
+                Logo alternativo usado quando o tema escuro está ativo (recomendado: versão clara/branca do logo)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="logo_url_dark">URL da Logo (Dark Mode)</Label>
+                <Input
+                  id="logo_url_dark"
+                  value={branding.logo_url_dark}
+                  onChange={e => setBranding(prev => ({ ...prev, logo_url_dark: e.target.value }))}
+                  placeholder="https://example.com/logo-dark.png"
+                />
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <Label>Ou faça upload</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.svg,.webp"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file || !selectedTenantId) return;
+                      
+                      try {
+                        setUploadingLogoDark(true);
+                        
+                        if (file.size > 2 * 1024 * 1024) {
+                          toast({
+                            title: 'Arquivo muito grande',
+                            description: 'O logo deve ter no máximo 2MB',
+                            variant: 'destructive',
+                          });
+                          return;
+                        }
+                        
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = async () => {
+                          const base64 = reader.result as string;
+                          const base64Data = base64.split(',')[1];
+                          
+                          const { data, error } = await supabase.functions.invoke('upload-to-s3', {
+                            body: {
+                              file: base64Data,
+                              filename: `logo-dark-${Date.now()}.${file.type.split('/')[1]}`,
+                              type: file.type,
+                              professionalId: selectedTenantId,
+                            },
+                          });
+                          
+                          if (error) throw error;
+                          
+                          setBranding(prev => ({ ...prev, logo_url_dark: data.url }));
+                          
+                          toast({
+                            title: 'Upload concluído!',
+                            description: 'Logo dark mode enviado com sucesso',
+                          });
+                        };
+                      } catch (error) {
+                        console.error('Erro no upload:', error);
+                        toast({
+                          title: 'Erro no upload',
+                          description: 'Não foi possível enviar o logo',
+                          variant: 'destructive',
+                        });
+                      } finally {
+                        setUploadingLogoDark(false);
+                      }
+                    }}
+                    disabled={uploadingLogoDark}
+                  />
+                  {uploadingLogoDark && (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Máximo 2MB. Formatos: PNG, JPG, SVG, WebP
+                </p>
+              </div>
+              
+              {branding.logo_url_dark && (
+                <div className="border rounded-lg p-4 bg-gray-900">
+                  <p className="text-sm text-gray-400 mb-2">Preview (fundo escuro):</p>
+                  <img 
+                    src={branding.logo_url_dark} 
+                    alt="Logo dark preview" 
                     className="h-16 object-contain"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';

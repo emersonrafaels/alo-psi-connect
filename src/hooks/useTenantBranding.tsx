@@ -5,6 +5,7 @@ import { Tenant } from '@/types/tenant';
 
 export interface TenantBrandingData {
   logo_url: string;
+  logo_url_dark: string;
   favicon_url: string;
   hero_title: string;
   hero_subtitle: string;
@@ -37,6 +38,7 @@ export const useTenantBranding = () => {
       
       return {
         logo_url: tenant.logo_url || '',
+        logo_url_dark: tenant.logo_url_dark || '',
         favicon_url: tenant.favicon_url || '',
         hero_title: tenant.theme_config?.hero_title || 'Sua jornada de bem-estar começa aqui',
         hero_subtitle: tenant.theme_config?.hero_subtitle || 'Conecte-se com profissionais qualificados',
@@ -71,6 +73,7 @@ export const useTenantBranding = () => {
         .from('tenants')
         .update({
           logo_url: branding.logo_url,
+          logo_url_dark: branding.logo_url_dark,
           favicon_url: branding.favicon_url,
           primary_color: branding.primary_color,
           accent_color: branding.accent_color,
