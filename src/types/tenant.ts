@@ -4,6 +4,7 @@ export interface Tenant {
   name: string;
   base_path: string;
   logo_url: string | null;
+  logo_url_dark: string | null;
   admin_email?: string | null;
   header_color?: string;
   primary_color: string;

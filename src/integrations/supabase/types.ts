@@ -2692,6 +2692,7 @@ export type Database = {
           is_active: boolean | null
           logo_size: number | null
           logo_url: string | null
+          logo_url_dark: string | null
           meta_config: Json | null
           meta_keywords: string[] | null
           modules_enabled: Json | null
@@ -2775,6 +2776,7 @@ export type Database = {
           is_active?: boolean | null
           logo_size?: number | null
           logo_url?: string | null
+          logo_url_dark?: string | null
           meta_config?: Json | null
           meta_keywords?: string[] | null
           modules_enabled?: Json | null
@@ -2858,6 +2860,7 @@ export type Database = {
           is_active?: boolean | null
           logo_size?: number | null
           logo_url?: string | null
+          logo_url_dark?: string | null
           meta_config?: Json | null
           meta_keywords?: string[] | null
           modules_enabled?: Json | null

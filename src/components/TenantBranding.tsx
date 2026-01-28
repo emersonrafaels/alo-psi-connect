@@ -3,11 +3,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Link, useLocation } from 'react-router-dom';
 import { buildTenantPath, getTenantSlugFromPath } from '@/utils/tenantHelpers';
 import { useState } from 'react';
+import { useTheme } from 'next-themes';
 
 export const TenantBranding = () => {
   const { tenant, loading } = useTenant();
   const location = useLocation();
   const [imageError, setImageError] = useState(false);
+  const { resolvedTheme } = useTheme();
 
   // Verificar se o tenant no estado é consistente com a URL
   const urlTenantSlug = getTenantSlugFromPath(location.pathname);
@@ -33,11 +35,15 @@ export const TenantBranding = () => {
     return `hsl(${color})`;
   };
 
+  // Use dark logo when in dark mode and it's available
+  const isDarkMode = resolvedTheme === 'dark';
+  const logoUrl = isDarkMode && tenant.logo_url_dark ? tenant.logo_url_dark : tenant.logo_url;
+
   return (
     <Link to={buildTenantPath(tenant.slug, '/')} className="flex items-center space-x-2 max-w-[200px]">
-      {tenant.logo_url && !imageError ? (
+      {logoUrl && !imageError ? (
         <img 
-          src={tenant.logo_url} 
+          src={logoUrl} 
           alt={tenant.name} 
           style={{ 
             height: tenant.logo_size ? `${tenant.logo_size}px` : 'var(--logo-size, 40px)',
@@ -45,7 +51,7 @@ export const TenantBranding = () => {
           }}
           className="object-contain max-w-full"
           onError={(e) => {
-            console.error('[TenantBranding] Failed to load logo:', tenant.logo_url, e);
+            console.error('[TenantBranding] Failed to load logo:', logoUrl, e);
             setImageError(true);
           }}
         />

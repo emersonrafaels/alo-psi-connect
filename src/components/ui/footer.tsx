@@ -7,6 +7,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { buildTenantPath } from "@/utils/tenantHelpers";
 import { useModuleEnabled } from "@/hooks/useModuleEnabled";
 import { useState } from "react";
+import { useTheme } from "next-themes";
 import { Mail, MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, MessageCircle, Heart, MessageCircleIcon } from "lucide-react";
 const Footer = () => {
   const {
@@ -21,7 +22,12 @@ const Footer = () => {
   } = useNewsletter();
   const [email, setEmail] = useState("");
   const [nome, setNome] = useState("");
+  const { resolvedTheme } = useTheme();
   const tenantSlug = tenant?.slug || 'alopsi';
+  
+  // Use dark logo when in dark mode and it's available
+  const isDarkMode = resolvedTheme === 'dark';
+  const footerLogoUrl = isDarkMode && tenant?.logo_url_dark ? tenant.logo_url_dark : tenant?.logo_url;
 
   // Helper function to build footer links with tenant context
   const buildFooterLink = (customUrl: string | null | undefined, defaultPath: string) => {
@@ -214,9 +220,9 @@ const Footer = () => {
         {/* Bottom */}
         <div className="border-t border-primary-foreground/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm opacity-60">Copyright © {tenant?.name || 'Rede Bem-Estar'} | Todos os direitos reservados</p>
-          {tenant?.logo_url && (
+          {footerLogoUrl && (
             <img 
-              src={tenant.logo_url} 
+              src={footerLogoUrl} 
               alt={tenant?.name || 'Logo'} 
               className="h-12 w-auto mt-4 md:mt-0 opacity-80" 
             />
