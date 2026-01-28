@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -44,7 +45,7 @@ const Header = () => {
     const fetchTenants = async () => {
       const { data } = await supabase
         .from('tenants')
-        .select('id, slug, name, logo_url, cross_tenant_navigation_warning_enabled, cross_tenant_navigation_warning_title, cross_tenant_navigation_warning_message')
+        .select('id, slug, name, logo_url, logo_url_dark, cross_tenant_navigation_warning_enabled, cross_tenant_navigation_warning_title, cross_tenant_navigation_warning_message')
         .eq('is_active', true)
       if (data) setAllTenants(data as unknown as Tenant[])
     }
@@ -53,6 +54,10 @@ const Header = () => {
 
   // Find the other tenant for the switcher
   const otherTenant = allTenants.find(t => t.slug !== tenantSlug)
+  
+  // Theme-aware logo selection for switcher
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === 'dark'
 
   // Fetch target tenant config when needed
   const handleTenantNavigation = async (targetSlug: string, targetPath: string) => {
@@ -129,19 +134,24 @@ const Header = () => {
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center space-x-4 flex-shrink-0">
             {/* Logo Secundário (Outro Tenant) - Dinâmico */}
-            {otherTenant && (
-              <button 
-                onClick={() => handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'alopsi' ? '/' : `/${otherTenant.slug}`)}
-                className="flex items-center bg-background hover:bg-muted rounded-lg px-3 py-2 transition-colors cursor-pointer shadow-md border border-border"
-                title={`Ir para ${otherTenant.name}`}
-              >
-                <img 
-                  src={otherTenant.logo_url || '/placeholder.svg'}
-                  alt={otherTenant.name}
-                  className="h-8 w-auto object-contain"
-                />
-              </button>
-            )}
+            {otherTenant && (() => {
+              const switcherLogoUrl = isDarkMode && otherTenant.logo_url_dark 
+                ? otherTenant.logo_url_dark 
+                : otherTenant.logo_url;
+              return (
+                <button 
+                  onClick={() => handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'alopsi' ? '/' : `/${otherTenant.slug}`)}
+                  className="flex items-center bg-background hover:bg-muted rounded-lg px-3 py-2 transition-colors cursor-pointer shadow-md border border-border"
+                  title={`Ir para ${otherTenant.name}`}
+                >
+                  <img 
+                    src={switcherLogoUrl || '/placeholder.svg'}
+                    alt={otherTenant.name}
+                    className="h-8 w-auto object-contain"
+                  />
+                </button>
+              );
+            })()}
             
             {/* Separador Visual */}
             <div className="h-8 w-px bg-border opacity-30" />
