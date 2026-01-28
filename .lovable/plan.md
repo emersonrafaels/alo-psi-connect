@@ -1,144 +1,168 @@
 
-## Plano: Aplicar Elementos Decorativos e UX do Brand Rede Bem Estar
 
-### Resumo
+## Plano: Melhorias de UX/UI para Rede Bem Estar
 
-Baseado no Brand Guide já analisado, vamos implementar os elementos visuais decorativos e melhorias de UX específicas para o tenant Rede Bem Estar (slug: `alopsi`).
+### Status Atual do Brand
 
----
-
-### Elementos Já Implementados
-
-| Elemento | Status |
-|----------|--------|
-| Logo e Favicon | ✅ Atualizado via S3 |
-| Paleta de cores (Roxo, Rosa, Ciano) | ✅ Aplicado no banco |
-| Cores do Header, Botões, Footer | ✅ Configurado |
+| Implementado | Pendente |
+|--------------|----------|
+| ✅ Logo e Favicon | ⏳ Patterns decorativos como backgrounds |
+| ✅ Paleta de cores (Roxo, Rosa, Ciano) | ⏳ Imagens do Hero alinhadas ao brand |
+| ✅ Tipografia Poppins para headings | ⏳ Cards mais arredondados |
+| ✅ Textos/slogans do brand | ⏳ Animações de entrada |
 
 ---
 
-### Elementos a Implementar
+### Melhorias Propostas por Prioridade
 
-#### 1. Tipografia - Fonte para Títulos
+#### 1. Homepage (Index.tsx) - Alta Prioridade
 
-O brand usa **Carbona** para headings. Como não está disponível gratuitamente, usaremos **Poppins** (Google Fonts) como alternativa similar:
-- Geométrica, moderna e arredondada
-- Boa legibilidade e personalidade semelhante
+| Problema | Solução |
+|----------|---------|
+| Hero Section sem pattern decorativo | Adicionar background pattern sutil usando imagens do S3 |
+| Cores hardcoded na seção "University" (#3b82f6, #10b981) | Usar cores do tenant (roxo, rosa, ciano) |
+| Seção de vídeo com cores genéricas (teal-100) | Substituir por cores do brand (roxo/rosa) |
+| Cards de estatísticas com emojis | Usar ícones Lucide mais profissionais |
+| CTA Section básica | Adicionar pattern decorativo e melhorar visual |
+| Botões duplicados no Hero ("Encontrar Profissional" e "Agendar Consulta" fazem a mesma coisa) | Diferenciar CTAs |
 
-**Implementação:**
-- Atualizar o campo `font_family_headings` no banco para `'Poppins'`
-- Carregar a fonte via Google Fonts no `index.html`
-- O sistema já aplica via CSS variable `--font-headings`
+#### 2. Footer (footer.tsx) - Média Prioridade
+
+| Problema | Solução |
+|----------|---------|
+| Background hardcoded `bg-gray-800` | Usar `hsl(var(--footer-bg))` dinâmico |
+| Círculo decorativo genérico no rodapé | Substituir por logo ou pattern do brand |
+| Copyright "Rede Bem-Estar" hardcoded | Usar nome dinâmico do tenant |
+
+#### 3. Página de Contato (Contact.tsx) - Média Prioridade
+
+| Problema | Solução |
+|----------|---------|
+| Informações de contato hardcoded (endereço, CNPJ) | Usar dados do tenant configurados no banco |
+| Hero Section sem visual diferenciado | Adicionar gradiente com cores do brand |
+| Seção sem ícones coloridos | Usar accent colors nos ícones |
+
+#### 4. Search Section - Baixa Prioridade
+
+| Problema | Solução |
+|----------|---------|
+| Emojis 🔵 nos labels | Usar ícones Lucide ou remover |
+| Visual genérico | Adicionar subtle pattern de background |
+
+#### 5. Cards de Profissionais - Baixa Prioridade
+
+| Problema | Solução |
+|----------|---------|
+| Gradientes genéricos | Usar cores do tenant |
+| Bordas não arredondadas o suficiente | Aumentar border-radius para 2xl |
+| Indicador "online" genérico verde | Manter consistência com brand |
 
 ---
 
-#### 2. Patterns Decorativos como Backgrounds
+### Detalhes Técnicos
 
-As imagens decorativas do brand podem ser usadas como backgrounds em seções específicas. URL base:
+#### A. Corrigir Cores Hardcoded na Homepage
+
+```tsx
+// ANTES (Index.tsx - University Section)
+stroke="#3b82f6" // Azul hardcoded
+stroke="#10b981" // Verde hardcoded
+className="bg-blue-500" // Azul hardcoded
+
+// DEPOIS - Usar classes do tema
+stroke="hsl(var(--primary))" // Roxo do tenant
+stroke="hsl(var(--accent))"  // Rosa do tenant
+className="bg-primary"
 ```
-https://alopsi-website.s3.us-east-1.amazonaws.com/rede_bem_estar/imagens/brand/
+
+#### B. Footer Dinâmico
+
+```tsx
+// ANTES
+<footer className="bg-gray-800 text-primary-foreground">
+
+// DEPOIS
+<footer style={{ 
+  backgroundColor: 'hsl(var(--footer-bg))',
+  color: 'hsl(var(--footer-text))'
+}}>
 ```
 
-**Seções para aplicar patterns:**
-- Hero Section: Pattern sutil como overlay
-- Seção CTA: Pattern de destaque
-- Footer: Pattern decorativo
+#### C. Componente de Pattern Decorativo
 
-**Abordagem técnica:**
-- Adicionar configuração em `theme_config` para URLs dos patterns
-- Criar componente `BrandPattern` reutilizável
-- Aplicar condicionalmente baseado no tenant
+Criar novo componente reutilizável:
 
----
-
-#### 3. Textos e Slogans do Brand
-
-Atualizar os textos do Hero e CTAs com os slogans oficiais:
-
-| Campo | Texto Atual | Texto do Brand |
-|-------|-------------|----------------|
-| `hero_title` | "Atendimento especializado..." | "Acolhimento muda trajetórias" |
-| `hero_subtitle` | "Encontre profissionais..." | "Quando alguém escuta, tudo muda. Cuidar da mente também faz parte da jornada." |
-| `cta_primary_text` | "Agendar Consulta" | "Encontrar Apoio" |
-
----
-
-#### 4. Imagens do Hero e About
-
-Atualizar as imagens do carousel com fotos no estilo do brand:
-- Usar imagens do S3 path: `rede_bem_estar/imagens/`
-- Cores e estilo alinhados com a paleta rosa/roxo/ciano
-
----
-
-### Alterações Técnicas
-
-#### Database (Tenant alopsi)
-
-```sql
-UPDATE tenants 
-SET 
-  -- Tipografia
-  font_family_headings = 'Poppins',
+```tsx
+// components/BrandPattern.tsx
+const BrandPattern = ({ variant = 'subtle' }) => {
+  const { tenant } = useTenant();
+  const patternUrl = tenant?.theme_config?.brand_patterns?.hero;
   
-  -- Textos do Brand
-  hero_title = 'Acolhimento muda trajetórias',
-  hero_subtitle = 'Quando alguém escuta, tudo muda. Cuidar da mente também faz parte da jornada.',
-  cta_primary_text = 'Encontrar Apoio',
+  if (!patternUrl) return null;
   
-  -- Patterns decorativos no theme_config
-  theme_config = jsonb_set(
-    theme_config,
-    '{brand_patterns}',
-    '{"hero": "URL_PATTERN_HERO", "cta": "URL_PATTERN_CTA"}'
-  )
-WHERE slug = 'alopsi';
+  return (
+    <div 
+      className="absolute inset-0 opacity-10 pointer-events-none"
+      style={{ backgroundImage: `url(${patternUrl})` }}
+    />
+  );
+};
 ```
-
-#### Código
-
-1. **index.html**: Adicionar Google Font Poppins
-2. **TenantContext.tsx**: Já aplica `--font-headings` dinamicamente
-3. **index.css**: Usar `var(--font-headings)` nos elementos h1-h6
-4. **Index.tsx**: Aplicar pattern decorativo condicionalmente no Hero
-5. **Componente BrandPattern**: Novo componente para patterns de background
 
 ---
 
-### Estrutura das Imagens no S3
+### Animações e Microinterações
 
-Preciso confirmar quais arquivos estão disponíveis em:
-```
-s3://alopsi-website/rede_bem_estar/imagens/brand/
-```
-
-Possíveis arquivos (baseado no PDF):
-- Pattern geométrico (linhas orgânicas rosa/ciano)
-- Elementos decorativos para cards
-- Backgrounds para seções
-
----
-
-### Impacto
-
-| Tenant | Afetado |
-|--------|---------|
-| **Rede Bem Estar** (alopsi) | ✅ Sim - Tipografia, textos e patterns |
-| **MEDCOS** (medcos) | ❌ Não - Mantém configuração atual |
+| Elemento | Animação Proposta |
+|----------|-------------------|
+| Cards de profissionais | `animate-fade-in` ao entrar na viewport |
+| Seções da homepage | Scroll reveal suave |
+| Botões CTA | `hover:scale-105` com transição |
+| Cards de estatísticas | Hover lift `hover:-translate-y-1` |
+| Hero text | Fade in sequencial com delay |
 
 ---
 
 ### Ordem de Implementação
 
-1. **Tipografia**: Adicionar Poppins e aplicar nos headings
-2. **Textos**: Atualizar hero_title, hero_subtitle e CTAs
-3. **Patterns**: Implementar backgrounds decorativos nas seções
-4. **Refinamentos**: Ajustar espaçamentos e animações
+1. **Footer dinâmico** - Corrigir uso de cores do tenant
+2. **Homepage - Cores hardcoded** - Substituir azul/verde por roxo/rosa/ciano
+3. **Homepage - Ícones** - Substituir emojis por Lucide icons
+4. **Contato - Dados dinâmicos** - Usar dados do tenant
+5. **Pattern decorativo** - Implementar backgrounds (requer imagens do S3)
+6. **Animações** - Adicionar microinterações
 
 ---
 
-### Próximo Passo
+### Impacto nos Tenants
 
-Antes de implementar, preciso saber quais arquivos de imagem estão disponíveis no S3 para os patterns. Você pode me informar os nomes dos arquivos em `s3://alopsi-website/rede_bem_estar/imagens/brand/`?
+| Tenant | Afetado |
+|--------|---------|
+| **Rede Bem Estar** (alopsi) | ✅ Melhorias visuais significativas |
+| **MEDCOS** (medcos) | ✅ Beneficia das melhorias genéricas (mantém cores próprias) |
 
-Ou posso começar com a tipografia e textos enquanto você verifica as imagens.
+---
+
+### Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/Index.tsx` | Cores dinâmicas, ícones, animações |
+| `src/components/ui/footer.tsx` | Cores dinâmicas, copyright dinâmico |
+| `src/pages/Contact.tsx` | Dados do tenant, visual |
+| `src/components/search-section.tsx` | Remover emojis, visual |
+| `src/components/professional-card.tsx` | Border-radius, cores |
+| `src/components/BrandPattern.tsx` | **Novo componente** |
+
+---
+
+### Pergunta Pendente
+
+Para implementar os patterns decorativos, preciso saber os nomes dos arquivos de imagem disponíveis em:
+
+```
+s3://alopsi-website/rede_bem_estar/imagens/brand/
+```
+
+Posso começar com as correções de cores e animações enquanto você verifica os nomes das imagens.
+
