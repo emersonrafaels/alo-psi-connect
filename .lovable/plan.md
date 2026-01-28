@@ -1,58 +1,103 @@
 
+## Plano: Tornar Logo do Switcher Dinâmico e Configurável
 
-## Plano: Corrigir Bug de Data Inválida no Carregamento de Encontros
-
-### Problema Identificado
-
-A página de Encontros (`/medcos/encontros`) exibe erro "Erro ao carregar encontros" porque a query no hook `useGroupSessions` gera uma data inválida.
-
-**Erro exato:** `date/time field value out of range: "2026-04-31"`
-
-**Causa:** O código assume que todos os meses têm 31 dias:
-```typescript
-const endDate = `${year}-${month}-31`;  // Falha para abril (30 dias)
-```
+### Problema
+O botão de alternância entre tenants no header (ex: botão "MEDCOS" quando você está no Rede Bem Estar) usa URLs de logos **hardcoded** em vez de buscar do banco de dados. Isso significa que:
+1. Alterações feitas no painel de branding não afetam esse botão
+2. O logo "Alô, Psi!" ainda aparece em vez de "Rede Bem Estar"
 
 ### Solução
-
-Corrigir o cálculo da data final do mês para usar o último dia real do mês, usando a biblioteca `date-fns` que já está instalada no projeto.
+Modificar o header para buscar dinamicamente o logo do tenant alternativo do banco de dados.
 
 ---
 
 ### Alterações Técnicas
 
-#### Arquivo: `src/hooks/useGroupSessions.tsx`
+#### Arquivo: `src/components/ui/header.tsx`
 
-**Mudança:** Importar funções `endOfMonth` e `format` do `date-fns` e calcular corretamente a data final do mês.
+**Mudanças:**
 
-**Antes:**
-```typescript
-if (filters?.month) {
-  const [year, month] = filters.month.split('-');
-  const startDate = `${year}-${month}-01`;
-  const endDate = `${year}-${month}-31`;  // BUG
-  query = query.gte('session_date', startDate).lte('session_date', endDate);
-}
+1. **Adicionar estado para tenants**: Buscar todos os tenants ativos ao montar o componente
+2. **Substituir URLs hardcoded**: Usar o `logo_url` do tenant alternativo dinamicamente
+
+**Código atual (linhas 116-140):**
+```tsx
+{tenantSlug === 'alopsi' ? (
+  <button onClick={() => handleTenantNavigation('medcos', '/medcos')}>
+    <img 
+      src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/logo/logo_medcos.png" // HARDCODED
+      alt="MEDCOS"
+    />
+  </button>
+) : (
+  <button onClick={() => handleTenantNavigation('alopsi', '/')}>
+    <img 
+      src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/logo/Logo.png" // HARDCODED - logo antigo!
+      alt="Alô, Psi!"
+    />
+  </button>
+)}
 ```
 
-**Depois:**
-```typescript
-import { endOfMonth, format, parse } from 'date-fns';
+**Código proposto:**
+```tsx
+// No início do componente, adicionar:
+const [allTenants, setAllTenants] = useState<Tenant[]>([]);
 
-// Dentro da queryFn:
-if (filters?.month) {
-  const monthDate = parse(filters.month, 'yyyy-MM', new Date());
-  const startDate = format(monthDate, 'yyyy-MM-01');
-  const lastDay = endOfMonth(monthDate);
-  const endDate = format(lastDay, 'yyyy-MM-dd');
-  query = query.gte('session_date', startDate).lte('session_date', endDate);
-}
+useEffect(() => {
+  const fetchTenants = async () => {
+    const { data } = await supabase
+      .from('tenants')
+      .select('id, slug, name, logo_url')
+      .eq('is_active', true);
+    if (data) setAllTenants(data as Tenant[]);
+  };
+  fetchTenants();
+}, []);
+
+// Na renderização do switcher:
+const otherTenant = allTenants.find(t => t.slug !== tenantSlug);
+
+{otherTenant && (
+  <button onClick={() => handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'medcos' ? '/medcos' : '/')}>
+    <img 
+      src={otherTenant.logo_url || '/placeholder-logo.png'}
+      alt={otherTenant.name}
+    />
+  </button>
+)}
 ```
 
-Esta correção:
-- Usa `endOfMonth()` para obter o último dia correto do mês (28, 29, 30 ou 31)
-- Funciona para todos os meses incluindo fevereiro em anos bissextos
-- Mantém compatibilidade com o resto da aplicação
+---
+
+### Benefícios
+
+1. **Dinamismo**: Alterações no painel de branding refletem automaticamente no switcher
+2. **Escalabilidade**: Se mais tenants forem adicionados, o sistema se adapta
+3. **Consistência**: Usa a mesma fonte de dados para todos os logos
+4. **Correção imediata**: O logo "Rede Bem Estar" aparecerá corretamente no botão
+
+### Fluxo Visual
+
+```text
+┌───────────────────────────────────────────────────┐
+│                    HEADER                         │
+├───────────────────────────────────────────────────┤
+│  [Logo Rede Bem Estar]  ...menu...  [MEDCOS btn]  │
+│                                          ↑        │
+│                                     Logo vem do   │
+│                                     banco (logo_url│
+│                                     do medcos)    │
+└───────────────────────────────────────────────────┘
+
+Banco de dados:
+┌─────────┬─────────────────────────────────────────┐
+│ slug    │ logo_url                                │
+├─────────┼─────────────────────────────────────────┤
+│ alopsi  │ .../logo_redebemestar_2.png             │
+│ medcos  │ .../logo_medcos.png                     │
+└─────────┴─────────────────────────────────────────┘
+```
 
 ---
 
@@ -60,10 +105,8 @@ Esta correção:
 
 | Arquivo | Mudanças |
 |---------|----------|
-| `src/hooks/useGroupSessions.tsx` | Adicionar import, corrigir cálculo de data |
+| `src/components/ui/header.tsx` | Adicionar fetch de tenants, substituir URLs hardcoded por dados dinâmicos |
 
 ### Estimativa
-
 - 1 arquivo
-- ~5 linhas de código
-
+- ~25 linhas de código alteradas
