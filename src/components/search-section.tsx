@@ -261,8 +261,9 @@ const SearchSection = () => {
           <div className="bg-card rounded-lg shadow-lg p-6 mt-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium mb-2 text-card-foreground">
-                  🔵 Profissão
+                <label className="block text-sm font-medium mb-2 text-card-foreground flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary"></span>
+                  Profissão
                 </label>
                 <MultiSelectCombobox
                   options={profissoes}
@@ -273,8 +274,9 @@ const SearchSection = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2 text-card-foreground">
-                  🔵 Especialidades
+                <label className="block text-sm font-medium mb-2 text-card-foreground flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-accent"></span>
+                  Especialidades
                 </label>
                 <MultiSelectCombobox
                   options={especialidades}
@@ -285,8 +287,9 @@ const SearchSection = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2 text-card-foreground">
-                  🔵 Nome do Profissional
+                <label className="block text-sm font-medium mb-2 text-card-foreground flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-secondary"></span>
+                  Nome do Profissional
                 </label>
                 <div className="relative">
                   <Input 

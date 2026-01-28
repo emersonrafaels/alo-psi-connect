@@ -189,9 +189,8 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold mb-2">Endereço</h3>
                         <p className="text-muted-foreground">
-                          R. Joaquim Távora, 1240 - Vila Mariana<br />
-                          São Paulo - SP, 04015-013<br />
-                          CNPJ: 12.345.678/0001-90, Brasil
+                          {tenant?.contact_address || 'R. Joaquim Távora, 1240 - Vila Mariana, São Paulo - SP, 04015-013'}
+                          {tenant?.cnpj && <><br />CNPJ: {tenant.cnpj}</>}
                         </p>
                       </div>
                     </div>
@@ -206,7 +205,7 @@ const Contact = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold mb-2">Telefone</h3>
-                        <p className="text-muted-foreground">(11) 97587-2447</p>
+                        <p className="text-muted-foreground">{tenant?.contact_phone || '(11) 97587-2447'}</p>
                       </div>
                     </div>
                   </CardContent>
