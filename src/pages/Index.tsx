@@ -74,10 +74,15 @@ const Index = () => {
         .eq('professional_tenants.tenant_id', tenant.id)
         .eq('professional_tenants.is_featured', true)
         .not('preco_consulta', 'is', null)
-        .order('display_name')
         .limit(3);
       if (error) throw error;
-      setFeaturedProfessionals(data || []);
+      // Sort by featured_order after fetching
+      const sortedData = (data || []).sort((a, b) => {
+        const orderA = a.professional_tenants?.[0]?.featured_order || 999;
+        const orderB = b.professional_tenants?.[0]?.featured_order || 999;
+        return orderA - orderB;
+      });
+      setFeaturedProfessionals(sortedData);
     } catch (error) {
       console.error('Erro ao buscar profissionais em destaque:', error);
     } finally {
