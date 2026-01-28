@@ -25,6 +25,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showConstructionModal, setShowConstructionModal] = useState(false)
   const [targetTenant, setTargetTenant] = useState<Tenant | null>(null)
+  const [allTenants, setAllTenants] = useState<Tenant[]>([])
   const location = useLocation()
   const navigate = useNavigate()
   const { user, loading, signOut } = useAuth()
@@ -37,6 +38,21 @@ const Header = () => {
 
   // Usar o slug da URL para navegação (sempre consistente com a rota atual)
   const tenantSlug = getTenantSlugFromPath(location.pathname)
+
+  // Fetch all active tenants for the switcher
+  useEffect(() => {
+    const fetchTenants = async () => {
+      const { data } = await supabase
+        .from('tenants')
+        .select('id, slug, name, logo_url, cross_tenant_navigation_warning_enabled, cross_tenant_navigation_warning_title, cross_tenant_navigation_warning_message')
+        .eq('is_active', true)
+      if (data) setAllTenants(data as unknown as Tenant[])
+    }
+    fetchTenants()
+  }, [])
+
+  // Find the other tenant for the switcher
+  const otherTenant = allTenants.find(t => t.slug !== tenantSlug)
 
   // Fetch target tenant config when needed
   const handleTenantNavigation = async (targetSlug: string, targetPath: string) => {
@@ -112,28 +128,16 @@ const Header = () => {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center space-x-4 flex-shrink-0">
-            {/* Logo Secundário (Outro Tenant) */}
-            {tenantSlug === 'alopsi' ? (
+            {/* Logo Secundário (Outro Tenant) - Dinâmico */}
+            {otherTenant && (
               <button 
-                onClick={() => handleTenantNavigation('medcos', '/medcos')}
-                className="flex items-center bg-[#ffffff] hover:bg-[#f1fa89] text-white rounded-lg px-3 py-2 transition-colors cursor-pointer shadow-md"
-                title="Ir para MEDCOS"
+                onClick={() => handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'alopsi' ? '/' : `/${otherTenant.slug}`)}
+                className="flex items-center bg-background hover:bg-muted rounded-lg px-3 py-2 transition-colors cursor-pointer shadow-md border border-border"
+                title={`Ir para ${otherTenant.name}`}
               >
                 <img 
-                  src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/logo/logo_medcos.png"
-                  alt="MEDCOS"
-                  className="h-8 w-auto object-contain"
-                />
-              </button>
-            ) : (
-              <button 
-                onClick={() => handleTenantNavigation('alopsi', '/')}
-                className="flex items-center bg-[#5e95e8] hover:bg-[#4fb828] text-white rounded-lg px-3 py-2 transition-colors cursor-pointer shadow-md"
-                title="Ir para Alô, Psi!"
-              >
-                <img 
-                  src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/logo/Logo.png"
-                  alt="Alô, Psi!" 
+                  src={otherTenant.logo_url || '/placeholder.svg'}
+                  alt={otherTenant.name}
                   className="h-8 w-auto object-contain"
                 />
               </button>
