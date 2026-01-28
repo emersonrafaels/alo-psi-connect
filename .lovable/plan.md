@@ -1,16 +1,15 @@
 
+## Plano: Corrigir Configuração de Profissionais em Destaque Multi-Tenant
 
-## Plano: Sincronizar Configuração de Profissionais em Destaque
+### Problemas Identificados
 
-### Problema Identificado
-Existe uma inconsistência de arquitetura onde dois sistemas diferentes controlam os profissionais em destaque:
-- **Painel Admin** atualiza `profissionais.em_destaque` e `profissionais.ordem_destaque`
-- **Homepage** lê de `professional_tenants.is_featured` e `professional_tenants.featured_order`
+1. **Hook errado no admin**: O componente `FeaturedProfessionalsConfig` usa `useTenant()` (detecta tenant pela URL), mas rotas `/admin/*` não têm prefixo de tenant. Deveria usar `useAdminTenant()` que lê o tenant do seletor do painel admin.
 
-Resultado: As alterações feitas no admin não refletem na homepage.
+2. **Lista não filtra por tenant**: A query busca todos profissionais ativos da tabela `profissionais` sem filtrar por tenant. Deveria buscar da `professional_tenants` para mostrar apenas profissionais do tenant selecionado.
 
-### Solução Proposta
-Modificar o componente `FeaturedProfessionalsConfig.tsx` para atualizar **ambas as tabelas** simultaneamente, garantindo que as alterações do admin reflitam corretamente na homepage por tenant.
+3. **Preview mostra dados globais**: O preview usa `em_destaque` da tabela `profissionais` (global), não `is_featured` da `professional_tenants` (por tenant).
+
+4. **Homepage sem ordenação correta**: A query da homepage não ordena pelo `featured_order`, então mesmo que os dados estejam corretos, podem aparecer na ordem errada.
 
 ---
 
@@ -21,44 +20,86 @@ Modificar o componente `FeaturedProfessionalsConfig.tsx` para atualizar **ambas 
 **Arquivo:** `src/components/admin/config/FeaturedProfessionalsConfig.tsx`
 
 **Mudanças:**
-- Adicionar contexto de tenant para saber qual tenant está sendo gerenciado
-- Na função `updateProfessionalFeatured`:
-  - Manter a atualização em `profissionais` (para compatibilidade)
-  - **Adicionar** atualização em `professional_tenants` com `is_featured` e `featured_order`
-- Na função `updateProfessionalOrder`:
-  - Atualizar também `professional_tenants.featured_order`
-- Atualizar a query inicial para buscar dados de `professional_tenants` junto com `profissionais`
 
-**Código exemplo da lógica:**
+- **Trocar hook**: Substituir `useTenant()` por `useAdminTenant()` para ler o tenant selecionado no admin
+- **Alterar query**: Buscar profissionais com join na `professional_tenants` filtrado pelo tenant selecionado
+- **Atualizar interface**: Usar campos `is_featured` e `featured_order` do `professional_tenants` no estado local
+- **Sincronizar updates**: Manter atualização em ambas tabelas (legacy + tenant-específico)
+
 ```typescript
-// Atualizar profissionais (manter compatibilidade)
-await supabase
-  .from('profissionais')
-  .update({ em_destaque: featured, ordem_destaque: finalOrder })
-  .eq('id', professionalId);
+// ANTES
+import { useTenant } from '@/hooks/useTenant';
+const { tenant } = useTenant();
 
-// Atualizar professional_tenants (para a homepage)
-await supabase
-  .from('professional_tenants')
-  .update({ is_featured: featured, featured_order: finalOrder })
-  .eq('professional_id', professionalId)
-  .eq('tenant_id', currentTenantId);
+// DEPOIS  
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
+const { tenantFilter, tenants } = useAdminTenant();
 ```
 
-#### 2. Correção de Dados Atuais (Opcional)
+**Nova query para buscar profissionais:**
+```typescript
+// Buscar profissionais com dados do tenant selecionado
+const { data, error } = await supabase
+  .from('profissionais')
+  .select(`
+    id, display_name, profissao, foto_perfil_url, ativo, preco_consulta,
+    em_destaque, ordem_destaque,
+    professional_tenants!inner(is_featured, featured_order, tenant_id)
+  `)
+  .eq('ativo', true)
+  .eq('professional_tenants.tenant_id', tenantFilter);
+```
 
-Após a correção, sincronizar os dados existentes:
-- Remover `is_featured = true` dos profissionais que não deveriam estar em destaque
-- Configurar corretamente os 3 profissionais desejados via admin
+#### 2. Atualizar query da Homepage (`Index.tsx`)
+
+**Arquivo:** `src/pages/Index.tsx`
+
+**Mudança:** Adicionar ordenação pelo `featured_order` na query
+
+```typescript
+// ANTES
+.order('display_name')
+
+// DEPOIS
+.order('professional_tenants.featured_order')
+```
 
 ---
 
-### Benefícios
-- Configurações do admin refletirão imediatamente na homepage
-- Cada tenant pode ter seus próprios profissionais em destaque
-- Mantém compatibilidade com o sistema legado (`em_destaque` na tabela profissionais)
+### Fluxo Corrigido
+
+```text
+┌─────────────────────────────────────────────────────┐
+│           Admin Panel (/admin/configuracoes)        │
+├─────────────────────────────────────────────────────┤
+│  1. Admin seleciona tenant via AdminTenantSelector  │
+│  2. FeaturedProfessionalsConfig lê useAdminTenant() │
+│  3. Query filtra por professional_tenants.tenant_id │
+│  4. Lista mostra profissionais daquele tenant       │
+│  5. Toggle atualiza is_featured + em_destaque       │
+│  6. Order atualiza featured_order + ordem_destaque  │
+└─────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────┐
+│              Homepage (/ ou /medcos)                │
+├─────────────────────────────────────────────────────┤
+│  1. useTenant() detecta tenant pela URL             │
+│  2. Query busca de professional_tenants por tenant  │
+│  3. Ordena por featured_order                       │
+│  4. Exibe os 3 profissionais em ordem correta       │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+### Arquivos a Modificar
+
+| Arquivo | Mudanças |
+|---------|----------|
+| `src/components/admin/config/FeaturedProfessionalsConfig.tsx` | Trocar hook, alterar query, atualizar lógica de estado |
+| `src/pages/Index.tsx` | Adicionar ordenação por `featured_order` |
 
 ### Estimativa
-- 1 arquivo a modificar
-- ~40 linhas de código alteradas
 
+- 2 arquivos a modificar
+- ~60 linhas de código alteradas
