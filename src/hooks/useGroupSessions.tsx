@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTenant } from './useTenant';
+import { endOfMonth, format, parse } from 'date-fns';
 
 export interface GroupSession {
   id: string;
@@ -79,9 +80,9 @@ export const useGroupSessions = (filters?: {
       }
 
       if (filters?.month) {
-        const [year, month] = filters.month.split('-');
-        const startDate = `${year}-${month}-01`;
-        const endDate = `${year}-${month}-31`;
+        const monthDate = parse(filters.month, 'yyyy-MM', new Date());
+        const startDate = format(monthDate, 'yyyy-MM-dd');
+        const endDate = format(endOfMonth(monthDate), 'yyyy-MM-dd');
         query = query.gte('session_date', startDate).lte('session_date', endDate);
       }
 
