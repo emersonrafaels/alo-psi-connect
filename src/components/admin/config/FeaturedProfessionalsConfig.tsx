@@ -8,8 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { useTenant } from '@/hooks/useTenant';
-import { Users, Star, Eye, AlertCircle, CheckCircle } from 'lucide-react';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
+import { Users, Star, Eye, AlertCircle, CheckCircle, Building2 } from 'lucide-react';
 
 interface Professional {
   id: number;
@@ -17,8 +17,8 @@ interface Professional {
   profissao: string;
   foto_perfil_url: string | null;
   ativo: boolean;
-  em_destaque: boolean | null;
-  ordem_destaque: number | null;
+  is_featured: boolean;
+  featured_order: number | null;
   preco_consulta: number | null;
 }
 
@@ -28,21 +28,53 @@ export const FeaturedProfessionalsConfig = () => {
   const [updating, setUpdating] = useState<number | null>(null);
   const { toast } = useToast();
   const { hasRole } = useAdminAuth();
-  const { tenant } = useTenant();
+  const { tenantFilter, tenants, selectedTenantId } = useAdminTenant();
 
   // Check permissions
   const hasPermission = hasRole('admin') || hasRole('super_admin');
 
+  // Get current tenant name for display
+  const currentTenantName = tenants.find(t => t.id === tenantFilter)?.name || 'Todos';
+
   const fetchProfessionals = async () => {
+    if (!tenantFilter) {
+      setProfessionals([]);
+      setLoading(false);
+      return;
+    }
+
     try {
+      // Query professionals with tenant-specific featured data
       const { data, error } = await supabase
         .from('profissionais')
-        .select('id, display_name, profissao, foto_perfil_url, ativo, em_destaque, ordem_destaque, preco_consulta')
+        .select(`
+          id, 
+          display_name, 
+          profissao, 
+          foto_perfil_url, 
+          ativo, 
+          preco_consulta,
+          professional_tenants!inner(is_featured, featured_order, tenant_id)
+        `)
         .eq('ativo', true)
+        .eq('professional_tenants.tenant_id', tenantFilter)
         .order('display_name');
 
       if (error) throw error;
-      setProfessionals(data || []);
+
+      // Map data to local interface using tenant-specific values
+      const mappedData: Professional[] = (data || []).map(p => ({
+        id: p.id,
+        display_name: p.display_name,
+        profissao: p.profissao,
+        foto_perfil_url: p.foto_perfil_url,
+        ativo: p.ativo,
+        preco_consulta: p.preco_consulta,
+        is_featured: p.professional_tenants?.[0]?.is_featured || false,
+        featured_order: p.professional_tenants?.[0]?.featured_order || null,
+      }));
+
+      setProfessionals(mappedData);
     } catch (error) {
       console.error('Erro ao buscar profissionais:', error);
       toast({
@@ -57,15 +89,25 @@ export const FeaturedProfessionalsConfig = () => {
 
   useEffect(() => {
     if (hasPermission) {
+      setLoading(true);
       fetchProfessionals();
     }
-  }, [hasPermission]);
+  }, [hasPermission, tenantFilter]);
 
   const updateProfessionalFeatured = async (professionalId: number, featured: boolean, order?: number) => {
+    if (!tenantFilter) {
+      toast({
+        title: "Selecione um tenant",
+        description: "Selecione um tenant específico para gerenciar profissionais em destaque",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setUpdating(professionalId);
     try {
       // Check if we're trying to add more than 3 featured professionals
-      const currentFeatured = professionals.filter(p => p.em_destaque && p.id !== professionalId);
+      const currentFeatured = professionals.filter(p => p.is_featured && p.id !== professionalId);
       if (featured && currentFeatured.length >= 3) {
         toast({
           title: "Limite excedido",
@@ -78,11 +120,23 @@ export const FeaturedProfessionalsConfig = () => {
       // If featuring a professional, assign next available order
       let finalOrder = order;
       if (featured && !finalOrder) {
-        const usedOrders = currentFeatured.map(p => p.ordem_destaque).filter(Boolean);
+        const usedOrders = currentFeatured.map(p => p.featured_order).filter(Boolean) as number[];
         finalOrder = [1, 2, 3].find(num => !usedOrders.includes(num)) || 1;
       }
 
-      // Update profissionais table (legacy compatibility)
+      // Update professional_tenants table (tenant-specific - for homepage)
+      const { error: ptError } = await supabase
+        .from('professional_tenants')
+        .update({
+          is_featured: featured,
+          featured_order: featured ? finalOrder : null
+        })
+        .eq('professional_id', professionalId)
+        .eq('tenant_id', tenantFilter);
+
+      if (ptError) throw ptError;
+
+      // Also update profissionais table (legacy compatibility)
       const { error } = await supabase
         .from('profissionais')
         .update({
@@ -91,28 +145,14 @@ export const FeaturedProfessionalsConfig = () => {
         })
         .eq('id', professionalId);
 
-      if (error) throw error;
-
-      // Also update professional_tenants table for homepage visibility
-      if (tenant?.id) {
-        const { error: ptError } = await supabase
-          .from('professional_tenants')
-          .update({
-            is_featured: featured,
-            featured_order: featured ? finalOrder : null
-          })
-          .eq('professional_id', professionalId)
-          .eq('tenant_id', tenant.id);
-
-        if (ptError) {
-          console.error('Error updating professional_tenants:', ptError);
-        }
+      if (error) {
+        console.error('Error updating legacy profissionais:', error);
       }
 
       // Update local state
       setProfessionals(prev => prev.map(p => 
         p.id === professionalId 
-          ? { ...p, em_destaque: featured, ordem_destaque: featured ? finalOrder : null }
+          ? { ...p, is_featured: featured, featured_order: featured ? finalOrder! : null }
           : p
       ));
 
@@ -133,10 +173,19 @@ export const FeaturedProfessionalsConfig = () => {
   };
 
   const updateProfessionalOrder = async (professionalId: number, newOrder: number) => {
+    if (!tenantFilter) {
+      toast({
+        title: "Selecione um tenant",
+        description: "Selecione um tenant específico para gerenciar profissionais em destaque",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setUpdating(professionalId);
     try {
       // Check if order is already taken
-      const orderTaken = professionals.find(p => p.ordem_destaque === newOrder && p.id !== professionalId);
+      const orderTaken = professionals.find(p => p.featured_order === newOrder && p.id !== professionalId);
       if (orderTaken) {
         toast({
           title: "Ordem já utilizada",
@@ -146,31 +195,29 @@ export const FeaturedProfessionalsConfig = () => {
         return;
       }
 
-      // Update profissionais table (legacy compatibility)
+      // Update professional_tenants table (tenant-specific - for homepage)
+      const { error: ptError } = await supabase
+        .from('professional_tenants')
+        .update({ featured_order: newOrder })
+        .eq('professional_id', professionalId)
+        .eq('tenant_id', tenantFilter);
+
+      if (ptError) throw ptError;
+
+      // Also update profissionais table (legacy compatibility)
       const { error } = await supabase
         .from('profissionais')
         .update({ ordem_destaque: newOrder })
         .eq('id', professionalId);
 
-      if (error) throw error;
-
-      // Also update professional_tenants table for homepage visibility
-      if (tenant?.id) {
-        const { error: ptError } = await supabase
-          .from('professional_tenants')
-          .update({ featured_order: newOrder })
-          .eq('professional_id', professionalId)
-          .eq('tenant_id', tenant.id);
-
-        if (ptError) {
-          console.error('Error updating professional_tenants order:', ptError);
-        }
+      if (error) {
+        console.error('Error updating legacy profissionais order:', error);
       }
 
       // Update local state
       setProfessionals(prev => prev.map(p => 
         p.id === professionalId 
-          ? { ...p, ordem_destaque: newOrder }
+          ? { ...p, featured_order: newOrder }
           : p
       ));
 
@@ -208,11 +255,44 @@ export const FeaturedProfessionalsConfig = () => {
     );
   }
 
-  const featuredProfessionals = professionals.filter(p => p.em_destaque);
+  // Show message if no tenant is selected
+  if (!tenantFilter || selectedTenantId === 'all') {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Selecione um Tenant
+          </CardTitle>
+          <CardDescription>
+            Para gerenciar profissionais em destaque, selecione um tenant específico no seletor acima
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="p-4 bg-muted rounded-lg flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              Os profissionais em destaque são configurados por tenant. Selecione "Rede Bem Estar" ou "Alopsi" para continuar.
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const featuredProfessionals = professionals.filter(p => p.is_featured);
   const availableSlots = 3 - featuredProfessionals.length;
 
   return (
     <div className="space-y-6">
+      {/* Current Tenant Indicator */}
+      <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-2">
+        <Building2 className="h-4 w-4 text-primary" />
+        <span className="text-sm font-medium">
+          Gerenciando profissionais em destaque para: <strong>{currentTenantName}</strong>
+        </span>
+      </div>
+
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -239,12 +319,12 @@ export const FeaturedProfessionalsConfig = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Ativos</CardTitle>
+            <CardTitle className="text-sm font-medium">Total no Tenant</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{professionals.length}</div>
-            <p className="text-xs text-muted-foreground">profissionais ativos</p>
+            <p className="text-xs text-muted-foreground">profissionais vinculados</p>
           </CardContent>
         </Card>
       </div>
@@ -255,7 +335,7 @@ export const FeaturedProfessionalsConfig = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5" />
-              Preview da Homepage
+              Preview da Homepage ({currentTenantName})
             </CardTitle>
             <CardDescription>
               Como os profissionais aparecerão na seção em destaque
@@ -264,7 +344,7 @@ export const FeaturedProfessionalsConfig = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {featuredProfessionals
-                .sort((a, b) => (a.ordem_destaque || 0) - (b.ordem_destaque || 0))
+                .sort((a, b) => (a.featured_order || 0) - (b.featured_order || 0))
                 .map((professional) => (
                   <div key={professional.id} className="border rounded-lg p-4 space-y-3">
                     <div className="flex items-center gap-3">
@@ -280,7 +360,7 @@ export const FeaturedProfessionalsConfig = () => {
                       </div>
                     </div>
                     <Badge variant="secondary">
-                      Posição {professional.ordem_destaque}
+                      Posição {professional.featured_order}
                     </Badge>
                   </div>
                 ))}
@@ -297,7 +377,7 @@ export const FeaturedProfessionalsConfig = () => {
             Gerenciar Profissionais em Destaque
           </CardTitle>
           <CardDescription>
-            Configure quais profissionais aparecerão na homepage e sua ordem de exibição
+            Configure quais profissionais aparecerão na homepage de {currentTenantName}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -330,7 +410,7 @@ export const FeaturedProfessionalsConfig = () => {
               ) : professionals.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Nenhum profissional ativo encontrado
+                    Nenhum profissional vinculado a este tenant
                   </TableCell>
                 </TableRow>
               ) : (
@@ -356,17 +436,17 @@ export const FeaturedProfessionalsConfig = () => {
                     </TableCell>
                     <TableCell>
                       <Switch
-                        checked={professional.em_destaque || false}
-                        disabled={updating === professional.id || (!professional.em_destaque && availableSlots === 0)}
+                        checked={professional.is_featured || false}
+                        disabled={updating === professional.id || (!professional.is_featured && availableSlots === 0)}
                         onCheckedChange={(checked) => 
                           updateProfessionalFeatured(professional.id, checked)
                         }
                       />
                     </TableCell>
                     <TableCell>
-                      {professional.em_destaque ? (
+                      {professional.is_featured ? (
                         <Select
-                          value={professional.ordem_destaque?.toString() || ''}
+                          value={professional.featured_order?.toString() || ''}
                           disabled={updating === professional.id}
                           onValueChange={(value) => 
                             updateProfessionalOrder(professional.id, parseInt(value))
