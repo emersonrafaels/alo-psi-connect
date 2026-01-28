@@ -1,105 +1,69 @@
 
-## Plano: Corrigir Configuração de Profissionais em Destaque Multi-Tenant
 
-### Problemas Identificados
+## Plano: Corrigir Bug de Data Inválida no Carregamento de Encontros
 
-1. **Hook errado no admin**: O componente `FeaturedProfessionalsConfig` usa `useTenant()` (detecta tenant pela URL), mas rotas `/admin/*` não têm prefixo de tenant. Deveria usar `useAdminTenant()` que lê o tenant do seletor do painel admin.
+### Problema Identificado
 
-2. **Lista não filtra por tenant**: A query busca todos profissionais ativos da tabela `profissionais` sem filtrar por tenant. Deveria buscar da `professional_tenants` para mostrar apenas profissionais do tenant selecionado.
+A página de Encontros (`/medcos/encontros`) exibe erro "Erro ao carregar encontros" porque a query no hook `useGroupSessions` gera uma data inválida.
 
-3. **Preview mostra dados globais**: O preview usa `em_destaque` da tabela `profissionais` (global), não `is_featured` da `professional_tenants` (por tenant).
+**Erro exato:** `date/time field value out of range: "2026-04-31"`
 
-4. **Homepage sem ordenação correta**: A query da homepage não ordena pelo `featured_order`, então mesmo que os dados estejam corretos, podem aparecer na ordem errada.
+**Causa:** O código assume que todos os meses têm 31 dias:
+```typescript
+const endDate = `${year}-${month}-31`;  // Falha para abril (30 dias)
+```
+
+### Solução
+
+Corrigir o cálculo da data final do mês para usar o último dia real do mês, usando a biblioteca `date-fns` que já está instalada no projeto.
 
 ---
 
 ### Alterações Técnicas
 
-#### 1. Atualizar `FeaturedProfessionalsConfig.tsx`
+#### Arquivo: `src/hooks/useGroupSessions.tsx`
 
-**Arquivo:** `src/components/admin/config/FeaturedProfessionalsConfig.tsx`
+**Mudança:** Importar funções `endOfMonth` e `format` do `date-fns` e calcular corretamente a data final do mês.
 
-**Mudanças:**
-
-- **Trocar hook**: Substituir `useTenant()` por `useAdminTenant()` para ler o tenant selecionado no admin
-- **Alterar query**: Buscar profissionais com join na `professional_tenants` filtrado pelo tenant selecionado
-- **Atualizar interface**: Usar campos `is_featured` e `featured_order` do `professional_tenants` no estado local
-- **Sincronizar updates**: Manter atualização em ambas tabelas (legacy + tenant-específico)
-
+**Antes:**
 ```typescript
-// ANTES
-import { useTenant } from '@/hooks/useTenant';
-const { tenant } = useTenant();
-
-// DEPOIS  
-import { useAdminTenant } from '@/contexts/AdminTenantContext';
-const { tenantFilter, tenants } = useAdminTenant();
+if (filters?.month) {
+  const [year, month] = filters.month.split('-');
+  const startDate = `${year}-${month}-01`;
+  const endDate = `${year}-${month}-31`;  // BUG
+  query = query.gte('session_date', startDate).lte('session_date', endDate);
+}
 ```
 
-**Nova query para buscar profissionais:**
+**Depois:**
 ```typescript
-// Buscar profissionais com dados do tenant selecionado
-const { data, error } = await supabase
-  .from('profissionais')
-  .select(`
-    id, display_name, profissao, foto_perfil_url, ativo, preco_consulta,
-    em_destaque, ordem_destaque,
-    professional_tenants!inner(is_featured, featured_order, tenant_id)
-  `)
-  .eq('ativo', true)
-  .eq('professional_tenants.tenant_id', tenantFilter);
+import { endOfMonth, format, parse } from 'date-fns';
+
+// Dentro da queryFn:
+if (filters?.month) {
+  const monthDate = parse(filters.month, 'yyyy-MM', new Date());
+  const startDate = format(monthDate, 'yyyy-MM-01');
+  const lastDay = endOfMonth(monthDate);
+  const endDate = format(lastDay, 'yyyy-MM-dd');
+  query = query.gte('session_date', startDate).lte('session_date', endDate);
+}
 ```
 
-#### 2. Atualizar query da Homepage (`Index.tsx`)
-
-**Arquivo:** `src/pages/Index.tsx`
-
-**Mudança:** Adicionar ordenação pelo `featured_order` na query
-
-```typescript
-// ANTES
-.order('display_name')
-
-// DEPOIS
-.order('professional_tenants.featured_order')
-```
+Esta correção:
+- Usa `endOfMonth()` para obter o último dia correto do mês (28, 29, 30 ou 31)
+- Funciona para todos os meses incluindo fevereiro em anos bissextos
+- Mantém compatibilidade com o resto da aplicação
 
 ---
 
-### Fluxo Corrigido
-
-```text
-┌─────────────────────────────────────────────────────┐
-│           Admin Panel (/admin/configuracoes)        │
-├─────────────────────────────────────────────────────┤
-│  1. Admin seleciona tenant via AdminTenantSelector  │
-│  2. FeaturedProfessionalsConfig lê useAdminTenant() │
-│  3. Query filtra por professional_tenants.tenant_id │
-│  4. Lista mostra profissionais daquele tenant       │
-│  5. Toggle atualiza is_featured + em_destaque       │
-│  6. Order atualiza featured_order + ordem_destaque  │
-└─────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────┐
-│              Homepage (/ ou /medcos)                │
-├─────────────────────────────────────────────────────┤
-│  1. useTenant() detecta tenant pela URL             │
-│  2. Query busca de professional_tenants por tenant  │
-│  3. Ordena por featured_order                       │
-│  4. Exibe os 3 profissionais em ordem correta       │
-└─────────────────────────────────────────────────────┘
-```
-
----
-
-### Arquivos a Modificar
+### Arquivo a Modificar
 
 | Arquivo | Mudanças |
 |---------|----------|
-| `src/components/admin/config/FeaturedProfessionalsConfig.tsx` | Trocar hook, alterar query, atualizar lógica de estado |
-| `src/pages/Index.tsx` | Adicionar ordenação por `featured_order` |
+| `src/hooks/useGroupSessions.tsx` | Adicionar import, corrigir cálculo de data |
 
 ### Estimativa
 
-- 2 arquivos a modificar
-- ~60 linhas de código alteradas
+- 1 arquivo
+- ~5 linhas de código
+
