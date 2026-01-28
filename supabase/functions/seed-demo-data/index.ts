@@ -172,15 +172,21 @@ async function seedProfessionals(
       continue;
     }
 
+    // Generate fake user_id (integer, starting from 99000 to avoid conflicts)
+    const fakeUserId = 99000 + Date.now() % 100000 + i;
+    const userLogin = `${name.firstName.toLowerCase()}.${name.lastName1.toLowerCase()}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
     // Create professional
     const { data: professional, error: profError } = await supabase
       .from("profissionais")
       .insert({
         profile_id: profile.id,
+        user_id: fakeUserId,
+        user_login: userLogin,
+        user_email: email,
         display_name: displayName,
         first_name: name.firstName,
         last_name: `${name.lastName1} ${name.lastName2}`,
-        user_email: email,
         profissao: profession.title,
         crp_crm: generateCRP(),
         preco_consulta: price,
@@ -258,16 +264,14 @@ async function seedStudents(
       continue;
     }
 
-    // Create patient record
+    // Create patient record (pacientes table only has: id, profile_id, eh_estudante, instituicao_ensino, created_at, tenant_id)
     const { data: patient, error: patientError } = await supabase
       .from("pacientes")
       .insert({
         profile_id: profile.id,
-        nome: name.fullName,
-        email: email,
-        telefone: `(${Math.floor(Math.random() * 90) + 10}) 9${Math.floor(Math.random() * 10000)}-${Math.floor(Math.random() * 10000)}`,
+        eh_estudante: true,
         instituicao_ensino: institutionName,
-        observacoes: `${demoMarker} Estudante demo`,
+        tenant_id: tenantId,
       })
       .select()
       .single();
@@ -285,7 +289,12 @@ async function seedStudents(
       enrollment_date: getRandomDate(365).toISOString().split("T")[0],
     });
 
-    students.push({ profile, patient });
+    // Store profile data for later use (appointments need nome, email, telefone from profile)
+    const telefone = `(${Math.floor(Math.random() * 90) + 10}) 9${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+    students.push({ 
+      profile: { ...profile, telefone }, 
+      patient 
+    });
   }
 
   return students;
@@ -418,13 +427,14 @@ async function seedAppointments(
       const hour = 8 + Math.floor(Math.random() * 10); // 8-17
       const horario = `${String(hour).padStart(2, '0')}:00:00`;
 
+      // Get data from profile (not patient) since pacientes doesn't have nome/email/telefone
       await supabase.from("agendamentos").insert({
         professional_id: professional.id,
         user_id: student.profile.user_id || student.profile.id,
         tenant_id: tenantId,
-        nome_paciente: student.patient.nome,
-        email_paciente: student.patient.email,
-        telefone_paciente: student.patient.telefone,
+        nome_paciente: student.profile.nome,
+        email_paciente: student.profile.email,
+        telefone_paciente: student.profile.telefone || "(00) 00000-0000",
         data_consulta: date.toISOString().split("T")[0],
         horario: horario,
         status: config.status,
@@ -520,12 +530,12 @@ async function cleanup(
   if (patientLinks && patientLinks.length > 0) {
     const patientIds = patientLinks.map((p: any) => p.patient_id);
     
-    // Get patients with demo marker
+    // Get patients linked to this institution (use instituicao_ensino to filter demo data)
     const { data: demoPatients } = await supabase
       .from("pacientes")
       .select("id, profile_id")
       .in("id", patientIds)
-      .ilike("observacoes", `%${demoMarker}%`);
+      .eq("instituicao_ensino", institutionName);
 
     if (demoPatients && demoPatients.length > 0) {
       const demoPatientIds = demoPatients.map((p: any) => p.id);
