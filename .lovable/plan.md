@@ -1,168 +1,164 @@
 
+## Plano: Criar Dados Demo para UNICAMP
 
-## Plano: Melhorias de UX/UI para Rede Bem Estar
+### Contexto
 
-### Status Atual do Brand
+A UNICAMP (Universidade Estadual de Campinas) já existe no banco de dados com ID `d06b3a18-efef-478a-84cb-bbaa5e8ddd36` e tipo `public`, mas está **completamente vazia**:
+- 0 profissionais
+- 0 estudantes  
+- 0 administradores
+- 0 cupons
 
-| Implementado | Pendente |
-|--------------|----------|
-| ✅ Logo e Favicon | ⏳ Patterns decorativos como backgrounds |
-| ✅ Paleta de cores (Roxo, Rosa, Ciano) | ⏳ Imagens do Hero alinhadas ao brand |
-| ✅ Tipografia Poppins para headings | ⏳ Cards mais arredondados |
-| ✅ Textos/slogans do brand | ⏳ Animações de entrada |
-
----
-
-### Melhorias Propostas por Prioridade
-
-#### 1. Homepage (Index.tsx) - Alta Prioridade
-
-| Problema | Solução |
-|----------|---------|
-| Hero Section sem pattern decorativo | Adicionar background pattern sutil usando imagens do S3 |
-| Cores hardcoded na seção "University" (#3b82f6, #10b981) | Usar cores do tenant (roxo, rosa, ciano) |
-| Seção de vídeo com cores genéricas (teal-100) | Substituir por cores do brand (roxo/rosa) |
-| Cards de estatísticas com emojis | Usar ícones Lucide mais profissionais |
-| CTA Section básica | Adicionar pattern decorativo e melhorar visual |
-| Botões duplicados no Hero ("Encontrar Profissional" e "Agendar Consulta" fazem a mesma coisa) | Diferenciar CTAs |
-
-#### 2. Footer (footer.tsx) - Média Prioridade
-
-| Problema | Solução |
-|----------|---------|
-| Background hardcoded `bg-gray-800` | Usar `hsl(var(--footer-bg))` dinâmico |
-| Círculo decorativo genérico no rodapé | Substituir por logo ou pattern do brand |
-| Copyright "Rede Bem-Estar" hardcoded | Usar nome dinâmico do tenant |
-
-#### 3. Página de Contato (Contact.tsx) - Média Prioridade
-
-| Problema | Solução |
-|----------|---------|
-| Informações de contato hardcoded (endereço, CNPJ) | Usar dados do tenant configurados no banco |
-| Hero Section sem visual diferenciado | Adicionar gradiente com cores do brand |
-| Seção sem ícones coloridos | Usar accent colors nos ícones |
-
-#### 4. Search Section - Baixa Prioridade
-
-| Problema | Solução |
-|----------|---------|
-| Emojis 🔵 nos labels | Usar ícones Lucide ou remover |
-| Visual genérico | Adicionar subtle pattern de background |
-
-#### 5. Cards de Profissionais - Baixa Prioridade
-
-| Problema | Solução |
-|----------|---------|
-| Gradientes genéricos | Usar cores do tenant |
-| Bordas não arredondadas o suficiente | Aumentar border-radius para 2xl |
-| Indicador "online" genérico verde | Manter consistência com brand |
+Vou criar uma Edge Function dedicada para popular a UNICAMP com dados demo semelhantes ao Instituto de Psicologia Aplicada São Paulo (IPSP), apenas com nomes diferentes.
 
 ---
 
-### Detalhes Técnicos
+### Dados a Serem Criados
 
-#### A. Corrigir Cores Hardcoded na Homepage
+#### 1. Profissionais (4 profissionais)
 
-```tsx
-// ANTES (Index.tsx - University Section)
-stroke="#3b82f6" // Azul hardcoded
-stroke="#10b981" // Verde hardcoded
-className="bg-blue-500" // Azul hardcoded
+| Nome | Profissão | CRP | Preço | Especialidades | Vínculo |
+|------|-----------|-----|-------|----------------|---------|
+| Dra. Camila Andrade Ribeiro | Psicóloga Clínica | CRP 06/112233 | R$ 150 | TCC, Ansiedade, Depressão | partner |
+| Dr. Thiago Nascimento Costa | Psicólogo | CRP 06/223344 | R$ 140 | Psicanálise, Trauma, Luto | partner |
+| Amanda Cristina Melo | Estudante de Psicologia | CRP 06/334455 | R$ 80 | Atendimento Supervisionado | partner |
+| Dr. Marcos Vinicius Prado | Psicólogo Clínico | CRP 06/445566 | R$ 180 | Neuropsicologia, TDAH | employee |
 
-// DEPOIS - Usar classes do tema
-stroke="hsl(var(--primary))" // Roxo do tenant
-stroke="hsl(var(--accent))"  // Rosa do tenant
-className="bg-primary"
-```
+#### 2. Estudantes (10 estudantes)
 
-#### B. Footer Dinâmico
+| Nome | Email | Status |
+|------|-------|--------|
+| Laura Fernandes Dias | laura.fernandes@unicamp.edu.br | enrolled |
+| Bruno Almeida Torres | bruno.almeida@unicamp.edu.br | enrolled |
+| Bianca Rodrigues Lima | bianca.rodrigues@unicamp.edu.br | enrolled |
+| Caio Henrique Souza | caio.henrique@unicamp.edu.br | enrolled |
+| Leticia Martins Pereira | leticia.martins@unicamp.edu.br | enrolled |
+| Gustavo Costa Moreira | gustavo.costa@unicamp.edu.br | enrolled |
+| Fernanda Oliveira Santos | fernanda.oliveira@unicamp.edu.br | graduated |
+| Leonardo Carvalho Nunes | leonardo.carvalho@unicamp.edu.br | enrolled |
+| Raquel Sousa Freitas | raquel.sousa@unicamp.edu.br | enrolled |
+| Vitor Barbosa Gomes | vitor.barbosa@unicamp.edu.br | inactive |
 
-```tsx
-// ANTES
-<footer className="bg-gray-800 text-primary-foreground">
+#### 3. Cupons Promocionais (6 cupons)
 
-// DEPOIS
-<footer style={{ 
-  backgroundColor: 'hsl(var(--footer-bg))',
-  color: 'hsl(var(--footer-text))'
-}}>
-```
+| Código | Desconto | Tipo | Público-Alvo |
+|--------|----------|------|--------------|
+| UNICAMP-BOAS-VINDAS-RBE | 20% | percentage | Estudantes da instituição |
+| UNICAMP-PRIMEIRA-SESSAO-RBE | R$ 40 | fixed_amount | Todos |
+| UNICAMP-ESTUDANTE-RBE | 25% | percentage | Estudantes da instituição |
+| UNICAMP-BOAS-VINDAS-MEDCOS | 20% | percentage | Estudantes da instituição |
+| UNICAMP-ESTUDANTE-MEDCOS | 25% | percentage | Estudantes da instituição |
+| UNICAMP-PRIMEIRA-GRATIS | 100% | percentage | Estudantes da instituição |
 
-#### C. Componente de Pattern Decorativo
+#### 4. Diários Emocionais (100-150 entradas)
 
-Criar novo componente reutilizável:
+- 10-15 entradas por estudante
+- Distribuídas nos últimos 30 dias
+- Scores variados (humor, ansiedade, energia, sono)
+- Tags contextuais (#provas, #estágio, #tcc, etc.)
 
-```tsx
-// components/BrandPattern.tsx
-const BrandPattern = ({ variant = 'subtle' }) => {
-  const { tenant } = useTenant();
-  const patternUrl = tenant?.theme_config?.brand_patterns?.hero;
-  
-  if (!patternUrl) return null;
-  
-  return (
-    <div 
-      className="absolute inset-0 opacity-10 pointer-events-none"
-      style={{ backgroundImage: `url(${patternUrl})` }}
-    />
-  );
-};
-```
+#### 5. Agendamentos Demo (~40 agendamentos)
+
+- 25 passados (realizados)
+- 3 cancelados
+- 12 futuros (confirmados/pendentes)
 
 ---
 
-### Animações e Microinterações
+### Implementação Técnica
 
-| Elemento | Animação Proposta |
-|----------|-------------------|
-| Cards de profissionais | `animate-fade-in` ao entrar na viewport |
-| Seções da homepage | Scroll reveal suave |
-| Botões CTA | `hover:scale-105` com transição |
-| Cards de estatísticas | Hover lift `hover:-translate-y-1` |
-| Hero text | Fade in sequencial com delay |
+#### Nova Edge Function: `seed-unicamp-demo-data`
+
+Estrutura baseada na `seed-unifoa-demo-data`, com:
+
+```typescript
+// Constants
+const UNICAMP_ID = "d06b3a18-efef-478a-84cb-bbaa5e8ddd36";
+const DEMO_MARKER = "[DEMO-UNICAMP]";
+
+// Professionals, Students, Coupons arrays...
+
+// Functions:
+- seedProfessionals()
+- seedStudents() 
+- seedCoupons()
+- seedMoodEntries()
+- seedAppointments()
+- cleanup()
+```
+
+#### Endpoints da Edge Function
+
+| Action | Descrição |
+|--------|-----------|
+| `seed_all` | Cria cenário completo (limpa antes se existir) |
+| `seed_professionals` | Apenas profissionais |
+| `seed_students` | Apenas estudantes |
+| `seed_coupons` | Apenas cupons |
+| `seed_mood_entries` | Apenas diários emocionais |
+| `seed_appointments` | Apenas agendamentos |
+| `cleanup` | Remove todos os dados demo |
+
+---
+
+### Tenant Configuration
+
+Os dados serão vinculados a **ambos os tenants**:
+- **Medcos** (`3a9ae5ec-50a9-4674-b808-7735e5f0afb5`) - Cupons com sufixo `-MEDCOS`
+- **Rede Bem Estar** (`472db0ac-0f45-4998-97da-490bc579efb1`) - Cupons com sufixo `-RBE`
+
+Profissionais e estudantes serão vinculados ao tenant **Medcos** (padrão para demos), mas podem ser alterados posteriormente.
+
+---
+
+### Arquivos a Criar/Modificar
+
+| Arquivo | Ação |
+|---------|------|
+| `supabase/functions/seed-unicamp-demo-data/index.ts` | **Criar** - Nova Edge Function |
+| `supabase/config.toml` | **Modificar** - Adicionar configuração da função |
+
+---
+
+### Diferenças do IPSP
+
+| Aspecto | IPSP | UNICAMP |
+|---------|------|---------|
+| Tipo | private | public |
+| ID | a1b2c3d4-... | d06b3a18-... |
+| Email domain | @example.com | @unicamp.edu.br |
+| Marker | (nenhum específico) | [DEMO-UNICAMP] |
+| Cupons | 6 | 6 (códigos diferentes) |
+
+---
+
+### Administradores
+
+Como você mencionou que vai adicionar outros usuários administrativos, a Edge Function **não criará admins automaticamente**. Você pode adicionar administradores manualmente via:
+1. Painel Admin → Instituições → UNICAMP → Gerenciar Admins
+2. Ou Edge Function `create-institutional-user`
+
+---
+
+### Execução
+
+Após deploy, você pode chamar a função via:
+```javascript
+// Criar cenário completo
+await supabase.functions.invoke('seed-unicamp-demo-data', {
+  body: { action: 'seed_all' }
+});
+```
+
+Ou via página admin de demo data existente (se adaptada para suportar múltiplas instituições).
 
 ---
 
 ### Ordem de Implementação
 
-1. **Footer dinâmico** - Corrigir uso de cores do tenant
-2. **Homepage - Cores hardcoded** - Substituir azul/verde por roxo/rosa/ciano
-3. **Homepage - Ícones** - Substituir emojis por Lucide icons
-4. **Contato - Dados dinâmicos** - Usar dados do tenant
-5. **Pattern decorativo** - Implementar backgrounds (requer imagens do S3)
-6. **Animações** - Adicionar microinterações
-
----
-
-### Impacto nos Tenants
-
-| Tenant | Afetado |
-|--------|---------|
-| **Rede Bem Estar** (alopsi) | ✅ Melhorias visuais significativas |
-| **MEDCOS** (medcos) | ✅ Beneficia das melhorias genéricas (mantém cores próprias) |
-
----
-
-### Arquivos a Modificar
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/pages/Index.tsx` | Cores dinâmicas, ícones, animações |
-| `src/components/ui/footer.tsx` | Cores dinâmicas, copyright dinâmico |
-| `src/pages/Contact.tsx` | Dados do tenant, visual |
-| `src/components/search-section.tsx` | Remover emojis, visual |
-| `src/components/professional-card.tsx` | Border-radius, cores |
-| `src/components/BrandPattern.tsx` | **Novo componente** |
-
----
-
-### Pergunta Pendente
-
-Para implementar os patterns decorativos, preciso saber os nomes dos arquivos de imagem disponíveis em:
-
-```
-s3://alopsi-website/rede_bem_estar/imagens/brand/
-```
-
-Posso começar com as correções de cores e animações enquanto você verifica os nomes das imagens.
+1. Criar Edge Function `seed-unicamp-demo-data`
+2. Atualizar `supabase/config.toml`
+3. Deploy automático
+4. Testar chamando a função
+5. Verificar dados no portal institucional
 
