@@ -1,112 +1,122 @@
 
-## Plano: Tornar Logo do Switcher Dinâmico e Configurável
 
-### Problema
-O botão de alternância entre tenants no header (ex: botão "MEDCOS" quando você está no Rede Bem Estar) usa URLs de logos **hardcoded** em vez de buscar do banco de dados. Isso significa que:
-1. Alterações feitas no painel de branding não afetam esse botão
-2. O logo "Alô, Psi!" ainda aparece em vez de "Rede Bem Estar"
+## Plano: Configurar Logo Dark Mode da Rede Bem Estar e Ajustar Switcher
 
-### Solução
-Modificar o header para buscar dinamicamente o logo do tenant alternativo do banco de dados.
+### Problema Identificado
 
----
+O logo atual da Rede Bem Estar (`logo_redebemestar_2.png`) usa texto **branco**, tornando-o invisível quando exibido no botão switcher com fundo claro (modo light).
 
-### Alterações Técnicas
+**Estado atual no banco de dados:**
 
-#### Arquivo: `src/components/ui/header.tsx`
+| Tenant | logo_url | logo_url_dark |
+|--------|----------|---------------|
+| alopsi (Rede Bem Estar) | `.../logo_redebemestar_2.png` | NULL |
+| medcos | `.../logo_medcos.png` | NULL |
 
-**Mudanças:**
-
-1. **Adicionar estado para tenants**: Buscar todos os tenants ativos ao montar o componente
-2. **Substituir URLs hardcoded**: Usar o `logo_url` do tenant alternativo dinamicamente
-
-**Código atual (linhas 116-140):**
-```tsx
-{tenantSlug === 'alopsi' ? (
-  <button onClick={() => handleTenantNavigation('medcos', '/medcos')}>
-    <img 
-      src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/logo/logo_medcos.png" // HARDCODED
-      alt="MEDCOS"
-    />
-  </button>
-) : (
-  <button onClick={() => handleTenantNavigation('alopsi', '/')}>
-    <img 
-      src="https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/logo/Logo.png" // HARDCODED - logo antigo!
-      alt="Alô, Psi!"
-    />
-  </button>
-)}
-```
-
-**Código proposto:**
-```tsx
-// No início do componente, adicionar:
-const [allTenants, setAllTenants] = useState<Tenant[]>([]);
-
-useEffect(() => {
-  const fetchTenants = async () => {
-    const { data } = await supabase
-      .from('tenants')
-      .select('id, slug, name, logo_url')
-      .eq('is_active', true);
-    if (data) setAllTenants(data as Tenant[]);
-  };
-  fetchTenants();
-}, []);
-
-// Na renderização do switcher:
-const otherTenant = allTenants.find(t => t.slug !== tenantSlug);
-
-{otherTenant && (
-  <button onClick={() => handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'medcos' ? '/medcos' : '/')}>
-    <img 
-      src={otherTenant.logo_url || '/placeholder-logo.png'}
-      alt={otherTenant.name}
-    />
-  </button>
-)}
-```
+**Problema no código:**
+O switcher no header (linha 139) usa apenas `otherTenant.logo_url`, ignorando o tema atual e o campo `logo_url_dark`.
 
 ---
 
-### Benefícios
+### Solução Proposta
 
-1. **Dinamismo**: Alterações no painel de branding refletem automaticamente no switcher
-2. **Escalabilidade**: Se mais tenants forem adicionados, o sistema se adapta
-3. **Consistência**: Usa a mesma fonte de dados para todos os logos
-4. **Correção imediata**: O logo "Rede Bem Estar" aparecerá corretamente no botão
+#### Parte 1: Configurar Logo Correto no Banco de Dados
+
+Precisamos de duas versões do logo Rede Bem Estar:
+- **Logo para fundo claro** (texto escuro/colorido) → `logo_url`
+- **Logo para fundo escuro** (texto branco) → `logo_url_dark`
+
+**Opção recomendada:** O logo branco atual deve ir para `logo_url_dark`, e um logo com texto roxo/escuro deve ser o `logo_url` principal.
+
+Se existir uma versão com texto escuro no S3 (ex: `logo_redebemestar_3.png` ou similar), podemos usá-la. Caso contrário, será necessário fazer upload de uma nova versão.
+
+#### Parte 2: Atualizar o Switcher para Usar o Tema
+
+**Arquivo:** `src/components/ui/header.tsx`
+
+**Mudanças necessárias:**
+
+1. **Importar hook de tema:**
+```typescript
+import { useTheme } from 'next-themes';
+```
+
+2. **Adicionar campo `logo_url_dark` na query do fetch:**
+```typescript
+// Linha 47 - adicionar logo_url_dark
+.select('id, slug, name, logo_url, logo_url_dark, cross_tenant_navigation_warning_enabled, ...')
+```
+
+3. **Usar o tema para escolher o logo correto:**
+```typescript
+const { resolvedTheme } = useTheme();
+const isDarkMode = resolvedTheme === 'dark';
+
+// Na renderização do switcher (linha 139):
+const switcherLogoUrl = isDarkMode && otherTenant.logo_url_dark 
+  ? otherTenant.logo_url_dark 
+  : otherTenant.logo_url;
+```
+
+4. **Atualizar a imagem do switcher:**
+```typescript
+<img 
+  src={switcherLogoUrl || '/placeholder.svg'}
+  alt={otherTenant.name}
+  className="h-8 w-auto object-contain"
+/>
+```
+
+---
 
 ### Fluxo Visual
 
 ```text
-┌───────────────────────────────────────────────────┐
-│                    HEADER                         │
-├───────────────────────────────────────────────────┤
-│  [Logo Rede Bem Estar]  ...menu...  [MEDCOS btn]  │
-│                                          ↑        │
-│                                     Logo vem do   │
-│                                     banco (logo_url│
-│                                     do medcos)    │
-└───────────────────────────────────────────────────┘
+MODO LIGHT (fundo branco)                MODO DARK (fundo escuro)
+┌─────────────────────────┐             ┌─────────────────────────┐
+│  Header MEDCOS          │             │  Header MEDCOS          │
+│                         │             │                         │
+│  [Rede Bem Estar btn]   │             │  [Rede Bem Estar btn]   │
+│   Logo texto ROXO ✓     │             │   Logo texto BRANCO ✓   │
+│   (logo_url)            │             │   (logo_url_dark)       │
+└─────────────────────────┘             └─────────────────────────┘
 
-Banco de dados:
-┌─────────┬─────────────────────────────────────────┐
-│ slug    │ logo_url                                │
-├─────────┼─────────────────────────────────────────┤
-│ alopsi  │ .../logo_redebemestar_2.png             │
-│ medcos  │ .../logo_medcos.png                     │
-└─────────┴─────────────────────────────────────────┘
+No banco:
+┌─────────┬──────────────────────────────┬──────────────────────────────┐
+│ slug    │ logo_url (para fundo claro)  │ logo_url_dark (fundo escuro) │
+├─────────┼──────────────────────────────┼──────────────────────────────┤
+│ alopsi  │ .../logo_texto_roxo.png      │ .../logo_texto_branco.png    │
+│ medcos  │ .../logo_medcos.png          │ (opcional)                   │
+└─────────┴──────────────────────────────┴──────────────────────────────┘
 ```
 
 ---
 
-### Arquivo a Modificar
+### Arquivos a Modificar
 
 | Arquivo | Mudanças |
 |---------|----------|
-| `src/components/ui/header.tsx` | Adicionar fetch de tenants, substituir URLs hardcoded por dados dinâmicos |
+| `src/components/ui/header.tsx` | Importar `useTheme`, adicionar `logo_url_dark` na query, implementar lógica de seleção de logo baseada no tema |
+
+### Configuração de Dados Necessária
+
+Após implementar o código, será necessário:
+
+1. **Fazer upload** de uma versão do logo Rede Bem Estar com texto roxo/escuro (para fundos claros)
+2. **Atualizar o banco** via Admin → Branding de Tenants:
+   - `logo_url`: versão com texto escuro
+   - `logo_url_dark`: versão atual (texto branco)
+
+---
+
+### Considerações Adicionais
+
+- O mesmo padrão pode ser aplicado ao tenant MEDCOS futuramente se necessário
+- A lógica é consistente com a já implementada no `TenantBranding.tsx` e `footer.tsx`
 
 ### Estimativa
-- 1 arquivo
-- ~25 linhas de código alteradas
+
+- 1 arquivo de código
+- ~10 linhas alteradas
+- 1 configuração de dados no admin
+
