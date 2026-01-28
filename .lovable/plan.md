@@ -1,121 +1,144 @@
 
+## Plano: Aplicar Elementos Decorativos e UX do Brand Rede Bem Estar
 
-## Plano: Aplicar Nova Identidade Visual - Rede Bem Estar
+### Resumo
 
-### Paleta de Cores Extraída do Brand Guide
-
-| Cor | HEX | HSL | Uso |
-|-----|-----|-----|-----|
-| **Roxo** | `#5b218e` | 273° 63% 34% | Cor primária |
-| **Rosa** | `#e281bb` | 330° 60% 70% | Cor de destaque (accent) |
-| **Ciano/Turquesa** | `#97d3d9` | 186° 44% 72% | Cor secundária |
-| **Cinza Claro** | `#f4f4f4` | 0° 0% 96% | Background |
-
-### Tipografia do Brand
-
-| Tipo | Fonte |
-|------|-------|
-| **Títulos (headings)** | Carbona |
-| **Corpo (body)** | Inter |
-
-> **Nota:** Inter já é a fonte padrão do sistema. Carbona precisaria ser adicionada via Google Fonts ou como fonte customizada, mas como não está disponível gratuitamente, podemos usar uma alternativa similar.
+Baseado no Brand Guide já analisado, vamos implementar os elementos visuais decorativos e melhorias de UX específicas para o tenant Rede Bem Estar (slug: `alopsi`).
 
 ---
 
-### Alterações Necessárias
+### Elementos Já Implementados
 
-#### 1. Atualizar banco de dados (tabela `tenants`)
+| Elemento | Status |
+|----------|--------|
+| Logo e Favicon | ✅ Atualizado via S3 |
+| Paleta de cores (Roxo, Rosa, Ciano) | ✅ Aplicado no banco |
+| Cores do Header, Botões, Footer | ✅ Configurado |
 
-Executar UPDATE no tenant `alopsi` com todas as novas cores:
+---
+
+### Elementos a Implementar
+
+#### 1. Tipografia - Fonte para Títulos
+
+O brand usa **Carbona** para headings. Como não está disponível gratuitamente, usaremos **Poppins** (Google Fonts) como alternativa similar:
+- Geométrica, moderna e arredondada
+- Boa legibilidade e personalidade semelhante
+
+**Implementação:**
+- Atualizar o campo `font_family_headings` no banco para `'Poppins'`
+- Carregar a fonte via Google Fonts no `index.html`
+- O sistema já aplica via CSS variable `--font-headings`
+
+---
+
+#### 2. Patterns Decorativos como Backgrounds
+
+As imagens decorativas do brand podem ser usadas como backgrounds em seções específicas. URL base:
+```
+https://alopsi-website.s3.us-east-1.amazonaws.com/rede_bem_estar/imagens/brand/
+```
+
+**Seções para aplicar patterns:**
+- Hero Section: Pattern sutil como overlay
+- Seção CTA: Pattern de destaque
+- Footer: Pattern decorativo
+
+**Abordagem técnica:**
+- Adicionar configuração em `theme_config` para URLs dos patterns
+- Criar componente `BrandPattern` reutilizável
+- Aplicar condicionalmente baseado no tenant
+
+---
+
+#### 3. Textos e Slogans do Brand
+
+Atualizar os textos do Hero e CTAs com os slogans oficiais:
+
+| Campo | Texto Atual | Texto do Brand |
+|-------|-------------|----------------|
+| `hero_title` | "Atendimento especializado..." | "Acolhimento muda trajetórias" |
+| `hero_subtitle` | "Encontre profissionais..." | "Quando alguém escuta, tudo muda. Cuidar da mente também faz parte da jornada." |
+| `cta_primary_text` | "Agendar Consulta" | "Encontrar Apoio" |
+
+---
+
+#### 4. Imagens do Hero e About
+
+Atualizar as imagens do carousel com fotos no estilo do brand:
+- Usar imagens do S3 path: `rede_bem_estar/imagens/`
+- Cores e estilo alinhados com a paleta rosa/roxo/ciano
+
+---
+
+### Alterações Técnicas
+
+#### Database (Tenant alopsi)
 
 ```sql
 UPDATE tenants 
 SET 
-  -- Cores principais do brand
-  primary_color = '#5b218e',           -- Roxo
-  accent_color = '#e281bb',            -- Rosa
-  header_color = '#5b218e',            -- Header em roxo
+  -- Tipografia
+  font_family_headings = 'Poppins',
   
-  -- Cores de texto do header
-  header_text_color_light = '#FFFFFF',
-  header_text_color_dark = '#FFFFFF',
+  -- Textos do Brand
+  hero_title = 'Acolhimento muda trajetórias',
+  hero_subtitle = 'Quando alguém escuta, tudo muda. Cuidar da mente também faz parte da jornada.',
+  cta_primary_text = 'Encontrar Apoio',
   
-  -- Cores dos botões
-  button_bg_color_light = '#e281bb',   -- Rosa para CTAs
-  button_text_color_light = '#5b218e', -- Texto roxo escuro
-  button_bg_color_dark = '#e281bb',
-  button_text_color_dark = '#5b218e',
-  
-  -- Cores das tags de especialidade
-  specialty_tag_bg_light = '#f4f4f4',
-  specialty_tag_text_light = '#5b218e',
-  specialty_tag_bg_dark = '#5b218e',
-  specialty_tag_text_dark = '#e281bb',
-  
-  -- Cores do footer
-  footer_bg_color_light = '#5b218e',
-  footer_text_color_light = '#FFFFFF',
-  footer_bg_color_dark = '#5b218e',
-  footer_text_color_dark = '#FFFFFF',
-  
-  -- Theme config com secondary
+  -- Patterns decorativos no theme_config
   theme_config = jsonb_set(
-    COALESCE(theme_config, '{}'::jsonb),
-    '{secondary_color}',
-    '"#97d3d9"'
+    theme_config,
+    '{brand_patterns}',
+    '{"hero": "URL_PATTERN_HERO", "cta": "URL_PATTERN_CTA"}'
   )
 WHERE slug = 'alopsi';
 ```
 
-#### 2. Verificar cache do tenant
+#### Código
 
-Após atualizar o banco, limpar o cache local para forçar o recarregamento das novas cores:
-- O sistema já possui lógica de cache-busting
-- O usuário deve fazer hard refresh (Ctrl+Shift+R) ou o sistema irá detectar automaticamente
-
----
-
-### Resultado Visual Esperado
-
-| Elemento | Antes | Depois |
-|----------|-------|--------|
-| **Header** | Azul escuro | Roxo `#5b218e` |
-| **Botões primários** | Azul/Cyan | Rosa `#e281bb` com texto roxo |
-| **Elementos de destaque** | Cyan | Rosa `#e281bb` |
-| **Tags de especialidades** | Azul claro | Roxo/Rosa |
-| **Footer** | Azul | Roxo `#5b218e` |
+1. **index.html**: Adicionar Google Font Poppins
+2. **TenantContext.tsx**: Já aplica `--font-headings` dinamicamente
+3. **index.css**: Usar `var(--font-headings)` nos elementos h1-h6
+4. **Index.tsx**: Aplicar pattern decorativo condicionalmente no Hero
+5. **Componente BrandPattern**: Novo componente para patterns de background
 
 ---
 
-### Impacto nos Tenants
+### Estrutura das Imagens no S3
 
-| Tenant | Será Afetado? |
-|--------|---------------|
-| **Rede Bem Estar** (alopsi) | ✅ Sim - Nova paleta de cores |
-| **MEDCOS** (medcos) | ❌ Não - Mantém cores atuais |
+Preciso confirmar quais arquivos estão disponíveis em:
+```
+s3://alopsi-website/rede_bem_estar/imagens/brand/
+```
 
----
-
-### Detalhes Técnicos
-
-O sistema multi-tenant já está preparado para aplicar cores dinamicamente:
-
-1. **TenantContext.tsx** - Busca cores do banco e aplica via CSS variables
-2. **colorHelpers.ts** - Converte HEX para HSL automaticamente
-3. **index.css** - Define variáveis CSS que usam valores do tenant
-
-A função `applyTenantTheme()` já suporta todos os campos de cor:
-- `primary_color` → `--primary`
-- `accent_color` → `--accent`
-- `header_color` → `--header-bg`
-- `theme_config.secondary_color` → `--secondary`
-- E todas as variantes para light/dark mode
+Possíveis arquivos (baseado no PDF):
+- Pattern geométrico (linhas orgânicas rosa/ciano)
+- Elementos decorativos para cards
+- Backgrounds para seções
 
 ---
 
-### Próximos Passos (Opcional)
+### Impacto
 
-1. **Fonte Carbona**: Se necessário, podemos adicionar uma fonte similar (como Poppins ou Montserrat) para títulos
-2. **Hero Images**: Atualizar imagens do hero carousel com as novas cores/estilo do brand
-3. **Pattern do Brand**: O PDF mostra um padrão visual que pode ser usado como background decorativo
+| Tenant | Afetado |
+|--------|---------|
+| **Rede Bem Estar** (alopsi) | ✅ Sim - Tipografia, textos e patterns |
+| **MEDCOS** (medcos) | ❌ Não - Mantém configuração atual |
 
+---
+
+### Ordem de Implementação
+
+1. **Tipografia**: Adicionar Poppins e aplicar nos headings
+2. **Textos**: Atualizar hero_title, hero_subtitle e CTAs
+3. **Patterns**: Implementar backgrounds decorativos nas seções
+4. **Refinamentos**: Ajustar espaçamentos e animações
+
+---
+
+### Próximo Passo
+
+Antes de implementar, preciso saber quais arquivos de imagem estão disponíveis no S3 para os patterns. Você pode me informar os nomes dos arquivos em `s3://alopsi-website/rede_bem_estar/imagens/brand/`?
+
+Ou posso começar com a tipografia e textos enquanto você verifica as imagens.
