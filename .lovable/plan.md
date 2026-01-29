@@ -1,163 +1,29 @@
 
 
-## Plano: Adicionar Logos Específicos para Footer e Features
+## Plano: Aplicar Feature Logo na Página de Encontros
 
-### Objetivo
+### Problema Identificado
 
-Adicionar novas opções de logos configuráveis por tenant:
+Os componentes de Encontros (Group Sessions) estão usando `tenant?.logo_url` diretamente em vez de `feature_logo_url` com fallback. Além disso, não há suporte para dark mode nesses componentes.
 
-1. **Logo do Footer** (light e dark) - Atualmente o footer usa o mesmo logo do header
-2. **Logo de Features/Ícones** (light e dark) - Para uso em páginas como Blog, Encontros, etc.
+### Componentes Afetados
 
-Todos com fallback automático para o logo principal do header caso não sejam configurados.
+| Componente | Linha | Uso Atual | Deve Usar |
+|------------|-------|-----------|-----------|
+| `NextSessionHighlight.tsx` | 48-49 | `tenant?.logo_url` | `feature_logo_url` → `logo_url` |
+| `GroupSessionCard.tsx` | 58-59 | `tenant?.logo_url` | `feature_logo_url` → `logo_url` |
 
----
+### Solução
 
-### Novos Campos no Banco de Dados
-
-| Campo | Descrição | Fallback |
-|-------|-----------|----------|
-| `footer_logo_url` | Logo do footer (light mode) | → `logo_url` |
-| `footer_logo_url_dark` | Logo do footer (dark mode) | → `logo_url_dark` |
-| `feature_logo_url` | Logo para features (light mode) | → `logo_url` |
-| `feature_logo_url_dark` | Logo para features (dark mode) | → `logo_url_dark` |
-
----
-
-### Arquitetura Visual
-
-```text
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│ Tab: Logos                                                                       │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│ ┌─ LOGOS DESTE TENANT ──────────────────────────────────────────────────────┐   │
-│ │ 🌞 Logo Light Mode (Header)    🌙 Logo Dark Mode (Header)                 │   │
-│ └──────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                  │
-│ ┌─ LOGOS NO SWITCHER DE OUTROS TENANTS ────────────────────────────────────┐   │
-│ │ 🌞 Switcher Light   🌙 Switcher Dark                                      │   │
-│ └──────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                  │
-│ ┌─ LOGO DO FOOTER (NOVO) ──────────────────────────────────────────────────┐   │
-│ │ 🌞 Footer Light Mode          🌙 Footer Dark Mode                         │   │
-│ │    Se vazio, usa logo do header   Se vazio, usa logo do header            │   │
-│ │                                                                            │   │
-│ │    Preview:                       Preview:                                 │   │
-│ │    ┌────────────────────┐        ┌────────────────────┐                   │   │
-│ │    │ bg similar footer │        │ bg similar footer  │                   │   │
-│ │    │   [Footer Logo]    │        │   [Footer Logo]    │                   │   │
-│ │    └────────────────────┘        └────────────────────┘                   │   │
-│ └──────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                  │
-│ ┌─ LOGO DE FEATURES/ÍCONES (NOVO) ─────────────────────────────────────────┐   │
-│ │ 🌞 Feature Light Mode         🌙 Feature Dark Mode                        │   │
-│ │    Se vazio, usa logo do header   Se vazio, usa logo do header            │   │
-│ │                                                                            │   │
-│ │    Usado em: Blog, Encontros, Autores, etc.                                │   │
-│ │                                                                            │   │
-│ │    Preview:                       Preview:                                 │   │
-│ │    ┌────────────────────┐        ┌────────────────────┐                   │   │
-│ │    │   [Feature Icon]   │        │   [Feature Icon]   │                   │   │
-│ │    │   w-16 h-16        │        │   w-16 h-16        │                   │   │
-│ │    └────────────────────┘        └────────────────────┘                   │   │
-│ └──────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                  │
-│ ┌─ IMAGEM PADRÃO DE PROFISSIONAL ──────────────────────────────────────────┐   │
-│ │ 👤 Fallback para profissionais sem foto                                    │   │
-│ └──────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-### Mudanças por Arquivo
-
-#### 1. Database Migration (SQL)
-
-Adicionar 4 novas colunas na tabela `tenants`:
-
-```sql
-ALTER TABLE tenants 
-ADD COLUMN footer_logo_url text,
-ADD COLUMN footer_logo_url_dark text,
-ADD COLUMN feature_logo_url text,
-ADD COLUMN feature_logo_url_dark text;
-```
-
-#### 2. `src/types/tenant.ts`
-
-Adicionar na interface `Tenant`:
+Aplicar a mesma lógica que foi implementada no `AuthorSpotlight.tsx`:
 
 ```typescript
-// Footer logos - separate from header
-footer_logo_url?: string | null;
-footer_logo_url_dark?: string | null;
+import { useTheme } from "next-themes";
 
-// Feature/icons logos - used on blog, group sessions, etc.
-feature_logo_url?: string | null;
-feature_logo_url_dark?: string | null;
-```
+// Dentro do componente:
+const { resolvedTheme } = useTheme();
 
-#### 3. `src/components/admin/TenantEditorModal.tsx`
-
-**Estado (`formData`):**
-```typescript
-footer_logo_url: "",
-footer_logo_url_dark: "",
-feature_logo_url: "",
-feature_logo_url_dark: "",
-```
-
-**useEffect (carregar dados):**
-```typescript
-footer_logo_url: tenant.footer_logo_url || "",
-footer_logo_url_dark: tenant.footer_logo_url_dark || "",
-feature_logo_url: tenant.feature_logo_url || "",
-feature_logo_url_dark: tenant.feature_logo_url_dark || "",
-```
-
-**handleSubmit:**
-```typescript
-footer_logo_url: formData.footer_logo_url || null,
-footer_logo_url_dark: formData.footer_logo_url_dark || null,
-feature_logo_url: formData.feature_logo_url || null,
-feature_logo_url_dark: formData.feature_logo_url_dark || null,
-```
-
-**handleLogoUpload - Adicionar tipos:**
-```typescript
-type: 'light' | 'dark' | 'switcher-light' | 'switcher-dark' | 'footer-light' | 'footer-dark' | 'feature-light' | 'feature-dark' | 'fallback'
-```
-
-**Nova seção na Tab Logos:**
-- Seção "Logo do Footer" com campos light/dark e previews
-- Seção "Logo de Features" com campos light/dark e previews
-- Explicação sobre fallback para logo principal
-
-#### 4. `src/components/ui/footer.tsx`
-
-Atualizar para usar os novos campos com fallback:
-
-```typescript
-// Antes:
-const footerLogoUrl = isDarkMode && tenant?.logo_url_dark 
-  ? tenant.logo_url_dark 
-  : tenant?.logo_url;
-
-// Depois:
-const footerLogoUrl = isDarkMode 
-  ? (tenant?.footer_logo_url_dark || tenant?.logo_url_dark)
-  : (tenant?.footer_logo_url || tenant?.logo_url);
-```
-
-#### 5. `src/components/blog/AuthorSpotlight.tsx` (exemplo de feature)
-
-Atualizar para usar feature logo quando for sistema/admin:
-
-```typescript
-// Obter logo de feature com fallback
+// Função helper para obter feature logo com fallback
 const getFeatureLogo = () => {
   const isDarkMode = resolvedTheme === 'dark';
   return isDarkMode 
@@ -165,43 +31,50 @@ const getFeatureLogo = () => {
     : (tenant?.feature_logo_url || tenant?.logo_url);
 };
 
-// Usar em autores do sistema
-const displayPhoto = isSystemAdmin ? getFeatureLogo() : author.author_photo;
+// Usar no organizerPhoto:
+const organizerPhoto = isOrganizedByTenant
+  ? getFeatureLogo()
+  : session.professional?.foto_perfil_url;
 ```
 
 ---
 
-### Lógica de Fallback
+### Mudanças por Arquivo
+
+#### 1. `src/components/group-sessions/NextSessionHighlight.tsx`
+
+- Adicionar import: `import { useTheme } from "next-themes";`
+- Adicionar hook: `const { resolvedTheme } = useTheme();`
+- Adicionar função `getFeatureLogo()`
+- Alterar linha 48-49 para usar `getFeatureLogo()` quando `isOrganizedByTenant`
+
+#### 2. `src/components/group-sessions/GroupSessionCard.tsx`
+
+- Adicionar import: `import { useTheme } from "next-themes";`
+- Adicionar hook: `const { resolvedTheme } = useTheme();`
+- Adicionar função `getFeatureLogo()`
+- Alterar linha 58-59 para usar `getFeatureLogo()` quando `isOrganizedByTenant`
+
+---
+
+### Comportamento Esperado
 
 ```text
-Footer Light:  footer_logo_url → logo_url
-Footer Dark:   footer_logo_url_dark → logo_url_dark
+Modo Light:
+  - Se feature_logo_url configurado → usa feature_logo_url
+  - Senão → usa logo_url (fallback)
 
-Feature Light: feature_logo_url → logo_url
-Feature Dark:  feature_logo_url_dark → logo_url_dark
+Modo Dark:
+  - Se feature_logo_url_dark configurado → usa feature_logo_url_dark
+  - Senão → usa logo_url_dark (fallback)
 ```
-
-Isso significa que se o admin não configurar logos específicos para footer ou features, o sistema automaticamente usa o logo principal do header.
 
 ---
 
 ### Arquivos a Modificar
 
-| Arquivo | Tipo | Descrição |
-|---------|------|-----------|
-| `supabase/migrations/...` | Migration | Adicionar 4 colunas |
-| `src/integrations/supabase/types.ts` | Auto-gerado | Atualizado após migration |
-| `src/types/tenant.ts` | Interface | Adicionar 4 campos |
-| `src/components/admin/TenantEditorModal.tsx` | Admin UI | Adicionar seções de logo |
-| `src/components/ui/footer.tsx` | Component | Usar footer_logo_url com fallback |
-| `src/components/blog/AuthorSpotlight.tsx` | Component | Usar feature_logo_url |
-
----
-
-### Estimativa
-
-- 1 migration SQL
-- ~6 arquivos modificados
-- ~120 linhas adicionadas
-- Lógica de fallback automática mantém compatibilidade
+| Arquivo | Mudanças |
+|---------|----------|
+| `src/components/group-sessions/NextSessionHighlight.tsx` | +import useTheme, +getFeatureLogo helper, usar no organizerPhoto |
+| `src/components/group-sessions/GroupSessionCard.tsx` | +import useTheme, +getFeatureLogo helper, usar no organizerPhoto |
 
