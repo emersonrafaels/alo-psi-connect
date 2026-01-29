@@ -102,6 +102,10 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     logo_url_dark: "",
     switcher_logo_url: "",
     switcher_logo_url_dark: "",
+    footer_logo_url: "",
+    footer_logo_url_dark: "",
+    feature_logo_url: "",
+    feature_logo_url_dark: "",
     header_color: "",
     primary_color: "#0ea5e9",
     accent_color: "#06b6d4",
@@ -150,7 +154,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
   });
   const [loading, setLoading] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
-  const [uploadingLogo, setUploadingLogo] = useState<'light' | 'dark' | 'switcher-light' | 'switcher-dark' | 'fallback' | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState<'light' | 'dark' | 'switcher-light' | 'switcher-dark' | 'footer-light' | 'footer-dark' | 'feature-light' | 'feature-dark' | 'fallback' | null>(null);
 
   useEffect(() => {
     if (tenant) {
@@ -162,6 +166,10 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         logo_url_dark: tenant.logo_url_dark || "",
         switcher_logo_url: tenant.switcher_logo_url || "",
         switcher_logo_url_dark: tenant.switcher_logo_url_dark || "",
+        footer_logo_url: (tenant as any).footer_logo_url || "",
+        footer_logo_url_dark: (tenant as any).footer_logo_url_dark || "",
+        feature_logo_url: (tenant as any).feature_logo_url || "",
+        feature_logo_url_dark: (tenant as any).feature_logo_url_dark || "",
         header_color: tenant.header_color || "",
         primary_color: tenant.primary_color || "#0ea5e9",
         accent_color: tenant.accent_color || "#06b6d4",
@@ -217,6 +225,10 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         logo_url_dark: "",
         switcher_logo_url: "",
         switcher_logo_url_dark: "",
+        footer_logo_url: "",
+        footer_logo_url_dark: "",
+        feature_logo_url: "",
+        feature_logo_url_dark: "",
         header_color: "",
         primary_color: "#0ea5e9",
         accent_color: "#06b6d4",
@@ -325,7 +337,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     }
   };
 
-  const handleLogoUpload = async (file: File, type: 'light' | 'dark' | 'switcher-light' | 'switcher-dark' | 'fallback') => {
+  const handleLogoUpload = async (file: File, type: 'light' | 'dark' | 'switcher-light' | 'switcher-dark' | 'footer-light' | 'footer-dark' | 'feature-light' | 'feature-dark' | 'fallback') => {
     if (!tenant?.id) {
       toast.error("Salve o tenant antes de fazer upload de imagens");
       return;
@@ -374,6 +386,10 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
           dark: 'logo_url_dark',
           'switcher-light': 'switcher_logo_url',
           'switcher-dark': 'switcher_logo_url_dark',
+          'footer-light': 'footer_logo_url',
+          'footer-dark': 'footer_logo_url_dark',
+          'feature-light': 'feature_logo_url',
+          'feature-dark': 'feature_logo_url_dark',
           fallback: 'fallback_professional_image'
         };
         
@@ -406,6 +422,10 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         logo_url_dark: formData.logo_url_dark || null,
         switcher_logo_url: formData.switcher_logo_url || null,
         switcher_logo_url_dark: formData.switcher_logo_url_dark || null,
+        footer_logo_url: formData.footer_logo_url || null,
+        footer_logo_url_dark: formData.footer_logo_url_dark || null,
+        feature_logo_url: formData.feature_logo_url || null,
+        feature_logo_url_dark: formData.feature_logo_url_dark || null,
         header_color: formData.header_color || null,
         primary_color: formData.primary_color,
         accent_color: formData.accent_color,
@@ -791,6 +811,224 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
                     </div>
                     {!formData.switcher_logo_url_dark && formData.logo_url_dark && (
                       <p className="text-xs text-amber-400 mt-2">⚠️ Usando logo principal (Dark Mode)</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <Separator className="my-6" />
+
+              {/* Section: Footer Logos */}
+              <div className="space-y-4">
+                <div className="border-b pb-2">
+                  <h3 className="text-lg font-semibold">Logo do Footer</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Logo específico para o rodapé. Se não configurado, usa o logo principal do header.
+                  </p>
+                </div>
+
+                {/* Footer Logo Light Mode */}
+                <div className="border rounded-lg p-4 space-y-4 bg-green-50 dark:bg-green-950/30">
+                  <div>
+                    <h4 className="font-medium">🌞 Footer Light Mode</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Se vazio, usa o logo principal (Light Mode).
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      value={formData.footer_logo_url}
+                      onChange={(e) => setFormData({ ...formData, footer_logo_url: e.target.value })}
+                      placeholder="https://exemplo.com/footer-logo-light.png"
+                      className="flex-1"
+                    />
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleLogoUpload(file, 'footer-light');
+                        }}
+                      />
+                      <Button type="button" variant="outline" disabled={uploadingLogo === 'footer-light'} asChild>
+                        <span>
+                          {uploadingLogo === 'footer-light' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 bg-primary text-primary-foreground">
+                    <p className="text-sm opacity-80 mb-2">Preview no Footer:</p>
+                    <img 
+                      src={formData.footer_logo_url || formData.logo_url || '/placeholder.svg'} 
+                      alt="Footer preview light" 
+                      className="h-10 object-contain opacity-80" 
+                    />
+                    {!formData.footer_logo_url && formData.logo_url && (
+                      <p className="text-xs text-amber-300 mt-2">⚠️ Usando logo principal (Light Mode)</p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Footer Logo Dark Mode */}
+                <div className="border rounded-lg p-4 space-y-4 bg-green-50 dark:bg-green-950/30">
+                  <div>
+                    <h4 className="font-medium">🌙 Footer Dark Mode</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Se vazio, usa o logo principal (Dark Mode).
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      value={formData.footer_logo_url_dark}
+                      onChange={(e) => setFormData({ ...formData, footer_logo_url_dark: e.target.value })}
+                      placeholder="https://exemplo.com/footer-logo-dark.png"
+                      className="flex-1"
+                    />
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleLogoUpload(file, 'footer-dark');
+                        }}
+                      />
+                      <Button type="button" variant="outline" disabled={uploadingLogo === 'footer-dark'} asChild>
+                        <span>
+                          {uploadingLogo === 'footer-dark' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 bg-gray-900">
+                    <p className="text-sm text-gray-400 mb-2">Preview no Footer (fundo escuro):</p>
+                    <img 
+                      src={formData.footer_logo_url_dark || formData.logo_url_dark || '/placeholder.svg'} 
+                      alt="Footer preview dark" 
+                      className="h-10 object-contain opacity-80" 
+                    />
+                    {!formData.footer_logo_url_dark && formData.logo_url_dark && (
+                      <p className="text-xs text-amber-400 mt-2">⚠️ Usando logo principal (Dark Mode)</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <Separator className="my-6" />
+
+              {/* Section: Feature Logos */}
+              <div className="space-y-4">
+                <div className="border-b pb-2">
+                  <h3 className="text-lg font-semibold">Logo de Features/Ícones</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Logo usado em páginas como Blog, Encontros, Autores, etc. Se não configurado, usa o logo principal.
+                  </p>
+                </div>
+
+                {/* Feature Logo Light Mode */}
+                <div className="border rounded-lg p-4 space-y-4 bg-purple-50 dark:bg-purple-950/30">
+                  <div>
+                    <h4 className="font-medium">🌞 Feature Light Mode</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Se vazio, usa o logo principal (Light Mode).
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      value={formData.feature_logo_url}
+                      onChange={(e) => setFormData({ ...formData, feature_logo_url: e.target.value })}
+                      placeholder="https://exemplo.com/feature-logo-light.png"
+                      className="flex-1"
+                    />
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleLogoUpload(file, 'feature-light');
+                        }}
+                      />
+                      <Button type="button" variant="outline" disabled={uploadingLogo === 'feature-light'} asChild>
+                        <span>
+                          {uploadingLogo === 'feature-light' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 bg-white flex items-center gap-3">
+                    <img 
+                      src={formData.feature_logo_url || formData.logo_url || '/placeholder.svg'} 
+                      alt="Feature preview light" 
+                      className="w-12 h-12 object-contain" 
+                    />
+                    <div className="text-sm text-gray-600">
+                      <p className="font-medium">Preview como ícone</p>
+                      <p className="text-xs">Ex: Autor do sistema em posts</p>
+                    </div>
+                    {!formData.feature_logo_url && formData.logo_url && (
+                      <p className="text-xs text-amber-600">⚠️ Usando logo principal</p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Feature Logo Dark Mode */}
+                <div className="border rounded-lg p-4 space-y-4 bg-purple-50 dark:bg-purple-950/30">
+                  <div>
+                    <h4 className="font-medium">🌙 Feature Dark Mode</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Se vazio, usa o logo principal (Dark Mode).
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      value={formData.feature_logo_url_dark}
+                      onChange={(e) => setFormData({ ...formData, feature_logo_url_dark: e.target.value })}
+                      placeholder="https://exemplo.com/feature-logo-dark.png"
+                      className="flex-1"
+                    />
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleLogoUpload(file, 'feature-dark');
+                        }}
+                      />
+                      <Button type="button" variant="outline" disabled={uploadingLogo === 'feature-dark'} asChild>
+                        <span>
+                          {uploadingLogo === 'feature-dark' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 bg-gray-900 flex items-center gap-3">
+                    <img 
+                      src={formData.feature_logo_url_dark || formData.logo_url_dark || '/placeholder.svg'} 
+                      alt="Feature preview dark" 
+                      className="w-12 h-12 object-contain" 
+                    />
+                    <div className="text-sm text-gray-400">
+                      <p className="font-medium">Preview como ícone</p>
+                      <p className="text-xs">Ex: Autor do sistema em posts</p>
+                    </div>
+                    {!formData.feature_logo_url_dark && formData.logo_url_dark && (
+                      <p className="text-xs text-amber-400">⚠️ Usando logo principal</p>
                     )}
                   </div>
                 </div>

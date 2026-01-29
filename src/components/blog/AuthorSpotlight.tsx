@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
+import { useTheme } from "next-themes";
 import { PenTool, Building2, X } from "lucide-react";
 
 interface Author {
@@ -21,6 +22,15 @@ interface AuthorSpotlightProps {
 
 export const AuthorSpotlight = ({ selectedAuthor, onAuthorSelect }: AuthorSpotlightProps) => {
   const { tenant } = useTenant();
+  const { resolvedTheme } = useTheme();
+
+  // Get feature logo with fallback to main logo
+  const getFeatureLogo = () => {
+    const isDarkMode = resolvedTheme === 'dark';
+    return isDarkMode 
+      ? (tenant?.feature_logo_url_dark || tenant?.logo_url_dark)
+      : (tenant?.feature_logo_url || tenant?.logo_url);
+  };
 
   const { data: topAuthors = [] } = useQuery({
     queryKey: ['top-blog-authors', tenant?.id],
@@ -129,7 +139,7 @@ export const AuthorSpotlight = ({ selectedAuthor, onAuthorSelect }: AuthorSpotli
         {topAuthors.map((author, index) => {
           const isSystemAdmin = !author.author_name || author.author_name === 'Administrador do Sistema';
           const displayName = isSystemAdmin ? (tenant?.name || 'Alô Psi') : author.author_name;
-          const displayPhoto = isSystemAdmin ? tenant?.logo_url : author.author_photo;
+          const displayPhoto = isSystemAdmin ? getFeatureLogo() : author.author_photo;
           const isSelected = selectedAuthor !== null && selectedAuthor === author.author_id;
 
           return (
