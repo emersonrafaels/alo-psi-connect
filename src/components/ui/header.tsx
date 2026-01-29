@@ -317,14 +317,25 @@ const Header = () => {
                   Minha Conta
                 </p>
                 <nav className="flex flex-col space-y-1">
-                  <Link
-                    to={buildTenantPath(tenantSlug, '/agendamentos')}
-                    className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Calendar className="h-5 w-5 opacity-70" />
-                    Meus Agendamentos
-                  </Link>
+                  {isInstitutionAdmin && !institutionAdminLoading ? (
+                    <Link
+                      to={buildTenantPath(tenantSlug, '/portal-institucional')}
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Building2 className="h-5 w-5 opacity-70" />
+                      Minha Instituição
+                    </Link>
+                  ) : (
+                    <Link
+                      to={buildTenantPath(tenantSlug, '/agendamentos')}
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Calendar className="h-5 w-5 opacity-70" />
+                      Meus Agendamentos
+                    </Link>
+                  )}
                   <Link
                     to={buildTenantPath(tenantSlug, '/meus-encontros')}
                     className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
