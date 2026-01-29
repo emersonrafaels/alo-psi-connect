@@ -45,7 +45,7 @@ const Header = () => {
     const fetchTenants = async () => {
       const { data } = await supabase
         .from('tenants')
-        .select('id, slug, name, logo_url, logo_url_dark, cross_tenant_navigation_warning_enabled, cross_tenant_navigation_warning_title, cross_tenant_navigation_warning_message')
+        .select('id, slug, name, logo_url, logo_url_dark, switcher_logo_url, switcher_logo_url_dark, cross_tenant_navigation_warning_enabled, cross_tenant_navigation_warning_title, cross_tenant_navigation_warning_message')
         .eq('is_active', true)
       if (data) setAllTenants(data as unknown as Tenant[])
     }
@@ -135,9 +135,10 @@ const Header = () => {
           <div className="hidden md:flex items-center space-x-4 flex-shrink-0">
             {/* Logo Secundário (Outro Tenant) - Dinâmico */}
             {otherTenant && (() => {
-              const switcherLogoUrl = isDarkMode && otherTenant.logo_url_dark 
-                ? otherTenant.logo_url_dark 
-                : otherTenant.logo_url;
+              // Use switcher-specific logos if available, otherwise fall back to main logos
+              const switcherLogoUrl = isDarkMode 
+                ? (otherTenant.switcher_logo_url_dark || otherTenant.logo_url_dark)
+                : (otherTenant.switcher_logo_url || otherTenant.logo_url);
               return (
                 <button 
                   onClick={() => handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'alopsi' ? '/' : `/${otherTenant.slug}`)}
@@ -361,9 +362,10 @@ const Header = () => {
                 <div className="flex flex-col space-y-2 pt-4 border-t border-primary-foreground/20">
                 {/* Mobile Tenant Switcher */}
                 {otherTenant && (() => {
-                  const mobileSwitcherLogoUrl = isDarkMode && otherTenant.logo_url_dark 
-                    ? otherTenant.logo_url_dark 
-                    : otherTenant.logo_url;
+                  // Use switcher-specific logos if available, otherwise fall back to main logos
+                  const mobileSwitcherLogoUrl = isDarkMode 
+                    ? (otherTenant.switcher_logo_url_dark || otherTenant.logo_url_dark)
+                    : (otherTenant.switcher_logo_url || otherTenant.logo_url);
                   return (
                     <button 
                       onClick={() => {

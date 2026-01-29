@@ -5,6 +5,9 @@ export interface Tenant {
   base_path: string;
   logo_url: string | null;
   logo_url_dark: string | null;
+  // Switcher logos - shown when this tenant appears in other tenant's header switcher
+  switcher_logo_url?: string | null;
+  switcher_logo_url_dark?: string | null;
   admin_email?: string | null;
   header_color?: string;
   primary_color: string;
