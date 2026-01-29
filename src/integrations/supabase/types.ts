@@ -2666,10 +2666,14 @@ export type Database = {
           empty_state_message: string | null
           fallback_professional_image: string | null
           favicon_url: string | null
+          feature_logo_url: string | null
+          feature_logo_url_dark: string | null
           font_family_body: string | null
           font_family_headings: string | null
           footer_bg_color_dark: string | null
           footer_bg_color_light: string | null
+          footer_logo_url: string | null
+          footer_logo_url_dark: string | null
           footer_text_color_dark: string | null
           footer_text_color_light: string | null
           google_analytics_id: string | null
@@ -2752,10 +2756,14 @@ export type Database = {
           empty_state_message?: string | null
           fallback_professional_image?: string | null
           favicon_url?: string | null
+          feature_logo_url?: string | null
+          feature_logo_url_dark?: string | null
           font_family_body?: string | null
           font_family_headings?: string | null
           footer_bg_color_dark?: string | null
           footer_bg_color_light?: string | null
+          footer_logo_url?: string | null
+          footer_logo_url_dark?: string | null
           footer_text_color_dark?: string | null
           footer_text_color_light?: string | null
           google_analytics_id?: string | null
@@ -2838,10 +2846,14 @@ export type Database = {
           empty_state_message?: string | null
           fallback_professional_image?: string | null
           favicon_url?: string | null
+          feature_logo_url?: string | null
+          feature_logo_url_dark?: string | null
           font_family_body?: string | null
           font_family_headings?: string | null
           footer_bg_color_dark?: string | null
           footer_bg_color_light?: string | null
+          footer_logo_url?: string | null
+          footer_logo_url_dark?: string | null
           footer_text_color_dark?: string | null
           footer_text_color_light?: string | null
           google_analytics_id?: string | null

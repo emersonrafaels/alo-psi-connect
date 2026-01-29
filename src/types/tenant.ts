@@ -8,6 +8,12 @@ export interface Tenant {
   // Switcher logos - shown when this tenant appears in other tenant's header switcher
   switcher_logo_url?: string | null;
   switcher_logo_url_dark?: string | null;
+  // Footer logos - separate from header, falls back to logo_url if not set
+  footer_logo_url?: string | null;
+  footer_logo_url_dark?: string | null;
+  // Feature logos - used on blog, group sessions, etc., falls back to logo_url if not set
+  feature_logo_url?: string | null;
+  feature_logo_url_dark?: string | null;
   admin_email?: string | null;
   header_color?: string;
   primary_color: string;

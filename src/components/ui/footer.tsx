@@ -25,9 +25,11 @@ const Footer = () => {
   const { resolvedTheme } = useTheme();
   const tenantSlug = tenant?.slug || 'alopsi';
   
-  // Use dark logo when in dark mode and it's available
+  // Use footer-specific logo with fallback to main logo
   const isDarkMode = resolvedTheme === 'dark';
-  const footerLogoUrl = isDarkMode && tenant?.logo_url_dark ? tenant.logo_url_dark : tenant?.logo_url;
+  const footerLogoUrl = isDarkMode 
+    ? (tenant?.footer_logo_url_dark || tenant?.logo_url_dark)
+    : (tenant?.footer_logo_url || tenant?.logo_url);
 
   // Helper function to build footer links with tenant context
   const buildFooterLink = (customUrl: string | null | undefined, defaultPath: string) => {
