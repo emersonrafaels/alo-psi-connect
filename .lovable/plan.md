@@ -1,93 +1,176 @@
 
 
-## Plano: Configurar Logo Dark Mode da Rede Bem Estar e Ajustar Switcher
+## Plano Expandido: Logos Light/Dark para Todos os Tenants + Switcher Mobile
 
-### Problema Identificado
+### Resumo das Mudanças
 
-O logo atual da Rede Bem Estar (`logo_redebemestar_2.png`) usa texto **branco**, tornando-o invisível quando exibido no botão switcher com fundo claro (modo light).
+O sistema já suporta `logo_url` (light) e `logo_url_dark` (dark) por tenant. Este plano expande para:
 
-**Estado atual no banco de dados:**
-
-| Tenant | logo_url | logo_url_dark |
-|--------|----------|---------------|
-| alopsi (Rede Bem Estar) | `.../logo_redebemestar_2.png` | NULL |
-| medcos | `.../logo_medcos.png` | NULL |
-
-**Problema no código:**
-O switcher no header (linha 139) usa apenas `otherTenant.logo_url`, ignorando o tema atual e o campo `logo_url_dark`.
+1. **Melhorar o painel de configuração** - Deixar claro o propósito de cada logo
+2. **Adicionar switcher no menu mobile** - Atualmente só existe no desktop
+3. **Usar lógica de tema no mobile também**
 
 ---
 
-### Solução Proposta
+### Situação Atual
 
-#### Parte 1: Configurar Logo Correto no Banco de Dados
+| Componente | Logo Light | Logo Dark | Status |
+|------------|-----------|-----------|--------|
+| Header Desktop (próprio tenant) | ✅ | ✅ | Implementado |
+| Header Desktop (switcher) | ✅ | ✅ | Implementado |
+| Header Mobile (próprio tenant) | ✅ | ✅ | Implementado |
+| Header Mobile (switcher) | ❌ | ❌ | **Não existe** |
+| Footer | ✅ | ✅ | Implementado |
+| Admin Branding | ✅ | ✅ | Funcional, mas confuso |
 
-Precisamos de duas versões do logo Rede Bem Estar:
-- **Logo para fundo claro** (texto escuro/colorido) → `logo_url`
-- **Logo para fundo escuro** (texto branco) → `logo_url_dark`
+---
 
-**Opção recomendada:** O logo branco atual deve ir para `logo_url_dark`, e um logo com texto roxo/escuro deve ser o `logo_url` principal.
-
-Se existir uma versão com texto escuro no S3 (ex: `logo_redebemestar_3.png` ou similar), podemos usá-la. Caso contrário, será necessário fazer upload de uma nova versão.
-
-#### Parte 2: Atualizar o Switcher para Usar o Tema
+### Mudança 1: Adicionar Switcher no Menu Mobile
 
 **Arquivo:** `src/components/ui/header.tsx`
 
-**Mudanças necessárias:**
+**Localização:** Dentro do bloco `{/* Mobile Navigation */}` (linhas 286-412)
 
-1. **Importar hook de tema:**
+**O que adicionar:**
+- Botão do switcher similar ao desktop
+- Usar a mesma lógica `isDarkMode && otherTenant.logo_url_dark`
+- Posicionar após os links de navegação e antes do ThemeToggle
+
 ```typescript
-import { useTheme } from 'next-themes';
-```
-
-2. **Adicionar campo `logo_url_dark` na query do fetch:**
-```typescript
-// Linha 47 - adicionar logo_url_dark
-.select('id, slug, name, logo_url, logo_url_dark, cross_tenant_navigation_warning_enabled, ...')
-```
-
-3. **Usar o tema para escolher o logo correto:**
-```typescript
-const { resolvedTheme } = useTheme();
-const isDarkMode = resolvedTheme === 'dark';
-
-// Na renderização do switcher (linha 139):
-const switcherLogoUrl = isDarkMode && otherTenant.logo_url_dark 
-  ? otherTenant.logo_url_dark 
-  : otherTenant.logo_url;
-```
-
-4. **Atualizar a imagem do switcher:**
-```typescript
-<img 
-  src={switcherLogoUrl || '/placeholder.svg'}
-  alt={otherTenant.name}
-  className="h-8 w-auto object-contain"
-/>
+// Adicionar no menu mobile, antes do ThemeToggle (linha ~361)
+{otherTenant && (() => {
+  const mobileSwitcherLogoUrl = isDarkMode && otherTenant.logo_url_dark 
+    ? otherTenant.logo_url_dark 
+    : otherTenant.logo_url;
+  return (
+    <button 
+      onClick={() => {
+        handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'alopsi' ? '/' : `/${otherTenant.slug}`);
+        setIsMenuOpen(false);
+      }}
+      className="flex items-center justify-center bg-background hover:bg-muted rounded-lg px-4 py-3 transition-colors cursor-pointer shadow-md border border-border"
+      title={`Ir para ${otherTenant.name}`}
+    >
+      <img 
+        src={mobileSwitcherLogoUrl || '/placeholder.svg'}
+        alt={otherTenant.name}
+        className="h-8 w-auto object-contain"
+      />
+    </button>
+  );
+})()}
 ```
 
 ---
 
-### Fluxo Visual
+### Mudança 2: Melhorar Painel de Branding
+
+**Arquivo:** `src/components/admin/config/TenantBrandingConfig.tsx`
+
+**Mudanças nos Cards de Logo:**
+
+#### Card 1: Logo Principal (linhas 173-202)
+
+**Antes:**
+```
+CardTitle: "Logo"
+CardDescription: "URL da logo do tenant"
+```
+
+**Depois:**
+```
+CardTitle: "Logo para Fundo Claro (Light Mode)"
+CardDescription: "Usado no header, footer e no switcher de outros tenants quando em light mode. Recomendado: logo com texto escuro/colorido."
+```
+
+**Adicionar preview do switcher:**
+```typescript
+{branding.logo_url && (
+  <div className="grid grid-cols-2 gap-4">
+    {/* Preview normal */}
+    <div className="border rounded-lg p-4 bg-white">
+      <p className="text-sm text-gray-600 mb-2">No Header:</p>
+      <img src={branding.logo_url} alt="Logo light" className="h-12 object-contain" />
+    </div>
+    {/* Preview no switcher */}
+    <div className="border rounded-lg p-4 bg-white">
+      <p className="text-sm text-gray-600 mb-2">No Switcher (outro tenant):</p>
+      <div className="inline-flex bg-white border rounded-lg px-3 py-2 shadow-sm">
+        <img src={branding.logo_url} alt="Switcher preview" className="h-8 object-contain" />
+      </div>
+    </div>
+  </div>
+)}
+```
+
+#### Card 2: Logo Dark Mode (linhas 204-306)
+
+**Antes:**
+```
+CardTitle: "Logo para Dark Mode"
+CardDescription: "Logo alternativo usado quando o tema escuro está ativo (recomendado: versão clara/branca do logo)"
+```
+
+**Depois:**
+```
+CardTitle: "Logo para Fundo Escuro (Dark Mode)"
+CardDescription: "Usado no header, footer e no switcher de outros tenants quando em dark mode. Recomendado: logo com texto branco/claro."
+```
+
+**Adicionar preview do switcher com fundo escuro:**
+```typescript
+{branding.logo_url_dark && (
+  <div className="grid grid-cols-2 gap-4">
+    {/* Preview normal */}
+    <div className="border rounded-lg p-4 bg-gray-900">
+      <p className="text-sm text-gray-400 mb-2">No Header:</p>
+      <img src={branding.logo_url_dark} alt="Logo dark" className="h-12 object-contain" />
+    </div>
+    {/* Preview no switcher */}
+    <div className="border rounded-lg p-4 bg-gray-900">
+      <p className="text-sm text-gray-400 mb-2">No Switcher (outro tenant):</p>
+      <div className="inline-flex bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 shadow-sm">
+        <img src={branding.logo_url_dark} alt="Switcher preview" className="h-8 object-contain" />
+      </div>
+    </div>
+  </div>
+)}
+```
+
+---
+
+### Fluxo Visual Completo
 
 ```text
-MODO LIGHT (fundo branco)                MODO DARK (fundo escuro)
-┌─────────────────────────┐             ┌─────────────────────────┐
-│  Header MEDCOS          │             │  Header MEDCOS          │
-│                         │             │                         │
-│  [Rede Bem Estar btn]   │             │  [Rede Bem Estar btn]   │
-│   Logo texto ROXO ✓     │             │   Logo texto BRANCO ✓   │
-│   (logo_url)            │             │   (logo_url_dark)       │
-└─────────────────────────┘             └─────────────────────────┘
+ESTOU NA MEDCOS (Light Mode)                    ESTOU NA MEDCOS (Dark Mode)
+┌─────────────────────────────────────┐        ┌─────────────────────────────────────┐
+│ Desktop:                            │        │ Desktop:                            │
+│ [Logo MEDCOS light] [RBE btn light] │        │ [Logo MEDCOS dark] [RBE btn dark]   │
+├─────────────────────────────────────┤        ├─────────────────────────────────────┤
+│ Mobile Menu:                        │        │ Mobile Menu:                        │
+│ - Profissionais                     │        │ - Profissionais                     │
+│ - Grupos                            │        │ - Grupos                            │
+│ - Blog                              │        │ - Blog                              │
+│ ┌───────────────────┐               │        │ ┌───────────────────┐               │
+│ │ [RBE logo light]  │ ← NOVO        │        │ │ [RBE logo dark]   │ ← NOVO        │
+│ └───────────────────┘               │        │ └───────────────────┘               │
+│ [Theme Toggle]                      │        │ [Theme Toggle]                      │
+└─────────────────────────────────────┘        └─────────────────────────────────────┘
 
-No banco:
-┌─────────┬──────────────────────────────┬──────────────────────────────┐
-│ slug    │ logo_url (para fundo claro)  │ logo_url_dark (fundo escuro) │
-├─────────┼──────────────────────────────┼──────────────────────────────┤
-│ alopsi  │ .../logo_texto_roxo.png      │ .../logo_texto_branco.png    │
-│ medcos  │ .../logo_medcos.png          │ (opcional)                   │
-└─────────┴──────────────────────────────┴──────────────────────────────┘
+ESTOU NA RBE (Light Mode)                       ESTOU NA RBE (Dark Mode)
+┌─────────────────────────────────────┐        ┌─────────────────────────────────────┐
+│ Desktop:                            │        │ Desktop:                            │
+│ [Logo RBE light] [MEDCOS btn light] │        │ [Logo RBE dark] [MEDCOS btn dark]   │
+├─────────────────────────────────────┤        ├─────────────────────────────────────┤
+│ Mobile Menu:                        │        │ Mobile Menu:                        │
+│ - Profissionais                     │        │ - Profissionais                     │
+│ - Grupos                            │        │ - Grupos                            │
+│ - Blog                              │        │ - Blog                              │
+│ ┌───────────────────┐               │        │ ┌───────────────────┐               │
+│ │ [MEDCOS logo lgt] │ ← NOVO        │        │ │ [MEDCOS logo drk] │ ← NOVO        │
+│ └───────────────────┘               │        │ └───────────────────┘               │
+│ [Theme Toggle]                      │        │ [Theme Toggle]                      │
+└─────────────────────────────────────┘        └─────────────────────────────────────┘
 ```
 
 ---
@@ -96,27 +179,32 @@ No banco:
 
 | Arquivo | Mudanças |
 |---------|----------|
-| `src/components/ui/header.tsx` | Importar `useTheme`, adicionar `logo_url_dark` na query, implementar lógica de seleção de logo baseada no tema |
-
-### Configuração de Dados Necessária
-
-Após implementar o código, será necessário:
-
-1. **Fazer upload** de uma versão do logo Rede Bem Estar com texto roxo/escuro (para fundos claros)
-2. **Atualizar o banco** via Admin → Branding de Tenants:
-   - `logo_url`: versão com texto escuro
-   - `logo_url_dark`: versão atual (texto branco)
+| `src/components/ui/header.tsx` | Adicionar switcher no menu mobile (~15 linhas) |
+| `src/components/admin/config/TenantBrandingConfig.tsx` | Melhorar labels, descrições e adicionar previews do switcher (~40 linhas) |
 
 ---
 
-### Considerações Adicionais
+### Configuração de Dados Necessária (Após Implementação)
 
-- O mesmo padrão pode ser aplicado ao tenant MEDCOS futuramente se necessário
-- A lógica é consistente com a já implementada no `TenantBranding.tsx` e `footer.tsx`
+O usuário precisará configurar via Admin → Branding de Tenants:
+
+**Rede Bem Estar (alopsi):**
+| Campo | Valor |
+|-------|-------|
+| `logo_url` | Logo com texto ROXO (para fundos claros) |
+| `logo_url_dark` | Logo atual com texto BRANCO (para fundos escuros) |
+
+**MEDCOS:**
+| Campo | Valor |
+|-------|-------|
+| `logo_url` | Logo atual (para fundos claros) |
+| `logo_url_dark` | Versão para fundo escuro (se disponível) |
+
+---
 
 ### Estimativa
 
-- 1 arquivo de código
-- ~10 linhas alteradas
-- 1 configuração de dados no admin
+- 2 arquivos
+- ~55 linhas alteradas
+- Configuração de dados pelo admin
 
