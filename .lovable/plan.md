@@ -1,98 +1,111 @@
 
 
-## Plano: Adicionar Link "Minha Instituição" no Menu Mobile
+## Plano: Botão Flutuante "Voltar ao Topo"
 
-### Problema Identificado
+### Objetivo
 
-O usuário `xamahot633@1200b.com` possui:
-- Role `institution_admin` na tabela `user_roles` ✓
-- Vínculo ativo na tabela `institution_users` com UNICAMP ✓
-- A função `has_role('institution_admin')` retorna `true` ✓
+Adicionar um botão flutuante no lado direito da tela que aparece quando o usuário rola a página, permitindo voltar ao topo com um clique.
 
-**Porém o menu mobile não contém o link para o Portal Institucional!**
+### Análise do Layout Atual
 
-| Menu | Link "Minha Instituição" |
-|------|--------------------------|
-| Desktop (dropdown) | Presente (linha 207) |
-| Mobile | **AUSENTE** |
-
-### Código Atual do Desktop (funciona)
-
-```tsx
-// Linhas 206-216 - Desktop dropdown
-{isInstitutionAdmin && !institutionAdminLoading ? (
-  <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/portal-institucional'))}>
-    <Building2 className="h-4 w-4 mr-2" />
-    Minha Instituição
-  </DropdownMenuItem>
-) : (
-  <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/agendamentos'))}>
-    <Calendar className="h-4 w-4 mr-2" />
-    Meus Agendamentos
-  </DropdownMenuItem>
-)}
-```
-
-### Código Atual do Mobile (falta o link)
-
-```tsx
-// Linhas 319-327 - Mobile menu - só tem "Meus Agendamentos" sempre
-<Link
-  to={buildTenantPath(tenantSlug, '/agendamentos')}
-  ...
->
-  <Calendar className="h-5 w-5 opacity-70" />
-  Meus Agendamentos
-</Link>
-```
+| Componente | Posição | Z-Index |
+|------------|---------|---------|
+| `WhatsAppFloat` | `bottom-6 right-6` | z-50 |
+| Novo botão | `bottom-24 right-6` (acima do WhatsApp) | z-40 |
 
 ### Solução
 
-Adicionar a mesma lógica condicional do desktop no menu mobile:
-
-```tsx
-// Seção "Minha Conta" no mobile (linhas ~319-327)
-{isInstitutionAdmin && !institutionAdminLoading ? (
-  <Link
-    to={buildTenantPath(tenantSlug, '/portal-institucional')}
-    className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
-    onClick={() => setIsMenuOpen(false)}
-  >
-    <Building2 className="h-5 w-5 opacity-70" />
-    Minha Instituição
-  </Link>
-) : (
-  <Link
-    to={buildTenantPath(tenantSlug, '/agendamentos')}
-    className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
-    onClick={() => setIsMenuOpen(false)}
-  >
-    <Calendar className="h-5 w-5 opacity-70" />
-    Meus Agendamentos
-  </Link>
-)}
-```
-
-### Arquivo a Modificar
-
-| Arquivo | Linhas | Mudança |
-|---------|--------|---------|
-| `src/components/ui/header.tsx` | 319-327 | Adicionar condicional `isInstitutionAdmin` para exibir "Minha Instituição" em vez de "Meus Agendamentos" |
-
-### Resultado Esperado
-
-Quando o usuário `institution_admin` acessar o menu mobile:
+Criar um novo componente `ScrollToTopButton` seguindo o padrão existente do `FloatingBackButton`:
 
 ```text
----- Minha Conta ----
-  🏛️ Minha Instituição    ← NOVO (em vez de "Meus Agendamentos")
-  👥 Meus Encontros
-  ⚙️ Meu Perfil
++-------------------------------------------+
+|                                           |
+|                                           |
+|                                    [↑]    | ← Scroll to Top (bottom-24)
+|                                    [💬]   | ← WhatsApp (bottom-6)
++-------------------------------------------+
 ```
 
-### Resumo
+### Comportamento
 
-- **1 arquivo** a modificar
-- **1 bloco condicional** a adicionar
-- Paridade desktop/mobile restaurada
+| Condição | Estado do Botão |
+|----------|-----------------|
+| Scroll < 400px | Invisível (fade out) |
+| Scroll >= 400px | Visível (fade in) |
+| Clique | Scroll suave para o topo |
+
+### Novo Arquivo
+
+**`src/components/ui/scroll-to-top-button.tsx`**
+
+```tsx
+import { useState, useEffect } from 'react';
+import { ArrowUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+
+export const ScrollToTopButton = () => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const toggleVisibility = () => {
+      setIsVisible(window.scrollY > 400);
+    };
+
+    window.addEventListener('scroll', toggleVisibility, { passive: true });
+    return () => window.removeEventListener('scroll', toggleVisibility);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <Button
+      onClick={scrollToTop}
+      size="icon"
+      variant="secondary"
+      className={cn(
+        "fixed bottom-24 right-6 z-40 shadow-lg transition-all duration-300",
+        "hover:scale-110 hover:shadow-xl",
+        isVisible 
+          ? "opacity-100 translate-y-0" 
+          : "opacity-0 translate-y-4 pointer-events-none"
+      )}
+      aria-label="Voltar ao topo"
+    >
+      <ArrowUp className="h-5 w-5" />
+    </Button>
+  );
+};
+
+export default ScrollToTopButton;
+```
+
+### Integração Global
+
+**Modificar `src/App.tsx`** para adicionar o componente globalmente, junto com o `WhatsAppFloat`:
+
+```tsx
+import ScrollToTopButton from "@/components/ui/scroll-to-top-button";
+
+// ... no retorno do App
+<WhatsAppFloat />
+<ScrollToTopButton />
+```
+
+### Resumo das Alterações
+
+| Arquivo | Ação | Descrição |
+|---------|------|-----------|
+| `src/components/ui/scroll-to-top-button.tsx` | Criar | Novo componente de botão flutuante |
+| `src/App.tsx` | Modificar | Importar e adicionar o componente globalmente |
+
+### Características Visuais
+
+- Ícone `ArrowUp` do Lucide
+- Estilo `variant="secondary"` para combinar com o design
+- Animação de fade in/out com translate suave
+- Efeito hover com scale e sombra
+- Posicionado acima do botão WhatsApp para não sobrepor
 
