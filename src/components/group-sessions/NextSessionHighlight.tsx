@@ -8,6 +8,7 @@ import { SessionCountdown } from './SessionCountdown';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTenant } from '@/hooks/useTenant';
 import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 
 interface NextSessionHighlightProps {
   session: GroupSession;
@@ -25,6 +26,7 @@ export const NextSessionHighlight = ({
   justRegisteredSessionId = null,
 }: NextSessionHighlightProps) => {
   const { tenant } = useTenant();
+  const { resolvedTheme } = useTheme();
   const [showSuccess, setShowSuccess] = useState(false);
   const sessionDate = parseISO(session.session_date);
   const formattedDate = format(sessionDate, "dd 'de' MMMM", { locale: ptBR });
@@ -38,6 +40,14 @@ export const NextSessionHighlight = ({
       return () => clearTimeout(timer);
     }
   }, [justRegisteredSessionId, session.id, isRegistered, isRegistering]);
+
+  // Feature logo com fallback para logo principal
+  const getFeatureLogo = () => {
+    const isDarkMode = resolvedTheme === 'dark';
+    return isDarkMode 
+      ? (tenant?.feature_logo_url_dark || tenant?.logo_url_dark)
+      : (tenant?.feature_logo_url || tenant?.logo_url);
+  };
   
   const isOrganizedByTenant = session.organizer_type === 'tenant';
   
@@ -46,7 +56,7 @@ export const NextSessionHighlight = ({
     : session.professional?.display_name || 'Profissional';
   
   const organizerPhoto = isOrganizedByTenant
-    ? tenant?.logo_url
+    ? getFeatureLogo()
     : session.professional?.foto_perfil_url;
   
   const organizerCredentials = isOrganizedByTenant
