@@ -1,60 +1,139 @@
 
 
-## Plano: Adicionar Dados de Qualidade do Sono para UNICAMP
+## Plano: Melhorar Disposição do Menu Hamburger Mobile
 
-### Problema Identificado
+### Problema Atual
 
-A instituição UNICAMP (educational_institution) possui:
+Analisando a imagem, identifico os seguintes problemas no header mobile:
 
-| Métrica | Valor |
-|---------|-------|
-| Total de registros | 484 |
-| Com `sleep_quality` | 0 (0%) |
-| Com `sleep_hours` | 484 (100%) |
-| Média de horas de sono | ~6h |
+1. **Logo e Menu juntos** - O ícone de menu (hamburger) fica muito próximo do logo, sem espaçamento adequado
+2. **Falta de separação visual** - Não há separador entre os elementos do header
+3. **Menu expandido sem organização clara** - Os itens do menu aparecem sem agrupamento visual
 
-Por isso o dashboard mostra "N/A" para Qualidade do Sono - não existem dados de `sleep_quality`.
+### Melhorias Propostas
 
-### Solução
+| Aspecto | Atual | Proposto |
+|---------|-------|----------|
+| Posição do hamburger | Próximo ao logo | Extrema direita com `ml-auto` |
+| Espaçamento header | Gap de 4 apenas | Gap + justify-between |
+| Menu expandido | Lista simples | Seções agrupadas com separadores |
+| Visual do botão | Sem estilo | Padding e área de toque maior |
+| Animação | Sem transição | Fade/slide suave |
 
-Preencher `sleep_quality` com valores derivados das `sleep_hours` existentes usando uma fórmula realística:
+### Estrutura Visual Proposta
 
-| Horas de Sono | Qualidade Estimada |
-|---------------|-------------------|
-| >= 8 horas | 5 (Excelente) |
-| 7-8 horas | 4 (Bom) |
-| 6-7 horas | 3 (Moderado) |
-| 5-6 horas | 2 (Ruim) |
-| < 5 horas | 1 (Muito ruim) |
-
-### Query de Atualização
-
-```sql
-UPDATE mood_entries me
-SET sleep_quality = CASE
-  WHEN sleep_hours >= 8 THEN 5
-  WHEN sleep_hours >= 7 THEN 4
-  WHEN sleep_hours >= 6 THEN 3
-  WHEN sleep_hours >= 5 THEN 2
-  ELSE 1
-END
-WHERE me.profile_id IN (
-  SELECT p.profile_id
-  FROM patient_institutions pi
-  JOIN pacientes p ON pi.patient_id = p.id
-  WHERE pi.institution_id = 'da361619-8360-449a-bdd9-45d42bba77a0'
-)
-AND me.sleep_quality IS NULL
-AND me.sleep_hours IS NOT NULL;
+```text
++------------------------------------------+
+| [LOGO]                        [≡ MENU]   |
++------------------------------------------+
+|                                          |
+| ---- Navegação ----                      |
+|   Home                                   |
+|   Sobre                                  |
+|   Profissionais                          |
+|   Encontros                              |
+|   Diário Emocional                       |
+|   Blog                                   |
+|   Contato                                |
+|                                          |
+| ---- Minha Conta ----  (se logado)       |
+|   📅 Meus Agendamentos                   |
+|   👥 Meus Encontros                      |
+|   ⚙️ Meu Perfil                          |
+|                                          |
+| ---- Ações ----                          |
+|   [Tenant Switcher]    [🌙 Theme]        |
+|   [Entrar]             [Cadastrar]       |
++------------------------------------------+
 ```
 
-### Resultado Esperado
+### Mudanças Técnicas
 
-- 484 registros atualizados com `sleep_quality`
-- Dashboard mostrará média de qualidade do sono (~3.2/5 baseado nas horas)
-- Insights de correlação sono-energia passarão a funcionar
+**Arquivo:** `src/components/ui/header.tsx`
 
-### Ação
+#### 1. Header Row (linha ~279-285)
+- Mover o botão hamburger para a extrema direita com `ml-auto`
+- Aumentar área de toque para acessibilidade (44x44px mínimo)
+- Adicionar padding e borda arredondada
 
-Executar a migration SQL acima para preencher os dados faltantes.
+#### 2. Menu Mobile Expandido (linhas ~287-438)
+- Adicionar transição suave de abertura
+- Organizar em seções com títulos:
+  - "Navegação" - links principais
+  - "Minha Conta" - links do usuário (quando logado)
+  - "Ações" - botões, theme toggle, tenant switcher
+- Usar grid 2 colunas para botões Entrar/Cadastrar
+- Melhorar espaçamento entre itens
+
+#### 3. Estilização Visual
+- Fundo semi-transparente no menu expandido
+- Ícones maiores nos links (h-5 w-5)
+- Separadores visuais entre seções
+- Border radius nas seções
+
+### Código Proposto
+
+**Botão Hamburger:**
+```tsx
+<button
+  className="md:hidden ml-auto p-2 rounded-lg hover:bg-white/10 transition-colors"
+  onClick={() => setIsMenuOpen(!isMenuOpen)}
+  aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
+>
+  {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+</button>
+```
+
+**Menu Expandido com Seções:**
+```tsx
+{isMenuOpen && (
+  <div className="md:hidden pb-6 animate-in fade-in slide-in-from-top-2 duration-200">
+    {/* Seção: Navegação */}
+    <div className="py-3">
+      <p className="text-xs font-medium uppercase tracking-wider opacity-60 mb-3">
+        Navegação
+      </p>
+      <nav className="flex flex-col space-y-1">
+        {navigation.map(...)}
+      </nav>
+    </div>
+    
+    {/* Seção: Minha Conta (se logado) */}
+    {user && (
+      <div className="py-3 border-t border-white/10">
+        <p className="text-xs font-medium uppercase tracking-wider opacity-60 mb-3">
+          Minha Conta
+        </p>
+        {/* Links do usuário */}
+      </div>
+    )}
+    
+    {/* Seção: Ações */}
+    <div className="pt-4 border-t border-white/10">
+      <div className="flex items-center justify-between gap-4 mb-4">
+        {/* Tenant Switcher */}
+        {/* Theme Toggle */}
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        {/* Botões Entrar/Cadastrar ou Sair */}
+      </div>
+    </div>
+  </div>
+)}
+```
+
+### Resumo das Alterações
+
+| Arquivo | Tipo | Descrição |
+|---------|------|-----------|
+| `src/components/ui/header.tsx` | Modificar | Reestruturar menu mobile com seções organizadas |
+
+### Benefícios
+
+- Melhor hierarquia visual com seções organizadas
+- Área de toque maior no botão hamburger (acessibilidade)
+- Botões Entrar/Cadastrar lado a lado economizam espaço
+- Animação suave de abertura melhora a experiência
+- Separadores visuais facilitam navegação
+- Menu mais limpo e profissional
 
