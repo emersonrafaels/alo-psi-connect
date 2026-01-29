@@ -29,6 +29,7 @@ interface Tenant {
   name: string;
   base_path: string;
   logo_url: string | null;
+  logo_url_dark?: string | null;
   header_color?: string;
   primary_color: string;
   accent_color: string;
@@ -54,6 +55,7 @@ interface Tenant {
   specialty_tag_text_dark?: string;
   ai_match_button_text?: string;
   favicon_url?: string;
+  fallback_professional_image?: string;
   // Contact information
   contact_phone?: string;
   contact_whatsapp?: string;
@@ -95,6 +97,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     name: "",
     base_path: "",
     logo_url: "",
+    logo_url_dark: "",
     header_color: "",
     primary_color: "#0ea5e9",
     accent_color: "#06b6d4",
@@ -134,6 +137,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     meta_description: "",
     meta_favicon: "",
     favicon_url: "",
+    fallback_professional_image: "",
     is_active: true,
     // Domain redirect configuration
     domain_redirect_enabled: false,
@@ -142,6 +146,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
   });
   const [loading, setLoading] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState<'light' | 'dark' | 'fallback' | null>(null);
 
   useEffect(() => {
     if (tenant) {
@@ -150,6 +155,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         name: tenant.name || "",
         base_path: tenant.base_path || "",
         logo_url: tenant.logo_url || "",
+        logo_url_dark: tenant.logo_url_dark || "",
         header_color: tenant.header_color || "",
         primary_color: tenant.primary_color || "#0ea5e9",
         accent_color: tenant.accent_color || "#06b6d4",
@@ -189,6 +195,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         meta_description: tenant.meta_config?.description || "",
         meta_favicon: tenant.meta_config?.favicon || "",
         favicon_url: tenant.favicon_url || "",
+        fallback_professional_image: tenant.fallback_professional_image || "",
         is_active: tenant.is_active ?? true,
         // Domain redirect configuration
         domain_redirect_enabled: tenant.domain_redirect_enabled ?? false,
@@ -201,6 +208,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         name: "",
         base_path: "",
         logo_url: "",
+        logo_url_dark: "",
         header_color: "",
         primary_color: "#0ea5e9",
         accent_color: "#06b6d4",
@@ -240,6 +248,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         meta_description: "",
         meta_favicon: "",
         favicon_url: "",
+        fallback_professional_image: "",
         is_active: true,
         // Domain redirect configuration
         domain_redirect_enabled: false,
@@ -308,6 +317,72 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     }
   };
 
+  const handleLogoUpload = async (file: File, type: 'light' | 'dark' | 'fallback') => {
+    if (!tenant?.id) {
+      toast.error("Salve o tenant antes de fazer upload de imagens");
+      return;
+    }
+    
+    try {
+      setUploadingLogo(type);
+      
+      // Validar tipo de arquivo
+      const validTypes = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        toast.error('Formato inválido. Use arquivos .png, .jpg, .svg ou .webp');
+        return;
+      }
+      
+      // Validar tamanho (máx 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('Arquivo muito grande. A imagem deve ter no máximo 2MB');
+        return;
+      }
+      
+      // Converter file para base64
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = async () => {
+        const base64String = reader.result as string;
+        const base64Data = base64String.split(',')[1];
+        
+        // Upload via edge function
+        const { data, error } = await supabase.functions.invoke('upload-to-s3', {
+          body: {
+            file: base64Data,
+            filename: file.name,
+            type: file.type,
+            professionalId: tenant.id,
+            uploadType: `tenant-logo-${type}`
+          }
+        });
+        
+        if (error) throw error;
+        
+        // Atualizar state com a URL do S3
+        const fieldMap = {
+          light: 'logo_url',
+          dark: 'logo_url_dark',
+          fallback: 'fallback_professional_image'
+        };
+        
+        setFormData(prev => ({ ...prev, [fieldMap[type]]: data.url }));
+        
+        toast.success('Imagem enviada com sucesso!');
+        setUploadingLogo(null);
+      };
+      
+      reader.onerror = () => {
+        throw new Error('Erro ao ler arquivo');
+      };
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast.error('Não foi possível enviar a imagem');
+      setUploadingLogo(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -318,6 +393,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         name: formData.name,
         base_path: formData.base_path || `/${formData.slug}`,
         logo_url: formData.logo_url || null,
+        logo_url_dark: formData.logo_url_dark || null,
         header_color: formData.header_color || null,
         primary_color: formData.primary_color,
         accent_color: formData.accent_color,
@@ -366,6 +442,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
           favicon: formData.meta_favicon || "/favicon.ico"
         },
         favicon_url: formData.favicon_url || null,
+        fallback_professional_image: formData.fallback_professional_image || null,
         is_active: formData.is_active
       };
 
@@ -443,6 +520,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
           <Tabs defaultValue="basic" className="w-full">
             <TabsList className="grid w-full grid-cols-6 h-auto flex-wrap">
               <TabsTrigger value="basic">Básico</TabsTrigger>
+              <TabsTrigger value="logos">Logos</TabsTrigger>
               <TabsTrigger value="theme">Tema</TabsTrigger>
               <TabsTrigger value="branding">Branding</TabsTrigger>
               <TabsTrigger value="favicon">Favicon</TabsTrigger>
@@ -495,15 +573,153 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
                   Deixe vazio para usar "/{formData.slug}"
                 </p>
               </div>
+            </TabsContent>
 
-              <div>
-                <Label htmlFor="logo_url">Logo URL</Label>
-                <Input
-                  id="logo_url"
-                  value={formData.logo_url}
-                  onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                  placeholder="https://exemplo.com/logo.png"
-                />
+            {/* Logos Tab */}
+            <TabsContent value="logos" className="space-y-6">
+              {/* Logo Light Mode */}
+              <div className="border rounded-lg p-4 space-y-4">
+                <div>
+                  <h3 className="font-medium">Logo para Fundo Claro (Light Mode)</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Usado no header, footer e no switcher quando em modo claro. Recomendado: logo com texto escuro/colorido.
+                  </p>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Input
+                    value={formData.logo_url}
+                    onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                    placeholder="https://exemplo.com/logo-light.png"
+                    className="flex-1"
+                  />
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleLogoUpload(file, 'light');
+                      }}
+                    />
+                    <Button type="button" variant="outline" disabled={uploadingLogo === 'light'} asChild>
+                      <span>
+                        {uploadingLogo === 'light' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+                
+                {formData.logo_url && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="border rounded-lg p-4 bg-white">
+                      <p className="text-sm text-gray-600 mb-2">No Header:</p>
+                      <img src={formData.logo_url} alt="Logo light" className="h-12 object-contain" />
+                    </div>
+                    <div className="border rounded-lg p-4 bg-white">
+                      <p className="text-sm text-gray-600 mb-2">No Switcher:</p>
+                      <div className="inline-flex bg-white border rounded-lg px-3 py-2 shadow-sm">
+                        <img src={formData.logo_url} alt="Switcher preview" className="h-8 object-contain" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Logo Dark Mode */}
+              <div className="border rounded-lg p-4 space-y-4">
+                <div>
+                  <h3 className="font-medium">Logo para Fundo Escuro (Dark Mode)</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Usado no header, footer e no switcher quando em modo escuro. Recomendado: logo com texto branco/claro.
+                  </p>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Input
+                    value={formData.logo_url_dark}
+                    onChange={(e) => setFormData({ ...formData, logo_url_dark: e.target.value })}
+                    placeholder="https://exemplo.com/logo-dark.png"
+                    className="flex-1"
+                  />
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleLogoUpload(file, 'dark');
+                      }}
+                    />
+                    <Button type="button" variant="outline" disabled={uploadingLogo === 'dark'} asChild>
+                      <span>
+                        {uploadingLogo === 'dark' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+                
+                {formData.logo_url_dark && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="border rounded-lg p-4 bg-gray-900">
+                      <p className="text-sm text-gray-400 mb-2">No Header:</p>
+                      <img src={formData.logo_url_dark} alt="Logo dark" className="h-12 object-contain" />
+                    </div>
+                    <div className="border rounded-lg p-4 bg-gray-900">
+                      <p className="text-sm text-gray-400 mb-2">No Switcher:</p>
+                      <div className="inline-flex bg-gray-800 border border-gray-700 rounded-lg px-3 py-2">
+                        <img src={formData.logo_url_dark} alt="Switcher preview" className="h-8 object-contain" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Fallback Professional Image */}
+              <div className="border rounded-lg p-4 space-y-4">
+                <div>
+                  <h3 className="font-medium">Imagem Padrão de Profissional</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Exibida quando um profissional não possui foto de perfil.
+                  </p>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Input
+                    value={formData.fallback_professional_image}
+                    onChange={(e) => setFormData({ ...formData, fallback_professional_image: e.target.value })}
+                    placeholder="https://exemplo.com/avatar-default.png"
+                    className="flex-1"
+                  />
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleLogoUpload(file, 'fallback');
+                      }}
+                    />
+                    <Button type="button" variant="outline" disabled={uploadingLogo === 'fallback'} asChild>
+                      <span>
+                        {uploadingLogo === 'fallback' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+                
+                {formData.fallback_professional_image && (
+                  <div className="flex justify-center">
+                    <img 
+                      src={formData.fallback_professional_image} 
+                      alt="Fallback professional" 
+                      className="w-24 h-24 rounded-full object-cover border"
+                    />
+                  </div>
+                )}
               </div>
             </TabsContent>
 
