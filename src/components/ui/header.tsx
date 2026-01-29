@@ -359,6 +359,29 @@ const Header = () => {
                 </>
               )}
                 <div className="flex flex-col space-y-2 pt-4 border-t border-primary-foreground/20">
+                {/* Mobile Tenant Switcher */}
+                {otherTenant && (() => {
+                  const mobileSwitcherLogoUrl = isDarkMode && otherTenant.logo_url_dark 
+                    ? otherTenant.logo_url_dark 
+                    : otherTenant.logo_url;
+                  return (
+                    <button 
+                      onClick={() => {
+                        handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'alopsi' ? '/' : `/${otherTenant.slug}`);
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center justify-center bg-background hover:bg-muted rounded-lg px-4 py-3 transition-colors cursor-pointer shadow-md border border-border"
+                      title={`Ir para ${otherTenant.name}`}
+                    >
+                      <img 
+                        src={mobileSwitcherLogoUrl || '/placeholder.svg'}
+                        alt={otherTenant.name}
+                        className="h-8 w-auto object-contain"
+                      />
+                    </button>
+                  );
+                })()}
+                
                 <div className="flex justify-center pb-2">
                   <ThemeToggle />
                 </div>

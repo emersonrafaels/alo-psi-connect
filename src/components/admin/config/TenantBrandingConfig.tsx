@@ -172,12 +172,15 @@ export const TenantBrandingConfig = () => {
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Logo</CardTitle>
-              <CardDescription>URL da logo do tenant</CardDescription>
+              <CardTitle>Logo para Fundo Claro (Light Mode)</CardTitle>
+              <CardDescription>
+                Usado no header, footer e no switcher de outros tenants quando em light mode. 
+                Recomendado: logo com texto escuro/colorido.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="logo_url">URL da Logo</Label>
+                <Label htmlFor="logo_url">URL da Logo (Light Mode)</Label>
                 <Input
                   id="logo_url"
                   value={branding.logo_url}
@@ -186,16 +189,33 @@ export const TenantBrandingConfig = () => {
                 />
               </div>
               {branding.logo_url && (
-                <div className="border rounded-lg p-4 bg-muted/50">
-                  <p className="text-sm text-muted-foreground mb-2">Preview:</p>
-                  <img 
-                    src={branding.logo_url} 
-                    alt="Logo preview" 
-                    className="h-16 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Preview no Header */}
+                  <div className="border rounded-lg p-4 bg-white">
+                    <p className="text-sm text-gray-600 mb-2">No Header (fundo claro):</p>
+                    <img 
+                      src={branding.logo_url} 
+                      alt="Logo light preview" 
+                      className="h-12 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                  {/* Preview no Switcher */}
+                  <div className="border rounded-lg p-4 bg-white">
+                    <p className="text-sm text-gray-600 mb-2">No Switcher (outro tenant):</p>
+                    <div className="inline-flex bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
+                      <img 
+                        src={branding.logo_url} 
+                        alt="Switcher preview light" 
+                        className="h-8 object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -203,9 +223,10 @@ export const TenantBrandingConfig = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Logo para Dark Mode</CardTitle>
+              <CardTitle>Logo para Fundo Escuro (Dark Mode)</CardTitle>
               <CardDescription>
-                Logo alternativo usado quando o tema escuro está ativo (recomendado: versão clara/branca do logo)
+                Usado no header, footer e no switcher de outros tenants quando em dark mode. 
+                Recomendado: logo com texto branco/claro.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -290,16 +311,33 @@ export const TenantBrandingConfig = () => {
               </div>
               
               {branding.logo_url_dark && (
-                <div className="border rounded-lg p-4 bg-gray-900">
-                  <p className="text-sm text-gray-400 mb-2">Preview (fundo escuro):</p>
-                  <img 
-                    src={branding.logo_url_dark} 
-                    alt="Logo dark preview" 
-                    className="h-16 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Preview no Header */}
+                  <div className="border rounded-lg p-4 bg-gray-900">
+                    <p className="text-sm text-gray-400 mb-2">No Header (fundo escuro):</p>
+                    <img 
+                      src={branding.logo_url_dark} 
+                      alt="Logo dark preview" 
+                      className="h-12 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                  {/* Preview no Switcher */}
+                  <div className="border rounded-lg p-4 bg-gray-900">
+                    <p className="text-sm text-gray-400 mb-2">No Switcher (outro tenant):</p>
+                    <div className="inline-flex bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 shadow-sm">
+                      <img 
+                        src={branding.logo_url_dark} 
+                        alt="Switcher preview dark" 
+                        className="h-8 object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
