@@ -1,80 +1,60 @@
 
 
-## Plano: Aplicar Feature Logo na Página de Encontros
+## Plano: Adicionar Dados de Qualidade do Sono para UNICAMP
 
 ### Problema Identificado
 
-Os componentes de Encontros (Group Sessions) estão usando `tenant?.logo_url` diretamente em vez de `feature_logo_url` com fallback. Além disso, não há suporte para dark mode nesses componentes.
+A instituição UNICAMP (educational_institution) possui:
 
-### Componentes Afetados
+| Métrica | Valor |
+|---------|-------|
+| Total de registros | 484 |
+| Com `sleep_quality` | 0 (0%) |
+| Com `sleep_hours` | 484 (100%) |
+| Média de horas de sono | ~6h |
 
-| Componente | Linha | Uso Atual | Deve Usar |
-|------------|-------|-----------|-----------|
-| `NextSessionHighlight.tsx` | 48-49 | `tenant?.logo_url` | `feature_logo_url` → `logo_url` |
-| `GroupSessionCard.tsx` | 58-59 | `tenant?.logo_url` | `feature_logo_url` → `logo_url` |
+Por isso o dashboard mostra "N/A" para Qualidade do Sono - não existem dados de `sleep_quality`.
 
 ### Solução
 
-Aplicar a mesma lógica que foi implementada no `AuthorSpotlight.tsx`:
+Preencher `sleep_quality` com valores derivados das `sleep_hours` existentes usando uma fórmula realística:
 
-```typescript
-import { useTheme } from "next-themes";
+| Horas de Sono | Qualidade Estimada |
+|---------------|-------------------|
+| >= 8 horas | 5 (Excelente) |
+| 7-8 horas | 4 (Bom) |
+| 6-7 horas | 3 (Moderado) |
+| 5-6 horas | 2 (Ruim) |
+| < 5 horas | 1 (Muito ruim) |
 
-// Dentro do componente:
-const { resolvedTheme } = useTheme();
+### Query de Atualização
 
-// Função helper para obter feature logo com fallback
-const getFeatureLogo = () => {
-  const isDarkMode = resolvedTheme === 'dark';
-  return isDarkMode 
-    ? (tenant?.feature_logo_url_dark || tenant?.logo_url_dark)
-    : (tenant?.feature_logo_url || tenant?.logo_url);
-};
-
-// Usar no organizerPhoto:
-const organizerPhoto = isOrganizedByTenant
-  ? getFeatureLogo()
-  : session.professional?.foto_perfil_url;
+```sql
+UPDATE mood_entries me
+SET sleep_quality = CASE
+  WHEN sleep_hours >= 8 THEN 5
+  WHEN sleep_hours >= 7 THEN 4
+  WHEN sleep_hours >= 6 THEN 3
+  WHEN sleep_hours >= 5 THEN 2
+  ELSE 1
+END
+WHERE me.profile_id IN (
+  SELECT p.profile_id
+  FROM patient_institutions pi
+  JOIN pacientes p ON pi.patient_id = p.id
+  WHERE pi.institution_id = 'da361619-8360-449a-bdd9-45d42bba77a0'
+)
+AND me.sleep_quality IS NULL
+AND me.sleep_hours IS NOT NULL;
 ```
 
----
+### Resultado Esperado
 
-### Mudanças por Arquivo
+- 484 registros atualizados com `sleep_quality`
+- Dashboard mostrará média de qualidade do sono (~3.2/5 baseado nas horas)
+- Insights de correlação sono-energia passarão a funcionar
 
-#### 1. `src/components/group-sessions/NextSessionHighlight.tsx`
+### Ação
 
-- Adicionar import: `import { useTheme } from "next-themes";`
-- Adicionar hook: `const { resolvedTheme } = useTheme();`
-- Adicionar função `getFeatureLogo()`
-- Alterar linha 48-49 para usar `getFeatureLogo()` quando `isOrganizedByTenant`
-
-#### 2. `src/components/group-sessions/GroupSessionCard.tsx`
-
-- Adicionar import: `import { useTheme } from "next-themes";`
-- Adicionar hook: `const { resolvedTheme } = useTheme();`
-- Adicionar função `getFeatureLogo()`
-- Alterar linha 58-59 para usar `getFeatureLogo()` quando `isOrganizedByTenant`
-
----
-
-### Comportamento Esperado
-
-```text
-Modo Light:
-  - Se feature_logo_url configurado → usa feature_logo_url
-  - Senão → usa logo_url (fallback)
-
-Modo Dark:
-  - Se feature_logo_url_dark configurado → usa feature_logo_url_dark
-  - Senão → usa logo_url_dark (fallback)
-```
-
----
-
-### Arquivos a Modificar
-
-| Arquivo | Mudanças |
-|---------|----------|
-| `src/components/group-sessions/NextSessionHighlight.tsx` | +import useTheme, +getFeatureLogo helper, usar no organizerPhoto |
-| `src/components/group-sessions/GroupSessionCard.tsx` | +import useTheme, +getFeatureLogo helper, usar no organizerPhoto |
+Executar a migration SQL acima para preencher os dados faltantes.
 
