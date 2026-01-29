@@ -12,6 +12,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { useGlobalCacheShortcut } from "@/hooks/useGlobalCacheShortcut";
 import { useEffect, useState } from "react";
 import WhatsAppFloat from "@/components/ui/whatsapp-float";
+import ScrollToTopButton from "@/components/ui/scroll-to-top-button";
 import { FirstLoginWelcome } from "@/components/FirstLoginWelcome";
 import { DomainRedirect } from "@/components/DomainRedirect";
 
@@ -334,6 +335,7 @@ const App: React.FC = () => {
                 <FirstLoginWelcome />
                 <AppWithShortcuts />
                 <WhatsAppFloat />
+                <ScrollToTopButton />
               </AuthProvider>
             </TenantProvider>
           </BrowserRouter>
