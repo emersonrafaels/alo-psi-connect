@@ -1,139 +1,98 @@
 
 
-## Plano: Melhorar Disposição do Menu Hamburger Mobile
+## Plano: Adicionar Link "Minha Instituição" no Menu Mobile
 
-### Problema Atual
+### Problema Identificado
 
-Analisando a imagem, identifico os seguintes problemas no header mobile:
+O usuário `xamahot633@1200b.com` possui:
+- Role `institution_admin` na tabela `user_roles` ✓
+- Vínculo ativo na tabela `institution_users` com UNICAMP ✓
+- A função `has_role('institution_admin')` retorna `true` ✓
 
-1. **Logo e Menu juntos** - O ícone de menu (hamburger) fica muito próximo do logo, sem espaçamento adequado
-2. **Falta de separação visual** - Não há separador entre os elementos do header
-3. **Menu expandido sem organização clara** - Os itens do menu aparecem sem agrupamento visual
+**Porém o menu mobile não contém o link para o Portal Institucional!**
 
-### Melhorias Propostas
+| Menu | Link "Minha Instituição" |
+|------|--------------------------|
+| Desktop (dropdown) | Presente (linha 207) |
+| Mobile | **AUSENTE** |
 
-| Aspecto | Atual | Proposto |
-|---------|-------|----------|
-| Posição do hamburger | Próximo ao logo | Extrema direita com `ml-auto` |
-| Espaçamento header | Gap de 4 apenas | Gap + justify-between |
-| Menu expandido | Lista simples | Seções agrupadas com separadores |
-| Visual do botão | Sem estilo | Padding e área de toque maior |
-| Animação | Sem transição | Fade/slide suave |
+### Código Atual do Desktop (funciona)
 
-### Estrutura Visual Proposta
-
-```text
-+------------------------------------------+
-| [LOGO]                        [≡ MENU]   |
-+------------------------------------------+
-|                                          |
-| ---- Navegação ----                      |
-|   Home                                   |
-|   Sobre                                  |
-|   Profissionais                          |
-|   Encontros                              |
-|   Diário Emocional                       |
-|   Blog                                   |
-|   Contato                                |
-|                                          |
-| ---- Minha Conta ----  (se logado)       |
-|   📅 Meus Agendamentos                   |
-|   👥 Meus Encontros                      |
-|   ⚙️ Meu Perfil                          |
-|                                          |
-| ---- Ações ----                          |
-|   [Tenant Switcher]    [🌙 Theme]        |
-|   [Entrar]             [Cadastrar]       |
-+------------------------------------------+
-```
-
-### Mudanças Técnicas
-
-**Arquivo:** `src/components/ui/header.tsx`
-
-#### 1. Header Row (linha ~279-285)
-- Mover o botão hamburger para a extrema direita com `ml-auto`
-- Aumentar área de toque para acessibilidade (44x44px mínimo)
-- Adicionar padding e borda arredondada
-
-#### 2. Menu Mobile Expandido (linhas ~287-438)
-- Adicionar transição suave de abertura
-- Organizar em seções com títulos:
-  - "Navegação" - links principais
-  - "Minha Conta" - links do usuário (quando logado)
-  - "Ações" - botões, theme toggle, tenant switcher
-- Usar grid 2 colunas para botões Entrar/Cadastrar
-- Melhorar espaçamento entre itens
-
-#### 3. Estilização Visual
-- Fundo semi-transparente no menu expandido
-- Ícones maiores nos links (h-5 w-5)
-- Separadores visuais entre seções
-- Border radius nas seções
-
-### Código Proposto
-
-**Botão Hamburger:**
 ```tsx
-<button
-  className="md:hidden ml-auto p-2 rounded-lg hover:bg-white/10 transition-colors"
-  onClick={() => setIsMenuOpen(!isMenuOpen)}
-  aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
->
-  {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-</button>
-```
-
-**Menu Expandido com Seções:**
-```tsx
-{isMenuOpen && (
-  <div className="md:hidden pb-6 animate-in fade-in slide-in-from-top-2 duration-200">
-    {/* Seção: Navegação */}
-    <div className="py-3">
-      <p className="text-xs font-medium uppercase tracking-wider opacity-60 mb-3">
-        Navegação
-      </p>
-      <nav className="flex flex-col space-y-1">
-        {navigation.map(...)}
-      </nav>
-    </div>
-    
-    {/* Seção: Minha Conta (se logado) */}
-    {user && (
-      <div className="py-3 border-t border-white/10">
-        <p className="text-xs font-medium uppercase tracking-wider opacity-60 mb-3">
-          Minha Conta
-        </p>
-        {/* Links do usuário */}
-      </div>
-    )}
-    
-    {/* Seção: Ações */}
-    <div className="pt-4 border-t border-white/10">
-      <div className="flex items-center justify-between gap-4 mb-4">
-        {/* Tenant Switcher */}
-        {/* Theme Toggle */}
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {/* Botões Entrar/Cadastrar ou Sair */}
-      </div>
-    </div>
-  </div>
+// Linhas 206-216 - Desktop dropdown
+{isInstitutionAdmin && !institutionAdminLoading ? (
+  <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/portal-institucional'))}>
+    <Building2 className="h-4 w-4 mr-2" />
+    Minha Instituição
+  </DropdownMenuItem>
+) : (
+  <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/agendamentos'))}>
+    <Calendar className="h-4 w-4 mr-2" />
+    Meus Agendamentos
+  </DropdownMenuItem>
 )}
 ```
 
-### Resumo das Alterações
+### Código Atual do Mobile (falta o link)
 
-| Arquivo | Tipo | Descrição |
-|---------|------|-----------|
-| `src/components/ui/header.tsx` | Modificar | Reestruturar menu mobile com seções organizadas |
+```tsx
+// Linhas 319-327 - Mobile menu - só tem "Meus Agendamentos" sempre
+<Link
+  to={buildTenantPath(tenantSlug, '/agendamentos')}
+  ...
+>
+  <Calendar className="h-5 w-5 opacity-70" />
+  Meus Agendamentos
+</Link>
+```
 
-### Benefícios
+### Solução
 
-- Melhor hierarquia visual com seções organizadas
-- Área de toque maior no botão hamburger (acessibilidade)
-- Botões Entrar/Cadastrar lado a lado economizam espaço
-- Animação suave de abertura melhora a experiência
-- Separadores visuais facilitam navegação
-- Menu mais limpo e profissional
+Adicionar a mesma lógica condicional do desktop no menu mobile:
+
+```tsx
+// Seção "Minha Conta" no mobile (linhas ~319-327)
+{isInstitutionAdmin && !institutionAdminLoading ? (
+  <Link
+    to={buildTenantPath(tenantSlug, '/portal-institucional')}
+    className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+    onClick={() => setIsMenuOpen(false)}
+  >
+    <Building2 className="h-5 w-5 opacity-70" />
+    Minha Instituição
+  </Link>
+) : (
+  <Link
+    to={buildTenantPath(tenantSlug, '/agendamentos')}
+    className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+    onClick={() => setIsMenuOpen(false)}
+  >
+    <Calendar className="h-5 w-5 opacity-70" />
+    Meus Agendamentos
+  </Link>
+)}
+```
+
+### Arquivo a Modificar
+
+| Arquivo | Linhas | Mudança |
+|---------|--------|---------|
+| `src/components/ui/header.tsx` | 319-327 | Adicionar condicional `isInstitutionAdmin` para exibir "Minha Instituição" em vez de "Meus Agendamentos" |
+
+### Resultado Esperado
+
+Quando o usuário `institution_admin` acessar o menu mobile:
+
+```text
+---- Minha Conta ----
+  🏛️ Minha Instituição    ← NOVO (em vez de "Meus Agendamentos")
+  👥 Meus Encontros
+  ⚙️ Meu Perfil
+```
+
+### Resumo
+
+- **1 arquivo** a modificar
+- **1 bloco condicional** a adicionar
+- Paridade desktop/mobile restaurada
 
