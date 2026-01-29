@@ -2711,6 +2711,8 @@ export type Database = {
           specialty_tag_bg_light: string | null
           specialty_tag_text_dark: string | null
           specialty_tag_text_light: string | null
+          switcher_logo_url: string | null
+          switcher_logo_url_dark: string | null
           terms_url: string | null
           theme_config: Json | null
           updated_at: string | null
@@ -2795,6 +2797,8 @@ export type Database = {
           specialty_tag_bg_light?: string | null
           specialty_tag_text_dark?: string | null
           specialty_tag_text_light?: string | null
+          switcher_logo_url?: string | null
+          switcher_logo_url_dark?: string | null
           terms_url?: string | null
           theme_config?: Json | null
           updated_at?: string | null
@@ -2879,6 +2883,8 @@ export type Database = {
           specialty_tag_bg_light?: string | null
           specialty_tag_text_dark?: string | null
           specialty_tag_text_light?: string | null
+          switcher_logo_url?: string | null
+          switcher_logo_url_dark?: string | null
           terms_url?: string | null
           theme_config?: Json | null
           updated_at?: string | null

@@ -30,6 +30,8 @@ interface Tenant {
   base_path: string;
   logo_url: string | null;
   logo_url_dark?: string | null;
+  switcher_logo_url?: string | null;
+  switcher_logo_url_dark?: string | null;
   header_color?: string;
   primary_color: string;
   accent_color: string;
@@ -98,6 +100,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     base_path: "",
     logo_url: "",
     logo_url_dark: "",
+    switcher_logo_url: "",
+    switcher_logo_url_dark: "",
     header_color: "",
     primary_color: "#0ea5e9",
     accent_color: "#06b6d4",
@@ -146,7 +150,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
   });
   const [loading, setLoading] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
-  const [uploadingLogo, setUploadingLogo] = useState<'light' | 'dark' | 'fallback' | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState<'light' | 'dark' | 'switcher-light' | 'switcher-dark' | 'fallback' | null>(null);
 
   useEffect(() => {
     if (tenant) {
@@ -156,6 +160,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         base_path: tenant.base_path || "",
         logo_url: tenant.logo_url || "",
         logo_url_dark: tenant.logo_url_dark || "",
+        switcher_logo_url: tenant.switcher_logo_url || "",
+        switcher_logo_url_dark: tenant.switcher_logo_url_dark || "",
         header_color: tenant.header_color || "",
         primary_color: tenant.primary_color || "#0ea5e9",
         accent_color: tenant.accent_color || "#06b6d4",
@@ -209,6 +215,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         base_path: "",
         logo_url: "",
         logo_url_dark: "",
+        switcher_logo_url: "",
+        switcher_logo_url_dark: "",
         header_color: "",
         primary_color: "#0ea5e9",
         accent_color: "#06b6d4",
@@ -317,7 +325,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     }
   };
 
-  const handleLogoUpload = async (file: File, type: 'light' | 'dark' | 'fallback') => {
+  const handleLogoUpload = async (file: File, type: 'light' | 'dark' | 'switcher-light' | 'switcher-dark' | 'fallback') => {
     if (!tenant?.id) {
       toast.error("Salve o tenant antes de fazer upload de imagens");
       return;
@@ -361,9 +369,11 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         if (error) throw error;
         
         // Atualizar state com a URL do S3
-        const fieldMap = {
+        const fieldMap: Record<string, string> = {
           light: 'logo_url',
           dark: 'logo_url_dark',
+          'switcher-light': 'switcher_logo_url',
+          'switcher-dark': 'switcher_logo_url_dark',
           fallback: 'fallback_professional_image'
         };
         
@@ -394,6 +404,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         base_path: formData.base_path || `/${formData.slug}`,
         logo_url: formData.logo_url || null,
         logo_url_dark: formData.logo_url_dark || null,
+        switcher_logo_url: formData.switcher_logo_url || null,
+        switcher_logo_url_dark: formData.switcher_logo_url_dark || null,
         header_color: formData.header_color || null,
         primary_color: formData.primary_color,
         accent_color: formData.accent_color,
@@ -577,110 +589,219 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
 
             {/* Logos Tab */}
             <TabsContent value="logos" className="space-y-6">
-              {/* Logo Light Mode */}
-              <div className="border rounded-lg p-4 space-y-4">
-                <div>
-                  <h3 className="font-medium">Logo para Fundo Claro (Light Mode)</h3>
+              {/* Section: Logos do Próprio Tenant */}
+              <div className="space-y-4">
+                <div className="border-b pb-2">
+                  <h3 className="text-lg font-semibold">Logos Deste Tenant</h3>
                   <p className="text-sm text-muted-foreground">
-                    Usado no header, footer e no switcher quando em modo claro. Recomendado: logo com texto escuro/colorido.
+                    Logos que aparecem no header e footer quando o usuário está neste tenant.
                   </p>
                 </div>
-                
-                <div className="flex gap-2">
-                  <Input
-                    value={formData.logo_url}
-                    onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                    placeholder="https://exemplo.com/logo-light.png"
-                    className="flex-1"
-                  />
-                  <label className="cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleLogoUpload(file, 'light');
-                      }}
+
+                {/* Logo Light Mode */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/20">
+                  <div>
+                    <h4 className="font-medium">🌞 Logo para Fundo Claro (Light Mode)</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Usado no header e footer deste tenant quando em modo claro.
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      value={formData.logo_url}
+                      onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                      placeholder="https://exemplo.com/logo-light.png"
+                      className="flex-1"
                     />
-                    <Button type="button" variant="outline" disabled={uploadingLogo === 'light'} asChild>
-                      <span>
-                        {uploadingLogo === 'light' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                      </span>
-                    </Button>
-                  </label>
-                </div>
-                
-                {formData.logo_url && (
-                  <div className="grid grid-cols-2 gap-4">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleLogoUpload(file, 'light');
+                        }}
+                      />
+                      <Button type="button" variant="outline" disabled={uploadingLogo === 'light'} asChild>
+                        <span>
+                          {uploadingLogo === 'light' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                  
+                  {formData.logo_url && (
                     <div className="border rounded-lg p-4 bg-white">
-                      <p className="text-sm text-gray-600 mb-2">No Header:</p>
+                      <p className="text-sm text-gray-600 mb-2">Preview no Header:</p>
                       <img src={formData.logo_url} alt="Logo light" className="h-12 object-contain" />
                     </div>
-                    <div className="border rounded-lg p-4 bg-white">
-                      <p className="text-sm text-gray-600 mb-2">No Switcher:</p>
-                      <div className="inline-flex bg-white border rounded-lg px-3 py-2 shadow-sm">
-                        <img src={formData.logo_url} alt="Switcher preview" className="h-8 object-contain" />
-                      </div>
-                    </div>
+                  )}
+                </div>
+                
+                {/* Logo Dark Mode */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/20">
+                  <div>
+                    <h4 className="font-medium">🌙 Logo para Fundo Escuro (Dark Mode)</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Usado no header e footer deste tenant quando em modo escuro.
+                    </p>
                   </div>
-                )}
-              </div>
-              
-              {/* Logo Dark Mode */}
-              <div className="border rounded-lg p-4 space-y-4">
-                <div>
-                  <h3 className="font-medium">Logo para Fundo Escuro (Dark Mode)</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Usado no header, footer e no switcher quando em modo escuro. Recomendado: logo com texto branco/claro.
-                  </p>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Input
-                    value={formData.logo_url_dark}
-                    onChange={(e) => setFormData({ ...formData, logo_url_dark: e.target.value })}
-                    placeholder="https://exemplo.com/logo-dark.png"
-                    className="flex-1"
-                  />
-                  <label className="cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleLogoUpload(file, 'dark');
-                      }}
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      value={formData.logo_url_dark}
+                      onChange={(e) => setFormData({ ...formData, logo_url_dark: e.target.value })}
+                      placeholder="https://exemplo.com/logo-dark.png"
+                      className="flex-1"
                     />
-                    <Button type="button" variant="outline" disabled={uploadingLogo === 'dark'} asChild>
-                      <span>
-                        {uploadingLogo === 'dark' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                      </span>
-                    </Button>
-                  </label>
-                </div>
-                
-                {formData.logo_url_dark && (
-                  <div className="grid grid-cols-2 gap-4">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleLogoUpload(file, 'dark');
+                        }}
+                      />
+                      <Button type="button" variant="outline" disabled={uploadingLogo === 'dark'} asChild>
+                        <span>
+                          {uploadingLogo === 'dark' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                  
+                  {formData.logo_url_dark && (
                     <div className="border rounded-lg p-4 bg-gray-900">
-                      <p className="text-sm text-gray-400 mb-2">No Header:</p>
+                      <p className="text-sm text-gray-400 mb-2">Preview no Header:</p>
                       <img src={formData.logo_url_dark} alt="Logo dark" className="h-12 object-contain" />
                     </div>
-                    <div className="border rounded-lg p-4 bg-gray-900">
-                      <p className="text-sm text-gray-400 mb-2">No Switcher:</p>
-                      <div className="inline-flex bg-gray-800 border border-gray-700 rounded-lg px-3 py-2">
-                        <img src={formData.logo_url_dark} alt="Switcher preview" className="h-8 object-contain" />
-                      </div>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
+
+              <Separator className="my-6" />
+
+              {/* Section: Logos que Aparecem em Outros Tenants */}
+              <div className="space-y-4">
+                <div className="border-b pb-2">
+                  <h3 className="text-lg font-semibold">Logos no Switcher de Outros Tenants</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Logos que aparecem no botão de troca de tenant (switcher) quando o usuário está em <strong>outro</strong> tenant.
+                    Esses logos aparecem no header de outros sites como botão para navegar até este tenant.
+                  </p>
+                </div>
+
+                {/* Switcher Logo Light Mode */}
+                <div className="border rounded-lg p-4 space-y-4 bg-blue-50 dark:bg-blue-950/30">
+                  <div>
+                    <h4 className="font-medium">🌞 Logo no Switcher (Light Mode)</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Exibido no botão do switcher de outros tenants quando em modo claro.
+                      Se vazio, usa o logo principal (Light Mode).
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      value={formData.switcher_logo_url}
+                      onChange={(e) => setFormData({ ...formData, switcher_logo_url: e.target.value })}
+                      placeholder="https://exemplo.com/switcher-logo-light.png"
+                      className="flex-1"
+                    />
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleLogoUpload(file, 'switcher-light');
+                        }}
+                      />
+                      <Button type="button" variant="outline" disabled={uploadingLogo === 'switcher-light'} asChild>
+                        <span>
+                          {uploadingLogo === 'switcher-light' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 bg-white">
+                    <p className="text-sm text-gray-600 mb-2">Preview no Switcher (fundo claro):</p>
+                    <div className="inline-flex bg-white border rounded-lg px-3 py-2 shadow-sm">
+                      <img 
+                        src={formData.switcher_logo_url || formData.logo_url || '/placeholder.svg'} 
+                        alt="Switcher preview light" 
+                        className="h-8 object-contain" 
+                      />
+                    </div>
+                    {!formData.switcher_logo_url && formData.logo_url && (
+                      <p className="text-xs text-amber-600 mt-2">⚠️ Usando logo principal (Light Mode)</p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Switcher Logo Dark Mode */}
+                <div className="border rounded-lg p-4 space-y-4 bg-blue-50 dark:bg-blue-950/30">
+                  <div>
+                    <h4 className="font-medium">🌙 Logo no Switcher (Dark Mode)</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Exibido no botão do switcher de outros tenants quando em modo escuro.
+                      Se vazio, usa o logo principal (Dark Mode).
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      value={formData.switcher_logo_url_dark}
+                      onChange={(e) => setFormData({ ...formData, switcher_logo_url_dark: e.target.value })}
+                      placeholder="https://exemplo.com/switcher-logo-dark.png"
+                      className="flex-1"
+                    />
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleLogoUpload(file, 'switcher-dark');
+                        }}
+                      />
+                      <Button type="button" variant="outline" disabled={uploadingLogo === 'switcher-dark'} asChild>
+                        <span>
+                          {uploadingLogo === 'switcher-dark' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 bg-gray-900">
+                    <p className="text-sm text-gray-400 mb-2">Preview no Switcher (fundo escuro):</p>
+                    <div className="inline-flex bg-gray-800 border border-gray-700 rounded-lg px-3 py-2">
+                      <img 
+                        src={formData.switcher_logo_url_dark || formData.logo_url_dark || '/placeholder.svg'} 
+                        alt="Switcher preview dark" 
+                        className="h-8 object-contain" 
+                      />
+                    </div>
+                    {!formData.switcher_logo_url_dark && formData.logo_url_dark && (
+                      <p className="text-xs text-amber-400 mt-2">⚠️ Usando logo principal (Dark Mode)</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <Separator className="my-6" />
               
               {/* Fallback Professional Image */}
               <div className="border rounded-lg p-4 space-y-4">
                 <div>
-                  <h3 className="font-medium">Imagem Padrão de Profissional</h3>
+                  <h3 className="font-medium">👤 Imagem Padrão de Profissional</h3>
                   <p className="text-sm text-muted-foreground">
                     Exibida quando um profissional não possui foto de perfil.
                   </p>
