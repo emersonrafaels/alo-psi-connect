@@ -277,8 +277,9 @@ const Header = () => {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden"
+            className="md:hidden ml-auto p-2.5 rounded-lg hover:bg-accent/10 transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -286,83 +287,103 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden pb-4">
-            <nav className="flex flex-col space-y-4">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    "text-sm hover:text-accent transition-colors",
-                    isActive(item.href) && "text-accent font-medium"
-                  )}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
-              {user && (
-                <>
-                   <Link
-                    to={buildTenantPath(tenantSlug, '/agendamentos')}
-                    className="text-sm hover:text-accent transition-colors flex items-center gap-2"
+          <div className="md:hidden pb-6 animate-in fade-in slide-in-from-top-2 duration-200">
+            {/* Seção: Navegação */}
+            <div className="py-4">
+              <p className="text-xs font-medium uppercase tracking-wider opacity-60 mb-3 px-1">
+                Navegação
+              </p>
+              <nav className="flex flex-col space-y-1">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors",
+                      isActive(item.href) && "text-accent font-medium bg-accent/5"
+                    )}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <Calendar className="h-4 w-4" />
+                    {item.name}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+
+            {/* Seção: Minha Conta (se logado) */}
+            {user && (
+              <div className="py-4 border-t border-border/50">
+                <p className="text-xs font-medium uppercase tracking-wider opacity-60 mb-3 px-1">
+                  Minha Conta
+                </p>
+                <nav className="flex flex-col space-y-1">
+                  <Link
+                    to={buildTenantPath(tenantSlug, '/agendamentos')}
+                    className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Calendar className="h-5 w-5 opacity-70" />
                     Meus Agendamentos
                   </Link>
                   <Link
                     to={buildTenantPath(tenantSlug, '/meus-encontros')}
-                    className="text-sm hover:text-accent transition-colors flex items-center gap-2"
+                    className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <Users className="h-4 w-4" />
+                    <Users className="h-5 w-5 opacity-70" />
                     Meus Encontros
                   </Link>
                   {isProfessional && (
                     <Link
                       to={buildTenantPath(tenantSlug, '/professional-profile')}
-                      className="text-sm hover:text-accent transition-colors flex items-center gap-2"
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <Briefcase className="h-4 w-4" />
+                      <Briefcase className="h-5 w-5 opacity-70" />
                       Área Profissional
                     </Link>
                   )}
                   <Link
                     to={buildTenantPath(tenantSlug, '/perfil')}
-                    className="text-sm hover:text-accent transition-colors flex items-center gap-2"
+                    className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <Settings className="h-4 w-4" />
+                    <Settings className="h-5 w-5 opacity-70" />
                     Meu Perfil
                   </Link>
                   {isAuthor && (
                     <Link
                       to="/admin/blog"
-                      className="text-sm hover:text-accent transition-colors flex items-center gap-2"
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <FileText className="h-4 w-4" />
+                      <FileText className="h-5 w-5 opacity-70" />
                       Gerenciar Blog
                     </Link>
                   )}
                   {isAdmin && (
                     <Link
                       to="/admin"
-                      className="text-sm hover:text-accent transition-colors flex items-center gap-2"
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <Shield className="h-4 w-4" />
+                      <Shield className="h-5 w-5 opacity-70" />
                       Acessar Admin
                     </Link>
                   )}
-                </>
-              )}
-                <div className="flex flex-col space-y-2 pt-4 border-t border-primary-foreground/20">
-                {/* Mobile Tenant Switcher */}
+                </nav>
+              </div>
+            )}
+
+            {/* Seção: Ações */}
+            <div className="pt-4 border-t border-border/50">
+              <p className="text-xs font-medium uppercase tracking-wider opacity-60 mb-3 px-1">
+                Ações
+              </p>
+              
+              {/* Tenant Switcher + Theme Toggle */}
+              <div className="flex items-center justify-between gap-3 mb-4 px-1">
                 {otherTenant && (() => {
-                  // Use switcher-specific logos if available, otherwise fall back to main logos
                   const mobileSwitcherLogoUrl = isDarkMode 
                     ? (otherTenant.switcher_logo_url_dark || otherTenant.logo_url_dark)
                     : (otherTenant.switcher_logo_url || otherTenant.logo_url);
@@ -372,69 +393,63 @@ const Header = () => {
                         handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'alopsi' ? '/' : `/${otherTenant.slug}`);
                         setIsMenuOpen(false);
                       }}
-                      className="flex items-center justify-center bg-background hover:bg-muted rounded-lg px-4 py-3 transition-colors cursor-pointer shadow-md border border-border"
+                      className="flex-1 flex items-center justify-center bg-background hover:bg-muted rounded-lg px-4 py-3 transition-colors cursor-pointer shadow-sm border border-border"
                       title={`Ir para ${otherTenant.name}`}
                     >
                       <img 
                         src={mobileSwitcherLogoUrl || '/placeholder.svg'}
                         alt={otherTenant.name}
-                        className="h-8 w-auto object-contain"
+                        className="h-7 w-auto object-contain"
                       />
                     </button>
                   );
                 })()}
-                
-                <div className="flex justify-center pb-2">
+                <div className="flex items-center gap-2">
                   <ThemeToggle />
+                  {isAdmin && <GlobalCacheButton variant="minimal" />}
                 </div>
-                {isAdmin && (
-                  <div className="flex justify-center pb-2">
-                    <GlobalCacheButton variant="minimal" />
-                  </div>
-                )}
-                {user ? (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+              </div>
+
+              {/* Botões de Autenticação */}
+              {user ? (
+                <Button 
+                  variant="outline" 
+                  size="default"
+                  className="w-full border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={() => {
+                    signOut();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sair da Conta
+                </Button>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    size="default"
                     className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
                     onClick={() => {
-                      signOut();
+                      navigate(buildTenantPath(tenantSlug, '/cadastro/tipo-usuario'));
                       setIsMenuOpen(false);
                     }}
                   >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sair
+                    Cadastrar
                   </Button>
-                ) : (
-                 <>
-  <Button
-    variant="outline"
-    size="sm"
-    className="
-      border-[hsl(var(--accent))]
-      text-[hsl(var(--accent))]
-      hover:bg-[hsl(var(--accent))]
-      hover:text-[hsl(var(--accent-foreground))]
-    "
-    onClick={() => navigate(buildTenantPath(tenantSlug, '/cadastro/tipo-usuario'))}
-    title="Criar uma nova conta gratuita"
-  >
-    Cadastrar
-  </Button>
-
-  <Button
-    variant="tenant-primary"
-    size="sm"
-    onClick={() => navigate(buildTenantPath(tenantSlug, '/auth'))}
-    title="Acessar sua conta existente"
-  >
-    Entrar
-  </Button>
-</>
-
-                )}
-              </div>
-            </nav>
+                  <Button
+                    variant="tenant-primary"
+                    size="default"
+                    onClick={() => {
+                      navigate(buildTenantPath(tenantSlug, '/auth'));
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Entrar
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
