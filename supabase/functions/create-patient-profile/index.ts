@@ -402,8 +402,9 @@ serve(async (req) => {
 
             console.log('📧 Sending confirmation email:', {
               tenant: normalizedTenantName,
-              from: `${normalizedTenantName} <${tenantData.admin_email}>`,
+              from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
               to: email,
+              bcc: tenantData.admin_email || null,
               subject: `Confirme seu email - ${normalizedTenantName}`,
               logo: tenantData.logo_url,
               color: tenantData.primary_color
@@ -416,8 +417,9 @@ serve(async (req) => {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                from: `${normalizedTenantName} <${tenantData.admin_email}>`,
+                from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
                 to: [email],
+                bcc: tenantData.admin_email ? [tenantData.admin_email] : [],
                 subject: `Confirme seu email - ${normalizedTenantName}`,
                 html: generateConfirmationEmailHTML(
                   normalizedTenantName,

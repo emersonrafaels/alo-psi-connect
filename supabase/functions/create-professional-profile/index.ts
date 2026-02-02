@@ -775,8 +775,9 @@ serve(async (req) => {
               console.log('📨 Sending to:', profileData.email);
               console.log('🏢 Tenant:', normalizedTenantName, '| Slug:', tenantSlug);
               console.log('📧 Email details:', {
-                from: `${normalizedTenantName} <${tenant.admin_email}>`,
+                from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
                 to: profileData.email,
+                bcc: tenant.admin_email || null,
                 subject: `Bem-vindo à ${normalizedTenantName} - Confirme seu email`,
                 logo: tenant.logo_url,
                 color: tenant.primary_color
@@ -789,8 +790,9 @@ serve(async (req) => {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  from: `${normalizedTenantName} <${tenant.admin_email}>`,
+                  from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
                   to: [profileData.email],
+                  bcc: tenant.admin_email ? [tenant.admin_email] : [],
                   subject: `Bem-vindo à ${normalizedTenantName} - Confirme seu email`,
                   html: generateConfirmationEmailHTML(
                     normalizedTenantName,

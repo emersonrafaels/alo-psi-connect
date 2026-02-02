@@ -227,17 +227,19 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('📧 Email confirmation details:', {
       tenant: tenantData.name,
-      from: `${tenantData.name} <${tenantData.admin_email}>`,
+      from: `${tenantData.name} <noreply@redebemestar.com.br>`,
       to: email,
+      bcc: tenantData.admin_email || null,
       confirmationUrl,
       logo: tenantData.logo_url,
       color: tenantData.primary_color
     });
 
-    // Send custom email via Resend
+    // Send custom email via Resend with verified domain
     const emailResponse = await resend.emails.send({
-      from: `${tenantData.name} <${tenantData.admin_email}>`,
+      from: `${tenantData.name} <noreply@redebemestar.com.br>`,
       to: [email],
+      bcc: tenantData.admin_email ? [tenantData.admin_email] : [],
       subject: `Confirme seu email - ${tenantData.name}`,
       html: generateConfirmationEmailHTML(
         tenantData.name,
