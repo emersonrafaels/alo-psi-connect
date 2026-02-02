@@ -46,21 +46,54 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Find the token in database
+    // Find the token in database (including already used tokens)
     console.log("Searching for token in database...");
     const { data: tokenData, error: tokenError } = await supabase
       .from('email_confirmation_tokens')
       .select('*')
       .eq('token', token)
-      .eq('used', false)
       .single();
 
     console.log("Token search result:", { tokenData, tokenError });
 
     if (tokenError || !tokenData) {
-      console.error('Token not found or error:', tokenError);
+      console.error('Token not found:', tokenError);
       return new Response(
         JSON.stringify({ error: "Token inválido ou expirado" }),
+        { 
+          status: 400, 
+          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        }
+      );
+    }
+
+    // If token was already used, check if email is already confirmed
+    if (tokenData.used) {
+      console.log('Token already used, checking if email is confirmed...');
+      
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(tokenData.user_id);
+      
+      if (!userError && userData?.user?.email_confirmed_at) {
+        console.log('Email already confirmed for user:', tokenData.user_id);
+        return new Response(
+          JSON.stringify({ 
+            message: "Email já foi confirmado anteriormente!",
+            success: true,
+            alreadyConfirmed: true
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+      
+      // Token used but email not confirmed - this shouldn't happen, but handle it
+      return new Response(
+        JSON.stringify({ error: "Token já foi utilizado" }),
         { 
           status: 400, 
           headers: { "Content-Type": "application/json", ...corsHeaders } 
