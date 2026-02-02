@@ -1,143 +1,118 @@
 
 
-## Plano: Corrigir Emails de Pós-Cadastro + Cópia para Admin do Tenant
+## Plano: Melhorar Tratamento de Token Já Utilizado
 
 ### Diagnóstico
 
-Os emails de confirmação de cadastro não estão chegando porque as edge functions usam o `admin_email` (Gmail) como remetente, mas o Resend só aceita domínios verificados.
+O email do usuário `ceked29859@1200b.com` **foi confirmado com sucesso** às 02:58:49. Porém, ao clicar novamente no link (às 02:58:50), recebeu erro porque o sistema trata token já usado como erro.
 
-| Edge Function | Remetente Atual | Status |
-|---------------|-----------------|--------|
-| `create-patient-profile` | `redebemestar1@gmail.com` | FALHA |
-| `create-professional-profile` | `medcos.host@gmail.com` | FALHA |
-| `resend-email-confirmation` | `redebemestar1@gmail.com` | FALHA |
+| Horário | Ação | Resultado |
+|---------|------|-----------|
+| 02:58:49 | 1ª tentativa | ✅ Sucesso (token marcado como usado) |
+| 02:58:50 | 2ª tentativa | ❌ Erro "Token inválido" |
 
-### Solução Completa
+### Problema
 
-1. **Remetente**: Usar `noreply@redebemestar.com.br` (domínio verificado)
-2. **Cópia para Admin**: Adicionar `admin_email` do tenant como BCC
+A edge function `confirm-email` retorna **erro 400** quando encontra um token já usado, mas não verifica se o **email já está confirmado** - o que resultaria em uma experiência positiva para o usuário.
 
-```javascript
-// ANTES (não funciona)
-from: `${tenantName} <${tenantData.admin_email}>`
-// Sem cópia para admin
+### Solução
 
-// DEPOIS (funciona)
-from: `${tenantName} <noreply@redebemestar.com.br>`
-bcc: [tenantData.admin_email] // Admin recebe cópia
+Modificar a edge function para:
+1. Se token não encontrado (ou já usado) → verificar se o email associado já está confirmado
+2. Se já confirmado → retornar **sucesso** com mensagem amigável
+3. Se não confirmado → manter erro atual
+
+```text
+Token não encontrado ou usado?
+├── Buscar token pelo valor (sem filtro de used)
+│   ├── Token encontrado → Verificar se user já tem email confirmado
+│   │   ├── Sim → Retornar sucesso "Email já confirmado"
+│   │   └── Não → Retornar erro "Token inválido ou expirado"
+│   └── Token não existe → Retornar erro "Token inválido"
 ```
 
-### Mapeamento de Admins por Tenant
+### Mudanças Técnicas
 
-| Tenant | Admin Email (BCC) |
-|--------|-------------------|
-| alopsi (Rede Bem Estar) | `redebemestar1@gmail.com` |
-| medcos | `medcos.host@gmail.com` |
+**Arquivo:** `supabase/functions/confirm-email/index.ts`
 
-### Arquivos a Modificar
+**Lógica atualizada (linhas 49-69):**
 
-#### 1. `create-patient-profile/index.ts`
+```typescript
+// Find the token in database (including already used tokens)
+console.log("Searching for token in database...");
+const { data: tokenData, error: tokenError } = await supabase
+  .from('email_confirmation_tokens')
+  .select('*')
+  .eq('token', token)
+  .single();
 
-**Linhas ~403-421** - Adicionar BCC no envio de email:
+console.log("Token search result:", { tokenData, tokenError });
 
-```javascript
-console.log('📧 Sending confirmation email:', {
-  tenant: normalizedTenantName,
-  from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
-  to: email,
-  bcc: tenantData.admin_email || null, // Cópia para admin
-});
+if (tokenError || !tokenData) {
+  console.error('Token not found:', tokenError);
+  return new Response(
+    JSON.stringify({ error: "Token inválido ou expirado" }),
+    { 
+      status: 400, 
+      headers: { "Content-Type": "application/json", ...corsHeaders } 
+    }
+  );
+}
 
-const emailResponse = await fetch('https://api.resend.com/emails', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
-    to: [email],
-    bcc: tenantData.admin_email ? [tenantData.admin_email] : [], // Cópia para admin
-    subject: `Confirme seu email - ${normalizedTenantName}`,
-    html: emailHtml,
-  }),
-});
-```
+// If token was already used, check if email is already confirmed
+if (tokenData.used) {
+  console.log('Token already used, checking if email is confirmed...');
+  
+  const { data: userData, error: userError } = await supabase.auth.admin.getUserById(tokenData.user_id);
+  
+  if (!userError && userData?.user?.email_confirmed_at) {
+    console.log('Email already confirmed for user:', tokenData.user_id);
+    return new Response(
+      JSON.stringify({ 
+        message: "Email já foi confirmado anteriormente!",
+        success: true,
+        alreadyConfirmed: true
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
+  }
+  
+  // Token used but email not confirmed - this shouldn't happen, but handle it
+  return new Response(
+    JSON.stringify({ error: "Token já foi utilizado" }),
+    { 
+      status: 400, 
+      headers: { "Content-Type": "application/json", ...corsHeaders } 
+    }
+  );
+}
 
-#### 2. `create-professional-profile/index.ts`
-
-**Linhas ~777-803** - Adicionar BCC no envio de email:
-
-```javascript
-console.log('📧 Email details:', {
-  from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
-  to: profileData.email,
-  bcc: tenant.admin_email || null, // Cópia para admin
-});
-
-const emailResponse = await fetch('https://api.resend.com/emails', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
-    to: [profileData.email],
-    bcc: tenant.admin_email ? [tenant.admin_email] : [], // Cópia para admin
-    subject: `Confirme seu email - ${normalizedTenantName}`,
-    html: emailHtml,
-  }),
-});
-```
-
-#### 3. `resend-email-confirmation/index.ts`
-
-**Linhas ~228-250** - Adicionar BCC no reenvio:
-
-```javascript
-console.log('📧 Email confirmation details:', {
-  tenant: normalizedTenantName,
-  from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
-  to: email,
-  bcc: tenantData.admin_email || null, // Cópia para admin
-});
-
-const emailResponse = await resend.emails.send({
-  from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
-  to: [email],
-  bcc: tenantData.admin_email ? [tenantData.admin_email] : [], // Cópia para admin
-  subject: `Confirme seu email - ${normalizedTenantName}`,
-  html: emailHtml,
-});
+// Continue with normal flow for unused tokens...
 ```
 
 ### Resumo das Alterações
 
 | Arquivo | Mudança |
 |---------|---------|
-| `create-patient-profile/index.ts` | Remetente verificado + BCC admin |
-| `create-professional-profile/index.ts` | Remetente verificado + BCC admin |
-| `resend-email-confirmation/index.ts` | Remetente verificado + BCC admin |
-
-### Fluxo Final
-
-```text
-Novo Cadastro (Rede Bem Estar)
-├── Email enviado DE: "Rede Bem Estar <noreply@redebemestar.com.br>"
-├── Email enviado PARA: usuario@email.com
-└── Cópia BCC PARA: redebemestar1@gmail.com ✅
-
-Novo Cadastro (MEDCOS)
-├── Email enviado DE: "MEDCOS <noreply@redebemestar.com.br>"
-├── Email enviado PARA: usuario@email.com
-└── Cópia BCC PARA: medcos.host@gmail.com ✅
-```
+| `supabase/functions/confirm-email/index.ts` | Verificar se email já está confirmado antes de retornar erro |
 
 ### Resultado Esperado
 
-- Emails de confirmação chegam aos usuários
-- Cada admin de tenant recebe cópia (BCC) dos cadastros da sua plataforma
-- Remetente usa domínio verificado (funciona com Resend)
-- Isolamento entre tenants mantido (admin do MEDCOS não vê cadastros da Rede Bem Estar)
+**Antes:**
+- Usuário clica 2x no link → Vê erro na segunda vez
+- Experiência confusa
+
+**Depois:**
+- Usuário clica 2x no link → Vê "Email já confirmado!" na segunda vez
+- Experiência positiva
+
+### Nota
+
+O email do usuário `ceked29859@1200b.com` **já está confirmado** no sistema. Ele pode fazer login normalmente agora.
 
