@@ -21,8 +21,8 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* Alô, Psi! Brand Colors */
-    --primary: var(--primary-light, 217 91% 21%); /* Deep blue - usar valores do tenant quando disponíveis */
+    /* Rede Bem Estar Brand Colors (default tenant) */
+    --primary: var(--primary-light, 280 63% 34%); /* Roxo - usar valores do tenant quando disponíveis */
     --primary-foreground: var(--primary-foreground-light, 0 0% 100%);
 
     --secondary: 210 40% 96.1%;
@@ -31,7 +31,7 @@ All colors MUST be HSL.
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: var(--accent-light, 199 89% 48%); /* Cyan vibrant - usar valores do tenant quando disponíveis */
+    --accent: var(--accent-light, 330 62% 70%); /* Rosa - usar valores do tenant quando disponíveis */
     --accent-foreground: var(--accent-foreground-light, 0 0% 100%);
 
     --teal: 188 94% 37%; /* Teal from design elements */
@@ -45,13 +45,13 @@ All colors MUST be HSL.
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 217 91% 21%;
+    --ring: 280 63% 34%;
 
     --radius: 0.5rem;
 
     /* Hover states for better contrast */
-    --hover-bg: 217 91% 95%; /* Light blue for hover */
-    --hover-text: 217 91% 21%; /* Dark blue for hover text */
+    --hover-bg: 280 63% 95%; /* Light purple for hover */
+    --hover-text: 280 63% 34%; /* Purple for hover text */
 
     /* Modern shadows */
     --shadow-card: 0 2px 8px -2px hsl(var(--foreground) / 0.1);
@@ -114,7 +114,7 @@ All colors MUST be HSL.
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: var(--primary-dark, 217 91% 21%); /* Azul primário dark mode */
+    --primary: var(--primary-dark, 280 63% 34%); /* Roxo primário dark mode */
     --primary-foreground: var(--primary-foreground-dark, 210 40% 98%);
 
     --secondary: 217.2 32.6% 17.5%;
@@ -123,7 +123,7 @@ All colors MUST be HSL.
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: var(--accent-dark, 199 89% 48%); /* Cyan vibrant dark mode */
+    --accent: var(--accent-dark, 330 62% 70%); /* Rosa dark mode */
     --accent-foreground: var(--accent-foreground-dark, 0 0% 100%);
 
     --teal: 188 94% 37%; /* Mantém o teal */
