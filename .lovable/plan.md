@@ -1,106 +1,143 @@
 
 
-## Plano: Corrigir Flash de Cores Antigas no Carregamento
+## Plano: Corrigir Emails de Pós-Cadastro + Cópia para Admin do Tenant
 
 ### Diagnóstico
 
-Quando você acessa a página, ocorre um "flash" visual porque:
+Os emails de confirmação de cadastro não estão chegando porque as edge functions usam o `admin_email` (Gmail) como remetente, mas o Resend só aceita domínios verificados.
 
-| Etapa | O que acontece | Cores visíveis |
-|-------|----------------|----------------|
-| 1. HTML carrega | CSS é aplicado | Azul (fallback antigo do CSS) |
-| 2. React inicia | TenantContext busca dados | Azul ainda visível |
-| 3. Dados chegam | `applyTenantTheme()` executa | Roxo (cores corretas) |
+| Edge Function | Remetente Atual | Status |
+|---------------|-----------------|--------|
+| `create-patient-profile` | `redebemestar1@gmail.com` | FALHA |
+| `create-professional-profile` | `medcos.host@gmail.com` | FALHA |
+| `resend-email-confirmation` | `redebemestar1@gmail.com` | FALHA |
 
-**O problema**: As cores CSS padrão no `index.css` ainda são do "Alô Psi" antigo (azul `217 91% 21%`), mas a marca atual "Rede Bem Estar" usa roxo (`#5b218e`).
+### Solução Completa
 
-### Dados Atuais no Banco
+1. **Remetente**: Usar `noreply@redebemestar.com.br` (domínio verificado)
+2. **Cópia para Admin**: Adicionar `admin_email` do tenant como BCC
 
-| Tenant | Primary Color | Accent Color |
-|--------|---------------|--------------|
-| alopsi (Rede Bem Estar) | `#5b218e` (roxo) | `#e281bb` (rosa) |
-| medcos | `#4fb828` (verde) | `#041d81` (azul) |
+```javascript
+// ANTES (não funciona)
+from: `${tenantName} <${tenantData.admin_email}>`
+// Sem cópia para admin
 
-### Soluções
-
-#### Opção 1: Atualizar CSS Fallbacks (Recomendada)
-Alterar os fallbacks no CSS para as cores atuais da Rede Bem Estar, já que é o tenant padrão.
-
-#### Opção 2: Ocultar UI Durante Loading
-Mostrar uma tela de loading até o tenant estar carregado.
-
-**Vou implementar a Opção 1** pois é mais simples e evita delay perceptível ao usuário.
-
-### Mudanças Técnicas
-
-**Arquivo:** `src/index.css`
-
-Atualizar as variáveis CSS padrão (linhas 24-35 e 117-127) para usar as cores atuais da Rede Bem Estar:
-
-| Variável | Valor Atual (Errado) | Novo Valor (Correto) |
-|----------|---------------------|----------------------|
-| `--primary` fallback | `217 91% 21%` (azul) | `280 63% 33%` (roxo #5b218e) |
-| `--accent` fallback | `199 89% 48%` (ciano) | `330 62% 70%` (rosa #e281bb) |
-| `--ring` | `217 91% 21%` | `280 63% 33%` |
-| `--hover-bg` | `217 91% 95%` | `280 63% 95%` |
-| `--hover-text` | `217 91% 21%` | `280 63% 33%` |
-
-#### Conversão HEX para HSL
-
-- `#5b218e` → `280 63% 34%` (roxo primário)
-- `#e281bb` → `330 62% 70%` (rosa accent)
-
-### Código Proposto
-
-**Linhas 24-35 do index.css (light mode):**
-```css
-/* Rede Bem Estar Brand Colors (default tenant) */
---primary: var(--primary-light, 280 63% 34%); /* Roxo - usar valores do tenant quando disponíveis */
---primary-foreground: var(--primary-foreground-light, 0 0% 100%);
-
---accent: var(--accent-light, 330 62% 70%); /* Rosa - usar valores do tenant quando disponíveis */
---accent-foreground: var(--accent-foreground-light, 0 0% 100%);
+// DEPOIS (funciona)
+from: `${tenantName} <noreply@redebemestar.com.br>`
+bcc: [tenantData.admin_email] // Admin recebe cópia
 ```
 
-**Linha 48:**
-```css
---ring: 280 63% 34%;
+### Mapeamento de Admins por Tenant
+
+| Tenant | Admin Email (BCC) |
+|--------|-------------------|
+| alopsi (Rede Bem Estar) | `redebemestar1@gmail.com` |
+| medcos | `medcos.host@gmail.com` |
+
+### Arquivos a Modificar
+
+#### 1. `create-patient-profile/index.ts`
+
+**Linhas ~403-421** - Adicionar BCC no envio de email:
+
+```javascript
+console.log('📧 Sending confirmation email:', {
+  tenant: normalizedTenantName,
+  from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
+  to: email,
+  bcc: tenantData.admin_email || null, // Cópia para admin
+});
+
+const emailResponse = await fetch('https://api.resend.com/emails', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
+    to: [email],
+    bcc: tenantData.admin_email ? [tenantData.admin_email] : [], // Cópia para admin
+    subject: `Confirme seu email - ${normalizedTenantName}`,
+    html: emailHtml,
+  }),
+});
 ```
 
-**Linhas 52-54:**
-```css
-/* Hover states for better contrast */
---hover-bg: 280 63% 95%; /* Light purple for hover */
---hover-text: 280 63% 34%; /* Purple for hover text */
+#### 2. `create-professional-profile/index.ts`
+
+**Linhas ~777-803** - Adicionar BCC no envio de email:
+
+```javascript
+console.log('📧 Email details:', {
+  from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
+  to: profileData.email,
+  bcc: tenant.admin_email || null, // Cópia para admin
+});
+
+const emailResponse = await fetch('https://api.resend.com/emails', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
+    to: [profileData.email],
+    bcc: tenant.admin_email ? [tenant.admin_email] : [], // Cópia para admin
+    subject: `Confirme seu email - ${normalizedTenantName}`,
+    html: emailHtml,
+  }),
+});
 ```
 
-**Linhas 117-127 do index.css (dark mode):**
-```css
---primary: var(--primary-dark, 280 63% 34%); /* Roxo primário dark mode */
---primary-foreground: var(--primary-foreground-dark, 210 40% 98%);
+#### 3. `resend-email-confirmation/index.ts`
 
---accent: var(--accent-dark, 330 62% 70%); /* Rosa dark mode */
---accent-foreground: var(--accent-foreground-dark, 0 0% 100%);
+**Linhas ~228-250** - Adicionar BCC no reenvio:
+
+```javascript
+console.log('📧 Email confirmation details:', {
+  tenant: normalizedTenantName,
+  from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
+  to: email,
+  bcc: tenantData.admin_email || null, // Cópia para admin
+});
+
+const emailResponse = await resend.emails.send({
+  from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
+  to: [email],
+  bcc: tenantData.admin_email ? [tenantData.admin_email] : [], // Cópia para admin
+  subject: `Confirme seu email - ${normalizedTenantName}`,
+  html: emailHtml,
+});
 ```
 
 ### Resumo das Alterações
 
-| Arquivo | Linhas | Tipo | Descrição |
-|---------|--------|------|-----------|
-| `src/index.css` | 24-35 | Modificar | Atualizar fallbacks light mode para roxo/rosa |
-| `src/index.css` | 48 | Modificar | Atualizar --ring para roxo |
-| `src/index.css` | 52-54 | Modificar | Atualizar hover states para roxo |
-| `src/index.css` | 117-127 | Modificar | Atualizar fallbacks dark mode para roxo/rosa |
+| Arquivo | Mudança |
+|---------|---------|
+| `create-patient-profile/index.ts` | Remetente verificado + BCC admin |
+| `create-professional-profile/index.ts` | Remetente verificado + BCC admin |
+| `resend-email-confirmation/index.ts` | Remetente verificado + BCC admin |
+
+### Fluxo Final
+
+```text
+Novo Cadastro (Rede Bem Estar)
+├── Email enviado DE: "Rede Bem Estar <noreply@redebemestar.com.br>"
+├── Email enviado PARA: usuario@email.com
+└── Cópia BCC PARA: redebemestar1@gmail.com ✅
+
+Novo Cadastro (MEDCOS)
+├── Email enviado DE: "MEDCOS <noreply@redebemestar.com.br>"
+├── Email enviado PARA: usuario@email.com
+└── Cópia BCC PARA: medcos.host@gmail.com ✅
+```
 
 ### Resultado Esperado
 
-- **Antes**: Flash de azul → roxo ao carregar
-- **Depois**: Cores roxas desde o primeiro frame
-
-### Benefícios
-
-- Zero flash visual no carregamento
-- Cores corretas da Rede Bem Estar como padrão
-- Medcos continuará funcionando normalmente (cores são sobrescritas pelo `applyTenantTheme`)
-- Sem delay adicional de loading
+- Emails de confirmação chegam aos usuários
+- Cada admin de tenant recebe cópia (BCC) dos cadastros da sua plataforma
+- Remetente usa domínio verificado (funciona com Resend)
+- Isolamento entre tenants mantido (admin do MEDCOS não vê cadastros da Rede Bem Estar)
 
