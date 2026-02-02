@@ -1,111 +1,106 @@
 
 
-## Plano: Botão Flutuante "Voltar ao Topo"
+## Plano: Corrigir Flash de Cores Antigas no Carregamento
 
-### Objetivo
+### Diagnóstico
 
-Adicionar um botão flutuante no lado direito da tela que aparece quando o usuário rola a página, permitindo voltar ao topo com um clique.
+Quando você acessa a página, ocorre um "flash" visual porque:
 
-### Análise do Layout Atual
+| Etapa | O que acontece | Cores visíveis |
+|-------|----------------|----------------|
+| 1. HTML carrega | CSS é aplicado | Azul (fallback antigo do CSS) |
+| 2. React inicia | TenantContext busca dados | Azul ainda visível |
+| 3. Dados chegam | `applyTenantTheme()` executa | Roxo (cores corretas) |
 
-| Componente | Posição | Z-Index |
-|------------|---------|---------|
-| `WhatsAppFloat` | `bottom-6 right-6` | z-50 |
-| Novo botão | `bottom-24 right-6` (acima do WhatsApp) | z-40 |
+**O problema**: As cores CSS padrão no `index.css` ainda são do "Alô Psi" antigo (azul `217 91% 21%`), mas a marca atual "Rede Bem Estar" usa roxo (`#5b218e`).
 
-### Solução
+### Dados Atuais no Banco
 
-Criar um novo componente `ScrollToTopButton` seguindo o padrão existente do `FloatingBackButton`:
+| Tenant | Primary Color | Accent Color |
+|--------|---------------|--------------|
+| alopsi (Rede Bem Estar) | `#5b218e` (roxo) | `#e281bb` (rosa) |
+| medcos | `#4fb828` (verde) | `#041d81` (azul) |
 
-```text
-+-------------------------------------------+
-|                                           |
-|                                           |
-|                                    [↑]    | ← Scroll to Top (bottom-24)
-|                                    [💬]   | ← WhatsApp (bottom-6)
-+-------------------------------------------+
+### Soluções
+
+#### Opção 1: Atualizar CSS Fallbacks (Recomendada)
+Alterar os fallbacks no CSS para as cores atuais da Rede Bem Estar, já que é o tenant padrão.
+
+#### Opção 2: Ocultar UI Durante Loading
+Mostrar uma tela de loading até o tenant estar carregado.
+
+**Vou implementar a Opção 1** pois é mais simples e evita delay perceptível ao usuário.
+
+### Mudanças Técnicas
+
+**Arquivo:** `src/index.css`
+
+Atualizar as variáveis CSS padrão (linhas 24-35 e 117-127) para usar as cores atuais da Rede Bem Estar:
+
+| Variável | Valor Atual (Errado) | Novo Valor (Correto) |
+|----------|---------------------|----------------------|
+| `--primary` fallback | `217 91% 21%` (azul) | `280 63% 33%` (roxo #5b218e) |
+| `--accent` fallback | `199 89% 48%` (ciano) | `330 62% 70%` (rosa #e281bb) |
+| `--ring` | `217 91% 21%` | `280 63% 33%` |
+| `--hover-bg` | `217 91% 95%` | `280 63% 95%` |
+| `--hover-text` | `217 91% 21%` | `280 63% 33%` |
+
+#### Conversão HEX para HSL
+
+- `#5b218e` → `280 63% 34%` (roxo primário)
+- `#e281bb` → `330 62% 70%` (rosa accent)
+
+### Código Proposto
+
+**Linhas 24-35 do index.css (light mode):**
+```css
+/* Rede Bem Estar Brand Colors (default tenant) */
+--primary: var(--primary-light, 280 63% 34%); /* Roxo - usar valores do tenant quando disponíveis */
+--primary-foreground: var(--primary-foreground-light, 0 0% 100%);
+
+--accent: var(--accent-light, 330 62% 70%); /* Rosa - usar valores do tenant quando disponíveis */
+--accent-foreground: var(--accent-foreground-light, 0 0% 100%);
 ```
 
-### Comportamento
-
-| Condição | Estado do Botão |
-|----------|-----------------|
-| Scroll < 400px | Invisível (fade out) |
-| Scroll >= 400px | Visível (fade in) |
-| Clique | Scroll suave para o topo |
-
-### Novo Arquivo
-
-**`src/components/ui/scroll-to-top-button.tsx`**
-
-```tsx
-import { useState, useEffect } from 'react';
-import { ArrowUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-
-export const ScrollToTopButton = () => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const toggleVisibility = () => {
-      setIsVisible(window.scrollY > 400);
-    };
-
-    window.addEventListener('scroll', toggleVisibility, { passive: true });
-    return () => window.removeEventListener('scroll', toggleVisibility);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  return (
-    <Button
-      onClick={scrollToTop}
-      size="icon"
-      variant="secondary"
-      className={cn(
-        "fixed bottom-24 right-6 z-40 shadow-lg transition-all duration-300",
-        "hover:scale-110 hover:shadow-xl",
-        isVisible 
-          ? "opacity-100 translate-y-0" 
-          : "opacity-0 translate-y-4 pointer-events-none"
-      )}
-      aria-label="Voltar ao topo"
-    >
-      <ArrowUp className="h-5 w-5" />
-    </Button>
-  );
-};
-
-export default ScrollToTopButton;
+**Linha 48:**
+```css
+--ring: 280 63% 34%;
 ```
 
-### Integração Global
+**Linhas 52-54:**
+```css
+/* Hover states for better contrast */
+--hover-bg: 280 63% 95%; /* Light purple for hover */
+--hover-text: 280 63% 34%; /* Purple for hover text */
+```
 
-**Modificar `src/App.tsx`** para adicionar o componente globalmente, junto com o `WhatsAppFloat`:
+**Linhas 117-127 do index.css (dark mode):**
+```css
+--primary: var(--primary-dark, 280 63% 34%); /* Roxo primário dark mode */
+--primary-foreground: var(--primary-foreground-dark, 210 40% 98%);
 
-```tsx
-import ScrollToTopButton from "@/components/ui/scroll-to-top-button";
-
-// ... no retorno do App
-<WhatsAppFloat />
-<ScrollToTopButton />
+--accent: var(--accent-dark, 330 62% 70%); /* Rosa dark mode */
+--accent-foreground: var(--accent-foreground-dark, 0 0% 100%);
 ```
 
 ### Resumo das Alterações
 
-| Arquivo | Ação | Descrição |
-|---------|------|-----------|
-| `src/components/ui/scroll-to-top-button.tsx` | Criar | Novo componente de botão flutuante |
-| `src/App.tsx` | Modificar | Importar e adicionar o componente globalmente |
+| Arquivo | Linhas | Tipo | Descrição |
+|---------|--------|------|-----------|
+| `src/index.css` | 24-35 | Modificar | Atualizar fallbacks light mode para roxo/rosa |
+| `src/index.css` | 48 | Modificar | Atualizar --ring para roxo |
+| `src/index.css` | 52-54 | Modificar | Atualizar hover states para roxo |
+| `src/index.css` | 117-127 | Modificar | Atualizar fallbacks dark mode para roxo/rosa |
 
-### Características Visuais
+### Resultado Esperado
 
-- Ícone `ArrowUp` do Lucide
-- Estilo `variant="secondary"` para combinar com o design
-- Animação de fade in/out com translate suave
-- Efeito hover com scale e sombra
-- Posicionado acima do botão WhatsApp para não sobrepor
+- **Antes**: Flash de azul → roxo ao carregar
+- **Depois**: Cores roxas desde o primeiro frame
+
+### Benefícios
+
+- Zero flash visual no carregamento
+- Cores corretas da Rede Bem Estar como padrão
+- Medcos continuará funcionando normalmente (cores são sobrescritas pelo `applyTenantTheme`)
+- Sem delay adicional de loading
 
