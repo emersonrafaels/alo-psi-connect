@@ -1,29 +1,33 @@
 
-## Plano: Alterar Cor do Header do Blog para Secondary
+
+## Plano: Usar Cor Roxa no Header do Blog
+
+### Análise da Paleta
+
+A paleta da Rede Bem Estar define:
+
+| Variável | Valor HSL | Cor |
+|----------|-----------|-----|
+| `--primary` | `280 63% 34%` | Roxo (principal) |
+| `--accent` | `330 62% 70%` | Rosa |
 
 ### Mudança
 
 | Arquivo | Linha | Antes | Depois |
 |---------|-------|-------|--------|
-| `src/pages/Blog.tsx` | 83 | `bg-primary` | `bg-secondary` |
+| `src/pages/Blog.tsx` | 83 | `bg-secondary` | `bg-primary` |
 
 ### Código
 
 ```jsx
 // Linha 83 - ANTES
-<section className="bg-primary py-16">
+<section className="bg-secondary py-16">
 
 // Linha 83 - DEPOIS  
-<section className="bg-secondary py-16">
+<section className="bg-primary py-16">
 ```
-
-### Cores no CSS (src/index.css)
-
-| Variável | Valor (Light) | Descrição |
-|----------|---------------|-----------|
-| `--primary` | `280 63% 34%` | Roxo |
-| `--secondary` | `210 40% 96.1%` | Cinza claro |
 
 ### Resultado
 
-O header do blog passará de roxo para um cinza claro suave, alinhando-se com o estilo secundário do design system.
+O header do blog voltará a usar a cor roxa (`--primary: 280 63% 34%`), respeitando a identidade visual da Rede Bem Estar.
+
