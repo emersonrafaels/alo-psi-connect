@@ -1,6 +1,21 @@
 import { toast } from 'sonner';
 
 /**
+ * Força a invalidação do cache de CSS adicionando timestamp às folhas de estilo
+ */
+export const clearCSSCache = () => {
+  const links = document.querySelectorAll('link[rel="stylesheet"]');
+  links.forEach((link) => {
+    const href = (link as HTMLLinkElement).href;
+    if (href) {
+      (link as HTMLLinkElement).href = href.split('?')[0] + '?v=' + Date.now();
+    }
+  });
+  
+  console.log('✅ Cache de CSS invalidado');
+};
+
+/**
  * Limpa o cache de um tenant específico ou de todos os tenants
  * @param slug - Slug do tenant (opcional). Se não fornecido, limpa todos os caches de tenant
  */
