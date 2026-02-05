@@ -80,7 +80,7 @@ const Blog = () => {
       <Header />
       
       {/* Header */}
-      <section className="bg-[#5e95e8] py-16">
+      <section className="bg-primary py-16">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold text-accent-foreground mb-4">News & Blog</h1>
           <p className="text-accent-foreground/80">Artigos, dicas e reflexões sobre saúde emocional</p>
