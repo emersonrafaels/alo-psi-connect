@@ -1283,10 +1283,15 @@ export type Database = {
           organizer_type: string
           price: number | null
           professional_id: number | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           session_date: string
           session_type: string
           start_time: string
           status: string | null
+          submitted_at: string | null
+          submitted_by: string | null
           tags: string[] | null
           tenant_id: string
           title: string
@@ -1311,10 +1316,15 @@ export type Database = {
           organizer_type: string
           price?: number | null
           professional_id?: number | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           session_date: string
           session_type: string
           start_time: string
           status?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
           tags?: string[] | null
           tenant_id: string
           title: string
@@ -1339,10 +1349,15 @@ export type Database = {
           organizer_type?: string
           price?: number | null
           professional_id?: number | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           session_date?: string
           session_type?: string
           start_time?: string
           status?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
           tags?: string[] | null
           tenant_id?: string
           title?: string
@@ -3392,6 +3407,7 @@ export type Database = {
         | "author"
         | "super_author"
         | "institution_admin"
+        | "facilitator"
       editorial_badge:
         | "editors_pick"
         | "trending"
@@ -3550,6 +3566,7 @@ export const Constants = {
         "author",
         "super_author",
         "institution_admin",
+        "facilitator",
       ],
       editorial_badge: [
         "editors_pick",
