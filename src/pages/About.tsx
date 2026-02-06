@@ -155,7 +155,7 @@ const About = () => {
                 auditoria de qualidade. Dados assistenciais ficam sob sigilo, relatórios 
                 institucionais são sempre agregados e anonimizados.
               </p>
-              <Button variant="outline" onClick={() => navigate(buildTenantPath(tenantSlug, '/termos-de-servico'))}>
+              <Button variant="outline" onClick={() => navigate(buildTenantPath(tenantSlug, '/termos-servico'))}>
                 Ver Termos de Serviço
               </Button>
             </div>
