@@ -8,8 +8,11 @@ import { useGroupSessions, GroupSession } from '@/hooks/useGroupSessions';
 import { GroupSessionsTable } from '@/components/group-sessions/admin/GroupSessionsTable';
 import { GroupSessionForm } from '@/components/group-sessions/admin/GroupSessionForm';
 import { SessionRegistrantsModal } from '@/components/group-sessions/admin/SessionRegistrantsModal';
+import { PendingSessionsApproval } from '@/components/admin/PendingSessionsApproval';
 import { AdminTenantSelector } from '@/components/admin/AdminTenantSelector';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function GroupSessionsAdmin() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -32,6 +35,18 @@ export default function GroupSessionsAdmin() {
   const scheduledSessions = sessions.filter(s => s.status === 'scheduled');
   const completedSessions = sessions.filter(s => s.status === 'completed');
   const draftSessions = sessions.filter(s => s.status === 'draft');
+
+  const { data: pendingCount } = useQuery({
+    queryKey: ['pending-sessions-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('group_sessions')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending_approval');
+      if (error) throw error;
+      return count || 0;
+    },
+  });
 
   const handleCreate = () => {
     setEditingSession(undefined);
@@ -84,8 +99,14 @@ export default function GroupSessionsAdmin() {
           </div>
         </div>
 
-        <Tabs defaultValue="scheduled">
+        <Tabs defaultValue={pendingCount && pendingCount > 0 ? "pending" : "scheduled"}>
           <TabsList>
+            <TabsTrigger value="pending" className="relative">
+              Pendentes {pendingCount ? `(${pendingCount})` : ''}
+              {pendingCount && pendingCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-2 w-2 bg-destructive rounded-full" />
+              )}
+            </TabsTrigger>
             <TabsTrigger value="scheduled">
               Agendados ({scheduledSessions.length})
             </TabsTrigger>
@@ -96,6 +117,10 @@ export default function GroupSessionsAdmin() {
               Rascunhos ({draftSessions.length})
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="pending" className="mt-6">
+            <PendingSessionsApproval />
+          </TabsContent>
 
           <TabsContent value="scheduled" className="mt-6">
             {isLoading ? (

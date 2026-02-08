@@ -36,6 +36,7 @@ const Header = () => {
   const { isAuthor } = useAuthorRole()
   const { tenant } = useTenant()
   const { hasRole: isInstitutionAdmin, loading: institutionAdminLoading } = useUserRole('institution_admin')
+  const { hasRole: isFacilitator, loading: facilitatorLoading } = useUserRole('facilitator')
 
   // Usar o slug da URL para navegação (sempre consistente com a rota atual)
   const tenantSlug = getTenantSlugFromPath(location.pathname)
@@ -218,6 +219,12 @@ const Header = () => {
                     <Users className="h-4 w-4 mr-2" />
                     Meus Encontros
                   </DropdownMenuItem>
+                  {isFacilitator && !facilitatorLoading && (
+                    <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/gerenciar-encontros'))}>
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Gerenciar Encontros
+                    </DropdownMenuItem>
+                  )}
                   {isProfessional && (
                     <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/professional-profile'))}>
                       <Briefcase className="h-4 w-4 mr-2" />
@@ -344,6 +351,16 @@ const Header = () => {
                     <Users className="h-5 w-5 opacity-70" />
                     Meus Encontros
                   </Link>
+                  {isFacilitator && !facilitatorLoading && (
+                    <Link
+                      to={buildTenantPath(tenantSlug, '/gerenciar-encontros')}
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Calendar className="h-5 w-5 opacity-70" />
+                      Gerenciar Encontros
+                    </Link>
+                  )}
                   {isProfessional && (
                     <Link
                       to={buildTenantPath(tenantSlug, '/professional-profile')}
