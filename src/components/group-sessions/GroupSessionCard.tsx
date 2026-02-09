@@ -3,15 +3,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, Clock, Users, Video, Building2, Check } from 'lucide-react';
+import { Calendar, Clock, Users, Video, Building2, Check, MessageCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getSessionTypeLabel } from './SessionTypeIcon';
 import { SessionTypeIcon } from './SessionTypeIcon';
 import { SessionCountdown } from './SessionCountdown';
+import { ShareSessionButton } from './ShareSessionButton';
 import { useTenant } from '@/hooks/useTenant';
 import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
+import { Link } from 'react-router-dom';
 
 interface GroupSessionCardProps {
   session: GroupSession;
@@ -119,9 +121,11 @@ export const GroupSessionCard = ({
                 />
               </div>
               
-              <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                {session.title}
-              </h3>
+              <Link to={`/encontros/${session.id}`} className="block">
+                <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors hover:underline cursor-pointer">
+                  {session.title}
+                </h3>
+              </Link>
               
               <p className="text-muted-foreground line-clamp-2">
                 {session.description}
@@ -149,6 +153,17 @@ export const GroupSessionCard = ({
                   <Video className="w-4 h-4 text-primary" />
                   <span>Online</span>
                 </div>
+              )}
+              {session.whatsapp_group_link && (
+                <a
+                  href={session.whatsapp_group_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 transition-colors hover:text-green-600 text-green-600"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>WhatsApp</span>
+                </a>
               )}
             </div>
 
@@ -182,6 +197,12 @@ export const GroupSessionCard = ({
                   </div>
                 )}
               </div>
+              
+              <ShareSessionButton
+                sessionId={session.id}
+                title={session.title}
+                description={session.description}
+              />
               
               {spotsLeft <= 3 && spotsLeft > 0 && (
                 <p className="text-sm text-destructive font-semibold animate-pulse">

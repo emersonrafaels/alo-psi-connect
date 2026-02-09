@@ -1,14 +1,16 @@
 import { GroupSession } from '@/hooks/useGroupSessions';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Users, Flame, Building2, Check } from 'lucide-react';
+import { Calendar, Clock, Users, Flame, Building2, Check, MessageCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SessionCountdown } from './SessionCountdown';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTenant } from '@/hooks/useTenant';
+import { ShareSessionButton } from './ShareSessionButton';
 import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
+import { Link } from 'react-router-dom';
 
 interface NextSessionHighlightProps {
   session: GroupSession;
@@ -96,12 +98,17 @@ export const NextSessionHighlight = ({
         {/* Session Info */}
         <div className="flex-1 space-y-3">
           <div className="space-y-2">
-            <h3 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
-              {session.title}
-            </h3>
+            <Link to={`/encontros/${session.id}`} className="block">
+              <h3 className="text-2xl md:text-3xl font-bold text-foreground leading-tight hover:underline cursor-pointer">
+                {session.title}
+              </h3>
+            </Link>
             <p className="text-muted-foreground line-clamp-2">
               {session.description}
             </p>
+            <Link to={`/encontros/${session.id}`} className="text-primary text-sm font-medium hover:underline">
+              Ver detalhes completos →
+            </Link>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -133,6 +140,17 @@ export const NextSessionHighlight = ({
               sessionDate={session.session_date}
               startTime={session.start_time}
             />
+            {session.whatsapp_group_link && (
+              <a
+                href={session.whatsapp_group_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-green-600 hover:text-green-700"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span className="font-semibold">WhatsApp</span>
+              </a>
+            )}
           </div>
         </div>
 
@@ -168,6 +186,15 @@ export const NextSessionHighlight = ({
                 <div className="confetti-particle animate-success-confetti" style={{ left: '85%', animationDelay: '0.12s' }}>🌟</div>
               </div>
             )}
+          </div>
+          <div className="mt-2 flex items-center gap-2 justify-center md:justify-start">
+            <ShareSessionButton
+              sessionId={session.id}
+              title={session.title}
+              description={session.description}
+              size="sm"
+              variant="outline"
+            />
           </div>
           {spotsLeft <= 3 && spotsLeft > 0 && (
             <p className="text-xs text-destructive font-semibold mt-2 text-center md:text-left">
