@@ -23,6 +23,7 @@ import InstitutionPortal from "./pages/InstitutionPortal";
 import InstitutionProfessionals from "./pages/InstitutionProfessionals";
 import InstitutionStudents from "./pages/InstitutionStudents";
 import GroupSessions from "./pages/GroupSessions";
+import GroupSessionDetail from "./pages/GroupSessionDetail";
 import MyGroupSessions from "./pages/MyGroupSessions";
 import ManageGroupSessions from "./pages/ManageGroupSessions";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -171,6 +172,7 @@ const AppWithShortcuts = () => {
       
       {/* Rotas de Encontros em Grupo */}
       <Route path="/encontros" element={<GroupSessions />} />
+      <Route path="/encontros/:sessionId" element={<GroupSessionDetail />} />
       <Route path="/meus-encontros" element={<MyGroupSessions />} />
       <Route path="/gerenciar-encontros" element={<ProtectedRoute requiredRole="facilitator"><ManageGroupSessions /></ProtectedRoute>} />
       
@@ -201,6 +203,7 @@ const AppWithShortcuts = () => {
       
       {/* Rotas de Encontros Medcos */}
       <Route path="/medcos/encontros" element={<GroupSessions />} />
+      <Route path="/medcos/encontros/:sessionId" element={<GroupSessionDetail />} />
       <Route path="/medcos/meus-encontros" element={<MyGroupSessions />} />
       <Route path="/medcos/gerenciar-encontros" element={<ProtectedRoute requiredRole="facilitator"><ManageGroupSessions /></ProtectedRoute>} />
       

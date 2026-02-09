@@ -4,7 +4,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Clock, Users, MapPin, ExternalLink, XCircle, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Users, MapPin, ExternalLink, XCircle, CheckCircle, AlertCircle, MessageCircle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { format, parseISO, isPast, isFuture, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Header from '@/components/ui/header';
@@ -196,7 +207,7 @@ const MyGroupSessions = () => {
                               </div>
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap">
                               {session.meeting_link ? (
                                 <Button
                                   size="sm"
@@ -213,16 +224,47 @@ const MyGroupSessions = () => {
                                   Link em breve
                                 </Button>
                               )}
-                              {registration.status === 'confirmed' && (
+                              {session.whatsapp_group_link && (
                                 <Button
                                   size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleCancelRegistration(registration.id)}
-                                  disabled={cancellingId === registration.id}
+                                  variant="outline"
+                                  className="text-green-600 border-green-600 hover:bg-green-50"
+                                  onClick={() => window.open(session.whatsapp_group_link, '_blank')}
                                 >
-                                  <XCircle className="h-4 w-4 mr-2" />
-                                  Cancelar
+                                  <MessageCircle className="h-4 w-4 mr-2" />
+                                  Grupo WhatsApp
                                 </Button>
+                              )}
+                              {registration.status === 'confirmed' && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      disabled={cancellingId === registration.id}
+                                    >
+                                      <XCircle className="h-4 w-4 mr-2" />
+                                      Cancelar
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Cancelar inscrição?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Você tem certeza que deseja cancelar sua inscrição neste encontro? Sua vaga será liberada para outros participantes.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Manter Inscrição</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleCancelRegistration(registration.id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Sim, Cancelar
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               )}
                             </div>
                           </CardContent>

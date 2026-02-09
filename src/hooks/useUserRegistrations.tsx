@@ -28,6 +28,7 @@ export const useUserRegistrations = () => {
             start_time,
             duration_minutes,
             meeting_link,
+            whatsapp_group_link,
             session_type,
             organizer_type,
             professional_id,
