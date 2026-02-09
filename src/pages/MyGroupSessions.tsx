@@ -20,7 +20,7 @@ import { format, parseISO, isPast, isFuture, differenceInMinutes } from 'date-fn
 import { ptBR } from 'date-fns/locale';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { SessionCountdown } from '@/components/group-sessions/SessionCountdown';
@@ -246,7 +246,9 @@ const MySessionsContent = ({
                           </Badge>
                         )}
                       </div>
-                      <CardTitle className="text-2xl">{session.title}</CardTitle>
+                      <Link to={buildTenantPath(tenantSlug, `/encontros/${session.id}`)} className="hover:underline hover:text-primary cursor-pointer transition-colors">
+                        <CardTitle className="text-2xl">{session.title}</CardTitle>
+                      </Link>
                       {session.description && (
                         <CardDescription className="mt-2">{session.description}</CardDescription>
                       )}
@@ -375,7 +377,9 @@ const MySessionsContent = ({
                           </Badge>
                         )}
                       </div>
-                      <CardTitle className="text-xl">{session.title}</CardTitle>
+                      <Link to={buildTenantPath(tenantSlug, `/encontros/${session.id}`)} className="hover:underline hover:text-primary cursor-pointer transition-colors">
+                        <CardTitle className="text-xl">{session.title}</CardTitle>
+                      </Link>
                     </div>
                   </div>
                 </CardHeader>
