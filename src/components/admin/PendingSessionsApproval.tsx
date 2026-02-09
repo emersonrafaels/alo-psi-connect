@@ -59,10 +59,15 @@ export const PendingSessionsApproval = () => {
         })
         .eq('id', sessionId);
       if (error) throw error;
+      return { sessionId, notes };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['pending-sessions-approval'] });
       toast({ title: 'Encontro aprovado e publicado!' });
+      // Notify facilitator
+      supabase.functions.invoke('send-group-session-notification', {
+        body: { event_type: 'session_approved', session_id: result.sessionId, review_notes: result.notes },
+      }).catch(err => console.error('Notification error:', err));
     },
     onError: (error) => {
       toast({ title: 'Erro ao aprovar', description: error.message, variant: 'destructive' });
@@ -81,10 +86,15 @@ export const PendingSessionsApproval = () => {
         })
         .eq('id', sessionId);
       if (error) throw error;
+      return { sessionId, notes };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['pending-sessions-approval'] });
       toast({ title: 'Encontro rejeitado.' });
+      // Notify facilitator
+      supabase.functions.invoke('send-group-session-notification', {
+        body: { event_type: 'session_rejected', session_id: result.sessionId, review_notes: result.notes },
+      }).catch(err => console.error('Notification error:', err));
     },
     onError: (error) => {
       toast({ title: 'Erro ao rejeitar', description: error.message, variant: 'destructive' });

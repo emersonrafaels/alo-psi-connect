@@ -141,17 +141,40 @@ export const useGroupSessionRegistration = (sessionId?: string) => {
       
       return { previousSessions };
     },
-    onSuccess: (_, sessionId) => {
+    onSuccess: async (_, sessionId) => {
       setLastRegisteredSessionId(sessionId);
       queryClient.invalidateQueries({ queryKey: ['group-session-registration'] });
-      // NÃO invalidar group-sessions - o optimistic update já atualizou
       queryClient.invalidateQueries({ queryKey: ['user-registrations'] });
       toast({
         title: 'Inscrição confirmada!',
-        description: 'Você receberá um email com o link da sessão.',
+        description: 'Você receberá um email com os detalhes da sessão.',
       });
       
-      // Limpar após 3 segundos
+      // Send confirmation email (fire-and-forget)
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('nome, email')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (profile?.email) {
+            supabase.functions.invoke('send-group-session-notification', {
+              body: {
+                event_type: 'registration_confirmed',
+                session_id: sessionId,
+                user_email: profile.email,
+                user_name: profile.nome || 'Participante',
+              },
+            }).catch(err => console.error('Email notification error:', err));
+          }
+        }
+      } catch (err) {
+        console.error('Error sending registration email:', err);
+      }
+      
       setTimeout(() => setLastRegisteredSessionId(null), 3000);
     },
     onError: (error, sessionId, context) => {
