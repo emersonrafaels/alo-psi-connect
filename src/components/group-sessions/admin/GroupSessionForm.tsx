@@ -244,6 +244,33 @@ export const GroupSessionForm = ({
         </CardContent>
       </Card>
 
+      {/* Links */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Links</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="meeting_link">Link da Reunião (Google Meet, Zoom, etc.)</Label>
+            <Input
+              id="meeting_link"
+              type="url"
+              {...register('meeting_link')}
+              placeholder="https://meet.google.com/xxx-xxxx-xxx"
+            />
+          </div>
+          <div>
+            <Label htmlFor="whatsapp_group_link">Link do Grupo do WhatsApp</Label>
+            <Input
+              id="whatsapp_group_link"
+              type="url"
+              {...register('whatsapp_group_link' as any)}
+              placeholder="https://chat.whatsapp.com/..."
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Restrição de Público */}
       <Card>
         <CardHeader>

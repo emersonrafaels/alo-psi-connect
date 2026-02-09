@@ -1296,6 +1296,7 @@ export type Database = {
           tenant_id: string
           title: string
           updated_at: string | null
+          whatsapp_group_link: string | null
         }
         Insert: {
           allowed_institution_ids?: string[] | null
@@ -1329,6 +1330,7 @@ export type Database = {
           tenant_id: string
           title: string
           updated_at?: string | null
+          whatsapp_group_link?: string | null
         }
         Update: {
           allowed_institution_ids?: string[] | null
@@ -1362,6 +1364,7 @@ export type Database = {
           tenant_id?: string
           title?: string
           updated_at?: string | null
+          whatsapp_group_link?: string | null
         }
         Relationships: [
           {

@@ -21,6 +21,7 @@ export interface GroupSession {
   is_free: boolean;
   price: number;
   meeting_link?: string;
+  whatsapp_group_link?: string;
   google_event_id?: string;
   featured_image_url?: string;
   has_libras: boolean;
@@ -114,6 +115,7 @@ export const useGroupSessions = (filters?: {
           is_free: sessionData.is_free !== false,
           price: sessionData.price || 0,
           meeting_link: sessionData.meeting_link,
+          whatsapp_group_link: sessionData.whatsapp_group_link,
           featured_image_url: sessionData.featured_image_url,
           has_libras: sessionData.has_libras || false,
           audience_type: sessionData.audience_type || 'all',
