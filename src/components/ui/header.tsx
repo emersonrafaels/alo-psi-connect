@@ -16,6 +16,7 @@ import { useUserType } from "@/hooks/useUserType"
 import { useAuthorRole } from "@/hooks/useAuthorRole"
 import { useTenant } from "@/hooks/useTenant"
 import { useUserRole } from "@/hooks/useUserRole"
+import { useCanCreateSessions } from "@/hooks/useCanCreateSessions"
 import { TenantBranding } from "@/components/TenantBranding"
 import { buildTenantPath, getTenantSlugFromPath } from "@/utils/tenantHelpers"
 import { UnderConstructionModal } from "@/components/UnderConstructionModal"
@@ -37,6 +38,7 @@ const Header = () => {
   const { tenant } = useTenant()
   const { hasRole: isInstitutionAdmin, loading: institutionAdminLoading } = useUserRole('institution_admin')
   const { hasRole: isFacilitator, loading: facilitatorLoading } = useUserRole('facilitator')
+  const { canCreateSessions } = useCanCreateSessions()
 
   // Usar o slug da URL para navegação (sempre consistente com a rota atual)
   const tenantSlug = getTenantSlugFromPath(location.pathname)
@@ -217,14 +219,8 @@ const Header = () => {
                 )}
                   <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/meus-encontros'))}>
                     <Users className="h-4 w-4 mr-2" />
-                    Meus Encontros
+                    {canCreateSessions ? 'Encontros' : 'Meus Encontros'}
                   </DropdownMenuItem>
-                  {isFacilitator && !facilitatorLoading && (
-                    <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/gerenciar-encontros'))}>
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Gerenciar Encontros
-                    </DropdownMenuItem>
-                  )}
                   {isProfessional && (
                     <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/professional-profile'))}>
                       <Briefcase className="h-4 w-4 mr-2" />
@@ -349,18 +345,8 @@ const Header = () => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <Users className="h-5 w-5 opacity-70" />
-                    Meus Encontros
+                    {canCreateSessions ? 'Encontros' : 'Meus Encontros'}
                   </Link>
-                  {isFacilitator && !facilitatorLoading && (
-                    <Link
-                      to={buildTenantPath(tenantSlug, '/gerenciar-encontros')}
-                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Calendar className="h-5 w-5 opacity-70" />
-                      Gerenciar Encontros
-                    </Link>
-                  )}
                   {isProfessional && (
                     <Link
                       to={buildTenantPath(tenantSlug, '/professional-profile')}
