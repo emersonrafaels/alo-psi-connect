@@ -1,68 +1,136 @@
 
 
-## Plano: Adicionar campos de Link do Meet e WhatsApp nos formularios de encontros
+## Plano: Notificacoes e Comunicacao para Encontros em Grupo
 
-### Problema Atual
-Os formularios de criacao/edicao de encontros (tanto admin quanto facilitador) nao possuem campos para informar links de videoconferencia (Google Meet) e grupo de WhatsApp.
+### Visao Geral
 
-### Mudancas Necessarias
+Implementar um sistema completo de notificacoes por email para o ciclo de vida dos encontros em grupo, reutilizando a infraestrutura ja existente (Resend, tenant branding, email `noreply@redebemestar.com.br`).
 
-#### 1. Migracao de Banco de Dados
-Adicionar coluna `whatsapp_group_link` na tabela `group_sessions` (a coluna `meeting_link` ja existe).
+---
 
-| Tabela | Coluna | Tipo | Descricao |
-|--------|--------|------|-----------|
-| group_sessions | whatsapp_group_link | text | Link do grupo do WhatsApp |
+### Fase 1 -- Email de Confirmacao de Inscricao
 
-#### 2. Atualizar tipos TypeScript
-Adicionar `whatsapp_group_link` na interface `GroupSession` em `src/hooks/useGroupSessions.tsx`.
+Quando um participante se inscreve em um encontro, enviar email automatico com:
+- Nome e descricao do encontro
+- Data, horario e duracao
+- Link do Google Meet (se disponivel)
+- Link do grupo do WhatsApp (se disponivel)
+- Nome do facilitador/organizador
+- Botao para cancelar inscricao
 
-#### 3. Formulario Admin (`GroupSessionForm.tsx`)
-Adicionar nova seção "Links" com dois campos:
-- **Link da Reunião (Meet)**: campo de URL para Google Meet ou similar (campo `meeting_link`)
-- **Link do Grupo do WhatsApp**: campo de URL para grupo do WhatsApp (campo `whatsapp_group_link`)
+**Implementacao:**
 
-Ambos opcionais, com placeholders orientando o formato esperado.
+| Item | Descricao |
+|------|-----------|
+| Edge Function | Criar `send-group-session-notification/index.ts` usando Resend com branding do tenant |
+| Hook | Chamar a edge function no `onSuccess` do `registerMutation` em `useGroupSessionRegistration.tsx` |
+| Template | HTML responsivo com dados da sessao, links e branding dinamico |
 
-#### 4. Formulario Facilitador (`FacilitatorSessionForm.tsx`)
-Adicionar a mesma secao "Links" com os mesmos dois campos, tambem opcionais.
+---
 
-#### 5. Hook useGroupSessions
-Garantir que os campos `meeting_link` e `whatsapp_group_link` sejam incluidos no `createSession` e `updateSession`.
+### Fase 2 -- Lembrete Automatico (24h e 1h antes)
 
-### Arquivos Modificados
+Enviar lembretes automaticos para todos os inscritos confirmados antes do inicio da sessao.
+
+**Implementacao:**
+
+| Item | Descricao |
+|------|-----------|
+| Edge Function | Criar `remind-group-session/index.ts` que busca sessoes proximas e envia lembretes |
+| Cron Job | Agendar via `pg_cron` a cada 30 minutos para verificar sessoes nas proximas 24h e 1h |
+| Controle | Adicionar coluna `reminder_24h_sent` e `reminder_1h_sent` (boolean) na tabela `group_session_registrations` para evitar duplicatas |
+
+**Migracao SQL:**
+```sql
+ALTER TABLE group_session_registrations
+  ADD COLUMN IF NOT EXISTS reminder_24h_sent boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS reminder_1h_sent boolean DEFAULT false;
+```
+
+---
+
+### Fase 3 -- Notificacao ao Facilitador sobre Status da Sessao
+
+Informar o facilitador quando sua sessao for aprovada ou rejeitada pelo admin.
+
+**Implementacao:**
+
+| Item | Descricao |
+|------|-----------|
+| Edge Function | Reutilizar `send-group-session-notification/index.ts` com tipo de evento `session_approved` ou `session_rejected` |
+| Trigger | Chamar a notificacao no componente `PendingSessionsApproval.tsx` apos a acao de aprovar/rejeitar |
+| Conteudo | Incluir notas de revisao (`review_notes`) quando houver rejeicao |
+
+---
+
+### Fase 4 -- Notificacao de Cancelamento de Sessao
+
+Quando um admin ou facilitador cancela uma sessao, notificar todos os inscritos.
+
+**Implementacao:**
+
+| Item | Descricao |
+|------|-----------|
+| Edge Function | Reutilizar a mesma function com tipo `session_cancelled` |
+| Busca | Consultar todos os registros com `status = 'confirmed'` para a sessao cancelada |
+| Conteudo | Motivo do cancelamento e sugestao de proximos encontros |
+
+---
+
+### Fase 5 -- Notificacao pos-Encontro (Follow-up)
+
+Enviar email apos o encontro com agradecimento e link para proximos eventos.
+
+**Implementacao:**
+
+| Item | Descricao |
+|------|-----------|
+| Cron Job | Verificar sessoes finalizadas (data passou) e enviar follow-up |
+| Controle | Adicionar coluna `followup_sent` (boolean) na tabela `group_session_registrations` |
+| Conteudo | Agradecimento, link para pagina de encontros, convite para newsletter |
+
+---
+
+### Arquitetura da Edge Function Central
+
+Uma unica edge function `send-group-session-notification` que recebe um `event_type` e despacha o template correto:
+
+```text
+event_type:
+  registration_confirmed  --> Email para participante
+  registration_cancelled  --> Email para participante
+  session_approved        --> Email para facilitador
+  session_rejected        --> Email para facilitador
+  session_cancelled       --> Email para todos os inscritos
+  reminder_24h            --> Email para inscritos
+  reminder_1h             --> Email para inscritos
+  followup                --> Email para inscritos que participaram
+```
+
+---
+
+### Arquivos a Criar/Modificar
 
 | Arquivo | Acao |
 |---------|------|
-| Migracao SQL (nova) | Adicionar coluna `whatsapp_group_link` |
-| `src/integrations/supabase/types.ts` | Atualizado automaticamente |
-| `src/hooks/useGroupSessions.tsx` | Adicionar `whatsapp_group_link` na interface e nas mutations |
-| `src/components/group-sessions/admin/GroupSessionForm.tsx` | Adicionar secao "Links" com dois campos |
-| `src/components/group-sessions/facilitator/FacilitatorSessionForm.tsx` | Adicionar secao "Links" com dois campos |
+| `supabase/functions/send-group-session-notification/index.ts` | Criar -- Edge function central de notificacoes |
+| `src/hooks/useGroupSessionRegistration.tsx` | Editar -- Chamar notificacao apos inscricao |
+| `src/components/admin/PendingSessionsApproval.tsx` | Editar -- Chamar notificacao apos aprovar/rejeitar |
+| `supabase/functions/remind-group-session/index.ts` | Criar -- Cron de lembretes |
+| Migracao SQL | Criar -- Adicionar colunas de controle de envio |
+| `supabase/config.toml` | Editar -- Registrar novas edge functions |
 
-### Detalhes Tecnicos
+### Dependencias
 
-**Secao "Links" nos formularios:**
-```
-Card: "Links"
-  - Label: "Link da Reunião (Google Meet, Zoom, etc.)"
-    Input type="url" placeholder="https://meet.google.com/xxx-xxxx-xxx"
-  - Label: "Link do Grupo do WhatsApp"
-    Input type="url" placeholder="https://chat.whatsapp.com/..."
-```
+- Secret `RESEND_API_KEY` ja esta configurada
+- Dominio `redebemestar.com.br` ja esta verificado no Resend
+- Infraestrutura de tenant branding ja existe
 
-**SQL da migracao:**
-```sql
-ALTER TABLE group_sessions
-  ADD COLUMN IF NOT EXISTS whatsapp_group_link text;
-```
+### Ordem de Implementacao Sugerida
 
-**Interface atualizada:**
-```typescript
-interface GroupSession {
-  // ... campos existentes
-  meeting_link?: string;
-  whatsapp_group_link?: string;
-}
-```
+1. Fase 1 (confirmacao de inscricao) -- impacto imediato para usuarios
+2. Fase 3 (status do facilitador) -- essencial para o workflow de aprovacao
+3. Fase 4 (cancelamento) -- protege a experiencia do usuario
+4. Fase 2 (lembretes) -- reduz no-show
+5. Fase 5 (follow-up) -- engajamento e retencao
 
