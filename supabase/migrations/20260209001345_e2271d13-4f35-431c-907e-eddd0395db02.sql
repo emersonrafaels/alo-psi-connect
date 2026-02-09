@@ -1,0 +1,1 @@
+ALTER TABLE group_sessions ADD COLUMN IF NOT EXISTS whatsapp_group_link text;

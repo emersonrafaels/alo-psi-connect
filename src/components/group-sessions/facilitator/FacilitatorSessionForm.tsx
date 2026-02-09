@@ -15,6 +15,8 @@ interface SessionFormData {
   duration_minutes: number;
   max_participants: number;
   organizer_type: string;
+  meeting_link?: string;
+  whatsapp_group_link?: string;
 }
 
 interface FacilitatorSessionFormProps {
@@ -86,6 +88,22 @@ export const FacilitatorSessionForm = ({ onSubmit, onCancel, isSubmitting }: Fac
           <div>
             <Label htmlFor="duration_minutes">Duração (minutos)</Label>
             <Input id="duration_minutes" type="number" min="30" max="180" {...register('duration_minutes', { valueAsNumber: true })} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Links</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="meeting_link">Link da Reunião (Google Meet, Zoom, etc.)</Label>
+            <Input id="meeting_link" type="url" {...register('meeting_link')} placeholder="https://meet.google.com/xxx-xxxx-xxx" />
+          </div>
+          <div>
+            <Label htmlFor="whatsapp_group_link">Link do Grupo do WhatsApp</Label>
+            <Input id="whatsapp_group_link" type="url" {...register('whatsapp_group_link')} placeholder="https://chat.whatsapp.com/..." />
           </div>
         </CardContent>
       </Card>
