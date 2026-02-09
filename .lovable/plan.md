@@ -1,111 +1,93 @@
 
 
-## Plano: Melhorias de Experiencia do Usuario nos Encontros
+## Plano: Unificar "Encontros" no Menu do Usuario
 
-### Visao Geral
+### Contexto
 
-Aprimorar a experiencia do usuario na feature de Encontros em Grupo, focando em: exibicao de links importantes nos cards, pagina de detalhes do encontro, melhorias na pagina "Meus Encontros" e micro-interacoes que aumentam engajamento.
+Atualmente, o menu do usuario exibe dois itens separados:
+- "Meus Encontros" (visivel para todos)
+- "Gerenciar Encontros" (visivel apenas para facilitadores)
 
----
+A proposta e unificar isso em um unico item "Encontros" para usuarios com perfil privilegiado (profissional, admin, ou roles especificas), levando a uma pagina com abas.
 
-### Melhoria 1 -- Exibir Links do WhatsApp e Compartilhamento nos Cards
+### Quem e afetado
 
-Atualmente os cards (`GroupSessionCard` e `NextSessionHighlight`) mostram apenas o indicador "Online" quando ha link do Meet, mas nao exibem o link do WhatsApp nem o botao de compartilhar (que ja existe como componente `ShareSessionButton`).
+**Usuarios que verao "Encontros" (com aba "Criar Encontro"):**
+- User types: `profissional`, `admin`
+- Roles: `author`, `super_author`, `super_admin`, `institution_admin`, `facilitator`
 
-**Mudancas:**
-
-| Componente | O que adicionar |
-|------------|-----------------|
-| `GroupSessionCard.tsx` | Icone do WhatsApp ao lado do indicador "Online" quando `whatsapp_group_link` existir; botao `ShareSessionButton` no rodape do card |
-| `NextSessionHighlight.tsx` | Mesmas adicoes: indicador WhatsApp e botao de compartilhar |
-
----
-
-### Melhoria 2 -- Pagina de Detalhes do Encontro
-
-Criar uma pagina dedicada `/encontros/:sessionId` que exibe todas as informacoes do encontro em formato expandido, ideal para compartilhamento em redes sociais e para quem quer saber mais antes de se inscrever.
-
-**Conteudo da pagina:**
-
-- Titulo, descricao completa (sem truncamento)
-- Foto e bio do organizador/facilitador
-- Data, horario, duracao
-- Tipo de sessao (Palestra, Workshop, Roda de Conversa)
-- Barra de vagas (`VacancyProgressBar`)
-- Botao de inscricao
-- Link do WhatsApp (visivel apenas para inscritos)
-- Botao de compartilhar
-- Botao "Adicionar ao Calendario" (`AddToCalendarButton`)
-- Tag LIBRAS se aplicavel
-- Sessoes relacionadas (mesmo tipo ou mesmo organizador)
-
-**Implementacao:**
-
-| Arquivo | Acao |
-|---------|------|
-| `src/pages/GroupSessionDetail.tsx` | Criar -- Pagina de detalhes |
-| `src/hooks/useGroupSessionById.tsx` | Criar -- Hook para buscar sessao individual por ID |
-| `src/App.tsx` | Editar -- Adicionar rotas `/encontros/:id` e `/medcos/encontros/:id` |
-| `GroupSessionCard.tsx` | Editar -- Titulo clicavel com link para pagina de detalhes |
-| `NextSessionHighlight.tsx` | Editar -- Adicionar link "Ver detalhes" |
+**Demais usuarios (pacientes sem roles especiais):**
+- Continuam vendo "Meus Encontros" como esta hoje, sem a aba de criacao.
 
 ---
 
-### Melhoria 3 -- Links de Acesso na Pagina "Meus Encontros"
+### Mudancas
 
-A pagina `MyGroupSessions` atualmente mostra o botao de acesso ao Meet mas nao exibe o link do grupo do WhatsApp.
+#### 1. Header (`src/components/ui/header.tsx`)
 
-**Mudancas em `MyGroupSessions.tsx`:**
+- Adicionar verificacao combinada: se o usuario tem tipo `profissional`/`admin` OU alguma das roles especiais, exibir "Encontros" no menu
+- Remover o item separado "Gerenciar Encontros" (sera absorvido pela aba)
+- Para usuarios comuns, manter "Meus Encontros" apontando para `/meus-encontros`
+- Para usuarios privilegiados, "Encontros" aponta para `/meus-encontros` (mesma rota, pagina diferenciada)
+- Aplicar tanto no dropdown desktop quanto no menu mobile
 
-- Adicionar botao "Grupo WhatsApp" ao lado do botao "Acessar Encontro" (visivel quando `whatsapp_group_link` existir)
-- Icone do WhatsApp (MessageCircle) com cor verde
-- Link abre em nova aba
-- Disponivel a qualquer momento (sem restricao de horario, diferente do Meet)
+#### 2. Pagina MyGroupSessions (`src/pages/MyGroupSessions.tsx`)
 
----
+- Adicionar verificacao de tipo/role do usuario
+- Se usuario privilegiado: exibir pagina com duas abas
+  - **Tab "Meus Encontros"**: conteudo atual (proximos + passados)
+  - **Tab "Criar Encontro"**: formulario de criacao (reutilizando `FacilitatorSessionForm`) + lista de encontros criados pelo usuario (reutilizando logica do `ManageGroupSessions`)
+- Se usuario comum: manter layout atual sem abas extras
+- O titulo da pagina muda de "Meus Encontros" para "Encontros" quando privilegiado
 
-### Melhoria 4 -- Confirmacao antes de Cancelar Inscricao
+#### 3. Hooks necessarios
 
-Atualmente o cancelamento de inscricao em `MyGroupSessions` acontece com um clique, sem confirmacao. Adicionar um `AlertDialog` pedindo confirmacao.
-
-**Mudancas em `MyGroupSessions.tsx`:**
-
-- Envolver o botao "Cancelar" com `AlertDialog` do Radix
-- Titulo: "Cancelar inscricao?"
-- Descricao: "Voce tem certeza que deseja cancelar sua inscricao neste encontro? Sua vaga sera liberada para outros participantes."
-- Botoes: "Manter Inscricao" e "Sim, Cancelar"
-
----
-
-### Melhoria 5 -- Card do Encontro Clicavel
-
-Tornar o titulo do encontro no `GroupSessionCard` um link clicavel que leva a pagina de detalhes, adicionando uma interacao natural de navegacao.
-
-**Mudancas:**
-
-| Componente | O que mudar |
-|------------|-------------|
-| `GroupSessionCard.tsx` | Titulo `h3` vira link para `/encontros/:id`; cursor pointer; hover underline |
-| `NextSessionHighlight.tsx` | Titulo clicavel + link "Ver detalhes completos" abaixo da descricao |
+- Usar `useUserType` para verificar `profissional`/`admin`
+- Usar `useUserRole` para verificar as roles `author`, `super_author`, `super_admin`, `institution_admin`, `facilitator`
+- Criar uma verificacao combinada simples inline (sem novo hook)
 
 ---
 
-### Arquivos a Criar/Modificar
+### Secao Tecnica
 
-| Arquivo | Acao |
-|---------|------|
-| `src/pages/GroupSessionDetail.tsx` | Criar -- Pagina de detalhes do encontro |
-| `src/hooks/useGroupSessionById.tsx` | Criar -- Hook para buscar sessao por ID |
-| `src/App.tsx` | Editar -- Adicionar rotas de detalhes |
-| `src/components/group-sessions/GroupSessionCard.tsx` | Editar -- Adicionar WhatsApp, Share, link clicavel |
-| `src/components/group-sessions/NextSessionHighlight.tsx` | Editar -- Adicionar WhatsApp, Share, link detalhes |
-| `src/pages/MyGroupSessions.tsx` | Editar -- Adicionar botao WhatsApp e AlertDialog de cancelamento |
+#### Logica de verificacao (inline no componente)
 
-### Ordem de Implementacao
+```typescript
+const { isProfessional } = useUserType();
+const { hasRole: isAdmin } = useUserRole('admin');
+const { hasRole: isSuperAdmin } = useUserRole('super_admin');
+const { hasRole: isAuthor } = useUserRole('author');
+const { hasRole: isSuperAuthor } = useUserRole('super_author');
+const { hasRole: isInstitutionAdmin } = useUserRole('institution_admin');
+const { hasRole: isFacilitator } = useUserRole('facilitator');
 
-1. Melhoria 1 (WhatsApp + Share nos cards) -- rapida e de impacto visual imediato
-2. Melhoria 3 (WhatsApp em Meus Encontros) -- complementa a melhoria 1
-3. Melhoria 4 (Confirmacao de cancelamento) -- previne erros do usuario
-4. Melhoria 2 (Pagina de detalhes) -- a mais complexa, mas agrega muito valor
-5. Melhoria 5 (Cards clicaveis) -- depende da melhoria 2 existir
+const canCreateSessions = isProfessional || isAdmin || isSuperAdmin 
+  || isAuthor || isSuperAuthor || isInstitutionAdmin || isFacilitator;
+```
+
+#### Estrutura da aba "Criar Encontro"
+
+Reutilizar a logica ja existente em `ManageGroupSessions.tsx`:
+- Query `facilitator-sessions` para listar encontros do usuario
+- Mutation de criacao com status `pending_approval`
+- Mutation de exclusao de encontros pendentes
+- Dialog com `FacilitatorSessionForm`
+
+#### Arquivos a modificar
+
+| Arquivo | Mudanca |
+|---------|---------|
+| `src/components/ui/header.tsx` | Trocar "Meus Encontros" por "Encontros" para usuarios privilegiados; remover item "Gerenciar Encontros" separado |
+| `src/pages/MyGroupSessions.tsx` | Adicionar tabs com "Meus Encontros" e "Criar Encontro"; integrar logica do ManageGroupSessions |
+
+#### Rota `/gerenciar-encontros`
+
+Sera mantida funcionando como redirect ou acesso direto, mas o item do menu nao apontara mais para ela. O `ManageGroupSessions.tsx` permanece inalterado como fallback.
+
+---
+
+### Ordem de implementacao
+
+1. Modificar `MyGroupSessions.tsx` para suportar as duas abas condicionalmente
+2. Modificar o header (desktop + mobile) para exibir "Encontros" ou "Meus Encontros" conforme o perfil
 
