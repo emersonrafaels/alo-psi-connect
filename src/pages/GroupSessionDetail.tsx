@@ -36,6 +36,14 @@ const GroupSessionDetail = () => {
 
   const isRegistered = session ? registeredSessionIds.has(session.id) : false;
 
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate(buildTenantPath(tenantSlug, '/encontros'));
+    }
+  };
+
   const handleRegister = () => {
     if (!user) {
       navigate(`/auth?redirect=${encodeURIComponent(window.location.pathname)}`);
@@ -120,7 +128,7 @@ const GroupSessionDetail = () => {
           {/* Back button */}
           <Button
             variant="ghost"
-            onClick={() => navigate(-1)}
+            onClick={handleGoBack}
             className="mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
