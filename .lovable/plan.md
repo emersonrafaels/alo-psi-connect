@@ -1,24 +1,19 @@
 
-
-## Plano: Tornar Titulos Clicaveis na Pagina "Meus Encontros"
+## Plano: Botao "Voltar" usar navegacao do historico
 
 ### Problema
 
-Na pagina `/meus-encontros`, os titulos dos encontros (tanto nos proximos quanto nos passados) sao texto estatico (`CardTitle`), sem link para a pagina de detalhes (`/encontros/:sessionId`). O usuario nao tem como navegar para os detalhes a partir dessa tela.
+O botao "Voltar para Encontros" na pagina de detalhes sempre navega para `/encontros`, mesmo quando o usuario veio de `/meus-encontros`. O comportamento esperado e voltar para a pagina anterior.
 
 ### Solucao
 
-Envolver os titulos dos cards com `Link` do React Router, apontando para `/encontros/:sessionId`, com estilo de hover (underline + cor primary).
+Substituir `navigate(buildTenantPath(..., '/encontros'))` por `navigate(-1)` para usar o historico do navegador. Adicionar fallback para `/encontros` caso nao haja historico.
 
-### Mudancas
+### Mudanca
 
-**Arquivo:** `src/pages/MyGroupSessions.tsx`
+**Arquivo:** `src/pages/GroupSessionDetail.tsx` (linha 123)
 
-- **Linha 249 (Proximos):** Envolver `CardTitle` com `<Link to={/encontros/${session.id}}>`, adicionando classes `hover:underline hover:text-primary cursor-pointer transition-colors`
-- **Linha 378 (Passados):** Mesma mudanca para os cards de sessoes passadas
-- **Import:** Adicionar `Link` ao import de `react-router-dom` (ja importa `useNavigate`, basta adicionar `Link`)
+- De: `onClick={() => navigate(buildTenantPath(tenantSlug, '/encontros'))}`
+- Para: `onClick={() => navigate(-1)}`
 
-### Resultado
-
-O usuario podera clicar no titulo de qualquer encontro (proximo ou passado) para ver a pagina completa de detalhes com todas as informacoes, links e opcoes de compartilhamento.
-
+Isso garante que o usuario volte para onde estava (seja `/meus-encontros`, `/encontros`, ou qualquer outra pagina de origem).
