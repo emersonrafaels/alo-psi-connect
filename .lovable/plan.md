@@ -1,111 +1,92 @@
 
 
-## Plano: Notificacoes e Comunicacao para Encontros em Grupo
+## Plano: Melhorias de Experiencia do Usuario nos Encontros
 
 ### Visao Geral
 
-Implementar um sistema completo de notificacoes por email para o ciclo de vida dos encontros em grupo, reutilizando a infraestrutura ja existente (Resend, tenant branding, email `noreply@redebemestar.com.br`).
+Aprimorar a experiencia do usuario na feature de Encontros em Grupo, focando em: exibicao de links importantes nos cards, pagina de detalhes do encontro, melhorias na pagina "Meus Encontros" e micro-interacoes que aumentam engajamento.
 
 ---
 
-### Fase 1 -- Email de Confirmacao de Inscricao
+### Melhoria 1 -- Exibir Links do WhatsApp e Compartilhamento nos Cards
 
-Quando um participante se inscreve em um encontro, enviar email automatico com:
-- Nome e descricao do encontro
-- Data, horario e duracao
-- Link do Google Meet (se disponivel)
-- Link do grupo do WhatsApp (se disponivel)
-- Nome do facilitador/organizador
-- Botao para cancelar inscricao
+Atualmente os cards (`GroupSessionCard` e `NextSessionHighlight`) mostram apenas o indicador "Online" quando ha link do Meet, mas nao exibem o link do WhatsApp nem o botao de compartilhar (que ja existe como componente `ShareSessionButton`).
+
+**Mudancas:**
+
+| Componente | O que adicionar |
+|------------|-----------------|
+| `GroupSessionCard.tsx` | Icone do WhatsApp ao lado do indicador "Online" quando `whatsapp_group_link` existir; botao `ShareSessionButton` no rodape do card |
+| `NextSessionHighlight.tsx` | Mesmas adicoes: indicador WhatsApp e botao de compartilhar |
+
+---
+
+### Melhoria 2 -- Pagina de Detalhes do Encontro
+
+Criar uma pagina dedicada `/encontros/:sessionId` que exibe todas as informacoes do encontro em formato expandido, ideal para compartilhamento em redes sociais e para quem quer saber mais antes de se inscrever.
+
+**Conteudo da pagina:**
+
+- Titulo, descricao completa (sem truncamento)
+- Foto e bio do organizador/facilitador
+- Data, horario, duracao
+- Tipo de sessao (Palestra, Workshop, Roda de Conversa)
+- Barra de vagas (`VacancyProgressBar`)
+- Botao de inscricao
+- Link do WhatsApp (visivel apenas para inscritos)
+- Botao de compartilhar
+- Botao "Adicionar ao Calendario" (`AddToCalendarButton`)
+- Tag LIBRAS se aplicavel
+- Sessoes relacionadas (mesmo tipo ou mesmo organizador)
 
 **Implementacao:**
 
-| Item | Descricao |
-|------|-----------|
-| Edge Function | Criar `send-group-session-notification/index.ts` usando Resend com branding do tenant |
-| Hook | Chamar a edge function no `onSuccess` do `registerMutation` em `useGroupSessionRegistration.tsx` |
-| Template | HTML responsivo com dados da sessao, links e branding dinamico |
+| Arquivo | Acao |
+|---------|------|
+| `src/pages/GroupSessionDetail.tsx` | Criar -- Pagina de detalhes |
+| `src/hooks/useGroupSessionById.tsx` | Criar -- Hook para buscar sessao individual por ID |
+| `src/App.tsx` | Editar -- Adicionar rotas `/encontros/:id` e `/medcos/encontros/:id` |
+| `GroupSessionCard.tsx` | Editar -- Titulo clicavel com link para pagina de detalhes |
+| `NextSessionHighlight.tsx` | Editar -- Adicionar link "Ver detalhes" |
 
 ---
 
-### Fase 2 -- Lembrete Automatico (24h e 1h antes)
+### Melhoria 3 -- Links de Acesso na Pagina "Meus Encontros"
 
-Enviar lembretes automaticos para todos os inscritos confirmados antes do inicio da sessao.
+A pagina `MyGroupSessions` atualmente mostra o botao de acesso ao Meet mas nao exibe o link do grupo do WhatsApp.
 
-**Implementacao:**
+**Mudancas em `MyGroupSessions.tsx`:**
 
-| Item | Descricao |
-|------|-----------|
-| Edge Function | Criar `remind-group-session/index.ts` que busca sessoes proximas e envia lembretes |
-| Cron Job | Agendar via `pg_cron` a cada 30 minutos para verificar sessoes nas proximas 24h e 1h |
-| Controle | Adicionar coluna `reminder_24h_sent` e `reminder_1h_sent` (boolean) na tabela `group_session_registrations` para evitar duplicatas |
-
-**Migracao SQL:**
-```sql
-ALTER TABLE group_session_registrations
-  ADD COLUMN IF NOT EXISTS reminder_24h_sent boolean DEFAULT false,
-  ADD COLUMN IF NOT EXISTS reminder_1h_sent boolean DEFAULT false;
-```
+- Adicionar botao "Grupo WhatsApp" ao lado do botao "Acessar Encontro" (visivel quando `whatsapp_group_link` existir)
+- Icone do WhatsApp (MessageCircle) com cor verde
+- Link abre em nova aba
+- Disponivel a qualquer momento (sem restricao de horario, diferente do Meet)
 
 ---
 
-### Fase 3 -- Notificacao ao Facilitador sobre Status da Sessao
+### Melhoria 4 -- Confirmacao antes de Cancelar Inscricao
 
-Informar o facilitador quando sua sessao for aprovada ou rejeitada pelo admin.
+Atualmente o cancelamento de inscricao em `MyGroupSessions` acontece com um clique, sem confirmacao. Adicionar um `AlertDialog` pedindo confirmacao.
 
-**Implementacao:**
+**Mudancas em `MyGroupSessions.tsx`:**
 
-| Item | Descricao |
-|------|-----------|
-| Edge Function | Reutilizar `send-group-session-notification/index.ts` com tipo de evento `session_approved` ou `session_rejected` |
-| Trigger | Chamar a notificacao no componente `PendingSessionsApproval.tsx` apos a acao de aprovar/rejeitar |
-| Conteudo | Incluir notas de revisao (`review_notes`) quando houver rejeicao |
-
----
-
-### Fase 4 -- Notificacao de Cancelamento de Sessao
-
-Quando um admin ou facilitador cancela uma sessao, notificar todos os inscritos.
-
-**Implementacao:**
-
-| Item | Descricao |
-|------|-----------|
-| Edge Function | Reutilizar a mesma function com tipo `session_cancelled` |
-| Busca | Consultar todos os registros com `status = 'confirmed'` para a sessao cancelada |
-| Conteudo | Motivo do cancelamento e sugestao de proximos encontros |
+- Envolver o botao "Cancelar" com `AlertDialog` do Radix
+- Titulo: "Cancelar inscricao?"
+- Descricao: "Voce tem certeza que deseja cancelar sua inscricao neste encontro? Sua vaga sera liberada para outros participantes."
+- Botoes: "Manter Inscricao" e "Sim, Cancelar"
 
 ---
 
-### Fase 5 -- Notificacao pos-Encontro (Follow-up)
+### Melhoria 5 -- Card do Encontro Clicavel
 
-Enviar email apos o encontro com agradecimento e link para proximos eventos.
+Tornar o titulo do encontro no `GroupSessionCard` um link clicavel que leva a pagina de detalhes, adicionando uma interacao natural de navegacao.
 
-**Implementacao:**
+**Mudancas:**
 
-| Item | Descricao |
-|------|-----------|
-| Cron Job | Verificar sessoes finalizadas (data passou) e enviar follow-up |
-| Controle | Adicionar coluna `followup_sent` (boolean) na tabela `group_session_registrations` |
-| Conteudo | Agradecimento, link para pagina de encontros, convite para newsletter |
-
----
-
-### Arquitetura da Edge Function Central
-
-Uma unica edge function `send-group-session-notification` que recebe um `event_type` e despacha o template correto:
-
-```text
-event_type:
-  registration_confirmed  --> Email para participante
-  registration_cancelled  --> Email para participante
-  session_approved        --> Email para facilitador
-  session_rejected        --> Email para facilitador
-  session_cancelled       --> Email para todos os inscritos
-  reminder_24h            --> Email para inscritos
-  reminder_1h             --> Email para inscritos
-  followup                --> Email para inscritos que participaram
-```
+| Componente | O que mudar |
+|------------|-------------|
+| `GroupSessionCard.tsx` | Titulo `h3` vira link para `/encontros/:id`; cursor pointer; hover underline |
+| `NextSessionHighlight.tsx` | Titulo clicavel + link "Ver detalhes completos" abaixo da descricao |
 
 ---
 
@@ -113,24 +94,18 @@ event_type:
 
 | Arquivo | Acao |
 |---------|------|
-| `supabase/functions/send-group-session-notification/index.ts` | Criar -- Edge function central de notificacoes |
-| `src/hooks/useGroupSessionRegistration.tsx` | Editar -- Chamar notificacao apos inscricao |
-| `src/components/admin/PendingSessionsApproval.tsx` | Editar -- Chamar notificacao apos aprovar/rejeitar |
-| `supabase/functions/remind-group-session/index.ts` | Criar -- Cron de lembretes |
-| Migracao SQL | Criar -- Adicionar colunas de controle de envio |
-| `supabase/config.toml` | Editar -- Registrar novas edge functions |
+| `src/pages/GroupSessionDetail.tsx` | Criar -- Pagina de detalhes do encontro |
+| `src/hooks/useGroupSessionById.tsx` | Criar -- Hook para buscar sessao por ID |
+| `src/App.tsx` | Editar -- Adicionar rotas de detalhes |
+| `src/components/group-sessions/GroupSessionCard.tsx` | Editar -- Adicionar WhatsApp, Share, link clicavel |
+| `src/components/group-sessions/NextSessionHighlight.tsx` | Editar -- Adicionar WhatsApp, Share, link detalhes |
+| `src/pages/MyGroupSessions.tsx` | Editar -- Adicionar botao WhatsApp e AlertDialog de cancelamento |
 
-### Dependencias
+### Ordem de Implementacao
 
-- Secret `RESEND_API_KEY` ja esta configurada
-- Dominio `redebemestar.com.br` ja esta verificado no Resend
-- Infraestrutura de tenant branding ja existe
-
-### Ordem de Implementacao Sugerida
-
-1. Fase 1 (confirmacao de inscricao) -- impacto imediato para usuarios
-2. Fase 3 (status do facilitador) -- essencial para o workflow de aprovacao
-3. Fase 4 (cancelamento) -- protege a experiencia do usuario
-4. Fase 2 (lembretes) -- reduz no-show
-5. Fase 5 (follow-up) -- engajamento e retencao
+1. Melhoria 1 (WhatsApp + Share nos cards) -- rapida e de impacto visual imediato
+2. Melhoria 3 (WhatsApp em Meus Encontros) -- complementa a melhoria 1
+3. Melhoria 4 (Confirmacao de cancelamento) -- previne erros do usuario
+4. Melhoria 2 (Pagina de detalhes) -- a mais complexa, mas agrega muito valor
+5. Melhoria 5 (Cards clicaveis) -- depende da melhoria 2 existir
 
