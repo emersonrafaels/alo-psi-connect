@@ -1,41 +1,22 @@
 
-
-## Plano: Corrigir botao "Voltar" com fallback robusto
+## Plano: Adicionar "pending_approval" ao check constraint de status
 
 ### Problema
 
-O `navigate(-1)` pode falhar em cenarios onde:
-- O usuario abre o link direto do encontro (sem historico anterior no app)
-- O iframe do preview reinicia o historico de navegacao
-- O historico aponta para fora do app
+O check constraint `group_sessions_status_check` na tabela `group_sessions` aceita apenas: `draft`, `scheduled`, `live`, `completed`, `cancelled`. O fluxo de facilitador tenta inserir com status `pending_approval`, que nao esta na lista permitida.
 
 ### Solucao
 
-Usar uma abordagem hibrida: tentar voltar no historico, mas com fallback para `/encontros` caso nao haja historico suficiente.
+Alterar o check constraint para incluir `pending_approval` na lista de valores validos.
 
 ### Mudanca
 
-**Arquivo:** `src/pages/GroupSessionDetail.tsx`
+**Migracao SQL:**
 
-Substituir o `onClick` do botao por uma funcao que verifica o historico:
-
-```typescript
-const handleGoBack = () => {
-  if (window.history.length > 1) {
-    navigate(-1);
-  } else {
-    navigate(buildTenantPath(tenantSlug, '/encontros'));
-  }
-};
+```sql
+ALTER TABLE group_sessions DROP CONSTRAINT group_sessions_status_check;
+ALTER TABLE group_sessions ADD CONSTRAINT group_sessions_status_check 
+  CHECK (status = ANY (ARRAY['draft', 'pending_approval', 'scheduled', 'live', 'completed', 'cancelled']));
 ```
 
-E no botao:
-```typescript
-onClick={handleGoBack}
-```
-
-Isso garante que:
-1. Se o usuario veio de `/meus-encontros`, volta para la
-2. Se o usuario veio de `/encontros`, volta para la
-3. Se o usuario abriu o link direto (sem historico), vai para `/encontros` como fallback
-
+Nenhuma mudanca de codigo necessaria. Apenas o constraint do banco precisa ser atualizado.
