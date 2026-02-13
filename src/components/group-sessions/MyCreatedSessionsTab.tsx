@@ -52,7 +52,7 @@ export const MyCreatedSessionsTab = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('group_sessions')
-        .select('*, group_session_registrations(id, user_id, status, registered_at, profiles:user_id(display_name, avatar_url))')
+        .select('*, group_session_registrations(id, user_id, status, registered_at, profiles:user_id(nome, foto_perfil_url))')
         .eq('created_by', user!.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -165,7 +165,7 @@ export const MyCreatedSessionsTab = () => {
                       <div className="rounded-md border divide-y">
                         {registrations.map((reg: any) => {
                           const profile = reg.profiles;
-                          const name = profile?.display_name || 'Participante';
+                          const name = profile?.nome || 'Participante';
                           const initials = name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
 
                           return (
