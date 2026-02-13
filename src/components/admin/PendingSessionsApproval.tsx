@@ -63,6 +63,8 @@ export const PendingSessionsApproval = () => {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['pending-sessions-approval'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-sessions-count'] });
+      queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
       toast({ title: 'Encontro aprovado e publicado!' });
       // Notify facilitator
       supabase.functions.invoke('send-group-session-notification', {
@@ -90,6 +92,8 @@ export const PendingSessionsApproval = () => {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['pending-sessions-approval'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-sessions-count'] });
+      queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
       toast({ title: 'Encontro rejeitado.' });
       // Notify facilitator
       supabase.functions.invoke('send-group-session-notification', {
