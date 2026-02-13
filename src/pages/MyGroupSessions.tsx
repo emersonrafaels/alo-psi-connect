@@ -121,13 +121,13 @@ const MyGroupSessions = () => {
                     <Calendar className="h-4 w-4" />
                     Encontros Inscritos
                   </TabsTrigger>
-                  <TabsTrigger value="create-session" className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Criar Encontro
-                  </TabsTrigger>
                   <TabsTrigger value="my-created-sessions" className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     Meus Encontros Criados
+                  </TabsTrigger>
+                  <TabsTrigger value="create-session" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                    <Plus className="h-4 w-4" />
+                    Criar Encontro
                   </TabsTrigger>
                 </TabsList>
 
@@ -144,12 +144,12 @@ const MyGroupSessions = () => {
                   />
                 </TabsContent>
 
-                <TabsContent value="create-session">
-                  <CreateSessionTab />
-                </TabsContent>
-
                 <TabsContent value="my-created-sessions">
                   <MyCreatedSessionsTab />
+                </TabsContent>
+
+                <TabsContent value="create-session">
+                  <CreateSessionTab />
                 </TabsContent>
               </Tabs>
             ) : (
