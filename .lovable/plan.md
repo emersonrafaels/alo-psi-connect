@@ -1,44 +1,40 @@
 
-
-## Corrigir carregamento de "Meus Encontros Criados"
+## Corrigir erro 400 na query de "Meus Encontros Criados"
 
 ### Causa raiz
 
-A query no componente `MyCreatedSessionsTab` tenta buscar colunas que nao existem na tabela `profiles`:
+A query tenta fazer um join aninhado `profiles:user_id(nome, foto_perfil_url)` dentro de `group_session_registrations`. Isso falha com erro 400 porque:
 
-- `display_name` -- o nome correto e `nome`
-- `avatar_url` -- o nome correto e `foto_perfil_url`
+- `group_session_registrations.user_id` tem FK para `auth.users(id)`
+- `profiles.user_id` tambem tem FK para `auth.users(id)`
+- Nao existe FK direta entre `group_session_registrations` e `profiles`
+- O PostgREST (API do Supabase) nao consegue resolver esse join indireto
 
-Isso faz a query do Supabase falhar silenciosamente, retornando resultado vazio.
+### Solucao
 
-### Correcao
+Separar em duas queries:
 
-**Arquivo: `src/components/group-sessions/MyCreatedSessionsTab.tsx`**
-
-1. Na query do Supabase, trocar o join de:
-   `profiles:user_id(display_name, avatar_url)` para `profiles:user_id(nome, foto_perfil_url)`
-
-2. Atualizar as referencias no template para usar `profile?.nome` em vez de `profile?.display_name`
+1. Buscar as sessoes com registrations (sem join de profiles)
+2. Buscar os profiles dos user_ids dos inscritos separadamente
+3. Combinar os dados no frontend
 
 ### Detalhes tecnicos
 
-Linha da query (aproximadamente linha 56):
-```
-// DE:
-.select('*, group_session_registrations(id, user_id, status, registered_at, profiles:user_id(display_name, avatar_url))')
+**Arquivo: `src/components/group-sessions/MyCreatedSessionsTab.tsx`**
 
-// PARA:
-.select('*, group_session_registrations(id, user_id, status, registered_at, profiles:user_id(nome, foto_perfil_url))')
-```
+1. Alterar a query principal para:
+   ```typescript
+   .select('*, group_session_registrations(id, user_id, status, registered_at)')
+   ```
+   (removendo o join com profiles)
 
-Na renderizacao dos inscritos (aproximadamente linha 143):
-```
-// DE:
-const name = profile?.display_name || 'Participante';
+2. Apos obter as sessoes, coletar todos os `user_id` unicos dos registrations
 
-// PARA:
-const name = profile?.nome || 'Participante';
-```
+3. Fazer uma segunda query:
+   ```typescript
+   supabase.from('profiles').select('user_id, nome, foto_perfil_url').in('user_id', userIds)
+   ```
 
-Nenhuma outra mudanca e necessaria. A correcao e pontual e resolve o problema de carregamento.
+4. Criar um mapa `user_id -> profile` e usa-lo na renderizacao dos inscritos
 
+5. Atualizar a renderizacao para buscar o perfil pelo `reg.user_id` no mapa em vez de `reg.profiles`
