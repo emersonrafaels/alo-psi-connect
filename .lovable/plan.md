@@ -1,40 +1,43 @@
 
-## Corrigir erro 400 na query de "Meus Encontros Criados"
 
-### Causa raiz
+## Tornar o card do encontro criado clicavel
 
-A query tenta fazer um join aninhado `profiles:user_id(nome, foto_perfil_url)` dentro de `group_session_registrations`. Isso falha com erro 400 porque:
+### Problema
 
-- `group_session_registrations.user_id` tem FK para `auth.users(id)`
-- `profiles.user_id` tambem tem FK para `auth.users(id)`
-- Nao existe FK direta entre `group_session_registrations` e `profiles`
-- O PostgREST (API do Supabase) nao consegue resolver esse join indireto
+O titulo do encontro na aba "Meus Encontros Criados" e texto puro -- nao e um link clicavel para a pagina de detalhes (`/encontros/:id`). As outras abas ja usam `<Link>` para isso.
 
 ### Solucao
 
-Separar em duas queries:
+**Arquivo: `src/components/group-sessions/MyCreatedSessionsTab.tsx`**
 
-1. Buscar as sessoes com registrations (sem join de profiles)
-2. Buscar os profiles dos user_ids dos inscritos separadamente
-3. Combinar os dados no frontend
+1. Importar `Link` do `react-router-dom` e os helpers de tenant (`getTenantSlugFromPath`, `buildTenantPath`)
+2. Envolver o `CardTitle` (linha 138) em um `<Link to={buildTenantPath(tenantSlug, '/encontros/' + session.id)}>` com estilo de hover (underline, cor primaria)
+3. Obter o `tenantSlug` a partir do pathname atual
 
 ### Detalhes tecnicos
 
-**Arquivo: `src/components/group-sessions/MyCreatedSessionsTab.tsx`**
+Adicionar imports:
+```typescript
+import { Link, useLocation } from 'react-router-dom';
+import { getTenantSlugFromPath, buildTenantPath } from '@/utils/tenantHelpers';
+```
 
-1. Alterar a query principal para:
-   ```typescript
-   .select('*, group_session_registrations(id, user_id, status, registered_at)')
-   ```
-   (removendo o join com profiles)
+Dentro do componente, obter o slug:
+```typescript
+const location = useLocation();
+const tenantSlug = getTenantSlugFromPath(location.pathname);
+```
 
-2. Apos obter as sessoes, coletar todos os `user_id` unicos dos registrations
+Alterar o titulo (linha ~138) de:
+```tsx
+<CardTitle className="text-lg">{session.title}</CardTitle>
+```
+Para:
+```tsx
+<Link to={buildTenantPath(tenantSlug, `/encontros/${session.id}`)} className="hover:underline hover:text-primary transition-colors">
+  <CardTitle className="text-lg">{session.title}</CardTitle>
+</Link>
+```
 
-3. Fazer uma segunda query:
-   ```typescript
-   supabase.from('profiles').select('user_id, nome, foto_perfil_url').in('user_id', userIds)
-   ```
+Mudanca pontual, sem impacto em outras funcionalidades.
 
-4. Criar um mapa `user_id -> profile` e usa-lo na renderizacao dos inscritos
-
-5. Atualizar a renderizacao para buscar o perfil pelo `reg.user_id` no mapa em vez de `reg.profiles`
