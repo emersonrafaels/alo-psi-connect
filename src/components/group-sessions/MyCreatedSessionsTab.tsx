@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { getTenantSlugFromPath, buildTenantPath } from '@/utils/tenantHelpers';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -46,6 +48,8 @@ export const MyCreatedSessionsTab = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [openSessions, setOpenSessions] = useState<Record<string, boolean>>({});
+  const location = useLocation();
+  const tenantSlug = getTenantSlugFromPath(location.pathname);
 
   const { data: sessions, isLoading } = useQuery({
     queryKey: ['facilitator-sessions', user?.id],
@@ -135,7 +139,9 @@ export const MyCreatedSessionsTab = () => {
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-lg">{session.title}</CardTitle>
+                  <Link to={buildTenantPath(tenantSlug, `/encontros/${session.id}`)} className="hover:underline hover:text-primary transition-colors">
+                    <CardTitle className="text-lg">{session.title}</CardTitle>
+                  </Link>
                   {session.description && (
                     <CardDescription className="mt-1">{session.description.slice(0, 120)}...</CardDescription>
                   )}
