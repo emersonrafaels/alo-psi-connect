@@ -1,41 +1,44 @@
 
 
-## Reordenar abas e melhorar "Meus Encontros Criados"
+## Corrigir carregamento de "Meus Encontros Criados"
 
-### Mudancas de ordem e UX
+### Causa raiz
 
-As abas para facilitadores serao reordenadas para:
+A query no componente `MyCreatedSessionsTab` tenta buscar colunas que nao existem na tabela `profiles`:
 
-```text
-+---------------------+-------------------------+------------------+
-| Encontros Inscritos | Meus Encontros Criados  | + Criar Encontro |
-+---------------------+-------------------------+------------------+
-```
+- `display_name` -- o nome correto e `nome`
+- `avatar_url` -- o nome correto e `foto_perfil_url`
 
-A aba "Criar Encontro" tera um estilo diferenciado com icone `+` para parecer um botao de acao.
+Isso faz a query do Supabase falhar silenciosamente, retornando resultado vazio.
 
-### Melhorias na aba "Meus Encontros Criados"
+### Correcao
 
-Cada card de sessao criada passara a exibir:
+**Arquivo: `src/components/group-sessions/MyCreatedSessionsTab.tsx`**
 
-1. **Indicadores visuais** - Barra de progresso mostrando vagas preenchidas vs total (`current_registrations / max_participants`)
-2. **Lista de inscritos** - Secao expansivel (Collapsible) mostrando nome e data/hora da inscricao de cada participante
-3. **Contagem de inscritos** - Badge destacado com numero atual de inscritos
+1. Na query do Supabase, trocar o join de:
+   `profiles:user_id(display_name, avatar_url)` para `profiles:user_id(nome, foto_perfil_url)`
 
-A query sera expandida para buscar os registros da tabela `group_session_registrations` junto com os dados do perfil (`profiles`) de cada inscrito.
+2. Atualizar as referencias no template para usar `profile?.nome` em vez de `profile?.display_name`
 
 ### Detalhes tecnicos
 
-**`src/pages/MyGroupSessions.tsx`**
-- Reordenar as `TabsTrigger`: `my-sessions` -> `my-created-sessions` -> `create-session`
-- Reordenar as `TabsContent` na mesma ordem
-- Estilizar a aba "Criar Encontro" com visual de botao (cor primaria, borda diferenciada)
+Linha da query (aproximadamente linha 56):
+```
+// DE:
+.select('*, group_session_registrations(id, user_id, status, registered_at, profiles:user_id(display_name, avatar_url))')
 
-**`src/components/group-sessions/MyCreatedSessionsTab.tsx`**
-- Expandir a query para incluir `group_session_registrations(*, profiles:user_id(display_name, avatar_url))` via join
-- Adicionar componente `Progress` mostrando `current_registrations / max_participants`
-- Adicionar secao `Collapsible` com lista de inscritos: nome, data de inscricao (`registered_at`) formatada
-- Melhorar os cards com layout mais rico: separadores visuais, icones coloridos por status
-- Usar `AlertDialog` em vez de `confirm()` nativo para exclusao (melhor UX)
-- Adicionar estado vazio mais informativo com link para criar encontro
+// PARA:
+.select('*, group_session_registrations(id, user_id, status, registered_at, profiles:user_id(nome, foto_perfil_url))')
+```
+
+Na renderizacao dos inscritos (aproximadamente linha 143):
+```
+// DE:
+const name = profile?.display_name || 'Participante';
+
+// PARA:
+const name = profile?.nome || 'Participante';
+```
+
+Nenhuma outra mudanca e necessaria. A correcao e pontual e resolve o problema de carregamento.
 
