@@ -30,6 +30,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCanCreateSessions } from '@/hooks/useCanCreateSessions';
 import { CreateSessionTab } from '@/components/group-sessions/CreateSessionTab';
+import { MyCreatedSessionsTab } from '@/components/group-sessions/MyCreatedSessionsTab';
 
 const MyGroupSessions = () => {
   const { registrations, isLoading } = useUserRegistrations();
@@ -104,7 +105,7 @@ const MyGroupSessions = () => {
             <div className="mb-8">
               <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
                 <Users className="h-10 w-10 text-primary" />
-                {canCreateSessions ? 'Encontros' : 'Meus Encontros'}
+                {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
               </h1>
               <p className="text-muted-foreground">
                 {canCreateSessions 
@@ -115,14 +116,18 @@ const MyGroupSessions = () => {
 
             {canCreateSessions ? (
               <Tabs defaultValue="my-sessions" className="space-y-6">
-                <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsList className="grid w-full max-w-2xl grid-cols-3">
                   <TabsTrigger value="my-sessions" className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    Meus Encontros
+                    Encontros Inscritos
                   </TabsTrigger>
                   <TabsTrigger value="create-session" className="flex items-center gap-2">
                     <Plus className="h-4 w-4" />
                     Criar Encontro
+                  </TabsTrigger>
+                  <TabsTrigger value="my-created-sessions" className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Meus Encontros Criados
                   </TabsTrigger>
                 </TabsList>
 
@@ -141,6 +146,10 @@ const MyGroupSessions = () => {
 
                 <TabsContent value="create-session">
                   <CreateSessionTab />
+                </TabsContent>
+
+                <TabsContent value="my-created-sessions">
+                  <MyCreatedSessionsTab />
                 </TabsContent>
               </Tabs>
             ) : (
