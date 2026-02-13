@@ -52,14 +52,36 @@ export const MyCreatedSessionsTab = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('group_sessions')
-        .select('*, group_session_registrations(id, user_id, status, registered_at, profiles:user_id(nome, foto_perfil_url))')
+        .select('*, group_session_registrations(id, user_id, status, registered_at)')
         .eq('created_by', user!.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+
+      // Collect unique user_ids from registrations
+      const userIds = Array.from(new Set(
+        (data || []).flatMap((s: any) =>
+          (s.group_session_registrations || []).map((r: any) => r.user_id)
+        )
+      ));
+
+      let profilesMap: Record<string, { nome: string; foto_perfil_url: string | null }> = {};
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, nome, foto_perfil_url')
+          .in('user_id', userIds);
+        if (profiles) {
+          profilesMap = Object.fromEntries(profiles.map((p: any) => [p.user_id, p]));
+        }
+      }
+
+      return { sessions: data, profilesMap };
     },
     enabled: !!user,
   });
+
+  const sessionsList = sessions?.sessions || [];
+  const profilesMap = sessions?.profilesMap || {};
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -83,7 +105,7 @@ export const MyCreatedSessionsTab = () => {
     return <div className="text-center py-12 text-muted-foreground">Carregando...</div>;
   }
 
-  if (!sessions || sessions.length === 0) {
+  if (!sessionsList || sessionsList.length === 0) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
@@ -99,7 +121,7 @@ export const MyCreatedSessionsTab = () => {
 
   return (
     <div className="space-y-4">
-      {sessions.map((session) => {
+      {sessionsList.map((session) => {
         const registrations = (session.group_session_registrations || []).filter(
           (r: any) => r.status === 'confirmed'
         );
@@ -164,7 +186,7 @@ export const MyCreatedSessionsTab = () => {
                     <CollapsibleContent className="mt-2">
                       <div className="rounded-md border divide-y">
                         {registrations.map((reg: any) => {
-                          const profile = reg.profiles;
+                          const profile = profilesMap[reg.user_id];
                           const name = profile?.nome || 'Participante';
                           const initials = name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
 
