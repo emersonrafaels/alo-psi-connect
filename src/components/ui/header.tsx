@@ -219,7 +219,7 @@ const Header = () => {
                 )}
                   <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/meus-encontros'))}>
                     <Users className="h-4 w-4 mr-2" />
-                    {canCreateSessions ? 'Encontros' : 'Meus Encontros'}
+                    {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
                   </DropdownMenuItem>
                   {isProfessional && (
                     <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/professional-profile'))}>
@@ -345,7 +345,7 @@ const Header = () => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <Users className="h-5 w-5 opacity-70" />
-                    {canCreateSessions ? 'Encontros' : 'Meus Encontros'}
+                    {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
                   </Link>
                   {isProfessional && (
                     <Link
