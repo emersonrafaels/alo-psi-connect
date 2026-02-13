@@ -1,22 +1,44 @@
 
-## Plano: Adicionar "pending_approval" ao check constraint de status
+
+## Plano: Corrigir invalidacao de cache ao aprovar/rejeitar encontros
 
 ### Problema
 
-O check constraint `group_sessions_status_check` na tabela `group_sessions` aceita apenas: `draft`, `scheduled`, `live`, `completed`, `cancelled`. O fluxo de facilitador tenta inserir com status `pending_approval`, que nao esta na lista permitida.
+Quando um encontro e aprovado ou rejeitado no painel admin, apenas a query `pending-sessions-approval` e invalidada. Duas outras queries ficam desatualizadas:
+
+1. **`pending-sessions-count`** - Usada na aba "Pendentes" para mostrar o contador. Por isso o "(1)" permanece mesmo apos aprovacao.
+2. **`group-sessions`** - Usada nas abas "Agendados", "Realizados" e "Rascunhos". Por isso o encontro aprovado nao aparece na lista de agendados.
 
 ### Solucao
 
-Alterar o check constraint para incluir `pending_approval` na lista de valores validos.
+Adicionar invalidacoes extras no `onSuccess` de ambas as mutations (`approveMutation` e `rejectMutation`).
 
-### Mudanca
+### Mudancas
 
-**Migracao SQL:**
+**Arquivo:** `src/components/admin/PendingSessionsApproval.tsx`
 
-```sql
-ALTER TABLE group_sessions DROP CONSTRAINT group_sessions_status_check;
-ALTER TABLE group_sessions ADD CONSTRAINT group_sessions_status_check 
-  CHECK (status = ANY (ARRAY['draft', 'pending_approval', 'scheduled', 'live', 'completed', 'cancelled']));
+**No `onSuccess` do `approveMutation` (linha 65):**
+```typescript
+onSuccess: (result) => {
+  queryClient.invalidateQueries({ queryKey: ['pending-sessions-approval'] });
+  queryClient.invalidateQueries({ queryKey: ['pending-sessions-count'] });
+  queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
+  // ... resto do codigo existente
+},
 ```
 
-Nenhuma mudanca de codigo necessaria. Apenas o constraint do banco precisa ser atualizado.
+**No `onSuccess` do `rejectMutation` (linha 92):**
+```typescript
+onSuccess: (result) => {
+  queryClient.invalidateQueries({ queryKey: ['pending-sessions-approval'] });
+  queryClient.invalidateQueries({ queryKey: ['pending-sessions-count'] });
+  queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
+  // ... resto do codigo existente
+},
+```
+
+Isso garante que ao aprovar ou rejeitar:
+- O contador de pendentes atualiza imediatamente
+- A lista de sessoes agendadas mostra o encontro recem-aprovado
+- A lista de pendentes remove o encontro processado
+
