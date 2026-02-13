@@ -1,21 +1,44 @@
 
 
-## Mover encontro para o tenant Rede Bem Estar
+## Reorganizar abas da pagina Meus Encontros
 
-### O que sera feito
+### Resumo
 
-Atualizar o `tenant_id` do encontro "Roda de conversa sobre pressao do periodo de provas" de **Medcos** (`3a9ae5ec-50a9-4674-b808-7735e5f0afb5`) para **Rede Bem Estar** (`472db0ac-1437-4c46-8e40-cbecc43db22d`).
+Atualmente, para facilitadores, existem 2 abas: "Meus Encontros" e "Criar Encontro". A mudanca sera:
+
+1. **Renomear** "Meus Encontros" para **"Encontros Inscritos"** (mesma funcionalidade - mostra inscricoes do usuario)
+2. **Manter** a aba **"Criar Encontro"** como esta
+3. **Criar** uma nova aba **"Meus Encontros Criados"** que lista os encontros criados pelo usuario (atualmente essa listagem fica dentro da aba "Criar Encontro")
+
+Para usuarios comuns (sem permissao de facilitador), o titulo da pagina tambem muda de "Meus Encontros" para "Encontros Inscritos".
+
+### Estrutura das abas (facilitadores)
+
+```text
++---------------------+------------------+-------------------------+
+| Encontros Inscritos | Criar Encontro   | Meus Encontros Criados  |
++---------------------+------------------+-------------------------+
+```
 
 ### Detalhes tecnicos
 
-Executar um UPDATE no banco de dados:
+**Arquivo: `src/pages/MyGroupSessions.tsx`**
+- Alterar o titulo e a label da aba de "Meus Encontros" para "Encontros Inscritos"
+- Expandir o grid de abas de 2 colunas para 3 colunas (`grid-cols-3`)
+- Adicionar nova aba "Meus Encontros Criados" com valor `my-created-sessions`
+- Importar e renderizar um novo componente `MyCreatedSessionsTab` nessa aba
 
-```text
-UPDATE group_sessions
-SET tenant_id = '472db0ac-1437-4c46-8e40-cbecc43db22d'
-WHERE title LIKE '%pressão do período de provas%'
-  AND tenant_id = '3a9ae5ec-50a9-4674-b808-7735e5f0afb5';
-```
+**Novo componente: `src/components/group-sessions/MyCreatedSessionsTab.tsx`**
+- Extrair a listagem de sessoes criadas do `CreateSessionTab` para este novo componente
+- Mostra cards com status, data, horario, vagas e observacoes do admin
+- Permite excluir sessoes pendentes
+- Reutiliza a mesma query `facilitator-sessions` ja existente
 
-Apos a atualizacao, o encontro aparecera na pagina `/encontros` do tenant Rede Bem Estar em fevereiro.
+**Arquivo: `src/components/group-sessions/CreateSessionTab.tsx`**
+- Remover a listagem de sessoes (que migra para a nova aba)
+- Manter apenas o botao e o formulario de criacao de novo encontro
+
+**Arquivo: `src/components/ui/header.tsx`**
+- Atualizar o label do menu de "Meus Encontros" para "Encontros Inscritos" (para usuarios comuns)
+- Manter "Encontros" para facilitadores (ja esta assim)
 
