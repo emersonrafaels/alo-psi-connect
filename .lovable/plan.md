@@ -1,44 +1,21 @@
 
 
-## Plano: Corrigir invalidacao de cache ao aprovar/rejeitar encontros
+## Mover encontro para o tenant Rede Bem Estar
 
-### Problema
+### O que sera feito
 
-Quando um encontro e aprovado ou rejeitado no painel admin, apenas a query `pending-sessions-approval` e invalidada. Duas outras queries ficam desatualizadas:
+Atualizar o `tenant_id` do encontro "Roda de conversa sobre pressao do periodo de provas" de **Medcos** (`3a9ae5ec-50a9-4674-b808-7735e5f0afb5`) para **Rede Bem Estar** (`472db0ac-1437-4c46-8e40-cbecc43db22d`).
 
-1. **`pending-sessions-count`** - Usada na aba "Pendentes" para mostrar o contador. Por isso o "(1)" permanece mesmo apos aprovacao.
-2. **`group-sessions`** - Usada nas abas "Agendados", "Realizados" e "Rascunhos". Por isso o encontro aprovado nao aparece na lista de agendados.
+### Detalhes tecnicos
 
-### Solucao
+Executar um UPDATE no banco de dados:
 
-Adicionar invalidacoes extras no `onSuccess` de ambas as mutations (`approveMutation` e `rejectMutation`).
-
-### Mudancas
-
-**Arquivo:** `src/components/admin/PendingSessionsApproval.tsx`
-
-**No `onSuccess` do `approveMutation` (linha 65):**
-```typescript
-onSuccess: (result) => {
-  queryClient.invalidateQueries({ queryKey: ['pending-sessions-approval'] });
-  queryClient.invalidateQueries({ queryKey: ['pending-sessions-count'] });
-  queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
-  // ... resto do codigo existente
-},
+```text
+UPDATE group_sessions
+SET tenant_id = '472db0ac-1437-4c46-8e40-cbecc43db22d'
+WHERE title LIKE '%pressão do período de provas%'
+  AND tenant_id = '3a9ae5ec-50a9-4674-b808-7735e5f0afb5';
 ```
 
-**No `onSuccess` do `rejectMutation` (linha 92):**
-```typescript
-onSuccess: (result) => {
-  queryClient.invalidateQueries({ queryKey: ['pending-sessions-approval'] });
-  queryClient.invalidateQueries({ queryKey: ['pending-sessions-count'] });
-  queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
-  // ... resto do codigo existente
-},
-```
-
-Isso garante que ao aprovar ou rejeitar:
-- O contador de pendentes atualiza imediatamente
-- A lista de sessoes agendadas mostra o encontro recem-aprovado
-- A lista de pendentes remove o encontro processado
+Apos a atualizacao, o encontro aparecera na pagina `/encontros` do tenant Rede Bem Estar em fevereiro.
 
