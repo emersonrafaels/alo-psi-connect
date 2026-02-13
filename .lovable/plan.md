@@ -1,44 +1,41 @@
 
 
-## Reorganizar abas da pagina Meus Encontros
+## Reordenar abas e melhorar "Meus Encontros Criados"
 
-### Resumo
+### Mudancas de ordem e UX
 
-Atualmente, para facilitadores, existem 2 abas: "Meus Encontros" e "Criar Encontro". A mudanca sera:
-
-1. **Renomear** "Meus Encontros" para **"Encontros Inscritos"** (mesma funcionalidade - mostra inscricoes do usuario)
-2. **Manter** a aba **"Criar Encontro"** como esta
-3. **Criar** uma nova aba **"Meus Encontros Criados"** que lista os encontros criados pelo usuario (atualmente essa listagem fica dentro da aba "Criar Encontro")
-
-Para usuarios comuns (sem permissao de facilitador), o titulo da pagina tambem muda de "Meus Encontros" para "Encontros Inscritos".
-
-### Estrutura das abas (facilitadores)
+As abas para facilitadores serao reordenadas para:
 
 ```text
-+---------------------+------------------+-------------------------+
-| Encontros Inscritos | Criar Encontro   | Meus Encontros Criados  |
-+---------------------+------------------+-------------------------+
++---------------------+-------------------------+------------------+
+| Encontros Inscritos | Meus Encontros Criados  | + Criar Encontro |
++---------------------+-------------------------+------------------+
 ```
+
+A aba "Criar Encontro" tera um estilo diferenciado com icone `+` para parecer um botao de acao.
+
+### Melhorias na aba "Meus Encontros Criados"
+
+Cada card de sessao criada passara a exibir:
+
+1. **Indicadores visuais** - Barra de progresso mostrando vagas preenchidas vs total (`current_registrations / max_participants`)
+2. **Lista de inscritos** - Secao expansivel (Collapsible) mostrando nome e data/hora da inscricao de cada participante
+3. **Contagem de inscritos** - Badge destacado com numero atual de inscritos
+
+A query sera expandida para buscar os registros da tabela `group_session_registrations` junto com os dados do perfil (`profiles`) de cada inscrito.
 
 ### Detalhes tecnicos
 
-**Arquivo: `src/pages/MyGroupSessions.tsx`**
-- Alterar o titulo e a label da aba de "Meus Encontros" para "Encontros Inscritos"
-- Expandir o grid de abas de 2 colunas para 3 colunas (`grid-cols-3`)
-- Adicionar nova aba "Meus Encontros Criados" com valor `my-created-sessions`
-- Importar e renderizar um novo componente `MyCreatedSessionsTab` nessa aba
+**`src/pages/MyGroupSessions.tsx`**
+- Reordenar as `TabsTrigger`: `my-sessions` -> `my-created-sessions` -> `create-session`
+- Reordenar as `TabsContent` na mesma ordem
+- Estilizar a aba "Criar Encontro" com visual de botao (cor primaria, borda diferenciada)
 
-**Novo componente: `src/components/group-sessions/MyCreatedSessionsTab.tsx`**
-- Extrair a listagem de sessoes criadas do `CreateSessionTab` para este novo componente
-- Mostra cards com status, data, horario, vagas e observacoes do admin
-- Permite excluir sessoes pendentes
-- Reutiliza a mesma query `facilitator-sessions` ja existente
-
-**Arquivo: `src/components/group-sessions/CreateSessionTab.tsx`**
-- Remover a listagem de sessoes (que migra para a nova aba)
-- Manter apenas o botao e o formulario de criacao de novo encontro
-
-**Arquivo: `src/components/ui/header.tsx`**
-- Atualizar o label do menu de "Meus Encontros" para "Encontros Inscritos" (para usuarios comuns)
-- Manter "Encontros" para facilitadores (ja esta assim)
+**`src/components/group-sessions/MyCreatedSessionsTab.tsx`**
+- Expandir a query para incluir `group_session_registrations(*, profiles:user_id(display_name, avatar_url))` via join
+- Adicionar componente `Progress` mostrando `current_registrations / max_participants`
+- Adicionar secao `Collapsible` com lista de inscritos: nome, data de inscricao (`registered_at`) formatada
+- Melhorar os cards com layout mais rico: separadores visuais, icones coloridos por status
+- Usar `AlertDialog` em vez de `confirm()` nativo para exclusao (melhor UX)
+- Adicionar estado vazio mais informativo com link para criar encontro
 
