@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Clock, Users, MapPin, ExternalLink, XCircle, CheckCircle, AlertCircle, MessageCircle, Plus } from 'lucide-react';
+import { Calendar, Clock, Users, MapPin, ExternalLink, XCircle, CheckCircle, AlertCircle, MessageCircle, Plus, Compass } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -106,10 +106,23 @@ const MyGroupSessions = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-5xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-                <Users className="h-10 w-10 text-primary" />
-                {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-4xl font-bold flex items-center gap-3">
+                  <Users className="h-10 w-10 text-primary" />
+                  {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
+                </h1>
+                {canCreateSessions && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={tour.resetTour}
+                    title="Reiniciar tour guiado"
+                    className="text-muted-foreground hover:text-primary"
+                  >
+                    <Compass className="h-5 w-5" />
+                  </Button>
+                )}
+              </div>
               <p className="text-muted-foreground">
                 {canCreateSessions 
                   ? 'Acompanhe suas inscrições e crie novos encontros'
