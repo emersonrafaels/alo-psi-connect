@@ -35,6 +35,7 @@ const GroupSessionDetail = () => {
   const tenantSlug = tenant?.slug || 'alopsi';
 
   const isRegistered = session ? registeredSessionIds.has(session.id) : false;
+  const isOwner = user?.id && session?.created_by === user.id;
 
   const handleGoBack = () => {
     if (window.history.length > 1) {
@@ -223,26 +224,34 @@ const GroupSessionDetail = () => {
                     max={session.max_participants || 0}
                   />
 
-                  <Button
-                    size="lg"
-                    className={`w-full font-bold ${
-                      showSuccess
-                        ? 'bg-success hover:bg-success text-success-foreground'
-                        : isRegistered
-                          ? 'bg-muted hover:bg-muted text-muted-foreground'
-                          : 'bg-accent hover:bg-accent/90 text-accent-foreground'
-                    }`}
-                    onClick={handleRegister}
-                    disabled={isFull || isRegistered || isRegistering}
-                  >
-                    {showSuccess && <Check className="w-5 h-5 mr-1" />}
-                    {showSuccess ? 'Inscrito!' : isRegistered ? 'Já Inscrito' : isRegistering ? 'Inscrevendo...' : isFull ? 'Esgotado' : 'Garantir Minha Vaga'}
-                  </Button>
+                  {isOwner ? (
+                    <div className="w-full text-center p-4 rounded-md bg-primary/10 border border-primary/20">
+                      <p className="font-semibold text-primary text-sm">Você é o responsável por este encontro</p>
+                    </div>
+                  ) : (
+                    <>
+                      <Button
+                        size="lg"
+                        className={`w-full font-bold ${
+                          showSuccess
+                            ? 'bg-success hover:bg-success text-success-foreground'
+                            : isRegistered
+                              ? 'bg-muted hover:bg-muted text-muted-foreground'
+                              : 'bg-accent hover:bg-accent/90 text-accent-foreground'
+                        }`}
+                        onClick={handleRegister}
+                        disabled={isFull || isRegistered || isRegistering}
+                      >
+                        {showSuccess && <Check className="w-5 h-5 mr-1" />}
+                        {showSuccess ? 'Inscrito!' : isRegistered ? 'Já Inscrito' : isRegistering ? 'Inscrevendo...' : isFull ? 'Esgotado' : 'Garantir Minha Vaga'}
+                      </Button>
 
-                  {spotsLeft <= 3 && spotsLeft > 0 && (
-                    <p className="text-sm text-destructive font-semibold text-center">
-                      🔥 Últimas {spotsLeft} vagas!
-                    </p>
+                      {spotsLeft <= 3 && spotsLeft > 0 && (
+                        <p className="text-sm text-destructive font-semibold text-center">
+                          🔥 Últimas {spotsLeft} vagas!
+                        </p>
+                      )}
+                    </>
                   )}
 
                   <div className="space-y-3">
