@@ -1,43 +1,58 @@
 
 
-## Tornar o card do encontro criado clicavel
+## Visao de Indicadores para o Dono do Encontro
 
-### Problema
+### Objetivo
 
-O titulo do encontro na aba "Meus Encontros Criados" e texto puro -- nao e um link clicavel para a pagina de detalhes (`/encontros/:id`). As outras abas ja usam `<Link>` para isso.
+Adicionar um painel de indicadores (KPIs) no topo da aba "Meus Encontros Criados" que mostre metricas consolidadas de todos os encontros do facilitador.
 
-### Solucao
+### Indicadores propostos
 
-**Arquivo: `src/components/group-sessions/MyCreatedSessionsTab.tsx`**
+1. **Total de Encontros** - quantidade de sessoes criadas (todas)
+2. **Encontros Aprovados** - sessoes com status `scheduled`
+3. **Total de Inscritos** - soma de registrations confirmadas em todas as sessoes
+4. **Taxa de Ocupacao Media** - media de (inscritos / max_participants) entre sessoes aprovadas
+5. **Encontros Realizados** - sessoes com status `completed`
+6. **Cancelamentos** - total de registrations com status `cancelled`
 
-1. Importar `Link` do `react-router-dom` e os helpers de tenant (`getTenantSlugFromPath`, `buildTenantPath`)
-2. Envolver o `CardTitle` (linha 138) em um `<Link to={buildTenantPath(tenantSlug, '/encontros/' + session.id)}>` com estilo de hover (underline, cor primaria)
-3. Obter o `tenantSlug` a partir do pathname atual
+### Layout
+
+Uma grade de cards de KPI (3 colunas em desktop, 2 em tablet, 1 em mobile) acima da lista de sessoes, com icones, valores numericos em destaque e labels descritivos.
 
 ### Detalhes tecnicos
 
-Adicionar imports:
+**Arquivo novo: `src/components/group-sessions/CreatedSessionsStats.tsx`**
+
+Componente que recebe a lista de sessoes (ja carregada pela query existente em `MyCreatedSessionsTab`) e calcula os indicadores no frontend:
+
 ```typescript
-import { Link, useLocation } from 'react-router-dom';
-import { getTenantSlugFromPath, buildTenantPath } from '@/utils/tenantHelpers';
+interface CreatedSessionsStatsProps {
+  sessions: any[];
+}
 ```
 
-Dentro do componente, obter o slug:
-```typescript
-const location = useLocation();
-const tenantSlug = getTenantSlugFromPath(location.pathname);
-```
+Calculos:
+- `totalSessions = sessions.length`
+- `approvedSessions = sessions.filter(s => s.status === 'scheduled').length`
+- `completedSessions = sessions.filter(s => s.status === 'completed').length`
+- `totalRegistrations = sessions.reduce(sum of confirmed registrations)`
+- `totalCancellations = sessions.reduce(sum of cancelled registrations)`
+- `avgOccupancy = media de (confirmed / max_participants) das sessoes scheduled/completed`
 
-Alterar o titulo (linha ~138) de:
-```tsx
-<CardTitle className="text-lg">{session.title}</CardTitle>
-```
-Para:
-```tsx
-<Link to={buildTenantPath(tenantSlug, `/encontros/${session.id}`)} className="hover:underline hover:text-primary transition-colors">
-  <CardTitle className="text-lg">{session.title}</CardTitle>
-</Link>
-```
+Cada KPI sera um mini-card com:
+- Icone (Calendar, CheckCircle, Users, TrendingUp, Award, XCircle)
+- Valor numerico grande
+- Label descritivo pequeno
 
-Mudanca pontual, sem impacto em outras funcionalidades.
+**Arquivo modificado: `src/components/group-sessions/MyCreatedSessionsTab.tsx`**
+
+- Importar e renderizar `<CreatedSessionsStats sessions={sessionsList} />` logo antes da lista de cards de sessoes (linha 127)
+- Nenhuma mudanca na query -- os dados ja estao disponiveis
+
+### Estilo visual
+
+Os cards seguem o padrao do design system existente (Card do shadcn/ui) com cores sutis:
+- Fundo levemente colorido para cada metrica
+- Responsivo com `grid grid-cols-2 md:grid-cols-3 gap-4`
+- Animacao sutil de entrada (`animate-fade-in`)
 
