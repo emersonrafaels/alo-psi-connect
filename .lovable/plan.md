@@ -1,42 +1,32 @@
 
+## Exibir mensagem de responsavel no detalhe do encontro
 
-## Tour Guiado para a Pagina de Encontros
+### Problema
 
-### Objetivo
+Quando o dono/criador do encontro visualiza a pagina de detalhes, o botao "Garantir Minha Vaga" aparece normalmente, o que nao faz sentido -- ele e o responsavel, nao um participante.
 
-Adicionar um tour guiado na pagina `/meus-encontros` seguindo exatamente o mesmo padrao ja implementado no portal institucional (`useInstitutionTour` + `InstitutionTour`).
+### Solucao
 
-### Arquivos a criar
+No arquivo `src/pages/GroupSessionDetail.tsx`, verificar se o usuario logado e o criador do encontro (`session.created_by === user?.id`) e, nesse caso, substituir o botao de inscricao por uma mensagem informativa.
 
-**1. `src/hooks/useGroupSessionsTour.tsx`**
+### Detalhes tecnicos
 
-Hook generico reutilizando o mesmo padrao do `useInstitutionTour`, com storage key proprio (`group-sessions-tour-completed`) e passos contextuais:
+**Arquivo: `src/pages/GroupSessionDetail.tsx`**
 
-| Passo | Titulo | Descricao |
-|-------|--------|-----------|
-| 1 - welcome | Bem-vindo aos seus Encontros! | Aqui voce gerencia inscricoes, cria novos encontros e acompanha seus indicadores. |
-| 2 - tabs | Navegacao por Abas | Alterne entre Encontros Inscritos, Meus Encontros Criados e Criar Encontro. |
-| 3 - my-sessions | Encontros Inscritos | Veja seus proximos encontros, acesse links de reuniao e gerencie inscricoes. |
-| 4 - created-sessions | Meus Encontros Criados | Acompanhe indicadores como inscritos, taxa de ocupacao e status dos encontros que voce criou. |
-| 5 - create-session | Criar Encontro | Crie novos encontros em grupo preenchendo o formulario com titulo, data, formato e descricao. |
+1. Criar variavel `isOwner`:
+```typescript
+const isOwner = user?.id && session.created_by === user.id;
+```
 
-**2. `src/components/group-sessions/GroupSessionsTour.tsx`**
+2. No bloco do botao de inscricao (linhas ~226-244), adicionar condicional: se `isOwner`, renderizar uma mensagem estilizada ao inves do botao:
+```tsx
+{isOwner ? (
+  <div className="w-full text-center p-4 rounded-md bg-primary/10 border border-primary/20">
+    <p className="font-semibold text-primary text-sm">Voce e o responsavel por este encontro</p>
+  </div>
+) : (
+  <Button ...>Garantir Minha Vaga / Ja Inscrito / etc</Button>
+)}
+```
 
-Componente de dialog identico ao `InstitutionTour` -- reutiliza o mesmo layout com icone Sparkles, barra de progresso, botoes Pular/Anterior/Proximo/Comecar.
-
-### Arquivo a modificar
-
-**3. `src/pages/MyGroupSessions.tsx`**
-
-- Importar o hook e o componente do tour
-- Chamar `useGroupSessionsTour()` no componente principal
-- Renderizar `<GroupSessionsTour ...props />` dentro do JSX
-- Adicionar atributos `data-tour` nos elementos-alvo das abas (TabsList, TabsTriggers) para referencia visual futura
-- O tour so aparece para usuarios com `canCreateSessions` (facilitadores), pois as abas extras so existem para eles
-
-### Comportamento
-
-- O tour aparece automaticamente na primeira visita (com delay de 1s)
-- Fica salvo no localStorage apos conclusao ou skip
-- Pode ser reiniciado programaticamente via `resetTour()`
-
+3. Mudanca pontual, sem impacto em outras funcionalidades. A logica de share, calendario e whatsapp continua visivel para o dono.
