@@ -31,6 +31,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCanCreateSessions } from '@/hooks/useCanCreateSessions';
 import { CreateSessionTab } from '@/components/group-sessions/CreateSessionTab';
 import { MyCreatedSessionsTab } from '@/components/group-sessions/MyCreatedSessionsTab';
+import { useGroupSessionsTour } from '@/hooks/useGroupSessionsTour';
+import { GroupSessionsTour } from '@/components/group-sessions/GroupSessionsTour';
 
 const MyGroupSessions = () => {
   const { registrations, isLoading } = useUserRegistrations();
@@ -39,6 +41,7 @@ const MyGroupSessions = () => {
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const tour = useGroupSessionsTour();
   const queryClient = useQueryClient();
 
   const handleCancelRegistration = async (registrationId: string) => {
@@ -116,16 +119,16 @@ const MyGroupSessions = () => {
 
             {canCreateSessions ? (
               <Tabs defaultValue="my-sessions" className="space-y-6">
-                <TabsList className="grid w-full max-w-2xl grid-cols-3">
-                  <TabsTrigger value="my-sessions" className="flex items-center gap-2">
+                <TabsList data-tour="sessions-tabs" className="grid w-full max-w-2xl grid-cols-3">
+                  <TabsTrigger data-tour="my-sessions-tab" value="my-sessions" className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     Encontros Inscritos
                   </TabsTrigger>
-                  <TabsTrigger value="my-created-sessions" className="flex items-center gap-2">
+                  <TabsTrigger data-tour="created-sessions-tab" value="my-created-sessions" className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     Meus Encontros Criados
                   </TabsTrigger>
-                  <TabsTrigger value="create-session" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  <TabsTrigger data-tour="create-session-tab" value="create-session" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                     <Plus className="h-4 w-4" />
                     Criar Encontro
                   </TabsTrigger>
@@ -168,6 +171,17 @@ const MyGroupSessions = () => {
         </div>
       </div>
       <Footer />
+      {canCreateSessions && (
+        <GroupSessionsTour
+          showTour={tour.showTour}
+          currentStep={tour.currentStep}
+          totalSteps={tour.totalSteps}
+          currentStepData={tour.currentStepData}
+          nextStep={tour.nextStep}
+          prevStep={tour.prevStep}
+          skipTour={tour.skipTour}
+        />
+      )}
     </>
   );
 };
