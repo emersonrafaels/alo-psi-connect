@@ -1,58 +1,42 @@
 
 
-## Visao de Indicadores para o Dono do Encontro
+## Tour Guiado para a Pagina de Encontros
 
 ### Objetivo
 
-Adicionar um painel de indicadores (KPIs) no topo da aba "Meus Encontros Criados" que mostre metricas consolidadas de todos os encontros do facilitador.
+Adicionar um tour guiado na pagina `/meus-encontros` seguindo exatamente o mesmo padrao ja implementado no portal institucional (`useInstitutionTour` + `InstitutionTour`).
 
-### Indicadores propostos
+### Arquivos a criar
 
-1. **Total de Encontros** - quantidade de sessoes criadas (todas)
-2. **Encontros Aprovados** - sessoes com status `scheduled`
-3. **Total de Inscritos** - soma de registrations confirmadas em todas as sessoes
-4. **Taxa de Ocupacao Media** - media de (inscritos / max_participants) entre sessoes aprovadas
-5. **Encontros Realizados** - sessoes com status `completed`
-6. **Cancelamentos** - total de registrations com status `cancelled`
+**1. `src/hooks/useGroupSessionsTour.tsx`**
 
-### Layout
+Hook generico reutilizando o mesmo padrao do `useInstitutionTour`, com storage key proprio (`group-sessions-tour-completed`) e passos contextuais:
 
-Uma grade de cards de KPI (3 colunas em desktop, 2 em tablet, 1 em mobile) acima da lista de sessoes, com icones, valores numericos em destaque e labels descritivos.
+| Passo | Titulo | Descricao |
+|-------|--------|-----------|
+| 1 - welcome | Bem-vindo aos seus Encontros! | Aqui voce gerencia inscricoes, cria novos encontros e acompanha seus indicadores. |
+| 2 - tabs | Navegacao por Abas | Alterne entre Encontros Inscritos, Meus Encontros Criados e Criar Encontro. |
+| 3 - my-sessions | Encontros Inscritos | Veja seus proximos encontros, acesse links de reuniao e gerencie inscricoes. |
+| 4 - created-sessions | Meus Encontros Criados | Acompanhe indicadores como inscritos, taxa de ocupacao e status dos encontros que voce criou. |
+| 5 - create-session | Criar Encontro | Crie novos encontros em grupo preenchendo o formulario com titulo, data, formato e descricao. |
 
-### Detalhes tecnicos
+**2. `src/components/group-sessions/GroupSessionsTour.tsx`**
 
-**Arquivo novo: `src/components/group-sessions/CreatedSessionsStats.tsx`**
+Componente de dialog identico ao `InstitutionTour` -- reutiliza o mesmo layout com icone Sparkles, barra de progresso, botoes Pular/Anterior/Proximo/Comecar.
 
-Componente que recebe a lista de sessoes (ja carregada pela query existente em `MyCreatedSessionsTab`) e calcula os indicadores no frontend:
+### Arquivo a modificar
 
-```typescript
-interface CreatedSessionsStatsProps {
-  sessions: any[];
-}
-```
+**3. `src/pages/MyGroupSessions.tsx`**
 
-Calculos:
-- `totalSessions = sessions.length`
-- `approvedSessions = sessions.filter(s => s.status === 'scheduled').length`
-- `completedSessions = sessions.filter(s => s.status === 'completed').length`
-- `totalRegistrations = sessions.reduce(sum of confirmed registrations)`
-- `totalCancellations = sessions.reduce(sum of cancelled registrations)`
-- `avgOccupancy = media de (confirmed / max_participants) das sessoes scheduled/completed`
+- Importar o hook e o componente do tour
+- Chamar `useGroupSessionsTour()` no componente principal
+- Renderizar `<GroupSessionsTour ...props />` dentro do JSX
+- Adicionar atributos `data-tour` nos elementos-alvo das abas (TabsList, TabsTriggers) para referencia visual futura
+- O tour so aparece para usuarios com `canCreateSessions` (facilitadores), pois as abas extras so existem para eles
 
-Cada KPI sera um mini-card com:
-- Icone (Calendar, CheckCircle, Users, TrendingUp, Award, XCircle)
-- Valor numerico grande
-- Label descritivo pequeno
+### Comportamento
 
-**Arquivo modificado: `src/components/group-sessions/MyCreatedSessionsTab.tsx`**
-
-- Importar e renderizar `<CreatedSessionsStats sessions={sessionsList} />` logo antes da lista de cards de sessoes (linha 127)
-- Nenhuma mudanca na query -- os dados ja estao disponiveis
-
-### Estilo visual
-
-Os cards seguem o padrao do design system existente (Card do shadcn/ui) com cores sutis:
-- Fundo levemente colorido para cada metrica
-- Responsivo com `grid grid-cols-2 md:grid-cols-3 gap-4`
-- Animacao sutil de entrada (`animate-fade-in`)
+- O tour aparece automaticamente na primeira visita (com delay de 1s)
+- Fica salvo no localStorage apos conclusao ou skip
+- Pode ser reiniciado programaticamente via `resetTour()`
 
