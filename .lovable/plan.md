@@ -1,83 +1,55 @@
 
 
-## Tours Guiados com Highlight nos Elementos
+## Editar Encontros Criados pelo Facilitador
 
 ### Objetivo
 
-Transformar ambos os tours (Portal Institucional e Encontros) de simples modais centralizados para um estilo que destaca visualmente os elementos-alvo na pagina, com um tooltip/popover posicionado proximo ao elemento em destaque. Tambem adicionar o botao de reiniciar tour na pagina de Encontros.
+Permitir que o criador de um encontro edite suas informacoes (titulo, descricao, data, horario, links, capacidade) diretamente na aba "Meus Encontros Criados".
 
-### Como funciona o highlight
+### Mudanca no Banco de Dados
 
-Cada passo do tour que possui um `target` (seletor CSS como `[data-tour="sessions-tabs"]`) ira:
+**Nova politica RLS** para permitir que criadores editem encontros com status `pending_approval` ou `scheduled`:
 
-1. Localizar o elemento na pagina via `document.querySelector(target)`
-2. Aplicar um overlay escuro sobre toda a pagina, exceto sobre o elemento-alvo (efeito "spotlight")
-3. Posicionar o card do tour (titulo, descricao, botoes) proximo ao elemento destacado
-4. Para passos sem `target` (como "welcome"), manter o card centralizado na tela
-
-### Arquivos a criar
-
-**1. `src/components/ui/tour-overlay.tsx`**
-
-Componente reutilizavel que renderiza:
-- Um overlay escuro (backdrop) com um "recorte" transparente sobre o elemento-alvo
-- Um card flutuante posicionado automaticamente (abaixo ou acima do elemento) contendo titulo, descricao, barra de progresso e botoes de navegacao
-- Usa `getBoundingClientRect()` para calcular posicao e `ResizeObserver`/scroll listener para reposicionar dinamicamente
-- Aplica `z-index` alto no elemento-alvo para que fique acima do overlay
-
-### Arquivos a modificar
-
-**2. `src/components/group-sessions/GroupSessionsTour.tsx`**
-
-Substituir o Dialog pelo novo componente `TourOverlay`, passando os mesmos props (step, next, prev, skip, progress).
-
-**3. `src/components/institution/InstitutionTour.tsx`**
-
-Mesma mudanca: substituir Dialog pelo `TourOverlay`.
-
-**4. `src/pages/MyGroupSessions.tsx`**
-
-Adicionar o botao com icone `Compass` ao lado do titulo "Encontros" (igual ao portal institucional) para chamar `tour.resetTour()`. Importar `Compass` do lucide-react e usar o `resetTour` que ja esta disponivel no hook.
-
-### Detalhes tecnicos do TourOverlay
-
-```
-+----------------------------------+
-|          OVERLAY ESCURO          |
-|                                  |
-|    +------------------------+    |
-|    |   ELEMENTO DESTACADO   |    |  <-- recorte transparente
-|    +------------------------+    |
-|         |                        |
-|    +----v-------------------+    |
-|    | Passo 2 de 5           |    |
-|    | Navegacao por Abas     |    |  <-- card flutuante
-|    | Alterne entre...       |    |
-|    | [Pular] [Ant] [Prox]   |    |
-|    +------------------------+    |
-|                                  |
-+----------------------------------+
+```sql
+CREATE POLICY "Creators can update own editable sessions"
+  ON group_sessions FOR UPDATE
+  USING (
+    auth.uid() = created_by 
+    AND status IN ('pending_approval', 'scheduled')
+  );
 ```
 
-Logica de posicionamento:
-- Calcula rect do elemento-alvo com `getBoundingClientRect()`
-- Se ha espaco abaixo (> 250px), posiciona card abaixo; senao, acima
-- Faz scroll suave ate o elemento se nao estiver visivel (`scrollIntoView`)
-- Overlay usa SVG ou box-shadow para criar o efeito de recorte
-- Abordagem com `box-shadow` no spotlight: `box-shadow: 0 0 0 9999px rgba(0,0,0,0.6)` aplicado no proprio "recorte"
+Observacao: ja existe uma politica para facilitadores atualizarem sessoes `pending_approval`, mas ela exige a role `facilitator`. A nova politica cobre qualquer criador e tambem inclui sessoes `scheduled`. A politica antiga pode ser mantida sem conflito (RLS e permissivo com OR entre politicas).
 
-Estrutura do componente:
-- Portal renderizado no body
-- Div de overlay com pointer-events
-- Div de spotlight posicionada sobre o elemento-alvo (sem pointer-events, com border-radius e box-shadow enorme)
-- Card absoluto posicionado relativo ao spotlight
-- Animacao de transicao entre passos
+### Arquivos a Modificar
 
-### Resumo de mudancas
+**1. `src/components/group-sessions/facilitator/FacilitatorSessionForm.tsx`**
 
-| Arquivo | Acao |
-|---------|------|
-| `src/components/ui/tour-overlay.tsx` | Criar componente reutilizavel de tour com highlight |
-| `src/components/group-sessions/GroupSessionsTour.tsx` | Usar TourOverlay ao inves de Dialog |
-| `src/components/institution/InstitutionTour.tsx` | Usar TourOverlay ao inves de Dialog |
-| `src/pages/MyGroupSessions.tsx` | Adicionar botao Compass para reiniciar tour |
+Adicionar suporte a valores iniciais para modo de edicao:
+- Novo prop opcional `initialData` com os dados existentes da sessao
+- Usar `defaultValues` do `useForm` preenchidos com `initialData` quando fornecido
+- Alterar texto do botao de submit: "Salvar Alteracoes" quando em modo edicao, "Enviar para Aprovacao" quando criando
+
+**2. `src/components/group-sessions/MyCreatedSessionsTab.tsx`**
+
+Adicionar funcionalidade de edicao:
+- Importar `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle` e icone `Pencil`
+- Adicionar state `editingSession` para controlar qual sessao esta sendo editada
+- Adicionar mutation `updateMutation` que faz `supabase.from('group_sessions').update(...)` com o id da sessao
+- Adicionar botao "Editar" (icone Pencil) ao lado do botao "Excluir" para sessoes com status `pending_approval` ou `scheduled`
+- Renderizar o `Dialog` com `FacilitatorSessionForm` passando `initialData` da sessao selecionada
+- Ao salvar, invalidar query `facilitator-sessions`
+
+### Fluxo do Usuario
+
+1. Na aba "Meus Encontros Criados", sessoes com status "Aguardando Aprovacao" ou "Aprovado" mostram botao "Editar"
+2. Ao clicar, abre um dialog com o formulario preenchido com os dados atuais
+3. O usuario edita os campos desejados e clica "Salvar Alteracoes"
+4. Os dados sao atualizados no banco e a lista e atualizada automaticamente
+
+### Detalhes tecnicos
+
+Campos editaveis: `title`, `description`, `session_type`, `session_date`, `start_time`, `duration_minutes`, `max_participants`, `meeting_link`, `whatsapp_group_link`
+
+O formulario ja possui todos esses campos -- a unica mudanca e aceitar `initialData` e ajustar o texto do botao.
+
