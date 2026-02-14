@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Calendar, Clock, Users, Trash2, ChevronDown, ChevronUp, UserCheck } from 'lucide-react';
+import { Calendar, Clock, Users, Trash2, ChevronDown, ChevronUp, UserCheck, Pencil } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   AlertDialog,
@@ -26,7 +26,9 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CreatedSessionsStats } from './CreatedSessionsStats';
+import { FacilitatorSessionForm } from './facilitator/FacilitatorSessionForm';
 
 const statusLabels: Record<string, string> = {
   pending_approval: 'Aguardando Aprovação',
@@ -49,6 +51,7 @@ export const MyCreatedSessionsTab = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [openSessions, setOpenSessions] = useState<Record<string, boolean>>({});
+  const [editingSession, setEditingSession] = useState<any>(null);
   const location = useLocation();
   const tenantSlug = getTenantSlugFromPath(location.pathname);
 
@@ -99,6 +102,21 @@ export const MyCreatedSessionsTab = () => {
     },
     onError: (error) => {
       toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const { error } = await supabase.from('group_sessions').update(data).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['facilitator-sessions'] });
+      setEditingSession(null);
+      toast({ title: 'Encontro atualizado com sucesso.' });
+    },
+    onError: (error) => {
+      toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -226,8 +244,12 @@ export const MyCreatedSessionsTab = () => {
                 </div>
               )}
 
-              {session.status === 'pending_approval' && (
+              {(session.status === 'pending_approval' || session.status === 'scheduled') && (
                 <div className="flex gap-2 mt-2">
+                  <Button variant="outline" size="sm" onClick={() => setEditingSession(session)}>
+                    <Pencil className="h-4 w-4 mr-1" /> Editar
+                  </Button>
+                  {session.status === 'pending_approval' && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="destructive" size="sm">
@@ -252,12 +274,39 @@ export const MyCreatedSessionsTab = () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
         );
       })}
+      {/* Edit Dialog */}
+      <Dialog open={!!editingSession} onOpenChange={(open) => !open && setEditingSession(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Encontro</DialogTitle>
+          </DialogHeader>
+          {editingSession && (
+            <FacilitatorSessionForm
+              initialData={{
+                title: editingSession.title,
+                description: editingSession.description,
+                session_type: editingSession.session_type,
+                session_date: editingSession.session_date,
+                start_time: editingSession.start_time?.slice(0, 5),
+                duration_minutes: editingSession.duration_minutes,
+                max_participants: editingSession.max_participants,
+                meeting_link: editingSession.meeting_link || '',
+                whatsapp_group_link: editingSession.whatsapp_group_link || '',
+              }}
+              onSubmit={(data) => updateMutation.mutate({ id: editingSession.id, data })}
+              onCancel={() => setEditingSession(null)}
+              isSubmitting={updateMutation.isPending}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
