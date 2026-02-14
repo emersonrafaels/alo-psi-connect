@@ -26,6 +26,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { CreatedSessionsStats } from './CreatedSessionsStats';
 
 const statusLabels: Record<string, string> = {
   pending_approval: 'Aguardando Aprovação',
@@ -124,7 +125,8 @@ export const MyCreatedSessionsTab = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <CreatedSessionsStats sessions={sessionsList} />
       {sessionsList.map((session) => {
         const registrations = (session.group_session_registrations || []).filter(
           (r: any) => r.status === 'confirmed'
