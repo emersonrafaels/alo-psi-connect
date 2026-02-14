@@ -23,15 +23,23 @@ interface FacilitatorSessionFormProps {
   onSubmit: (data: SessionFormData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  initialData?: Partial<SessionFormData>;
 }
 
-export const FacilitatorSessionForm = ({ onSubmit, onCancel, isSubmitting }: FacilitatorSessionFormProps) => {
+export const FacilitatorSessionForm = ({ onSubmit, onCancel, isSubmitting, initialData }: FacilitatorSessionFormProps) => {
+  const isEditing = !!initialData;
   const { register, handleSubmit, watch, setValue } = useForm<SessionFormData>({
     defaultValues: {
-      session_type: 'roda_conversa',
-      duration_minutes: 60,
-      max_participants: 50,
-      organizer_type: 'professional',
+      session_type: initialData?.session_type || 'roda_conversa',
+      duration_minutes: initialData?.duration_minutes || 60,
+      max_participants: initialData?.max_participants || 50,
+      organizer_type: initialData?.organizer_type || 'professional',
+      title: initialData?.title || '',
+      description: initialData?.description || '',
+      session_date: initialData?.session_date || '',
+      start_time: initialData?.start_time || '',
+      meeting_link: initialData?.meeting_link || '',
+      whatsapp_group_link: initialData?.whatsapp_group_link || '',
     },
   });
 
@@ -121,7 +129,7 @@ export const FacilitatorSessionForm = ({ onSubmit, onCancel, isSubmitting }: Fac
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Enviando...' : 'Enviar para Aprovação'}
+          {isSubmitting ? 'Salvando...' : isEditing ? 'Salvar Alterações' : 'Enviar para Aprovação'}
         </Button>
       </div>
     </form>
