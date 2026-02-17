@@ -3,15 +3,19 @@ import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Mail } from 'lucide-react';
+import { Plus, X, Mail, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminTenant } from '@/contexts/AdminTenantContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function EmailBccConfig() {
   const { getConfig, updateConfig, loading } = useSystemConfig(['email_bcc']);
   const [newEmail, setNewEmail] = useState('');
+  const [sendingTest, setSendingTest] = useState(false);
   const { toast } = useToast();
+  const { tenantFilter } = useAdminTenant();
 
   const bccEmails: string[] = (() => {
     const val = getConfig('email_bcc', 'bcc_recipients', []);
@@ -101,6 +105,41 @@ export function EmailBccConfig() {
         <p className="text-sm text-muted-foreground italic">
           Nenhum email BCC configurado para este tenant.
         </p>
+      )}
+
+      {bccEmails.length > 0 && (
+        <Button
+          onClick={async () => {
+            if (!tenantFilter) {
+              toast({ title: 'Selecione um tenant', description: 'Selecione um tenant específico para enviar o teste.', variant: 'destructive' });
+              return;
+            }
+            setSendingTest(true);
+            try {
+              const { data, error } = await supabase.functions.invoke('send-test-email', {
+                body: {
+                  emailType: 'newsletter_confirmation',
+                  recipientEmail: bccEmails[0],
+                  tenantId: tenantFilter,
+                  variables: { recipientName: 'Teste BCC' }
+                }
+              });
+              if (error) throw error;
+              toast({ title: 'Email enviado!', description: `Email de teste enviado para ${bccEmails[0]}` });
+            } catch (err: any) {
+              toast({ title: 'Erro ao enviar', description: err.message || 'Erro desconhecido', variant: 'destructive' });
+            } finally {
+              setSendingTest(false);
+            }
+          }}
+          variant="outline"
+          size="sm"
+          disabled={sendingTest}
+          className="gap-2"
+        >
+          {sendingTest ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          Enviar Email de Teste
+        </Button>
       )}
     </div>
   );
