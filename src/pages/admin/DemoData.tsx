@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Users, 
   GraduationCap, 
@@ -20,7 +21,13 @@ import {
   Building2,
   Plus,
   Sparkles,
-  Heart
+  Heart,
+  BookOpen,
+  TrendingUp,
+  Flame,
+  Smile,
+  Activity,
+  Shuffle
 } from "lucide-react";
 import { useDemoData, DemoDataParams } from "@/hooks/useDemoData";
 import { useInstitutions } from "@/hooks/useInstitutions";
@@ -30,6 +37,23 @@ const TENANT_OPTIONS = [
   { id: "3a9ae5ec-50a9-4674-b808-7735e5f0afb5", name: "Medcos" },
   { id: "472db0ac-0f45-4998-97da-490bc579efb1", name: "Rede Bem Estar" },
 ];
+
+const DATA_PATTERNS = [
+  { id: "exam_stress", label: "Semana de Provas", icon: BookOpen, description: "Mood baixo, ansiedade alta, sono reduzido" },
+  { id: "progressive_improvement", label: "Melhora Progressiva", icon: TrendingUp, description: "Evolução gradual com terapia" },
+  { id: "burnout", label: "Burnout Acadêmico", icon: Flame, description: "Esgotamento crônico, energia muito baixa" },
+  { id: "healthy", label: "Saudável/Estável", icon: Smile, description: "Equilíbrio emocional, boa rotina" },
+  { id: "volatile", label: "Altos e Baixos", icon: Activity, description: "Oscilação emocional irregular" },
+  { id: "random", label: "Aleatório", icon: Shuffle, description: "Valores completamente aleatórios" },
+];
+
+const togglePattern = (patterns: string[], id: string): string[] => {
+  if (patterns.includes(id)) {
+    const next = patterns.filter(p => p !== id);
+    return next.length ? next : ["random"];
+  }
+  return [...patterns, id];
+};
 
 const DemoData = () => {
   const { tenant } = useTenant();
@@ -46,11 +70,14 @@ const DemoData = () => {
     tenant?.id || TENANT_OPTIONS[0].id
   );
 
+  const [selectedPatterns, setSelectedPatterns] = useState<string[]>(["random"]);
+
   // State for existing institution actions
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
   const [addDataProfCount, setAddDataProfCount] = useState(5);
   const [addDataStudentCount, setAddDataStudentCount] = useState(10);
   const [addDataMoodCount, setAddDataMoodCount] = useState(12);
+  const [addDataPatterns, setAddDataPatterns] = useState<string[]>(["random"]);
 
   const handleCreateInstitution = async () => {
     if (!institutionName.trim()) return;
@@ -63,6 +90,7 @@ const DemoData = () => {
       studentsCount,
       moodEntriesPerStudent,
       tenantId: selectedTenant,
+      dataPatterns: selectedPatterns,
     });
 
     setInstitutionName("");
@@ -76,6 +104,7 @@ const DemoData = () => {
       studentsCount: addDataStudentCount,
       moodEntriesPerStudent: addDataMoodCount,
       tenantId: selectedTenant,
+      dataPatterns: addDataPatterns,
     });
     setSelectedInstitutionId(null);
   };
@@ -209,6 +238,41 @@ const DemoData = () => {
             </div>
           </div>
 
+          {/* Data Patterns */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium">Padrão dos Diários Emocionais</Label>
+            <p className="text-sm text-muted-foreground">
+              Selecione um ou mais padrões. Alunos serão distribuídos entre os padrões escolhidos.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {DATA_PATTERNS.map((pattern) => {
+                const Icon = pattern.icon;
+                const isSelected = selectedPatterns.includes(pattern.id);
+                return (
+                  <label
+                    key={pattern.id}
+                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => setSelectedPatterns(prev => togglePattern(prev, pattern.id))}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <Icon className="h-4 w-4 shrink-0 text-primary" />
+                        <span className="text-sm font-medium">{pattern.label}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{pattern.description}</p>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Tenant Selection */}
           <div className="space-y-2">
             <Label>Tenant Alvo</Label>
@@ -327,6 +391,26 @@ const DemoData = () => {
                               onChange={(e) => setAddDataMoodCount(Number(e.target.value))}
                               className="h-8"
                             />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Padrão dos Diários</Label>
+                          <div className="flex flex-wrap gap-1.5">
+                            {DATA_PATTERNS.map((p) => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => setAddDataPatterns(prev => togglePattern(prev, p.id))}
+                                className={`text-xs px-2 py-1 rounded-full border transition-colors ${
+                                  addDataPatterns.includes(p.id)
+                                    ? "border-primary bg-primary/10 text-primary"
+                                    : "border-border text-muted-foreground hover:border-primary/50"
+                                }`}
+                              >
+                                {p.label}
+                              </button>
+                            ))}
                           </div>
                         </div>
 

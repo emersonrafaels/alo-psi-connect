@@ -9,12 +9,12 @@ const corsHeaders = {
 const NAMES = ["Ana","Beatriz","Camila","Eduardo","Fernando","Gabriela","Helena","Igor","Julia","Leonardo","Mariana","Rafael","Thiago","Lucas","Bruno","Gustavo","Pedro"];
 const SURNAMES = ["Silva","Santos","Oliveira","Souza","Rodrigues","Ferreira","Almeida","Pereira","Lima","Gomes","Costa"];
 const SPECS = [["TCC","Ansiedade"],["Psicanálise","Trauma"],["Neuropsicologia","TDAH"],["Terapia Familiar","Autoestima"]];
-const TAGS = ["#ansiedade","#calma","#foco","#estudos","#provas","#tcc"];
-const JOURNALS = ["Dia produtivo.","Ansiedade pela manhã.","Boa noite de sono.","Aulas intensas.","Meditação ajudou.","Dia estressante."];
 const TENANT_MEDCOS = "3a9ae5ec-50a9-4674-b808-7735e5f0afb5";
 
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const pickN = <T>(arr: T[], n: number): T[] => [...arr].sort(() => 0.5 - Math.random()).slice(0, n);
+const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, Math.round(v)));
 
 function genName() {
   const f = pick(NAMES), l1 = pick(SURNAMES), l2 = pick(SURNAMES.filter(s => s !== l1));
@@ -39,6 +39,119 @@ function pastDate(days: number): Date {
 function futureDate(days: number): Date {
   return new Date(Date.now() + (Math.floor(Math.random() * days) + 1) * 86400000);
 }
+
+// ── Pattern-specific data ──
+
+const PATTERN_CONFIG: Record<string, {
+  tags: string[];
+  journals: string[];
+  generate: (index: number, total: number) => { mood: number; anxiety: number; energy: number; sleep: number };
+}> = {
+  exam_stress: {
+    tags: ["#provas", "#estresse", "#ansiedade", "#pressão", "#estudos"],
+    journals: [
+      "Semana de provas, não consigo dormir direito.",
+      "Muita pressão com as entregas.",
+      "Ansiedade forte antes da prova.",
+      "Não consegui me concentrar nos estudos.",
+      "Estômago embrulhado de nervoso.",
+      "Sinto que vou reprovar, muita coisa para estudar.",
+    ],
+    generate: (i, total) => {
+      const isRecentWeek = i >= total - 7;
+      if (isRecentWeek) {
+        return { mood: rand(1, 2), anxiety: rand(4, 5), energy: rand(1, 3), sleep: rand(3, 5) };
+      }
+      return { mood: rand(3, 4), anxiety: rand(2, 3), energy: rand(3, 4), sleep: rand(6, 8) };
+    },
+  },
+  progressive_improvement: {
+    tags: ["#terapia", "#progresso", "#autoconhecimento", "#melhora", "#gratidão"],
+    journals: [
+      "Comecei a terapia, me sinto vulnerável.",
+      "Hoje foi um pouco melhor que ontem.",
+      "Percebi um padrão no meu comportamento.",
+      "Estou dormindo melhor com a nova rotina.",
+      "Me sinto mais leve depois da sessão.",
+      "Dia bom! Consegui lidar com a ansiedade.",
+      "Gratidão pelo progresso que estou fazendo.",
+    ],
+    generate: (i, total) => {
+      const progress = total > 1 ? i / (total - 1) : 1;
+      return {
+        mood: clamp(1 + progress * 4 + (Math.random() - 0.5), 1, 5),
+        anxiety: clamp(5 - progress * 4 + (Math.random() - 0.5), 1, 5),
+        energy: clamp(2 + progress * 3 + (Math.random() - 0.5), 1, 5),
+        sleep: clamp(4 + progress * 4 + (Math.random() - 0.5), 3, 9),
+      };
+    },
+  },
+  burnout: {
+    tags: ["#esgotamento", "#cansaço", "#sobrecarga", "#exaustão", "#desmotivação"],
+    journals: [
+      "Não tenho energia pra nada.",
+      "Mais um dia arrastado.",
+      "Corpo e mente exaustos.",
+      "Não consigo me motivar para estudar.",
+      "Tudo parece demais.",
+      "Dormi mal de novo, insônia crônica.",
+    ],
+    generate: () => ({
+      mood: rand(1, 3),
+      anxiety: rand(3, 4),
+      energy: rand(1, 2),
+      sleep: rand(4, 6),
+    }),
+  },
+  healthy: {
+    tags: ["#calma", "#foco", "#equilíbrio", "#bem-estar", "#rotina"],
+    journals: [
+      "Dia produtivo e equilibrado.",
+      "Boa noite de sono, acordei disposto(a).",
+      "Meditação pela manhã ajudou muito.",
+      "Me sinto em paz hoje.",
+      "Estudos fluindo bem, sem ansiedade.",
+      "Exercício físico + alimentação boa = dia top.",
+    ],
+    generate: () => ({
+      mood: rand(3, 5),
+      anxiety: rand(1, 2),
+      energy: rand(3, 5),
+      sleep: rand(7, 9),
+    }),
+  },
+  volatile: {
+    tags: ["#ansiedade", "#calma", "#foco", "#estresse", "#alívio", "#confuso"],
+    journals: [
+      "Altos e baixos o dia todo.",
+      "Comecei bem mas depois desandou.",
+      "Humor instável, não sei o que sinto.",
+      "Explosão emocional seguida de culpa.",
+      "De repente ficou tudo bem.",
+      "Oscilando entre motivação e desânimo.",
+    ],
+    generate: (i, total) => {
+      const wave = Math.sin(i * 1.5) * 2 + (Math.random() - 0.5) * 2;
+      const mood = clamp(3 + wave, 1, 5);
+      return {
+        mood,
+        anxiety: clamp(6 - mood + (Math.random() - 0.5), 1, 5),
+        energy: clamp(mood + (Math.random() - 0.5), 1, 5),
+        sleep: clamp(5 + wave * 0.8, 3, 9),
+      };
+    },
+  },
+  random: {
+    tags: ["#ansiedade", "#calma", "#foco", "#estudos", "#provas", "#tcc"],
+    journals: ["Dia produtivo.", "Ansiedade pela manhã.", "Boa noite de sono.", "Aulas intensas.", "Meditação ajudou.", "Dia estressante."],
+    generate: () => ({
+      mood: rand(1, 5),
+      anxiety: rand(1, 5),
+      energy: rand(1, 5),
+      sleep: rand(4, 9),
+    }),
+  },
+};
 
 async function seedProfessionals(supabase: any, instId: string, instName: string, count: number, tenantId: string) {
   const marker = genMarker(instName), domain = genDomain(instName), profs = [];
@@ -122,19 +235,32 @@ async function seedCoupons(supabase: any, instId: string, instName: string, tena
   return coupons.length;
 }
 
-async function seedMoodEntries(supabase: any, students: any[], entriesPerStudent: number, tenantId: string) {
-  console.log(`[seed] Creating ~${students.length * entriesPerStudent} mood entries`);
+async function seedMoodEntries(supabase: any, students: any[], entriesPerStudent: number, tenantId: string, patterns: string[]) {
+  const validPatterns = patterns.filter(p => PATTERN_CONFIG[p]);
+  if (!validPatterns.length) validPatterns.push("random");
+
+  console.log(`[seed] Creating ~${students.length * entriesPerStudent} mood entries with patterns: ${validPatterns.join(", ")}`);
   let total = 0;
-  for (const s of students) {
+
+  for (let si = 0; si < students.length; si++) {
+    const s = students[si];
+    const patternKey = validPatterns[si % validPatterns.length];
+    const config = PATTERN_CONFIG[patternKey];
+
     for (let i = 0; i < entriesPerStudent; i++) {
+      const values = config.generate(i, entriesPerStudent);
+      const daysAgo = entriesPerStudent - i;
+      const date = new Date(Date.now() - daysAgo * 86400000);
+
       await supabase.from("mood_entries").insert({
         profile_id: s.profile.id, tenant_id: tenantId,
-        date: pastDate(30).toISOString().split("T")[0],
-        mood_score: Math.floor(Math.random() * 5) + 1,
-        anxiety_level: Math.floor(Math.random() * 5) + 1,
-        energy_level: Math.floor(Math.random() * 5) + 1,
-        sleep_hours: Math.floor(Math.random() * 5) + 4,
-        journal_text: pick(JOURNALS), tags: pickN(TAGS, 2)
+        date: date.toISOString().split("T")[0],
+        mood_score: values.mood,
+        anxiety_level: values.anxiety,
+        energy_level: values.energy,
+        sleep_hours: values.sleep,
+        journal_text: pick(config.journals),
+        tags: pickN(config.tags, 2),
       });
       total++;
     }
@@ -225,8 +351,8 @@ Deno.serve(async (req) => {
     const { data: claims } = await anonClient.auth.getClaims(authHeader.replace("Bearer ", ""));
     if (!claims?.claims) return new Response(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { action, institution_id, institution_name, institution_type = "private", professionals_count = 5, students_count = 10, mood_entries_per_student = 12, tenant_id = TENANT_MEDCOS } = await req.json();
-    console.log(`[seed] Action: ${action}, Institution: ${institution_name || institution_id}`);
+    const { action, institution_id, institution_name, institution_type = "private", professionals_count = 5, students_count = 10, mood_entries_per_student = 12, tenant_id = TENANT_MEDCOS, data_patterns = ["random"] } = await req.json();
+    console.log(`[seed] Action: ${action}, Institution: ${institution_name || institution_id}, Patterns: ${data_patterns}`);
 
     let instId = institution_id, instName = institution_name;
 
@@ -256,8 +382,9 @@ Deno.serve(async (req) => {
       const students = await seedStudents(supabase, instId, instName, students_count, tenant_id);
       details.students = students.length;
       details.coupons = await seedCoupons(supabase, instId, instName, tenant_id);
-      details.mood_entries = await seedMoodEntries(supabase, students, mood_entries_per_student, tenant_id);
+      details.mood_entries = await seedMoodEntries(supabase, students, mood_entries_per_student, tenant_id, data_patterns);
       details.appointments = await seedAppointments(supabase, instName, profs, students, tenant_id);
+      details.patterns_used = data_patterns;
     } else if (action === "cleanup") {
       await cleanup(supabase, instId, instName);
       details.cleaned = true;

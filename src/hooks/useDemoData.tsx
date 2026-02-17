@@ -21,6 +21,7 @@ export interface DemoDataParams {
   studentsCount?: number;
   moodEntriesPerStudent?: number;
   tenantId?: string;
+  dataPatterns?: string[];
 }
 
 export interface DemoDataResult {
@@ -63,6 +64,7 @@ export const useDemoData = () => {
           students_count: params.studentsCount,
           mood_entries_per_student: params.moodEntriesPerStudent,
           tenant_id: params.tenantId,
+          data_patterns: params.dataPatterns,
         },
       });
 
