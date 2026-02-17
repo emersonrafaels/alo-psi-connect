@@ -22,7 +22,8 @@ import {
   UserCircle, 
   Ticket, 
   Heart,
-  Compass 
+  Compass,
+  ClipboardList 
 } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
@@ -38,6 +39,7 @@ import { WelcomeCard } from '@/components/institution/WelcomeCard';
 import { InstitutionTour } from '@/components/institution/InstitutionTour';
 import { KeyboardShortcutsPopover } from '@/components/institution/KeyboardShortcutsPopover';
 import { InstitutionWellbeingDashboard } from '@/components/institution/InstitutionWellbeingDashboard';
+import { StudentTriageTab } from '@/components/institution/StudentTriageTab';
 
 export default function InstitutionPortal() {
   const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
@@ -240,7 +242,7 @@ export default function InstitutionPortal() {
           className="space-y-6"
           data-tour="tabs"
         >
-          <TabsList className="grid w-full max-w-4xl grid-cols-2 md:grid-cols-4 h-auto">
+          <TabsList className="grid w-full max-w-4xl grid-cols-2 md:grid-cols-5 h-auto">
             <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
               Visão Geral
             </TabsTrigger>
@@ -259,6 +261,10 @@ export default function InstitutionPortal() {
             >
               <Heart className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               Diário Emocional
+            </TabsTrigger>
+            <TabsTrigger value="triage" className="text-xs md:text-sm py-2">
+              <ClipboardList className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              Triagem
             </TabsTrigger>
           </TabsList>
 
@@ -368,6 +374,24 @@ export default function InstitutionPortal() {
                   <Heart className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
                   <p className="text-muted-foreground">
                     Nenhuma instituição vinculada para exibir dados do diário emocional.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Tab de Triagem */}
+          <TabsContent value="triage">
+            {userInstitutions[0]?.institution_id ? (
+              <StudentTriageTab 
+                institutionId={userInstitutions[0].institution_id} 
+              />
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    Nenhuma instituição vinculada para exibir triagem.
                   </p>
                 </CardContent>
               </Card>
