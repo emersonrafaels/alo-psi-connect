@@ -351,8 +351,11 @@ Deno.serve(async (req) => {
     const { data: claims } = await anonClient.auth.getClaims(authHeader.replace("Bearer ", ""));
     if (!claims?.claims) return new Response(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { action, institution_id, institution_name, institution_type = "private", professionals_count = 5, students_count = 10, mood_entries_per_student = 12, tenant_id = TENANT_MEDCOS, data_patterns = ["random"] } = await req.json();
-    console.log(`[seed] Action: ${action}, Institution: ${institution_name || institution_id}, Patterns: ${data_patterns}`);
+    const { action, institution_id, institution_name, institution_type = "private", professionals_count, students_count, mood_entries_per_student, tenant_id = TENANT_MEDCOS, data_patterns = ["random"] } = await req.json();
+    const safeProfCount = professionals_count || 5;
+    const safeStudentCount = students_count || 10;
+    const safeMoodCount = mood_entries_per_student || 12;
+    console.log(`[seed] Action: ${action}, Institution: ${institution_name || institution_id}, Profs: ${safeProfCount}, Students: ${safeStudentCount}, Mood: ${safeMoodCount}, Patterns: ${data_patterns}`);
 
     let instId = institution_id, instName = institution_name;
 
@@ -377,12 +380,12 @@ Deno.serve(async (req) => {
 
     if (action === "create_institution" || action === "seed_all") {
       if (action === "seed_all") await cleanup(supabase, instId, instName);
-      const profs = await seedProfessionals(supabase, instId, instName, professionals_count, tenant_id);
+      const profs = await seedProfessionals(supabase, instId, instName, safeProfCount, tenant_id);
       details.professionals = profs.length;
-      const students = await seedStudents(supabase, instId, instName, students_count, tenant_id);
+      const students = await seedStudents(supabase, instId, instName, safeStudentCount, tenant_id);
       details.students = students.length;
       details.coupons = await seedCoupons(supabase, instId, instName, tenant_id);
-      details.mood_entries = await seedMoodEntries(supabase, students, mood_entries_per_student, tenant_id, data_patterns);
+      details.mood_entries = await seedMoodEntries(supabase, students, safeMoodCount, tenant_id, data_patterns);
       details.appointments = await seedAppointments(supabase, instName, profs, students, tenant_id);
       details.patterns_used = data_patterns;
     } else if (action === "cleanup") {
