@@ -18,6 +18,11 @@ export const SessionCountdown = ({ sessionDate, startTime }: SessionCountdownPro
     return null; // Session has passed
   }
 
+  // When < 24h, LiveCountdown handles the display
+  if (hoursUntil < 24) {
+    return null;
+  }
+
   let label = '';
   let icon = null;
   let variant: 'default' | 'secondary' | 'destructive' = 'secondary';
