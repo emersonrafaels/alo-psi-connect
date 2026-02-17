@@ -92,8 +92,8 @@ export function useStudentTriageData(institutionId: string | null) {
       if (studentsError) throw studentsError;
       if (!students || students.length === 0) return [];
 
-      // 2. Get user_ids for mood_entries lookup
-      const userIds = students.map((s: any) => s.pacientes.profiles.user_id).filter(Boolean);
+      // 2. Get profile_ids for mood_entries lookup
+      const profileIds = students.map((s: any) => s.pacientes.profile_id).filter(Boolean);
 
       // 3. Get mood entries for last 14 days
       const fourteenDaysAgo = new Date();
@@ -102,8 +102,8 @@ export function useStudentTriageData(institutionId: string | null) {
 
       const { data: moodEntries } = await supabase
         .from('mood_entries')
-        .select('user_id, mood_score, anxiety_level, energy_level, sleep_quality, date')
-        .in('user_id', userIds)
+        .select('profile_id, mood_score, anxiety_level, energy_level, sleep_quality, date')
+        .in('profile_id', profileIds)
         .gte('date', dateStr)
         .order('date', { ascending: true });
 
@@ -116,12 +116,12 @@ export function useStudentTriageData(institutionId: string | null) {
         .in('patient_id', patientIds)
         .order('created_at', { ascending: false });
 
-      // Group mood entries by user_id
-      const moodByUser = new Map<string, any[]>();
+      // Group mood entries by profile_id
+      const moodByProfile = new Map<string, any[]>();
       (moodEntries || []).forEach((e: any) => {
-        const arr = moodByUser.get(e.user_id) || [];
+        const arr = moodByProfile.get(e.profile_id) || [];
         arr.push(e);
-        moodByUser.set(e.user_id, arr);
+        moodByProfile.set(e.profile_id, arr);
       });
 
       // Latest triage per patient
@@ -134,8 +134,8 @@ export function useStudentTriageData(institutionId: string | null) {
 
       // 5. Calculate risk for each student
       return students.map((s: any) => {
-        const userId = s.pacientes.profiles.user_id;
-        const entries = moodByUser.get(userId) || [];
+        const profileId = s.pacientes.profile_id;
+        const entries = moodByProfile.get(profileId) || [];
         const latestTriage = triageByPatient.get(s.patient_id);
 
         const avgMood = entries.length > 0
