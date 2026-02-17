@@ -102,7 +102,7 @@ export function useStudentTriageData(institutionId: string | null) {
 
       const { data: moodEntries } = await supabase
         .from('mood_entries')
-        .select('profile_id, mood_score, anxiety_level, energy_level, sleep_quality, date')
+        .select('profile_id, mood_score, anxiety_level, energy_level, sleep_quality, sleep_hours, date')
         .in('profile_id', profileIds)
         .gte('date', dateStr)
         .order('date', { ascending: true });
@@ -149,9 +149,12 @@ export function useStudentTriageData(institutionId: string | null) {
         const avgEnergy = energyEntries.length > 0
           ? energyEntries.reduce((sum: number, e: any) => sum + e.energy_level, 0) / energyEntries.length
           : null;
-        const sleepEntries = entries.filter((e: any) => e.sleep_quality != null);
+        const sleepEntries = entries.filter((e: any) => e.sleep_quality != null || e.sleep_hours != null);
         const avgSleep = sleepEntries.length > 0
-          ? sleepEntries.reduce((sum: number, e: any) => sum + e.sleep_quality, 0) / sleepEntries.length
+          ? sleepEntries.reduce((sum: number, e: any) => {
+              const val = e.sleep_quality ?? Math.min(5, Math.max(1, Math.round((e.sleep_hours - 3) / 1.5 + 1)));
+              return sum + val;
+            }, 0) / sleepEntries.length
           : null;
 
         const moodTrend = calculateTrend(entries.filter((e: any) => e.mood_score != null));
