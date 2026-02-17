@@ -13,6 +13,7 @@ import { Settings, Bot, Webhook, Cog, Shield, Mic, Database, Star, GraduationCap
 import { GoogleCalendarTenantConfig } from '@/components/admin/config/GoogleCalendarTenantConfig';
 import { EducationalInstitutionsConfig } from '@/components/admin/config/EducationalInstitutionsConfig';
 import { NewsletterSubscribersConfig } from '@/components/admin/config/NewsletterSubscribersConfig';
+import { EmailBccConfig } from '@/components/admin/config/EmailBccConfig';
 import { cn } from '@/lib/utils';
 import { AdminTenantProvider } from '@/contexts/AdminTenantContext';
 import { AdminTenantSelector } from '@/components/admin/AdminTenantSelector';
@@ -90,6 +91,14 @@ export default function Configurations() {
       description: 'Visualize e gerencie os inscritos da newsletter',
       icon: Mail,
       component: NewsletterSubscribersConfig,
+      category: 'system'
+    },
+    {
+      id: 'email-bcc',
+      title: 'Emails BCC',
+      description: 'Gerencie emails copiados em oculto nos envios',
+      icon: Mail,
+      component: EmailBccConfig,
       category: 'system'
     },
     {

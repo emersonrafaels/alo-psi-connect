@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
+import { getBccEmails } from "../_shared/get-bcc-emails.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -59,10 +60,14 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Buscar emails BCC configurados
+    const bccEmails = await getBccEmails(supabase, tenantId || null);
+
     // Send email to the company
     const emailResponse = await resend.emails.send({
       from: `Contato ${tenantName} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
+      bcc: bccEmails.length > 0 ? bccEmails : undefined,
       subject: `Novo contato: ${subject}`,
       html: `
         <h2>Nova mensagem de contato</h2>
@@ -82,6 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
     const confirmationResponse = await resend.emails.send({
       from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [email],
+      bcc: bccEmails.length > 0 ? bccEmails : undefined,
       subject: `Recebemos sua mensagem - ${tenantName}`,
       html: `
         <h2>Olá, ${name}!</h2>

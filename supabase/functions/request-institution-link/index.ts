@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@4.0.0";
+import { getBccEmails } from "../_shared/get-bcc-emails.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -157,6 +158,9 @@ const handler = async (req: Request): Promise<Response> => {
     const tenantColor = tenant.primary_color || '#7c3aed';
     const tenantLogo = tenant.logo_url || '';
     const tenantSlug = tenant.slug || '';
+
+    // Buscar emails BCC configurados
+    const bccEmails = await getBccEmails(supabaseClient, tenantId);
     const userTypeLabel = userType === 'paciente' ? 'Paciente/Aluno' : 'Profissional';
     
     const relationshipLabels: Record<string, string> = {
@@ -274,6 +278,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
+      bcc: bccEmails.length > 0 ? bccEmails : undefined,
       subject: `Nova Solicitação de Vínculo Institucional - ${institution.name}`,
       html: emailHtml,
     });
@@ -291,6 +296,7 @@ const handler = async (req: Request): Promise<Response> => {
           await resend.emails.send({
             from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
             to: institutionAdminEmails,
+            bcc: bccEmails.length > 0 ? bccEmails : undefined,
             subject: `Nova Solicitação de Vínculo - ${institution.name}`,
             html: emailHtml,
           });

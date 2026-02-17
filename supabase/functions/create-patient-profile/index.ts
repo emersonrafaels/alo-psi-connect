@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { getBccEmails } from "../_shared/get-bcc-emails.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -404,11 +405,14 @@ serve(async (req) => {
               tenant: normalizedTenantName,
               from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
               to: email,
-              bcc: tenantData.admin_email || null,
               subject: `Confirme seu email - ${normalizedTenantName}`,
               logo: tenantData.logo_url,
               color: tenantData.primary_color
             });
+
+            // Buscar emails BCC configurados
+            const bccEmails = await getBccEmails(supabase, tenantId);
+            const allBcc = [...(tenantData.admin_email ? [tenantData.admin_email] : []), ...bccEmails];
 
             const emailResponse = await fetch('https://api.resend.com/emails', {
               method: 'POST',
@@ -419,7 +423,7 @@ serve(async (req) => {
               body: JSON.stringify({
                 from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
                 to: [email],
-                bcc: tenantData.admin_email ? [tenantData.admin_email] : [],
+                bcc: allBcc.length > 0 ? allBcc : undefined,
                 subject: `Confirme seu email - ${normalizedTenantName}`,
                 html: generateConfirmationEmailHTML(
                   normalizedTenantName,
