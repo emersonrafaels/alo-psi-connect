@@ -259,6 +259,7 @@ async function seedMoodEntries(supabase: any, students: any[], entriesPerStudent
         anxiety_level: values.anxiety,
         energy_level: values.energy,
         sleep_hours: values.sleep,
+        sleep_quality: values.mood,
         journal_text: pick(config.journals),
         tags: pickN(config.tags, 2),
       });
