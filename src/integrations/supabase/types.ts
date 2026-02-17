@@ -1693,6 +1693,63 @@ export type Database = {
           },
         ]
       }
+      institution_notes: {
+        Row: {
+          content: string | null
+          created_at: string
+          created_by: string
+          end_date: string | null
+          id: string
+          institution_id: string
+          is_pinned: boolean
+          note_type: string
+          start_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          created_by: string
+          end_date?: string | null
+          id?: string
+          institution_id: string
+          is_pinned?: boolean
+          note_type?: string
+          start_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          created_by?: string
+          end_date?: string | null
+          id?: string
+          institution_id?: string
+          is_pinned?: boolean
+          note_type?: string
+          start_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_notes_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_notes_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_user_permissions: {
         Row: {
           granted_at: string | null
