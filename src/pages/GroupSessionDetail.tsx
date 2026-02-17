@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, Clock, Users, Video, Building2, MessageCircle, ArrowLeft, Check } from 'lucide-react';
+import { Calendar, Clock, Users, Video, Building2, MessageCircle, ArrowLeft, Check, CheckCircle2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SessionTypeIcon, getSessionTypeLabel } from '@/components/group-sessions/SessionTypeIcon';
@@ -98,6 +98,8 @@ const GroupSessionDetail = () => {
   }
 
   const sessionDate = parseISO(session.session_date);
+  const sessionDateTime = parseISO(`${session.session_date}T${session.start_time}`);
+  const isPast = session.status === 'completed' || sessionDateTime < new Date();
   const formattedDate = format(sessionDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   const formattedTime = session.start_time.slice(0, 5);
   const isOrganizedByTenant = session.organizer_type === 'tenant';
@@ -150,10 +152,16 @@ const GroupSessionDetail = () => {
                   {session.has_libras && (
                     <Badge variant="outline" className="gap-1">♿ LIBRAS</Badge>
                   )}
-                <SessionCountdown sessionDate={session.session_date} startTime={session.start_time} />
+                  {isPast && (
+                    <Badge variant="outline" className="gap-1 bg-muted text-muted-foreground border-muted-foreground/30">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Evento já realizado
+                    </Badge>
+                  )}
+                  {!isPast && <SessionCountdown sessionDate={session.session_date} startTime={session.start_time} />}
                 </div>
 
-                <LiveCountdown sessionDate={session.session_date} startTime={session.start_time} />
+                {!isPast && <LiveCountdown sessionDate={session.session_date} startTime={session.start_time} />}
 
                 <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
                   {session.title}

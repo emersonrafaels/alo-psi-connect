@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Users, Building2 } from "lucide-react";
+import { Calendar, Clock, Users, Building2, CheckCircle2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useTenant } from "@/hooks/useTenant";
@@ -84,9 +84,15 @@ export const PastSessionsSection = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <Badge variant="secondary" className="mb-1">
-                        {getSessionTypeLabel(session.session_type)}
-                      </Badge>
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        <Badge variant="secondary">
+                          {getSessionTypeLabel(session.session_type)}
+                        </Badge>
+                        <Badge variant="outline" className="gap-1 bg-muted text-muted-foreground border-muted-foreground/30">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Evento já realizado
+                        </Badge>
+                      </div>
                       <p className="text-xs text-muted-foreground">{organizerName}</p>
                     </div>
                   </div>
