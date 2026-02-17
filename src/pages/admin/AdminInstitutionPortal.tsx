@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Users, GraduationCap, Building2, TrendingUp, BarChart3, Briefcase, UserCircle, Ticket, Heart } from 'lucide-react';
+import { Users, GraduationCap, Building2, TrendingUp, BarChart3, Briefcase, UserCircle, Ticket, Heart, ClipboardList } from 'lucide-react';
 import { useAdminInstitutionPortal } from '@/hooks/useAdminInstitutionPortal';
 import { InstitutionAnalyticsDashboard } from '@/components/admin/InstitutionAnalyticsDashboard';
 import { InstitutionCouponsTab } from '@/components/admin/InstitutionCouponsTab';
 import { InstitutionWellbeingDashboard } from '@/components/institution/InstitutionWellbeingDashboard';
+import { StudentTriageTab } from '@/components/institution/StudentTriageTab';
 
 export default function AdminInstitutionPortal() {
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
@@ -122,8 +123,11 @@ export default function AdminInstitutionPortal() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full max-w-2xl grid-cols-4 h-auto">
+            <TabsList className="grid w-full max-w-3xl grid-cols-5 h-auto">
               <TabsTrigger value="overview" className="text-xs md:text-sm py-2">Visão Geral</TabsTrigger>
+              <TabsTrigger value="triage" className="text-xs md:text-sm py-2">
+                <ClipboardList className="h-3 w-3 mr-1" /> Triagem
+              </TabsTrigger>
               <TabsTrigger value="coupons" className="text-xs md:text-sm py-2">
                 <Ticket className="h-3 w-3 mr-1" /> Cupons
               </TabsTrigger>
@@ -211,6 +215,10 @@ export default function AdminInstitutionPortal() {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            <TabsContent value="triage">
+              <StudentTriageTab institutionId={selectedInstitutionId} />
             </TabsContent>
 
             <TabsContent value="coupons">
