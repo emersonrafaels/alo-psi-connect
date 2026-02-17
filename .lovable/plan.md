@@ -1,26 +1,56 @@
 
-## Adicionar aba "Triagem" ao Portal Institucional
+
+## Corrigir vinculacao dos dados de diario emocional com alunos
 
 ### Problema
-A aba de Triagem foi criada apenas no portal admin (`/admin/portal-institucional`), mas nao existe no portal institucional real (`/portal-institucional`) que o institution_admin usa. A screenshot mostra exatamente essa pagina com 4 tabs: Visao Geral, Cupons, Metricas, Diario Emocional.
 
-### Mudanca
+Os dados de mood_entries estao sendo criados com `profile_id` na seed function, mas o hook de triagem busca por `user_id`. Como os perfis demo nao tem `user_id` (nao sao usuarios reais do auth), a consulta nunca encontra os registros.
 
-**Arquivo: `src/pages/InstitutionPortal.tsx`**
+### Correcoes
 
-1. Importar `ClipboardList` do lucide-react e o componente `StudentTriageTab`
-2. Alterar o grid de tabs de 4 para 5 colunas (`grid-cols-2 md:grid-cols-5`)
-3. Adicionar nova `TabsTrigger` com valor "triage" e icone `ClipboardList` com texto "Triagem"
-4. Adicionar novo `TabsContent` para "triage" renderizando `StudentTriageTab` com o `institutionId` da instituicao do usuario
+**1. Hook de triagem: `src/hooks/useStudentTriage.tsx`**
+
+Alterar a query de mood_entries para buscar por `profile_id` em vez de `user_id`:
+
+- Em vez de extrair `user_id` dos profiles e filtrar por `.in('user_id', userIds)`, extrair os `profile_id` diretamente dos pacientes e filtrar por `.in('profile_id', profileIds)`
+- Agrupar mood_entries por `profile_id` em vez de `user_id`
+- Mapear cada aluno pelo seu `profile_id` para encontrar seus registros
+
+**2. Seed function: `supabase/functions/seed-demo-data/index.ts`**
+
+A seed function ja insere com `profile_id`, o que esta correto. Porem, tambem deve incluir `sleep_quality` (campo que o hook tenta ler), pois atualmente so insere `sleep_hours`.
+
+Adicionar `sleep_quality` ao insert de mood_entries para que o hook de triagem consiga calcular o indicador de sono corretamente.
 
 ### Detalhes tecnicos
 
-- O componente `StudentTriageTab` ja existe em `src/components/institution/StudentTriageTab.tsx` e recebe `institutionId` como prop
-- O hook `useStudentTriage` ja busca dados via `patient_institutions` e `mood_entries`, compativel com RLS de institution_admin
-- O `institutionId` sera obtido de `userInstitutions[0]?.institution_id`, mesmo padrao usado nas outras tabs
+Mudanca no hook (logica central):
+
+```
+// ANTES: busca por user_id (nao existe em dados demo)
+const userIds = students.map(s => s.pacientes.profiles.user_id).filter(Boolean);
+.in('user_id', userIds)
+
+// DEPOIS: busca por profile_id (sempre existe)
+const profileIds = students.map(s => s.pacientes.profile_id);
+.in('profile_id', profileIds)
+```
+
+Mudanca na seed function:
+
+```
+// ANTES
+sleep_hours: values.sleep,
+
+// DEPOIS
+sleep_hours: values.sleep,
+sleep_quality: values.mood,  // usar mood como proxy para qualidade do sono
+```
 
 ### Resumo de arquivos
 
 | Arquivo | Acao |
 |---|---|
-| `src/pages/InstitutionPortal.tsx` | Adicionar tab Triagem com StudentTriageTab |
+| `src/hooks/useStudentTriage.tsx` | Alterar query para usar profile_id em vez de user_id |
+| `supabase/functions/seed-demo-data/index.ts` | Adicionar sleep_quality ao insert de mood_entries |
+
