@@ -88,6 +88,7 @@ import GoogleCalendarTests from "@/pages/admin/GoogleCalendarTests";
 import GroupSessionsAdmin from "@/pages/admin/GroupSessionsAdmin";
 import DemoData from "@/pages/admin/DemoData";
 import AIManagement from "@/pages/admin/AIManagement";
+import AdminInstitutionPortal from "@/pages/admin/AdminInstitutionPortal";
 
 import "./App.css";
 
@@ -288,6 +289,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />
       <Route path="/admin/tenants" element={<AdminLayout><AdminTenants /></AdminLayout>} />
       <Route path="/admin/instituicoes" element={<AdminLayout><AdminInstitutions /></AdminLayout>} />
+      <Route path="/admin/portal-institucional" element={<AdminLayout><AdminInstitutionPortal /></AdminLayout>} />
       <Route path="/admin/bulk-import" element={<AdminLayout><BulkImport /></AdminLayout>} />
       <Route path="/admin/system" element={<AdminLayout><AdminSystemMaintenance /></AdminLayout>} />
       <Route path="/admin/encontros" element={<AdminLayout><GroupSessionsAdmin /></AdminLayout>} />
