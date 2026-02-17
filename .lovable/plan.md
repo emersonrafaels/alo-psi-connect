@@ -1,39 +1,28 @@
 
-## Adicionar Badge "Evento ja realizado" para sessoes passadas
 
-### Objetivo
+## Esconder botao "Entrar na Reuniao" para eventos passados
 
-Exibir uma badge vermelha/cinza "Evento ja realizado" na pagina de detalhes do encontro quando a data/hora do evento ja passou. Tambem adicionar essa badge na secao de encontros passados e nos cards de listagem.
+### Problema
 
-### Mudancas
+O `MeetingLinkButton` aparece mesmo para eventos ja realizados. Ele so deveria aparecer para eventos futuros (e ficar clicavel 1h antes).
 
-**1. `src/pages/GroupSessionDetail.tsx`**
+### Mudanca
 
-Na area de badges (linha 145-154), adicionar logica para verificar se o evento ja passou:
+**`src/pages/GroupSessionDetail.tsx`**
 
-```
-const isPast = session.status === 'completed' || sessionDateTime < new Date();
-```
+Envolver a renderizacao do `MeetingLinkButton` com a condicao `!isPast`:
 
-Se `isPast`, renderizar uma badge com variante `destructive` ou estilo customizado cinza:
-```
-{isPast && (
-  <Badge variant="outline" className="gap-1 bg-muted text-muted-foreground border-muted-foreground/30">
-    <CheckCircle2 className="w-3 h-3" />
-    Evento ja realizado
-  </Badge>
+```tsx
+{!isPast && session.meeting_link && (
+  <MeetingLinkButton ... />
 )}
 ```
 
-Tambem esconder o `LiveCountdown` e o `SessionCountdown` quando o evento ja passou (ja retornam null naturalmente para eventos passados, mas a badge adiciona clareza).
+Isso remove o botao completamente para eventos passados, mantendo-o apenas para eventos futuros (onde a logica de 1h antes continua funcionando normalmente).
 
-**2. `src/components/group-sessions/PastSessionsSection.tsx`**
-
-Adicionar a mesma badge "Evento ja realizado" nos cards de encontros passados, dentro do bloco de informacoes (ao lado do tipo de sessao ou na area de metadados).
-
-### Resumo
+### Arquivo
 
 | Arquivo | Acao |
 |---------|------|
-| `src/pages/GroupSessionDetail.tsx` | Adicionar badge "Evento ja realizado" quando sessao passou |
-| `src/components/group-sessions/PastSessionsSection.tsx` | Adicionar badge nos cards de encontros passados |
+| `src/pages/GroupSessionDetail.tsx` | Adicionar condicao `!isPast` ao redor do MeetingLinkButton |
+
