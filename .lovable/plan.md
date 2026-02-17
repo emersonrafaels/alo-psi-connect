@@ -1,40 +1,50 @@
 
 
-## Corrigir dados de sono faltantes na triagem
+## Adicionar dados de sono para alunos existentes
 
 ### Problema
 
-Os dados demo existentes no banco foram criados antes da correcao que adicionou `sleep_quality`. Por isso, todos os registros atuais tem `sleep_quality = NULL`, resultando em "Sono: --" na triagem.
-
-O codigo da seed function ja foi corrigido (linha 262), mas os dados antigos nao foram regenerados.
+450 registros de mood_entries possuem `sleep_hours` mas `sleep_quality = NULL`. O hook de triagem so busca `sleep_quality` e nao faz fallback para `sleep_hours`.
 
 ### Solucao (duas partes)
 
-**1. Backfill dos dados existentes (SQL direto)**
+**1. Backfill no banco de dados**
 
-Atualizar os registros existentes que tem `sleep_quality = NULL` mas possuem `sleep_hours`, usando uma formula de conversao:
-- `sleep_hours` vai de ~3 a ~9
-- Converter para escala 1-5: `ROUND(LEAST(5, GREATEST(1, (sleep_hours - 3) / 1.5)))`
+Executar UPDATE para preencher `sleep_quality` nos registros existentes, convertendo `sleep_hours` (escala 3-9) para escala 1-5:
 
-Isso sera feito via Run SQL no painel.
+```sql
+UPDATE mood_entries
+SET sleep_quality = ROUND(LEAST(5, GREATEST(1, (sleep_hours - 3) / 1.5 + 1)))::integer
+WHERE sleep_quality IS NULL AND sleep_hours IS NOT NULL;
+```
+
+Isso vai corrigir os 450 registros de uma vez.
 
 **2. Fallback no hook: `src/hooks/useStudentTriage.tsx`**
 
-Alterar o hook para usar `sleep_quality` quando disponivel, mas fazer fallback para uma conversao de `sleep_hours` quando `sleep_quality` for NULL. Isso garante compatibilidade com dados antigos e novos:
+Adicionar `sleep_hours` ao select da query e implementar fallback no calculo de `avgSleep`:
 
-- Na query, adicionar `sleep_hours` ao select
-- No calculo de `avgSleep`, usar `sleep_quality ?? convertSleepHours(sleep_hours)` para cada entrada
-- Funcao de conversao: `Math.min(5, Math.max(1, Math.round((hours - 3) / 1.5)))`
+- Alterar linha 105: adicionar `sleep_hours` ao select
+- No calculo do sono (linhas ~145-148), usar `sleep_quality` quando disponivel, senao converter `sleep_hours` para escala 1-5
 
-**3. Seed function: sem mudanca necessaria**
+```typescript
+// Na query (linha 105):
+.select('profile_id, mood_score, anxiety_level, energy_level, sleep_quality, sleep_hours, date')
 
-A seed function ja inclui `sleep_quality` (correcao anterior). Dados novos virao corretos.
+// No calculo (onde filtra sleepEntries):
+const sleepEntries = entries.filter((e: any) => e.sleep_quality != null || e.sleep_hours != null);
+const avgSleep = sleepEntries.length > 0
+  ? sleepEntries.reduce((sum: number, e: any) => {
+      const val = e.sleep_quality ?? Math.min(5, Math.max(1, Math.round((e.sleep_hours - 3) / 1.5 + 1)));
+      return sum + val;
+    }, 0) / sleepEntries.length
+  : null;
+```
 
-### Resumo de arquivos
+### Resumo
 
-| Arquivo | Acao |
+| Item | Acao |
 |---|---|
-| `src/hooks/useStudentTriage.tsx` | Adicionar fallback sleep_hours para sleep_quality no calculo |
-
-Apos aprovar, tambem fornecerei o SQL para backfill dos dados existentes.
+| Banco de dados | UPDATE para preencher sleep_quality em 450 registros |
+| `src/hooks/useStudentTriage.tsx` | Adicionar sleep_hours ao select e fallback no calculo |
 
