@@ -2,7 +2,7 @@
 // Last updated: 2025-10-15
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
+import { getBccEmails } from "../_shared/get-bcc-emails.ts";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -774,10 +774,15 @@ serve(async (req) => {
               console.log('🔗 Confirmation URL:', confirmationUrl);
               console.log('📨 Sending to:', profileData.email);
               console.log('🏢 Tenant:', normalizedTenantName, '| Slug:', tenantSlug);
+
+              // Buscar emails BCC configurados
+              const bccEmails = await getBccEmails(supabaseAdmin, tenant.id);
+              const allBcc = [...(tenant.admin_email ? [tenant.admin_email] : []), ...bccEmails];
+
               console.log('📧 Email details:', {
                 from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
                 to: profileData.email,
-                bcc: tenant.admin_email || null,
+                bcc: allBcc,
                 subject: `Bem-vindo à ${normalizedTenantName} - Confirme seu email`,
                 logo: tenant.logo_url,
                 color: tenant.primary_color
@@ -792,7 +797,7 @@ serve(async (req) => {
                 body: JSON.stringify({
                   from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
                   to: [profileData.email],
-                  bcc: tenant.admin_email ? [tenant.admin_email] : [],
+                  bcc: allBcc.length > 0 ? allBcc : undefined,
                   subject: `Bem-vindo à ${normalizedTenantName} - Confirme seu email`,
                   html: generateConfirmationEmailHTML(
                     normalizedTenantName,

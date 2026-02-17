@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { getBccEmails } from "../_shared/get-bcc-emails.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -126,10 +127,14 @@ const handler = async (req: Request): Promise<Response> => {
       : `/${tenantSlug}/auth`;
     const resetLink = `${baseUrl}${resetPath}?reset=true&token=${token}`;
 
+    // Buscar emails BCC configurados
+    const bccEmails = await getBccEmails(supabase, tenantData?.id || null);
+
     // Enviar email com template personalizado e dinâmico por tenant
     const emailResponse = await resend.emails.send({
       from: `${tenantName} <${adminEmail}>`,
       to: [email],
+      bcc: bccEmails.length > 0 ? bccEmails : undefined,
       subject: `Recuperação de senha - ${tenantName}`,
       html: `
         <!DOCTYPE html>

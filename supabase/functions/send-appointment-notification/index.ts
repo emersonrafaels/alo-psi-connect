@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
+import { getBccEmails } from "../_shared/get-bcc-emails.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -74,6 +75,9 @@ const handler = async (req: Request): Promise<Response> => {
         tenantName = 'MEDCOS';
       }
     }
+
+    // Buscar emails BCC configurados
+    const bccEmails = await getBccEmails(supabase, professionalTenant?.tenant_id || null);
 
     // Format date and time for email
     const dataFormatada = new Date(agendamento.data_consulta).toLocaleDateString('pt-BR');
@@ -164,6 +168,7 @@ const handler = async (req: Request): Promise<Response> => {
     const internalEmailResponse = await resend.emails.send({
       from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
+      bcc: bccEmails.length > 0 ? bccEmails : undefined,
       subject: `🎉 Nova Consulta Agendada - ${agendamento.profissionais.display_name} - ${dataFormatada}`,
       html: emailHtml,
     });
@@ -173,6 +178,7 @@ const handler = async (req: Request): Promise<Response> => {
     const professionalEmailResponse = await resend.emails.send({
       from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [agendamento.profissionais.user_email],
+      bcc: bccEmails.length > 0 ? bccEmails : undefined,
       subject: `📅 Nova Consulta Agendada - ${agendamento.nome_paciente} - ${dataFormatada} às ${horarioFormatado}`,
       html: professionalEmailHtml,
     });
@@ -182,6 +188,7 @@ const handler = async (req: Request): Promise<Response> => {
     const patientEmailResponse = await resend.emails.send({
       from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [agendamento.email_paciente],
+      bcc: bccEmails.length > 0 ? bccEmails : undefined,
       subject: `✅ Consulta Confirmada - ${agendamento.profissionais.display_name} - ${dataFormatada} às ${horarioFormatado}`,
       html: patientEmailHtml,
     });

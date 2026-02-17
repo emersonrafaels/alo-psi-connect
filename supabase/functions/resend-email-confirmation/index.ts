@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { getBccEmails } from "../_shared/get-bcc-emails.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -235,11 +236,15 @@ const handler = async (req: Request): Promise<Response> => {
       color: tenantData.primary_color
     });
 
+    // Buscar emails BCC configurados
+    const bccEmails = await getBccEmails(supabase, tenantData?.id || null);
+    const allBcc = [...(tenantData.admin_email ? [tenantData.admin_email] : []), ...bccEmails];
+
     // Send custom email via Resend with verified domain
     const emailResponse = await resend.emails.send({
       from: `${tenantData.name} <noreply@redebemestar.com.br>`,
       to: [email],
-      bcc: tenantData.admin_email ? [tenantData.admin_email] : [],
+      bcc: allBcc.length > 0 ? allBcc : undefined,
       subject: `Confirme seu email - ${tenantData.name}`,
       html: generateConfirmationEmailHTML(
         tenantData.name,

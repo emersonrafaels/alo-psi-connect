@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@4.0.0";
+import { getBccEmails } from "../_shared/get-bcc-emails.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -110,6 +111,9 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Buscar emails BCC configurados
+    const bccEmails = await getBccEmails(supabase, tenantId || null);
+
     // Send welcome email using Resend
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
     
@@ -117,6 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
       const emailResponse = await resend.emails.send({
         from: "Alô, Psi <noreply@redebemestar.com.br>",
         to: [email],
+        bcc: bccEmails.length > 0 ? bccEmails : undefined,
         subject: "Bem-vindo ao Newsletter - Alô, Psi",
         html: `
           <!DOCTYPE html>
@@ -197,6 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
       await resend.emails.send({
         from: `Newsletter ${tenantName} <noreply@redebemestar.com.br>`,
         to: [adminEmail],
+        bcc: bccEmails.length > 0 ? bccEmails : undefined,
         subject: "Nova inscrição no newsletter",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

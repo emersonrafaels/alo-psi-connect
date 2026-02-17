@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getBccEmails } from "../_shared/get-bcc-emails.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -77,6 +78,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (tenantSlug === "medcos") tenantName = "MEDCOS";
 
+    // Buscar emails BCC configurados
+    const bccEmails = await getBccEmails(supabase, session.tenant_id);
+
     const primaryColor = tenantColor.startsWith("#") ? tenantColor : `hsl(${tenantColor})`;
     const siteBaseUrl = "https://alopsi.com.br";
     const tenantPath = tenantSlug !== "default" ? `/${tenantSlug}` : "";
@@ -134,7 +138,9 @@ const handler = async (req: Request): Promise<Response> => {
       const { error } = await resend.emails.send({
         from: `${tenantName} <noreply@redebemestar.com.br>`,
         to: [email],
-        bcc: adminEmail ? [adminEmail] : undefined,
+        bcc: [...(adminEmail ? [adminEmail] : []), ...bccEmails].length > 0 
+          ? [...(adminEmail ? [adminEmail] : []), ...bccEmails] 
+          : undefined,
         subject: `✅ Inscrição Confirmada - ${session.title}`,
         html,
       });
@@ -182,6 +188,7 @@ const handler = async (req: Request): Promise<Response> => {
       const { error } = await resend.emails.send({
         from: `${tenantName} <noreply@redebemestar.com.br>`,
         to: [profile.email],
+        bcc: bccEmails.length > 0 ? bccEmails : undefined,
         subject: isApproved
           ? `🎉 Seu encontro foi aprovado - ${session.title}`
           : `❌ Encontro não aprovado - ${session.title}`,
@@ -220,6 +227,7 @@ const handler = async (req: Request): Promise<Response> => {
           const { error } = await resend.emails.send({
             from: `${tenantName} <noreply@redebemestar.com.br>`,
             to: [profile.email],
+            bcc: bccEmails.length > 0 ? bccEmails : undefined,
             subject: `⚠️ Encontro Cancelado - ${session.title}`,
             html,
           });
