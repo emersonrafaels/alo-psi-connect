@@ -1,40 +1,40 @@
 
 
-## Melhorias na aba de Triagem
+## Corrigir dados de sono faltantes na triagem
 
-### 1. Trocar "reg." por "registros"
+### Problema
 
-Na linha 209, alterar `{student.entryCount} reg.` para `{student.entryCount} registros`.
+Os dados demo existentes no banco foram criados antes da correcao que adicionou `sleep_quality`. Por isso, todos os registros atuais tem `sleep_quality = NULL`, resultando em "Sono: --" na triagem.
 
-### 2. Adicionar legenda explicativa dos niveis de risco
+O codigo da seed function ja foi corrigido (linha 262), mas os dados antigos nao foram regenerados.
 
-Abaixo dos cards de resumo, adicionar um card informativo (com icone `Info`) que explica cada nivel:
+### Solucao (duas partes)
 
-- **Critico**: Humor medio muito baixo (<=1.5), ansiedade muito alta (>=4.5) ou queda acentuada no humor (>40%)
-- **Alerta**: Humor baixo (<=2.5), ansiedade alta (>=3.5) ou energia muito baixa (<=1.5)
-- **Atencao**: Humor moderadamente baixo (<=3.0), ansiedade moderada (>=3.0) ou qualidade de sono ruim (<=2.0)
-- **Saudavel**: Indicadores dentro da faixa esperada
-- **Sem Dados**: Aluno sem registros nos ultimos 14 dias
+**1. Backfill dos dados existentes (SQL direto)**
 
-Sera um componente colapsavel (comeca fechado) com titulo "Como funciona a classificacao de risco?" para nao poluir a tela.
+Atualizar os registros existentes que tem `sleep_quality = NULL` mas possuem `sleep_hours`, usando uma formula de conversao:
+- `sleep_hours` vai de ~3 a ~9
+- Converter para escala 1-5: `ROUND(LEAST(5, GREATEST(1, (sleep_hours - 3) / 1.5)))`
 
-### 3. Melhorias adicionais de UX/UI e funcionalidade
+Isso sera feito via Run SQL no painel.
 
-**UX/UI:**
+**2. Fallback no hook: `src/hooks/useStudentTriage.tsx`**
 
-- **Tooltips nos indicadores**: Adicionar tooltips nos icones de cada indicador (Humor, Ansiedade, Energia, Sono) para que o usuario saiba o que cada numero significa ao passar o mouse
-- **Labels nos indicadores**: Trocar icones sozinhos por icones + label curto (ex: "Humor: 2.6" em vez de apenas icone + 2.6)
-- **Barra de progresso visual nos cards**: Adicionar uma mini barra de progresso nos cards de resumo mostrando a proporcao de cada risco em relacao ao total
-- **Busca por nome**: Adicionar campo de busca para filtrar alunos por nome
+Alterar o hook para usar `sleep_quality` quando disponivel, mas fazer fallback para uma conversao de `sleep_hours` quando `sleep_quality` for NULL. Isso garante compatibilidade com dados antigos e novos:
 
-**Funcionalidade:**
+- Na query, adicionar `sleep_hours` ao select
+- No calculo de `avgSleep`, usar `sleep_quality ?? convertSleepHours(sleep_hours)` para cada entrada
+- Funcao de conversao: `Math.min(5, Math.max(1, Math.round((hours - 3) / 1.5)))`
 
-- **Exportar relatorio**: Botao para exportar a lista de alunos com seus indicadores e nivel de risco em formato CSV/Excel (ja tem a lib xlsx instalada)
-- **Botao "Triar" tambem para alunos saudaveis**: Permitir triar qualquer aluno, nao apenas os de risco, pois o admin pode querer registrar observacoes preventivas
+**3. Seed function: sem mudanca necessaria**
+
+A seed function ja inclui `sleep_quality` (correcao anterior). Dados novos virao corretos.
 
 ### Resumo de arquivos
 
 | Arquivo | Acao |
 |---|---|
-| `src/components/institution/StudentTriageTab.tsx` | Trocar "reg." por "registros", adicionar legenda de risco, tooltips nos indicadores, busca por nome, botao exportar, permitir triar qualquer aluno |
+| `src/hooks/useStudentTriage.tsx` | Adicionar fallback sleep_hours para sleep_quality no calculo |
+
+Apos aprovar, tambem fornecerei o SQL para backfill dos dados existentes.
 
