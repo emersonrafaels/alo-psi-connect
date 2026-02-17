@@ -74,6 +74,12 @@ const adminMenuGroups = [
         requiredRole: 'admin' as const
       },
       {
+        title: 'Portal Institucional',
+        url: '/admin/portal-institucional',
+        icon: Building2,
+        requiredRole: 'admin' as const
+      },
+      {
         title: 'Importação em Massa',
         url: '/admin/bulk-import',
         icon: FileSpreadsheet,
