@@ -2602,6 +2602,73 @@ export type Database = {
           },
         ]
       }
+      student_triage: {
+        Row: {
+          created_at: string
+          id: string
+          institution_id: string
+          notes: string | null
+          patient_id: string
+          priority: string
+          recommended_action: string | null
+          resolved_at: string | null
+          risk_level: string
+          status: string
+          triaged_by: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          institution_id: string
+          notes?: string | null
+          patient_id: string
+          priority?: string
+          recommended_action?: string | null
+          resolved_at?: string | null
+          risk_level: string
+          status?: string
+          triaged_by: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          institution_id?: string
+          notes?: string | null
+          patient_id?: string
+          priority?: string
+          recommended_action?: string | null
+          resolved_at?: string | null
+          risk_level?: string
+          status?: string
+          triaged_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_triage_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_triage_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_triage_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_configurations: {
         Row: {
           category: string

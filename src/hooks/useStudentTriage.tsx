@@ -1,0 +1,247 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+export type RiskLevel = 'critical' | 'alert' | 'attention' | 'healthy' | 'no_data';
+
+export interface StudentRiskData {
+  patientId: string;
+  studentName: string;
+  riskLevel: RiskLevel;
+  avgMood: number | null;
+  avgAnxiety: number | null;
+  avgEnergy: number | null;
+  avgSleep: number | null;
+  moodTrend: number | null; // percentage change
+  entryCount: number;
+  lastTriageStatus: string | null;
+  lastTriageId: string | null;
+}
+
+export interface TriageRecord {
+  id: string;
+  patient_id: string;
+  institution_id: string;
+  triaged_by: string;
+  status: string;
+  risk_level: string;
+  priority: string;
+  recommended_action: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  resolved_at: string | null;
+}
+
+function calculateRiskLevel(
+  avgMood: number | null,
+  avgAnxiety: number | null,
+  avgEnergy: number | null,
+  avgSleep: number | null,
+  moodTrend: number | null
+): RiskLevel {
+  if (avgMood === null) return 'no_data';
+
+  // Critical
+  if (
+    avgMood <= 1.5 ||
+    (avgAnxiety !== null && avgAnxiety >= 4.5) ||
+    (moodTrend !== null && moodTrend <= -40)
+  ) return 'critical';
+
+  // Alert
+  if (
+    avgMood <= 2.5 ||
+    (avgAnxiety !== null && avgAnxiety >= 3.5) ||
+    (avgEnergy !== null && avgEnergy <= 1.5)
+  ) return 'alert';
+
+  // Attention
+  if (
+    avgMood <= 3.0 ||
+    (avgAnxiety !== null && avgAnxiety >= 3.0) ||
+    (avgSleep !== null && avgSleep <= 2.0)
+  ) return 'attention';
+
+  return 'healthy';
+}
+
+function calculateTrend(entries: any[]): number | null {
+  if (entries.length < 4) return null;
+  const half = Math.floor(entries.length / 2);
+  const firstHalf = entries.slice(0, half);
+  const secondHalf = entries.slice(half);
+  const avgFirst = firstHalf.reduce((s: number, e: any) => s + (e.mood_score || 0), 0) / firstHalf.length;
+  const avgSecond = secondHalf.reduce((s: number, e: any) => s + (e.mood_score || 0), 0) / secondHalf.length;
+  if (avgFirst === 0) return null;
+  return Math.round(((avgSecond - avgFirst) / avgFirst) * 100);
+}
+
+export function useStudentTriageData(institutionId: string | null) {
+  return useQuery({
+    queryKey: ['student-triage-data', institutionId],
+    queryFn: async (): Promise<StudentRiskData[]> => {
+      if (!institutionId) return [];
+
+      // 1. Get students linked to institution
+      const { data: students, error: studentsError } = await supabase
+        .from('patient_institutions')
+        .select('patient_id, pacientes!inner(id, profile_id, profiles!inner(nome, user_id))')
+        .eq('institution_id', institutionId)
+        .eq('enrollment_status', 'enrolled');
+
+      if (studentsError) throw studentsError;
+      if (!students || students.length === 0) return [];
+
+      // 2. Get user_ids for mood_entries lookup
+      const userIds = students.map((s: any) => s.pacientes.profiles.user_id).filter(Boolean);
+
+      // 3. Get mood entries for last 14 days
+      const fourteenDaysAgo = new Date();
+      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+      const dateStr = fourteenDaysAgo.toISOString().split('T')[0];
+
+      const { data: moodEntries } = await supabase
+        .from('mood_entries')
+        .select('user_id, mood_score, anxiety_level, energy_level, sleep_quality, date')
+        .in('user_id', userIds)
+        .gte('date', dateStr)
+        .order('date', { ascending: true });
+
+      // 4. Get latest triage records
+      const patientIds = students.map((s: any) => s.patient_id);
+      const { data: triageRecords } = await supabase
+        .from('student_triage' as any)
+        .select('*')
+        .eq('institution_id', institutionId)
+        .in('patient_id', patientIds)
+        .order('created_at', { ascending: false });
+
+      // Group mood entries by user_id
+      const moodByUser = new Map<string, any[]>();
+      (moodEntries || []).forEach((e: any) => {
+        const arr = moodByUser.get(e.user_id) || [];
+        arr.push(e);
+        moodByUser.set(e.user_id, arr);
+      });
+
+      // Latest triage per patient
+      const triageByPatient = new Map<string, any>();
+      (triageRecords || []).forEach((t: any) => {
+        if (!triageByPatient.has(t.patient_id)) {
+          triageByPatient.set(t.patient_id, t);
+        }
+      });
+
+      // 5. Calculate risk for each student
+      return students.map((s: any) => {
+        const userId = s.pacientes.profiles.user_id;
+        const entries = moodByUser.get(userId) || [];
+        const latestTriage = triageByPatient.get(s.patient_id);
+
+        const avgMood = entries.length > 0
+          ? entries.reduce((sum: number, e: any) => sum + (e.mood_score || 0), 0) / entries.length
+          : null;
+        const anxietyEntries = entries.filter((e: any) => e.anxiety_level != null);
+        const avgAnxiety = anxietyEntries.length > 0
+          ? anxietyEntries.reduce((sum: number, e: any) => sum + e.anxiety_level, 0) / anxietyEntries.length
+          : null;
+        const energyEntries = entries.filter((e: any) => e.energy_level != null);
+        const avgEnergy = energyEntries.length > 0
+          ? energyEntries.reduce((sum: number, e: any) => sum + e.energy_level, 0) / energyEntries.length
+          : null;
+        const sleepEntries = entries.filter((e: any) => e.sleep_quality != null);
+        const avgSleep = sleepEntries.length > 0
+          ? sleepEntries.reduce((sum: number, e: any) => sum + e.sleep_quality, 0) / sleepEntries.length
+          : null;
+
+        const moodTrend = calculateTrend(entries.filter((e: any) => e.mood_score != null));
+
+        return {
+          patientId: s.patient_id,
+          studentName: s.pacientes.profiles.nome || 'Sem nome',
+          riskLevel: calculateRiskLevel(avgMood, avgAnxiety, avgEnergy, avgSleep, moodTrend),
+          avgMood: avgMood !== null ? Math.round(avgMood * 10) / 10 : null,
+          avgAnxiety: avgAnxiety !== null ? Math.round(avgAnxiety * 10) / 10 : null,
+          avgEnergy: avgEnergy !== null ? Math.round(avgEnergy * 10) / 10 : null,
+          avgSleep: avgSleep !== null ? Math.round(avgSleep * 10) / 10 : null,
+          moodTrend,
+          entryCount: entries.length,
+          lastTriageStatus: latestTriage?.status || null,
+          lastTriageId: latestTriage?.id || null,
+        };
+      });
+    },
+    enabled: !!institutionId,
+  });
+}
+
+export function useTriageRecords(institutionId: string | null) {
+  return useQuery({
+    queryKey: ['triage-records', institutionId],
+    queryFn: async () => {
+      if (!institutionId) return [];
+      const { data, error } = await supabase
+        .from('student_triage' as any)
+        .select('*')
+        .eq('institution_id', institutionId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as TriageRecord[];
+    },
+    enabled: !!institutionId,
+  });
+}
+
+export function useTriageActions(institutionId: string | null) {
+  const queryClient = useQueryClient();
+
+  const createTriage = useMutation({
+    mutationFn: async (params: {
+      patientId: string;
+      riskLevel: string;
+      priority: string;
+      recommendedAction: string;
+      notes: string;
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !institutionId) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('student_triage' as any)
+        .insert({
+          patient_id: params.patientId,
+          institution_id: institutionId,
+          triaged_by: user.id,
+          status: 'triaged',
+          risk_level: params.riskLevel,
+          priority: params.priority,
+          recommended_action: params.recommendedAction,
+          notes: params.notes,
+        } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['student-triage-data', institutionId] });
+      queryClient.invalidateQueries({ queryKey: ['triage-records', institutionId] });
+    },
+  });
+
+  const updateTriageStatus = useMutation({
+    mutationFn: async (params: { triageId: string; status: string; resolvedAt?: string }) => {
+      const updateData: any = { status: params.status };
+      if (params.resolvedAt) updateData.resolved_at = params.resolvedAt;
+
+      const { error } = await supabase
+        .from('student_triage' as any)
+        .update(updateData)
+        .eq('id', params.triageId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['student-triage-data', institutionId] });
+      queryClient.invalidateQueries({ queryKey: ['triage-records', institutionId] });
+    },
+  });
+
+  return { createTriage, updateTriageStatus };
+}
