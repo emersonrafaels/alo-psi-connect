@@ -1,55 +1,72 @@
 
-
-## Editar Encontros Criados pelo Facilitador
+## Contagem Regressiva e Link Clicavel na Pagina de Detalhe
 
 ### Objetivo
 
-Permitir que o criador de um encontro edite suas informacoes (titulo, descricao, data, horario, links, capacidade) diretamente na aba "Meus Encontros Criados".
+Quando faltar poucas horas para o evento, exibir uma contagem regressiva em tempo real (hh:mm:ss) na pagina de detalhes. Alem disso, o link da reuniao (meeting_link) so se torna clicavel 1 hora antes do inicio do evento.
 
-### Mudanca no Banco de Dados
+### Mudancas
 
-**Nova politica RLS** para permitir que criadores editem encontros com status `pending_approval` ou `scheduled`:
+**1. Novo componente: `src/components/group-sessions/LiveCountdown.tsx`**
 
-```sql
-CREATE POLICY "Creators can update own editable sessions"
-  ON group_sessions FOR UPDATE
-  USING (
-    auth.uid() = created_by 
-    AND status IN ('pending_approval', 'scheduled')
-  );
-```
+Componente que recebe `sessionDate` e `startTime` e exibe:
+- Uma contagem regressiva em tempo real (atualizada a cada segundo via `setInterval`) quando faltam menos de 24h
+- Formato: "Comeca em 02:34:15" com icone de relogio
+- Estilizado com cores de urgencia (vermelho pulsante quando < 1h, amarelo quando < 6h, etc.)
+- Quando o horario chega, exibe "Acontecendo agora!" com animacao
+- Retorna `null` se faltar mais de 24h (o `SessionCountdown` existente ja cobre esses casos com badges como "Em 3 dias")
 
-Observacao: ja existe uma politica para facilitadores atualizarem sessoes `pending_approval`, mas ela exige a role `facilitator`. A nova politica cobre qualquer criador e tambem inclui sessoes `scheduled`. A politica antiga pode ser mantida sem conflito (RLS e permissivo com OR entre politicas).
+**2. Novo componente: `src/components/group-sessions/MeetingLinkButton.tsx`**
 
-### Arquivos a Modificar
+Componente que recebe `meetingLink`, `sessionDate`, `startTime` e `isRegistered`:
+- Calcula se falta menos de 1 hora para o evento
+- Se sim e usuario esta inscrito: renderiza botao clicavel "Entrar na Reuniao" com icone de Video e link aberto em nova aba
+- Se nao: renderiza botao desabilitado com tooltip/texto explicativo "Disponivel 1h antes do evento"
+- Atualiza a cada minuto para verificar se ja pode liberar
 
-**1. `src/components/group-sessions/facilitator/FacilitatorSessionForm.tsx`**
+**3. Modificar: `src/pages/GroupSessionDetail.tsx`**
 
-Adicionar suporte a valores iniciais para modo de edicao:
-- Novo prop opcional `initialData` com os dados existentes da sessao
-- Usar `defaultValues` do `useForm` preenchidos com `initialData` quando fornecido
-- Alterar texto do botao de submit: "Salvar Alteracoes" quando em modo edicao, "Enviar para Aprovacao" quando criando
+- Importar `LiveCountdown` e `MeetingLinkButton`
+- Adicionar `LiveCountdown` abaixo do `SessionCountdown` no topo, ou dentro do card de data/horario
+- Substituir a exibicao estatica "Online (Google Meet)" pelo `MeetingLinkButton` que controla se o link e clicavel ou nao
+- Manter o `SessionCountdown` (badge) para informacoes de dias, e o `LiveCountdown` para contagem em tempo real nas ultimas horas
 
-**2. `src/components/group-sessions/MyCreatedSessionsTab.tsx`**
+**4. Modificar: `src/components/group-sessions/SessionCountdown.tsx`**
 
-Adicionar funcionalidade de edicao:
-- Importar `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle` e icone `Pencil`
-- Adicionar state `editingSession` para controlar qual sessao esta sendo editada
-- Adicionar mutation `updateMutation` que faz `supabase.from('group_sessions').update(...)` com o id da sessao
-- Adicionar botao "Editar" (icone Pencil) ao lado do botao "Excluir" para sessoes com status `pending_approval` ou `scheduled`
-- Renderizar o `Dialog` com `FacilitatorSessionForm` passando `initialData` da sessao selecionada
-- Ao salvar, invalidar query `facilitator-sessions`
-
-### Fluxo do Usuario
-
-1. Na aba "Meus Encontros Criados", sessoes com status "Aguardando Aprovacao" ou "Aprovado" mostram botao "Editar"
-2. Ao clicar, abre um dialog com o formulario preenchido com os dados atuais
-3. O usuario edita os campos desejados e clica "Salvar Alteracoes"
-4. Os dados sao atualizados no banco e a lista e atualizada automaticamente
+- Quando `hoursUntil <= 24`, nao renderizar badge (para evitar duplicidade com o `LiveCountdown`)
+- Manter comportamento atual para "Amanha", "Em X dias"
 
 ### Detalhes tecnicos
 
-Campos editaveis: `title`, `description`, `session_type`, `session_date`, `start_time`, `duration_minutes`, `max_participants`, `meeting_link`, `whatsapp_group_link`
+Logica do LiveCountdown:
+```text
+const [timeLeft, setTimeLeft] = useState({ hours, minutes, seconds })
 
-O formulario ja possui todos esses campos -- a unica mudanca e aceitar `initialData` e ajustar o texto do botao.
+useEffect(() => {
+  const interval = setInterval(() => {
+    const diff = sessionDateTime - Date.now()
+    if (diff <= 0) { setIsLive(true); return }
+    setTimeLeft({
+      hours: Math.floor(diff / 3600000),
+      minutes: Math.floor((diff % 3600000) / 60000),
+      seconds: Math.floor((diff % 60000) / 1000)
+    })
+  }, 1000)
+  return () => clearInterval(interval)
+}, [])
+```
 
+Logica do MeetingLinkButton:
+```text
+const isUnlocked = differenceInMinutes(sessionDateTime, now) <= 60
+// Atualiza a cada 30s para detectar quando libera
+```
+
+### Resumo de arquivos
+
+| Arquivo | Acao |
+|---------|------|
+| `src/components/group-sessions/LiveCountdown.tsx` | Criar - contagem regressiva em tempo real |
+| `src/components/group-sessions/MeetingLinkButton.tsx` | Criar - botao de link condicional |
+| `src/pages/GroupSessionDetail.tsx` | Modificar - integrar ambos componentes |
+| `src/components/group-sessions/SessionCountdown.tsx` | Modificar - evitar duplicidade quando < 24h |
