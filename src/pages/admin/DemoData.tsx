@@ -366,7 +366,7 @@ const DemoData = () => {
                               min={1}
                               max={20}
                               value={addDataProfCount}
-                              onChange={(e) => setAddDataProfCount(Number(e.target.value))}
+                              onChange={(e) => setAddDataProfCount(Math.max(1, Number(e.target.value) || 5))}
                               className="h-8"
                             />
                           </div>
@@ -377,7 +377,7 @@ const DemoData = () => {
                               min={1}
                               max={50}
                               value={addDataStudentCount}
-                              onChange={(e) => setAddDataStudentCount(Number(e.target.value))}
+                              onChange={(e) => setAddDataStudentCount(Math.max(1, Number(e.target.value) || 10))}
                               className="h-8"
                             />
                           </div>
@@ -388,7 +388,7 @@ const DemoData = () => {
                               min={5}
                               max={30}
                               value={addDataMoodCount}
-                              onChange={(e) => setAddDataMoodCount(Number(e.target.value))}
+                              onChange={(e) => setAddDataMoodCount(Math.max(1, Number(e.target.value) || 12))}
                               className="h-8"
                             />
                           </div>
