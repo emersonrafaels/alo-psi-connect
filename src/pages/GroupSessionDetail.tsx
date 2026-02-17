@@ -16,6 +16,8 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SessionTypeIcon, getSessionTypeLabel } from '@/components/group-sessions/SessionTypeIcon';
 import { SessionCountdown } from '@/components/group-sessions/SessionCountdown';
+import { LiveCountdown } from '@/components/group-sessions/LiveCountdown';
+import { MeetingLinkButton } from '@/components/group-sessions/MeetingLinkButton';
 import { VacancyProgressBar } from '@/components/group-sessions/VacancyProgressBar';
 import { ShareSessionButton } from '@/components/group-sessions/ShareSessionButton';
 import { AddToCalendarButton } from '@/components/group-sessions/AddToCalendarButton';
@@ -148,8 +150,10 @@ const GroupSessionDetail = () => {
                   {session.has_libras && (
                     <Badge variant="outline" className="gap-1">♿ LIBRAS</Badge>
                   )}
-                  <SessionCountdown sessionDate={session.session_date} startTime={session.start_time} />
+                <SessionCountdown sessionDate={session.session_date} startTime={session.start_time} />
                 </div>
+
+                <LiveCountdown sessionDate={session.session_date} startTime={session.start_time} />
 
                 <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
                   {session.title}
@@ -178,10 +182,12 @@ const GroupSessionDetail = () => {
                       </div>
                     </div>
                     {session.meeting_link && (
-                      <div className="flex items-center gap-3">
-                        <Video className="w-5 h-5 text-primary" />
-                        <p className="font-semibold">Online (Google Meet)</p>
-                      </div>
+                      <MeetingLinkButton
+                        meetingLink={session.meeting_link}
+                        sessionDate={session.session_date}
+                        startTime={session.start_time}
+                        isRegistered={isRegistered}
+                      />
                     )}
                   </div>
                 </CardContent>
