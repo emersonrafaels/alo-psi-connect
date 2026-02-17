@@ -1,50 +1,58 @@
 
 
-## Adicionar dados de sono para alunos existentes
+## Notas Institucionais no Portal Admin
 
-### Problema
+### Objetivo
+Permitir que administradores adicionem notas/anotacoes vinculadas a uma instituicao, como datas de semana de provas, eventos importantes, avisos, etc.
 
-450 registros de mood_entries possuem `sleep_hours` mas `sleep_quality = NULL`. O hook de triagem so busca `sleep_quality` e nao faz fallback para `sleep_hours`.
+### 1. Nova tabela no banco: `institution_notes`
 
-### Solucao (duas partes)
+Criar tabela com as colunas:
+- `id` (uuid, PK)
+- `institution_id` (uuid, FK para educational_institutions)
+- `title` (text) - titulo curto da nota (ex: "Semana de Provas")
+- `content` (text) - descricao detalhada
+- `note_type` (text) - tipo: "event", "info", "alert", "reminder"
+- `start_date` (date, nullable) - data de inicio (para eventos com periodo)
+- `end_date` (date, nullable) - data de fim
+- `is_pinned` (boolean, default false) - fixar nota no topo
+- `created_by` (uuid, FK para auth.users)
+- `created_at`, `updated_at` (timestamps)
 
-**1. Backfill no banco de dados**
+RLS: apenas admins podem CRUD (usando `is_admin(auth.uid())`).
 
-Executar UPDATE para preencher `sleep_quality` nos registros existentes, convertendo `sleep_hours` (escala 3-9) para escala 1-5:
+### 2. Nova aba "Notas" no portal
 
-```sql
-UPDATE mood_entries
-SET sleep_quality = ROUND(LEAST(5, GREATEST(1, (sleep_hours - 3) / 1.5 + 1)))::integer
-WHERE sleep_quality IS NULL AND sleep_hours IS NOT NULL;
-```
+Adicionar uma 6a aba no `AdminInstitutionPortal.tsx` com icone `StickyNote`:
 
-Isso vai corrigir os 450 registros de uma vez.
+- Lista de notas ordenada por pinned primeiro, depois por data
+- Cada nota mostra: titulo, tipo (badge colorido), datas (se houver), conteudo, quem criou e quando
+- Botao "Nova Nota" abre dialog para criar
+- Acoes por nota: editar, fixar/desafixar, excluir
+- Notas com datas futuras/atuais destacadas visualmente
 
-**2. Fallback no hook: `src/hooks/useStudentTriage.tsx`**
+### 3. Novo componente: `InstitutionNotesTab.tsx`
 
-Adicionar `sleep_hours` ao select da query e implementar fallback no calculo de `avgSleep`:
+Componente dedicado que recebe `institutionId` e implementa:
+- Listagem com cards para cada nota
+- Badges por tipo: Evento (azul), Info (cinza), Alerta (laranja), Lembrete (amarelo)
+- Datas formatadas com date-fns
+- Dialog para criar/editar nota com campos: titulo, tipo, datas (opcionais), conteudo
+- Confirmacao para excluir
 
-- Alterar linha 105: adicionar `sleep_hours` ao select
-- No calculo do sono (linhas ~145-148), usar `sleep_quality` quando disponivel, senao converter `sleep_hours` para escala 1-5
+### 4. Hook: `useInstitutionNotes.tsx`
 
-```typescript
-// Na query (linha 105):
-.select('profile_id, mood_score, anxiety_level, energy_level, sleep_quality, sleep_hours, date')
+Hook com react-query para:
+- `useQuery` para listar notas da instituicao
+- `useMutation` para criar, atualizar e excluir notas
 
-// No calculo (onde filtra sleepEntries):
-const sleepEntries = entries.filter((e: any) => e.sleep_quality != null || e.sleep_hours != null);
-const avgSleep = sleepEntries.length > 0
-  ? sleepEntries.reduce((sum: number, e: any) => {
-      const val = e.sleep_quality ?? Math.min(5, Math.max(1, Math.round((e.sleep_hours - 3) / 1.5 + 1)));
-      return sum + val;
-    }, 0) / sleepEntries.length
-  : null;
-```
+### Resumo de arquivos
 
-### Resumo
-
-| Item | Acao |
+| Arquivo | Acao |
 |---|---|
-| Banco de dados | UPDATE para preencher sleep_quality em 450 registros |
-| `src/hooks/useStudentTriage.tsx` | Adicionar sleep_hours ao select e fallback no calculo |
+| Migration SQL | Criar tabela `institution_notes` com RLS |
+| `src/hooks/useInstitutionNotes.tsx` | Novo hook para CRUD de notas |
+| `src/components/admin/InstitutionNotesTab.tsx` | Novo componente da aba de notas |
+| `src/pages/admin/AdminInstitutionPortal.tsx` | Adicionar aba "Notas" com icone StickyNote |
+| `src/integrations/supabase/types.ts` | Atualizado automaticamente pela migration |
 
