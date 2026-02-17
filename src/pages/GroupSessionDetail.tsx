@@ -189,7 +189,7 @@ const GroupSessionDetail = () => {
                         <p className="text-sm text-muted-foreground">{session.duration_minutes || 60} minutos</p>
                       </div>
                     </div>
-                    {session.meeting_link && (
+                    {!isPast && session.meeting_link && (
                       <MeetingLinkButton
                         meetingLink={session.meeting_link}
                         sessionDate={session.session_date}
