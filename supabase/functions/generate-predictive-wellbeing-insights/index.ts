@@ -21,7 +21,7 @@ serve(async (req) => {
   }
 
   try {
-    const { institutionId, dailyEntries, metrics } = await req.json();
+    const { institutionId, dailyEntries, metrics, institutionalNotes } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -110,6 +110,17 @@ Priorize insights que permitam ação preventiva.
 Mantenha descrições entre 50-100 palavras. Seja direto e objetivo.
 Use linguagem empática e construtiva, focando em soluções.`;
 
+    // Build institutional context section
+    const notesContext = institutionalNotes && institutionalNotes.length > 0
+      ? `\n\nCONTEXTO INSTITUCIONAL (Notas registradas pela instituição):
+${institutionalNotes.map((n: any) => {
+  const dateRange = n.start_date && n.end_date ? ` (${n.start_date} a ${n.end_date})` : n.start_date ? ` (a partir de ${n.start_date})` : '';
+  return `- [${n.note_type?.toUpperCase() || 'NOTA'}] ${n.title}${dateRange}${n.content ? ': ' + n.content : ''}`;
+}).join('\n')}
+
+IMPORTANTE: Considere estas notas institucionais ao analisar os dados. Eventos como semanas de provas, feriados ou situações especiais registradas pela instituição devem ser correlacionados com as variações nos indicadores de bem-estar.`
+      : '';
+
     const userPrompt = `Analise estes dados de bem-estar estudantil e gere insights preditivos:
 
 RESUMO GERAL:
@@ -124,6 +135,7 @@ RESUMO GERAL:
 
 DADOS DOS ÚLTIMOS 14 DIAS:
 ${JSON.stringify(dataSummary.recentDays, null, 2)}
+${notesContext}
 
 Gere 3-5 insights preditivos relevantes usando a função generate_predictions.
 IMPORTANTE: Use APENAS português brasileiro, sem termos em inglês.`;

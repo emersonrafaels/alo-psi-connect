@@ -28,7 +28,7 @@ import {
   Lightbulb,
   Activity,
 } from 'lucide-react';
-import { useInstitutionWellbeing } from '@/hooks/useInstitutionWellbeing';
+import { useInstitutionWellbeing, type ActiveInstitutionNote } from '@/hooks/useInstitutionWellbeing';
 import { usePredictiveInsights } from '@/hooks/usePredictiveInsights';
 import { LGPDNotice } from './LGPDNotice';
 import { WellbeingTimelineCharts } from './WellbeingTimelineCharts';
@@ -45,6 +45,8 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
   const [insightsOpen, setInsightsOpen] = useState(true);
   const { data: metrics, isLoading } = useInstitutionWellbeing(institutionId, periodDays);
   
+  const activeNotes = metrics?.activeNotes || [];
+
   const {
     predictions,
     forecast,
@@ -52,7 +54,12 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
     isGenerating,
     hasSufficientData,
     generatePredictions,
-  } = usePredictiveInsights(institutionId, metrics?.daily_entries || [], metrics);
+  } = usePredictiveInsights(
+    institutionId,
+    metrics?.daily_entries || [],
+    metrics,
+    activeNotes.map(n => ({ title: n.title, content: n.content, note_type: n.note_type, start_date: n.start_date, end_date: n.end_date }))
+  );
 
   if (isLoading) {
     return (
@@ -206,6 +213,31 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
 
       {/* LGPD Notice - Colapsável */}
       <LGPDNotice />
+
+      {/* Contexto Institucional - Notas Ativas */}
+      {activeNotes.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {activeNotes.map(note => {
+            const typeConfig: Record<string, { icon: string; bg: string; border: string }> = {
+              event: { icon: '📅', bg: 'bg-blue-50 dark:bg-blue-950/20', border: 'border-blue-200 dark:border-blue-800' },
+              alert: { icon: '🚨', bg: 'bg-red-50 dark:bg-red-950/20', border: 'border-red-200 dark:border-red-800' },
+              reminder: { icon: '🔔', bg: 'bg-amber-50 dark:bg-amber-950/20', border: 'border-amber-200 dark:border-amber-800' },
+              info: { icon: 'ℹ️', bg: 'bg-sky-50 dark:bg-sky-950/20', border: 'border-sky-200 dark:border-sky-800' },
+            };
+            const config = typeConfig[note.note_type] || typeConfig.info;
+            const dateRange = note.start_date && note.end_date
+              ? `${new Date(note.start_date + 'T12:00:00').toLocaleDateString('pt-BR')} - ${new Date(note.end_date + 'T12:00:00').toLocaleDateString('pt-BR')}`
+              : '';
+            return (
+              <div key={note.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${config.bg} ${config.border}`}>
+                <span>{config.icon}</span>
+                <span className="font-medium">{note.title}</span>
+                {dateRange && <span className="text-muted-foreground text-xs">({dateRange})</span>}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Seção: Visão Geral */}
       <Card>

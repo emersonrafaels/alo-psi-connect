@@ -17,6 +17,16 @@ interface WellbeingInsight {
   description: string;
 }
 
+export interface ActiveInstitutionNote {
+  id: string;
+  title: string;
+  content: string | null;
+  note_type: string;
+  start_date: string | null;
+  end_date: string | null;
+  is_pinned: boolean;
+}
+
 interface WellbeingMetrics {
   avg_mood_score: number | null;
   avg_anxiety_level: number | null;
@@ -40,6 +50,7 @@ interface WellbeingMetrics {
     newest: string;
   };
   totalStudentsLinked: number;
+  activeNotes: ActiveInstitutionNote[];
 }
 
 export const useInstitutionWellbeing = (institutionId: string | undefined, days: number = 30) => {
@@ -92,10 +103,30 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
           insights: [],
           hasDataInPeriod: false,
           totalStudentsLinked: 0,
+          activeNotes: [],
         };
       }
 
       const profileIds = students.map(s => s.pacientes.profile_id);
+
+      // Buscar notas da instituição que se sobrepõem ao período
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+
+      const { data: notesData } = await supabase
+        .from('institution_notes')
+        .select('id, title, content, note_type, start_date, end_date, is_pinned')
+        .eq('institution_id', institutionId)
+        .or(`start_date.is.null,start_date.lte.${endDateStr}`)
+        .or(`end_date.is.null,end_date.gte.${startDateStr}`);
+
+      const activeNotes: ActiveInstitutionNote[] = (notesData || []).filter(n => {
+        if (!n.start_date && !n.end_date) return true;
+        if (n.start_date && n.end_date) return n.start_date <= endDateStr && n.end_date >= startDateStr;
+        if (n.start_date) return n.start_date <= endDateStr;
+        if (n.end_date) return n.end_date >= startDateStr;
+        return true;
+      });
 
       // Buscar mood entries com data do período atual
       const { data: entriesWithDate } = await supabase
@@ -335,6 +366,25 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         }
       }
 
+      // Insights contextuais baseados nas notas ativas
+      const noteTypeLabels: Record<string, string> = { event: 'Evento', alert: 'Alerta', reminder: 'Lembrete', info: 'Informação' };
+      const noteTypeIcons: Record<string, string> = { event: '📅', alert: '🚨', reminder: '🔔', info: 'ℹ️' };
+
+      activeNotes.forEach(note => {
+        const label = noteTypeLabels[note.note_type] || 'Nota';
+        const icon = noteTypeIcons[note.note_type] || '📌';
+        const dateRange = note.start_date && note.end_date
+          ? ` (${new Date(note.start_date + 'T12:00:00').toLocaleDateString('pt-BR')} - ${new Date(note.end_date + 'T12:00:00').toLocaleDateString('pt-BR')})`
+          : '';
+        
+        insights.push({
+          type: note.note_type === 'alert' ? 'warning' : 'info',
+          icon,
+          title: `${label}: ${note.title}`,
+          description: `${note.content || note.title}${dateRange} — Considere este contexto ao analisar os indicadores.`,
+        });
+      });
+
       return {
         avg_mood_score: avgMood ? Number(avgMood.toFixed(1)) : null,
         avg_anxiety_level: avgAnxiety ? Number(avgAnxiety.toFixed(1)) : null,
@@ -354,6 +404,7 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         hasDataInPeriod: totalEntries > 0,
         availableDataRange,
         totalStudentsLinked,
+        activeNotes,
       };
     },
     enabled: !!institutionId,

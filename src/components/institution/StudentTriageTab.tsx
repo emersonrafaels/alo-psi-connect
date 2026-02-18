@@ -4,12 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar } from 'lucide-react';
 import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
+import { useInstitutionNotes } from '@/hooks/useInstitutionNotes';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -60,6 +62,7 @@ function TrendIcon({ trend }: { trend: number | null }) {
 
 export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const { data: students = [], isLoading } = useStudentTriageData(institutionId);
+  const { notes: institutionNotes } = useInstitutionNotes(institutionId);
   const { data: triageRecords = [] } = useTriageRecords(institutionId);
   const { createTriage, updateTriageStatus } = useTriageActions(institutionId);
 
@@ -186,6 +189,29 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             );
           })}
         </div>
+
+        {/* Contexto Institucional */}
+        {(() => {
+          const today = new Date().toISOString().split('T')[0];
+          const activeTriageNotes = institutionNotes.filter(n => {
+            if (!n.start_date && !n.end_date) return n.is_pinned;
+            if (n.start_date && n.end_date) return n.start_date <= today && n.end_date >= today;
+            if (n.start_date) return n.start_date <= today;
+            if (n.end_date) return n.end_date >= today;
+            return false;
+          });
+          if (activeTriageNotes.length === 0) return null;
+          return (
+            <Alert className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800">
+              <Calendar className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-sm">
+                <span className="font-medium">Contexto institucional:</span>{' '}
+                {activeTriageNotes.map(n => n.title).join(', ')}
+                {' — '}Considere estes eventos ao avaliar os alunos.
+              </AlertDescription>
+            </Alert>
+          );
+        })()}
 
         {/* Risk legend */}
         <Collapsible open={legendOpen} onOpenChange={setLegendOpen}>
