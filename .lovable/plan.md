@@ -1,31 +1,69 @@
 
-## Corrigir Modal que Nao Mostra Conteudo
 
-### Problema
-A mudanca anterior adicionou `h-0 min-h-0` ao `ScrollArea`, o que colapsou sua altura para zero. O conteudo (Diario Emocional / Historico de Triagens) nao aparece porque o `ScrollArea` tem altura zero e o `flex-1` nao consegue expandi-lo corretamente nesse contexto.
+## Indicador de Media da Turma nas Barras de Metrica
 
-### Correcao
+### O que sera feito
 
-**Arquivo: `src/components/institution/StudentActivityModal.tsx`**
+Adicionar um marcador elegante (seta/triangulo) nas barras de metrica de cada aluno, mostrando onde esta a media geral da turma. Isso permite ao educador comparar rapidamente se o aluno esta acima ou abaixo da media.
 
-Substituir o `ScrollArea` (que tem problemas com altura flexivel) por um `div` com `overflow-y-auto` e altura maxima calculada:
+### Mudancas
 
-- **Linha 256**: Trocar:
-  ```
-  <ScrollArea className="flex-1 mt-3 h-0 min-h-0" style={{ maxHeight: 'calc(85vh - 180px)' }}>
-  ```
-  Por:
-  ```
-  <div className="mt-3 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 180px)' }}>
-  ```
+**Arquivo: `src/components/institution/StudentTriageTab.tsx`**
 
-- **Linha 269**: Trocar o fechamento correspondente:
-  ```
-  </ScrollArea>
-  ```
-  Por:
-  ```
-  </div>
-  ```
+1. **Calcular as medias gerais da turma** com um `useMemo` que agrega os valores de todos os alunos com dados:
 
-Isso remove a dependencia do `ScrollArea` do Radix (que requer altura fixa explicita) e usa scroll nativo do navegador, que funciona com `max-height` sem problemas.
+```text
+const classAverages = useMemo(() => ({
+  mood: media de todos student.avgMood,
+  anxiety: media de todos student.avgAnxiety,
+  energy: media de todos student.avgEnergy,
+  sleep: media de todos student.avgSleep,
+}), [students]);
+```
+
+2. **Evoluir o componente `MetricBar`** para aceitar uma prop opcional `classAvg`:
+
+```text
+function MetricBar({ value, invert, classAvg }) {
+  // Barra atual do aluno (sem mudancas)
+  // + marcador da media da turma:
+  //   Um pequeno triangulo (seta para baixo) posicionado
+  //   horizontalmente na posicao da media
+  //   com tooltip "Media da turma: X.X"
+}
+```
+
+O marcador sera um triangulo SVG inline posicionado com `left: X%` via CSS absolute, apontando para baixo sobre a barra. Cor neutra (cinza/slate) para nao competir com a cor da barra do aluno.
+
+3. **Passar `classAvg` em todas as chamadas de `MetricBar`** na listagem de alunos:
+
+```text
+<MetricBar value={student.avgMood} classAvg={classAverages.mood} />
+<MetricBar value={student.avgAnxiety} invert classAvg={classAverages.anxiety} />
+<MetricBar value={student.avgEnergy} classAvg={classAverages.energy} />
+<MetricBar value={student.avgSleep} classAvg={classAverages.sleep} />
+```
+
+4. **Adicionar legenda sutil** abaixo dos cards de resumo ou no cabecalho "Indicadores (14 dias)", ex: um pequeno texto "▼ = media da turma" para que o usuario entenda o marcador.
+
+### Visual do marcador
+
+```text
+         ▼  (triangulo cinza, 6px)
+  ████████░░░░░░░░░░░  (barra do aluno)
+  |------- 2.3 -------|  (escala 1-5)
+```
+
+- Triangulo apontando para baixo, posicionado no topo da barra
+- Cor: `text-slate-400 dark:text-slate-500` (discreto)
+- Tooltip ao passar o mouse: "Media da turma: 3.2"
+- Transicao suave na posicao
+
+### Detalhes tecnicos
+
+| Arquivo | Mudanca |
+|---|---|
+| `src/components/institution/StudentTriageTab.tsx` | (1) Adicionar `useMemo` para calcular medias da turma. (2) Evoluir `MetricBar` com prop `classAvg` e marcador SVG triangulo. (3) Passar `classAvg` nas 4 chamadas de MetricBar. (4) Legenda sutil. |
+
+Nenhum arquivo novo. Nenhuma mudanca no banco de dados.
+
