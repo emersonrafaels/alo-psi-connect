@@ -62,11 +62,13 @@ interface CachedData {
   version: number;
 }
 
-const generateDataHash = (entries: DailyEntry[]): string => {
+const generateDataHash = (entries: DailyEntry[], notes: InstitutionalNote[] = []): string => {
   if (!entries?.length) return 'empty';
   const src = entries.map(e => `${e.date}:${e.avg_mood}:${e.avg_anxiety}:${e.avg_sleep}:${e.avg_energy}:${e.entries_count}`).join('|');
+  const notesSrc = notes.map(n => `${n.title}:${n.note_type}:${n.start_date}:${n.end_date}`).join('|');
+  const combined = src + '||' + notesSrc;
   let hash = 0;
-  for (let i = 0; i < src.length; i++) { hash = ((hash << 5) - hash) + src.charCodeAt(i); hash = hash & hash; }
+  for (let i = 0; i < combined.length; i++) { hash = ((hash << 5) - hash) + combined.charCodeAt(i); hash = hash & hash; }
   return hash.toString(36);
 };
 
@@ -75,7 +77,15 @@ const countNewEntriesSince = (entries: DailyEntry[], sinceDate: string): number 
   return entries.filter(e => new Date(e.date) > since).reduce((sum, e) => sum + e.entries_count, 0);
 };
 
-export const usePredictiveInsights = (institutionId: string | null, dailyEntries: DailyEntry[], metrics: WellbeingMetrics | null) => {
+interface InstitutionalNote {
+  title: string;
+  content: string | null;
+  note_type: string;
+  start_date: string | null;
+  end_date: string | null;
+}
+
+export const usePredictiveInsights = (institutionId: string | null, dailyEntries: DailyEntry[], metrics: WellbeingMetrics | null, institutionalNotes: InstitutionalNote[] = []) => {
   const queryClient = useQueryClient();
   const cacheKey = `${CACHE_KEY}-${institutionId}`;
 
@@ -93,7 +103,7 @@ export const usePredictiveInsights = (institutionId: string | null, dailyEntries
     try { localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now(), dataHash, version: CACHE_VERSION })); } catch {}
   }, [cacheKey]);
 
-  const currentDataHash = useMemo(() => generateDataHash(dailyEntries), [dailyEntries]);
+  const currentDataHash = useMemo(() => generateDataHash(dailyEntries, institutionalNotes), [dailyEntries, institutionalNotes]);
   const hasSufficientData = useMemo(() => dailyEntries.length >= 7 && metrics !== null, [dailyEntries, metrics]);
 
   const { data: cachedResult } = useQuery({
@@ -130,7 +140,7 @@ export const usePredictiveInsights = (institutionId: string | null, dailyEntries
   const generateMutation = useMutation({
     mutationFn: async () => {
       if (!institutionId || !hasSufficientData) throw new Error('Dados insuficientes');
-      const { data, error } = await supabase.functions.invoke('generate-predictive-wellbeing-insights', { body: { institutionId, dailyEntries, metrics } });
+      const { data, error } = await supabase.functions.invoke('generate-predictive-wellbeing-insights', { body: { institutionId, dailyEntries, metrics, institutionalNotes } });
       if (error) throw error;
       return data as PredictiveResponse;
     },
