@@ -616,25 +616,27 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             return (
               <MetricTooltip key={level} title={tooltip.title} description={tooltip.description}>
                 <Card
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${config.cardBg} ${isSelected ? 'ring-2 ring-primary shadow-md scale-[1.02]' : ''} relative group/card`}
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${config.cardBg} ${isSelected ? 'ring-2 ring-primary shadow-md scale-[1.02]' : ''}`}
                   onClick={() => setRiskFilter(isSelected ? 'all' : level)}>
 
-                  <button
-                    type="button"
-                    className="absolute top-2 right-2 p-1 rounded-md opacity-0 group-hover/card:opacity-60 hover:!opacity-100 transition-opacity z-10 bg-background/50"
-                    onClick={(e) => { e.stopPropagation(); setRiskDetailLevel(level); }}
-                    title="Ver detalhes"
-                  >
-                    <Maximize2 className="h-3.5 w-3.5" />
-                  </button>
                   <CardContent className="p-4 space-y-3">
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-center justify-between">
                       <div className={`p-2.5 rounded-xl ${config.color}`}>
                         <Icon className="h-5 w-5" />
                       </div>
-                      <span className="text-[11px] text-muted-foreground font-medium">
-                        {pct.toFixed(0)}%
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-lg font-bold ${config.labelColor}`}>
+                          {pct.toFixed(0)}%
+                        </span>
+                        <button
+                          type="button"
+                          className="p-1 rounded-md opacity-40 hover:opacity-100 transition-opacity"
+                          onClick={(e) => { e.stopPropagation(); setRiskDetailLevel(level); }}
+                          title="Ver detalhes"
+                        >
+                          <Maximize2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <p className="text-2xl font-bold tracking-tight">
