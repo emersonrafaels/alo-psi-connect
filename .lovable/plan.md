@@ -1,78 +1,37 @@
 
 
-## Melhorias Completas na Triagem de Alunos
+## Adicionar Tooltips Explicativos nas Metricas Principais
 
-### 1. Sugestao automatica de prioridade baseada no risco
+### Objetivo
+Adicionar tooltips informativos nos cards de "Visao Geral" e "Metricas de Bem-Estar" do dashboard, para que gestores leigos entendam o significado de cada indicador ao passar o mouse.
 
-Quando o gestor abrir o TriageDialog, a prioridade sera pre-selecionada automaticamente com base no nivel de risco do aluno:
-- Critico -> Urgente
-- Alerta -> Alta
-- Atencao -> Media
-- Saudavel/Sem Dados -> Baixa
+### O que muda para o usuario
+Cada metrica tera um pequeno icone de interrogacao (?) ao lado do titulo. Ao passar o mouse, aparece uma explicacao simples e acessivel.
 
-O gestor pode alterar manualmente, mas a sugestao economiza tempo e reduz erros.
+### Tooltips planejados
 
-**Arquivo:** `src/components/institution/TriageDialog.tsx`
+**Secao Visao Geral (4 cards):**
+- **Participantes**: "Quantidade de alunos que registraram pelo menos um diario emocional no periodo selecionado."
+- **Registros**: "Total de diarios emocionais preenchidos por todos os alunos no periodo. Quanto mais registros, mais confiavel a analise."
+- **Tendencia**: "Compara a media de humor da primeira metade do periodo com a segunda metade. 'Em melhora' significa que o humor medio subiu, 'Em queda' que diminuiu."
+- **Alertas**: "Numero de alunos com humor medio abaixo de 3 (em uma escala de 1 a 5). Esses alunos podem precisar de acolhimento."
 
-### 2. Historico de triagens anteriores no dialog
-
-Ao abrir o dialog de triagem de um aluno, exibir as triagens anteriores daquele aluno (ultimas 5) em uma secao colapsavel abaixo do resumo. Cada registro mostrara: data, prioridade, acao recomendada, notas e status.
-
-**Arquivos:** `src/components/institution/TriageDialog.tsx` (receber e exibir historico), `src/components/institution/StudentTriageTab.tsx` (passar triageRecords filtrados para o dialog)
-
-### 3. Status "Em andamento" no workflow
-
-Adicionar um botao "Em andamento" no historico de triagens (ao lado de "Resolver"), permitindo a transicao: Triado -> Em andamento -> Resolvido. O botao "Em andamento" so aparece quando o status e "triaged", e o botao "Resolver" aparece tanto para "triaged" quanto para "in_progress".
-
-**Arquivo:** `src/components/institution/StudentTriageTab.tsx` (botao adicional no historico)
-
-### 4. Campo de data de follow-up
-
-Adicionar um campo opcional de data de follow-up no TriageDialog ("Acompanhamento ate"). Isso exige adicionar uma coluna `follow_up_date` (tipo date, nullable) na tabela `student_triage`.
-
-No historico, triagens com follow-up mostrarao a data e um indicador visual se estiver vencida (cor vermelha) ou proxima (cor amarela).
-
-**Arquivos:** 
-- Migracao SQL: adicionar coluna `follow_up_date` a `student_triage`
-- `src/components/institution/TriageDialog.tsx` (campo de data)
-- `src/hooks/useStudentTriage.tsx` (enviar follow_up_date na mutation, atualizar interface)
-- `src/components/institution/StudentTriageTab.tsx` (exibir follow-up no historico)
-
-### 5. Sparklines de tendencia de humor
-
-Exibir um mini-grafico (sparkline) na lista de alunos mostrando a evolucao do humor nos ultimos 14 dias. Sera um SVG inline simples (polyline) com ~60px de largura.
-
-Para isso, os dados diarios de humor precisam ser retornados pelo hook `useStudentTriageData` (novo campo `moodHistory: number[]`).
-
-**Arquivos:**
-- `src/hooks/useStudentTriage.tsx` (retornar `moodHistory` no StudentRiskData)
-- `src/components/institution/StudentTriageTab.tsx` (componente MoodSparkline inline)
-
-### 6. Atribuicao - quem triou
-
-Exibir o nome de quem realizou a triagem no historico. Isso requer buscar o nome do usuario via `triaged_by` (UUID) cruzando com `profiles`.
-
-**Arquivos:**
-- `src/hooks/useStudentTriage.tsx` (join com profiles na query de triageRecords, ou buscar nomes separadamente)
-- `src/components/institution/StudentTriageTab.tsx` (exibir "por [Nome]" no historico)
-
----
+**Secao Metricas de Bem-Estar (4 cards):**
+- **Humor Medio**: "Media geral de como os alunos avaliaram seu humor (1=muito mal, 5=muito bem). Acima de 3.5 e considerado saudavel."
+- **Ansiedade**: "Nivel medio de ansiedade reportado (1=tranquilo, 5=muito ansioso). Valores acima de 3.5 merecem atencao."
+- **Qualidade do Sono**: "Como os alunos avaliaram seu sono (1=pessimo, 5=otimo). Sono ruim costuma afetar humor e concentracao."
+- **Energia**: "Nivel medio de energia dos alunos (1=sem energia, 5=muita energia). Valores baixos podem indicar cansaco ou desmotivacao."
 
 ### Detalhes tecnicos
 
-| Mudanca | Arquivo(s) | Tipo |
-|---|---|---|
-| Sugestao automatica de prioridade | TriageDialog.tsx | Frontend |
-| Historico no dialog | TriageDialog.tsx, StudentTriageTab.tsx | Frontend |
-| Status "Em andamento" | StudentTriageTab.tsx | Frontend |
-| Campo follow-up | Migracao SQL, TriageDialog.tsx, useStudentTriage.tsx, StudentTriageTab.tsx | DB + Frontend |
-| Sparklines | useStudentTriage.tsx, StudentTriageTab.tsx | Frontend |
-| Atribuicao (quem triou) | useStudentTriage.tsx, StudentTriageTab.tsx | Frontend |
+| Arquivo | Acao |
+|---|---|
+| `src/components/institution/InstitutionWellbeingDashboard.tsx` | Importar Tooltip/TooltipProvider/TooltipTrigger/TooltipContent, adicionar icone HelpCircle com tooltip em cada card |
 
-### Sequencia de implementacao
+- Usar o componente `Tooltip` ja existente em `@/components/ui/tooltip`
+- Importar `HelpCircle` do lucide-react (ja importado na triagem, precisa importar no dashboard)
+- Envolver todo o retorno com `TooltipProvider` (delayDuration curto, ex: 200ms)
+- Em cada card, adicionar ao lado do titulo um `<Tooltip><TooltipTrigger><HelpCircle size 14 /></TooltipTrigger><TooltipContent>texto explicativo</TooltipContent></Tooltip>`
 
-1. Migracao SQL (adicionar `follow_up_date`)
-2. Atualizar `useStudentTriage.tsx` (moodHistory, follow_up_date, triaged_by com nome)
-3. Atualizar `TriageDialog.tsx` (sugestao de prioridade, historico, campo follow-up)
-4. Atualizar `StudentTriageTab.tsx` (sparkline, botao "Em andamento", follow-up visual, nome de quem triou, passar historico ao dialog)
+Mudanca em um unico arquivo, sem impacto em logica ou dados.
 
