@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2 } from 'lucide-react';
 import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
 import { useInstitutionNotes } from '@/hooks/useInstitutionNotes';
@@ -21,12 +21,12 @@ interface StudentTriageTabProps {
   institutionId: string;
 }
 
-const riskConfig: Record<RiskLevel, { label: string; color: string; icon: typeof AlertTriangle; cardBg: string }> = {
-  critical: { label: 'Crítico', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', icon: AlertTriangle, cardBg: 'border-red-200 dark:border-red-900/50' },
-  alert: { label: 'Alerta', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', icon: AlertCircle, cardBg: 'border-orange-200 dark:border-orange-900/50' },
-  attention: { label: 'Atenção', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', icon: Eye, cardBg: 'border-yellow-200 dark:border-yellow-900/50' },
-  healthy: { label: 'Saudável', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: Heart, cardBg: 'border-green-200 dark:border-green-900/50' },
-  no_data: { label: 'Sem Dados', color: 'bg-muted text-muted-foreground', icon: HelpCircle, cardBg: '' },
+const riskConfig: Record<RiskLevel, { label: string; color: string; icon: typeof AlertTriangle; cardBg: string; progressColor: string }> = {
+  critical: { label: 'Crítico', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', icon: AlertTriangle, cardBg: 'border-red-200 dark:border-red-900/50 bg-red-50/40 dark:bg-red-950/20', progressColor: '[&>div]:bg-red-500' },
+  alert: { label: 'Alerta', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', icon: AlertCircle, cardBg: 'border-orange-200 dark:border-orange-900/50 bg-orange-50/40 dark:bg-orange-950/20', progressColor: '[&>div]:bg-orange-500' },
+  attention: { label: 'Atenção', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', icon: Eye, cardBg: 'border-yellow-200 dark:border-yellow-900/50 bg-yellow-50/30 dark:bg-yellow-950/20', progressColor: '[&>div]:bg-yellow-500' },
+  healthy: { label: 'Saudável', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: Heart, cardBg: 'border-green-200 dark:border-green-900/50 bg-green-50/30 dark:bg-green-950/20', progressColor: '[&>div]:bg-green-500' },
+  no_data: { label: 'Sem Dados', color: 'bg-muted text-muted-foreground', icon: HelpCircle, cardBg: 'bg-muted/30', progressColor: '[&>div]:bg-muted-foreground/40' },
 };
 
 const riskLegend: Record<RiskLevel, string> = {
@@ -37,12 +37,34 @@ const riskLegend: Record<RiskLevel, string> = {
   no_data: 'Sem registros nos últimos 14 dias',
 };
 
-const riskTooltips: Record<RiskLevel, string> = {
-  critical: 'Alunos com humor muito baixo (≤1.5), ansiedade muito alta (≥4.5) ou queda brusca no humor (>40%). Necessitam atenção imediata.',
-  alert: 'Alunos com humor baixo (≤2.5), ansiedade elevada (≥3.5) ou energia muito baixa. Recomenda-se acompanhamento.',
-  attention: 'Alunos com indicadores moderadamente preocupantes. Vale monitorar de perto.',
-  healthy: 'Alunos com todos os indicadores dentro da faixa esperada.',
-  no_data: 'Alunos que não registraram diários emocionais nos últimos 14 dias.',
+const riskTooltips: Record<RiskLevel, { title: string; description: string }> = {
+  critical: {
+    title: '🔴 Nível Crítico',
+    description: 'Alunos com humor muito baixo (≤1.5), ansiedade muito alta (≥4.5) ou queda brusca no humor (>40%). Necessitam atenção imediata.',
+  },
+  alert: {
+    title: '🟠 Nível Alerta',
+    description: 'Alunos com humor baixo (≤2.5), ansiedade elevada (≥3.5) ou energia muito baixa. Recomenda-se acompanhamento.',
+  },
+  attention: {
+    title: '🟡 Nível Atenção',
+    description: 'Alunos com indicadores moderadamente preocupantes. Vale monitorar de perto.',
+  },
+  healthy: {
+    title: '🟢 Nível Saudável',
+    description: 'Alunos com todos os indicadores dentro da faixa esperada.',
+  },
+  no_data: {
+    title: '⚪ Sem Dados',
+    description: 'Alunos que não registraram diários emocionais nos últimos 14 dias.',
+  },
+};
+
+const metricTooltips = {
+  mood: { title: '😊 Humor', description: 'Como o aluno avaliou seu humor (1=muito mal, 5=muito bem). Abaixo de 3 merece atenção.' },
+  anxiety: { title: '😰 Ansiedade', description: 'Nível de ansiedade reportado (1=tranquilo, 5=muito ansioso). Acima de 3.5 é preocupante.' },
+  energy: { title: '⚡ Energia', description: 'Nível de energia do aluno (1=sem energia, 5=muita energia). Valores baixos podem indicar cansaço.' },
+  sleep: { title: '🌙 Sono', description: 'Qualidade do sono (1=péssimo, 5=ótimo). Sono ruim afeta humor e concentração.' },
 };
 
 const priorityLabels: Record<string, string> = {
@@ -61,6 +83,39 @@ const actionLabels: Record<string, string> = {
 
 const riskOrder: RiskLevel[] = ['critical', 'alert', 'attention', 'healthy', 'no_data'];
 
+// Elegant tooltip component
+function MetricTooltip({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent
+        side="bottom"
+        className="w-[280px] p-0 border-border/60 shadow-lg"
+      >
+        <div className="px-3 py-2 border-b border-border/40 bg-muted/50 rounded-t-md">
+          <p className="font-semibold text-xs">{title}</p>
+        </div>
+        <div className="px-3 py-2">
+          <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+        </div>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+// Small metric bar (1-5 scale)
+function MetricBar({ value, invert }: { value: number | null; invert?: boolean }) {
+  if (value === null) return null;
+  const pct = ((value - 1) / 4) * 100;
+  const effectivePct = invert ? 100 - pct : pct;
+  const color = effectivePct >= 60 ? 'bg-green-500' : effectivePct >= 40 ? 'bg-yellow-500' : 'bg-red-500';
+  return (
+    <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+      <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
+
 function TrendIcon({ trend }: { trend: number | null }) {
   if (trend === null) return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
   if (trend <= -20) return <TrendingDown className="h-3.5 w-3.5 text-red-500" />;
@@ -68,10 +123,31 @@ function TrendIcon({ trend }: { trend: number | null }) {
   return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
 }
 
+function TrendBadge({ trend }: { trend: number | null }) {
+  if (trend === null) return null;
+  const isNegative = trend < 0;
+  const isSignificant = Math.abs(trend) >= 20;
+  if (!isSignificant) return (
+    <span className="text-[10px] text-muted-foreground">{trend > 0 ? '+' : ''}{trend}%</span>
+  );
+  return (
+    <MetricTooltip title="📈 Tendência" description="Variação percentual do humor entre a primeira e segunda semana. Vermelho=piora, verde=melhora.">
+      <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium cursor-help ${
+        isNegative
+          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+          : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+      }`}>
+        {isNegative ? <TrendingDown className="h-2.5 w-2.5" /> : <TrendingUp className="h-2.5 w-2.5" />}
+        {trend > 0 ? '+' : ''}{trend}%
+      </span>
+    </MetricTooltip>
+  );
+}
+
 function MoodSparkline({ data }: { data: number[] }) {
   if (data.length < 2) return null;
-  const width = 60;
-  const height = 20;
+  const width = 72;
+  const height = 24;
   const max = 5;
   const min = 1;
   const range = max - min || 1;
@@ -81,21 +157,18 @@ function MoodSparkline({ data }: { data: number[] }) {
   const color = lastVal <= 2 ? 'var(--color-destructive, #ef4444)' : lastVal <= 3 ? '#eab308' : '#22c55e';
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <svg width={width} height={height} className="shrink-0">
-          <polyline
-            points={points}
-            fill="none"
-            stroke={color}
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-xs"><p className="text-xs">Mini-gráfico mostrando a evolução do humor nos últimos 14 dias. Verde=bom, amarelo=moderado, vermelho=preocupante.</p></TooltipContent>
-    </Tooltip>
+    <MetricTooltip title="📊 Evolução do Humor" description="Mini-gráfico mostrando a evolução do humor nos últimos 14 dias. Verde=bom, amarelo=moderado, vermelho=preocupante.">
+      <svg width={width} height={height} className="shrink-0 cursor-help">
+        <polyline
+          points={points}
+          fill="none"
+          stroke={color}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </MetricTooltip>
   );
 }
 
@@ -108,16 +181,13 @@ function FollowUpIndicator({ date }: { date: string }) {
   const isNear = diff >= 0 && diff <= 3;
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className={`flex items-center gap-1 text-[10px] cursor-help ${isOverdue ? 'text-red-500 font-medium' : isNear ? 'text-yellow-600 font-medium' : 'text-muted-foreground'}`}>
-          <Clock className="h-3 w-3" />
-          {format(followUp, "dd/MM", { locale: ptBR })}
-          {isOverdue && ' (vencido)'}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-xs"><p className="text-xs">Data limite para acompanhamento. Vermelho=vencido, amarelo=próximo do prazo.</p></TooltipContent>
-    </Tooltip>
+    <MetricTooltip title="📅 Acompanhamento" description="Data limite para acompanhamento. Vermelho=vencido, amarelo=próximo do prazo.">
+      <span className={`flex items-center gap-1 text-[10px] cursor-help ${isOverdue ? 'text-red-500 font-medium' : isNear ? 'text-yellow-600 font-medium' : 'text-muted-foreground'}`}>
+        <Clock className="h-3 w-3" />
+        {format(followUp, "dd/MM", { locale: ptBR })}
+        {isOverdue && ' (vencido)'}
+      </span>
+    </MetricTooltip>
   );
 }
 
@@ -225,45 +295,41 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   }
 
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={200}>
       <div className="space-y-6">
-        {/* Summary cards */}
+        {/* Summary cards — redesigned */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {riskOrder.map(level => {
             const config = riskConfig[level];
             const Icon = config.icon;
-            const pct = totalStudents > 0 ? (counts[level] / totalStudents) * 100 : 0;
+            const count = counts[level];
+            const pct = totalStudents > 0 ? (count / totalStudents) * 100 : 0;
+            const tooltip = riskTooltips[level];
+            const isSelected = riskFilter === level;
+
             return (
-              <Card
-                key={level}
-                className={`cursor-pointer transition-all hover:shadow-md ${config.cardBg} ${riskFilter === level ? 'ring-2 ring-primary' : ''}`}
-                onClick={() => setRiskFilter(riskFilter === level ? 'all' : level)}
-              >
-                <CardContent className="p-3 space-y-2">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${config.color}`}>
-                      <Icon className="h-4 w-4" />
+              <MetricTooltip key={level} title={tooltip.title} description={tooltip.description}>
+                <Card
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${config.cardBg} ${isSelected ? 'ring-2 ring-primary shadow-md scale-[1.02]' : ''}`}
+                  onClick={() => setRiskFilter(isSelected ? 'all' : level)}
+                >
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className={`p-2.5 rounded-xl ${config.color}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <span className="text-[11px] text-muted-foreground font-medium">
+                        {pct.toFixed(0)}%
+                      </span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{counts[level]}</p>
-                      <div className="flex items-center gap-1">
-                        <p className="text-[11px] text-muted-foreground">{config.label}</p>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
-                              <HelpCircle className="h-3 w-3" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" className="max-w-xs">
-                            <p className="text-xs">{riskTooltips[level]}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
+                      <p className="text-2xl font-bold tracking-tight">{count}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{config.label}</p>
                     </div>
-                  </div>
-                  <Progress value={pct} className="h-1.5" />
-                </CardContent>
-              </Card>
+                    <Progress value={pct} className={`h-1.5 ${config.progressColor}`} />
+                  </CardContent>
+                </Card>
+              </MetricTooltip>
             );
           })}
         </div>
@@ -364,90 +430,109 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           </Button>
         </div>
 
-        {/* Student list */}
+        {/* Student list — redesigned with 2x2 grid */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              Alunos ({filteredStudents.length})
+              Alunos
+              <Badge variant="secondary" className="ml-2 text-xs font-normal">{filteredStudents.length}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
               {filteredStudents.map(student => {
                 const config = riskConfig[student.riskLevel];
+                const isCritical = student.riskLevel === 'critical';
+                const isTriaged = student.lastTriageStatus && student.lastTriageStatus !== 'pending';
+
                 return (
-                  <div key={student.patientId} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
-                      <div className="min-w-0">
+                  <div key={student.patientId} className="p-4 hover:bg-muted/30 transition-colors">
+                    {/* Row 1: Name, badge, sparkline, actions */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
                         <p className="font-medium text-sm truncate">{student.studentName}</p>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="flex items-center gap-1">
-                                <Activity className="h-3 w-3" />
-                                Humor: {student.avgMood ?? '—'}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs"><p className="text-xs">Como o aluno avaliou seu humor (1=muito mal, 5=muito bem). Abaixo de 3 merece atenção.</p></TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="flex items-center gap-1">
-                                <Brain className="h-3 w-3" />
-                                Ansiedade: {student.avgAnxiety ?? '—'}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs"><p className="text-xs">Nível de ansiedade reportado (1=tranquilo, 5=muito ansioso). Acima de 3.5 é preocupante.</p></TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="flex items-center gap-1">
-                                <Zap className="h-3 w-3" />
-                                Energia: {student.avgEnergy ?? '—'}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs"><p className="text-xs">Nível de energia do aluno (1=sem energia, 5=muita energia). Valores baixos podem indicar cansaço.</p></TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="flex items-center gap-1">
-                                <Moon className="h-3 w-3" />
-                                Sono: {student.avgSleep ?? '—'}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs"><p className="text-xs">Qualidade do sono (1=péssimo, 5=ótimo). Sono ruim afeta humor e concentração.</p></TooltipContent>
-                          </Tooltip>
-                          <MoodSparkline data={student.moodHistory} />
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="flex items-center"><TrendIcon trend={student.moodTrend} /></span>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs"><p className="text-xs">Variação percentual do humor entre a primeira e segunda semana. Seta vermelha=piora, verde=melhora.</p></TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="text-[10px] cursor-help">{student.entryCount} registros</span>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs"><p className="text-xs">Quantidade de diários emocionais preenchidos nos últimos 14 dias. Mais registros = análise mais confiável.</p></TooltipContent>
-                          </Tooltip>
-                        </div>
+                        <TrendBadge trend={student.moodTrend} />
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <MoodSparkline data={student.moodHistory} />
+                        <MetricTooltip title="📝 Registros" description="Quantidade de diários emocionais preenchidos nos últimos 14 dias. Mais registros = análise mais confiável.">
+                          <Badge variant="outline" className="text-[10px] cursor-help font-normal">
+                            {student.entryCount} reg.
+                          </Badge>
+                        </MetricTooltip>
+                        {isTriaged && (
+                          <Badge variant="secondary" className="text-[10px] gap-1">
+                            <CheckCircle2 className="h-2.5 w-2.5" />
+                            Triado
+                          </Badge>
+                        )}
+                        <Button
+                          size="sm"
+                          variant={isCritical ? 'destructive' : 'outline'}
+                          onClick={() => {
+                            setSelectedStudent(student);
+                            setDialogOpen(true);
+                          }}
+                        >
+                          Triar
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {student.lastTriageStatus && student.lastTriageStatus !== 'pending' && (
-                        <Badge variant="outline" className="text-[10px]">Triado</Badge>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedStudent(student);
-                          setDialogOpen(true);
-                        }}
-                      >
-                        Triar
-                      </Button>
+
+                    {/* Row 2: 2x2 metrics grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 pl-[72px]">
+                      <MetricTooltip title={metricTooltips.mood.title} description={metricTooltips.mood.description}>
+                        <div className="space-y-1 cursor-help">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <Activity className="h-3 w-3" />
+                              Humor
+                            </span>
+                            <span className="font-medium">{student.avgMood?.toFixed(1) ?? '—'}</span>
+                          </div>
+                          <MetricBar value={student.avgMood} />
+                        </div>
+                      </MetricTooltip>
+
+                      <MetricTooltip title={metricTooltips.anxiety.title} description={metricTooltips.anxiety.description}>
+                        <div className="space-y-1 cursor-help">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <Brain className="h-3 w-3" />
+                              Ansiedade
+                            </span>
+                            <span className="font-medium">{student.avgAnxiety?.toFixed(1) ?? '—'}</span>
+                          </div>
+                          <MetricBar value={student.avgAnxiety} invert />
+                        </div>
+                      </MetricTooltip>
+
+                      <MetricTooltip title={metricTooltips.energy.title} description={metricTooltips.energy.description}>
+                        <div className="space-y-1 cursor-help">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <Zap className="h-3 w-3" />
+                              Energia
+                            </span>
+                            <span className="font-medium">{student.avgEnergy?.toFixed(1) ?? '—'}</span>
+                          </div>
+                          <MetricBar value={student.avgEnergy} />
+                        </div>
+                      </MetricTooltip>
+
+                      <MetricTooltip title={metricTooltips.sleep.title} description={metricTooltips.sleep.description}>
+                        <div className="space-y-1 cursor-help">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <Moon className="h-3 w-3" />
+                              Sono
+                            </span>
+                            <span className="font-medium">{student.avgSleep?.toFixed(1) ?? '—'}</span>
+                          </div>
+                          <MetricBar value={student.avgSleep} />
+                        </div>
+                      </MetricTooltip>
                     </div>
                   </div>
                 );
@@ -505,41 +590,35 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                         </div>
                         <div className="flex gap-1 items-center">
                           {t.status === 'triaged' && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-xs h-7"
-                                  onClick={() => updateTriageStatus.mutate({
-                                    triageId: t.id,
-                                    status: 'in_progress',
-                                  })}
-                                >
-                                  Em andamento
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent><p className="text-xs">Marca esta triagem como em acompanhamento ativo.</p></TooltipContent>
-                            </Tooltip>
+                            <MetricTooltip title="▶️ Em andamento" description="Marca esta triagem como em acompanhamento ativo.">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-xs h-7"
+                                onClick={() => updateTriageStatus.mutate({
+                                  triageId: t.id,
+                                  status: 'in_progress',
+                                })}
+                              >
+                                Em andamento
+                              </Button>
+                            </MetricTooltip>
                           )}
                           {(t.status === 'triaged' || t.status === 'in_progress') && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-xs h-7"
-                                  onClick={() => updateTriageStatus.mutate({
-                                    triageId: t.id,
-                                    status: 'resolved',
-                                    resolvedAt: new Date().toISOString(),
-                                  })}
-                                >
-                                  Resolver
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent><p className="text-xs">Marca esta triagem como concluída.</p></TooltipContent>
-                            </Tooltip>
+                            <MetricTooltip title="✅ Resolver" description="Marca esta triagem como concluída.">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-xs h-7"
+                                onClick={() => updateTriageStatus.mutate({
+                                  triageId: t.id,
+                                  status: 'resolved',
+                                  resolvedAt: new Date().toISOString(),
+                                })}
+                              >
+                                Resolver
+                              </Button>
+                            </MetricTooltip>
                           )}
                           <Badge variant={t.status === 'resolved' ? 'secondary' : 'default'} className="text-[10px]">
                             {t.status === 'resolved' ? 'Resolvido' : t.status === 'in_progress' ? 'Em andamento' : 'Triado'}
