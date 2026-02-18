@@ -1,56 +1,78 @@
 
 
-## Integrar Notas Institucionais ao Sistema de Inteligencia
+## Melhorias Completas na Triagem de Alunos
 
-### Objetivo
-Quando a instituicao cadastrar notas como "Semana de Provas" ou "Feriado", essas informacoes serao usadas como contexto no dashboard de bem-estar emocional, nos insights inteligentes, na IA preditiva (Inteligencia MEDCOS) e na triagem de alunos.
+### 1. Sugestao automatica de prioridade baseada no risco
 
-### Mudancas
+Quando o gestor abrir o TriageDialog, a prioridade sera pre-selecionada automaticamente com base no nivel de risco do aluno:
+- Critico -> Urgente
+- Alerta -> Alta
+- Atencao -> Media
+- Saudavel/Sem Dados -> Baixa
 
-**1. Hook `useInstitutionWellbeing.tsx` - Buscar notas e gerar insights contextuais**
+O gestor pode alterar manualmente, mas a sugestao economiza tempo e reduz erros.
 
-- Importar e buscar notas da instituicao (`institution_notes`) que tenham datas sobrepostas ao periodo selecionado
-- Adicionar insights automaticos baseados nas notas ativas. Exemplo: se existe uma nota tipo "event" com titulo "Semana de Provas" cujas datas coincidem com o periodo, gerar um insight do tipo `info` com mensagem como: "Semana de Provas em andamento - variações de humor e ansiedade podem ser esperadas neste periodo"
-- Retornar as notas relevantes no objeto `WellbeingMetrics` (novo campo `activeNotes`)
+**Arquivo:** `src/components/institution/TriageDialog.tsx`
 
-**2. Dashboard `InstitutionWellbeingDashboard.tsx` - Mostrar contexto visual**
+### 2. Historico de triagens anteriores no dialog
 
-- Exibir um banner/card com as notas ativas no periodo selecionado (ex: "Semana de Provas: 10/02 - 14/02"), antes dos graficos
-- Usar icones e cores por tipo de nota (event, alert, reminder, info) para contextualizar os dados visuais
+Ao abrir o dialog de triagem de um aluno, exibir as triagens anteriores daquele aluno (ultimas 5) em uma secao colapsavel abaixo do resumo. Cada registro mostrara: data, prioridade, acao recomendada, notas e status.
 
-**3. Edge Function `generate-predictive-wellbeing-insights` - Contexto para IA**
+**Arquivos:** `src/components/institution/TriageDialog.tsx` (receber e exibir historico), `src/components/institution/StudentTriageTab.tsx` (passar triageRecords filtrados para o dialog)
 
-- Receber as notas institucionais como parametro adicional no body (`institutionalNotes`)
-- Incluir as notas no prompt da IA para que a analise preditiva considere eventos institucionais (ex: "Ha uma semana de provas agendada, o que pode explicar aumento de ansiedade")
-- Adicionar no `userPrompt` uma secao "CONTEXTO INSTITUCIONAL" com as notas ativas
+### 3. Status "Em andamento" no workflow
 
-**4. Hook `usePredictiveInsights.tsx` - Enviar notas para a Edge Function**
+Adicionar um botao "Em andamento" no historico de triagens (ao lado de "Resolver"), permitindo a transicao: Triado -> Em andamento -> Resolvido. O botao "Em andamento" so aparece quando o status e "triaged", e o botao "Resolver" aparece tanto para "triaged" quanto para "in_progress".
 
-- Receber as notas como parametro adicional
-- Incluir as notas no body da chamada `supabase.functions.invoke`
-- Incluir notas no hash de dados para detectar mudancas (nova nota = novo insight)
+**Arquivo:** `src/components/institution/StudentTriageTab.tsx` (botao adicional no historico)
 
-**5. `StudentTriageTab.tsx` - Contexto na triagem**
+### 4. Campo de data de follow-up
 
-- Buscar notas ativas da instituicao
-- Mostrar um banner informativo no topo da triagem quando houver notas relevantes (ex: "Semana de Provas em andamento - considere este contexto ao avaliar os alunos")
+Adicionar um campo opcional de data de follow-up no TriageDialog ("Acompanhamento ate"). Isso exige adicionar uma coluna `follow_up_date` (tipo date, nullable) na tabela `student_triage`.
+
+No historico, triagens com follow-up mostrarao a data e um indicador visual se estiver vencida (cor vermelha) ou proxima (cor amarela).
+
+**Arquivos:** 
+- Migracao SQL: adicionar coluna `follow_up_date` a `student_triage`
+- `src/components/institution/TriageDialog.tsx` (campo de data)
+- `src/hooks/useStudentTriage.tsx` (enviar follow_up_date na mutation, atualizar interface)
+- `src/components/institution/StudentTriageTab.tsx` (exibir follow-up no historico)
+
+### 5. Sparklines de tendencia de humor
+
+Exibir um mini-grafico (sparkline) na lista de alunos mostrando a evolucao do humor nos ultimos 14 dias. Sera um SVG inline simples (polyline) com ~60px de largura.
+
+Para isso, os dados diarios de humor precisam ser retornados pelo hook `useStudentTriageData` (novo campo `moodHistory: number[]`).
+
+**Arquivos:**
+- `src/hooks/useStudentTriage.tsx` (retornar `moodHistory` no StudentRiskData)
+- `src/components/institution/StudentTriageTab.tsx` (componente MoodSparkline inline)
+
+### 6. Atribuicao - quem triou
+
+Exibir o nome de quem realizou a triagem no historico. Isso requer buscar o nome do usuario via `triaged_by` (UUID) cruzando com `profiles`.
+
+**Arquivos:**
+- `src/hooks/useStudentTriage.tsx` (join com profiles na query de triageRecords, ou buscar nomes separadamente)
+- `src/components/institution/StudentTriageTab.tsx` (exibir "por [Nome]" no historico)
+
+---
 
 ### Detalhes tecnicos
 
-| Arquivo | Acao |
-|---|---|
-| `src/hooks/useInstitutionWellbeing.tsx` | Buscar notas, filtrar por periodo, gerar insights contextuais, retornar `activeNotes` |
-| `src/components/institution/InstitutionWellbeingDashboard.tsx` | Exibir banner de contexto institucional, passar notas ao hook preditivo |
-| `supabase/functions/generate-predictive-wellbeing-insights/index.ts` | Receber e incluir notas no prompt da IA |
-| `src/hooks/usePredictiveInsights.tsx` | Aceitar notas como parametro, enviar na chamada, incluir no hash |
-| `src/components/institution/StudentTriageTab.tsx` | Buscar e exibir notas como contexto na triagem |
+| Mudanca | Arquivo(s) | Tipo |
+|---|---|---|
+| Sugestao automatica de prioridade | TriageDialog.tsx | Frontend |
+| Historico no dialog | TriageDialog.tsx, StudentTriageTab.tsx | Frontend |
+| Status "Em andamento" | StudentTriageTab.tsx | Frontend |
+| Campo follow-up | Migracao SQL, TriageDialog.tsx, useStudentTriage.tsx, StudentTriageTab.tsx | DB + Frontend |
+| Sparklines | useStudentTriage.tsx, StudentTriageTab.tsx | Frontend |
+| Atribuicao (quem triou) | useStudentTriage.tsx, StudentTriageTab.tsx | Frontend |
 
-### Fluxo
+### Sequencia de implementacao
 
-1. Instituicao cria nota "Semana de Provas" com datas 10/02 a 14/02
-2. Ao abrir o dashboard de bem-estar, o sistema busca notas com datas sobrepostas ao periodo
-3. Um banner aparece: "Semana de Provas (10/02 - 14/02)" com icone de evento
-4. Os insights locais incluem: "Semana de Provas em andamento - variacoes nos indicadores podem ser esperadas"
-5. Ao gerar a Inteligencia MEDCOS, a IA recebe o contexto e diz: "O aumento de ansiedade observado coincide com a Semana de Provas registrada pela instituicao"
-6. Na triagem, um aviso contextual aparece para o gestor considerar o evento ao avaliar os alunos
+1. Migracao SQL (adicionar `follow_up_date`)
+2. Atualizar `useStudentTriage.tsx` (moodHistory, follow_up_date, triaged_by com nome)
+3. Atualizar `TriageDialog.tsx` (sugestao de prioridade, historico, campo follow-up)
+4. Atualizar `StudentTriageTab.tsx` (sparkline, botao "Em andamento", follow-up visual, nome de quem triou, passar historico ao dialog)
 
