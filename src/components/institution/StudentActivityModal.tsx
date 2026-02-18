@@ -225,7 +225,7 @@ export function StudentActivityModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -253,7 +253,7 @@ export function StudentActivityModal({
             </TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="flex-1 mt-3" style={{ maxHeight: 'calc(85vh - 180px)' }}>
+          <ScrollArea className="flex-1 mt-3 h-0 min-h-0" style={{ maxHeight: 'calc(85vh - 180px)' }}>
             {isLoading ? (
               <div className="py-8 text-center text-muted-foreground text-sm">Carregando...</div>
             ) : (
