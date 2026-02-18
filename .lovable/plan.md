@@ -1,40 +1,94 @@
 
 
-## Correcoes e Melhorias na Triagem de Alunos
+## Sugestoes de Melhorias para o Sistema de Triagem / Portal Institucional
 
-### Problemas Identificados
+Apos analisar todo o codigo do portal institucional e sistema de triagem, identifiquei as seguintes oportunidades organizadas por impacto:
 
-1. **Legenda duplicada**: A linha "MEDIA DA INSTITUICAO" aparece repetida para cada aluno, e o texto mostra duas versoes redundantes ("media da instituicao" + "media da turma").
-2. **Labels dos cards pouco visiveis**: Os textos "Critico", "Alerta", "Atencao" nos cards de resumo usam `text-muted-foreground`, ficando apagados.
+---
 
-### Correcoes
+### 1. Triagem em Lote (Batch Triage)
 
-**Arquivo: `src/components/institution/StudentTriageTab.tsx`**
+Atualmente, o educador precisa triar aluno por aluno individualmente. Quando ha muitos alunos pendentes, isso e demorado.
 
-1. **Remover legenda duplicada por aluno (linha 570)** - Mover a legenda para fora do loop de alunos, exibindo-a uma unica vez acima da listagem. Texto unificado: "▼ = media da turma".
+**Proposta:** Adicionar checkboxes nos cards de alunos na aba "Para Triar" e um botao "Triar Selecionados" que abre um dialog simplificado para aplicar a mesma acao/prioridade a todos de uma vez.
 
-2. **Destacar labels dos cards de resumo (linha 392)** - Trocar `text-xs text-muted-foreground` por texto com a cor do respectivo nivel de risco, usando `font-semibold`:
-   - Critico: `text-red-700 dark:text-red-400`
-   - Alerta: `text-orange-700 dark:text-orange-400`
-   - Atencao: `text-yellow-700 dark:text-yellow-400`
-   - Saudavel: `text-green-700 dark:text-green-400`
-   - Sem Dados: `text-muted-foreground`
+---
 
-### Melhorias Adicionais Sugeridas
+### 2. Dashboard de Metricas da Triagem
 
-3. **Valor numerico da media da turma nos cards** - Adicionar ao lado de cada card de resumo os valores medios da turma (ex: "Humor: 2.8 | Ansiedade: 3.2") como uma linha sutil, dando contexto numerico geral.
+Nao existe uma visao consolidada do trabalho de triagem realizado. O educador nao sabe quantas triagens foram feitas no mes, tempo medio de resolucao, etc.
 
-4. **Alerta visual para alunos criticos pendentes** - Quando houver alunos criticos nao triados, exibir um banner de alerta no topo (vermelho) com a contagem, chamando atencao imediata do educador.
+**Proposta:** Adicionar um mini-dashboard no topo da aba de triagem com:
+- Triagens realizadas este mes
+- Tempo medio de resolucao (dias entre criacao e resolved_at)
+- Taxa de resolucao (resolvidas / total)
+- Grafico sparkline de triagens por semana
 
-5. **Indicador de comparacao na MetricBar** - Alem do triangulo, adicionar uma sutil diferenca visual: quando o valor do aluno estiver abaixo da media (ou acima, para ansiedade invertida), a cor do triangulo muda para vermelho claro; quando esta acima/melhor, muda para verde claro. Isso torna a comparacao instantanea sem precisar ler os numeros.
+---
 
-6. **Mostrar valor numerico da media no hover das barras** - Ao lado do valor do aluno (ex: "2.3"), mostrar a media da turma em texto menor entre parenteses: "2.3 (turma: 3.1)".
+### 3. Notificacoes de Follow-up Vencido
 
-### Detalhes tecnicos
+Existem datas de follow-up nos registros de triagem, mas nao ha um sistema proativo de alerta. O educador precisa navegar ate a aba "Em Andamento" para ver quais estao vencidos.
 
-| Arquivo | Mudanca |
-|---|---|
-| `src/components/institution/StudentTriageTab.tsx` | (1) Extrair legenda da media para fora do loop, exibir uma vez antes da lista. (2) Adicionar `labelColor` ao `riskConfig` e usar nos cards. (3) Adicionar media geral nos cards de resumo. (4) Banner de alerta critico. (5) Triangulo com cor dinamica na MetricBar. (6) Media da turma inline nos valores das metricas. |
+**Proposta:** Adicionar um banner/alerta no topo (similar ao de criticos pendentes) mostrando "X triagens com follow-up vencido" com link direto para a aba "Em Andamento" filtrada.
 
-Nenhum arquivo novo. Nenhuma mudanca no banco de dados.
+---
+
+### 4. Filtro por Periodo nas Abas de Historico
+
+As abas "Concluidos" e "Todos" mostram todas as triagens sem filtro temporal. Com o tempo, a lista ficara muito grande.
+
+**Proposta:** Adicionar um seletor de periodo (Ultima semana / Ultimo mes / Ultimos 3 meses / Todos) nessas abas para facilitar a navegacao.
+
+---
+
+### 5. Comparacao Temporal do Aluno
+
+O modal de atividade do aluno mostra os ultimos 30 dias, mas nao compara com o periodo anterior. O educador nao consegue ver facilmente se o aluno melhorou ou piorou apos a triagem.
+
+**Proposta:** No modal `StudentActivityModal`, adicionar uma secao "Antes vs Depois da Triagem" que compara as metricas dos 14 dias antes e depois da ultima triagem realizada.
+
+---
+
+### 6. Notas Rapidas na Listagem
+
+Para adicionar uma observacao, o educador precisa abrir o dialog completo de triagem. As vezes, ele so quer anotar algo rapido.
+
+**Proposta:** Adicionar um botao de "nota rapida" (icone de lapis) ao lado do botao "Triar" que abre um popover simples com um campo de texto, salvando como nota no registro de triagem existente ou criando uma anotacao avulsa.
+
+---
+
+### 7. Indicador de Engajamento do Aluno
+
+Atualmente, so mostra "X reg." (registros), mas nao ha contexto de regularidade. Um aluno com 4 registros em 14 dias pode ter preenchido 4 dias seguidos e parado, ou 1 por semana.
+
+**Proposta:** Substituir ou complementar o badge "X reg." com um indicador de regularidade (ex: "4/14 dias" ou um mini calendario de pontos mostrando quais dias o aluno preencheu).
+
+---
+
+### 8. Exportacao Avancada com Filtros
+
+A exportacao atual exporta apenas a aba ativa. Nao inclui historico de triagens nem permite escolher o que exportar.
+
+**Proposta:** Evoluir o botao "Exportar" para um dropdown com opcoes:
+- Exportar alunos pendentes (atual)
+- Exportar historico de triagens
+- Exportar relatorio completo (alunos + metricas + triagens)
+
+---
+
+### Prioridade Sugerida
+
+| Melhoria | Impacto | Esforco |
+|---|---|---|
+| 1. Triagem em Lote | Alto | Medio |
+| 2. Dashboard de Metricas | Alto | Medio |
+| 3. Alerta Follow-up Vencido | Alto | Baixo |
+| 4. Filtro por Periodo | Medio | Baixo |
+| 5. Comparacao Temporal | Alto | Alto |
+| 6. Notas Rapidas | Medio | Baixo |
+| 7. Indicador Engajamento | Medio | Baixo |
+| 8. Exportacao Avancada | Medio | Medio |
+
+Posso implementar qualquer combinacao dessas melhorias. Qual(is) voce gostaria de priorizar?
 
