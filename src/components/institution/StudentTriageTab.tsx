@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play, ChevronRight } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
 import { StudentActivityModal } from './StudentActivityModal';
@@ -43,7 +43,7 @@ const riskLegend: Record<RiskLevel, string> = {
   alert: 'Humor ≤ 2.5, ansiedade ≥ 3.5 ou energia ≤ 1.5',
   attention: 'Humor ≤ 3.0, ansiedade ≥ 3.0 ou qualidade de sono ≤ 2.0',
   healthy: 'Indicadores dentro da faixa esperada',
-  no_data: 'Sem registros nos últimos 14 dias'
+  no_data: 'Sem registros no período selecionado'
 };
 
 const riskTooltips: Record<RiskLevel, {title: string;description: string;}> = {
@@ -65,7 +65,7 @@ const riskTooltips: Record<RiskLevel, {title: string;description: string;}> = {
   },
   no_data: {
     title: '⚪ Sem Dados',
-    description: 'Alunos que não registraram diários emocionais nos últimos 14 dias.'
+    description: 'Alunos que não registraram diários emocionais no período selecionado.'
   }
 };
 
@@ -197,7 +197,7 @@ function MoodSparkline({ data }: {data: number[];}) {
   const color = lastVal <= 2 ? 'var(--color-destructive, #ef4444)' : lastVal <= 3 ? '#eab308' : '#22c55e';
 
   return (
-    <MetricTooltip title="📊 Evolução do Humor" description="Mini-gráfico mostrando a evolução do humor nos últimos 14 dias. Verde=bom, amarelo=moderado, vermelho=preocupante.">
+    <MetricTooltip title="📊 Evolução do Humor" description="Mini-gráfico mostrando a evolução do humor no período selecionado. Verde=bom, amarelo=moderado, vermelho=preocupante.">
       <svg width={width} height={height} className="shrink-0 cursor-help">
         <polyline
           points={points}
@@ -232,7 +232,8 @@ function FollowUpIndicator({ date }: {date: string;}) {
 }
 
 export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
-  const { data: students = [], isLoading } = useStudentTriageData(institutionId);
+  const [analysisPeriod, setAnalysisPeriod] = useState<number>(15);
+  const { data: students = [], isLoading } = useStudentTriageData(institutionId, analysisPeriod);
   const { notes: institutionNotes } = useInstitutionNotes(institutionId);
   const { data: triageRecords = [] } = useTriageRecords(institutionId);
   const { createTriage, updateTriageStatus, batchCreateTriage, addQuickNote } = useTriageActions(institutionId);
@@ -255,6 +256,53 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
     const c: Record<RiskLevel, number> = { critical: 0, alert: 0, attention: 0, healthy: 0, no_data: 0 };
     students.forEach((s) => c[s.riskLevel]++);
     return c;
+  }, [students]);
+
+  // Compute previous period risk counts for comparison
+  const prevCounts = useMemo(() => {
+    const c: Record<RiskLevel, number> = { critical: 0, alert: 0, attention: 0, healthy: 0, no_data: 0 };
+    students.forEach((s) => {
+      // Determine what the previous period risk level would have been
+      if (s.prevAvgMood === null && s.prevEntryCount === 0) {
+        c.no_data++;
+      } else if (
+        (s.prevAvgMood !== null && s.prevAvgMood <= 1.5) ||
+        (s.prevAvgAnxiety !== null && s.prevAvgAnxiety >= 4.5)
+      ) {
+        c.critical++;
+      } else if (
+        (s.prevAvgMood !== null && s.prevAvgMood <= 2.5) ||
+        (s.prevAvgAnxiety !== null && s.prevAvgAnxiety >= 3.5) ||
+        (s.prevAvgEnergy !== null && s.prevAvgEnergy <= 1.5)
+      ) {
+        c.alert++;
+      } else if (
+        (s.prevAvgMood !== null && s.prevAvgMood <= 3.0) ||
+        (s.prevAvgAnxiety !== null && s.prevAvgAnxiety >= 3.0) ||
+        (s.prevAvgSleep !== null && s.prevAvgSleep <= 2.0)
+      ) {
+        c.attention++;
+      } else {
+        c.healthy++;
+      }
+    });
+    return c;
+  }, [students]);
+
+  // Previous period class averages for comparison
+  const prevClassAverages = useMemo(() => {
+    const withData = students.filter((s) => s.prevEntryCount > 0);
+    if (withData.length === 0) return { mood: null, anxiety: null, energy: null, sleep: null };
+    const avg = (vals: (number | null)[]) => {
+      const valid = vals.filter((v): v is number => v != null);
+      return valid.length > 0 ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+    };
+    return {
+      mood: avg(withData.map((s) => s.prevAvgMood)),
+      anxiety: avg(withData.map((s) => s.prevAvgAnxiety)),
+      energy: avg(withData.map((s) => s.prevAvgEnergy)),
+      sleep: avg(withData.map((s) => s.prevAvgSleep))
+    };
   }, [students]);
 
   const totalStudents = students.length;
@@ -408,7 +456,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
         'Energia Média': s.avgEnergy ?? '—',
         'Sono Médio': s.avgSleep ?? '—',
         'Tendência (%)': s.moodTrend ?? '—',
-        'Registros (14d)': s.entryCount,
+        'Registros': s.entryCount,
       }));
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
@@ -486,6 +534,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             const config = riskConfig[level];
             const Icon = config.icon;
             const count = counts[level];
+            const prevCount = prevCounts[level];
+            const delta = count - prevCount;
             const pct = totalStudents > 0 ? count / totalStudents * 100 : 0;
             const tooltip = riskTooltips[level];
             const isSelected = riskFilter === level;
@@ -506,7 +556,17 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                       </span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold tracking-tight">{count}</p>
+                      <p className="text-2xl font-bold tracking-tight">
+                        {count}
+                        {delta !== 0 && (
+                          <span className={`text-xs font-medium ml-1 ${delta > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                            ({delta > 0 ? '+' : ''}{delta})
+                          </span>
+                        )}
+                        {delta === 0 && prevCount > 0 && (
+                          <span className="text-xs font-medium ml-1 text-muted-foreground">(=)</span>
+                        )}
+                      </p>
                       <p className={`text-xs font-semibold mt-0.5 ${config.labelColor}`}>{config.label}</p>
                     </div>
                     <Progress value={pct} className={`h-1.5 ${config.progressColor}`} />
@@ -517,14 +577,50 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           })}
         </div>
 
-        {/* Class averages summary */}
+        {/* Class averages summary with comparatives */}
         {(classAverages.mood != null || classAverages.anxiety != null) && (
           <div className="flex flex-wrap items-center gap-3 px-1 text-xs text-muted-foreground">
-            <span className="font-medium text-foreground/70">Médias da turma:</span>
-            {classAverages.mood != null && <span className="flex items-center gap-1"><Activity className="h-3 w-3" />Humor: {classAverages.mood.toFixed(1)}</span>}
-            {classAverages.anxiety != null && <span className="flex items-center gap-1"><Brain className="h-3 w-3" />Ansiedade: {classAverages.anxiety.toFixed(1)}</span>}
-            {classAverages.energy != null && <span className="flex items-center gap-1"><Zap className="h-3 w-3" />Energia: {classAverages.energy.toFixed(1)}</span>}
-            {classAverages.sleep != null && <span className="flex items-center gap-1"><Moon className="h-3 w-3" />Sono: {classAverages.sleep.toFixed(1)}</span>}
+            <span className="font-medium text-foreground/70">Médias da turma ({analysisPeriod}d):</span>
+            {classAverages.mood != null && (
+              <span className="flex items-center gap-1">
+                <Activity className="h-3 w-3" />Humor: {classAverages.mood.toFixed(1)}
+                {prevClassAverages.mood != null && (() => {
+                  const d = classAverages.mood! - prevClassAverages.mood!;
+                  if (Math.abs(d) < 0.05) return <span className="text-muted-foreground/60">(=)</span>;
+                  return <span className={d > 0 ? 'text-green-600' : 'text-red-600'}>({d > 0 ? '+' : ''}{d.toFixed(1)})</span>;
+                })()}
+              </span>
+            )}
+            {classAverages.anxiety != null && (
+              <span className="flex items-center gap-1">
+                <Brain className="h-3 w-3" />Ansiedade: {classAverages.anxiety.toFixed(1)}
+                {prevClassAverages.anxiety != null && (() => {
+                  const d = classAverages.anxiety! - prevClassAverages.anxiety!;
+                  if (Math.abs(d) < 0.05) return <span className="text-muted-foreground/60">(=)</span>;
+                  return <span className={d < 0 ? 'text-green-600' : 'text-red-600'}>({d > 0 ? '+' : ''}{d.toFixed(1)})</span>;
+                })()}
+              </span>
+            )}
+            {classAverages.energy != null && (
+              <span className="flex items-center gap-1">
+                <Zap className="h-3 w-3" />Energia: {classAverages.energy.toFixed(1)}
+                {prevClassAverages.energy != null && (() => {
+                  const d = classAverages.energy! - prevClassAverages.energy!;
+                  if (Math.abs(d) < 0.05) return <span className="text-muted-foreground/60">(=)</span>;
+                  return <span className={d > 0 ? 'text-green-600' : 'text-red-600'}>({d > 0 ? '+' : ''}{d.toFixed(1)})</span>;
+                })()}
+              </span>
+            )}
+            {classAverages.sleep != null && (
+              <span className="flex items-center gap-1">
+                <Moon className="h-3 w-3" />Sono: {classAverages.sleep.toFixed(1)}
+                {prevClassAverages.sleep != null && (() => {
+                  const d = classAverages.sleep! - prevClassAverages.sleep!;
+                  if (Math.abs(d) < 0.05) return <span className="text-muted-foreground/60">(=)</span>;
+                  return <span className={d > 0 ? 'text-green-600' : 'text-red-600'}>({d > 0 ? '+' : ''}{d.toFixed(1)})</span>;
+                })()}
+              </span>
+            )}
           </div>
         )}
 
@@ -554,7 +650,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
         )}
 
         {/* Triage Metrics Dashboard */}
-        <TriageMetricsDashboard triageRecords={triageRecords} />
+        <TriageMetricsDashboard triageRecords={triageRecords} periodDays={analysisPeriod} />
 
         {/* Contexto Institucional */}
         {(() => {
@@ -609,7 +705,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           </CollapsibleContent>
         </Collapsible>
 
-        {/* Filters + search + export */}
+        {/* Filters + search + period selector + export */}
         <div className="flex flex-wrap gap-3 items-center">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -618,8 +714,21 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 w-[200px]" />
-
           </div>
+
+          <Select value={String(analysisPeriod)} onValueChange={(v) => setAnalysisPeriod(Number(v))}>
+            <SelectTrigger className="w-[140px]">
+              <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">7 dias</SelectItem>
+              <SelectItem value="15">15 dias</SelectItem>
+              <SelectItem value="30">30 dias</SelectItem>
+              <SelectItem value="60">60 dias</SelectItem>
+              <SelectItem value="90">90 dias</SelectItem>
+            </SelectContent>
+          </Select>
 
           <Select value={riskFilter} onValueChange={setRiskFilter}>
             <SelectTrigger className="w-[180px]">
@@ -750,9 +859,9 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                             <button type="button" onClick={() => handleOpenActivity(student)} className="font-semibold text-base truncate text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{displayName}</button>
                             <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
                             <TrendBadge trend={student.moodTrend} />
-                            <MetricTooltip title="📝 Engajamento" description="Dias com registro emocional nos últimos 14 dias. Quanto mais regular, melhor o acompanhamento.">
+                            <MetricTooltip title="📝 Engajamento" description={`Dias com registro emocional nos últimos ${analysisPeriod} dias. Quanto mais regular, melhor o acompanhamento.`}>
                               <Badge variant="outline" className="text-xs cursor-help font-normal">
-                                {student.entryCount}/14 dias
+                                {student.entryCount}/{analysisPeriod} dias
                               </Badge>
                             </MetricTooltip>
                           </div>
@@ -772,13 +881,21 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                         </div>
                         <div className="flex items-center gap-6">
                           <div className="flex-1 space-y-2">
-                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Indicadores (14 dias)</p>
+                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Indicadores ({analysisPeriod} dias)</p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-2">
                             <MetricTooltip title={metricTooltips.mood.title} description={metricTooltips.mood.description}>
                               <div className="space-y-1 cursor-help">
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="flex items-center gap-1 text-muted-foreground"><Activity className="h-3 w-3" />Humor</span>
-                                  <span className="font-medium">{student.avgMood?.toFixed(1) ?? '—'}{classAverages.mood != null && student.avgMood != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.mood.toFixed(1)})</span>}</span>
+                                  <span className="font-medium flex items-center gap-0.5">
+                                    {student.avgMood?.toFixed(1) ?? '—'}
+                                    {student.avgMood != null && student.prevAvgMood != null && (() => {
+                                      const d = student.avgMood! - student.prevAvgMood!;
+                                      if (Math.abs(d) < 0.15) return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
+                                      return d > 0 ? <ArrowUp className="h-2.5 w-2.5 text-green-500" /> : <ArrowDown className="h-2.5 w-2.5 text-red-500" />;
+                                    })()}
+                                    {classAverages.mood != null && student.avgMood != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.mood.toFixed(1)})</span>}
+                                  </span>
                                 </div>
                                 <MetricBar value={student.avgMood} classAvg={classAverages.mood} />
                               </div>
@@ -787,7 +904,15 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                               <div className="space-y-1 cursor-help">
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="flex items-center gap-1 text-muted-foreground"><Brain className="h-3 w-3" />Ansiedade</span>
-                                  <span className="font-medium">{student.avgAnxiety?.toFixed(1) ?? '—'}{classAverages.anxiety != null && student.avgAnxiety != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.anxiety.toFixed(1)})</span>}</span>
+                                  <span className="font-medium flex items-center gap-0.5">
+                                    {student.avgAnxiety?.toFixed(1) ?? '—'}
+                                    {student.avgAnxiety != null && student.prevAvgAnxiety != null && (() => {
+                                      const d = student.avgAnxiety! - student.prevAvgAnxiety!;
+                                      if (Math.abs(d) < 0.15) return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
+                                      return d < 0 ? <ArrowDown className="h-2.5 w-2.5 text-green-500" /> : <ArrowUp className="h-2.5 w-2.5 text-red-500" />;
+                                    })()}
+                                    {classAverages.anxiety != null && student.avgAnxiety != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.anxiety.toFixed(1)})</span>}
+                                  </span>
                                 </div>
                                 <MetricBar value={student.avgAnxiety} invert classAvg={classAverages.anxiety} />
                               </div>
@@ -796,7 +921,15 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                               <div className="space-y-1 cursor-help">
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="flex items-center gap-1 text-muted-foreground"><Zap className="h-3 w-3" />Energia</span>
-                                  <span className="font-medium">{student.avgEnergy?.toFixed(1) ?? '—'}{classAverages.energy != null && student.avgEnergy != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.energy.toFixed(1)})</span>}</span>
+                                  <span className="font-medium flex items-center gap-0.5">
+                                    {student.avgEnergy?.toFixed(1) ?? '—'}
+                                    {student.avgEnergy != null && student.prevAvgEnergy != null && (() => {
+                                      const d = student.avgEnergy! - student.prevAvgEnergy!;
+                                      if (Math.abs(d) < 0.15) return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
+                                      return d > 0 ? <ArrowUp className="h-2.5 w-2.5 text-green-500" /> : <ArrowDown className="h-2.5 w-2.5 text-red-500" />;
+                                    })()}
+                                    {classAverages.energy != null && student.avgEnergy != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.energy.toFixed(1)})</span>}
+                                  </span>
                                 </div>
                                 <MetricBar value={student.avgEnergy} classAvg={classAverages.energy} />
                               </div>
@@ -805,7 +938,15 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                               <div className="space-y-1 cursor-help">
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="flex items-center gap-1 text-muted-foreground"><Moon className="h-3 w-3" />Sono</span>
-                                  <span className="font-medium">{student.avgSleep?.toFixed(1) ?? '—'}{classAverages.sleep != null && student.avgSleep != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.sleep.toFixed(1)})</span>}</span>
+                                  <span className="font-medium flex items-center gap-0.5">
+                                    {student.avgSleep?.toFixed(1) ?? '—'}
+                                    {student.avgSleep != null && student.prevAvgSleep != null && (() => {
+                                      const d = student.avgSleep! - student.prevAvgSleep!;
+                                      if (Math.abs(d) < 0.15) return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
+                                      return d > 0 ? <ArrowUp className="h-2.5 w-2.5 text-green-500" /> : <ArrowDown className="h-2.5 w-2.5 text-red-500" />;
+                                    })()}
+                                    {classAverages.sleep != null && student.avgSleep != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.sleep.toFixed(1)})</span>}
+                                  </span>
                                 </div>
                                 <MetricBar value={student.avgSleep} classAvg={classAverages.sleep} />
                               </div>
