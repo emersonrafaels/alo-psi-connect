@@ -25,6 +25,10 @@ export interface StudentRiskData {
   lastTriageStatus: string | null;
   lastTriageId: string | null;
   moodHistory: number[];
+  anxietyHistory: number[];
+  energyHistory: number[];
+  sleepHistory: number[];
+  scoreHistory: number[];
   // Previous period comparative data
   prevAvgMood: number | null;
   prevAvgAnxiety: number | null;
@@ -214,6 +218,32 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
           .filter((e: any) => e.mood_score != null)
           .map((e: any) => e.mood_score as number);
 
+        const anxietyHistory = entries
+          .filter((e: any) => e.anxiety_level != null)
+          .map((e: any) => e.anxiety_level as number);
+
+        const energyHistory = entries
+          .filter((e: any) => e.energy_level != null)
+          .map((e: any) => e.energy_level as number);
+
+        const sleepHistory = entries
+          .filter((e: any) => e.sleep_quality != null || e.sleep_hours != null)
+          .map((e: any) => {
+            return e.sleep_quality ?? Math.min(5, Math.max(1, Math.round((e.sleep_hours - 3) / 1.5 + 1)));
+          });
+
+        const scoreHistory = entries.map((e: any) => {
+          const vals: number[] = [];
+          if (e.mood_score != null) vals.push(e.mood_score);
+          if (e.anxiety_level != null) vals.push(6 - e.anxiety_level);
+          if (e.energy_level != null) vals.push(e.energy_level);
+          const sleep = e.sleep_quality ?? (e.sleep_hours != null
+            ? Math.min(5, Math.max(1, Math.round((e.sleep_hours - 3) / 1.5 + 1)))
+            : null);
+          if (sleep != null) vals.push(sleep);
+          return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+        }).filter((v): v is number => v !== null);
+
         return {
           patientId: s.patient_id,
           studentName: s.pacientes.profiles.nome || 'Sem nome',
@@ -229,6 +259,10 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
           lastTriageStatus: latestTriage?.status || null,
           lastTriageId: latestTriage?.id || null,
           moodHistory,
+          anxietyHistory,
+          energyHistory,
+          sleepHistory,
+          scoreHistory,
           prevAvgMood: round1(prevAvgMood),
           prevAvgAnxiety: round1(prevAvgAnxiety),
           prevAvgEnergy: round1(prevAvgEnergy),
