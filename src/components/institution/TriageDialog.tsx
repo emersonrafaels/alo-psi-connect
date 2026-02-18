@@ -1,24 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Activity, Moon, Zap, Brain } from 'lucide-react';
-import { StudentRiskData } from '@/hooks/useStudentTriage';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { AlertTriangle, Activity, Moon, Zap, Brain, ChevronDown, History } from 'lucide-react';
+import { StudentRiskData, TriageRecord } from '@/hooks/useStudentTriage';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface TriageDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   student: StudentRiskData | null;
+  studentHistory?: TriageRecord[];
   onSubmit: (data: {
     patientId: string;
     riskLevel: string;
     priority: string;
     recommendedAction: string;
     notes: string;
+    followUpDate?: string;
   }) => Promise<void>;
 }
 
@@ -30,15 +36,56 @@ const riskLabels: Record<string, { label: string; color: string }> = {
   no_data: { label: 'Sem Dados', color: 'bg-muted text-muted-foreground' },
 };
 
-export function TriageDialog({ open, onOpenChange, student, onSubmit }: TriageDialogProps) {
+const riskToPriority: Record<string, string> = {
+  critical: 'urgent',
+  alert: 'high',
+  attention: 'medium',
+  healthy: 'low',
+  no_data: 'low',
+};
+
+const priorityLabels: Record<string, string> = {
+  urgent: '🔴 Urgente',
+  high: '🟠 Alta',
+  medium: '🟡 Média',
+  low: '🟢 Baixa',
+};
+
+const actionLabels: Record<string, string> = {
+  refer_professional: 'Encaminhar para profissional',
+  schedule_talk: 'Agendar conversa',
+  monitor: 'Monitorar',
+  contact_family: 'Contato com família',
+};
+
+const statusLabels: Record<string, string> = {
+  triaged: 'Triado',
+  in_progress: 'Em andamento',
+  resolved: 'Resolvido',
+};
+
+export function TriageDialog({ open, onOpenChange, student, studentHistory = [], onSubmit }: TriageDialogProps) {
   const [priority, setPriority] = useState('medium');
   const [action, setAction] = useState('monitor');
   const [notes, setNotes] = useState('');
+  const [followUpDate, setFollowUpDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  // Auto-suggest priority based on risk level
+  useEffect(() => {
+    if (student) {
+      setPriority(riskToPriority[student.riskLevel] || 'medium');
+      setAction('monitor');
+      setNotes('');
+      setFollowUpDate('');
+    }
+  }, [student]);
 
   if (!student) return null;
 
   const risk = riskLabels[student.riskLevel];
+  const recentHistory = studentHistory.slice(0, 5);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -49,12 +96,10 @@ export function TriageDialog({ open, onOpenChange, student, onSubmit }: TriageDi
         priority,
         recommendedAction: action,
         notes,
+        followUpDate: followUpDate || undefined,
       });
       toast.success('Triagem registrada com sucesso');
       onOpenChange(false);
-      setPriority('medium');
-      setAction('monitor');
-      setNotes('');
     } catch {
       toast.error('Erro ao registrar triagem');
     } finally {
@@ -64,7 +109,7 @@ export function TriageDialog({ open, onOpenChange, student, onSubmit }: TriageDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5" />
@@ -107,6 +152,54 @@ export function TriageDialog({ open, onOpenChange, student, onSubmit }: TriageDi
             )}
           </div>
 
+          {/* Previous triage history */}
+          {recentHistory.length > 0 && (
+            <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-full flex items-center justify-between text-muted-foreground hover:text-foreground">
+                  <span className="flex items-center gap-2">
+                    <History className="h-4 w-4" />
+                    Triagens anteriores ({recentHistory.length})
+                  </span>
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${historyOpen ? 'rotate-180' : ''}`} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="space-y-2 mt-2">
+                  {recentHistory.map(t => (
+                    <div key={t.id} className="p-2.5 rounded-lg bg-muted/30 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">
+                          {format(new Date(t.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          {t.triaged_by_name && ` • por ${t.triaged_by_name}`}
+                        </span>
+                        <Badge variant={t.status === 'resolved' ? 'secondary' : 'default'} className="text-[10px]">
+                          {statusLabels[t.status] || t.status}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-2 text-muted-foreground">
+                        <span>{priorityLabels[t.priority] || t.priority}</span>
+                        {t.recommended_action && (
+                          <>
+                            <span>•</span>
+                            <span>{actionLabels[t.recommended_action] || t.recommended_action}</span>
+                          </>
+                        )}
+                      </div>
+                      {t.notes && <p className="text-muted-foreground italic">"{t.notes}"</p>}
+                      {t.follow_up_date && (
+                        <p className={`text-[10px] ${new Date(t.follow_up_date) < new Date() ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
+                          Follow-up: {format(new Date(t.follow_up_date), "dd/MM/yyyy", { locale: ptBR })}
+                          {new Date(t.follow_up_date) < new Date() && ' (vencido)'}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
           {/* Priority */}
           <div className="space-y-1.5">
             <Label>Prioridade</Label>
@@ -137,6 +230,17 @@ export function TriageDialog({ open, onOpenChange, student, onSubmit }: TriageDi
                 <SelectItem value="contact_family">Contato com família</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Follow-up date */}
+          <div className="space-y-1.5">
+            <Label>Acompanhamento até (opcional)</Label>
+            <Input
+              type="date"
+              value={followUpDate}
+              onChange={e => setFollowUpDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+            />
           </div>
 
           {/* Notes */}

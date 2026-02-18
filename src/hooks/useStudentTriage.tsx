@@ -15,6 +15,7 @@ export interface StudentRiskData {
   entryCount: number;
   lastTriageStatus: string | null;
   lastTriageId: string | null;
+  moodHistory: number[];
 }
 
 export interface TriageRecord {
@@ -22,11 +23,13 @@ export interface TriageRecord {
   patient_id: string;
   institution_id: string;
   triaged_by: string;
+  triaged_by_name?: string;
   status: string;
   risk_level: string;
   priority: string;
   recommended_action: string | null;
   notes: string | null;
+  follow_up_date: string | null;
   created_at: string;
   updated_at: string;
   resolved_at: string | null;
@@ -159,6 +162,10 @@ export function useStudentTriageData(institutionId: string | null) {
 
         const moodTrend = calculateTrend(entries.filter((e: any) => e.mood_score != null));
 
+        const moodHistory = entries
+          .filter((e: any) => e.mood_score != null)
+          .map((e: any) => e.mood_score as number);
+
         return {
           patientId: s.patient_id,
           studentName: s.pacientes.profiles.nome || 'Sem nome',
@@ -171,6 +178,7 @@ export function useStudentTriageData(institutionId: string | null) {
           entryCount: entries.length,
           lastTriageStatus: latestTriage?.status || null,
           lastTriageId: latestTriage?.id || null,
+          moodHistory,
         };
       });
     },
@@ -189,7 +197,23 @@ export function useTriageRecords(institutionId: string | null) {
         .eq('institution_id', institutionId)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as TriageRecord[];
+
+      const records = (data || []) as unknown as TriageRecord[];
+
+      // Fetch triaged_by names
+      const uniqueUserIds = [...new Set(records.map(r => r.triaged_by).filter(Boolean))];
+      if (uniqueUserIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, nome')
+          .in('user_id', uniqueUserIds);
+        const nameMap = new Map((profiles || []).map((p: any) => [p.user_id, p.nome]));
+        records.forEach(r => {
+          r.triaged_by_name = nameMap.get(r.triaged_by) || undefined;
+        });
+      }
+
+      return records;
     },
     enabled: !!institutionId,
   });
@@ -205,22 +229,26 @@ export function useTriageActions(institutionId: string | null) {
       priority: string;
       recommendedAction: string;
       notes: string;
+      followUpDate?: string;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !institutionId) throw new Error('Not authenticated');
 
+      const insertData: any = {
+        patient_id: params.patientId,
+        institution_id: institutionId,
+        triaged_by: user.id,
+        status: 'triaged',
+        risk_level: params.riskLevel,
+        priority: params.priority,
+        recommended_action: params.recommendedAction,
+        notes: params.notes,
+      };
+      if (params.followUpDate) insertData.follow_up_date = params.followUpDate;
+
       const { error } = await supabase
         .from('student_triage' as any)
-        .insert({
-          patient_id: params.patientId,
-          institution_id: institutionId,
-          triaged_by: user.id,
-          status: 'triaged',
-          risk_level: params.riskLevel,
-          priority: params.priority,
-          recommended_action: params.recommendedAction,
-          notes: params.notes,
-        } as any);
+        .insert(insertData as any);
       if (error) throw error;
     },
     onSuccess: () => {

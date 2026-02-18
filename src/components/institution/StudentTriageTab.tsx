@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock } from 'lucide-react';
 import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
 import { useInstitutionNotes } from '@/hooks/useInstitutionNotes';
@@ -58,6 +58,54 @@ function TrendIcon({ trend }: { trend: number | null }) {
   if (trend <= -20) return <TrendingDown className="h-3.5 w-3.5 text-red-500" />;
   if (trend >= 20) return <TrendingUp className="h-3.5 w-3.5 text-green-500" />;
   return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
+}
+
+function MoodSparkline({ data }: { data: number[] }) {
+  if (data.length < 2) return null;
+  const width = 60;
+  const height = 20;
+  const max = 5;
+  const min = 1;
+  const range = max - min || 1;
+  const step = width / (data.length - 1);
+  const points = data.map((v, i) => `${i * step},${height - ((v - min) / range) * height}`).join(' ');
+  const lastVal = data[data.length - 1];
+  const color = lastVal <= 2 ? 'var(--color-destructive, #ef4444)' : lastVal <= 3 ? '#eab308' : '#22c55e';
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <svg width={width} height={height} className="shrink-0">
+          <polyline
+            points={points}
+            fill="none"
+            stroke={color}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </TooltipTrigger>
+      <TooltipContent>Tendência de humor (14 dias)</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function FollowUpIndicator({ date }: { date: string }) {
+  const followUp = new Date(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.ceil((followUp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const isOverdue = diff < 0;
+  const isNear = diff >= 0 && diff <= 3;
+
+  return (
+    <span className={`flex items-center gap-1 text-[10px] ${isOverdue ? 'text-red-500 font-medium' : isNear ? 'text-yellow-600 font-medium' : 'text-muted-foreground'}`}>
+      <Clock className="h-3 w-3" />
+      {format(followUp, "dd/MM", { locale: ptBR })}
+      {isOverdue && ' (vencido)'}
+    </span>
+  );
 }
 
 export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
@@ -114,6 +162,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
     students.forEach(s => map.set(s.patientId, s.studentName));
     return map;
   }, [students]);
+
+  const selectedStudentHistory = useMemo(() => {
+    if (!selectedStudent) return [];
+    return triageRecords.filter(t => t.patient_id === selectedStudent.patientId);
+  }, [selectedStudent, triageRecords]);
 
   const handleTriage = async (data: any) => {
     await createTriage.mutateAsync(data);
@@ -340,6 +393,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                             </TooltipTrigger>
                             <TooltipContent>Média de qualidade do sono nos últimos 14 dias (1-5)</TooltipContent>
                           </Tooltip>
+                          <MoodSparkline data={student.moodHistory} />
                           <TrendIcon trend={student.moodTrend} />
                           <span className="text-[10px]">{student.entryCount} registros</span>
                         </div>
@@ -404,11 +458,31 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                 <span>{actionLabels[t.recommended_action] || t.recommended_action}</span>
                               </>
                             )}
+                            {t.triaged_by_name && (
+                              <>
+                                <span>•</span>
+                                <span>por {t.triaged_by_name}</span>
+                              </>
+                            )}
                           </div>
                           {t.notes && <p className="text-xs text-muted-foreground mt-1">"{t.notes}"</p>}
+                          {t.follow_up_date && <FollowUpIndicator date={t.follow_up_date} />}
                         </div>
-                        <div className="flex gap-1">
-                          {t.status !== 'resolved' && (
+                        <div className="flex gap-1 items-center">
+                          {t.status === 'triaged' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-xs h-7"
+                              onClick={() => updateTriageStatus.mutate({
+                                triageId: t.id,
+                                status: 'in_progress',
+                              })}
+                            >
+                              Em andamento
+                            </Button>
+                          )}
+                          {(t.status === 'triaged' || t.status === 'in_progress') && (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -439,6 +513,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           student={selectedStudent}
+          studentHistory={selectedStudentHistory}
           onSubmit={handleTriage}
         />
       </div>
