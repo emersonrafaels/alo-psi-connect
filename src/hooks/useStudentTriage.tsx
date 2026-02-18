@@ -13,6 +13,8 @@ export type RiskLevel = 'critical' | 'alert' | 'attention' | 'healthy' | 'no_dat
 export interface StudentRiskData {
   patientId: string;
   studentName: string;
+  profileId: string | null;
+  userId: string | null;
   riskLevel: RiskLevel;
   avgMood: number | null;
   avgAnxiety: number | null;
@@ -176,6 +178,8 @@ export function useStudentTriageData(institutionId: string | null) {
         return {
           patientId: s.patient_id,
           studentName: s.pacientes.profiles.nome || 'Sem nome',
+          profileId: s.pacientes.profile_id || null,
+          userId: s.pacientes.profiles.user_id || null,
           riskLevel: calculateRiskLevel(avgMood, avgAnxiety, avgEnergy, avgSleep, moodTrend),
           avgMood: avgMood !== null ? Math.round(avgMood * 10) / 10 : null,
           avgAnxiety: avgAnxiety !== null ? Math.round(avgAnxiety * 10) / 10 : null,

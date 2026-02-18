@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play } from 'lucide-react';
 import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
+import { StudentActivityModal } from './StudentActivityModal';
 import { useInstitutionNotes } from '@/hooks/useInstitutionNotes';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -205,6 +206,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const [legendOpen, setLegendOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('para_triar');
+  const [activityModalStudent, setActivityModalStudent] = useState<StudentRiskData | null>(null);
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   const counts = useMemo(() => {
@@ -245,11 +248,29 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
     return students.filter(s => s.riskLevel === 'critical' && (!s.lastTriageStatus || s.lastTriageStatus === 'pending')).length;
   }, [students]);
 
+  const patientDataMap = useMemo(() => {
+    const map = new Map<string, StudentRiskData>();
+    students.forEach(s => map.set(s.patientId, s));
+    return map;
+  }, [students]);
+
   const patientNameMap = useMemo(() => {
     const map = new Map<string, string>();
     students.forEach(s => map.set(s.patientId, s.studentName));
     return map;
   }, [students]);
+
+  const handleOpenActivity = (student: StudentRiskData) => {
+    setActivityModalStudent(student);
+    setActivityModalOpen(true);
+  };
+
+  const handleOpenActivityByPatientId = (patientId: string) => {
+    const student = patientDataMap.get(patientId);
+    if (student) {
+      handleOpenActivity(student);
+    }
+  };
 
   const selectedStudentHistory = useMemo(() => {
     if (!selectedStudent) return [];
@@ -492,7 +513,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                             <Avatar className="h-8 w-8 shrink-0">
                               <AvatarFallback className={`text-xs font-semibold ${config.color}`}>{initials}</AvatarFallback>
                             </Avatar>
-                            <p className="font-semibold text-base truncate">{student.studentName}</p>
+                            <button type="button" onClick={() => handleOpenActivity(student)} className="font-semibold text-base truncate text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{student.studentName}</button>
                             <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
                             <TrendBadge trend={student.moodTrend} />
                             <MetricTooltip title="📝 Registros" description="Quantidade de diários emocionais preenchidos nos últimos 14 dias.">
@@ -595,7 +616,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                           <div className="flex items-start justify-between gap-4">
                             <div className="space-y-2 flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-semibold text-base">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
+                              <button type="button" onClick={() => handleOpenActivityByPatientId(t.patient_id)} className="font-semibold text-base text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{patientNameMap.get(t.patient_id) || 'Aluno'}</button>
                                 <Badge className="text-xs">{priorityLabels[t.priority] || t.priority}</Badge>
                                 <Badge variant={t.status === 'in_progress' ? 'default' : 'secondary'} className="text-xs">
                                   {t.status === 'in_progress' ? 'Em andamento' : 'Triado'}
@@ -664,7 +685,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                         <div className="flex items-center justify-between gap-4">
                           <div className="space-y-1 flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="font-semibold text-base">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
+                              <button type="button" onClick={() => handleOpenActivityByPatientId(t.patient_id)} className="font-semibold text-base text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{patientNameMap.get(t.patient_id) || 'Aluno'}</button>
                               <Badge variant="secondary" className="text-xs">{priorityLabels[t.priority] || t.priority}</Badge>
                             </div>
                             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -722,7 +743,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                           <div className="flex items-center justify-between gap-4">
                             <div className="space-y-1 flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <p className="font-semibold text-base">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
+                                <button type="button" onClick={() => handleOpenActivityByPatientId(t.patient_id)} className="font-semibold text-base text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{patientNameMap.get(t.patient_id) || 'Aluno'}</button>
                                 <Badge className="text-xs">{priorityLabels[t.priority] || t.priority}</Badge>
                                 <Badge variant={statusVariant} className="text-xs">{statusLabel}</Badge>
                               </div>
@@ -752,6 +773,19 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           studentHistory={selectedStudentHistory}
           onSubmit={handleTriage}
         />
+
+        {activityModalStudent && (
+          <StudentActivityModal
+            open={activityModalOpen}
+            onOpenChange={setActivityModalOpen}
+            studentName={activityModalStudent.studentName}
+            profileId={activityModalStudent.profileId}
+            patientId={activityModalStudent.patientId}
+            institutionId={institutionId}
+            riskLevel={activityModalStudent.riskLevel}
+            entryCount={activityModalStudent.entryCount}
+          />
+        )}
       </div>
     </TooltipProvider>
   );
