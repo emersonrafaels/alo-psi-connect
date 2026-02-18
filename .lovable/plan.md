@@ -1,48 +1,51 @@
 
 
-## Tooltips Explicativos na Aba de Triagem
+## Tooltips Mais Elegantes e UX Aprimorado na Pagina de Triagem
 
-### O que sera adicionado
+### Problemas atuais
+- Tooltips sao simples caixas de texto sem hierarquia visual
+- Cards de resumo de risco sao compactos demais, sem clareza visual
+- Lista de alunos e densa, com metricas amontoadas em uma unica linha
+- Icone de interrogacao (?) e muito pequeno e pouco visivel
 
-Tooltips com icone de interrogacao (?) nos principais elementos da aba Triagem, para que gestores leigos entendam cada informacao ao passar o mouse.
+### Melhorias planejadas
 
-### Tooltips planejados
+**1. Tooltips mais elegantes**
+- Criar um componente `MetricTooltip` reutilizavel com:
+  - Titulo em negrito separado da descricao
+  - Icone contextual (colorido) no topo do tooltip
+  - Largura fixa (280px) para consistencia
+  - Fundo com leve gradiente e borda sutil
+  - Separador visual entre titulo e explicacao
+- Substituir todos os tooltips atuais pelo novo componente
 
-**Cards de resumo (topo - 5 cards de risco):**
-Cada card ja mostra o nivel (Critico, Alerta, etc.) e a contagem. Sera adicionado um tooltip no label de cada card:
-- **Critico**: "Alunos com humor muito baixo (<=1.5), ansiedade muito alta (>=4.5) ou queda brusca no humor (>40%). Necessitam atencao imediata."
-- **Alerta**: "Alunos com humor baixo (<=2.5), ansiedade elevada (>=3.5) ou energia muito baixa. Recomenda-se acompanhamento."
-- **Atencao**: "Alunos com indicadores moderadamente preocupantes. Vale monitorar de perto."
-- **Saudavel**: "Alunos com todos os indicadores dentro da faixa esperada."
-- **Sem Dados**: "Alunos que nao registraram diarios emocionais nos ultimos 14 dias."
+**2. Cards de resumo de risco redesenhados**
+- Aumentar o padding dos cards para respirar mais
+- Adicionar porcentagem ao lado da contagem (ex: "3 (12%)")
+- Icone de risco maior e mais destacado
+- Barra de progresso com cor correspondente ao nivel de risco (vermelho para critico, verde para saudavel)
+- Tooltip integrado ao card inteiro (nao apenas no icone ?)
+- Efeito hover mais pronunciado com sombra e scale sutil
 
-**Metricas individuais dos alunos (ja existem tooltips basicos - serao enriquecidos):**
-Os tooltips atuais dizem apenas "Media de humor nos ultimos 14 dias (1-5)". Serao melhorados com explicacoes mais acessiveis:
-- **Humor**: "Como o aluno avaliou seu humor (1=muito mal, 5=muito bem). Abaixo de 3 merece atencao."
-- **Ansiedade**: "Nivel de ansiedade reportado (1=tranquilo, 5=muito ansioso). Acima de 3.5 e preocupante."
-- **Energia**: "Nivel de energia do aluno (1=sem energia, 5=muita energia). Valores baixos podem indicar cansaco."
-- **Sono**: "Qualidade do sono (1=pessimo, 5=otimo). Sono ruim afeta humor e concentracao."
+**3. Lista de alunos com melhor UX**
+- Reorganizar metricas em grid 2x2 ao inves de linha unica
+- Cada metrica com barra de progresso colorida (1-5) ao lado do valor
+- Sparkline maior e mais visivel
+- Tendencia com badge colorido mostrando a porcentagem (ex: badge vermelho "-61%")
+- Separar visualmente nome/risco das metricas
+- Botao "Triar" com variante mais chamativa para alunos criticos (vermelho)
+- Badge "Triado" com icone de check
 
-**Sparkline (mini-grafico):**
-O tooltip atual diz "Tendencia de humor (14 dias)". Sera melhorado para: "Mini-grafico mostrando a evolucao do humor nos ultimos 14 dias. Verde=bom, amarelo=moderado, vermelho=preocupante."
-
-**Tendencia (seta):**
-Adicionar tooltip na seta de tendencia: "Variacao percentual do humor entre a primeira e segunda semana. Seta vermelha=piora, verde=melhora."
-
-**Contagem de registros:**
-Adicionar tooltip: "Quantidade de diarios emocionais preenchidos nos ultimos 14 dias. Mais registros = analise mais confiavel."
-
-**Historico de Triagens:**
-Adicionar tooltips nos botoes "Em andamento" e "Resolver" e no badge de status:
-- **Em andamento**: "Marca esta triagem como em acompanhamento ativo."
-- **Resolver**: "Marca esta triagem como concluida."
-- **Follow-up (relogio)**: tooltip ja existente implicitamente, sera adicionado: "Data limite para acompanhamento. Vermelho=vencido, amarelo=proximo do prazo."
+**4. Pequenas melhorias gerais**
+- Remover icone HelpCircle dos cards de risco (tooltip no hover do card inteiro e mais intuitivo)
+- Adicionar contagem de registros como badge discreto
+- Hover nos cards de risco com animacao suave (transform scale)
 
 ### Detalhes tecnicos
 
 | Arquivo | Mudanca |
 |---|---|
-| `src/components/institution/StudentTriageTab.tsx` | Adicionar tooltips nos cards de resumo, enriquecer tooltips existentes nas metricas, adicionar tooltips na tendencia/registros/historico |
+| `src/components/institution/StudentTriageTab.tsx` | Redesign dos cards de risco, novo layout de metricas por aluno, tooltips elegantes, melhorias visuais gerais |
 
-Apenas um arquivo modificado. Sem mudancas em logica ou banco de dados.
+Mudanca em um unico arquivo. Sem impacto em logica, dados ou banco.
 
