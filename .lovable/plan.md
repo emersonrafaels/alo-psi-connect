@@ -1,56 +1,23 @@
 
 
-## Corrigir Diario Emocional Nao Aparecendo no Modal de Atividade
+## Adicionar Barra de Rolagem Vertical no Modal de Atividade do Aluno
 
-### Causa raiz
-
-Quando o modal abre, o `profileId` passado ao hook `useStudentActivityData` esta chegando como `null`. Isso faz com que a query de `mood_entries` seja PULADA (usando `Promise.resolve({ data: [] })`), resultando em "Nenhum registro emocional nos ultimos 30 dias" -- mesmo havendo dados no banco.
-
-Evidencia: a request de `student_triage` aparece no network (feita pelo mesmo `Promise.all`), mas a de `mood_entries` NAO aparece -- ou seja, o `profileId` e falsy no momento da execucao.
+### Problema
+O conteudo do modal (registros emocionais) ultrapassa a altura visivel mas nao mostra uma barra de rolagem, impedindo o usuario de ver todos os registros.
 
 ### Correcao
 
-**Arquivo: `src/hooks/useStudentActivityData.tsx`**
+**Arquivo: `src/components/institution/StudentActivityModal.tsx`**
 
-1. Adicionar fallback: se `profileId` for null mas `patientId` existir, buscar o `profile_id` na tabela `pacientes` antes de fazer a query de mood_entries
-2. Adicionar `console.log` para depuracao das entradas e do profileId resolvido
-3. Garantir que a query nao e pulada quando ha dados disponiveis
+Duas mudancas:
 
-Mudanca principal no `queryFn`:
+1. **Linha 228** - Adicionar `overflow-hidden` ao `DialogContent` para evitar overflow externo:
+   - De: `className="max-w-2xl max-h-[85vh] flex flex-col"`
+   - Para: `className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden"`
 
-```text
-// ANTES (pula mood_entries se profileId e null):
-const [moodResult, triageResult] = await Promise.all([
-  profileId
-    ? supabase.from('mood_entries')...
-    : Promise.resolve({ data: [], error: null }),
-  ...
-]);
+2. **Linha 256** - Trocar o `ScrollArea` com `style` inline por uma altura fixa via classe Tailwind e garantir `overflow-y-auto`:
+   - De: `<ScrollArea className="flex-1 mt-3" style={{ maxHeight: 'calc(85vh - 180px)' }}>`
+   - Para: `<ScrollArea className="flex-1 mt-3 h-0 min-h-0" style={{ maxHeight: 'calc(85vh - 180px)' }}>`
 
-// DEPOIS (busca profileId do paciente como fallback):
-let resolvedProfileId = profileId;
-if (!resolvedProfileId && patientId) {
-  const { data: patient } = await supabase
-    .from('pacientes')
-    .select('profile_id')
-    .eq('id', patientId)
-    .single();
-  resolvedProfileId = patient?.profile_id || null;
-}
-
-const [moodResult, triageResult] = await Promise.all([
-  resolvedProfileId
-    ? supabase.from('mood_entries')...eq('profile_id', resolvedProfileId)...
-    : Promise.resolve({ data: [], error: null }),
-  ...
-]);
-```
-
-### Detalhes tecnicos
-
-| Arquivo | Mudanca |
-|---|---|
-| `src/hooks/useStudentActivityData.tsx` | Adicionar fallback de profileId via pacientes.profile_id quando profileId e null. Adicionar console.log para depuracao. |
-
-Sem mudancas no banco de dados. Sem novos arquivos.
+O truque e adicionar `h-0 min-h-0` ao `ScrollArea` para forcar o container flex a respeitar o `flex-1` e permitir que o `ScrollArea` do Radix renderize a barra de rolagem corretamente dentro do espaco disponivel.
 
