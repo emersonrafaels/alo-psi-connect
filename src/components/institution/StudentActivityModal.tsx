@@ -253,7 +253,7 @@ export function StudentActivityModal({
             </TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="flex-1 mt-3 h-0 min-h-0" style={{ maxHeight: 'calc(85vh - 180px)' }}>
+          <div className="mt-3 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 180px)' }}>
             {isLoading ? (
               <div className="py-8 text-center text-muted-foreground text-sm">Carregando...</div>
             ) : (
@@ -266,7 +266,7 @@ export function StudentActivityModal({
                 </TabsContent>
               </>
             )}
-          </ScrollArea>
+          </div>
         </Tabs>
       </DialogContent>
     </Dialog>
