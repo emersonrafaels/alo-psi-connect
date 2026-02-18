@@ -1,0 +1,1 @@
+ALTER TABLE public.student_triage ADD COLUMN follow_up_date date;

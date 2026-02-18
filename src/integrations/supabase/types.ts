@@ -2662,6 +2662,7 @@ export type Database = {
       student_triage: {
         Row: {
           created_at: string
+          follow_up_date: string | null
           id: string
           institution_id: string
           notes: string | null
@@ -2676,6 +2677,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          follow_up_date?: string | null
           id?: string
           institution_id: string
           notes?: string | null
@@ -2690,6 +2692,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          follow_up_date?: string | null
           id?: string
           institution_id?: string
           notes?: string | null
