@@ -1,59 +1,57 @@
 
+## Notificacoes por Email para Acoes Institucionais
 
-## Redesign do Workflow de Triagem com Abas de Status
+### Objetivo
+Criar uma edge function que envia emails para os administradores da instituicao quando acoes importantes acontecem (triagem, mudanca de status, notas criadas, etc).
 
-### Problema atual
-- A lista de alunos mistura triados e nao triados em um unico card
-- O historico de triagens e um collapsible escondido no final da pagina, misturando todos os status (Triado, Em Andamento, Resolvido)
-- Nao ha visao clara de quantos alunos estao em cada etapa do workflow
+### Abordagem
+Criar uma unica edge function `notify-institution-action` que recebe o tipo de acao e dados relevantes, busca os admins da instituicao, e envia um email formatado com branding do tenant. No frontend, invocar essa funcao nos hooks existentes (`useStudentTriage` e `useInstitutionNotes`) apos cada acao bem-sucedida (fire-and-forget, sem bloquear a UI).
 
-### Solucao proposta
+### Acoes que disparam email
+1. **Aluno triado** (createTriage) - inclui nome do aluno, nivel de risco, prioridade
+2. **Triagem em andamento** (updateTriageStatus -> in_progress)
+3. **Triagem concluida** (updateTriageStatus -> resolved)
+4. **Triagem reaberta** (updateTriageStatus -> triaged, vindo de resolved)
+5. **Nota institucional criada** (createNote)
+6. **Nota institucional excluida** (deleteNote)
 
-Substituir a estrutura atual (lista unica + collapsible) por um sistema de **sub-abas** dentro da aba Triagem, separando claramente cada etapa do fluxo:
+### Arquitetura
 
 ```text
-+-------------------------------------------------------------+
-| [Para Triar (12)] [Em Andamento (3)] [Concluidos (5)] [Todos]|
-+-------------------------------------------------------------+
+Frontend (hook onSuccess)
+  |
+  v  (fire-and-forget, nao bloqueia UI)
+Edge Function: notify-institution-action
+  |
+  +-- Busca admins da instituicao (institution_users WHERE role='admin')
+  +-- Busca emails dos admins (profiles.email)
+  +-- Busca branding do tenant (tenants table)
+  +-- Busca BCC emails (system_configurations)
+  +-- Envia email via Resend para todos os admins
 ```
-
-**Sub-aba "Para Triar"** (padrao):
-- Mostra apenas alunos que ainda nao foram triados ou com status "pending"
-- Ordenados por risco (critico primeiro)
-- Layout atual dos cards de aluno (nome, metricas, sparkline, botao Triar)
-- Counter em vermelho se houver criticos
-
-**Sub-aba "Em Andamento"**:
-- Mostra triagens com status "triaged" ou "in_progress"
-- Card redesenhado com:
-  - Nome do aluno, prioridade (badge colorido), acao recomendada
-  - Data da triagem e quem triou
-  - Follow-up com indicador visual (vencido/proximo)
-  - Notas da triagem
-  - Botoes de acao: "Marcar Em Andamento" / "Resolver"
-- Separacao visual entre "Triado" e "Em Andamento" com headers de secao
-
-**Sub-aba "Concluidos"**:
-- Triagens com status "resolved"
-- Cards mais compactos (ja finalizados)
-- Data de resolucao visivel
-- Opcao de reabrir se necessario
-
-**Sub-aba "Todos"** (historico completo):
-- Todas as triagens ordenadas por data (mais recente primeiro)
-- Filtro por status inline
-
-### Mudancas visuais adicionais
-- Badges de contagem em cada sub-aba com cores contextuais (vermelho para pendentes, amarelo para em andamento, verde para concluidos)
-- Cards de triagem em andamento com borda lateral colorida por prioridade (vermelho=urgente, laranja=alta, amarelo=media, verde=baixa)
-- Remover o Collapsible de historico (substituido pelas sub-abas)
-- Remover filtro "Status de triagem" do select (agora e feito pelas abas)
 
 ### Detalhes tecnicos
 
 | Arquivo | Mudanca |
 |---|---|
-| `src/components/institution/StudentTriageTab.tsx` | Adicionar sub-tabs (Tabs do Radix) para separar "Para Triar", "Em Andamento", "Concluidos" e "Todos". Remover Collapsible de historico e select de filtro de triagem. Redesenhar cards de triagem com borda lateral por prioridade. Adicionar contadores coloridos nas abas. |
+| `supabase/functions/notify-institution-action/index.ts` | Nova edge function que recebe action_type, institution_id, e metadata; busca admins e envia email formatado com Resend |
+| `src/hooks/useStudentTriage.tsx` | Nos callbacks onSuccess de createTriage e updateTriageStatus, invocar a edge function (fire-and-forget) |
+| `src/hooks/useInstitutionNotes.tsx` | Nos callbacks onSuccess de createNote e deleteNote, invocar a edge function (fire-and-forget) |
 
-Apenas um arquivo modificado. Sem mudancas em banco de dados ou logica de negocio.
+### Conteudo do email por acao
 
+- **Aluno triado**: "O aluno [Nome] foi triado com risco [Nivel] e prioridade [Prioridade]. Acao recomendada: [texto]"
+- **Em andamento**: "A triagem do aluno [Nome] foi movida para Em Andamento"
+- **Concluida**: "A triagem do aluno [Nome] foi concluida/resolvida"
+- **Reaberta**: "A triagem do aluno [Nome] foi reaberta"
+- **Nota criada**: "Uma nova nota '[Titulo]' foi criada na instituicao [Nome]"
+- **Nota excluida**: "A nota '[Titulo]' foi excluida da instituicao [Nome]"
+
+### Seguranca
+- Edge function valida autenticacao via Authorization header
+- Usa service role key internamente para buscar admins
+- Emails enviados apenas para admins ativos da instituicao
+- Falha no envio de email nao bloqueia a acao principal (fire-and-forget)
+
+### Sem mudancas no banco de dados
+Nenhuma migracao necessaria. Usa tabelas existentes: `institution_users`, `profiles`, `tenants`, `system_configurations`.
