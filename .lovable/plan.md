@@ -1,59 +1,56 @@
 
-## Corrigir Dados Demo para Aparecer no Modal de Atividade do Aluno
 
-### Problemas Identificados
+## Corrigir Diario Emocional Nao Aparecendo no Modal de Atividade
 
-1. **Mood entries sem `emotion_values`**: A seed function nao preenche o campo `emotion_values` (jsonb), entao a secao "Sentimentos predominantes" do modal fica vazia
-2. **Sem registros de triagem demo**: A seed function nao cria registros na tabela `student_triage`, entao a aba "Historico de Triagens" fica vazia
-3. **Limpeza incompleta**: A funcao de cleanup nao limpa registros de `student_triage` criados por demo
+### Causa raiz
 
-### Mudancas
+Quando o modal abre, o `profileId` passado ao hook `useStudentActivityData` esta chegando como `null`. Isso faz com que a query de `mood_entries` seja PULADA (usando `Promise.resolve({ data: [] })`), resultando em "Nenhum registro emocional nos ultimos 30 dias" -- mesmo havendo dados no banco.
 
-#### 1. Edge Function `seed-demo-data/index.ts`
+Evidencia: a request de `student_triage` aparece no network (feita pelo mesmo `Promise.all`), mas a de `mood_entries` NAO aparece -- ou seja, o `profileId` e falsy no momento da execucao.
 
-**Adicionar `emotion_values` nas mood entries:**
-- Cada pattern tera um mapa de emocoes associadas (ex: `exam_stress` -> `{ansiedade: 4, medo: 3, frustração: 2}`)
-- Os valores serao gerados proporcionalmente ao estado emocional daquele dia
+### Correcao
 
-**Nova funcao `seedTriageRecords`:**
-- Para cada aluno, criar 1-3 registros de triagem demo com datas passadas realistas
-- Distribuir status entre `triaged`, `in_progress`, `resolved`
-- Usar prioridades e acoes recomendadas coerentes com o nivel de risco do aluno
-- O campo `triaged_by` usara um UUID fixo de demo (ou o admin placeholder)
-- Adicionar notas contextuais ao padrao emocional do aluno
+**Arquivo: `src/hooks/useStudentActivityData.tsx`**
 
-**Atualizar cleanup:**
-- Adicionar limpeza de `student_triage` vinculados aos pacientes da instituicao demo
+1. Adicionar fallback: se `profileId` for null mas `patientId` existir, buscar o `profile_id` na tabela `pacientes` antes de fazer a query de mood_entries
+2. Adicionar `console.log` para depuracao das entradas e do profileId resolvido
+3. Garantir que a query nao e pulada quando ha dados disponiveis
 
-**Atualizar fluxo principal (`seed_all` e `create_institution`):**
-- Chamar `seedTriageRecords` apos criar alunos
+Mudanca principal no `queryFn`:
 
-#### 2. Hook `useStudentActivityData.tsx`
+```text
+// ANTES (pula mood_entries se profileId e null):
+const [moodResult, triageResult] = await Promise.all([
+  profileId
+    ? supabase.from('mood_entries')...
+    : Promise.resolve({ data: [], error: null }),
+  ...
+]);
 
-**Adicionar tratamento de erro no query:**
-- Logar erro no console se a query de mood_entries falhar silenciosamente
-- Garantir que `emotion_values` retornado como `{}` default nao quebre o calculo de top emotions
+// DEPOIS (busca profileId do paciente como fallback):
+let resolvedProfileId = profileId;
+if (!resolvedProfileId && patientId) {
+  const { data: patient } = await supabase
+    .from('pacientes')
+    .select('profile_id')
+    .eq('id', patientId)
+    .single();
+  resolvedProfileId = patient?.profile_id || null;
+}
+
+const [moodResult, triageResult] = await Promise.all([
+  resolvedProfileId
+    ? supabase.from('mood_entries')...eq('profile_id', resolvedProfileId)...
+    : Promise.resolve({ data: [], error: null }),
+  ...
+]);
+```
 
 ### Detalhes tecnicos
 
 | Arquivo | Mudanca |
 |---|---|
-| `supabase/functions/seed-demo-data/index.ts` | Adicionar `emotion_values` em cada PATTERN_CONFIG, inserir no mood_entries. Nova funcao `seedTriageRecords`. Atualizar cleanup para limpar `student_triage`. |
-| `src/hooks/useStudentActivityData.tsx` | Adicionar console.error para erros silenciosos nas queries de mood_entries e student_triage |
+| `src/hooks/useStudentActivityData.tsx` | Adicionar fallback de profileId via pacientes.profile_id quando profileId e null. Adicionar console.log para depuracao. |
 
-### Estrutura de `emotion_values` por padrao
+Sem mudancas no banco de dados. Sem novos arquivos.
 
-- **exam_stress**: `{ansiedade: 4, medo: 3, frustração: 3, preocupação: 4}`
-- **progressive_improvement**: valores que melhoram progressivamente
-- **burnout**: `{exaustão: 4, desânimo: 3, apatia: 3}`
-- **healthy**: `{calma: 4, gratidão: 3, motivação: 3}`
-- **volatile**: alternancia entre emocoes positivas e negativas
-- **random**: mix aleatorio
-
-### Estrutura dos triagem demo
-
-Para cada aluno, gerar 1-2 registros:
-- Prioridade baseada no risk_level do padrao (exam_stress/burnout -> urgent/high, healthy -> low)
-- Status variado: ~40% triaged, ~30% in_progress, ~30% resolved
-- Datas de criacao distribuidas nos ultimos 30 dias
-- Notas contextuais como "[DEMO] Aluno apresenta sinais de estresse academico"
