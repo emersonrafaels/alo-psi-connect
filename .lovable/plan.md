@@ -1,48 +1,59 @@
 
+## Corrigir Dados Demo para Aparecer no Modal de Atividade do Aluno
 
-## Perfil de Atividades do Aluno ao Clicar no Nome
+### Problemas Identificados
 
-### O que muda
-Ao clicar no nome de qualquer aluno na aba de triagem (em qualquer sub-aba), abre um modal mostrando as principais atividades dele no site: diarios emocionais recentes, sentimentos predominantes, e historico completo de triagens.
+1. **Mood entries sem `emotion_values`**: A seed function nao preenche o campo `emotion_values` (jsonb), entao a secao "Sentimentos predominantes" do modal fica vazia
+2. **Sem registros de triagem demo**: A seed function nao cria registros na tabela `student_triage`, entao a aba "Historico de Triagens" fica vazia
+3. **Limpeza incompleta**: A funcao de cleanup nao limpa registros de `student_triage` criados por demo
 
-### Componentes do modal
+### Mudancas
 
-**1. Cabecalho**: Avatar com iniciais, nome, nivel de risco atual (badge), e quantidade de registros nos ultimos 14 dias.
+#### 1. Edge Function `seed-demo-data/index.ts`
 
-**2. Aba "Diario Emocional"**:
-- Lista dos ultimos 14 dias de registros emocionais (data, humor, ansiedade, energia, sono)
-- Sentimentos predominantes (top 3 emocoes mais registradas via `emotion_values`)
-- Mini grafico sparkline de evolucao do humor
-- Tags e texto do diario (se houver)
+**Adicionar `emotion_values` nas mood entries:**
+- Cada pattern tera um mapa de emocoes associadas (ex: `exam_stress` -> `{ansiedade: 4, medo: 3, frustração: 2}`)
+- Os valores serao gerados proporcionalmente ao estado emocional daquele dia
 
-**3. Aba "Historico de Triagens"**:
-- Todas as triagens desse aluno, com data, prioridade, acao recomendada, notas, quem triou, status
-- Timeline visual com icones de status
+**Nova funcao `seedTriageRecords`:**
+- Para cada aluno, criar 1-3 registros de triagem demo com datas passadas realistas
+- Distribuir status entre `triaged`, `in_progress`, `resolved`
+- Usar prioridades e acoes recomendadas coerentes com o nivel de risco do aluno
+- O campo `triaged_by` usara um UUID fixo de demo (ou o admin placeholder)
+- Adicionar notas contextuais ao padrao emocional do aluno
 
-**4. Aba "Consultas"** (reusa o `UserStorytellingModal` existente):
-- Consultas agendadas/realizadas/canceladas
-- Cupons utilizados
+**Atualizar cleanup:**
+- Adicionar limpeza de `student_triage` vinculados aos pacientes da instituicao demo
+
+**Atualizar fluxo principal (`seed_all` e `create_institution`):**
+- Chamar `seedTriageRecords` apos criar alunos
+
+#### 2. Hook `useStudentActivityData.tsx`
+
+**Adicionar tratamento de erro no query:**
+- Logar erro no console se a query de mood_entries falhar silenciosamente
+- Garantir que `emotion_values` retornado como `{}` default nao quebre o calculo de top emotions
 
 ### Detalhes tecnicos
 
 | Arquivo | Mudanca |
 |---|---|
-| `src/hooks/useStudentTriage.tsx` | Adicionar `profileId` e `userId` ao interface `StudentRiskData` e retorna-los no map de dados |
-| `src/hooks/useStudentActivityData.tsx` | **Novo** - Hook que busca mood_entries recentes (com emotion_values, tags, journal_text), triagens do aluno, e calcula sentimentos predominantes |
-| `src/components/institution/StudentActivityModal.tsx` | **Novo** - Modal com abas mostrando diario emocional, sentimentos, historico de triagens |
-| `src/components/institution/StudentTriageTab.tsx` | Tornar nomes dos alunos clicaveis (cursor-pointer, underline on hover) em todas as 4 sub-abas. Adicionar state para o modal e renderiza-lo. Criar um map de patientId -> {profileId, userId} para as sub-abas de triagem. |
+| `supabase/functions/seed-demo-data/index.ts` | Adicionar `emotion_values` em cada PATTERN_CONFIG, inserir no mood_entries. Nova funcao `seedTriageRecords`. Atualizar cleanup para limpar `student_triage`. |
+| `src/hooks/useStudentActivityData.tsx` | Adicionar console.error para erros silenciosos nas queries de mood_entries e student_triage |
 
-### Interacao do usuario
-- Clicar no nome do aluno em qualquer sub-aba -> abre o modal
-- O nome tera estilo de link (cursor pointer, hover underline, cor primary)
-- O modal abre com a aba "Diario Emocional" como padrao
-- Pode navegar entre as abas dentro do modal
+### Estrutura de `emotion_values` por padrao
 
-### Dados buscados pelo novo hook
-- `mood_entries` dos ultimos 30 dias (profile_id, mood_score, anxiety_level, energy_level, sleep_quality, sleep_hours, date, tags, journal_text, emotion_values)
-- `student_triage` records para o patient_id
-- Calculo de top emocoes a partir de emotion_values agregados
+- **exam_stress**: `{ansiedade: 4, medo: 3, frustração: 3, preocupação: 4}`
+- **progressive_improvement**: valores que melhoram progressivamente
+- **burnout**: `{exaustão: 4, desânimo: 3, apatia: 3}`
+- **healthy**: `{calma: 4, gratidão: 3, motivação: 3}`
+- **volatile**: alternancia entre emocoes positivas e negativas
+- **random**: mix aleatorio
 
-### Sem mudancas no banco de dados
-Usa tabelas existentes: `mood_entries`, `student_triage`, `profiles`. Nenhuma migracao necessaria.
+### Estrutura dos triagem demo
 
+Para cada aluno, gerar 1-2 registros:
+- Prioridade baseada no risk_level do padrao (exam_stress/burnout -> urgent/high, healthy -> low)
+- Status variado: ~40% triaged, ~30% in_progress, ~30% resolved
+- Datas de criacao distribuidas nos ultimos 30 dias
+- Notas contextuais como "[DEMO] Aluno apresenta sinais de estresse academico"
