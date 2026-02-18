@@ -1,89 +1,86 @@
 
 
-## Configuracao de Anonimizacao de Alunos
+## Seletor de Periodo de Analise com Comparativo entre Periodos
 
-### Objetivo
+### Visao Geral
 
-Criar uma configuracao no painel admin que permita habilitar/desabilitar a anonimizacao dos nomes de alunos no portal institucional. O sistema tera um **valor padrao global** (aplicado a todas as instituicoes) e a possibilidade de **sobrescrever por instituicao**.
+Adicionar um seletor de periodo de analise ao sistema de triagem (default: 15 dias) que afeta todos os indicadores e metricas. Alem disso, implementar comparativo automatico entre o periodo atual e o periodo anterior de mesmo tamanho (ex: ultimos 15 dias vs 15-30 dias atras).
 
-### Arquitetura
+### Mudancas
 
-```text
-Prioridade de resolucao:
-  1. Configuracao da instituicao (se definida) -> usa ela
-  2. Configuracao global padrao -> fallback
-  3. Nenhuma configurada -> default = true (anonimizado por seguranca)
-```
+**1. Hook `useStudentTriageData` - aceitar periodo dinamico**
 
-### Mudancas no Banco de Dados
+Arquivo: `src/hooks/useStudentTriage.tsx`
 
-**1. Nova coluna na tabela `educational_institutions`:**
+- Adicionar parametro `periodDays` (default 15) ao hook `useStudentTriageData`
+- Incluir no `queryKey` para revalidar ao mudar periodo
+- Substituir o hardcoded "14 dias" por `periodDays`
+- Buscar tambem os dados do periodo anterior (para comparacao): se periodo = 15 dias, buscar tambem de 30 a 15 dias atras
+- Retornar dados adicionais por aluno: `prevAvgMood`, `prevAvgAnxiety`, `prevAvgEnergy`, `prevAvgSleep`, `prevEntryCount` (do periodo anterior)
+- Atualizar interface `StudentRiskData` com os campos de periodo anterior
 
-- `anonymize_students` (boolean, nullable, default null)
-- Quando `null`, herda o valor global. Quando `true/false`, sobrescreve.
+**2. Componente `StudentTriageTab` - seletor de periodo + comparativos**
 
-### Mudancas no Painel Admin
+Arquivo: `src/components/institution/StudentTriageTab.tsx`
 
-**2. Novo componente `AnonymizationConfig`** (`src/components/admin/config/AnonymizationConfig.tsx`):
+- Adicionar estado `analysisPeriod` com default `15` (opcoes: 7, 15, 30, 60, 90 dias)
+- Adicionar seletor visual (Select ou botoes) no topo, proximo ao titulo/filtros
+- Passar `analysisPeriod` para o hook `useStudentTriageData`
+- Atualizar todas as referencias "14 dias" para usar o periodo selecionado
+- Nos cards de resumo (critical/alert/attention/healthy/no_data), exibir uma seta e delta numerico comparando com o periodo anterior (ex: "3 (+1)")
+- Na secao "Medias da turma", mostrar a variacao vs periodo anterior (ex: "Humor: 3.2 (+0.3)")
+- Nos indicadores de cada aluno, adicionar icone de seta mostrando se melhorou ou piorou em relacao ao periodo anterior
+- Na legenda "Sem Dados", atualizar dinamicamente (ex: "Sem registros nos ultimos 15 dias")
+- Atualizar tooltip de engajamento (ex: "X/15 dias" em vez de fixo "X/14 dias")
 
-- Usa `useSystemConfig(['institution'])` para ler/gravar a config global
-- Chave: `institution.default_anonymize_students` (valor: `true`/`false`)
-- Switch para o padrao global com explicacao
-- Tabela listando todas as instituicoes com um select de 3 opcoes cada:
-  - "Usar padrao global" (null)
-  - "Anonimizar" (true)
-  - "Mostrar nomes" (false)
-- Busca instituicoes via Supabase e atualiza a coluna `anonymize_students` diretamente
+**3. Componente `TriageMetricsDashboard` - comparativo**
 
-**3. Registrar no `Configurations.tsx`:**
+Arquivo: `src/components/institution/TriageMetricsDashboard.tsx`
 
-- Adicionar card "Anonimizacao de Alunos" na categoria "Cadastro e Usuarios" com icone `Shield`
+- Receber `periodDays` como prop
+- Filtrar triagens pelo periodo selecionado (em vez de fixo "este mes")
+- Adicionar comparativo: mostrar delta em relacao ao periodo anterior
+- Ex: "12 triagens (+3 vs periodo anterior)"
 
-### Mudancas no Portal Institucional
+**4. Textos e legendas dinamicos**
 
-**4. Novo hook `useAnonymizationConfig`** (`src/hooks/useAnonymizationConfig.tsx`):
+- `riskLegend.no_data`: "Sem registros nos ultimos X dias" (dinamico)
+- `riskTooltips.no_data.description`: atualizar com periodo
+- Label "Indicadores (X dias)" nos cards de alunos
+- Badge de engajamento: "X/Y dias" onde Y = periodo selecionado
 
-- Recebe `institutionId`
-- Busca o valor de `anonymize_students` da instituicao
-- Busca o default global via `usePublicConfig` ou query direta em `system_configurations`
-- Retorna `{ isAnonymized: boolean, loading: boolean }`
-- Logica: se instituicao tem valor definido, usa; senao, usa global; senao, default `true`
+### Detalhes do Seletor de Periodo
 
-**5. Funcao de anonimizacao `anonymizeStudentName`:**
+Opcoes disponiveis:
 
-- Recebe nome completo, retorna versao anonimizada
-- Formato: "Aluno 1", "Aluno 2", etc. (baseado em indice) ou "L***s S***a" (primeiras e ultimas letras mascaradas)
-- Sugestao: usar formato "Aluno #XX" onde XX e um hash curto do patientId para manter consistencia
-
-**6. Aplicar em `StudentTriageTab.tsx`:**
-
-- Importar o hook `useAnonymizationConfig`
-- Quando anonimizado:
-  - Nomes exibidos como "Aluno #1", "Aluno #2", etc.
-  - Iniciais do avatar como "A1", "A2"
-  - Exportacao tambem anonimizada
-  - Tooltip indicando "Nomes anonimizados por politica da instituicao"
-- Quando nao anonimizado: comportamento atual (nomes reais)
-
-**7. Aplicar em `StudentActivityModal.tsx`:**
-
-- Nome do aluno no titulo do modal tambem anonimizado
-
-### Arquivos Afetados
-
-| Arquivo | Acao |
+| Label | Valor |
 |---|---|
-| Migracao SQL | Adicionar coluna `anonymize_students` (boolean nullable) em `educational_institutions` |
-| `src/components/admin/config/AnonymizationConfig.tsx` | Novo - painel de config global + por instituicao |
-| `src/pages/admin/Configurations.tsx` | Adicionar card de Anonimizacao |
-| `src/hooks/useAnonymizationConfig.tsx` | Novo - hook para resolver config efetiva |
-| `src/components/institution/StudentTriageTab.tsx` | Aplicar anonimizacao nos nomes e exportacao |
-| `src/components/institution/StudentActivityModal.tsx` | Anonimizar nome no modal |
-| `src/components/institution/BatchTriageDialog.tsx` | Anonimizar nomes na listagem de lote |
+| 7 dias | 7 |
+| 15 dias (default) | 15 |
+| 30 dias | 30 |
+| 60 dias | 60 |
+| 90 dias | 90 |
 
-### Detalhes de Seguranca
+Visual: Select dropdown ao lado dos filtros existentes, com icone de calendario.
 
-- O default sera `true` (anonimizado) para garantir privacidade mesmo se nenhuma configuracao for feita
-- A configuracao global usa `system_configurations` (ja existente, com RLS para admins)
-- A coluna na instituicao e protegida pelo RLS existente da tabela `educational_institutions` (apenas admins podem gerenciar)
+### Detalhes do Comparativo
+
+Para cada metrica, o comparativo mostrara:
+- Seta verde para cima: melhora (humor/energia/sono subiu, ansiedade desceu)
+- Seta vermelha para baixo: piora (humor/energia/sono desceu, ansiedade subiu)
+- Traco cinza: sem variacao significativa (delta < 5%)
+- Texto pequeno com o delta numerico (ex: "+0.3" ou "-0.5")
+
+Nos cards de resumo de risco, mostrar a variacao na contagem:
+- "3 alunos criticos (+1 vs periodo anterior)" ou "(=)" se nao mudou
+
+### Detalhes Tecnicos
+
+| Arquivo | Mudanca |
+|---|---|
+| `src/hooks/useStudentTriage.tsx` | Adicionar `periodDays` param, buscar periodo anterior, retornar dados comparativos em `StudentRiskData` |
+| `src/components/institution/StudentTriageTab.tsx` | Adicionar estado `analysisPeriod`, seletor, passar para hook, exibir comparativos nos cards/indicadores, textos dinamicos |
+| `src/components/institution/TriageMetricsDashboard.tsx` | Receber `periodDays`, filtrar por periodo, exibir deltas comparativos |
+
+Nenhum arquivo novo. Nenhuma mudanca no banco de dados.
 
