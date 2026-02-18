@@ -110,7 +110,7 @@ function MetricBar({ value, invert }: { value: number | null; invert?: boolean }
   const effectivePct = invert ? 100 - pct : pct;
   const color = effectivePct >= 60 ? 'bg-green-500' : effectivePct >= 40 ? 'bg-yellow-500' : 'bg-red-500';
   return (
-    <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
       <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
     </div>
   );
@@ -146,8 +146,8 @@ function TrendBadge({ trend }: { trend: number | null }) {
 
 function MoodSparkline({ data }: { data: number[] }) {
   if (data.length < 2) return null;
-  const width = 72;
-  const height = 24;
+  const width = 100;
+  const height = 32;
   const max = 5;
   const min = 1;
   const range = max - min || 1;
@@ -447,15 +447,12 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
                 return (
                   <div key={student.patientId} className="p-4 hover:bg-muted/30 transition-colors">
-                    {/* Row 1: Name, badge, sparkline, actions */}
+                    {/* Row 1: Name, badge, trend, actions */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
                         <p className="font-medium text-sm truncate">{student.studentName}</p>
                         <TrendBadge trend={student.moodTrend} />
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <MoodSparkline data={student.moodHistory} />
                         <MetricTooltip title="📝 Registros" description="Quantidade de diários emocionais preenchidos nos últimos 14 dias. Mais registros = análise mais confiável.">
                           <Badge variant="outline" className="text-[10px] cursor-help font-normal">
                             {student.entryCount} reg.
@@ -467,6 +464,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                             Triado
                           </Badge>
                         )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
                         <Button
                           size="sm"
                           variant={isCritical ? 'destructive' : 'outline'}
@@ -480,8 +479,9 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                       </div>
                     </div>
 
-                    {/* Row 2: 2x2 metrics grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 pl-[72px]">
+                    {/* Row 2: metrics + sparkline, full width */}
+                    <div className="flex items-center gap-6">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-2 flex-1">
                       <MetricTooltip title={metricTooltips.mood.title} description={metricTooltips.mood.description}>
                         <div className="space-y-1 cursor-help">
                           <div className="flex items-center justify-between text-xs">
@@ -533,6 +533,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                           <MetricBar value={student.avgSleep} />
                         </div>
                       </MetricTooltip>
+                      </div>
+                      <MoodSparkline data={student.moodHistory} />
                     </div>
                   </div>
                 );
