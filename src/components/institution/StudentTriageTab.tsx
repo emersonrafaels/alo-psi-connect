@@ -10,10 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play, ChevronRight } from 'lucide-react';
 import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
 import { StudentActivityModal } from './StudentActivityModal';
+import { BatchTriageDialog } from './BatchTriageDialog';
+import { TriageMetricsDashboard } from './TriageMetricsDashboard';
+import { QuickNotePopover } from './QuickNotePopover';
 import { useInstitutionNotes } from '@/hooks/useInstitutionNotes';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -229,7 +234,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const { data: students = [], isLoading } = useStudentTriageData(institutionId);
   const { notes: institutionNotes } = useInstitutionNotes(institutionId);
   const { data: triageRecords = [] } = useTriageRecords(institutionId);
-  const { createTriage, updateTriageStatus } = useTriageActions(institutionId);
+  const { createTriage, updateTriageStatus, batchCreateTriage, addQuickNote } = useTriageActions(institutionId);
 
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [selectedStudent, setSelectedStudent] = useState<StudentRiskData | null>(null);
@@ -239,6 +244,9 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const [activeTab, setActiveTab] = useState('para_triar');
   const [activityModalStudent, setActivityModalStudent] = useState<StudentRiskData | null>(null);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const [historyPeriod, setHistoryPeriod] = useState<string>('all');
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   const counts = useMemo(() => {
@@ -278,6 +286,33 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const criticalPendingCount = useMemo(() => {
     return students.filter((s) => s.riskLevel === 'critical' && (!s.lastTriageStatus || s.lastTriageStatus === 'pending')).length;
   }, [students]);
+
+  const overdueFollowUpCount = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return inProgressTriages.filter(t => {
+      if (!t.follow_up_date) return false;
+      return new Date(t.follow_up_date) < today;
+    }).length;
+  }, [inProgressTriages]);
+
+  const filteredResolvedTriages = useMemo(() => {
+    if (historyPeriod === 'all') return resolvedTriages;
+    const cutoff = new Date();
+    if (historyPeriod === '1w') cutoff.setDate(cutoff.getDate() - 7);
+    else if (historyPeriod === '1m') cutoff.setMonth(cutoff.getMonth() - 1);
+    else cutoff.setMonth(cutoff.getMonth() - 3);
+    return resolvedTriages.filter(t => new Date(t.created_at) >= cutoff);
+  }, [resolvedTriages, historyPeriod]);
+
+  const filteredAllTriages = useMemo(() => {
+    if (historyPeriod === 'all') return allTriages;
+    const cutoff = new Date();
+    if (historyPeriod === '1w') cutoff.setDate(cutoff.getDate() - 7);
+    else if (historyPeriod === '1m') cutoff.setMonth(cutoff.getMonth() - 1);
+    else cutoff.setMonth(cutoff.getMonth() - 3);
+    return allTriages.filter(t => new Date(t.created_at) >= cutoff);
+  }, [allTriages, historyPeriod]);
 
   const classAverages = useMemo(() => {
     const withData = students.filter((s) => s.riskLevel !== 'no_data');
@@ -327,27 +362,89 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
     await createTriage.mutateAsync(data);
   };
 
-  const handleExport = useCallback(() => {
-    const exportStudents = activeTab === 'para_triar' ? pendingStudents : students.filter((s) => {
-      if (riskFilter !== 'all') return s.riskLevel === riskFilter;
-      return true;
+  const handleBatchTriage = useCallback(async (data: { patientIds: string[]; priority: string; recommendedAction: string; notes: string; followUpDate?: string }) => {
+    const entries = data.patientIds.map(id => {
+      const s = patientDataMap.get(id);
+      return { patientId: id, riskLevel: s?.riskLevel || 'attention', studentName: s?.studentName };
     });
-    const data = exportStudents.map((s) => ({
-      'Nome': s.studentName,
-      'Nível de Risco': riskConfig[s.riskLevel].label,
-      'Humor Médio': s.avgMood ?? '—',
-      'Ansiedade Média': s.avgAnxiety ?? '—',
-      'Energia Média': s.avgEnergy ?? '—',
-      'Sono Médio': s.avgSleep ?? '—',
-      'Tendência Humor (%)': s.moodTrend ?? '—',
-      'Registros': s.entryCount,
-      'Triado': s.lastTriageStatus && s.lastTriageStatus !== 'pending' ? 'Sim' : 'Não'
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Triagem');
-    XLSX.writeFile(wb, `triagem-alunos-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
-  }, [activeTab, pendingStudents, students, riskFilter]);
+    await batchCreateTriage.mutateAsync({ entries, priority: data.priority, recommendedAction: data.recommendedAction, notes: data.notes, followUpDate: data.followUpDate });
+    setSelectedStudentIds(new Set());
+  }, [batchCreateTriage, patientDataMap]);
+
+  const toggleStudentSelection = useCallback((patientId: string) => {
+    setSelectedStudentIds(prev => {
+      const next = new Set(prev);
+      if (next.has(patientId)) next.delete(patientId);
+      else next.add(patientId);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    if (selectedStudentIds.size === pendingStudents.length) {
+      setSelectedStudentIds(new Set());
+    } else {
+      setSelectedStudentIds(new Set(pendingStudents.map(s => s.patientId)));
+    }
+  }, [pendingStudents, selectedStudentIds.size]);
+
+  const handleExport = useCallback((type: 'pending' | 'history' | 'full') => {
+    if (type === 'pending') {
+      const data = pendingStudents.map(s => ({
+        'Nome': s.studentName,
+        'Nível de Risco': riskConfig[s.riskLevel].label,
+        'Humor Médio': s.avgMood ?? '—',
+        'Ansiedade Média': s.avgAnxiety ?? '—',
+        'Energia Média': s.avgEnergy ?? '—',
+        'Sono Médio': s.avgSleep ?? '—',
+        'Tendência (%)': s.moodTrend ?? '—',
+        'Registros (14d)': s.entryCount,
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Pendentes');
+      XLSX.writeFile(wb, `pendentes-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    } else if (type === 'history') {
+      const data = triageRecords.map(t => ({
+        'Aluno': patientNameMap.get(t.patient_id) || 'Aluno',
+        'Status': t.status === 'resolved' ? 'Resolvido' : t.status === 'in_progress' ? 'Em andamento' : 'Triado',
+        'Prioridade': priorityLabels[t.priority] || t.priority,
+        'Ação': actionLabels[t.recommended_action || ''] || t.recommended_action || '',
+        'Notas': t.notes || '',
+        'Triado por': t.triaged_by_name || '',
+        'Data Triagem': format(new Date(t.created_at), 'dd/MM/yyyy'),
+        'Data Resolução': t.resolved_at ? format(new Date(t.resolved_at), 'dd/MM/yyyy') : '',
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Triagens');
+      XLSX.writeFile(wb, `triagens-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    } else {
+      const studentsData = students.map(s => ({
+        'Nome': s.studentName,
+        'Nível de Risco': riskConfig[s.riskLevel].label,
+        'Humor': s.avgMood ?? '—',
+        'Ansiedade': s.avgAnxiety ?? '—',
+        'Energia': s.avgEnergy ?? '—',
+        'Sono': s.avgSleep ?? '—',
+        'Tendência (%)': s.moodTrend ?? '—',
+        'Registros': s.entryCount,
+        'Status Triagem': s.lastTriageStatus || 'Pendente',
+      }));
+      const triagesData = triageRecords.map(t => ({
+        'Aluno': patientNameMap.get(t.patient_id) || 'Aluno',
+        'Status': t.status,
+        'Prioridade': t.priority,
+        'Ação': t.recommended_action || '',
+        'Notas': t.notes || '',
+        'Data': format(new Date(t.created_at), 'dd/MM/yyyy'),
+      }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(studentsData), 'Alunos');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(triagesData), 'Triagens');
+      XLSX.writeFile(wb, `relatorio-completo-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    }
+  }, [pendingStudents, students, triageRecords, patientNameMap]);
 
   if (isLoading) {
     return (
@@ -431,6 +528,24 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           </Alert>
         )}
 
+        {/* Overdue follow-up banner */}
+        {overdueFollowUpCount > 0 && (
+          <Alert className="border-orange-300 bg-orange-50 dark:bg-orange-950/30 dark:border-orange-800">
+            <Clock className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-sm text-orange-800 dark:text-orange-300 flex items-center justify-between">
+              <span>
+                <span className="font-semibold">{overdueFollowUpCount} triagem{overdueFollowUpCount > 1 ? 'ns' : ''} com follow-up vencido.</span>
+              </span>
+              <Button variant="ghost" size="sm" className="text-orange-700 hover:text-orange-900 h-7 text-xs" onClick={() => setActiveTab('em_andamento')}>
+                Ver <ChevronRight className="h-3 w-3 ml-1" />
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Triage Metrics Dashboard */}
+        <TriageMetricsDashboard triageRecords={triageRecords} />
+
         {/* Contexto Institucional */}
         {(() => {
           const today = new Date().toISOString().split('T')[0];
@@ -510,10 +625,20 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             </SelectContent>
           </Select>
 
-          <Button variant="outline" size="sm" onClick={handleExport} className="ml-auto">
-            <Download className="h-4 w-4 mr-1" />
-            Exportar
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="ml-auto">
+                <Download className="h-4 w-4 mr-1" />
+                Exportar
+                <ChevronDown className="h-3 w-3 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('pending')}>Alunos pendentes</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('history')}>Histórico de triagens</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('full')}>Relatório completo</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Sub-tabs for triage workflow */}
@@ -556,20 +681,37 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           <TabsContent value="para_triar">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold">
-                  Alunos para Triar
-                  <Badge variant="secondary" className="ml-2 text-xs font-normal">{pendingStudents.length}</Badge>
-                </CardTitle>
-                <CardDescription>Alunos que ainda não foram avaliados pela equipe</CardDescription>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <CardTitle className="text-lg font-semibold">
+                      Alunos para Triar
+                      <Badge variant="secondary" className="ml-2 text-xs font-normal">{pendingStudents.length}</Badge>
+                    </CardTitle>
+                    <CardDescription>Alunos que ainda não foram avaliados pela equipe</CardDescription>
+                  </div>
+                  {selectedStudentIds.size > 0 && (
+                    <Button size="sm" onClick={() => setBatchDialogOpen(true)}>
+                      Triar {selectedStudentIds.size} selecionado{selectedStudentIds.size > 1 ? 's' : ''}
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="p-0">
-                {/* Legend - shown once above the list */}
+                {/* Legend + select all */}
                 {pendingStudents.length > 0 && (
-                  <div className="px-5 pt-3 pb-1">
+                  <div className="px-5 pt-3 pb-1 flex items-center justify-between">
                     <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                       <svg width="8" height="6" viewBox="0 0 8 6" className="text-slate-400 inline-block"><polygon points="4,6 0,0 8,0" fill="currentColor" /></svg>
                       = média da turma
                     </p>
+                    <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer">
+                      <Checkbox
+                        checked={selectedStudentIds.size === pendingStudents.length && pendingStudents.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                        className="h-3.5 w-3.5"
+                      />
+                      Selecionar todos
+                    </label>
                   </div>
                 )}
                 <div className="divide-y">
@@ -586,25 +728,36 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                       <div key={student.patientId} className={`p-5 border-l-4 ${riskBorder} hover:bg-muted/30 transition-colors ${isCritical ? 'bg-red-50/30 dark:bg-red-950/10' : ''}`}>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3 min-w-0">
+                            <Checkbox
+                              checked={selectedStudentIds.has(student.patientId)}
+                              onCheckedChange={() => toggleStudentSelection(student.patientId)}
+                              className="h-4 w-4 shrink-0"
+                            />
                             <Avatar className="h-8 w-8 shrink-0">
                               <AvatarFallback className={`text-xs font-semibold ${config.color}`}>{initials}</AvatarFallback>
                             </Avatar>
                             <button type="button" onClick={() => handleOpenActivity(student)} className="font-semibold text-base truncate text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{student.studentName}</button>
                             <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
                             <TrendBadge trend={student.moodTrend} />
-                            <MetricTooltip title="📝 Registros" description="Quantidade de diários emocionais preenchidos nos últimos 14 dias.">
+                            <MetricTooltip title="📝 Engajamento" description="Dias com registro emocional nos últimos 14 dias. Quanto mais regular, melhor o acompanhamento.">
                               <Badge variant="outline" className="text-xs cursor-help font-normal">
-                                {student.entryCount} reg.
+                                {student.entryCount}/14 dias
                               </Badge>
                             </MetricTooltip>
                           </div>
-                          <Button
-                            size="sm"
-                            variant={isCritical ? 'destructive' : 'outline'}
-                            onClick={() => {setSelectedStudent(student);setDialogOpen(true);}}>
-
-                            Triar
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <QuickNotePopover
+                              onSave={async (note) => {
+                                await addQuickNote.mutateAsync({ patientId: student.patientId, note, riskLevel: student.riskLevel });
+                              }}
+                            />
+                            <Button
+                              size="sm"
+                              variant={isCritical ? 'destructive' : 'outline'}
+                              onClick={() => {setSelectedStudent(student);setDialogOpen(true);}}>
+                              Triar
+                            </Button>
+                          </div>
                         </div>
                         <div className="flex items-center gap-6">
                           <div className="flex-1 space-y-2">
@@ -742,21 +895,36 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           <TabsContent value="concluidos">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  Triagens Concluídas
-                  <Badge variant="secondary" className="text-xs font-normal">{resolvedTriages.length}</Badge>
-                </CardTitle>
-                <CardDescription>Triagens finalizadas e resolvidas</CardDescription>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                      <CheckCircle2 className="h-5 w-5" />
+                      Triagens Concluídas
+                      <Badge variant="secondary" className="text-xs font-normal">{filteredResolvedTriages.length}</Badge>
+                    </CardTitle>
+                    <CardDescription>Triagens finalizadas e resolvidas</CardDescription>
+                  </div>
+                  <Select value={historyPeriod} onValueChange={setHistoryPeriod}>
+                    <SelectTrigger className="w-[160px] h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1w">Última semana</SelectItem>
+                      <SelectItem value="1m">Último mês</SelectItem>
+                      <SelectItem value="3m">Últimos 3 meses</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
-                {resolvedTriages.length === 0 ?
+                {filteredResolvedTriages.length === 0 ?
                 <div className="p-8 text-center text-muted-foreground text-sm">
-                    Nenhuma triagem concluída ainda.
+                    Nenhuma triagem concluída{historyPeriod !== 'all' ? ' neste período' : ' ainda'}.
                   </div> :
 
                 <div className="divide-y">
-                    {resolvedTriages.map((t) =>
+                    {filteredResolvedTriages.map((t) =>
                   <div key={t.id} className="p-4 hover:bg-muted/30 transition-colors">
                         <div className="flex items-center justify-between gap-4">
                           <div className="space-y-1 flex-1 min-w-0">
@@ -793,21 +961,36 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           <TabsContent value="todos">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <ClipboardCheck className="h-5 w-5" />
-                  Histórico Completo
-                  <Badge variant="secondary" className="text-xs font-normal">{allTriages.length}</Badge>
-                </CardTitle>
-                <CardDescription>Todas as triagens realizadas nesta instituição</CardDescription>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                      <ClipboardCheck className="h-5 w-5" />
+                      Histórico Completo
+                      <Badge variant="secondary" className="text-xs font-normal">{filteredAllTriages.length}</Badge>
+                    </CardTitle>
+                    <CardDescription>Todas as triagens realizadas nesta instituição</CardDescription>
+                  </div>
+                  <Select value={historyPeriod} onValueChange={setHistoryPeriod}>
+                    <SelectTrigger className="w-[160px] h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1w">Última semana</SelectItem>
+                      <SelectItem value="1m">Último mês</SelectItem>
+                      <SelectItem value="3m">Últimos 3 meses</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
-                {allTriages.length === 0 ?
+                {filteredAllTriages.length === 0 ?
                 <div className="p-8 text-center text-muted-foreground text-sm">
-                    Nenhuma triagem registrada ainda.
+                    Nenhuma triagem registrada{historyPeriod !== 'all' ? ' neste período' : ' ainda'}.
                   </div> :
 
                 <div className="divide-y">
-                    {allTriages.map((t) => {
+                    {filteredAllTriages.map((t) => {
                     const priorityBorder = t.priority === 'urgent' ? 'border-l-red-500' :
                     t.priority === 'high' ? 'border-l-orange-500' :
                     t.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500';
@@ -849,6 +1032,12 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           studentHistory={selectedStudentHistory}
           onSubmit={handleTriage} />
 
+        <BatchTriageDialog
+          open={batchDialogOpen}
+          onOpenChange={setBatchDialogOpen}
+          students={pendingStudents.filter(s => selectedStudentIds.has(s.patientId))}
+          onSubmit={handleBatchTriage}
+        />
 
         {activityModalStudent &&
         <StudentActivityModal

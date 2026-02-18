@@ -68,7 +68,7 @@ function MoodScoreDisplay({ value, label, icon: Icon }: { value: number | null; 
   );
 }
 
-function EmotionDiaryTab({ entries, topEmotions }: { entries: MoodEntry[]; topEmotions: TopEmotion[] }) {
+function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: MoodEntry[]; topEmotions: TopEmotion[]; lastTriageDate?: string }) {
   if (entries.length === 0) {
     return (
       <div className="py-8 text-center text-muted-foreground text-sm">
@@ -113,6 +113,55 @@ function EmotionDiaryTab({ entries, topEmotions }: { entries: MoodEntry[]; topEm
           </svg>
         </div>
       )}
+
+      {/* Before vs After Triage Comparison */}
+      {lastTriageDate && entries.length >= 2 && (() => {
+        const triageDate = lastTriageDate.split('T')[0];
+        const before = entries.filter(e => e.date < triageDate);
+        const after = entries.filter(e => e.date >= triageDate);
+        if (before.length === 0 || after.length === 0) return null;
+
+        const calcAvg = (arr: MoodEntry[], field: 'mood_score' | 'anxiety_level') => {
+          const valid = arr.filter(e => e[field] != null);
+          return valid.length > 0 ? valid.reduce((s, e) => s + (e[field] as number), 0) / valid.length : null;
+        };
+
+        const moodBefore = calcAvg(before, 'mood_score');
+        const moodAfter = calcAvg(after, 'mood_score');
+        const anxBefore = calcAvg(before, 'anxiety_level');
+        const anxAfter = calcAvg(after, 'anxiety_level');
+
+        return (
+          <div className="p-3 rounded-lg border bg-muted/20 space-y-2">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+              <Activity className="h-3 w-3" />
+              Antes vs Depois da Última Triagem
+            </p>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="space-y-1">
+                <p className="text-muted-foreground font-medium">Antes ({before.length} reg.)</p>
+                {moodBefore != null && <p>😊 Humor: <span className="font-semibold">{moodBefore.toFixed(1)}</span></p>}
+                {anxBefore != null && <p>😰 Ansiedade: <span className="font-semibold">{anxBefore.toFixed(1)}</span></p>}
+              </div>
+              <div className="space-y-1">
+                <p className="text-muted-foreground font-medium">Depois ({after.length} reg.)</p>
+                {moodAfter != null && (
+                  <p>😊 Humor: <span className={`font-semibold ${moodBefore != null && moodAfter > moodBefore ? 'text-green-600' : moodBefore != null && moodAfter < moodBefore ? 'text-red-500' : ''}`}>
+                    {moodAfter.toFixed(1)}
+                    {moodBefore != null && <span className="ml-1">{moodAfter > moodBefore ? '↑' : moodAfter < moodBefore ? '↓' : '='}</span>}
+                  </span></p>
+                )}
+                {anxAfter != null && (
+                  <p>😰 Ansiedade: <span className={`font-semibold ${anxBefore != null && anxAfter < anxBefore ? 'text-green-600' : anxBefore != null && anxAfter > anxBefore ? 'text-red-500' : ''}`}>
+                    {anxAfter.toFixed(1)}
+                    {anxBefore != null && <span className="ml-1">{anxAfter < anxBefore ? '↓' : anxAfter > anxBefore ? '↑' : '='}</span>}
+                  </span></p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Entries list */}
       <div>
@@ -259,7 +308,7 @@ export function StudentActivityModal({
             ) : (
               <>
                 <TabsContent value="diario" className="mt-0">
-                  <EmotionDiaryTab entries={data?.moodEntries || []} topEmotions={data?.topEmotions || []} />
+                  <EmotionDiaryTab entries={data?.moodEntries || []} topEmotions={data?.topEmotions || []} lastTriageDate={data?.triageHistory?.[0]?.created_at} />
                 </TabsContent>
                 <TabsContent value="triagens" className="mt-0">
                   <TriageHistoryTab history={data?.triageHistory || []} />
