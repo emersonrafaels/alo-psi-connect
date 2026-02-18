@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,10 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Plus, Pin, PinOff, Pencil, Trash2, CalendarDays, StickyNote } from 'lucide-react';
+import { Plus, Pin, PinOff, Pencil, Trash2, CalendarDays, StickyNote, Search } from 'lucide-react';
 import { format, isAfter, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useInstitutionNotes, type CreateNoteData, type InstitutionNote } from '@/hooks/useInstitutionNotes';
+import { useDebounce } from '@/hooks/useDebounce';
+import { highlightText } from '@/utils/highlightHelpers';
 
 const NOTE_TYPE_CONFIG: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; className: string }> = {
   event: { label: 'Evento', variant: 'default', className: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20' },
@@ -28,12 +30,32 @@ export function InstitutionNotesTab({ institutionId }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<InstitutionNote | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [noteType, setNoteType] = useState('info');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  const filteredNotes = useMemo(() => {
+    if (!debouncedSearch.trim()) return notes;
+    const term = debouncedSearch.toLowerCase();
+    return notes.filter((note) => {
+      if (note.title.toLowerCase().includes(term)) return true;
+      if (note.content?.toLowerCase().includes(term)) return true;
+      const formatDate = (d: string | null) => {
+        if (!d) return '';
+        try { return format(parseISO(d), 'dd/MM/yyyy', { locale: ptBR }); } catch { return d; }
+      };
+      const sd = formatDate(note.start_date);
+      const ed = formatDate(note.end_date);
+      if (sd.includes(term) || ed.includes(term)) return true;
+      if (note.start_date?.includes(term) || note.end_date?.includes(term)) return true;
+      return false;
+    });
+  }, [notes, debouncedSearch]);
 
   const openCreate = () => {
     setEditingNote(null);
@@ -97,6 +119,25 @@ export function InstitutionNotesTab({ institutionId }: Props) {
         </Button>
       </div>
 
+      {notes.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Buscar por título, descrição ou data..."
+            className="pl-10"
+          />
+        </div>
+      )}
+
+      {debouncedSearch.trim() && (
+        <p className="text-sm text-muted-foreground">
+          {filteredNotes.length} de {notes.length} nota{notes.length !== 1 ? 's' : ''}
+        </p>
+      )}
+
       {notes.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
@@ -104,9 +145,16 @@ export function InstitutionNotesTab({ institutionId }: Props) {
             <p className="text-muted-foreground">Nenhuma nota cadastrada para esta instituição.</p>
           </CardContent>
         </Card>
+      ) : filteredNotes.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Search className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+            <p className="text-muted-foreground">Nenhuma nota encontrada para '{debouncedSearch}'</p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-3">
-          {notes.map((note) => {
+          {filteredNotes.map((note) => {
             const typeConfig = NOTE_TYPE_CONFIG[note.note_type] || NOTE_TYPE_CONFIG.info;
             const relevant = isDateRelevant(note);
             return (
@@ -115,7 +163,7 @@ export function InstitutionNotesTab({ institutionId }: Props) {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       {note.is_pinned && <Pin className="h-3.5 w-3.5 text-primary shrink-0" />}
-                      <CardTitle className="text-base">{note.title}</CardTitle>
+                      <CardTitle className="text-base">{highlightText(note.title, debouncedSearch)}</CardTitle>
                       <Badge variant={typeConfig.variant} className={`text-[10px] px-1.5 ${typeConfig.className}`}>
                         {typeConfig.label}
                       </Badge>
@@ -134,7 +182,7 @@ export function InstitutionNotesTab({ institutionId }: Props) {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0 space-y-2">
-                  {note.content && <p className="text-sm text-muted-foreground whitespace-pre-wrap">{note.content}</p>}
+                  {note.content && <p className="text-sm text-muted-foreground whitespace-pre-wrap">{highlightText(note.content, debouncedSearch)}</p>}
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     {(note.start_date || note.end_date) && (
                       <span className="flex items-center gap-1">
