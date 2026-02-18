@@ -25,6 +25,12 @@ export interface StudentRiskData {
   lastTriageStatus: string | null;
   lastTriageId: string | null;
   moodHistory: number[];
+  // Previous period comparative data
+  prevAvgMood: number | null;
+  prevAvgAnxiety: number | null;
+  prevAvgEnergy: number | null;
+  prevAvgSleep: number | null;
+  prevEntryCount: number;
 }
 
 export interface TriageRecord {
@@ -88,9 +94,28 @@ function calculateTrend(entries: any[]): number | null {
   return Math.round(((avgSecond - avgFirst) / avgFirst) * 100);
 }
 
-export function useStudentTriageData(institutionId: string | null) {
+function computeAvg(entries: any[], field: string): number | null {
+  const valid = entries.filter((e: any) => e[field] != null);
+  if (valid.length === 0) return null;
+  return valid.reduce((sum: number, e: any) => sum + e[field], 0) / valid.length;
+}
+
+function computeSleepAvg(entries: any[]): number | null {
+  const sleepEntries = entries.filter((e: any) => e.sleep_quality != null || e.sleep_hours != null);
+  if (sleepEntries.length === 0) return null;
+  return sleepEntries.reduce((sum: number, e: any) => {
+    const val = e.sleep_quality ?? Math.min(5, Math.max(1, Math.round((e.sleep_hours - 3) / 1.5 + 1)));
+    return sum + val;
+  }, 0) / sleepEntries.length;
+}
+
+function round1(v: number | null): number | null {
+  return v !== null ? Math.round(v * 10) / 10 : null;
+}
+
+export function useStudentTriageData(institutionId: string | null, periodDays: number = 15) {
   return useQuery({
-    queryKey: ['student-triage-data', institutionId],
+    queryKey: ['student-triage-data', institutionId, periodDays],
     queryFn: async (): Promise<StudentRiskData[]> => {
       if (!institutionId) return [];
 
@@ -107,10 +132,10 @@ export function useStudentTriageData(institutionId: string | null) {
       // 2. Get profile_ids for mood_entries lookup
       const profileIds = students.map((s: any) => s.pacientes.profile_id).filter(Boolean);
 
-      // 3. Get mood entries for last 14 days
-      const fourteenDaysAgo = new Date();
-      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-      const dateStr = fourteenDaysAgo.toISOString().split('T')[0];
+      // 3. Get mood entries for current period AND previous period (2x periodDays)
+      const doublePeriodAgo = new Date();
+      doublePeriodAgo.setDate(doublePeriodAgo.getDate() - (periodDays * 2));
+      const dateStr = doublePeriodAgo.toISOString().split('T')[0];
 
       const { data: moodEntries } = await supabase
         .from('mood_entries')
@@ -128,12 +153,27 @@ export function useStudentTriageData(institutionId: string | null) {
         .in('patient_id', patientIds)
         .order('created_at', { ascending: false });
 
-      // Group mood entries by profile_id
-      const moodByProfile = new Map<string, any[]>();
+      // Split entries into current and previous period
+      const currentCutoff = new Date();
+      currentCutoff.setDate(currentCutoff.getDate() - periodDays);
+      const currentCutoffStr = currentCutoff.toISOString().split('T')[0];
+      const prevCutoff = new Date();
+      prevCutoff.setDate(prevCutoff.getDate() - (periodDays * 2));
+      const prevCutoffStr = prevCutoff.toISOString().split('T')[0];
+
+      // Group mood entries by profile_id, split by period
+      const currentByProfile = new Map<string, any[]>();
+      const prevByProfile = new Map<string, any[]>();
       (moodEntries || []).forEach((e: any) => {
-        const arr = moodByProfile.get(e.profile_id) || [];
-        arr.push(e);
-        moodByProfile.set(e.profile_id, arr);
+        if (e.date >= currentCutoffStr) {
+          const arr = currentByProfile.get(e.profile_id) || [];
+          arr.push(e);
+          currentByProfile.set(e.profile_id, arr);
+        } else if (e.date >= prevCutoffStr) {
+          const arr = prevByProfile.get(e.profile_id) || [];
+          arr.push(e);
+          prevByProfile.set(e.profile_id, arr);
+        }
       });
 
       // Latest triage per patient
@@ -147,27 +187,19 @@ export function useStudentTriageData(institutionId: string | null) {
       // 5. Calculate risk for each student
       return students.map((s: any) => {
         const profileId = s.pacientes.profile_id;
-        const entries = moodByProfile.get(profileId) || [];
+        const entries = currentByProfile.get(profileId) || [];
+        const prevEntries = prevByProfile.get(profileId) || [];
         const latestTriage = triageByPatient.get(s.patient_id);
 
-        const avgMood = entries.length > 0
-          ? entries.reduce((sum: number, e: any) => sum + (e.mood_score || 0), 0) / entries.length
-          : null;
-        const anxietyEntries = entries.filter((e: any) => e.anxiety_level != null);
-        const avgAnxiety = anxietyEntries.length > 0
-          ? anxietyEntries.reduce((sum: number, e: any) => sum + e.anxiety_level, 0) / anxietyEntries.length
-          : null;
-        const energyEntries = entries.filter((e: any) => e.energy_level != null);
-        const avgEnergy = energyEntries.length > 0
-          ? energyEntries.reduce((sum: number, e: any) => sum + e.energy_level, 0) / energyEntries.length
-          : null;
-        const sleepEntries = entries.filter((e: any) => e.sleep_quality != null || e.sleep_hours != null);
-        const avgSleep = sleepEntries.length > 0
-          ? sleepEntries.reduce((sum: number, e: any) => {
-              const val = e.sleep_quality ?? Math.min(5, Math.max(1, Math.round((e.sleep_hours - 3) / 1.5 + 1)));
-              return sum + val;
-            }, 0) / sleepEntries.length
-          : null;
+        const avgMood = computeAvg(entries, 'mood_score');
+        const avgAnxiety = computeAvg(entries, 'anxiety_level');
+        const avgEnergy = computeAvg(entries, 'energy_level');
+        const avgSleep = computeSleepAvg(entries);
+
+        const prevAvgMood = computeAvg(prevEntries, 'mood_score');
+        const prevAvgAnxiety = computeAvg(prevEntries, 'anxiety_level');
+        const prevAvgEnergy = computeAvg(prevEntries, 'energy_level');
+        const prevAvgSleep = computeSleepAvg(prevEntries);
 
         const moodTrend = calculateTrend(entries.filter((e: any) => e.mood_score != null));
 
@@ -181,15 +213,20 @@ export function useStudentTriageData(institutionId: string | null) {
           profileId: s.pacientes.profile_id || null,
           userId: s.pacientes.profiles.user_id || null,
           riskLevel: calculateRiskLevel(avgMood, avgAnxiety, avgEnergy, avgSleep, moodTrend),
-          avgMood: avgMood !== null ? Math.round(avgMood * 10) / 10 : null,
-          avgAnxiety: avgAnxiety !== null ? Math.round(avgAnxiety * 10) / 10 : null,
-          avgEnergy: avgEnergy !== null ? Math.round(avgEnergy * 10) / 10 : null,
-          avgSleep: avgSleep !== null ? Math.round(avgSleep * 10) / 10 : null,
+          avgMood: round1(avgMood),
+          avgAnxiety: round1(avgAnxiety),
+          avgEnergy: round1(avgEnergy),
+          avgSleep: round1(avgSleep),
           moodTrend,
           entryCount: entries.length,
           lastTriageStatus: latestTriage?.status || null,
           lastTriageId: latestTriage?.id || null,
           moodHistory,
+          prevAvgMood: round1(prevAvgMood),
+          prevAvgAnxiety: round1(prevAvgAnxiety),
+          prevAvgEnergy: round1(prevAvgEnergy),
+          prevAvgSleep: round1(prevAvgSleep),
+          prevEntryCount: prevEntries.length,
         };
       });
     },

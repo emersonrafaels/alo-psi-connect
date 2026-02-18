@@ -1,18 +1,45 @@
 import { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TriageRecord } from '@/hooks/useStudentTriage';
-import { ClipboardCheck, Clock, CheckCircle2, TrendingUp } from 'lucide-react';
+import { ClipboardCheck, Clock, CheckCircle2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface TriageMetricsDashboardProps {
   triageRecords: TriageRecord[];
+  periodDays?: number;
 }
 
-export function TriageMetricsDashboard({ triageRecords }: TriageMetricsDashboardProps) {
+function DeltaIndicator({ current, previous, invertBetter }: { current: number; previous: number; invertBetter?: boolean }) {
+  const delta = current - previous;
+  if (delta === 0) return <span className="text-[10px] text-muted-foreground ml-1">(=)</span>;
+  const isPositive = delta > 0;
+  const isBetter = invertBetter ? !isPositive : isPositive;
+  return (
+    <span className={`text-[10px] ml-1 inline-flex items-center gap-0.5 ${isBetter ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+      {isPositive ? '+' : ''}{delta}
+    </span>
+  );
+}
+
+export function TriageMetricsDashboard({ triageRecords, periodDays = 15 }: TriageMetricsDashboardProps) {
   const metrics = useMemo(() => {
     const now = new Date();
-    const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-    const thisMonthRecords = triageRecords.filter(t => t.created_at.startsWith(thisMonth));
+    // Current period
+    const currentStart = new Date(now);
+    currentStart.setDate(currentStart.getDate() - periodDays);
+    currentStart.setHours(0, 0, 0, 0);
+
+    // Previous period
+    const prevStart = new Date(now);
+    prevStart.setDate(prevStart.getDate() - periodDays * 2);
+    prevStart.setHours(0, 0, 0, 0);
+
+    const currentRecords = triageRecords.filter(t => new Date(t.created_at) >= currentStart);
+    const prevRecords = triageRecords.filter(t => {
+      const d = new Date(t.created_at);
+      return d >= prevStart && d < currentStart;
+    });
+
     const resolved = triageRecords.filter(t => t.status === 'resolved' && t.resolved_at);
 
     let avgResolutionDays: number | null = null;
@@ -44,8 +71,14 @@ export function TriageMetricsDashboard({ triageRecords }: TriageMetricsDashboard
       weeklyData.push(count);
     }
 
-    return { thisMonthCount: thisMonthRecords.length, avgResolutionDays, resolutionRate, weeklyData };
-  }, [triageRecords]);
+    return {
+      currentCount: currentRecords.length,
+      prevCount: prevRecords.length,
+      avgResolutionDays,
+      resolutionRate,
+      weeklyData,
+    };
+  }, [triageRecords, periodDays]);
 
   if (triageRecords.length === 0) return null;
 
@@ -64,8 +97,11 @@ export function TriageMetricsDashboard({ triageRecords }: TriageMetricsDashboard
             <ClipboardCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <p className="text-lg font-bold">{metrics.thisMonthCount}</p>
-            <p className="text-[11px] text-muted-foreground">Triagens este mês</p>
+            <p className="text-lg font-bold">
+              {metrics.currentCount}
+              <DeltaIndicator current={metrics.currentCount} previous={metrics.prevCount} />
+            </p>
+            <p className="text-[11px] text-muted-foreground">Triagens ({periodDays}d)</p>
           </div>
         </CardContent>
       </Card>
