@@ -1,78 +1,44 @@
 
 
-## Melhorias de UX na Badge de Engajamento e Cards de Aluno
+## Classificar Indicadores em 4 Faixas (Critico, Alerta, Atencao, Saudavel)
 
-### 1. Badge "14/15 dias" mais explicativa
+### O que muda
 
-**Problema:** A badge atual mostra apenas `{entryCount}/{analysisPeriod} dias`, sem contexto. O usuario precisa interpretar o que isso significa.
+Atualmente, a barra de cada metrica (humor, ansiedade, energia, sono) usa apenas 3 cores baseadas em porcentagem generica (verde/amarelo/vermelho). O pedido e alinhar as cores com os mesmos limiares da classificacao de risco da triagem.
 
-**Solucao:** Transformar em uma badge mais descritiva com icone e cor condicional baseada no nivel de engajamento.
+### Novas faixas por metrica
 
-**Arquivo:** `src/components/institution/StudentTriageTab.tsx` (linhas 1030-1034)
+As cores da barra e do valor numerico passarao a refletir exatamente os criterios de risco:
 
-De:
-```text
-[14/15 dias]
-```
+| Metrica | Critico (vermelho) | Alerta (laranja) | Atencao (amarelo) | Saudavel (verde) |
+|---|---|---|---|---|
+| Humor | ≤ 1.5 | ≤ 2.5 | ≤ 3.0 | > 3.0 |
+| Ansiedade | ≥ 4.5 | ≥ 3.5 | ≥ 3.0 | < 3.0 |
+| Energia | - | ≤ 1.5 | - | > 1.5 |
+| Sono | - | - | ≤ 2.0 | > 2.0 |
 
-Para:
-```text
-[BookOpen icon] Diario: 14/15 dias  (verde se >= 80%, amarelo 50-79%, vermelho < 50%)
-```
+Para energia e sono, que nao tem todos os 4 niveis definidos nos criterios de risco, serao interpoladas faixas coerentes:
 
-Detalhes:
-- Adicionar icone `BookOpen` (ou `NotebookPen`) antes do texto
-- Texto passa a ser: `Diario: {entryCount}/{analysisPeriod} dias`
-- Cor da badge varia conforme engajamento:
-  - Verde (`bg-green-100 text-green-700`): >= 80% de preenchimento
-  - Amarelo (`bg-yellow-100 text-yellow-700`): 50-79%
-  - Vermelho (`bg-red-100 text-red-700`): < 50%
-  - Cinza (outline atual): 0 registros
-- Tooltip atualizado: "Diario emocional preenchido em {entryCount} dos ultimos {analysisPeriod} dias. Engajamento: {percentual}%."
+| Metrica | Critico | Alerta | Atencao | Saudavel |
+|---|---|---|---|---|
+| Energia | ≤ 1.0 | ≤ 1.5 | ≤ 2.5 | > 2.5 |
+| Sono | ≤ 1.5 | ≤ 2.0 | ≤ 2.5 | > 2.5 |
 
----
+### Detalhes tecnicos
 
-### 2. Indicador visual de engajamento (mini barra de progresso)
+**Arquivo:** `src/components/institution/StudentTriageTab.tsx`
 
-Adicionar uma mini barra de progresso dentro da badge ou ao lado, mostrando visualmente a proporcao de preenchimento. Isso torna o dado legivel instantaneamente sem ler numeros.
+1. **Criar funcao `getMetricBand`** que recebe `(value, metric)` e retorna `'critical' | 'alert' | 'attention' | 'healthy'` com base nos limiares acima.
 
----
+2. **Atualizar `MetricBar`** para usar `getMetricBand` em vez do calculo generico de porcentagem para definir a cor:
+   - Critico: `bg-red-500`
+   - Alerta: `bg-orange-500`
+   - Atencao: `bg-yellow-500`
+   - Saudavel: `bg-green-500`
 
-### 3. Seletor de periodo mais descritivo (linhas 840-846)
+3. **Passar o tipo de metrica** como prop para `MetricBar` (ex: `metric="mood"`, `metric="anxiety"`), para que a funcao saiba quais limiares aplicar.
 
-Atualizar as opcoes do `Select` de periodo para incluir descricoes mais claras:
+4. **Atualizar os 4 usos de MetricBar** nos cards dos alunos para incluir a nova prop `metric`.
 
-De:
-```
-7 dias | 15 dias | 30 dias | 60 dias | 90 dias
-```
-
-Para:
-```
-Ultima semana (7d) | Quinzena (15d) | Ultimo mes (30d) | 2 meses (60d) | Trimestre (90d)
-```
-
-E adicionar abaixo do seletor as datas concretas em texto pequeno: `04/02 - 18/02`
-
----
-
-### 4. Label "(t:3.2)" mais legivel nas metricas (linhas 1070, 1092, 1114)
-
-**Problema:** O indicador de media da turma `(t:3.2)` e críptico.
-
-**Solucao:** Substituir por um tooltip com icone de referencia. Ao passar o mouse, mostra "Media da turma: 3.2". O texto inline passa a mostrar apenas a seta de comparacao com a turma, ou um pequeno ponto colorido indicando se esta acima/abaixo da media.
-
----
-
-### 5. Sparkline no card do aluno
-
-A MoodSparkline ja existe como componente mas verificar se esta sendo exibida nos cards de aluno da aba "Para Triar". Se nao, incluir ao lado das metricas para dar contexto visual da evolucao do humor.
-
----
-
-### Resumo dos arquivos afetados
-
-| Arquivo | Acao |
-|---|---|
-| `src/components/institution/StudentTriageTab.tsx` | (1) Badge engajamento com cor e icone (linhas 1030-1034), (2) Select periodo descritivo (linhas 840-846), (3) Label turma legivel (linhas 1070, 1092, 1114), (4) Datas concretas abaixo do seletor |
+5. **Opcional:** Exibir ao lado do valor numerico um dot ou badge com a cor da faixa, para reforcar visualmente o status mesmo sem olhar a barra.
 
