@@ -225,34 +225,119 @@ function TrendBadge({ trend }: {trend: number | null;}) {
 
 }
 
-function MoodSparkline({ data }: {data: number[];}) {
-  if (data.length < 2) return null;
+type SparklineMetric = 'score' | 'mood' | 'anxiety' | 'energy' | 'sleep';
+
+const sparklineMetricConfig: Record<SparklineMetric, { label: string; icon: typeof Activity; metricType: MetricType }> = {
+  score: { label: 'Score', icon: Activity, metricType: 'mood' },
+  mood: { label: 'Humor', icon: Heart, metricType: 'mood' },
+  anxiety: { label: 'Ansiedade', icon: Brain, metricType: 'anxiety' },
+  energy: { label: 'Energia', icon: Zap, metricType: 'energy' },
+  sleep: { label: 'Sono', icon: Moon, metricType: 'sleep' },
+};
+
+function getSparklineColor(value: number, metricType: MetricType): string {
+  const band = getMetricBand(value, metricType);
+  return {
+    critical: '#ef4444',
+    alert: '#f97316',
+    attention: '#eab308',
+    healthy: '#22c55e',
+  }[band];
+}
+
+function MetricSparkline({ student }: { student: StudentRiskData }) {
+  const [metric, setMetric] = useState<SparklineMetric>('score');
+
+  const dataMap: Record<SparklineMetric, number[]> = {
+    score: student.scoreHistory,
+    mood: student.moodHistory,
+    anxiety: student.anxietyHistory,
+    energy: student.energyHistory,
+    sleep: student.sleepHistory,
+  };
+
+  const data = dataMap[metric];
+  const config = sparklineMetricConfig[metric];
+
+  if (data.length < 2) return (
+    <div className="flex items-center gap-1">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-5 px-1 text-[10px] text-muted-foreground gap-0.5">
+            <config.icon className="h-3 w-3" />
+            <ChevronDown className="h-2.5 w-2.5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-[120px]">
+          {(Object.keys(sparklineMetricConfig) as SparklineMetric[]).map((key) => {
+            const cfg = sparklineMetricConfig[key];
+            return (
+              <DropdownMenuItem key={key} onClick={() => setMetric(key)} className={metric === key ? 'bg-accent' : ''}>
+                <cfg.icon className="h-3.5 w-3.5 mr-2" />
+                <span className="text-xs">{cfg.label}</span>
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+
   const width = 100;
   const height = 32;
   const max = 5;
   const min = 1;
   const range = max - min || 1;
   const step = width / (data.length - 1);
-  const points = data.map((v, i) => `${i * step},${height - (v - min) / range * height}`).join(' ');
-  const lastVal = data[data.length - 1];
-  const color = lastVal <= 2 ? 'var(--color-destructive, #ef4444)' : lastVal <= 3 ? '#eab308' : '#22c55e';
 
   return (
-    <MetricTooltip title="📊 Evolução do Humor" description="Mini-gráfico mostrando a evolução do humor no período selecionado. Verde=bom, amarelo=moderado, vermelho=preocupante.">
-      <svg width={width} height={height} className="shrink-0 cursor-help">
-        <polyline
-          points={points}
-          fill="none"
-          stroke={color}
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round" />
-
-      </svg>
-    </MetricTooltip>);
-
+    <div className="flex items-center gap-1">
+      <MetricTooltip
+        title={`📊 Evolução: ${config.label}`}
+        description={`Mini-gráfico mostrando a evolução de ${config.label.toLowerCase()} no período. Verde=saudável, amarelo=atenção, laranja=alerta, vermelho=crítico.`}
+      >
+        <svg width={width} height={height} className="shrink-0 cursor-help">
+          {data.slice(1).map((val, i) => {
+            const color = getSparklineColor(val, config.metricType);
+            const x1 = i * step;
+            const y1 = height - ((data[i] - min) / range) * height;
+            const x2 = (i + 1) * step;
+            const y2 = height - ((val - min) / range) * height;
+            return (
+              <line
+                key={i}
+                x1={x1} y1={y1}
+                x2={x2} y2={y2}
+                stroke={color}
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            );
+          })}
+        </svg>
+      </MetricTooltip>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-5 px-1 text-[10px] text-muted-foreground gap-0.5">
+            <config.icon className="h-3 w-3" />
+            <ChevronDown className="h-2.5 w-2.5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-[120px]">
+          {(Object.keys(sparklineMetricConfig) as SparklineMetric[]).map((key) => {
+            const cfg = sparklineMetricConfig[key];
+            return (
+              <DropdownMenuItem key={key} onClick={() => setMetric(key)} className={metric === key ? 'bg-accent' : ''}>
+                <cfg.icon className="h-3.5 w-3.5 mr-2" />
+                <span className="text-xs">{cfg.label}</span>
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
 }
-
 function FollowUpIndicator({ date }: {date: string;}) {
   const followUp = new Date(date);
   const today = new Date();
@@ -1228,7 +1313,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                             </MetricTooltip>
                             </div>
                           </div>
-                          <MoodSparkline data={student.moodHistory} />
+                          <MetricSparkline student={student} />
                         </div>
                       </div>);
 
