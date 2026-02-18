@@ -1,23 +1,31 @@
 
-
-## Adicionar Barra de Rolagem Vertical no Modal de Atividade do Aluno
+## Corrigir Modal que Nao Mostra Conteudo
 
 ### Problema
-O conteudo do modal (registros emocionais) ultrapassa a altura visivel mas nao mostra uma barra de rolagem, impedindo o usuario de ver todos os registros.
+A mudanca anterior adicionou `h-0 min-h-0` ao `ScrollArea`, o que colapsou sua altura para zero. O conteudo (Diario Emocional / Historico de Triagens) nao aparece porque o `ScrollArea` tem altura zero e o `flex-1` nao consegue expandi-lo corretamente nesse contexto.
 
 ### Correcao
 
 **Arquivo: `src/components/institution/StudentActivityModal.tsx`**
 
-Duas mudancas:
+Substituir o `ScrollArea` (que tem problemas com altura flexivel) por um `div` com `overflow-y-auto` e altura maxima calculada:
 
-1. **Linha 228** - Adicionar `overflow-hidden` ao `DialogContent` para evitar overflow externo:
-   - De: `className="max-w-2xl max-h-[85vh] flex flex-col"`
-   - Para: `className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden"`
+- **Linha 256**: Trocar:
+  ```
+  <ScrollArea className="flex-1 mt-3 h-0 min-h-0" style={{ maxHeight: 'calc(85vh - 180px)' }}>
+  ```
+  Por:
+  ```
+  <div className="mt-3 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 180px)' }}>
+  ```
 
-2. **Linha 256** - Trocar o `ScrollArea` com `style` inline por uma altura fixa via classe Tailwind e garantir `overflow-y-auto`:
-   - De: `<ScrollArea className="flex-1 mt-3" style={{ maxHeight: 'calc(85vh - 180px)' }}>`
-   - Para: `<ScrollArea className="flex-1 mt-3 h-0 min-h-0" style={{ maxHeight: 'calc(85vh - 180px)' }}>`
+- **Linha 269**: Trocar o fechamento correspondente:
+  ```
+  </ScrollArea>
+  ```
+  Por:
+  ```
+  </div>
+  ```
 
-O truque e adicionar `h-0 min-h-0` ao `ScrollArea` para forcar o container flex a respeitar o `flex-1` e permitir que o `ScrollArea` do Radix renderize a barra de rolagem corretamente dentro do espaco disponivel.
-
+Isso remove a dependencia do `ScrollArea` do Radix (que requer altura fixa explicita) e usa scroll nativo do navegador, que funciona com `max-height` sem problemas.
