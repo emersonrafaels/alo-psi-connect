@@ -37,6 +37,14 @@ const riskLegend: Record<RiskLevel, string> = {
   no_data: 'Sem registros nos últimos 14 dias',
 };
 
+const riskTooltips: Record<RiskLevel, string> = {
+  critical: 'Alunos com humor muito baixo (≤1.5), ansiedade muito alta (≥4.5) ou queda brusca no humor (>40%). Necessitam atenção imediata.',
+  alert: 'Alunos com humor baixo (≤2.5), ansiedade elevada (≥3.5) ou energia muito baixa. Recomenda-se acompanhamento.',
+  attention: 'Alunos com indicadores moderadamente preocupantes. Vale monitorar de perto.',
+  healthy: 'Alunos com todos os indicadores dentro da faixa esperada.',
+  no_data: 'Alunos que não registraram diários emocionais nos últimos 14 dias.',
+};
+
 const priorityLabels: Record<string, string> = {
   urgent: '🔴 Urgente',
   high: '🟠 Alta',
@@ -86,7 +94,7 @@ function MoodSparkline({ data }: { data: number[] }) {
           />
         </svg>
       </TooltipTrigger>
-      <TooltipContent>Tendência de humor (14 dias)</TooltipContent>
+      <TooltipContent className="max-w-xs"><p className="text-xs">Mini-gráfico mostrando a evolução do humor nos últimos 14 dias. Verde=bom, amarelo=moderado, vermelho=preocupante.</p></TooltipContent>
     </Tooltip>
   );
 }
@@ -100,11 +108,16 @@ function FollowUpIndicator({ date }: { date: string }) {
   const isNear = diff >= 0 && diff <= 3;
 
   return (
-    <span className={`flex items-center gap-1 text-[10px] ${isOverdue ? 'text-red-500 font-medium' : isNear ? 'text-yellow-600 font-medium' : 'text-muted-foreground'}`}>
-      <Clock className="h-3 w-3" />
-      {format(followUp, "dd/MM", { locale: ptBR })}
-      {isOverdue && ' (vencido)'}
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className={`flex items-center gap-1 text-[10px] cursor-help ${isOverdue ? 'text-red-500 font-medium' : isNear ? 'text-yellow-600 font-medium' : 'text-muted-foreground'}`}>
+          <Clock className="h-3 w-3" />
+          {format(followUp, "dd/MM", { locale: ptBR })}
+          {isOverdue && ' (vencido)'}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs"><p className="text-xs">Data limite para acompanhamento. Vermelho=vencido, amarelo=próximo do prazo.</p></TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -233,7 +246,19 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{counts[level]}</p>
-                      <p className="text-[11px] text-muted-foreground">{config.label}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-[11px] text-muted-foreground">{config.label}</p>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
+                              <HelpCircle className="h-3 w-3" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-xs">
+                            <p className="text-xs">{riskTooltips[level]}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
                     </div>
                   </div>
                   <Progress value={pct} className="h-1.5" />
@@ -364,7 +389,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                 Humor: {student.avgMood ?? '—'}
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent>Média de humor nos últimos 14 dias (1-5)</TooltipContent>
+                            <TooltipContent className="max-w-xs"><p className="text-xs">Como o aluno avaliou seu humor (1=muito mal, 5=muito bem). Abaixo de 3 merece atenção.</p></TooltipContent>
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -373,7 +398,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                 Ansiedade: {student.avgAnxiety ?? '—'}
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent>Média de ansiedade nos últimos 14 dias (1-5)</TooltipContent>
+                            <TooltipContent className="max-w-xs"><p className="text-xs">Nível de ansiedade reportado (1=tranquilo, 5=muito ansioso). Acima de 3.5 é preocupante.</p></TooltipContent>
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -382,7 +407,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                 Energia: {student.avgEnergy ?? '—'}
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent>Média de energia nos últimos 14 dias (1-5)</TooltipContent>
+                            <TooltipContent className="max-w-xs"><p className="text-xs">Nível de energia do aluno (1=sem energia, 5=muita energia). Valores baixos podem indicar cansaço.</p></TooltipContent>
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -391,11 +416,21 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                 Sono: {student.avgSleep ?? '—'}
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent>Média de qualidade do sono nos últimos 14 dias (1-5)</TooltipContent>
+                            <TooltipContent className="max-w-xs"><p className="text-xs">Qualidade do sono (1=péssimo, 5=ótimo). Sono ruim afeta humor e concentração.</p></TooltipContent>
                           </Tooltip>
                           <MoodSparkline data={student.moodHistory} />
-                          <TrendIcon trend={student.moodTrend} />
-                          <span className="text-[10px]">{student.entryCount} registros</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="flex items-center"><TrendIcon trend={student.moodTrend} /></span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs"><p className="text-xs">Variação percentual do humor entre a primeira e segunda semana. Seta vermelha=piora, verde=melhora.</p></TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-[10px] cursor-help">{student.entryCount} registros</span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs"><p className="text-xs">Quantidade de diários emocionais preenchidos nos últimos 14 dias. Mais registros = análise mais confiável.</p></TooltipContent>
+                          </Tooltip>
                         </div>
                       </div>
                     </div>
@@ -470,31 +505,41 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                         </div>
                         <div className="flex gap-1 items-center">
                           {t.status === 'triaged' && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-xs h-7"
-                              onClick={() => updateTriageStatus.mutate({
-                                triageId: t.id,
-                                status: 'in_progress',
-                              })}
-                            >
-                              Em andamento
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-xs h-7"
+                                  onClick={() => updateTriageStatus.mutate({
+                                    triageId: t.id,
+                                    status: 'in_progress',
+                                  })}
+                                >
+                                  Em andamento
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent><p className="text-xs">Marca esta triagem como em acompanhamento ativo.</p></TooltipContent>
+                            </Tooltip>
                           )}
                           {(t.status === 'triaged' || t.status === 'in_progress') && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-xs h-7"
-                              onClick={() => updateTriageStatus.mutate({
-                                triageId: t.id,
-                                status: 'resolved',
-                                resolvedAt: new Date().toISOString(),
-                              })}
-                            >
-                              Resolver
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-xs h-7"
+                                  onClick={() => updateTriageStatus.mutate({
+                                    triageId: t.id,
+                                    status: 'resolved',
+                                    resolvedAt: new Date().toISOString(),
+                                  })}
+                                >
+                                  Resolver
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent><p className="text-xs">Marca esta triagem como concluída.</p></TooltipContent>
+                            </Tooltip>
                           )}
                           <Badge variant={t.status === 'resolved' ? 'secondary' : 'default'} className="text-[10px]">
                             {t.status === 'resolved' ? 'Resolvido' : t.status === 'in_progress' ? 'Em andamento' : 'Triado'}
