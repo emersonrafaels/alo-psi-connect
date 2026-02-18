@@ -118,22 +118,57 @@ function MetricTooltip({ title, description, children }: {title: string;descript
 
 }
 
+type MetricType = 'mood' | 'anxiety' | 'energy' | 'sleep';
+
+function getMetricBand(value: number, metric: MetricType): 'critical' | 'alert' | 'attention' | 'healthy' {
+  switch (metric) {
+    case 'mood':
+      if (value <= 1.5) return 'critical';
+      if (value <= 2.5) return 'alert';
+      if (value <= 3.0) return 'attention';
+      return 'healthy';
+    case 'anxiety':
+      if (value >= 4.5) return 'critical';
+      if (value >= 3.5) return 'alert';
+      if (value >= 3.0) return 'attention';
+      return 'healthy';
+    case 'energy':
+      if (value <= 1.0) return 'critical';
+      if (value <= 1.5) return 'alert';
+      if (value <= 2.5) return 'attention';
+      return 'healthy';
+    case 'sleep':
+      if (value <= 1.5) return 'critical';
+      if (value <= 2.0) return 'alert';
+      if (value <= 2.5) return 'attention';
+      return 'healthy';
+  }
+}
+
+const bandColors: Record<string, string> = {
+  critical: 'bg-red-500',
+  alert: 'bg-orange-500',
+  attention: 'bg-yellow-500',
+  healthy: 'bg-green-500',
+};
+
 // Small metric bar (1-5 scale) with optional class average indicator
-function MetricBar({ value, invert, classAvg }: {value: number | null;invert?: boolean;classAvg?: number | null;}) {
+function MetricBar({ value, invert, classAvg, metric }: {value: number | null;invert?: boolean;classAvg?: number | null;metric?: MetricType;}) {
   if (value === null) return null;
   const pct = (value - 1) / 4 * 100;
-  const effectivePct = invert ? 100 - pct : pct;
-  const color = effectivePct >= 60 ? 'bg-green-500' : effectivePct >= 40 ? 'bg-yellow-500' : 'bg-red-500';
+  const band = metric ? getMetricBand(value, metric) : null;
+  const color = band ? bandColors[band] : (() => {
+    const effectivePct = invert ? 100 - pct : pct;
+    return effectivePct >= 60 ? 'bg-green-500' : effectivePct >= 40 ? 'bg-yellow-500' : 'bg-red-500';
+  })();
   const avgPct = classAvg != null ? (classAvg - 1) / 4 * 100 : null;
 
   // Dynamic triangle color: compare student vs class avg
   let triangleColor = 'text-slate-400 dark:text-slate-500';
   if (classAvg != null && value != null) {
     if (invert) {
-      // For anxiety: lower is better
       triangleColor = value > classAvg ? 'text-red-400 dark:text-red-500' : value < classAvg ? 'text-green-400 dark:text-green-500' : 'text-slate-400 dark:text-slate-500';
     } else {
-      // For mood/energy/sleep: higher is better
       triangleColor = value < classAvg ? 'text-red-400 dark:text-red-500' : value > classAvg ? 'text-green-400 dark:text-green-500' : 'text-slate-400 dark:text-slate-500';
     }
   }
@@ -1110,7 +1145,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                     )}
                                   </span>
                                 </div>
-                                <MetricBar value={student.avgMood} classAvg={classAverages.mood} />
+                                <MetricBar value={student.avgMood} classAvg={classAverages.mood} metric="mood" />
                               </div>
                             </MetricTooltip>
                             <MetricTooltip title={metricTooltips.anxiety.title} description={metricTooltips.anxiety.description}>
@@ -1136,7 +1171,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                     )}
                                   </span>
                                 </div>
-                                <MetricBar value={student.avgAnxiety} invert classAvg={classAverages.anxiety} />
+                                <MetricBar value={student.avgAnxiety} invert classAvg={classAverages.anxiety} metric="anxiety" />
                               </div>
                             </MetricTooltip>
                             <MetricTooltip title={metricTooltips.energy.title} description={metricTooltips.energy.description}>
@@ -1162,7 +1197,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                     )}
                                   </span>
                                 </div>
-                                <MetricBar value={student.avgEnergy} classAvg={classAverages.energy} />
+                                <MetricBar value={student.avgEnergy} classAvg={classAverages.energy} metric="energy" />
                               </div>
                             </MetricTooltip>
                             <MetricTooltip title={metricTooltips.sleep.title} description={metricTooltips.sleep.description}>
@@ -1188,7 +1223,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                     )}
                                   </span>
                                 </div>
-                                <MetricBar value={student.avgSleep} classAvg={classAverages.sleep} />
+                                <MetricBar value={student.avgSleep} classAvg={classAverages.sleep} metric="sleep" />
                               </div>
                             </MetricTooltip>
                             </div>
