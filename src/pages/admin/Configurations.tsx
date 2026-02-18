@@ -12,6 +12,7 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Settings, Bot, Webhook, Cog, Shield, Mic, Database, Star, GraduationCap, Link2, ArrowLeft, LucideIcon, Mail, Video } from 'lucide-react';
 import { GoogleCalendarTenantConfig } from '@/components/admin/config/GoogleCalendarTenantConfig';
 import { EducationalInstitutionsConfig } from '@/components/admin/config/EducationalInstitutionsConfig';
+import { AnonymizationConfig } from '@/components/admin/config/AnonymizationConfig';
 import { NewsletterSubscribersConfig } from '@/components/admin/config/NewsletterSubscribersConfig';
 import { EmailBccConfig } from '@/components/admin/config/EmailBccConfig';
 import { cn } from '@/lib/utils';
@@ -125,6 +126,14 @@ export default function Configurations() {
       description: 'Configure instituições disponíveis no cadastro',
       icon: GraduationCap,
       component: EducationalInstitutionsConfig,
+      category: 'users'
+    },
+    {
+      id: 'anonymization',
+      title: 'Anonimização de Alunos',
+      description: 'Configure a anonimização de nomes no portal institucional',
+      icon: Shield,
+      component: AnonymizationConfig,
       category: 'users'
     }
   ];

@@ -19,6 +19,8 @@ interface BatchTriageDialogProps {
     notes: string;
     followUpDate?: string;
   }) => Promise<void>;
+  isAnonymized?: boolean;
+  studentIndexMap?: Map<string, number>;
 }
 
 const priorityOptions = [
@@ -35,7 +37,7 @@ const actionOptions = [
   { value: 'contact_family', label: 'Contato com família' },
 ];
 
-export function BatchTriageDialog({ open, onOpenChange, students, onSubmit }: BatchTriageDialogProps) {
+export function BatchTriageDialog({ open, onOpenChange, students, onSubmit, isAnonymized = false, studentIndexMap }: BatchTriageDialogProps) {
   const [priority, setPriority] = useState('medium');
   const [action, setAction] = useState('monitor');
   const [notes, setNotes] = useState('');
@@ -70,9 +72,14 @@ export function BatchTriageDialog({ open, onOpenChange, students, onSubmit }: Ba
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
-            {students.map(s => (
-              <Badge key={s.patientId} variant="secondary" className="text-xs">{s.studentName}</Badge>
-            ))}
+            {students.map(s => {
+              const displayName = isAnonymized && studentIndexMap
+                ? `Aluno #${(studentIndexMap.get(s.patientId) ?? 0) + 1}`
+                : s.studentName;
+              return (
+                <Badge key={s.patientId} variant="secondary" className="text-xs">{displayName}</Badge>
+              );
+            })}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
