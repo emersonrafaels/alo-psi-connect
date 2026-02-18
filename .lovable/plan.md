@@ -1,37 +1,59 @@
 
 
-## Melhorar Distribuicao e Espacamento na Lista de Alunos
+## Redesign do Workflow de Triagem com Abas de Status
 
-### Problemas identificados na screenshot
-- As barras de metrica (Humor, Ansiedade, Energia, Sono) estao muito apertadas, especialmente com o padding-left de 72px que desperica espaco
-- O sparkline e muito pequeno (72x24px) e fica comprimido entre outros elementos
-- A linha do nome + badge + sparkline + botoes esta sobrecarregada, tudo junto
+### Problema atual
+- A lista de alunos mistura triados e nao triados em um unico card
+- O historico de triagens e um collapsible escondido no final da pagina, misturando todos os status (Triado, Em Andamento, Resolvido)
+- Nao ha visao clara de quantos alunos estao em cada etapa do workflow
 
-### Mudancas planejadas
+### Solucao proposta
 
-**1. Layout do aluno em 2 linhas mais respiradas**
-- Remover o padding-left excessivo (pl-[72px]) das metricas
-- Primeira linha: nome + badge de risco + tendencia (lado esquerdo) e botao Triar (lado direito)
-- Segunda linha: metricas em grid de 4 colunas ocupando toda a largura, com gap maior
-- Sparkline movido para a segunda linha, ao lado das metricas, com tamanho maior (100x32px)
+Substituir a estrutura atual (lista unica + collapsible) por um sistema de **sub-abas** dentro da aba Triagem, separando claramente cada etapa do fluxo:
 
-**2. Barras de metrica mais visiveis**
-- Aumentar altura da barra de 1px (h-1) para 1.5px (h-1.5) para melhor visibilidade
-- Aumentar gap entre colunas de metricas (gap-x-6 para gap-x-8)
+```text
++-------------------------------------------------------------+
+| [Para Triar (12)] [Em Andamento (3)] [Concluidos (5)] [Todos]|
++-------------------------------------------------------------+
+```
 
-**3. Sparkline maior e melhor posicionado**
-- Aumentar de 72x24 para 100x32 pixels
-- Posicionar como ultimo elemento na linha de metricas, com mais destaque
+**Sub-aba "Para Triar"** (padrao):
+- Mostra apenas alunos que ainda nao foram triados ou com status "pending"
+- Ordenados por risco (critico primeiro)
+- Layout atual dos cards de aluno (nome, metricas, sparkline, botao Triar)
+- Counter em vermelho se houver criticos
 
-**4. Registros e Triado como badges na primeira linha**
-- Manter badges de registros e status "Triado" na primeira linha junto ao botao
-- Remover acumulo visual da area do sparkline
+**Sub-aba "Em Andamento"**:
+- Mostra triagens com status "triaged" ou "in_progress"
+- Card redesenhado com:
+  - Nome do aluno, prioridade (badge colorido), acao recomendada
+  - Data da triagem e quem triou
+  - Follow-up com indicador visual (vencido/proximo)
+  - Notas da triagem
+  - Botoes de acao: "Marcar Em Andamento" / "Resolver"
+- Separacao visual entre "Triado" e "Em Andamento" com headers de secao
+
+**Sub-aba "Concluidos"**:
+- Triagens com status "resolved"
+- Cards mais compactos (ja finalizados)
+- Data de resolucao visivel
+- Opcao de reabrir se necessario
+
+**Sub-aba "Todos"** (historico completo):
+- Todas as triagens ordenadas por data (mais recente primeiro)
+- Filtro por status inline
+
+### Mudancas visuais adicionais
+- Badges de contagem em cada sub-aba com cores contextuais (vermelho para pendentes, amarelo para em andamento, verde para concluidos)
+- Cards de triagem em andamento com borda lateral colorida por prioridade (vermelho=urgente, laranja=alta, amarelo=media, verde=baixa)
+- Remover o Collapsible de historico (substituido pelas sub-abas)
+- Remover filtro "Status de triagem" do select (agora e feito pelas abas)
 
 ### Detalhes tecnicos
 
 | Arquivo | Mudanca |
 |---|---|
-| `src/components/institution/StudentTriageTab.tsx` | Reorganizar layout dos alunos: remover pl-[72px], aumentar sparkline, aumentar barras, redistribuir elementos entre as 2 linhas |
+| `src/components/institution/StudentTriageTab.tsx` | Adicionar sub-tabs (Tabs do Radix) para separar "Para Triar", "Em Andamento", "Concluidos" e "Todos". Remover Collapsible de historico e select de filtro de triagem. Redesenhar cards de triagem com borda lateral por prioridade. Adicionar contadores coloridos nas abas. |
 
-Apenas ajustes de layout/CSS. Sem mudanca em logica ou dados.
+Apenas um arquivo modificado. Sem mudancas em banco de dados ou logica de negocio.
 
