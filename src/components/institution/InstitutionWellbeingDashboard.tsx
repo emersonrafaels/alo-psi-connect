@@ -27,7 +27,9 @@ import {
   Calendar,
   Lightbulb,
   Activity,
+  HelpCircle,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useInstitutionWellbeing, type ActiveInstitutionNote } from '@/hooks/useInstitutionWellbeing';
 import { usePredictiveInsights } from '@/hooks/usePredictiveInsights';
 import { LGPDNotice } from './LGPDNotice';
@@ -158,7 +160,21 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
 
   const overallStatus = getOverallStatus();
 
+  const MetricTooltip = ({ text }: { text: string }) => (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
+          <HelpCircle className="h-3.5 w-3.5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs">
+        <p className="text-sm">{text}</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="space-y-8">
       {/* Header with Period Selector and Status Badge */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -261,7 +277,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
               </div>
               <div>
                 <p className="text-2xl font-bold">{metrics.students_with_entries}</p>
-                <p className="text-xs text-muted-foreground">Participantes</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">Participantes <MetricTooltip text="Quantidade de alunos que registraram pelo menos um diário emocional no período selecionado." /></p>
               </div>
             </div>
 
@@ -271,7 +287,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
               </div>
               <div>
                 <p className="text-2xl font-bold">{metrics.total_entries}</p>
-                <p className="text-xs text-muted-foreground">Registros</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">Registros <MetricTooltip text="Total de diários emocionais preenchidos por todos os alunos no período. Quanto mais registros, mais confiável a análise." /></p>
               </div>
             </div>
 
@@ -283,7 +299,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
                 <p className="text-sm font-medium">
                   {metrics.mood_trend === 'up' ? 'Em melhora' : metrics.mood_trend === 'down' ? 'Em queda' : 'Estável'}
                 </p>
-                <p className="text-xs text-muted-foreground">Tendência</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">Tendência <MetricTooltip text="Compara a média de humor da primeira metade do período com a segunda metade. 'Em melhora' significa que o humor médio subiu, 'Em queda' que diminuiu." /></p>
               </div>
             </div>
 
@@ -293,7 +309,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
               </div>
               <div>
                 <p className="text-2xl font-bold">{metrics.students_with_low_mood}</p>
-                <p className="text-xs text-muted-foreground">Alertas</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">Alertas <MetricTooltip text="Número de alunos com humor médio abaixo de 3 (em uma escala de 1 a 5). Esses alunos podem precisar de acolhimento." /></p>
               </div>
             </div>
           </div>
@@ -313,7 +329,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
           <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
             <div className="p-4 rounded-lg border bg-card">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Humor Médio</span>
+                <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">Humor Médio <MetricTooltip text="Média geral de como os alunos avaliaram seu humor (1=muito mal, 5=muito bem). Acima de 3.5 é considerado saudável." /></span>
                 <Heart className={`h-5 w-5 ${getMoodColor(metrics.avg_mood_score).replace('bg-', 'text-')}`} />
               </div>
               <div className="flex items-center gap-2">
@@ -339,7 +355,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
 
             <div className="p-4 rounded-lg border bg-card">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Ansiedade</span>
+                <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">Ansiedade <MetricTooltip text="Nível médio de ansiedade reportado (1=tranquilo, 5=muito ansioso). Valores acima de 3.5 merecem atenção." /></span>
                 <Brain className="h-5 w-5 text-purple-500" />
               </div>
               <span className="text-2xl font-bold">
@@ -356,7 +372,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
 
             <div className="p-4 rounded-lg border bg-card">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Qualidade do Sono</span>
+                <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">Qualidade do Sono <MetricTooltip text="Como os alunos avaliaram seu sono (1=péssimo, 5=ótimo). Sono ruim costuma afetar humor e concentração." /></span>
                 <Moon className="h-5 w-5 text-indigo-500" />
               </div>
               <span className="text-2xl font-bold">
@@ -373,7 +389,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
 
             <div className="p-4 rounded-lg border bg-card">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Energia</span>
+                <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">Energia <MetricTooltip text="Nível médio de energia dos alunos (1=sem energia, 5=muita energia). Valores baixos podem indicar cansaço ou desmotivação." /></span>
                 <Zap className="h-5 w-5 text-yellow-500" />
               </div>
               <span className="text-2xl font-bold">
@@ -478,5 +494,6 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   );
 };
