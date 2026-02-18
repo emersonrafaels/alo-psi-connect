@@ -1,69 +1,40 @@
 
 
-## Indicador de Media da Turma nas Barras de Metrica
+## Correcoes e Melhorias na Triagem de Alunos
 
-### O que sera feito
+### Problemas Identificados
 
-Adicionar um marcador elegante (seta/triangulo) nas barras de metrica de cada aluno, mostrando onde esta a media geral da turma. Isso permite ao educador comparar rapidamente se o aluno esta acima ou abaixo da media.
+1. **Legenda duplicada**: A linha "MEDIA DA INSTITUICAO" aparece repetida para cada aluno, e o texto mostra duas versoes redundantes ("media da instituicao" + "media da turma").
+2. **Labels dos cards pouco visiveis**: Os textos "Critico", "Alerta", "Atencao" nos cards de resumo usam `text-muted-foreground`, ficando apagados.
 
-### Mudancas
+### Correcoes
 
 **Arquivo: `src/components/institution/StudentTriageTab.tsx`**
 
-1. **Calcular as medias gerais da turma** com um `useMemo` que agrega os valores de todos os alunos com dados:
+1. **Remover legenda duplicada por aluno (linha 570)** - Mover a legenda para fora do loop de alunos, exibindo-a uma unica vez acima da listagem. Texto unificado: "▼ = media da turma".
 
-```text
-const classAverages = useMemo(() => ({
-  mood: media de todos student.avgMood,
-  anxiety: media de todos student.avgAnxiety,
-  energy: media de todos student.avgEnergy,
-  sleep: media de todos student.avgSleep,
-}), [students]);
-```
+2. **Destacar labels dos cards de resumo (linha 392)** - Trocar `text-xs text-muted-foreground` por texto com a cor do respectivo nivel de risco, usando `font-semibold`:
+   - Critico: `text-red-700 dark:text-red-400`
+   - Alerta: `text-orange-700 dark:text-orange-400`
+   - Atencao: `text-yellow-700 dark:text-yellow-400`
+   - Saudavel: `text-green-700 dark:text-green-400`
+   - Sem Dados: `text-muted-foreground`
 
-2. **Evoluir o componente `MetricBar`** para aceitar uma prop opcional `classAvg`:
+### Melhorias Adicionais Sugeridas
 
-```text
-function MetricBar({ value, invert, classAvg }) {
-  // Barra atual do aluno (sem mudancas)
-  // + marcador da media da turma:
-  //   Um pequeno triangulo (seta para baixo) posicionado
-  //   horizontalmente na posicao da media
-  //   com tooltip "Media da turma: X.X"
-}
-```
+3. **Valor numerico da media da turma nos cards** - Adicionar ao lado de cada card de resumo os valores medios da turma (ex: "Humor: 2.8 | Ansiedade: 3.2") como uma linha sutil, dando contexto numerico geral.
 
-O marcador sera um triangulo SVG inline posicionado com `left: X%` via CSS absolute, apontando para baixo sobre a barra. Cor neutra (cinza/slate) para nao competir com a cor da barra do aluno.
+4. **Alerta visual para alunos criticos pendentes** - Quando houver alunos criticos nao triados, exibir um banner de alerta no topo (vermelho) com a contagem, chamando atencao imediata do educador.
 
-3. **Passar `classAvg` em todas as chamadas de `MetricBar`** na listagem de alunos:
+5. **Indicador de comparacao na MetricBar** - Alem do triangulo, adicionar uma sutil diferenca visual: quando o valor do aluno estiver abaixo da media (ou acima, para ansiedade invertida), a cor do triangulo muda para vermelho claro; quando esta acima/melhor, muda para verde claro. Isso torna a comparacao instantanea sem precisar ler os numeros.
 
-```text
-<MetricBar value={student.avgMood} classAvg={classAverages.mood} />
-<MetricBar value={student.avgAnxiety} invert classAvg={classAverages.anxiety} />
-<MetricBar value={student.avgEnergy} classAvg={classAverages.energy} />
-<MetricBar value={student.avgSleep} classAvg={classAverages.sleep} />
-```
-
-4. **Adicionar legenda sutil** abaixo dos cards de resumo ou no cabecalho "Indicadores (14 dias)", ex: um pequeno texto "▼ = media da turma" para que o usuario entenda o marcador.
-
-### Visual do marcador
-
-```text
-         ▼  (triangulo cinza, 6px)
-  ████████░░░░░░░░░░░  (barra do aluno)
-  |------- 2.3 -------|  (escala 1-5)
-```
-
-- Triangulo apontando para baixo, posicionado no topo da barra
-- Cor: `text-slate-400 dark:text-slate-500` (discreto)
-- Tooltip ao passar o mouse: "Media da turma: 3.2"
-- Transicao suave na posicao
+6. **Mostrar valor numerico da media no hover das barras** - Ao lado do valor do aluno (ex: "2.3"), mostrar a media da turma em texto menor entre parenteses: "2.3 (turma: 3.1)".
 
 ### Detalhes tecnicos
 
 | Arquivo | Mudanca |
 |---|---|
-| `src/components/institution/StudentTriageTab.tsx` | (1) Adicionar `useMemo` para calcular medias da turma. (2) Evoluir `MetricBar` com prop `classAvg` e marcador SVG triangulo. (3) Passar `classAvg` nas 4 chamadas de MetricBar. (4) Legenda sutil. |
+| `src/components/institution/StudentTriageTab.tsx` | (1) Extrair legenda da media para fora do loop, exibir uma vez antes da lista. (2) Adicionar `labelColor` ao `riskConfig` e usar nos cards. (3) Adicionar media geral nos cards de resumo. (4) Banner de alerta critico. (5) Triangulo com cor dinamica na MetricBar. (6) Media da turma inline nos valores das metricas. |
 
 Nenhum arquivo novo. Nenhuma mudanca no banco de dados.
 
