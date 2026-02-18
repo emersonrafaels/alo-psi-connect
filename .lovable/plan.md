@@ -1,51 +1,37 @@
 
 
-## Tooltips Mais Elegantes e UX Aprimorado na Pagina de Triagem
+## Melhorar Distribuicao e Espacamento na Lista de Alunos
 
-### Problemas atuais
-- Tooltips sao simples caixas de texto sem hierarquia visual
-- Cards de resumo de risco sao compactos demais, sem clareza visual
-- Lista de alunos e densa, com metricas amontoadas em uma unica linha
-- Icone de interrogacao (?) e muito pequeno e pouco visivel
+### Problemas identificados na screenshot
+- As barras de metrica (Humor, Ansiedade, Energia, Sono) estao muito apertadas, especialmente com o padding-left de 72px que desperica espaco
+- O sparkline e muito pequeno (72x24px) e fica comprimido entre outros elementos
+- A linha do nome + badge + sparkline + botoes esta sobrecarregada, tudo junto
 
-### Melhorias planejadas
+### Mudancas planejadas
 
-**1. Tooltips mais elegantes**
-- Criar um componente `MetricTooltip` reutilizavel com:
-  - Titulo em negrito separado da descricao
-  - Icone contextual (colorido) no topo do tooltip
-  - Largura fixa (280px) para consistencia
-  - Fundo com leve gradiente e borda sutil
-  - Separador visual entre titulo e explicacao
-- Substituir todos os tooltips atuais pelo novo componente
+**1. Layout do aluno em 2 linhas mais respiradas**
+- Remover o padding-left excessivo (pl-[72px]) das metricas
+- Primeira linha: nome + badge de risco + tendencia (lado esquerdo) e botao Triar (lado direito)
+- Segunda linha: metricas em grid de 4 colunas ocupando toda a largura, com gap maior
+- Sparkline movido para a segunda linha, ao lado das metricas, com tamanho maior (100x32px)
 
-**2. Cards de resumo de risco redesenhados**
-- Aumentar o padding dos cards para respirar mais
-- Adicionar porcentagem ao lado da contagem (ex: "3 (12%)")
-- Icone de risco maior e mais destacado
-- Barra de progresso com cor correspondente ao nivel de risco (vermelho para critico, verde para saudavel)
-- Tooltip integrado ao card inteiro (nao apenas no icone ?)
-- Efeito hover mais pronunciado com sombra e scale sutil
+**2. Barras de metrica mais visiveis**
+- Aumentar altura da barra de 1px (h-1) para 1.5px (h-1.5) para melhor visibilidade
+- Aumentar gap entre colunas de metricas (gap-x-6 para gap-x-8)
 
-**3. Lista de alunos com melhor UX**
-- Reorganizar metricas em grid 2x2 ao inves de linha unica
-- Cada metrica com barra de progresso colorida (1-5) ao lado do valor
-- Sparkline maior e mais visivel
-- Tendencia com badge colorido mostrando a porcentagem (ex: badge vermelho "-61%")
-- Separar visualmente nome/risco das metricas
-- Botao "Triar" com variante mais chamativa para alunos criticos (vermelho)
-- Badge "Triado" com icone de check
+**3. Sparkline maior e melhor posicionado**
+- Aumentar de 72x24 para 100x32 pixels
+- Posicionar como ultimo elemento na linha de metricas, com mais destaque
 
-**4. Pequenas melhorias gerais**
-- Remover icone HelpCircle dos cards de risco (tooltip no hover do card inteiro e mais intuitivo)
-- Adicionar contagem de registros como badge discreto
-- Hover nos cards de risco com animacao suave (transform scale)
+**4. Registros e Triado como badges na primeira linha**
+- Manter badges de registros e status "Triado" na primeira linha junto ao botao
+- Remover acumulo visual da area do sparkline
 
 ### Detalhes tecnicos
 
 | Arquivo | Mudanca |
 |---|---|
-| `src/components/institution/StudentTriageTab.tsx` | Redesign dos cards de risco, novo layout de metricas por aluno, tooltips elegantes, melhorias visuais gerais |
+| `src/components/institution/StudentTriageTab.tsx` | Reorganizar layout dos alunos: remover pl-[72px], aumentar sparkline, aumentar barras, redistribuir elementos entre as 2 linhas |
 
-Mudanca em um unico arquivo. Sem impacto em logica, dados ou banco.
+Apenas ajustes de layout/CSS. Sem mudanca em logica ou dados.
 
