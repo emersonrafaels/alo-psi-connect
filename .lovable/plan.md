@@ -1,47 +1,29 @@
 
 
-## Permitir que a Instituicao use as Notas
+## Busca Inteligente de Notas Institucionais
 
-### Contexto
+### Objetivo
+Adicionar um campo de busca no componente `InstitutionNotesTab` que filtra notas por titulo, conteudo/descricao e datas, com debounce para performance.
 
-As notas institucionais ja existem no sistema (tabela `institution_notes` e componente `InstitutionNotesTab`), mas atualmente so admins podem acessar. A instituicao (role `institution_admin`) precisa ver e gerenciar essas notas no seu portal em `/portal-institucional`.
+### Implementacao
 
-### Mudancas necessarias
+**Arquivo: `src/components/admin/InstitutionNotesTab.tsx`**
 
-**1. Nova politica RLS no banco de dados**
+1. Adicionar estado `searchTerm` e usar o hook `useDebounce` existente (300ms)
+2. Inserir campo de busca (Input com icone Search) entre o header e a lista de notas
+3. Filtrar `notes` localmente (client-side) pelo termo debounced:
+   - Titulo (`title`) - match case-insensitive
+   - Conteudo (`content`) - match case-insensitive
+   - Datas (`start_date`, `end_date`) - match no formato dd/MM/yyyy e tambem no formato original YYYY-MM-DD
+4. Mostrar contador de resultados quando houver filtro ativo (ex: "3 de 8 notas")
+5. Usar o utilitario `highlightText` existente em `src/utils/highlightHelpers.tsx` para destacar os termos encontrados no titulo e conteudo das notas
+6. Mostrar estado vazio especifico quando a busca nao retorna resultados ("Nenhuma nota encontrada para 'termo'")
 
-Adicionar politica que permite institution_admins fazerem CRUD nas notas da sua propria instituicao:
+### Detalhes tecnicos
 
-```sql
-CREATE POLICY "Institution admins can manage their notes"
-ON public.institution_notes
-FOR ALL
-USING (
-  institution_id IN (
-    SELECT iu.institution_id FROM institution_users iu
-    WHERE iu.user_id = auth.uid() AND iu.is_active = true
-  )
-)
-WITH CHECK (
-  institution_id IN (
-    SELECT iu.institution_id FROM institution_users iu
-    WHERE iu.user_id = auth.uid() AND iu.is_active = true
-  )
-);
-```
-
-Isso permite que o admin institucional crie, edite, exclua e visualize notas apenas da sua instituicao.
-
-**2. Nova aba "Notas" no `InstitutionPortal.tsx`**
-
-- Adicionar uma 6a aba com icone `StickyNote` e label "Notas"
-- Reutilizar o componente `InstitutionNotesTab` ja existente, passando o `institutionId` da instituicao do usuario
-- Atualizar o grid do TabsList de 5 para 6 colunas (em desktop)
-
-### Resumo de arquivos
-
-| Arquivo | Acao |
-|---|---|
-| Migration SQL | Adicionar politica RLS para institution_admins |
-| `src/pages/InstitutionPortal.tsx` | Adicionar aba "Notas" com `InstitutionNotesTab` |
+- Reutilizar `useDebounce` de `src/hooks/useDebounce.tsx`
+- Reutilizar `highlightText` de `src/utils/highlightHelpers.tsx`
+- Filtro 100% client-side (notas ja estao carregadas em memoria)
+- Busca nas datas formata `start_date` e `end_date` para dd/MM/yyyy antes de comparar, permitindo buscar por "15/03" ou "2026"
+- Nenhuma alteracao no banco de dados necessaria
 
