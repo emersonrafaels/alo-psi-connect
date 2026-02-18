@@ -10,6 +10,7 @@ const NAMES = ["Ana","Beatriz","Camila","Eduardo","Fernando","Gabriela","Helena"
 const SURNAMES = ["Silva","Santos","Oliveira","Souza","Rodrigues","Ferreira","Almeida","Pereira","Lima","Gomes","Costa"];
 const SPECS = [["TCC","Ansiedade"],["Psicanálise","Trauma"],["Neuropsicologia","TDAH"],["Terapia Familiar","Autoestima"]];
 const TENANT_MEDCOS = "3a9ae5ec-50a9-4674-b808-7735e5f0afb5";
+const DEMO_ADMIN_ID = "11111111-1111-1111-1111-111111111111";
 
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const pickN = <T>(arr: T[], n: number): T[] => [...arr].sort(() => 0.5 - Math.random()).slice(0, n);
@@ -38,6 +39,58 @@ function pastDate(days: number): Date {
 
 function futureDate(days: number): Date {
   return new Date(Date.now() + (Math.floor(Math.random() * days) + 1) * 86400000);
+}
+
+// ── Emotion values per pattern ──
+
+const EMOTION_VALUES_CONFIG: Record<string, {
+  emotions: Record<string, [number, number]>; // [min, max] range
+  generate?: (i: number, total: number) => Record<string, number>;
+}> = {
+  exam_stress: {
+    emotions: { ansiedade: [3, 5], medo: [2, 4], frustração: [2, 4], preocupação: [3, 5], estresse: [3, 5] },
+  },
+  progressive_improvement: {
+    emotions: {},
+    generate: (i, total) => {
+      const progress = total > 1 ? i / (total - 1) : 1;
+      return {
+        ansiedade: clamp(5 - progress * 4 + (Math.random() - 0.5), 1, 5),
+        calma: clamp(1 + progress * 4 + (Math.random() - 0.5), 1, 5),
+        esperança: clamp(1 + progress * 3 + (Math.random() - 0.5), 1, 5),
+        gratidão: clamp(progress * 4 + (Math.random() - 0.5), 1, 5),
+      };
+    },
+  },
+  burnout: {
+    emotions: { exaustão: [3, 5], desânimo: [3, 5], apatia: [2, 4], tristeza: [2, 4], irritação: [2, 3] },
+  },
+  healthy: {
+    emotions: { calma: [3, 5], gratidão: [2, 4], motivação: [3, 5], alegria: [3, 5], equilíbrio: [3, 5] },
+  },
+  volatile: {
+    emotions: {},
+    generate: (i) => {
+      const wave = Math.sin(i * 1.5);
+      if (wave > 0) {
+        return { alegria: rand(3, 5), motivação: rand(2, 4), calma: rand(2, 4) };
+      }
+      return { ansiedade: rand(3, 5), irritação: rand(2, 4), confusão: rand(2, 4) };
+    },
+  },
+  random: {
+    emotions: { ansiedade: [1, 4], calma: [1, 4], alegria: [1, 4], tristeza: [1, 3], motivação: [1, 4] },
+  },
+};
+
+function generateEmotionValues(patternKey: string, i: number, total: number): Record<string, number> {
+  const config = EMOTION_VALUES_CONFIG[patternKey] || EMOTION_VALUES_CONFIG.random;
+  if (config.generate) return config.generate(i, total);
+  const result: Record<string, number> = {};
+  for (const [emotion, [min, max]] of Object.entries(config.emotions)) {
+    result[emotion] = rand(min, max);
+  }
+  return result;
 }
 
 // ── Pattern-specific data ──
@@ -153,6 +206,17 @@ const PATTERN_CONFIG: Record<string, {
   },
 };
 
+// ── Triage config per pattern ──
+
+const TRIAGE_CONFIG: Record<string, { risk: string; priority: string; action: string; notes: string }> = {
+  exam_stress: { risk: "high", priority: "urgent", action: "Encaminhar para acolhimento psicológico", notes: "[DEMO] Aluno apresenta sinais de estresse acadêmico intenso" },
+  burnout: { risk: "high", priority: "high", action: "Agendar sessão de acompanhamento", notes: "[DEMO] Esgotamento emocional identificado nos registros" },
+  volatile: { risk: "medium", priority: "medium", action: "Monitorar evolução emocional", notes: "[DEMO] Oscilações emocionais frequentes observadas" },
+  progressive_improvement: { risk: "low", priority: "low", action: "Manter acompanhamento", notes: "[DEMO] Aluno em melhora progressiva" },
+  healthy: { risk: "low", priority: "low", action: "Nenhuma ação necessária", notes: "[DEMO] Aluno com indicadores saudáveis" },
+  random: { risk: "medium", priority: "medium", action: "Avaliar necessidade de suporte", notes: "[DEMO] Padrão emocional variável" },
+};
+
 async function seedProfessionals(supabase: any, instId: string, instName: string, count: number, tenantId: string) {
   const marker = genMarker(instName), domain = genDomain(instName), profs = [];
   console.log(`[seed] Creating ${count} professionals`);
@@ -251,6 +315,7 @@ async function seedMoodEntries(supabase: any, students: any[], entriesPerStudent
       const values = config.generate(i, entriesPerStudent);
       const daysAgo = entriesPerStudent - i;
       const date = new Date(Date.now() - daysAgo * 86400000);
+      const emotionValues = generateEmotionValues(patternKey, i, entriesPerStudent);
 
       await supabase.from("mood_entries").insert({
         profile_id: s.profile.id, tenant_id: tenantId,
@@ -262,6 +327,48 @@ async function seedMoodEntries(supabase: any, students: any[], entriesPerStudent
         sleep_quality: values.mood,
         journal_text: pick(config.journals),
         tags: pickN(config.tags, 2),
+        emotion_values: emotionValues,
+      });
+      total++;
+    }
+  }
+  return total;
+}
+
+async function seedTriageRecords(supabase: any, instId: string, students: any[], patterns: string[]) {
+  const validPatterns = patterns.filter(p => TRIAGE_CONFIG[p]);
+  if (!validPatterns.length) validPatterns.push("random");
+
+  console.log(`[seed] Creating triage records for ${students.length} students`);
+  let total = 0;
+  const statuses = ["triaged", "in_progress", "resolved"];
+
+  for (let si = 0; si < students.length; si++) {
+    const s = students[si];
+    const patternKey = validPatterns[si % validPatterns.length];
+    const triageConf = TRIAGE_CONFIG[patternKey];
+    const recordCount = rand(1, 2);
+
+    for (let r = 0; r < recordCount; r++) {
+      const daysAgo = rand(3, 30);
+      const createdAt = new Date(Date.now() - daysAgo * 86400000);
+      const status = statuses[rand(0, 2)];
+      const resolvedAt = status === "resolved" ? new Date(createdAt.getTime() + rand(1, 7) * 86400000) : null;
+      const followUpDate = status !== "resolved" ? new Date(Date.now() + rand(1, 14) * 86400000) : null;
+
+      await supabase.from("student_triage").insert({
+        patient_id: s.patient.id,
+        institution_id: instId,
+        triaged_by: DEMO_ADMIN_ID,
+        status,
+        risk_level: triageConf.risk,
+        priority: triageConf.priority,
+        recommended_action: triageConf.action,
+        notes: `${triageConf.notes} (registro ${r + 1})`,
+        created_at: createdAt.toISOString(),
+        updated_at: (resolvedAt || createdAt).toISOString(),
+        resolved_at: resolvedAt?.toISOString() || null,
+        follow_up_date: followUpDate?.toISOString().split("T")[0] || null,
       });
       total++;
     }
@@ -328,6 +435,8 @@ async function cleanup(supabase: any, instId: string, instName: string) {
     const { data: demoPats } = await supabase.from("pacientes").select("id, profile_id").in("id", ids).eq("instituicao_ensino", instName);
     if (demoPats?.length) {
       const pIds = demoPats.map((p: any) => p.id), profileIds = demoPats.map((p: any) => p.profile_id).filter(Boolean);
+      // Clean up triage records for demo patients
+      await supabase.from("student_triage").delete().in("patient_id", pIds);
       if (profileIds.length) await supabase.from("mood_entries").delete().in("profile_id", profileIds);
       await supabase.from("patient_institutions").delete().in("patient_id", pIds);
       await supabase.from("pacientes").delete().in("id", pIds);
@@ -387,6 +496,7 @@ Deno.serve(async (req) => {
       details.students = students.length;
       details.coupons = await seedCoupons(supabase, instId, instName, tenant_id);
       details.mood_entries = await seedMoodEntries(supabase, students, safeMoodCount, tenant_id, data_patterns);
+      details.triage_records = await seedTriageRecords(supabase, instId, students, data_patterns);
       details.appointments = await seedAppointments(supabase, instName, profs, students, tenant_id);
       details.patterns_used = data_patterns;
     } else if (action === "cleanup") {

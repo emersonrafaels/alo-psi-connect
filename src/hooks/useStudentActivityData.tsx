@@ -71,6 +71,9 @@ export function useStudentActivityData(
           : Promise.resolve({ data: [], error: null }),
       ]);
 
+      if (moodResult.error) console.error('[useStudentActivityData] mood_entries error:', moodResult.error);
+      if (triageResult.error) console.error('[useStudentActivityData] student_triage error:', triageResult.error);
+
       const moodEntries: MoodEntry[] = (moodResult.data || []).map((e: any) => ({
         id: e.id,
         date: e.date,
