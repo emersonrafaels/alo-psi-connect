@@ -305,5 +305,67 @@ export function useTriageActions(institutionId: string | null) {
     },
   });
 
-  return { createTriage, updateTriageStatus };
+  const batchCreateTriage = useMutation({
+    mutationFn: async (params: {
+      entries: Array<{ patientId: string; riskLevel: string; studentName?: string }>;
+      priority: string;
+      recommendedAction: string;
+      notes: string;
+      followUpDate?: string;
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !institutionId) throw new Error('Not authenticated');
+
+      const inserts = params.entries.map(e => {
+        const d: any = {
+          patient_id: e.patientId,
+          institution_id: institutionId,
+          triaged_by: user.id,
+          status: 'triaged',
+          risk_level: e.riskLevel,
+          priority: params.priority,
+          recommended_action: params.recommendedAction,
+          notes: params.notes,
+        };
+        if (params.followUpDate) d.follow_up_date = params.followUpDate;
+        return d;
+      });
+
+      const { error } = await supabase
+        .from('student_triage' as any)
+        .insert(inserts as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['student-triage-data', institutionId] });
+      queryClient.invalidateQueries({ queryKey: ['triage-records', institutionId] });
+    },
+  });
+
+  const addQuickNote = useMutation({
+    mutationFn: async (params: { patientId: string; note: string; riskLevel?: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !institutionId) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('student_triage' as any)
+        .insert({
+          patient_id: params.patientId,
+          institution_id: institutionId,
+          triaged_by: user.id,
+          status: 'triaged',
+          risk_level: params.riskLevel || 'attention',
+          priority: 'low',
+          recommended_action: 'monitor',
+          notes: params.note,
+        } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['student-triage-data', institutionId] });
+      queryClient.invalidateQueries({ queryKey: ['triage-records', institutionId] });
+    },
+  });
+
+  return { createTriage, updateTriageStatus, batchCreateTriage, addQuickNote };
 }
