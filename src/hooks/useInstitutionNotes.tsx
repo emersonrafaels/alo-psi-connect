@@ -2,6 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+// Fire-and-forget notification helper
+function notifyInstitutionAction(action_type: string, institution_id: string, metadata: Record<string, any>) {
+  supabase.functions.invoke('notify-institution-action', {
+    body: { action_type, institution_id, metadata },
+  }).catch(err => console.warn('Notification failed (non-blocking):', err));
+}
 export type InstitutionNote = {
   id: string;
   institution_id: string;
@@ -58,9 +64,14 @@ export function useInstitutionNotes(institutionId: string | null) {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey });
       toast.success('Nota criada com sucesso');
+      if (institutionId) {
+        notifyInstitutionAction('note_created', institutionId, {
+          note_title: variables.title,
+        });
+      }
     },
     onError: () => toast.error('Erro ao criar nota'),
   });
@@ -81,13 +92,18 @@ export function useInstitutionNotes(institutionId: string | null) {
   });
 
   const deleteNote = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('institution_notes').delete().eq('id', id);
+    mutationFn: async (params: { id: string; title?: string }) => {
+      const { error } = await supabase.from('institution_notes').delete().eq('id', params.id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey });
       toast.success('Nota excluída');
+      if (institutionId) {
+        notifyInstitutionAction('note_deleted', institutionId, {
+          note_title: variables.title || '',
+        });
+      }
     },
     onError: () => toast.error('Erro ao excluir nota'),
   });

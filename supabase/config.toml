@@ -169,3 +169,6 @@ verify_jwt = true
 
 [functions.send-group-session-notification]
 verify_jwt = false
+
+[functions.notify-institution-action]
+verify_jwt = false

@@ -1,6 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// Fire-and-forget notification helper
+function notifyInstitutionAction(action_type: string, institution_id: string, metadata: Record<string, any>) {
+  supabase.functions.invoke('notify-institution-action', {
+    body: { action_type, institution_id, metadata },
+  }).catch(err => console.warn('Notification failed (non-blocking):', err));
+}
+
 export type RiskLevel = 'critical' | 'alert' | 'attention' | 'healthy' | 'no_data';
 
 export interface StudentRiskData {
@@ -225,6 +232,7 @@ export function useTriageActions(institutionId: string | null) {
   const createTriage = useMutation({
     mutationFn: async (params: {
       patientId: string;
+      studentName?: string;
       riskLevel: string;
       priority: string;
       recommendedAction: string;
@@ -251,14 +259,22 @@ export function useTriageActions(institutionId: string | null) {
         .insert(insertData as any);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['student-triage-data', institutionId] });
       queryClient.invalidateQueries({ queryKey: ['triage-records', institutionId] });
+      if (institutionId) {
+        notifyInstitutionAction('student_triaged', institutionId, {
+          student_name: variables.studentName || '',
+          risk_level: variables.riskLevel,
+          priority: variables.priority,
+          recommended_action: variables.recommendedAction,
+        });
+      }
     },
   });
 
   const updateTriageStatus = useMutation({
-    mutationFn: async (params: { triageId: string; status: string; resolvedAt?: string }) => {
+    mutationFn: async (params: { triageId: string; status: string; resolvedAt?: string; studentName?: string }) => {
       const updateData: any = { status: params.status };
       if (params.resolvedAt) updateData.resolved_at = params.resolvedAt;
 
@@ -268,9 +284,20 @@ export function useTriageActions(institutionId: string | null) {
         .eq('id', params.triageId);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['student-triage-data', institutionId] });
       queryClient.invalidateQueries({ queryKey: ['triage-records', institutionId] });
+      if (institutionId) {
+        const actionMap: Record<string, string> = {
+          in_progress: 'triage_in_progress',
+          resolved: 'triage_resolved',
+          triaged: 'triage_reopened',
+        };
+        const actionType = actionMap[variables.status] || 'triage_in_progress';
+        notifyInstitutionAction(actionType, institutionId, {
+          student_name: variables.studentName || '',
+        });
+      }
     },
   });
 
