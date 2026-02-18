@@ -20,6 +20,7 @@ import { BatchTriageDialog } from './BatchTriageDialog';
 import { TriageMetricsDashboard } from './TriageMetricsDashboard';
 import { QuickNotePopover } from './QuickNotePopover';
 import { useInstitutionNotes } from '@/hooks/useInstitutionNotes';
+import { useAnonymizationConfig, anonymizeStudentName, anonymizeInitials } from '@/hooks/useAnonymizationConfig';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -235,6 +236,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const { notes: institutionNotes } = useInstitutionNotes(institutionId);
   const { data: triageRecords = [] } = useTriageRecords(institutionId);
   const { createTriage, updateTriageStatus, batchCreateTriage, addQuickNote } = useTriageActions(institutionId);
+  const { isAnonymized, loading: anonLoading } = useAnonymizationConfig(institutionId);
 
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [selectedStudent, setSelectedStudent] = useState<StudentRiskData | null>(null);
@@ -337,7 +339,15 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
   const patientNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    students.forEach((s) => map.set(s.patientId, s.studentName));
+    students.forEach((s, idx) => {
+      map.set(s.patientId, isAnonymized ? anonymizeStudentName(idx) : s.studentName);
+    });
+    return map;
+  }, [students, isAnonymized]);
+
+  const patientIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    students.forEach((s, idx) => map.set(s.patientId, idx));
     return map;
   }, [students]);
 
@@ -390,8 +400,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
   const handleExport = useCallback((type: 'pending' | 'history' | 'full') => {
     if (type === 'pending') {
-      const data = pendingStudents.map(s => ({
-        'Nome': s.studentName,
+      const data = pendingStudents.map((s, idx) => ({
+        'Nome': isAnonymized ? anonymizeStudentName(patientIndexMap.get(s.patientId) ?? idx) : s.studentName,
         'Nível de Risco': riskConfig[s.riskLevel].label,
         'Humor Médio': s.avgMood ?? '—',
         'Ansiedade Média': s.avgAnxiety ?? '—',
@@ -420,8 +430,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
       XLSX.utils.book_append_sheet(wb, ws, 'Triagens');
       XLSX.writeFile(wb, `triagens-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     } else {
-      const studentsData = students.map(s => ({
-        'Nome': s.studentName,
+      const studentsData = students.map((s, idx) => ({
+        'Nome': isAnonymized ? anonymizeStudentName(idx) : s.studentName,
         'Nível de Risco': riskConfig[s.riskLevel].label,
         'Humor': s.avgMood ?? '—',
         'Ansiedade': s.avgAnxiety ?? '—',
@@ -444,7 +454,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(triagesData), 'Triagens');
       XLSX.writeFile(wb, `relatorio-completo-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     }
-  }, [pendingStudents, students, triageRecords, patientNameMap]);
+  }, [pendingStudents, students, triageRecords, patientNameMap, isAnonymized, patientIndexMap]);
 
   if (isLoading) {
     return (
@@ -722,7 +732,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                     student.riskLevel === 'alert' ? 'border-l-orange-500' :
                     student.riskLevel === 'attention' ? 'border-l-yellow-500' :
                     student.riskLevel === 'healthy' ? 'border-l-green-500' : 'border-l-muted-foreground/40';
-                    const initials = student.studentName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
+                    const displayName = isAnonymized ? anonymizeStudentName(patientIndexMap.get(student.patientId) ?? 0) : student.studentName;
+                    const initials = isAnonymized ? anonymizeInitials(patientIndexMap.get(student.patientId) ?? 0) : student.studentName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
 
                     return (
                       <div key={student.patientId} className={`p-5 border-l-4 ${riskBorder} hover:bg-muted/30 transition-colors ${isCritical ? 'bg-red-50/30 dark:bg-red-950/10' : ''}`}>
@@ -736,7 +747,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                             <Avatar className="h-8 w-8 shrink-0">
                               <AvatarFallback className={`text-xs font-semibold ${config.color}`}>{initials}</AvatarFallback>
                             </Avatar>
-                            <button type="button" onClick={() => handleOpenActivity(student)} className="font-semibold text-base truncate text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{student.studentName}</button>
+                            <button type="button" onClick={() => handleOpenActivity(student)} className="font-semibold text-base truncate text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{displayName}</button>
                             <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
                             <TrendBadge trend={student.moodTrend} />
                             <MetricTooltip title="📝 Engajamento" description="Dias com registro emocional nos últimos 14 dias. Quanto mais regular, melhor o acompanhamento.">
@@ -1037,13 +1048,15 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           onOpenChange={setBatchDialogOpen}
           students={pendingStudents.filter(s => selectedStudentIds.has(s.patientId))}
           onSubmit={handleBatchTriage}
+          isAnonymized={isAnonymized}
+          studentIndexMap={patientIndexMap}
         />
 
         {activityModalStudent &&
         <StudentActivityModal
           open={activityModalOpen}
           onOpenChange={setActivityModalOpen}
-          studentName={activityModalStudent.studentName}
+          studentName={isAnonymized ? anonymizeStudentName(patientIndexMap.get(activityModalStudent.patientId) ?? 0) : activityModalStudent.studentName}
           profileId={activityModalStudent.profileId}
           patientId={activityModalStudent.patientId}
           institutionId={institutionId}

@@ -886,6 +886,7 @@ export type Database = {
       }
       educational_institutions: {
         Row: {
+          anonymize_students: boolean | null
           can_manage_coupons: boolean
           can_manage_professionals: boolean
           can_manage_users: boolean
@@ -899,6 +900,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          anonymize_students?: boolean | null
           can_manage_coupons?: boolean
           can_manage_professionals?: boolean
           can_manage_users?: boolean
@@ -912,6 +914,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          anonymize_students?: boolean | null
           can_manage_coupons?: boolean
           can_manage_professionals?: boolean
           can_manage_users?: boolean
