@@ -8,7 +8,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2 } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play } from 'lucide-react';
 import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
 import { useInstitutionNotes } from '@/hooks/useInstitutionNotes';
@@ -198,12 +199,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const { createTriage, updateTriageStatus } = useTriageActions(institutionId);
 
   const [riskFilter, setRiskFilter] = useState<string>('all');
-  const [triageFilter, setTriageFilter] = useState<string>('all');
   const [selectedStudent, setSelectedStudent] = useState<StudentRiskData | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [triagedOpen, setTriagedOpen] = useState(false);
   const [legendOpen, setLegendOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('para_triar');
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   const counts = useMemo(() => {
@@ -214,31 +214,35 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
   const totalStudents = students.length;
 
-  const filteredStudents = useMemo(() => {
-    let filtered = [...students];
-
-    if (riskFilter !== 'all') {
-      filtered = filtered.filter(s => s.riskLevel === riskFilter);
-    }
-
-    if (triageFilter === 'not_triaged') {
-      filtered = filtered.filter(s => !s.lastTriageStatus || s.lastTriageStatus === 'pending');
-    } else if (triageFilter === 'triaged') {
-      filtered = filtered.filter(s => s.lastTriageStatus && s.lastTriageStatus !== 'pending');
-    }
-
+  // Students not yet triaged or pending
+  const pendingStudents = useMemo(() => {
+    let filtered = students.filter(s => !s.lastTriageStatus || s.lastTriageStatus === 'pending');
+    if (riskFilter !== 'all') filtered = filtered.filter(s => s.riskLevel === riskFilter);
     if (debouncedSearch.trim()) {
       const term = debouncedSearch.toLowerCase();
       filtered = filtered.filter(s => s.studentName.toLowerCase().includes(term));
     }
-
     filtered.sort((a, b) => riskOrder.indexOf(a.riskLevel) - riskOrder.indexOf(b.riskLevel));
     return filtered;
-  }, [students, riskFilter, triageFilter, debouncedSearch]);
+  }, [students, riskFilter, debouncedSearch]);
 
-  const triagedStudents = useMemo(() => {
-    return triageRecords.filter(t => t.status !== 'pending');
+  // Triage records by status
+  const inProgressTriages = useMemo(() => {
+    return triageRecords.filter(t => t.status === 'triaged' || t.status === 'in_progress');
   }, [triageRecords]);
+
+  const resolvedTriages = useMemo(() => {
+    return triageRecords.filter(t => t.status === 'resolved');
+  }, [triageRecords]);
+
+  const allTriages = useMemo(() => {
+    return [...triageRecords].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [triageRecords]);
+
+  // Count of critical pending students
+  const criticalPendingCount = useMemo(() => {
+    return students.filter(s => s.riskLevel === 'critical' && (!s.lastTriageStatus || s.lastTriageStatus === 'pending')).length;
+  }, [students]);
 
   const patientNameMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -256,7 +260,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   };
 
   const handleExport = useCallback(() => {
-    const data = filteredStudents.map(s => ({
+    const exportStudents = activeTab === 'para_triar' ? pendingStudents : students.filter(s => {
+      if (riskFilter !== 'all') return s.riskLevel === riskFilter;
+      return true;
+    });
+    const data = exportStudents.map(s => ({
       'Nome': s.studentName,
       'Nível de Risco': riskConfig[s.riskLevel].label,
       'Humor Médio': s.avgMood ?? '—',
@@ -271,7 +279,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Triagem');
     XLSX.writeFile(wb, `triagem-alunos-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
-  }, [filteredStudents]);
+  }, [activeTab, pendingStudents, students, riskFilter]);
 
   if (isLoading) {
     return (
@@ -413,227 +421,313 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             </SelectContent>
           </Select>
 
-          <Select value={triageFilter} onValueChange={setTriageFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Status de triagem" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="not_triaged">Não triados</SelectItem>
-              <SelectItem value="triaged">Triados</SelectItem>
-            </SelectContent>
-          </Select>
-
           <Button variant="outline" size="sm" onClick={handleExport} className="ml-auto">
             <Download className="h-4 w-4 mr-1" />
             Exportar
           </Button>
         </div>
 
-        {/* Student list — redesigned with 2x2 grid */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              Alunos
-              <Badge variant="secondary" className="ml-2 text-xs font-normal">{filteredStudents.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y">
-              {filteredStudents.map(student => {
-                const config = riskConfig[student.riskLevel];
-                const isCritical = student.riskLevel === 'critical';
-                const isTriaged = student.lastTriageStatus && student.lastTriageStatus !== 'pending';
+        {/* Sub-tabs for triage workflow */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full justify-start bg-muted/50 p-1 h-auto flex-wrap">
+            <TabsTrigger value="para_triar" className="gap-2 data-[state=active]:bg-background">
+              Para Triar
+              <Badge
+                variant="secondary"
+                className={`text-[10px] px-1.5 py-0 h-5 ${
+                  criticalPendingCount > 0
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
+                    : ''
+                }`}
+              >
+                {pendingStudents.length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="em_andamento" className="gap-2 data-[state=active]:bg-background">
+              Em Andamento
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400">
+                {inProgressTriages.length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="concluidos" className="gap-2 data-[state=active]:bg-background">
+              Concluídos
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                {resolvedTriages.length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="todos" className="gap-2 data-[state=active]:bg-background">
+              Todos
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">
+                {allTriages.length}
+              </Badge>
+            </TabsTrigger>
+          </TabsList>
 
-                return (
-                  <div key={student.patientId} className="p-4 hover:bg-muted/30 transition-colors">
-                    {/* Row 1: Name, badge, trend, actions */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
-                        <p className="font-medium text-sm truncate">{student.studentName}</p>
-                        <TrendBadge trend={student.moodTrend} />
-                        <MetricTooltip title="📝 Registros" description="Quantidade de diários emocionais preenchidos nos últimos 14 dias. Mais registros = análise mais confiável.">
-                          <Badge variant="outline" className="text-[10px] cursor-help font-normal">
-                            {student.entryCount} reg.
-                          </Badge>
-                        </MetricTooltip>
-                        {isTriaged && (
-                          <Badge variant="secondary" className="text-[10px] gap-1">
-                            <CheckCircle2 className="h-2.5 w-2.5" />
-                            Triado
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Button
-                          size="sm"
-                          variant={isCritical ? 'destructive' : 'outline'}
-                          onClick={() => {
-                            setSelectedStudent(student);
-                            setDialogOpen(true);
-                          }}
-                        >
-                          Triar
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Row 2: metrics + sparkline, full width */}
-                    <div className="flex items-center gap-6">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-2 flex-1">
-                      <MetricTooltip title={metricTooltips.mood.title} description={metricTooltips.mood.description}>
-                        <div className="space-y-1 cursor-help">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="flex items-center gap-1 text-muted-foreground">
-                              <Activity className="h-3 w-3" />
-                              Humor
-                            </span>
-                            <span className="font-medium">{student.avgMood?.toFixed(1) ?? '—'}</span>
-                          </div>
-                          <MetricBar value={student.avgMood} />
-                        </div>
-                      </MetricTooltip>
-
-                      <MetricTooltip title={metricTooltips.anxiety.title} description={metricTooltips.anxiety.description}>
-                        <div className="space-y-1 cursor-help">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="flex items-center gap-1 text-muted-foreground">
-                              <Brain className="h-3 w-3" />
-                              Ansiedade
-                            </span>
-                            <span className="font-medium">{student.avgAnxiety?.toFixed(1) ?? '—'}</span>
-                          </div>
-                          <MetricBar value={student.avgAnxiety} invert />
-                        </div>
-                      </MetricTooltip>
-
-                      <MetricTooltip title={metricTooltips.energy.title} description={metricTooltips.energy.description}>
-                        <div className="space-y-1 cursor-help">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="flex items-center gap-1 text-muted-foreground">
-                              <Zap className="h-3 w-3" />
-                              Energia
-                            </span>
-                            <span className="font-medium">{student.avgEnergy?.toFixed(1) ?? '—'}</span>
-                          </div>
-                          <MetricBar value={student.avgEnergy} />
-                        </div>
-                      </MetricTooltip>
-
-                      <MetricTooltip title={metricTooltips.sleep.title} description={metricTooltips.sleep.description}>
-                        <div className="space-y-1 cursor-help">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="flex items-center gap-1 text-muted-foreground">
-                              <Moon className="h-3 w-3" />
-                              Sono
-                            </span>
-                            <span className="font-medium">{student.avgSleep?.toFixed(1) ?? '—'}</span>
-                          </div>
-                          <MetricBar value={student.avgSleep} />
-                        </div>
-                      </MetricTooltip>
-                      </div>
-                      <MoodSparkline data={student.moodHistory} />
-                    </div>
-                  </div>
-                );
-              })}
-              {filteredStudents.length === 0 && (
-                <div className="p-8 text-center text-muted-foreground text-sm">
-                  Nenhum aluno encontrado com os filtros selecionados.
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Triaged students (collapsible) */}
-        {triagedStudents.length > 0 && (
-          <Collapsible open={triagedOpen} onOpenChange={setTriagedOpen}>
+          {/* Tab: Para Triar */}
+          <TabsContent value="para_triar">
             <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <ClipboardCheck className="h-4 w-4" />
-                      Histórico de Triagens ({triagedStudents.length})
-                    </CardTitle>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${triagedOpen ? 'rotate-180' : ''}`} />
-                  </div>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="pt-0">
-                  <div className="space-y-2">
-                    {triagedStudents.map(t => (
-                      <div key={t.id} className="flex items-start justify-between p-3 rounded-lg bg-muted/50 text-sm">
-                        <div className="space-y-1">
-                          <p className="font-medium">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
-                          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                            <span>{format(new Date(t.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
-                            <span>•</span>
-                            <span>{priorityLabels[t.priority] || t.priority}</span>
-                            {t.recommended_action && (
-                              <>
-                                <span>•</span>
-                                <span>{actionLabels[t.recommended_action] || t.recommended_action}</span>
-                              </>
-                            )}
-                            {t.triaged_by_name && (
-                              <>
-                                <span>•</span>
-                                <span>por {t.triaged_by_name}</span>
-                              </>
-                            )}
-                          </div>
-                          {t.notes && <p className="text-xs text-muted-foreground mt-1">"{t.notes}"</p>}
-                          {t.follow_up_date && <FollowUpIndicator date={t.follow_up_date} />}
-                        </div>
-                        <div className="flex gap-1 items-center">
-                          {t.status === 'triaged' && (
-                            <MetricTooltip title="▶️ Em andamento" description="Marca esta triagem como em acompanhamento ativo.">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="text-xs h-7"
-                                onClick={() => updateTriageStatus.mutate({
-                                  triageId: t.id,
-                                  status: 'in_progress',
-                                })}
-                              >
-                                Em andamento
-                              </Button>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">
+                  Alunos para Triar
+                  <Badge variant="secondary" className="ml-2 text-xs font-normal">{pendingStudents.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y">
+                  {pendingStudents.map(student => {
+                    const config = riskConfig[student.riskLevel];
+                    const isCritical = student.riskLevel === 'critical';
+
+                    return (
+                      <div key={student.patientId} className="p-4 hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
+                            <p className="font-medium text-sm truncate">{student.studentName}</p>
+                            <TrendBadge trend={student.moodTrend} />
+                            <MetricTooltip title="📝 Registros" description="Quantidade de diários emocionais preenchidos nos últimos 14 dias.">
+                              <Badge variant="outline" className="text-[10px] cursor-help font-normal">
+                                {student.entryCount} reg.
+                              </Badge>
                             </MetricTooltip>
-                          )}
-                          {(t.status === 'triaged' || t.status === 'in_progress') && (
-                            <MetricTooltip title="✅ Resolver" description="Marca esta triagem como concluída.">
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={isCritical ? 'destructive' : 'outline'}
+                            onClick={() => { setSelectedStudent(student); setDialogOpen(true); }}
+                          >
+                            Triar
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-6">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-2 flex-1">
+                            <MetricTooltip title={metricTooltips.mood.title} description={metricTooltips.mood.description}>
+                              <div className="space-y-1 cursor-help">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="flex items-center gap-1 text-muted-foreground"><Activity className="h-3 w-3" />Humor</span>
+                                  <span className="font-medium">{student.avgMood?.toFixed(1) ?? '—'}</span>
+                                </div>
+                                <MetricBar value={student.avgMood} />
+                              </div>
+                            </MetricTooltip>
+                            <MetricTooltip title={metricTooltips.anxiety.title} description={metricTooltips.anxiety.description}>
+                              <div className="space-y-1 cursor-help">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="flex items-center gap-1 text-muted-foreground"><Brain className="h-3 w-3" />Ansiedade</span>
+                                  <span className="font-medium">{student.avgAnxiety?.toFixed(1) ?? '—'}</span>
+                                </div>
+                                <MetricBar value={student.avgAnxiety} invert />
+                              </div>
+                            </MetricTooltip>
+                            <MetricTooltip title={metricTooltips.energy.title} description={metricTooltips.energy.description}>
+                              <div className="space-y-1 cursor-help">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="flex items-center gap-1 text-muted-foreground"><Zap className="h-3 w-3" />Energia</span>
+                                  <span className="font-medium">{student.avgEnergy?.toFixed(1) ?? '—'}</span>
+                                </div>
+                                <MetricBar value={student.avgEnergy} />
+                              </div>
+                            </MetricTooltip>
+                            <MetricTooltip title={metricTooltips.sleep.title} description={metricTooltips.sleep.description}>
+                              <div className="space-y-1 cursor-help">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="flex items-center gap-1 text-muted-foreground"><Moon className="h-3 w-3" />Sono</span>
+                                  <span className="font-medium">{student.avgSleep?.toFixed(1) ?? '—'}</span>
+                                </div>
+                                <MetricBar value={student.avgSleep} />
+                              </div>
+                            </MetricTooltip>
+                          </div>
+                          <MoodSparkline data={student.moodHistory} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {pendingStudents.length === 0 && (
+                    <div className="p-8 text-center text-muted-foreground text-sm">
+                      <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-500/60" />
+                      Todos os alunos foram triados! 🎉
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Em Andamento */}
+          <TabsContent value="em_andamento">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Play className="h-4 w-4" />
+                  Triagens em Andamento
+                  <Badge variant="secondary" className="text-xs font-normal">{inProgressTriages.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {inProgressTriages.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground text-sm">
+                    Nenhuma triagem em andamento.
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {inProgressTriages.map(t => {
+                      const priorityBorder = t.priority === 'urgent' ? 'border-l-red-500' :
+                        t.priority === 'high' ? 'border-l-orange-500' :
+                        t.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500';
+
+                      return (
+                        <div key={t.id} className={`p-4 border-l-4 ${priorityBorder} hover:bg-muted/30 transition-colors`}>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-2 flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-medium text-sm">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
+                                <Badge className="text-[10px]">{priorityLabels[t.priority] || t.priority}</Badge>
+                                <Badge variant={t.status === 'in_progress' ? 'default' : 'secondary'} className="text-[10px]">
+                                  {t.status === 'in_progress' ? 'Em andamento' : 'Triado'}
+                                </Badge>
+                              </div>
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                <span>{format(new Date(t.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
+                                {t.recommended_action && <span>{actionLabels[t.recommended_action] || t.recommended_action}</span>}
+                                {t.triaged_by_name && <span>por {t.triaged_by_name}</span>}
+                              </div>
+                              {t.notes && <p className="text-xs text-muted-foreground italic">"{t.notes}"</p>}
+                              {t.follow_up_date && <FollowUpIndicator date={t.follow_up_date} />}
+                            </div>
+                            <div className="flex gap-1 shrink-0">
+                              {t.status === 'triaged' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs h-8"
+                                  onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'in_progress' })}
+                                >
+                                  <Play className="h-3 w-3 mr-1" />
+                                  Em andamento
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
-                                variant="ghost"
-                                className="text-xs h-7"
-                                onClick={() => updateTriageStatus.mutate({
-                                  triageId: t.id,
-                                  status: 'resolved',
-                                  resolvedAt: new Date().toISOString(),
-                                })}
+                                variant="default"
+                                className="text-xs h-8"
+                                onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'resolved', resolvedAt: new Date().toISOString() })}
                               >
+                                <CheckCircle2 className="h-3 w-3 mr-1" />
                                 Resolver
                               </Button>
-                            </MetricTooltip>
-                          )}
-                          <Badge variant={t.status === 'resolved' ? 'secondary' : 'default'} className="text-[10px]">
-                            {t.status === 'resolved' ? 'Resolvido' : t.status === 'in_progress' ? 'Em andamento' : 'Triado'}
-                          </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Concluídos */}
+          <TabsContent value="concluidos">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Triagens Concluídas
+                  <Badge variant="secondary" className="text-xs font-normal">{resolvedTriages.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {resolvedTriages.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground text-sm">
+                    Nenhuma triagem concluída ainda.
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {resolvedTriages.map(t => (
+                      <div key={t.id} className="p-3 hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
+                              <Badge variant="secondary" className="text-[10px]">{priorityLabels[t.priority] || t.priority}</Badge>
+                            </div>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                              <span>Triado em {format(new Date(t.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
+                              {t.resolved_at && <span>Resolvido em {format(new Date(t.resolved_at), "dd/MM/yyyy", { locale: ptBR })}</span>}
+                              {t.triaged_by_name && <span>por {t.triaged_by_name}</span>}
+                            </div>
+                            {t.notes && <p className="text-xs text-muted-foreground italic truncate">"{t.notes}"</p>}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs h-7"
+                            onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'triaged' })}
+                          >
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            Reabrir
+                          </Button>
                         </div>
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </CollapsibleContent>
+                )}
+              </CardContent>
             </Card>
-          </Collapsible>
-        )}
+          </TabsContent>
+
+          {/* Tab: Todos */}
+          <TabsContent value="todos">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <ClipboardCheck className="h-4 w-4" />
+                  Histórico Completo
+                  <Badge variant="secondary" className="text-xs font-normal">{allTriages.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {allTriages.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground text-sm">
+                    Nenhuma triagem registrada ainda.
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {allTriages.map(t => {
+                      const priorityBorder = t.priority === 'urgent' ? 'border-l-red-500' :
+                        t.priority === 'high' ? 'border-l-orange-500' :
+                        t.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500';
+                      const statusLabel = t.status === 'resolved' ? 'Resolvido' : t.status === 'in_progress' ? 'Em andamento' : 'Triado';
+                      const statusVariant = t.status === 'resolved' ? 'secondary' as const : 'default' as const;
+
+                      return (
+                        <div key={t.id} className={`p-3 border-l-4 ${priorityBorder} hover:bg-muted/30 transition-colors`}>
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="space-y-1 flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-medium text-sm">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
+                                <Badge className="text-[10px]">{priorityLabels[t.priority] || t.priority}</Badge>
+                                <Badge variant={statusVariant} className="text-[10px]">{statusLabel}</Badge>
+                              </div>
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                <span>{format(new Date(t.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
+                                {t.recommended_action && <span>{actionLabels[t.recommended_action] || t.recommended_action}</span>}
+                                {t.triaged_by_name && <span>por {t.triaged_by_name}</span>}
+                              </div>
+                              {t.notes && <p className="text-xs text-muted-foreground italic truncate">"{t.notes}"</p>}
+                              {t.follow_up_date && <FollowUpIndicator date={t.follow_up_date} />}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         <TriageDialog
           open={dialogOpen}
