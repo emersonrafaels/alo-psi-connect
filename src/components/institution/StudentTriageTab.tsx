@@ -24,12 +24,12 @@ interface StudentTriageTabProps {
   institutionId: string;
 }
 
-const riskConfig: Record<RiskLevel, {label: string;color: string;icon: typeof AlertTriangle;cardBg: string;progressColor: string;}> = {
-  critical: { label: 'Crítico', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', icon: AlertTriangle, cardBg: 'border-red-200 dark:border-red-900/50 bg-red-50/40 dark:bg-red-950/20', progressColor: '[&>div]:bg-red-500' },
-  alert: { label: 'Alerta', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', icon: AlertCircle, cardBg: 'border-orange-200 dark:border-orange-900/50 bg-orange-50/40 dark:bg-orange-950/20', progressColor: '[&>div]:bg-orange-500' },
-  attention: { label: 'Atenção', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', icon: Eye, cardBg: 'border-yellow-200 dark:border-yellow-900/50 bg-yellow-50/30 dark:bg-yellow-950/20', progressColor: '[&>div]:bg-yellow-500' },
-  healthy: { label: 'Saudável', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: Heart, cardBg: 'border-green-200 dark:border-green-900/50 bg-green-50/30 dark:bg-green-950/20', progressColor: '[&>div]:bg-green-500' },
-  no_data: { label: 'Sem Dados', color: 'bg-muted text-muted-foreground', icon: HelpCircle, cardBg: 'bg-muted/30', progressColor: '[&>div]:bg-muted-foreground/40' }
+const riskConfig: Record<RiskLevel, {label: string;color: string;labelColor: string;icon: typeof AlertTriangle;cardBg: string;progressColor: string;}> = {
+  critical: { label: 'Crítico', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', labelColor: 'text-red-700 dark:text-red-400', icon: AlertTriangle, cardBg: 'border-red-200 dark:border-red-900/50 bg-red-50/40 dark:bg-red-950/20', progressColor: '[&>div]:bg-red-500' },
+  alert: { label: 'Alerta', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', labelColor: 'text-orange-700 dark:text-orange-400', icon: AlertCircle, cardBg: 'border-orange-200 dark:border-orange-900/50 bg-orange-50/40 dark:bg-orange-950/20', progressColor: '[&>div]:bg-orange-500' },
+  attention: { label: 'Atenção', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', labelColor: 'text-yellow-700 dark:text-yellow-400', icon: Eye, cardBg: 'border-yellow-200 dark:border-yellow-900/50 bg-yellow-50/30 dark:bg-yellow-950/20', progressColor: '[&>div]:bg-yellow-500' },
+  healthy: { label: 'Saudável', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', labelColor: 'text-green-700 dark:text-green-400', icon: Heart, cardBg: 'border-green-200 dark:border-green-900/50 bg-green-50/30 dark:bg-green-950/20', progressColor: '[&>div]:bg-green-500' },
+  no_data: { label: 'Sem Dados', color: 'bg-muted text-muted-foreground', labelColor: 'text-muted-foreground', icon: HelpCircle, cardBg: 'bg-muted/30', progressColor: '[&>div]:bg-muted-foreground/40' }
 };
 
 const riskLegend: Record<RiskLevel, string> = {
@@ -113,6 +113,19 @@ function MetricBar({ value, invert, classAvg }: {value: number | null;invert?: b
   const effectivePct = invert ? 100 - pct : pct;
   const color = effectivePct >= 60 ? 'bg-green-500' : effectivePct >= 40 ? 'bg-yellow-500' : 'bg-red-500';
   const avgPct = classAvg != null ? (classAvg - 1) / 4 * 100 : null;
+
+  // Dynamic triangle color: compare student vs class avg
+  let triangleColor = 'text-slate-400 dark:text-slate-500';
+  if (classAvg != null && value != null) {
+    if (invert) {
+      // For anxiety: lower is better
+      triangleColor = value > classAvg ? 'text-red-400 dark:text-red-500' : value < classAvg ? 'text-green-400 dark:text-green-500' : 'text-slate-400 dark:text-slate-500';
+    } else {
+      // For mood/energy/sleep: higher is better
+      triangleColor = value < classAvg ? 'text-red-400 dark:text-red-500' : value > classAvg ? 'text-green-400 dark:text-green-500' : 'text-slate-400 dark:text-slate-500';
+    }
+  }
+
   return (
     <div className="relative">
       {avgPct != null &&
@@ -121,8 +134,7 @@ function MetricBar({ value, invert, classAvg }: {value: number | null;invert?: b
             <div
             className="absolute -top-[7px] z-10 cursor-help transition-all duration-300"
             style={{ left: `calc(${avgPct}% - 4px)` }}>
-
-              <svg width="8" height="6" viewBox="0 0 8 6" className="text-slate-400 dark:text-slate-500">
+              <svg width="8" height="6" viewBox="0 0 8 6" className={triangleColor}>
                 <polygon points="4,6 0,0 8,0" fill="currentColor" />
               </svg>
             </div>
@@ -136,7 +148,6 @@ function MetricBar({ value, invert, classAvg }: {value: number | null;invert?: b
         <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
       </div>
     </div>);
-
 }
 
 function TrendIcon({ trend }: {trend: number | null;}) {
@@ -389,7 +400,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                     </div>
                     <div>
                       <p className="text-2xl font-bold tracking-tight">{count}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{config.label}</p>
+                      <p className={`text-xs font-semibold mt-0.5 ${config.labelColor}`}>{config.label}</p>
                     </div>
                     <Progress value={pct} className={`h-1.5 ${config.progressColor}`} />
                   </CardContent>
@@ -398,6 +409,27 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
           })}
         </div>
+
+        {/* Class averages summary */}
+        {(classAverages.mood != null || classAverages.anxiety != null) && (
+          <div className="flex flex-wrap items-center gap-3 px-1 text-xs text-muted-foreground">
+            <span className="font-medium text-foreground/70">Médias da turma:</span>
+            {classAverages.mood != null && <span className="flex items-center gap-1"><Activity className="h-3 w-3" />Humor: {classAverages.mood.toFixed(1)}</span>}
+            {classAverages.anxiety != null && <span className="flex items-center gap-1"><Brain className="h-3 w-3" />Ansiedade: {classAverages.anxiety.toFixed(1)}</span>}
+            {classAverages.energy != null && <span className="flex items-center gap-1"><Zap className="h-3 w-3" />Energia: {classAverages.energy.toFixed(1)}</span>}
+            {classAverages.sleep != null && <span className="flex items-center gap-1"><Moon className="h-3 w-3" />Sono: {classAverages.sleep.toFixed(1)}</span>}
+          </div>
+        )}
+
+        {/* Critical alert banner */}
+        {criticalPendingCount > 0 && (
+          <Alert className="border-red-300 bg-red-50 dark:bg-red-950/30 dark:border-red-800">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-sm text-red-800 dark:text-red-300">
+              <span className="font-semibold">{criticalPendingCount} aluno{criticalPendingCount > 1 ? 's' : ''} em nível crítico</span> aguardando triagem. Ação imediata recomendada.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Contexto Institucional */}
         {(() => {
@@ -531,6 +563,15 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                 <CardDescription>Alunos que ainda não foram avaliados pela equipe</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
+                {/* Legend - shown once above the list */}
+                {pendingStudents.length > 0 && (
+                  <div className="px-5 pt-3 pb-1">
+                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                      <svg width="8" height="6" viewBox="0 0 8 6" className="text-slate-400 inline-block"><polygon points="4,6 0,0 8,0" fill="currentColor" /></svg>
+                      = média da turma
+                    </p>
+                  </div>
+                )}
                 <div className="divide-y">
                   {pendingStudents.map((student) => {
                     const config = riskConfig[student.riskLevel];
@@ -567,13 +608,13 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                         </div>
                         <div className="flex items-center gap-6">
                           <div className="flex-1 space-y-2">
-                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">▼ = média da instituição <span className="normal-case font-normal ml-1 text-slate-400">▼ = média da turma</span></p>
+                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Indicadores (14 dias)</p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-2">
                             <MetricTooltip title={metricTooltips.mood.title} description={metricTooltips.mood.description}>
                               <div className="space-y-1 cursor-help">
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="flex items-center gap-1 text-muted-foreground"><Activity className="h-3 w-3" />Humor</span>
-                                  <span className="font-medium">{student.avgMood?.toFixed(1) ?? '—'}</span>
+                                  <span className="font-medium">{student.avgMood?.toFixed(1) ?? '—'}{classAverages.mood != null && student.avgMood != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.mood.toFixed(1)})</span>}</span>
                                 </div>
                                 <MetricBar value={student.avgMood} classAvg={classAverages.mood} />
                               </div>
@@ -582,7 +623,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                               <div className="space-y-1 cursor-help">
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="flex items-center gap-1 text-muted-foreground"><Brain className="h-3 w-3" />Ansiedade</span>
-                                  <span className="font-medium">{student.avgAnxiety?.toFixed(1) ?? '—'}</span>
+                                  <span className="font-medium">{student.avgAnxiety?.toFixed(1) ?? '—'}{classAverages.anxiety != null && student.avgAnxiety != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.anxiety.toFixed(1)})</span>}</span>
                                 </div>
                                 <MetricBar value={student.avgAnxiety} invert classAvg={classAverages.anxiety} />
                               </div>
@@ -591,7 +632,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                               <div className="space-y-1 cursor-help">
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="flex items-center gap-1 text-muted-foreground"><Zap className="h-3 w-3" />Energia</span>
-                                  <span className="font-medium">{student.avgEnergy?.toFixed(1) ?? '—'}</span>
+                                  <span className="font-medium">{student.avgEnergy?.toFixed(1) ?? '—'}{classAverages.energy != null && student.avgEnergy != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.energy.toFixed(1)})</span>}</span>
                                 </div>
                                 <MetricBar value={student.avgEnergy} classAvg={classAverages.energy} />
                               </div>
@@ -600,7 +641,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                               <div className="space-y-1 cursor-help">
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="flex items-center gap-1 text-muted-foreground"><Moon className="h-3 w-3" />Sono</span>
-                                  <span className="font-medium">{student.avgSleep?.toFixed(1) ?? '—'}</span>
+                                  <span className="font-medium">{student.avgSleep?.toFixed(1) ?? '—'}{classAverages.sleep != null && student.avgSleep != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.sleep.toFixed(1)})</span>}</span>
                                 </div>
                                 <MetricBar value={student.avgSleep} classAvg={classAverages.sleep} />
                               </div>
