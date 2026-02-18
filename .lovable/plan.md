@@ -1,58 +1,47 @@
 
 
-## Notas Institucionais no Portal Admin
+## Permitir que a Instituicao use as Notas
 
-### Objetivo
-Permitir que administradores adicionem notas/anotacoes vinculadas a uma instituicao, como datas de semana de provas, eventos importantes, avisos, etc.
+### Contexto
 
-### 1. Nova tabela no banco: `institution_notes`
+As notas institucionais ja existem no sistema (tabela `institution_notes` e componente `InstitutionNotesTab`), mas atualmente so admins podem acessar. A instituicao (role `institution_admin`) precisa ver e gerenciar essas notas no seu portal em `/portal-institucional`.
 
-Criar tabela com as colunas:
-- `id` (uuid, PK)
-- `institution_id` (uuid, FK para educational_institutions)
-- `title` (text) - titulo curto da nota (ex: "Semana de Provas")
-- `content` (text) - descricao detalhada
-- `note_type` (text) - tipo: "event", "info", "alert", "reminder"
-- `start_date` (date, nullable) - data de inicio (para eventos com periodo)
-- `end_date` (date, nullable) - data de fim
-- `is_pinned` (boolean, default false) - fixar nota no topo
-- `created_by` (uuid, FK para auth.users)
-- `created_at`, `updated_at` (timestamps)
+### Mudancas necessarias
 
-RLS: apenas admins podem CRUD (usando `is_admin(auth.uid())`).
+**1. Nova politica RLS no banco de dados**
 
-### 2. Nova aba "Notas" no portal
+Adicionar politica que permite institution_admins fazerem CRUD nas notas da sua propria instituicao:
 
-Adicionar uma 6a aba no `AdminInstitutionPortal.tsx` com icone `StickyNote`:
+```sql
+CREATE POLICY "Institution admins can manage their notes"
+ON public.institution_notes
+FOR ALL
+USING (
+  institution_id IN (
+    SELECT iu.institution_id FROM institution_users iu
+    WHERE iu.user_id = auth.uid() AND iu.is_active = true
+  )
+)
+WITH CHECK (
+  institution_id IN (
+    SELECT iu.institution_id FROM institution_users iu
+    WHERE iu.user_id = auth.uid() AND iu.is_active = true
+  )
+);
+```
 
-- Lista de notas ordenada por pinned primeiro, depois por data
-- Cada nota mostra: titulo, tipo (badge colorido), datas (se houver), conteudo, quem criou e quando
-- Botao "Nova Nota" abre dialog para criar
-- Acoes por nota: editar, fixar/desafixar, excluir
-- Notas com datas futuras/atuais destacadas visualmente
+Isso permite que o admin institucional crie, edite, exclua e visualize notas apenas da sua instituicao.
 
-### 3. Novo componente: `InstitutionNotesTab.tsx`
+**2. Nova aba "Notas" no `InstitutionPortal.tsx`**
 
-Componente dedicado que recebe `institutionId` e implementa:
-- Listagem com cards para cada nota
-- Badges por tipo: Evento (azul), Info (cinza), Alerta (laranja), Lembrete (amarelo)
-- Datas formatadas com date-fns
-- Dialog para criar/editar nota com campos: titulo, tipo, datas (opcionais), conteudo
-- Confirmacao para excluir
-
-### 4. Hook: `useInstitutionNotes.tsx`
-
-Hook com react-query para:
-- `useQuery` para listar notas da instituicao
-- `useMutation` para criar, atualizar e excluir notas
+- Adicionar uma 6a aba com icone `StickyNote` e label "Notas"
+- Reutilizar o componente `InstitutionNotesTab` ja existente, passando o `institutionId` da instituicao do usuario
+- Atualizar o grid do TabsList de 5 para 6 colunas (em desktop)
 
 ### Resumo de arquivos
 
 | Arquivo | Acao |
 |---|---|
-| Migration SQL | Criar tabela `institution_notes` com RLS |
-| `src/hooks/useInstitutionNotes.tsx` | Novo hook para CRUD de notas |
-| `src/components/admin/InstitutionNotesTab.tsx` | Novo componente da aba de notas |
-| `src/pages/admin/AdminInstitutionPortal.tsx` | Adicionar aba "Notas" com icone StickyNote |
-| `src/integrations/supabase/types.ts` | Atualizado automaticamente pela migration |
+| Migration SQL | Adicionar politica RLS para institution_admins |
+| `src/pages/InstitutionPortal.tsx` | Adicionar aba "Notas" com `InstitutionNotesTab` |
 
