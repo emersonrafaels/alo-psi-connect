@@ -249,11 +249,11 @@ function MetricSparkline({ student }: { student: StudentRiskData }) {
   const [metric, setMetric] = useState<SparklineMetric>('score');
 
   const dataMap: Record<SparklineMetric, number[]> = {
-    score: student.scoreHistory,
-    mood: student.moodHistory,
-    anxiety: student.anxietyHistory,
-    energy: student.energyHistory,
-    sleep: student.sleepHistory,
+    score: student.scoreHistory ?? [],
+    mood: student.moodHistory ?? [],
+    anxiety: student.anxietyHistory ?? [],
+    energy: student.energyHistory ?? [],
+    sleep: student.sleepHistory ?? [],
   };
 
   const data = dataMap[metric];
