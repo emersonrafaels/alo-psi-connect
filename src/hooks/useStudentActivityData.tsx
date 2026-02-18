@@ -47,17 +47,29 @@ export function useStudentActivityData(
   return useQuery({
     queryKey: ['student-activity', profileId, patientId, institutionId],
     queryFn: async (): Promise<StudentActivityData> => {
+      // Resolve profileId: fallback to pacientes.profile_id if not provided
+      let resolvedProfileId = profileId;
+      if (!resolvedProfileId && patientId) {
+        const { data: patient } = await supabase
+          .from('pacientes')
+          .select('profile_id')
+          .eq('id', patientId)
+          .single();
+        resolvedProfileId = patient?.profile_id || null;
+        console.log('[useStudentActivityData] Resolved profileId from patientId:', { patientId, resolvedProfileId });
+      }
+
       // Fetch mood entries (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const dateStr = thirtyDaysAgo.toISOString().split('T')[0];
 
       const [moodResult, triageResult] = await Promise.all([
-        profileId
+        resolvedProfileId
           ? supabase
               .from('mood_entries')
               .select('id, date, mood_score, anxiety_level, energy_level, sleep_quality, sleep_hours, tags, journal_text, emotion_values')
-              .eq('profile_id', profileId)
+              .eq('profile_id', resolvedProfileId)
               .gte('date', dateStr)
               .order('date', { ascending: false })
           : Promise.resolve({ data: [], error: null }),
