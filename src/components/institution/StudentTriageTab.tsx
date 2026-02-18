@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -429,12 +430,12 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
         {/* Sub-tabs for triage workflow */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full justify-start bg-muted/50 p-1 h-auto flex-wrap">
-            <TabsTrigger value="para_triar" className="gap-2 data-[state=active]:bg-background">
+          <TabsList className="w-full justify-start bg-muted/50 p-1.5 h-auto flex-wrap">
+            <TabsTrigger value="para_triar" className="gap-2 py-2 px-4 text-sm data-[state=active]:bg-background">
               Para Triar
               <Badge
                 variant="secondary"
-                className={`text-[10px] px-1.5 py-0 h-5 ${
+                className={`text-xs px-2 py-0.5 h-5 ${
                   criticalPendingCount > 0
                     ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
                     : ''
@@ -443,21 +444,21 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                 {pendingStudents.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="em_andamento" className="gap-2 data-[state=active]:bg-background">
+            <TabsTrigger value="em_andamento" className="gap-2 py-2 px-4 text-sm data-[state=active]:bg-background">
               Em Andamento
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400">
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400">
                 {inProgressTriages.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="concluidos" className="gap-2 data-[state=active]:bg-background">
+            <TabsTrigger value="concluidos" className="gap-2 py-2 px-4 text-sm data-[state=active]:bg-background">
               Concluídos
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
                 {resolvedTriages.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="todos" className="gap-2 data-[state=active]:bg-background">
+            <TabsTrigger value="todos" className="gap-2 py-2 px-4 text-sm data-[state=active]:bg-background">
               Todos
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">
                 {allTriages.length}
               </Badge>
             </TabsTrigger>
@@ -467,26 +468,35 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           <TabsContent value="para_triar">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">
+                <CardTitle className="text-lg font-semibold">
                   Alunos para Triar
                   <Badge variant="secondary" className="ml-2 text-xs font-normal">{pendingStudents.length}</Badge>
                 </CardTitle>
+                <CardDescription>Alunos que ainda não foram avaliados pela equipe</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y">
                   {pendingStudents.map(student => {
                     const config = riskConfig[student.riskLevel];
                     const isCritical = student.riskLevel === 'critical';
+                    const riskBorder = student.riskLevel === 'critical' ? 'border-l-red-500' :
+                      student.riskLevel === 'alert' ? 'border-l-orange-500' :
+                      student.riskLevel === 'attention' ? 'border-l-yellow-500' :
+                      student.riskLevel === 'healthy' ? 'border-l-green-500' : 'border-l-muted-foreground/40';
+                    const initials = student.studentName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
                     return (
-                      <div key={student.patientId} className="p-4 hover:bg-muted/30 transition-colors">
+                      <div key={student.patientId} className={`p-5 border-l-4 ${riskBorder} hover:bg-muted/30 transition-colors ${isCritical ? 'bg-red-50/30 dark:bg-red-950/10' : ''}`}>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3 min-w-0">
+                            <Avatar className="h-8 w-8 shrink-0">
+                              <AvatarFallback className={`text-xs font-semibold ${config.color}`}>{initials}</AvatarFallback>
+                            </Avatar>
+                            <p className="font-semibold text-base truncate">{student.studentName}</p>
                             <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
-                            <p className="font-medium text-sm truncate">{student.studentName}</p>
                             <TrendBadge trend={student.moodTrend} />
                             <MetricTooltip title="📝 Registros" description="Quantidade de diários emocionais preenchidos nos últimos 14 dias.">
-                              <Badge variant="outline" className="text-[10px] cursor-help font-normal">
+                              <Badge variant="outline" className="text-xs cursor-help font-normal">
                                 {student.entryCount} reg.
                               </Badge>
                             </MetricTooltip>
@@ -500,7 +510,9 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                           </Button>
                         </div>
                         <div className="flex items-center gap-6">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-2 flex-1">
+                          <div className="flex-1 space-y-2">
+                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Indicadores (14 dias)</p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-2">
                             <MetricTooltip title={metricTooltips.mood.title} description={metricTooltips.mood.description}>
                               <div className="space-y-1 cursor-help">
                                 <div className="flex items-center justify-between text-xs">
@@ -537,6 +549,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                 <MetricBar value={student.avgSleep} />
                               </div>
                             </MetricTooltip>
+                            </div>
                           </div>
                           <MoodSparkline data={student.moodHistory} />
                         </div>
@@ -558,11 +571,12 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           <TabsContent value="em_andamento">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Play className="h-4 w-4" />
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Play className="h-5 w-5" />
                   Triagens em Andamento
                   <Badge variant="secondary" className="text-xs font-normal">{inProgressTriages.length}</Badge>
                 </CardTitle>
+                <CardDescription>Triagens que estão sendo acompanhadas ativamente</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {inProgressTriages.length === 0 ? (
@@ -581,9 +595,9 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                           <div className="flex items-start justify-between gap-4">
                             <div className="space-y-2 flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <p className="font-medium text-sm">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
-                                <Badge className="text-[10px]">{priorityLabels[t.priority] || t.priority}</Badge>
-                                <Badge variant={t.status === 'in_progress' ? 'default' : 'secondary'} className="text-[10px]">
+                              <p className="font-semibold text-base">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
+                                <Badge className="text-xs">{priorityLabels[t.priority] || t.priority}</Badge>
+                                <Badge variant={t.status === 'in_progress' ? 'default' : 'secondary'} className="text-xs">
                                   {t.status === 'in_progress' ? 'Em andamento' : 'Triado'}
                                 </Badge>
                               </div>
@@ -631,11 +645,12 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           <TabsContent value="concluidos">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" />
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5" />
                   Triagens Concluídas
                   <Badge variant="secondary" className="text-xs font-normal">{resolvedTriages.length}</Badge>
                 </CardTitle>
+                <CardDescription>Triagens finalizadas e resolvidas</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {resolvedTriages.length === 0 ? (
@@ -645,12 +660,12 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                 ) : (
                   <div className="divide-y">
                     {resolvedTriages.map(t => (
-                      <div key={t.id} className="p-3 hover:bg-muted/30 transition-colors">
+                      <div key={t.id} className="p-4 hover:bg-muted/30 transition-colors">
                         <div className="flex items-center justify-between gap-4">
                           <div className="space-y-1 flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="font-medium text-sm">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
-                              <Badge variant="secondary" className="text-[10px]">{priorityLabels[t.priority] || t.priority}</Badge>
+                              <p className="font-semibold text-base">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
+                              <Badge variant="secondary" className="text-xs">{priorityLabels[t.priority] || t.priority}</Badge>
                             </div>
                             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                               <span>Triado em {format(new Date(t.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
@@ -681,11 +696,12 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           <TabsContent value="todos">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <ClipboardCheck className="h-4 w-4" />
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <ClipboardCheck className="h-5 w-5" />
                   Histórico Completo
                   <Badge variant="secondary" className="text-xs font-normal">{allTriages.length}</Badge>
                 </CardTitle>
+                <CardDescription>Todas as triagens realizadas nesta instituição</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {allTriages.length === 0 ? (
@@ -702,13 +718,13 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                       const statusVariant = t.status === 'resolved' ? 'secondary' as const : 'default' as const;
 
                       return (
-                        <div key={t.id} className={`p-3 border-l-4 ${priorityBorder} hover:bg-muted/30 transition-colors`}>
+                        <div key={t.id} className={`p-4 border-l-4 ${priorityBorder} hover:bg-muted/30 transition-colors`}>
                           <div className="flex items-center justify-between gap-4">
                             <div className="space-y-1 flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <p className="font-medium text-sm">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
-                                <Badge className="text-[10px]">{priorityLabels[t.priority] || t.priority}</Badge>
-                                <Badge variant={statusVariant} className="text-[10px]">{statusLabel}</Badge>
+                                <p className="font-semibold text-base">{patientNameMap.get(t.patient_id) || 'Aluno'}</p>
+                                <Badge className="text-xs">{priorityLabels[t.priority] || t.priority}</Badge>
+                                <Badge variant={statusVariant} className="text-xs">{statusLabel}</Badge>
                               </div>
                               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                                 <span>{format(new Date(t.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
