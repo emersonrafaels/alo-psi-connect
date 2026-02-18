@@ -258,7 +258,7 @@ export function InstitutionNotesTab({ institutionId }: Props) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { if (deleteId) { deleteNote.mutate(deleteId); setDeleteId(null); } }}>
+            <AlertDialogAction onClick={() => { if (deleteId) { const note = notes.find(n => n.id === deleteId); deleteNote.mutate({ id: deleteId, title: note?.title }); setDeleteId(null); } }}>
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
