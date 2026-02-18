@@ -15,7 +15,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play, ChevronRight, ArrowUp, ArrowDown, GitCompareArrows, Maximize2 } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play, ChevronRight, ArrowUp, ArrowDown, GitCompareArrows, Maximize2, BookOpen, Users } from 'lucide-react';
+import { subDays } from 'date-fns';
 import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
 import { StudentActivityModal } from './StudentActivityModal';
@@ -832,19 +833,24 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
               className="pl-9 w-[200px]" />
           </div>
 
-          <Select value={String(analysisPeriod)} onValueChange={(v) => setAnalysisPeriod(Number(v))}>
-            <SelectTrigger className="w-[140px]">
-              <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">7 dias</SelectItem>
-              <SelectItem value="15">15 dias</SelectItem>
-              <SelectItem value="30">30 dias</SelectItem>
-              <SelectItem value="60">60 dias</SelectItem>
-              <SelectItem value="90">90 dias</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col gap-1">
+            <Select value={String(analysisPeriod)} onValueChange={(v) => setAnalysisPeriod(Number(v))}>
+              <SelectTrigger className="w-[180px]">
+                <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Última semana (7d)</SelectItem>
+                <SelectItem value="15">Quinzena (15d)</SelectItem>
+                <SelectItem value="30">Último mês (30d)</SelectItem>
+                <SelectItem value="60">2 meses (60d)</SelectItem>
+                <SelectItem value="90">Trimestre (90d)</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-[11px] text-muted-foreground ml-1">
+              {format(subDays(new Date(), analysisPeriod), 'dd/MM')} – {format(new Date(), 'dd/MM')}
+            </span>
+          </div>
 
           <div className="flex items-center gap-2 border rounded-md px-3 py-1.5 bg-muted/30">
             <Switch
@@ -853,25 +859,32 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
               onCheckedChange={setCompareEnabled}
               className="scale-90"
             />
-            <Label htmlFor="compare-toggle" className="text-xs font-medium cursor-pointer flex items-center gap-1">
-              <GitCompareArrows className="h-3.5 w-3.5" />
-              Comparar
-            </Label>
+            <MetricTooltip title="📊 Comparar períodos" description="Ativa a comparação com um período anterior para identificar tendências de melhora ou piora nos indicadores.">
+              <Label htmlFor="compare-toggle" className="text-xs font-medium cursor-pointer flex items-center gap-1">
+                <GitCompareArrows className="h-3.5 w-3.5" />
+                Comparar
+              </Label>
+            </MetricTooltip>
           </div>
 
           {compareEnabled && (
-            <Select value={String(comparePeriod)} onValueChange={(v) => setComparePeriod(Number(v))}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">vs 7 dias</SelectItem>
-                <SelectItem value="15">vs 15 dias</SelectItem>
-                <SelectItem value="30">vs 30 dias</SelectItem>
-                <SelectItem value="60">vs 60 dias</SelectItem>
-                <SelectItem value="90">vs 90 dias</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col gap-1">
+              <Select value={String(comparePeriod)} onValueChange={(v) => setComparePeriod(Number(v))}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">vs Última semana (7d)</SelectItem>
+                  <SelectItem value="15">vs Quinzena (15d)</SelectItem>
+                  <SelectItem value="30">vs Último mês (30d)</SelectItem>
+                  <SelectItem value="60">vs 2 meses (60d)</SelectItem>
+                  <SelectItem value="90">vs Trimestre (90d)</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-[11px] text-muted-foreground ml-1">
+                {format(subDays(new Date(), analysisPeriod + comparePeriod), 'dd/MM')} – {format(subDays(new Date(), analysisPeriod), 'dd/MM')}
+              </span>
+            </div>
           )}
 
           <Select value={riskFilter} onValueChange={setRiskFilter}>
@@ -1027,11 +1040,34 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                             <button type="button" onClick={() => handleOpenActivity(student)} className="font-semibold text-base truncate text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{displayName}</button>
                             <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
                             <TrendBadge trend={student.moodTrend} />
-                            <MetricTooltip title="📝 Engajamento" description={`Dias com registro emocional nos últimos ${analysisPeriod} dias. Quanto mais regular, melhor o acompanhamento.`}>
-                              <Badge variant="outline" className="text-xs cursor-help font-normal">
-                                {student.entryCount}/{analysisPeriod} dias
-                              </Badge>
-                            </MetricTooltip>
+                            {(() => {
+                              const engagementRate = analysisPeriod > 0 ? (student.entryCount / analysisPeriod) * 100 : 0;
+                              const engagementColor = student.entryCount === 0
+                                ? 'bg-muted text-muted-foreground'
+                                : engagementRate >= 80
+                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                  : engagementRate >= 50
+                                    ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+                              const progressBarColor = student.entryCount === 0
+                                ? 'bg-muted-foreground/30'
+                                : engagementRate >= 80
+                                  ? 'bg-green-500'
+                                  : engagementRate >= 50
+                                    ? 'bg-yellow-500'
+                                    : 'bg-red-500';
+                              return (
+                                <MetricTooltip title="📝 Diário Emocional" description={`Preenchido em ${student.entryCount} dos últimos ${analysisPeriod} dias. Engajamento: ${Math.round(engagementRate)}%.`}>
+                                  <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium cursor-help ${engagementColor}`}>
+                                    <BookOpen className="h-3 w-3 shrink-0" />
+                                    <span>Diário: {student.entryCount}/{analysisPeriod}d</span>
+                                    <div className="w-10 h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+                                      <div className={`h-full rounded-full transition-all ${progressBarColor}`} style={{ width: `${Math.min(engagementRate, 100)}%` }} />
+                                    </div>
+                                  </div>
+                                </MetricTooltip>
+                              );
+                            })()}
                           </div>
                           <div className="flex items-center gap-1">
                             <QuickNotePopover
@@ -1067,7 +1103,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                         </ComparisonTooltip>
                                       );
                                     })()}
-                                    {classAverages.mood != null && student.avgMood != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.mood.toFixed(1)})</span>}
+                                    {classAverages.mood != null && student.avgMood != null && (
+                                      <MetricTooltip title="👥 Média da turma" description={`Média da turma: ${classAverages.mood.toFixed(1)}. ${student.avgMood >= classAverages.mood ? 'Acima' : 'Abaixo'} da média.`}>
+                                        <span className={`inline-block h-2 w-2 rounded-full cursor-help ml-0.5 ${student.avgMood >= classAverages.mood ? 'bg-green-500' : 'bg-red-500'}`} />
+                                      </MetricTooltip>
+                                    )}
                                   </span>
                                 </div>
                                 <MetricBar value={student.avgMood} classAvg={classAverages.mood} />
@@ -1089,7 +1129,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                         </ComparisonTooltip>
                                       );
                                     })()}
-                                    {classAverages.anxiety != null && student.avgAnxiety != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.anxiety.toFixed(1)})</span>}
+                                    {classAverages.anxiety != null && student.avgAnxiety != null && (
+                                      <MetricTooltip title="👥 Média da turma" description={`Média da turma: ${classAverages.anxiety.toFixed(1)}. ${student.avgAnxiety <= classAverages.anxiety ? 'Melhor' : 'Pior'} que a média.`}>
+                                        <span className={`inline-block h-2 w-2 rounded-full cursor-help ml-0.5 ${student.avgAnxiety <= classAverages.anxiety ? 'bg-green-500' : 'bg-red-500'}`} />
+                                      </MetricTooltip>
+                                    )}
                                   </span>
                                 </div>
                                 <MetricBar value={student.avgAnxiety} invert classAvg={classAverages.anxiety} />
@@ -1111,7 +1155,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                         </ComparisonTooltip>
                                       );
                                     })()}
-                                    {classAverages.energy != null && student.avgEnergy != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.energy.toFixed(1)})</span>}
+                                    {classAverages.energy != null && student.avgEnergy != null && (
+                                      <MetricTooltip title="👥 Média da turma" description={`Média da turma: ${classAverages.energy.toFixed(1)}. ${student.avgEnergy >= classAverages.energy ? 'Acima' : 'Abaixo'} da média.`}>
+                                        <span className={`inline-block h-2 w-2 rounded-full cursor-help ml-0.5 ${student.avgEnergy >= classAverages.energy ? 'bg-green-500' : 'bg-red-500'}`} />
+                                      </MetricTooltip>
+                                    )}
                                   </span>
                                 </div>
                                 <MetricBar value={student.avgEnergy} classAvg={classAverages.energy} />
@@ -1133,7 +1181,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                         </ComparisonTooltip>
                                       );
                                     })()}
-                                    {classAverages.sleep != null && student.avgSleep != null && <span className="text-[10px] text-muted-foreground ml-0.5">(t:{classAverages.sleep.toFixed(1)})</span>}
+                                    {classAverages.sleep != null && student.avgSleep != null && (
+                                      <MetricTooltip title="👥 Média da turma" description={`Média da turma: ${classAverages.sleep.toFixed(1)}. ${student.avgSleep >= classAverages.sleep ? 'Acima' : 'Abaixo'} da média.`}>
+                                        <span className={`inline-block h-2 w-2 rounded-full cursor-help ml-0.5 ${student.avgSleep >= classAverages.sleep ? 'bg-green-500' : 'bg-red-500'}`} />
+                                      </MetricTooltip>
+                                    )}
                                   </span>
                                 </div>
                                 <MetricBar value={student.avgSleep} classAvg={classAverages.sleep} />
