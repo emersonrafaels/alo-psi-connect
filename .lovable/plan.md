@@ -1,94 +1,89 @@
 
 
-## Sugestoes de Melhorias para o Sistema de Triagem / Portal Institucional
+## Configuracao de Anonimizacao de Alunos
 
-Apos analisar todo o codigo do portal institucional e sistema de triagem, identifiquei as seguintes oportunidades organizadas por impacto:
+### Objetivo
 
----
+Criar uma configuracao no painel admin que permita habilitar/desabilitar a anonimizacao dos nomes de alunos no portal institucional. O sistema tera um **valor padrao global** (aplicado a todas as instituicoes) e a possibilidade de **sobrescrever por instituicao**.
 
-### 1. Triagem em Lote (Batch Triage)
+### Arquitetura
 
-Atualmente, o educador precisa triar aluno por aluno individualmente. Quando ha muitos alunos pendentes, isso e demorado.
+```text
+Prioridade de resolucao:
+  1. Configuracao da instituicao (se definida) -> usa ela
+  2. Configuracao global padrao -> fallback
+  3. Nenhuma configurada -> default = true (anonimizado por seguranca)
+```
 
-**Proposta:** Adicionar checkboxes nos cards de alunos na aba "Para Triar" e um botao "Triar Selecionados" que abre um dialog simplificado para aplicar a mesma acao/prioridade a todos de uma vez.
+### Mudancas no Banco de Dados
 
----
+**1. Nova coluna na tabela `educational_institutions`:**
 
-### 2. Dashboard de Metricas da Triagem
+- `anonymize_students` (boolean, nullable, default null)
+- Quando `null`, herda o valor global. Quando `true/false`, sobrescreve.
 
-Nao existe uma visao consolidada do trabalho de triagem realizado. O educador nao sabe quantas triagens foram feitas no mes, tempo medio de resolucao, etc.
+### Mudancas no Painel Admin
 
-**Proposta:** Adicionar um mini-dashboard no topo da aba de triagem com:
-- Triagens realizadas este mes
-- Tempo medio de resolucao (dias entre criacao e resolved_at)
-- Taxa de resolucao (resolvidas / total)
-- Grafico sparkline de triagens por semana
+**2. Novo componente `AnonymizationConfig`** (`src/components/admin/config/AnonymizationConfig.tsx`):
 
----
+- Usa `useSystemConfig(['institution'])` para ler/gravar a config global
+- Chave: `institution.default_anonymize_students` (valor: `true`/`false`)
+- Switch para o padrao global com explicacao
+- Tabela listando todas as instituicoes com um select de 3 opcoes cada:
+  - "Usar padrao global" (null)
+  - "Anonimizar" (true)
+  - "Mostrar nomes" (false)
+- Busca instituicoes via Supabase e atualiza a coluna `anonymize_students` diretamente
 
-### 3. Notificacoes de Follow-up Vencido
+**3. Registrar no `Configurations.tsx`:**
 
-Existem datas de follow-up nos registros de triagem, mas nao ha um sistema proativo de alerta. O educador precisa navegar ate a aba "Em Andamento" para ver quais estao vencidos.
+- Adicionar card "Anonimizacao de Alunos" na categoria "Cadastro e Usuarios" com icone `Shield`
 
-**Proposta:** Adicionar um banner/alerta no topo (similar ao de criticos pendentes) mostrando "X triagens com follow-up vencido" com link direto para a aba "Em Andamento" filtrada.
+### Mudancas no Portal Institucional
 
----
+**4. Novo hook `useAnonymizationConfig`** (`src/hooks/useAnonymizationConfig.tsx`):
 
-### 4. Filtro por Periodo nas Abas de Historico
+- Recebe `institutionId`
+- Busca o valor de `anonymize_students` da instituicao
+- Busca o default global via `usePublicConfig` ou query direta em `system_configurations`
+- Retorna `{ isAnonymized: boolean, loading: boolean }`
+- Logica: se instituicao tem valor definido, usa; senao, usa global; senao, default `true`
 
-As abas "Concluidos" e "Todos" mostram todas as triagens sem filtro temporal. Com o tempo, a lista ficara muito grande.
+**5. Funcao de anonimizacao `anonymizeStudentName`:**
 
-**Proposta:** Adicionar um seletor de periodo (Ultima semana / Ultimo mes / Ultimos 3 meses / Todos) nessas abas para facilitar a navegacao.
+- Recebe nome completo, retorna versao anonimizada
+- Formato: "Aluno 1", "Aluno 2", etc. (baseado em indice) ou "L***s S***a" (primeiras e ultimas letras mascaradas)
+- Sugestao: usar formato "Aluno #XX" onde XX e um hash curto do patientId para manter consistencia
 
----
+**6. Aplicar em `StudentTriageTab.tsx`:**
 
-### 5. Comparacao Temporal do Aluno
+- Importar o hook `useAnonymizationConfig`
+- Quando anonimizado:
+  - Nomes exibidos como "Aluno #1", "Aluno #2", etc.
+  - Iniciais do avatar como "A1", "A2"
+  - Exportacao tambem anonimizada
+  - Tooltip indicando "Nomes anonimizados por politica da instituicao"
+- Quando nao anonimizado: comportamento atual (nomes reais)
 
-O modal de atividade do aluno mostra os ultimos 30 dias, mas nao compara com o periodo anterior. O educador nao consegue ver facilmente se o aluno melhorou ou piorou apos a triagem.
+**7. Aplicar em `StudentActivityModal.tsx`:**
 
-**Proposta:** No modal `StudentActivityModal`, adicionar uma secao "Antes vs Depois da Triagem" que compara as metricas dos 14 dias antes e depois da ultima triagem realizada.
+- Nome do aluno no titulo do modal tambem anonimizado
 
----
+### Arquivos Afetados
 
-### 6. Notas Rapidas na Listagem
+| Arquivo | Acao |
+|---|---|
+| Migracao SQL | Adicionar coluna `anonymize_students` (boolean nullable) em `educational_institutions` |
+| `src/components/admin/config/AnonymizationConfig.tsx` | Novo - painel de config global + por instituicao |
+| `src/pages/admin/Configurations.tsx` | Adicionar card de Anonimizacao |
+| `src/hooks/useAnonymizationConfig.tsx` | Novo - hook para resolver config efetiva |
+| `src/components/institution/StudentTriageTab.tsx` | Aplicar anonimizacao nos nomes e exportacao |
+| `src/components/institution/StudentActivityModal.tsx` | Anonimizar nome no modal |
+| `src/components/institution/BatchTriageDialog.tsx` | Anonimizar nomes na listagem de lote |
 
-Para adicionar uma observacao, o educador precisa abrir o dialog completo de triagem. As vezes, ele so quer anotar algo rapido.
+### Detalhes de Seguranca
 
-**Proposta:** Adicionar um botao de "nota rapida" (icone de lapis) ao lado do botao "Triar" que abre um popover simples com um campo de texto, salvando como nota no registro de triagem existente ou criando uma anotacao avulsa.
-
----
-
-### 7. Indicador de Engajamento do Aluno
-
-Atualmente, so mostra "X reg." (registros), mas nao ha contexto de regularidade. Um aluno com 4 registros em 14 dias pode ter preenchido 4 dias seguidos e parado, ou 1 por semana.
-
-**Proposta:** Substituir ou complementar o badge "X reg." com um indicador de regularidade (ex: "4/14 dias" ou um mini calendario de pontos mostrando quais dias o aluno preencheu).
-
----
-
-### 8. Exportacao Avancada com Filtros
-
-A exportacao atual exporta apenas a aba ativa. Nao inclui historico de triagens nem permite escolher o que exportar.
-
-**Proposta:** Evoluir o botao "Exportar" para um dropdown com opcoes:
-- Exportar alunos pendentes (atual)
-- Exportar historico de triagens
-- Exportar relatorio completo (alunos + metricas + triagens)
-
----
-
-### Prioridade Sugerida
-
-| Melhoria | Impacto | Esforco |
-|---|---|---|
-| 1. Triagem em Lote | Alto | Medio |
-| 2. Dashboard de Metricas | Alto | Medio |
-| 3. Alerta Follow-up Vencido | Alto | Baixo |
-| 4. Filtro por Periodo | Medio | Baixo |
-| 5. Comparacao Temporal | Alto | Alto |
-| 6. Notas Rapidas | Medio | Baixo |
-| 7. Indicador Engajamento | Medio | Baixo |
-| 8. Exportacao Avancada | Medio | Medio |
-
-Posso implementar qualquer combinacao dessas melhorias. Qual(is) voce gostaria de priorizar?
+- O default sera `true` (anonimizado) para garantir privacidade mesmo se nenhuma configuracao for feita
+- A configuracao global usa `system_configurations` (ja existente, com RLS para admins)
+- A coluna na instituicao e protegida pelo RLS existente da tabela `educational_institutions` (apenas admins podem gerenciar)
 
