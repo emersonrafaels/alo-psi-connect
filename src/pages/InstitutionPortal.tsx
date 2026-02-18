@@ -23,7 +23,8 @@ import {
   Ticket, 
   Heart,
   Compass,
-  ClipboardList 
+  ClipboardList,
+  StickyNote 
 } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
@@ -35,6 +36,7 @@ import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { InstitutionAnalyticsDashboard } from '@/components/admin/InstitutionAnalyticsDashboard';
 import { InstitutionCouponsTab } from '@/components/admin/InstitutionCouponsTab';
+import { InstitutionNotesTab } from '@/components/admin/InstitutionNotesTab';
 import { WelcomeCard } from '@/components/institution/WelcomeCard';
 import { InstitutionTour } from '@/components/institution/InstitutionTour';
 import { KeyboardShortcutsPopover } from '@/components/institution/KeyboardShortcutsPopover';
@@ -242,7 +244,7 @@ export default function InstitutionPortal() {
           className="space-y-6"
           data-tour="tabs"
         >
-          <TabsList className="grid w-full max-w-4xl grid-cols-2 md:grid-cols-5 h-auto">
+          <TabsList className="grid w-full max-w-4xl grid-cols-2 md:grid-cols-6 h-auto">
             <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
               Visão Geral
             </TabsTrigger>
@@ -265,6 +267,10 @@ export default function InstitutionPortal() {
             <TabsTrigger value="triage" className="text-xs md:text-sm py-2">
               <ClipboardList className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               Triagem
+            </TabsTrigger>
+            <TabsTrigger value="notes" className="text-xs md:text-sm py-2">
+              <StickyNote className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              Notas
             </TabsTrigger>
           </TabsList>
 
@@ -392,6 +398,24 @@ export default function InstitutionPortal() {
                   <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
                   <p className="text-muted-foreground">
                     Nenhuma instituição vinculada para exibir triagem.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Tab de Notas */}
+          <TabsContent value="notes">
+            {userInstitutions[0]?.institution_id ? (
+              <InstitutionNotesTab 
+                institutionId={userInstitutions[0].institution_id} 
+              />
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <StickyNote className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    Nenhuma instituição vinculada para exibir notas.
                   </p>
                 </CardContent>
               </Card>
