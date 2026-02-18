@@ -106,15 +106,35 @@ function MetricTooltip({ title, description, children }: { title: string; descri
   );
 }
 
-// Small metric bar (1-5 scale)
-function MetricBar({ value, invert }: { value: number | null; invert?: boolean }) {
+// Small metric bar (1-5 scale) with optional class average indicator
+function MetricBar({ value, invert, classAvg }: { value: number | null; invert?: boolean; classAvg?: number | null }) {
   if (value === null) return null;
   const pct = ((value - 1) / 4) * 100;
   const effectivePct = invert ? 100 - pct : pct;
   const color = effectivePct >= 60 ? 'bg-green-500' : effectivePct >= 40 ? 'bg-yellow-500' : 'bg-red-500';
+  const avgPct = classAvg != null ? ((classAvg - 1) / 4) * 100 : null;
   return (
-    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-      <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+    <div className="relative">
+      {avgPct != null && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className="absolute -top-[7px] z-10 cursor-help transition-all duration-300"
+              style={{ left: `calc(${avgPct}% - 4px)` }}
+            >
+              <svg width="8" height="6" viewBox="0 0 8 6" className="text-slate-400 dark:text-slate-500">
+                <polygon points="4,6 0,0 8,0" fill="currentColor" />
+              </svg>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            Média da turma: {classAvg!.toFixed(1)}
+          </TooltipContent>
+        </Tooltip>
+      )}
+      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+      </div>
     </div>
   );
 }
@@ -246,6 +266,21 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   // Count of critical pending students
   const criticalPendingCount = useMemo(() => {
     return students.filter(s => s.riskLevel === 'critical' && (!s.lastTriageStatus || s.lastTriageStatus === 'pending')).length;
+  }, [students]);
+
+  const classAverages = useMemo(() => {
+    const withData = students.filter(s => s.riskLevel !== 'no_data');
+    if (withData.length === 0) return { mood: null, anxiety: null, energy: null, sleep: null };
+    const avg = (vals: (number | null)[]) => {
+      const valid = vals.filter((v): v is number => v != null);
+      return valid.length > 0 ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+    };
+    return {
+      mood: avg(withData.map(s => s.avgMood)),
+      anxiety: avg(withData.map(s => s.avgAnxiety)),
+      energy: avg(withData.map(s => s.avgEnergy)),
+      sleep: avg(withData.map(s => s.avgSleep)),
+    };
   }, [students]);
 
   const patientDataMap = useMemo(() => {
@@ -532,7 +567,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                         </div>
                         <div className="flex items-center gap-6">
                           <div className="flex-1 space-y-2">
-                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Indicadores (14 dias)</p>
+                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Indicadores (14 dias) <span className="normal-case font-normal ml-1 text-slate-400">▼ = média da turma</span></p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-2">
                             <MetricTooltip title={metricTooltips.mood.title} description={metricTooltips.mood.description}>
                               <div className="space-y-1 cursor-help">
@@ -540,7 +575,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                   <span className="flex items-center gap-1 text-muted-foreground"><Activity className="h-3 w-3" />Humor</span>
                                   <span className="font-medium">{student.avgMood?.toFixed(1) ?? '—'}</span>
                                 </div>
-                                <MetricBar value={student.avgMood} />
+                                <MetricBar value={student.avgMood} classAvg={classAverages.mood} />
                               </div>
                             </MetricTooltip>
                             <MetricTooltip title={metricTooltips.anxiety.title} description={metricTooltips.anxiety.description}>
@@ -549,7 +584,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                   <span className="flex items-center gap-1 text-muted-foreground"><Brain className="h-3 w-3" />Ansiedade</span>
                                   <span className="font-medium">{student.avgAnxiety?.toFixed(1) ?? '—'}</span>
                                 </div>
-                                <MetricBar value={student.avgAnxiety} invert />
+                                <MetricBar value={student.avgAnxiety} invert classAvg={classAverages.anxiety} />
                               </div>
                             </MetricTooltip>
                             <MetricTooltip title={metricTooltips.energy.title} description={metricTooltips.energy.description}>
@@ -558,7 +593,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                   <span className="flex items-center gap-1 text-muted-foreground"><Zap className="h-3 w-3" />Energia</span>
                                   <span className="font-medium">{student.avgEnergy?.toFixed(1) ?? '—'}</span>
                                 </div>
-                                <MetricBar value={student.avgEnergy} />
+                                <MetricBar value={student.avgEnergy} classAvg={classAverages.energy} />
                               </div>
                             </MetricTooltip>
                             <MetricTooltip title={metricTooltips.sleep.title} description={metricTooltips.sleep.description}>
@@ -567,7 +602,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                   <span className="flex items-center gap-1 text-muted-foreground"><Moon className="h-3 w-3" />Sono</span>
                                   <span className="font-medium">{student.avgSleep?.toFixed(1) ?? '—'}</span>
                                 </div>
-                                <MetricBar value={student.avgSleep} />
+                                <MetricBar value={student.avgSleep} classAvg={classAverages.sleep} />
                               </div>
                             </MetricTooltip>
                             </div>
