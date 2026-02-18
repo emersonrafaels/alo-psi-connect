@@ -24,12 +24,12 @@ interface StudentTriageTabProps {
   institutionId: string;
 }
 
-const riskConfig: Record<RiskLevel, { label: string; color: string; icon: typeof AlertTriangle; cardBg: string; progressColor: string }> = {
+const riskConfig: Record<RiskLevel, {label: string;color: string;icon: typeof AlertTriangle;cardBg: string;progressColor: string;}> = {
   critical: { label: 'Crítico', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', icon: AlertTriangle, cardBg: 'border-red-200 dark:border-red-900/50 bg-red-50/40 dark:bg-red-950/20', progressColor: '[&>div]:bg-red-500' },
   alert: { label: 'Alerta', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', icon: AlertCircle, cardBg: 'border-orange-200 dark:border-orange-900/50 bg-orange-50/40 dark:bg-orange-950/20', progressColor: '[&>div]:bg-orange-500' },
   attention: { label: 'Atenção', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', icon: Eye, cardBg: 'border-yellow-200 dark:border-yellow-900/50 bg-yellow-50/30 dark:bg-yellow-950/20', progressColor: '[&>div]:bg-yellow-500' },
   healthy: { label: 'Saudável', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: Heart, cardBg: 'border-green-200 dark:border-green-900/50 bg-green-50/30 dark:bg-green-950/20', progressColor: '[&>div]:bg-green-500' },
-  no_data: { label: 'Sem Dados', color: 'bg-muted text-muted-foreground', icon: HelpCircle, cardBg: 'bg-muted/30', progressColor: '[&>div]:bg-muted-foreground/40' },
+  no_data: { label: 'Sem Dados', color: 'bg-muted text-muted-foreground', icon: HelpCircle, cardBg: 'bg-muted/30', progressColor: '[&>div]:bg-muted-foreground/40' }
 };
 
 const riskLegend: Record<RiskLevel, string> = {
@@ -37,64 +37,64 @@ const riskLegend: Record<RiskLevel, string> = {
   alert: 'Humor ≤ 2.5, ansiedade ≥ 3.5 ou energia ≤ 1.5',
   attention: 'Humor ≤ 3.0, ansiedade ≥ 3.0 ou qualidade de sono ≤ 2.0',
   healthy: 'Indicadores dentro da faixa esperada',
-  no_data: 'Sem registros nos últimos 14 dias',
+  no_data: 'Sem registros nos últimos 14 dias'
 };
 
-const riskTooltips: Record<RiskLevel, { title: string; description: string }> = {
+const riskTooltips: Record<RiskLevel, {title: string;description: string;}> = {
   critical: {
     title: '🔴 Nível Crítico',
-    description: 'Alunos com humor muito baixo (≤1.5), ansiedade muito alta (≥4.5) ou queda brusca no humor (>40%). Necessitam atenção imediata.',
+    description: 'Alunos com humor muito baixo (≤1.5), ansiedade muito alta (≥4.5) ou queda brusca no humor (>40%). Necessitam atenção imediata.'
   },
   alert: {
     title: '🟠 Nível Alerta',
-    description: 'Alunos com humor baixo (≤2.5), ansiedade elevada (≥3.5) ou energia muito baixa. Recomenda-se acompanhamento.',
+    description: 'Alunos com humor baixo (≤2.5), ansiedade elevada (≥3.5) ou energia muito baixa. Recomenda-se acompanhamento.'
   },
   attention: {
     title: '🟡 Nível Atenção',
-    description: 'Alunos com indicadores moderadamente preocupantes. Vale monitorar de perto.',
+    description: 'Alunos com indicadores moderadamente preocupantes. Vale monitorar de perto.'
   },
   healthy: {
     title: '🟢 Nível Saudável',
-    description: 'Alunos com todos os indicadores dentro da faixa esperada.',
+    description: 'Alunos com todos os indicadores dentro da faixa esperada.'
   },
   no_data: {
     title: '⚪ Sem Dados',
-    description: 'Alunos que não registraram diários emocionais nos últimos 14 dias.',
-  },
+    description: 'Alunos que não registraram diários emocionais nos últimos 14 dias.'
+  }
 };
 
 const metricTooltips = {
   mood: { title: '😊 Humor', description: 'Como o aluno avaliou seu humor (1=muito mal, 5=muito bem). Abaixo de 3 merece atenção.' },
   anxiety: { title: '😰 Ansiedade', description: 'Nível de ansiedade reportado (1=tranquilo, 5=muito ansioso). Acima de 3.5 é preocupante.' },
   energy: { title: '⚡ Energia', description: 'Nível de energia do aluno (1=sem energia, 5=muita energia). Valores baixos podem indicar cansaço.' },
-  sleep: { title: '🌙 Sono', description: 'Qualidade do sono (1=péssimo, 5=ótimo). Sono ruim afeta humor e concentração.' },
+  sleep: { title: '🌙 Sono', description: 'Qualidade do sono (1=péssimo, 5=ótimo). Sono ruim afeta humor e concentração.' }
 };
 
 const priorityLabels: Record<string, string> = {
   urgent: '🔴 Urgente',
   high: '🟠 Alta',
   medium: '🟡 Média',
-  low: '🟢 Baixa',
+  low: '🟢 Baixa'
 };
 
 const actionLabels: Record<string, string> = {
   refer_professional: 'Encaminhar para profissional',
   schedule_talk: 'Agendar conversa',
   monitor: 'Monitorar',
-  contact_family: 'Contato com família',
+  contact_family: 'Contato com família'
 };
 
 const riskOrder: RiskLevel[] = ['critical', 'alert', 'attention', 'healthy', 'no_data'];
 
 // Elegant tooltip component
-function MetricTooltip({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+function MetricTooltip({ title, description, children }: {title: string;description: string;children: React.ReactNode;}) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent
         side="bottom"
-        className="w-[280px] p-0 border-border/60 shadow-lg"
-      >
+        className="w-[280px] p-0 border-border/60 shadow-lg">
+
         <div className="px-3 py-2 border-b border-border/40 bg-muted/50 rounded-t-md">
           <p className="font-semibold text-xs">{title}</p>
         </div>
@@ -102,26 +102,26 @@ function MetricTooltip({ title, description, children }: { title: string; descri
           <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
         </div>
       </TooltipContent>
-    </Tooltip>
-  );
+    </Tooltip>);
+
 }
 
 // Small metric bar (1-5 scale) with optional class average indicator
-function MetricBar({ value, invert, classAvg }: { value: number | null; invert?: boolean; classAvg?: number | null }) {
+function MetricBar({ value, invert, classAvg }: {value: number | null;invert?: boolean;classAvg?: number | null;}) {
   if (value === null) return null;
-  const pct = ((value - 1) / 4) * 100;
+  const pct = (value - 1) / 4 * 100;
   const effectivePct = invert ? 100 - pct : pct;
   const color = effectivePct >= 60 ? 'bg-green-500' : effectivePct >= 40 ? 'bg-yellow-500' : 'bg-red-500';
-  const avgPct = classAvg != null ? ((classAvg - 1) / 4) * 100 : null;
+  const avgPct = classAvg != null ? (classAvg - 1) / 4 * 100 : null;
   return (
     <div className="relative">
-      {avgPct != null && (
-        <Tooltip>
+      {avgPct != null &&
+      <Tooltip>
           <TooltipTrigger asChild>
             <div
-              className="absolute -top-[7px] z-10 cursor-help transition-all duration-300"
-              style={{ left: `calc(${avgPct}% - 4px)` }}
-            >
+            className="absolute -top-[7px] z-10 cursor-help transition-all duration-300"
+            style={{ left: `calc(${avgPct}% - 4px)` }}>
+
               <svg width="8" height="6" viewBox="0 0 8 6" className="text-slate-400 dark:text-slate-500">
                 <polygon points="4,6 0,0 8,0" fill="currentColor" />
               </svg>
@@ -131,43 +131,43 @@ function MetricBar({ value, invert, classAvg }: { value: number | null; invert?:
             Média da turma: {classAvg!.toFixed(1)}
           </TooltipContent>
         </Tooltip>
-      )}
+      }
       <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
         <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
       </div>
-    </div>
-  );
+    </div>);
+
 }
 
-function TrendIcon({ trend }: { trend: number | null }) {
+function TrendIcon({ trend }: {trend: number | null;}) {
   if (trend === null) return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
   if (trend <= -20) return <TrendingDown className="h-3.5 w-3.5 text-red-500" />;
   if (trend >= 20) return <TrendingUp className="h-3.5 w-3.5 text-green-500" />;
   return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
 }
 
-function TrendBadge({ trend }: { trend: number | null }) {
+function TrendBadge({ trend }: {trend: number | null;}) {
   if (trend === null) return null;
   const isNegative = trend < 0;
   const isSignificant = Math.abs(trend) >= 20;
   if (!isSignificant) return (
-    <span className="text-[10px] text-muted-foreground">{trend > 0 ? '+' : ''}{trend}%</span>
-  );
+    <span className="text-[10px] text-muted-foreground">{trend > 0 ? '+' : ''}{trend}%</span>);
+
   return (
     <MetricTooltip title="📈 Tendência" description="Variação percentual do humor entre a primeira e segunda semana. Vermelho=piora, verde=melhora.">
       <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium cursor-help ${
-        isNegative
-          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-          : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-      }`}>
+      isNegative ?
+      'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+      'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`
+      }>
         {isNegative ? <TrendingDown className="h-2.5 w-2.5" /> : <TrendingUp className="h-2.5 w-2.5" />}
         {trend > 0 ? '+' : ''}{trend}%
       </span>
-    </MetricTooltip>
-  );
+    </MetricTooltip>);
+
 }
 
-function MoodSparkline({ data }: { data: number[] }) {
+function MoodSparkline({ data }: {data: number[];}) {
   if (data.length < 2) return null;
   const width = 100;
   const height = 32;
@@ -175,7 +175,7 @@ function MoodSparkline({ data }: { data: number[] }) {
   const min = 1;
   const range = max - min || 1;
   const step = width / (data.length - 1);
-  const points = data.map((v, i) => `${i * step},${height - ((v - min) / range) * height}`).join(' ');
+  const points = data.map((v, i) => `${i * step},${height - (v - min) / range * height}`).join(' ');
   const lastVal = data[data.length - 1];
   const color = lastVal <= 2 ? 'var(--color-destructive, #ef4444)' : lastVal <= 3 ? '#eab308' : '#22c55e';
 
@@ -188,14 +188,14 @@ function MoodSparkline({ data }: { data: number[] }) {
           stroke={color}
           strokeWidth="1.5"
           strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+          strokeLinejoin="round" />
+
       </svg>
-    </MetricTooltip>
-  );
+    </MetricTooltip>);
+
 }
 
-function FollowUpIndicator({ date }: { date: string }) {
+function FollowUpIndicator({ date }: {date: string;}) {
   const followUp = new Date(date);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -210,8 +210,8 @@ function FollowUpIndicator({ date }: { date: string }) {
         {format(followUp, "dd/MM", { locale: ptBR })}
         {isOverdue && ' (vencido)'}
       </span>
-    </MetricTooltip>
-  );
+    </MetricTooltip>);
+
 }
 
 export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
@@ -232,7 +232,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
   const counts = useMemo(() => {
     const c: Record<RiskLevel, number> = { critical: 0, alert: 0, attention: 0, healthy: 0, no_data: 0 };
-    students.forEach(s => c[s.riskLevel]++);
+    students.forEach((s) => c[s.riskLevel]++);
     return c;
   }, [students]);
 
@@ -240,11 +240,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
   // Students not yet triaged or pending
   const pendingStudents = useMemo(() => {
-    let filtered = students.filter(s => !s.lastTriageStatus || s.lastTriageStatus === 'pending');
-    if (riskFilter !== 'all') filtered = filtered.filter(s => s.riskLevel === riskFilter);
+    let filtered = students.filter((s) => !s.lastTriageStatus || s.lastTriageStatus === 'pending');
+    if (riskFilter !== 'all') filtered = filtered.filter((s) => s.riskLevel === riskFilter);
     if (debouncedSearch.trim()) {
       const term = debouncedSearch.toLowerCase();
-      filtered = filtered.filter(s => s.studentName.toLowerCase().includes(term));
+      filtered = filtered.filter((s) => s.studentName.toLowerCase().includes(term));
     }
     filtered.sort((a, b) => riskOrder.indexOf(a.riskLevel) - riskOrder.indexOf(b.riskLevel));
     return filtered;
@@ -252,11 +252,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
   // Triage records by status
   const inProgressTriages = useMemo(() => {
-    return triageRecords.filter(t => t.status === 'triaged' || t.status === 'in_progress');
+    return triageRecords.filter((t) => t.status === 'triaged' || t.status === 'in_progress');
   }, [triageRecords]);
 
   const resolvedTriages = useMemo(() => {
-    return triageRecords.filter(t => t.status === 'resolved');
+    return triageRecords.filter((t) => t.status === 'resolved');
   }, [triageRecords]);
 
   const allTriages = useMemo(() => {
@@ -265,33 +265,33 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
   // Count of critical pending students
   const criticalPendingCount = useMemo(() => {
-    return students.filter(s => s.riskLevel === 'critical' && (!s.lastTriageStatus || s.lastTriageStatus === 'pending')).length;
+    return students.filter((s) => s.riskLevel === 'critical' && (!s.lastTriageStatus || s.lastTriageStatus === 'pending')).length;
   }, [students]);
 
   const classAverages = useMemo(() => {
-    const withData = students.filter(s => s.riskLevel !== 'no_data');
+    const withData = students.filter((s) => s.riskLevel !== 'no_data');
     if (withData.length === 0) return { mood: null, anxiety: null, energy: null, sleep: null };
     const avg = (vals: (number | null)[]) => {
       const valid = vals.filter((v): v is number => v != null);
       return valid.length > 0 ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
     };
     return {
-      mood: avg(withData.map(s => s.avgMood)),
-      anxiety: avg(withData.map(s => s.avgAnxiety)),
-      energy: avg(withData.map(s => s.avgEnergy)),
-      sleep: avg(withData.map(s => s.avgSleep)),
+      mood: avg(withData.map((s) => s.avgMood)),
+      anxiety: avg(withData.map((s) => s.avgAnxiety)),
+      energy: avg(withData.map((s) => s.avgEnergy)),
+      sleep: avg(withData.map((s) => s.avgSleep))
     };
   }, [students]);
 
   const patientDataMap = useMemo(() => {
     const map = new Map<string, StudentRiskData>();
-    students.forEach(s => map.set(s.patientId, s));
+    students.forEach((s) => map.set(s.patientId, s));
     return map;
   }, [students]);
 
   const patientNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    students.forEach(s => map.set(s.patientId, s.studentName));
+    students.forEach((s) => map.set(s.patientId, s.studentName));
     return map;
   }, [students]);
 
@@ -309,7 +309,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
   const selectedStudentHistory = useMemo(() => {
     if (!selectedStudent) return [];
-    return triageRecords.filter(t => t.patient_id === selectedStudent.patientId);
+    return triageRecords.filter((t) => t.patient_id === selectedStudent.patientId);
   }, [selectedStudent, triageRecords]);
 
   const handleTriage = async (data: any) => {
@@ -317,11 +317,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   };
 
   const handleExport = useCallback(() => {
-    const exportStudents = activeTab === 'para_triar' ? pendingStudents : students.filter(s => {
+    const exportStudents = activeTab === 'para_triar' ? pendingStudents : students.filter((s) => {
       if (riskFilter !== 'all') return s.riskLevel === riskFilter;
       return true;
     });
-    const data = exportStudents.map(s => ({
+    const data = exportStudents.map((s) => ({
       'Nome': s.studentName,
       'Nível de Risco': riskConfig[s.riskLevel].label,
       'Humor Médio': s.avgMood ?? '—',
@@ -330,7 +330,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
       'Sono Médio': s.avgSleep ?? '—',
       'Tendência Humor (%)': s.moodTrend ?? '—',
       'Registros': s.entryCount,
-      'Triado': s.lastTriageStatus && s.lastTriageStatus !== 'pending' ? 'Sim' : 'Não',
+      'Triado': s.lastTriageStatus && s.lastTriageStatus !== 'pending' ? 'Sim' : 'Não'
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -344,8 +344,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
         <CardContent className="py-12 text-center">
           <p className="text-muted-foreground">Carregando dados de triagem...</p>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   if (students.length === 0) {
@@ -355,8 +355,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           <ClipboardCheck className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
           <p className="text-muted-foreground">Nenhum aluno matriculado nesta instituição.</p>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
@@ -364,11 +364,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
       <div className="space-y-6">
         {/* Summary cards — redesigned */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {riskOrder.map(level => {
+          {riskOrder.map((level) => {
             const config = riskConfig[level];
             const Icon = config.icon;
             const count = counts[level];
-            const pct = totalStudents > 0 ? (count / totalStudents) * 100 : 0;
+            const pct = totalStudents > 0 ? count / totalStudents * 100 : 0;
             const tooltip = riskTooltips[level];
             const isSelected = riskFilter === level;
 
@@ -376,8 +376,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
               <MetricTooltip key={level} title={tooltip.title} description={tooltip.description}>
                 <Card
                   className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${config.cardBg} ${isSelected ? 'ring-2 ring-primary shadow-md scale-[1.02]' : ''}`}
-                  onClick={() => setRiskFilter(isSelected ? 'all' : level)}
-                >
+                  onClick={() => setRiskFilter(isSelected ? 'all' : level)}>
+
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div className={`p-2.5 rounded-xl ${config.color}`}>
@@ -394,15 +394,15 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                     <Progress value={pct} className={`h-1.5 ${config.progressColor}`} />
                   </CardContent>
                 </Card>
-              </MetricTooltip>
-            );
+              </MetricTooltip>);
+
           })}
         </div>
 
         {/* Contexto Institucional */}
         {(() => {
           const today = new Date().toISOString().split('T')[0];
-          const activeTriageNotes = institutionNotes.filter(n => {
+          const activeTriageNotes = institutionNotes.filter((n) => {
             if (!n.start_date && !n.end_date) return n.is_pinned;
             if (n.start_date && n.end_date) return n.start_date <= today && n.end_date >= today;
             if (n.start_date) return n.start_date <= today;
@@ -415,11 +415,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
               <Calendar className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-sm">
                 <span className="font-medium">Contexto institucional:</span>{' '}
-                {activeTriageNotes.map(n => n.title).join(', ')}
+                {activeTriageNotes.map((n) => n.title).join(', ')}
                 {' — '}Considere estes eventos ao avaliar os alunos.
               </AlertDescription>
-            </Alert>
-          );
+            </Alert>);
+
         })()}
 
         {/* Risk legend */}
@@ -434,7 +434,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           <CollapsibleContent>
             <Card className="mt-2">
               <CardContent className="p-4 space-y-2 text-sm">
-                {riskOrder.map(level => {
+                {riskOrder.map((level) => {
                   const config = riskConfig[level];
                   const Icon = config.icon;
                   return (
@@ -444,8 +444,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                         {config.label}
                       </Badge>
                       <span className="text-muted-foreground">{riskLegend[level]}</span>
-                    </div>
-                  );
+                    </div>);
+
                 })}
               </CardContent>
             </Card>
@@ -459,9 +459,9 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             <Input
               placeholder="Buscar aluno..."
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="pl-9 w-[200px]"
-            />
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 w-[200px]" />
+
           </div>
 
           <Select value={riskFilter} onValueChange={setRiskFilter}>
@@ -492,11 +492,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
               <Badge
                 variant="secondary"
                 className={`text-xs px-2 py-0.5 h-5 ${
-                  criticalPendingCount > 0
-                    ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
-                    : ''
-                }`}
-              >
+                criticalPendingCount > 0 ?
+                'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' :
+                ''}`
+                }>
+
                 {pendingStudents.length}
               </Badge>
             </TabsTrigger>
@@ -532,14 +532,14 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y">
-                  {pendingStudents.map(student => {
+                  {pendingStudents.map((student) => {
                     const config = riskConfig[student.riskLevel];
                     const isCritical = student.riskLevel === 'critical';
                     const riskBorder = student.riskLevel === 'critical' ? 'border-l-red-500' :
-                      student.riskLevel === 'alert' ? 'border-l-orange-500' :
-                      student.riskLevel === 'attention' ? 'border-l-yellow-500' :
-                      student.riskLevel === 'healthy' ? 'border-l-green-500' : 'border-l-muted-foreground/40';
-                    const initials = student.studentName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+                    student.riskLevel === 'alert' ? 'border-l-orange-500' :
+                    student.riskLevel === 'attention' ? 'border-l-yellow-500' :
+                    student.riskLevel === 'healthy' ? 'border-l-green-500' : 'border-l-muted-foreground/40';
+                    const initials = student.studentName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
 
                     return (
                       <div key={student.patientId} className={`p-5 border-l-4 ${riskBorder} hover:bg-muted/30 transition-colors ${isCritical ? 'bg-red-50/30 dark:bg-red-950/10' : ''}`}>
@@ -560,14 +560,14 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                           <Button
                             size="sm"
                             variant={isCritical ? 'destructive' : 'outline'}
-                            onClick={() => { setSelectedStudent(student); setDialogOpen(true); }}
-                          >
+                            onClick={() => {setSelectedStudent(student);setDialogOpen(true);}}>
+
                             Triar
                           </Button>
                         </div>
                         <div className="flex items-center gap-6">
                           <div className="flex-1 space-y-2">
-                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Indicadores (14 dias) <span className="normal-case font-normal ml-1 text-slate-400">▼ = média da turma</span></p>
+                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">▼ = média da instituição <span className="normal-case font-normal ml-1 text-slate-400">▼ = média da turma</span></p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-2">
                             <MetricTooltip title={metricTooltips.mood.title} description={metricTooltips.mood.description}>
                               <div className="space-y-1 cursor-help">
@@ -609,15 +609,15 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                           </div>
                           <MoodSparkline data={student.moodHistory} />
                         </div>
-                      </div>
-                    );
+                      </div>);
+
                   })}
-                  {pendingStudents.length === 0 && (
-                    <div className="p-8 text-center text-muted-foreground text-sm">
+                  {pendingStudents.length === 0 &&
+                  <div className="p-8 text-center text-muted-foreground text-sm">
                       <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-500/60" />
                       Todos os alunos foram triados! 🎉
                     </div>
-                  )}
+                  }
                 </div>
               </CardContent>
             </Card>
@@ -635,19 +635,19 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                 <CardDescription>Triagens que estão sendo acompanhadas ativamente</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                {inProgressTriages.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground text-sm">
+                {inProgressTriages.length === 0 ?
+                <div className="p-8 text-center text-muted-foreground text-sm">
                     Nenhuma triagem em andamento.
-                  </div>
-                ) : (
-                  <div className="divide-y">
-                    {inProgressTriages.map(t => {
-                      const priorityBorder = t.priority === 'urgent' ? 'border-l-red-500' :
-                        t.priority === 'high' ? 'border-l-orange-500' :
-                        t.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500';
+                  </div> :
 
-                      return (
-                        <div key={t.id} className={`p-4 border-l-4 ${priorityBorder} hover:bg-muted/30 transition-colors`}>
+                <div className="divide-y">
+                    {inProgressTriages.map((t) => {
+                    const priorityBorder = t.priority === 'urgent' ? 'border-l-red-500' :
+                    t.priority === 'high' ? 'border-l-orange-500' :
+                    t.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500';
+
+                    return (
+                      <div key={t.id} className={`p-4 border-l-4 ${priorityBorder} hover:bg-muted/30 transition-colors`}>
                           <div className="flex items-start justify-between gap-4">
                             <div className="space-y-2 flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
@@ -666,33 +666,33 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                               {t.follow_up_date && <FollowUpIndicator date={t.follow_up_date} />}
                             </div>
                             <div className="flex gap-1 shrink-0">
-                              {t.status === 'triaged' && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs h-8"
-                                  onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'in_progress' })}
-                                >
+                              {t.status === 'triaged' &&
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs h-8"
+                              onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'in_progress' })}>
+
                                   <Play className="h-3 w-3 mr-1" />
                                   Em andamento
                                 </Button>
-                              )}
+                            }
                               <Button
-                                size="sm"
-                                variant="default"
-                                className="text-xs h-8"
-                                onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'resolved', resolvedAt: new Date().toISOString() })}
-                              >
+                              size="sm"
+                              variant="default"
+                              className="text-xs h-8"
+                              onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'resolved', resolvedAt: new Date().toISOString() })}>
+
                                 <CheckCircle2 className="h-3 w-3 mr-1" />
                                 Resolver
                               </Button>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        </div>);
+
+                  })}
                   </div>
-                )}
+                }
               </CardContent>
             </Card>
           </TabsContent>
@@ -709,14 +709,14 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                 <CardDescription>Triagens finalizadas e resolvidas</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                {resolvedTriages.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground text-sm">
+                {resolvedTriages.length === 0 ?
+                <div className="p-8 text-center text-muted-foreground text-sm">
                     Nenhuma triagem concluída ainda.
-                  </div>
-                ) : (
-                  <div className="divide-y">
-                    {resolvedTriages.map(t => (
-                      <div key={t.id} className="p-4 hover:bg-muted/30 transition-colors">
+                  </div> :
+
+                <div className="divide-y">
+                    {resolvedTriages.map((t) =>
+                  <div key={t.id} className="p-4 hover:bg-muted/30 transition-colors">
                         <div className="flex items-center justify-between gap-4">
                           <div className="space-y-1 flex-1 min-w-0">
                             <div className="flex items-center gap-2">
@@ -731,19 +731,19 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                             {t.notes && <p className="text-xs text-muted-foreground italic truncate">"{t.notes}"</p>}
                           </div>
                           <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-xs h-7"
-                            onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'triaged' })}
-                          >
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs h-7"
+                        onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'triaged' })}>
+
                             <RotateCcw className="h-3 w-3 mr-1" />
                             Reabrir
                           </Button>
                         </div>
                       </div>
-                    ))}
+                  )}
                   </div>
-                )}
+                }
               </CardContent>
             </Card>
           </TabsContent>
@@ -760,21 +760,21 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                 <CardDescription>Todas as triagens realizadas nesta instituição</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                {allTriages.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground text-sm">
+                {allTriages.length === 0 ?
+                <div className="p-8 text-center text-muted-foreground text-sm">
                     Nenhuma triagem registrada ainda.
-                  </div>
-                ) : (
-                  <div className="divide-y">
-                    {allTriages.map(t => {
-                      const priorityBorder = t.priority === 'urgent' ? 'border-l-red-500' :
-                        t.priority === 'high' ? 'border-l-orange-500' :
-                        t.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500';
-                      const statusLabel = t.status === 'resolved' ? 'Resolvido' : t.status === 'in_progress' ? 'Em andamento' : 'Triado';
-                      const statusVariant = t.status === 'resolved' ? 'secondary' as const : 'default' as const;
+                  </div> :
 
-                      return (
-                        <div key={t.id} className={`p-4 border-l-4 ${priorityBorder} hover:bg-muted/30 transition-colors`}>
+                <div className="divide-y">
+                    {allTriages.map((t) => {
+                    const priorityBorder = t.priority === 'urgent' ? 'border-l-red-500' :
+                    t.priority === 'high' ? 'border-l-orange-500' :
+                    t.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500';
+                    const statusLabel = t.status === 'resolved' ? 'Resolvido' : t.status === 'in_progress' ? 'Em andamento' : 'Triado';
+                    const statusVariant = t.status === 'resolved' ? 'secondary' as const : 'default' as const;
+
+                    return (
+                      <div key={t.id} className={`p-4 border-l-4 ${priorityBorder} hover:bg-muted/30 transition-colors`}>
                           <div className="flex items-center justify-between gap-4">
                             <div className="space-y-1 flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
@@ -791,11 +791,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                               {t.follow_up_date && <FollowUpIndicator date={t.follow_up_date} />}
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        </div>);
+
+                  })}
                   </div>
-                )}
+                }
               </CardContent>
             </Card>
           </TabsContent>
@@ -806,22 +806,22 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           onOpenChange={setDialogOpen}
           student={selectedStudent}
           studentHistory={selectedStudentHistory}
-          onSubmit={handleTriage}
-        />
+          onSubmit={handleTriage} />
 
-        {activityModalStudent && (
-          <StudentActivityModal
-            open={activityModalOpen}
-            onOpenChange={setActivityModalOpen}
-            studentName={activityModalStudent.studentName}
-            profileId={activityModalStudent.profileId}
-            patientId={activityModalStudent.patientId}
-            institutionId={institutionId}
-            riskLevel={activityModalStudent.riskLevel}
-            entryCount={activityModalStudent.entryCount}
-          />
-        )}
+
+        {activityModalStudent &&
+        <StudentActivityModal
+          open={activityModalOpen}
+          onOpenChange={setActivityModalOpen}
+          studentName={activityModalStudent.studentName}
+          profileId={activityModalStudent.profileId}
+          patientId={activityModalStudent.patientId}
+          institutionId={institutionId}
+          riskLevel={activityModalStudent.riskLevel}
+          entryCount={activityModalStudent.entryCount} />
+
+        }
       </div>
-    </TooltipProvider>
-  );
+    </TooltipProvider>);
+
 }
