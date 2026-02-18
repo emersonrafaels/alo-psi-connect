@@ -1,50 +1,48 @@
 
 
-## Melhorias de UX/UI na Pagina de Triagem
+## Perfil de Atividades do Aluno ao Clicar no Nome
 
-### Problemas identificados na screenshot
-- Titulo "Alunos para Triar" com `text-base` (16px) e muito pequeno e sem destaque visual
-- Nomes dos alunos com `text-sm` (14px) se perdem entre badges e metricas
-- Titulos das sub-abas "Triagens em Andamento", "Triagens Concluidas", "Historico Completo" tambem muito pequenos
-- Cards de alunos sem separacao visual clara entre identidade e metricas
-- Secao de metricas nao tem header visual, fica confusa
-- Cards "Em Andamento" e "Concluidos" tem padding muito apertado (p-3)
-- Badges de prioridade e status com `text-[10px]` sao dificeis de ler
+### O que muda
+Ao clicar no nome de qualquer aluno na aba de triagem (em qualquer sub-aba), abre um modal mostrando as principais atividades dele no site: diarios emocionais recentes, sentimentos predominantes, e historico completo de triagens.
 
-### Mudancas planejadas
+### Componentes do modal
 
-**1. Titulos de secao maiores e com mais destaque**
-- `CardTitle` de cada aba: de `text-base` para `text-lg font-semibold`
-- Adicionar descricao sutil abaixo do titulo (CardDescription) em cada aba
+**1. Cabecalho**: Avatar com iniciais, nome, nivel de risco atual (badge), e quantidade de registros nos ultimos 14 dias.
 
-**2. Nomes dos alunos mais proeminentes**
-- Nome do aluno: de `text-sm` para `text-base font-semibold`
-- Adicionar um avatar placeholder (circulo com iniciais) antes do nome para destaque visual
+**2. Aba "Diario Emocional"**:
+- Lista dos ultimos 14 dias de registros emocionais (data, humor, ansiedade, energia, sono)
+- Sentimentos predominantes (top 3 emocoes mais registradas via `emotion_values`)
+- Mini grafico sparkline de evolucao do humor
+- Tags e texto do diario (se houver)
 
-**3. Cards de alunos com melhor estrutura**
-- Adicionar separador visual (borda lateral colorida por risco) nos cards de "Para Triar" tambem
-- Aumentar padding dos cards de p-4 para p-5
-- Adicionar fundo sutil nos cards criticos (bg-red-50/30)
+**3. Aba "Historico de Triagens"**:
+- Todas as triagens desse aluno, com data, prioridade, acao recomendada, notas, quem triou, status
+- Timeline visual com icones de status
 
-**4. Badges mais legiveis**
-- Badges de prioridade/status: de `text-[10px]` para `text-xs`
-- Badge de registros: de `text-[10px]` para `text-xs`
-
-**5. Cards "Em Andamento" e "Concluidos" com mais respiracao**
-- Padding de p-3 para p-4 nos concluidos
-- Nomes dos alunos com mesmo destaque (text-base font-semibold)
-
-**6. Secao de metricas com label de grupo**
-- Adicionar um label sutil "Indicadores (14 dias)" acima das barras de metrica
-
-**7. Tabs com visual mais robusto**
-- Aumentar altura das tabs
-- Badges de contagem ligeiramente maiores
+**4. Aba "Consultas"** (reusa o `UserStorytellingModal` existente):
+- Consultas agendadas/realizadas/canceladas
+- Cupons utilizados
 
 ### Detalhes tecnicos
 
 | Arquivo | Mudanca |
 |---|---|
-| `src/components/institution/StudentTriageTab.tsx` | Aumentar fontes de titulos e nomes, adicionar avatar com iniciais, borda lateral por risco nos cards pendentes, melhorar padding, badges maiores, label de metricas |
+| `src/hooks/useStudentTriage.tsx` | Adicionar `profileId` e `userId` ao interface `StudentRiskData` e retorna-los no map de dados |
+| `src/hooks/useStudentActivityData.tsx` | **Novo** - Hook que busca mood_entries recentes (com emotion_values, tags, journal_text), triagens do aluno, e calcula sentimentos predominantes |
+| `src/components/institution/StudentActivityModal.tsx` | **Novo** - Modal com abas mostrando diario emocional, sentimentos, historico de triagens |
+| `src/components/institution/StudentTriageTab.tsx` | Tornar nomes dos alunos clicaveis (cursor-pointer, underline on hover) em todas as 4 sub-abas. Adicionar state para o modal e renderiza-lo. Criar um map de patientId -> {profileId, userId} para as sub-abas de triagem. |
 
-Apenas mudancas visuais/CSS. Sem alteracao de logica ou dados.
+### Interacao do usuario
+- Clicar no nome do aluno em qualquer sub-aba -> abre o modal
+- O nome tera estilo de link (cursor pointer, hover underline, cor primary)
+- O modal abre com a aba "Diario Emocional" como padrao
+- Pode navegar entre as abas dentro do modal
+
+### Dados buscados pelo novo hook
+- `mood_entries` dos ultimos 30 dias (profile_id, mood_score, anxiety_level, energy_level, sleep_quality, sleep_hours, date, tags, journal_text, emotion_values)
+- `student_triage` records para o patient_id
+- Calculo de top emocoes a partir de emotion_values agregados
+
+### Sem mudancas no banco de dados
+Usa tabelas existentes: `mood_entries`, `student_triage`, `profiles`. Nenhuma migracao necessaria.
+
