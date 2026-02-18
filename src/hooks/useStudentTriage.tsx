@@ -113,9 +113,9 @@ function round1(v: number | null): number | null {
   return v !== null ? Math.round(v * 10) / 10 : null;
 }
 
-export function useStudentTriageData(institutionId: string | null, periodDays: number = 15) {
+export function useStudentTriageData(institutionId: string | null, periodDays: number = 15, comparePeriodDays?: number | null) {
   return useQuery({
-    queryKey: ['student-triage-data', institutionId, periodDays],
+    queryKey: ['student-triage-data', institutionId, periodDays, comparePeriodDays ?? null],
     queryFn: async (): Promise<StudentRiskData[]> => {
       if (!institutionId) return [];
 
@@ -132,10 +132,11 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
       // 2. Get profile_ids for mood_entries lookup
       const profileIds = students.map((s: any) => s.pacientes.profile_id).filter(Boolean);
 
-      // 3. Get mood entries for current period AND previous period (2x periodDays)
-      const doublePeriodAgo = new Date();
-      doublePeriodAgo.setDate(doublePeriodAgo.getDate() - (periodDays * 2));
-      const dateStr = doublePeriodAgo.toISOString().split('T')[0];
+      // 3. Get mood entries - fetch enough for comparison if enabled
+      const totalLookback = comparePeriodDays ? periodDays + comparePeriodDays : periodDays;
+      const lookbackDate = new Date();
+      lookbackDate.setDate(lookbackDate.getDate() - totalLookback);
+      const dateStr = lookbackDate.toISOString().split('T')[0];
 
       const { data: moodEntries } = await supabase
         .from('mood_entries')
@@ -157,9 +158,15 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
       const currentCutoff = new Date();
       currentCutoff.setDate(currentCutoff.getDate() - periodDays);
       const currentCutoffStr = currentCutoff.toISOString().split('T')[0];
-      const prevCutoff = new Date();
-      prevCutoff.setDate(prevCutoff.getDate() - (periodDays * 2));
-      const prevCutoffStr = prevCutoff.toISOString().split('T')[0];
+
+      // Previous period: from (periodDays + comparePeriodDays) ago to periodDays ago
+      const prevCutoffStr = comparePeriodDays
+        ? (() => {
+            const d = new Date();
+            d.setDate(d.getDate() - (periodDays + comparePeriodDays));
+            return d.toISOString().split('T')[0];
+          })()
+        : null;
 
       // Group mood entries by profile_id, split by period
       const currentByProfile = new Map<string, any[]>();
@@ -169,7 +176,7 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
           const arr = currentByProfile.get(e.profile_id) || [];
           arr.push(e);
           currentByProfile.set(e.profile_id, arr);
-        } else if (e.date >= prevCutoffStr) {
+        } else if (prevCutoffStr && e.date >= prevCutoffStr) {
           const arr = prevByProfile.get(e.profile_id) || [];
           arr.push(e);
           prevByProfile.set(e.profile_id, arr);
@@ -196,10 +203,10 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
         const avgEnergy = computeAvg(entries, 'energy_level');
         const avgSleep = computeSleepAvg(entries);
 
-        const prevAvgMood = computeAvg(prevEntries, 'mood_score');
-        const prevAvgAnxiety = computeAvg(prevEntries, 'anxiety_level');
-        const prevAvgEnergy = computeAvg(prevEntries, 'energy_level');
-        const prevAvgSleep = computeSleepAvg(prevEntries);
+        const prevAvgMood = comparePeriodDays ? computeAvg(prevEntries, 'mood_score') : null;
+        const prevAvgAnxiety = comparePeriodDays ? computeAvg(prevEntries, 'anxiety_level') : null;
+        const prevAvgEnergy = comparePeriodDays ? computeAvg(prevEntries, 'energy_level') : null;
+        const prevAvgSleep = comparePeriodDays ? computeSleepAvg(prevEntries) : null;
 
         const moodTrend = calculateTrend(entries.filter((e: any) => e.mood_score != null));
 
@@ -226,7 +233,7 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
           prevAvgAnxiety: round1(prevAvgAnxiety),
           prevAvgEnergy: round1(prevAvgEnergy),
           prevAvgSleep: round1(prevAvgSleep),
-          prevEntryCount: prevEntries.length,
+          prevEntryCount: comparePeriodDays ? prevEntries.length : 0,
         };
       });
     },

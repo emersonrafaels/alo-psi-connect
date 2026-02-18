@@ -6,6 +6,7 @@ import { ClipboardCheck, Clock, CheckCircle2, TrendingUp, TrendingDown, Minus } 
 interface TriageMetricsDashboardProps {
   triageRecords: TriageRecord[];
   periodDays?: number;
+  compareEnabled?: boolean;
 }
 
 function DeltaIndicator({ current, previous, invertBetter }: { current: number; previous: number; invertBetter?: boolean }) {
@@ -20,7 +21,7 @@ function DeltaIndicator({ current, previous, invertBetter }: { current: number; 
   );
 }
 
-export function TriageMetricsDashboard({ triageRecords, periodDays = 15 }: TriageMetricsDashboardProps) {
+export function TriageMetricsDashboard({ triageRecords, periodDays = 15, compareEnabled = false }: TriageMetricsDashboardProps) {
   const metrics = useMemo(() => {
     const now = new Date();
 
@@ -99,7 +100,7 @@ export function TriageMetricsDashboard({ triageRecords, periodDays = 15 }: Triag
           <div>
             <p className="text-lg font-bold">
               {metrics.currentCount}
-              <DeltaIndicator current={metrics.currentCount} previous={metrics.prevCount} />
+              {compareEnabled && <DeltaIndicator current={metrics.currentCount} previous={metrics.prevCount} />}
             </p>
             <p className="text-[11px] text-muted-foreground">Triagens ({periodDays}d)</p>
           </div>

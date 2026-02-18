@@ -11,8 +11,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play, ChevronRight, ArrowUp, ArrowDown, GitCompareArrows } from 'lucide-react';
 import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
 import { StudentActivityModal } from './StudentActivityModal';
@@ -233,7 +235,13 @@ function FollowUpIndicator({ date }: {date: string;}) {
 
 export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const [analysisPeriod, setAnalysisPeriod] = useState<number>(15);
-  const { data: students = [], isLoading } = useStudentTriageData(institutionId, analysisPeriod);
+  const [compareEnabled, setCompareEnabled] = useState(false);
+  const [comparePeriod, setComparePeriod] = useState<number>(15);
+  const { data: students = [], isLoading } = useStudentTriageData(
+    institutionId,
+    analysisPeriod,
+    compareEnabled ? comparePeriod : null
+  );
   const { notes: institutionNotes } = useInstitutionNotes(institutionId);
   const { data: triageRecords = [] } = useTriageRecords(institutionId);
   const { createTriage, updateTriageStatus, batchCreateTriage, addQuickNote } = useTriageActions(institutionId);
@@ -558,12 +566,12 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                     <div>
                       <p className="text-2xl font-bold tracking-tight">
                         {count}
-                        {delta !== 0 && (
+                        {compareEnabled && delta !== 0 && (
                           <span className={`text-xs font-medium ml-1 ${delta > 0 ? 'text-red-500' : 'text-green-500'}`}>
                             ({delta > 0 ? '+' : ''}{delta})
                           </span>
                         )}
-                        {delta === 0 && prevCount > 0 && (
+                        {compareEnabled && delta === 0 && prevCount > 0 && (
                           <span className="text-xs font-medium ml-1 text-muted-foreground">(=)</span>
                         )}
                       </p>
@@ -584,7 +592,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             {classAverages.mood != null && (
               <span className="flex items-center gap-1">
                 <Activity className="h-3 w-3" />Humor: {classAverages.mood.toFixed(1)}
-                {prevClassAverages.mood != null && (() => {
+                {compareEnabled && prevClassAverages.mood != null && (() => {
                   const d = classAverages.mood! - prevClassAverages.mood!;
                   if (Math.abs(d) < 0.05) return <span className="text-muted-foreground/60">(=)</span>;
                   return <span className={d > 0 ? 'text-green-600' : 'text-red-600'}>({d > 0 ? '+' : ''}{d.toFixed(1)})</span>;
@@ -594,7 +602,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             {classAverages.anxiety != null && (
               <span className="flex items-center gap-1">
                 <Brain className="h-3 w-3" />Ansiedade: {classAverages.anxiety.toFixed(1)}
-                {prevClassAverages.anxiety != null && (() => {
+                {compareEnabled && prevClassAverages.anxiety != null && (() => {
                   const d = classAverages.anxiety! - prevClassAverages.anxiety!;
                   if (Math.abs(d) < 0.05) return <span className="text-muted-foreground/60">(=)</span>;
                   return <span className={d < 0 ? 'text-green-600' : 'text-red-600'}>({d > 0 ? '+' : ''}{d.toFixed(1)})</span>;
@@ -604,7 +612,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             {classAverages.energy != null && (
               <span className="flex items-center gap-1">
                 <Zap className="h-3 w-3" />Energia: {classAverages.energy.toFixed(1)}
-                {prevClassAverages.energy != null && (() => {
+                {compareEnabled && prevClassAverages.energy != null && (() => {
                   const d = classAverages.energy! - prevClassAverages.energy!;
                   if (Math.abs(d) < 0.05) return <span className="text-muted-foreground/60">(=)</span>;
                   return <span className={d > 0 ? 'text-green-600' : 'text-red-600'}>({d > 0 ? '+' : ''}{d.toFixed(1)})</span>;
@@ -614,7 +622,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             {classAverages.sleep != null && (
               <span className="flex items-center gap-1">
                 <Moon className="h-3 w-3" />Sono: {classAverages.sleep.toFixed(1)}
-                {prevClassAverages.sleep != null && (() => {
+                {compareEnabled && prevClassAverages.sleep != null && (() => {
                   const d = classAverages.sleep! - prevClassAverages.sleep!;
                   if (Math.abs(d) < 0.05) return <span className="text-muted-foreground/60">(=)</span>;
                   return <span className={d > 0 ? 'text-green-600' : 'text-red-600'}>({d > 0 ? '+' : ''}{d.toFixed(1)})</span>;
@@ -650,7 +658,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
         )}
 
         {/* Triage Metrics Dashboard */}
-        <TriageMetricsDashboard triageRecords={triageRecords} periodDays={analysisPeriod} />
+        <TriageMetricsDashboard triageRecords={triageRecords} periodDays={analysisPeriod} compareEnabled={compareEnabled} />
 
         {/* Contexto Institucional */}
         {(() => {
@@ -730,6 +738,34 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             </SelectContent>
           </Select>
 
+          <div className="flex items-center gap-2 border rounded-md px-3 py-1.5 bg-muted/30">
+            <Switch
+              id="compare-toggle"
+              checked={compareEnabled}
+              onCheckedChange={setCompareEnabled}
+              className="scale-90"
+            />
+            <Label htmlFor="compare-toggle" className="text-xs font-medium cursor-pointer flex items-center gap-1">
+              <GitCompareArrows className="h-3.5 w-3.5" />
+              Comparar
+            </Label>
+          </div>
+
+          {compareEnabled && (
+            <Select value={String(comparePeriod)} onValueChange={(v) => setComparePeriod(Number(v))}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">vs 7 dias</SelectItem>
+                <SelectItem value="15">vs 15 dias</SelectItem>
+                <SelectItem value="30">vs 30 dias</SelectItem>
+                <SelectItem value="60">vs 60 dias</SelectItem>
+                <SelectItem value="90">vs 90 dias</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+
           <Select value={riskFilter} onValueChange={setRiskFilter}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Nível de risco" />
@@ -759,6 +795,30 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* Period comparison banner */}
+        {compareEnabled && (
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted/40 border border-border/50 text-xs text-muted-foreground">
+            <GitCompareArrows className="h-4 w-4 shrink-0 text-primary/70" />
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>
+                <span className="font-semibold text-foreground">Período atual:</span>{' '}
+                {format((() => { const d = new Date(); d.setDate(d.getDate() - analysisPeriod); return d; })(), 'dd/MM', { locale: ptBR })}
+                {' — '}
+                {format(new Date(), 'dd/MM', { locale: ptBR })}
+                {' '}({analysisPeriod}d)
+              </span>
+              <span className="text-muted-foreground/50">vs.</span>
+              <span>
+                <span className="font-semibold text-foreground">Comparativo:</span>{' '}
+                {format((() => { const d = new Date(); d.setDate(d.getDate() - analysisPeriod - comparePeriod); return d; })(), 'dd/MM', { locale: ptBR })}
+                {' — '}
+                {format((() => { const d = new Date(); d.setDate(d.getDate() - analysisPeriod); return d; })(), 'dd/MM', { locale: ptBR })}
+                {' '}({comparePeriod}d)
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Sub-tabs for triage workflow */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -889,7 +949,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                   <span className="flex items-center gap-1 text-muted-foreground"><Activity className="h-3 w-3" />Humor</span>
                                   <span className="font-medium flex items-center gap-0.5">
                                     {student.avgMood?.toFixed(1) ?? '—'}
-                                    {student.avgMood != null && student.prevAvgMood != null && (() => {
+                                    {compareEnabled && student.avgMood != null && student.prevAvgMood != null && (() => {
                                       const d = student.avgMood! - student.prevAvgMood!;
                                       if (Math.abs(d) < 0.15) return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
                                       return d > 0 ? <ArrowUp className="h-2.5 w-2.5 text-green-500" /> : <ArrowDown className="h-2.5 w-2.5 text-red-500" />;
@@ -906,7 +966,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                   <span className="flex items-center gap-1 text-muted-foreground"><Brain className="h-3 w-3" />Ansiedade</span>
                                   <span className="font-medium flex items-center gap-0.5">
                                     {student.avgAnxiety?.toFixed(1) ?? '—'}
-                                    {student.avgAnxiety != null && student.prevAvgAnxiety != null && (() => {
+                                    {compareEnabled && student.avgAnxiety != null && student.prevAvgAnxiety != null && (() => {
                                       const d = student.avgAnxiety! - student.prevAvgAnxiety!;
                                       if (Math.abs(d) < 0.15) return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
                                       return d < 0 ? <ArrowDown className="h-2.5 w-2.5 text-green-500" /> : <ArrowUp className="h-2.5 w-2.5 text-red-500" />;
@@ -923,7 +983,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                   <span className="flex items-center gap-1 text-muted-foreground"><Zap className="h-3 w-3" />Energia</span>
                                   <span className="font-medium flex items-center gap-0.5">
                                     {student.avgEnergy?.toFixed(1) ?? '—'}
-                                    {student.avgEnergy != null && student.prevAvgEnergy != null && (() => {
+                                    {compareEnabled && student.avgEnergy != null && student.prevAvgEnergy != null && (() => {
                                       const d = student.avgEnergy! - student.prevAvgEnergy!;
                                       if (Math.abs(d) < 0.15) return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
                                       return d > 0 ? <ArrowUp className="h-2.5 w-2.5 text-green-500" /> : <ArrowDown className="h-2.5 w-2.5 text-red-500" />;
@@ -940,7 +1000,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                   <span className="flex items-center gap-1 text-muted-foreground"><Moon className="h-3 w-3" />Sono</span>
                                   <span className="font-medium flex items-center gap-0.5">
                                     {student.avgSleep?.toFixed(1) ?? '—'}
-                                    {student.avgSleep != null && student.prevAvgSleep != null && (() => {
+                                    {compareEnabled && student.avgSleep != null && student.prevAvgSleep != null && (() => {
                                       const d = student.avgSleep! - student.prevAvgSleep!;
                                       if (Math.abs(d) < 0.15) return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
                                       return d > 0 ? <ArrowUp className="h-2.5 w-2.5 text-green-500" /> : <ArrowDown className="h-2.5 w-2.5 text-red-500" />;
