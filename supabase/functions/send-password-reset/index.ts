@@ -132,7 +132,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Enviar email com template personalizado e dinâmico por tenant
     const emailResponse = await resend.emails.send({
-      from: `${tenantName} <${adminEmail}>`,
+      from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [email],
       bcc: bccEmails.length > 0 ? bccEmails : undefined,
       subject: `Recuperação de senha - ${tenantName}`,
