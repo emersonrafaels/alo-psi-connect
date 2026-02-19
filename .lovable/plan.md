@@ -1,40 +1,26 @@
 
 
-## Corrigir email de recuperacao de senha
+## Corrigir link de recuperacao de senha (APP_BASE_URL)
 
-### Alteracoes
+### Problema
 
-**Arquivo:** `supabase/functions/send-password-reset/index.ts`
+O codigo le `Deno.env.get("APP_BASE_URL")` que esta configurado como secret com valor `https://alopsi.com.br`. Esse valor tem prioridade sobre o fallback `https://redebemestar.com.br` que foi adicionado.
 
-**1. Subtitulo do header (linha 81)**
+### Solucao
 
-Trocar o fallback de "Conectando voce ao cuidado mental" para "Conectando voce ao cuidado":
+**Arquivo:** `supabase/functions/send-password-reset/index.ts` (linha 124)
 
-```text
-Antes:  'Conectando você ao cuidado mental'
-Depois: 'Conectando você ao cuidado'
-```
-
-**2. Dominio do link de recuperacao (linhas 124-128)**
-
-Atualmente o link usa `alopsi.com.br` como base. O correto e usar `redebemestar.com.br` para ambos os tenants, ja que esse e o dominio principal da plataforma:
+Remover a dependencia da variavel de ambiente e usar diretamente o dominio correto:
 
 ```text
-Antes:
-  baseUrl = "https://alopsi.com.br"
-  alopsi  -> /auth?reset=true&token=...
-  medcos  -> /medcos/auth?reset=true&token=...
-
-Depois:
-  baseUrl = "https://redebemestar.com.br"
-  alopsi  -> /auth?reset=true&token=...
-  medcos  -> /medcos/auth?reset=true&token=...
+Antes:  const baseUrl = Deno.env.get("APP_BASE_URL") || "https://redebemestar.com.br";
+Depois: const baseUrl = "https://redebemestar.com.br";
 ```
 
-Alterar o fallback de `APP_BASE_URL` de `https://alopsi.com.br` para `https://redebemestar.com.br`.
+Isso garante que o link sempre use `redebemestar.com.br` independentemente de qualquer secret configurado.
 
 ### Resultado
 
-- Header do email: "Conectando voce ao cuidado"
-- Link para alopsi: `https://redebemestar.com.br/auth?reset=true&token=xxx`
-- Link para medcos: `https://redebemestar.com.br/medcos/auth?reset=true&token=xxx`
+- Link alopsi: `https://redebemestar.com.br/auth?reset=true&token=xxx`
+- Link medcos: `https://redebemestar.com.br/medcos/auth?reset=true&token=xxx`
+
