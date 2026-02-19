@@ -37,7 +37,7 @@ function generateConfirmationEmailHTML(
               ? `<img src="${tenantLogo}" alt="${tenantName}" style="max-height: 60px; margin-bottom: 15px;" />` 
               : `<h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">${tenantName}</h1>`
             }
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Conectando você ao cuidado mental</p>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Conectando você ao cuidado</p>
           </div>
           <div style="padding: 40px 20px;">
             <h2 style="color: ${primaryColor}; margin: 0 0 20px 0; font-size: 24px;">${welcomeTitle}</h2>
@@ -397,7 +397,7 @@ serve(async (req) => {
           // Send email using Resend
           const resendApiKey = Deno.env.get('RESEND_API_KEY');
           if (resendApiKey) {
-            const baseUrl = Deno.env.get('APP_BASE_URL') || 'https://alopsi.com.br';
+            const baseUrl = 'https://redebemestar.com.br';
             const tenantPath = tenantSlug === 'medcos' ? '/medcos' : '';
             const confirmationUrl = `${baseUrl}${tenantPath}/auth?confirm=true&token=${confirmationToken}`;
 

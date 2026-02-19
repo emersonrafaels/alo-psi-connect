@@ -58,7 +58,7 @@ function generateConfirmationEmailHTML(
               ? `<img src="${tenantLogo}" alt="${tenantName}" style="max-height: 60px; margin-bottom: 15px;" />` 
               : `<h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">${tenantName}</h1>`
             }
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Conectando você ao cuidado mental</p>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Conectando você ao cuidado</p>
           </div>
           <div style="padding: 40px 20px;">
             <h2 style="color: ${primaryColor}; margin: 0 0 20px 0; font-size: 24px;">${welcomeTitle}</h2>
@@ -149,12 +149,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Detectar tenant do usuário e buscar admin_email
+    // Detectar tenant e tipo do usuário
     const { data: profile } = await supabase
       .from('profiles')
-      .select('tenant_id, nome')
+      .select('tenant_id, nome, tipo_usuario')
       .eq('user_id', user.id)
       .single();
+
+    const isProfessional = profile?.tipo_usuario === 'profissional';
 
     let tenantSlug = 'alopsi';
     let tenantData: any = null;
@@ -222,7 +224,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Gerar URL de confirmação com prefixo do tenant
-    const baseUrl = Deno.env.get("APP_BASE_URL") || "https://alopsi.com.br";
+    const baseUrl = "https://redebemestar.com.br";
     const tenantPath = tenantSlug === 'medcos' ? '/medcos' : '';
     const confirmationUrl = `${baseUrl}${tenantPath}/auth?confirm=true&token=${confirmationToken}`;
     
@@ -252,7 +254,7 @@ const handler = async (req: Request): Promise<Response> => {
         tenantData.logo_url,
         profile?.nome || 'Usuário',
         confirmationUrl,
-        false
+        isProfessional
       )
     });
 
