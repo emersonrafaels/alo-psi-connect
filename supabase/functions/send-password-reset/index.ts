@@ -121,7 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Criar link de recuperação com prefixo do tenant
-    const baseUrl = Deno.env.get("APP_BASE_URL") || "https://redebemestar.com.br";
+    const baseUrl = "https://redebemestar.com.br";
     const resetPath = tenantSlug === 'alopsi' 
       ? '/auth'
       : `/${tenantSlug}/auth`;
