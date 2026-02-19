@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
     const tenantColor = tenantData?.primary_color || '#1e40af';
     const tenantLogo = tenantData?.logo_url;
-    const tenantSubtitle = tenantData?.hero_subtitle || 'Conectando você ao cuidado mental';
+    const tenantSubtitle = tenantData?.hero_subtitle || 'Conectando você ao cuidado';
     const adminEmail = tenantData?.admin_email || 'noreply@redebemestar.com.br';
 
     // Verificar se o usuário existe
@@ -121,7 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Criar link de recuperação com prefixo do tenant
-    const baseUrl = Deno.env.get("APP_BASE_URL") || "https://alopsi.com.br";
+    const baseUrl = Deno.env.get("APP_BASE_URL") || "https://redebemestar.com.br";
     const resetPath = tenantSlug === 'alopsi' 
       ? '/auth'
       : `/${tenantSlug}/auth`;
