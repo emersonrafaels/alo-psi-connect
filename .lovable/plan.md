@@ -1,25 +1,40 @@
 
-## Corrigir remetente do email de recuperacao de senha
 
-### Problema
+## Corrigir email de recuperacao de senha
 
-A funcao `send-password-reset` usa o `admin_email` do tenant (que e um endereco Gmail) como remetente do email. O Resend rejeita emails enviados de dominios nao verificados, causando o erro 500.
+### Alteracoes
 
-### Solucao
+**Arquivo:** `supabase/functions/send-password-reset/index.ts`
 
-**Arquivo:** `supabase/functions/send-password-reset/index.ts` (linha 135)
+**1. Subtitulo do header (linha 81)**
 
-Alterar o campo `from` para sempre usar o dominio verificado `noreply@redebemestar.com.br`, mantendo o nome do tenant como display name:
+Trocar o fallback de "Conectando voce ao cuidado mental" para "Conectando voce ao cuidado":
 
 ```text
-Antes:  from: `${tenantName} <${adminEmail}>`
-Depois: from: `${tenantName} <noreply@redebemestar.com.br>`
+Antes:  'Conectando você ao cuidado mental'
+Depois: 'Conectando você ao cuidado'
 ```
 
-A variavel `adminEmail` continuara sendo usada apenas para referencia interna (caso necessario no futuro), mas nao mais como remetente do Resend.
+**2. Dominio do link de recuperacao (linhas 124-128)**
 
-### Detalhes tecnicos
+Atualmente o link usa `alopsi.com.br` como base. O correto e usar `redebemestar.com.br` para ambos os tenants, ja que esse e o dominio principal da plataforma:
 
-- A API key do Resend ("alopsi-lovable") tem permissao "All domains" e 221 usos, confirmando que `redebemestar.com.br` e um dominio verificado.
-- Apenas este edge function (`send-password-reset`) tem o problema. As demais funcoes de email ja usam enderecos verificados ou tem logica diferente.
-- Nenhuma outra alteracao e necessaria.
+```text
+Antes:
+  baseUrl = "https://alopsi.com.br"
+  alopsi  -> /auth?reset=true&token=...
+  medcos  -> /medcos/auth?reset=true&token=...
+
+Depois:
+  baseUrl = "https://redebemestar.com.br"
+  alopsi  -> /auth?reset=true&token=...
+  medcos  -> /medcos/auth?reset=true&token=...
+```
+
+Alterar o fallback de `APP_BASE_URL` de `https://alopsi.com.br` para `https://redebemestar.com.br`.
+
+### Resultado
+
+- Header do email: "Conectando voce ao cuidado"
+- Link para alopsi: `https://redebemestar.com.br/auth?reset=true&token=xxx`
+- Link para medcos: `https://redebemestar.com.br/medcos/auth?reset=true&token=xxx`
