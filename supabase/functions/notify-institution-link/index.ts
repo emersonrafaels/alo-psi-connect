@@ -245,7 +245,7 @@ const handler = async (req: Request): Promise<Response> => {
     const bccEmails = await getBccEmails(supabase, tenantId || null);
 
     // URL base
-    const baseUrl = Deno.env.get("APP_BASE_URL") || "https://alopsi.com.br";
+    const baseUrl = "https://redebemestar.com.br";
     
     // URL de login baseada no tenant
     const loginUrl = tenantSlug === 'alopsi' 
