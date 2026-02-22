@@ -81,10 +81,10 @@ const Blog = () => {
       <Header />
       
       {/* Header */}
-      <section className="bg-[#f9e1f9] py-[20px]">
+      <section className="bg-gradient-to-r from-primary/10 via-teal/10 to-accent/10 dark:from-primary/20 dark:via-teal/20 dark:to-accent/20 py-[20px]">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold text-accent-foreground mb-4">News & Blog</h1>
-          <p className="text-accent-foreground/80">Artigos, dicas e reflexões sobre saúde emocional</p>
+          <h1 className="text-4xl font-bold text-foreground mb-4">News & Blog</h1>
+          <p className="text-muted-foreground">Artigos, dicas e reflexões sobre saúde emocional</p>
         </div>
       </section>
 
