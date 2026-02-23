@@ -33,8 +33,9 @@ export function InstitutionSelector({ value, onChange, className }: InstitutionS
   // Convert to combobox options with badges (use UUID as value)
   const options: ComboboxOption[] = useMemo(() => {
     return filteredInstitutions.map(inst => ({
-      value: inst.id, // Use UUID instead of name
+      value: inst.id,
       label: inst.name,
+      keywords: [inst.name],
       badge: (
         <div className="flex items-center gap-1">
           {inst.has_partnership && (
