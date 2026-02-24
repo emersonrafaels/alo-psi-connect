@@ -79,15 +79,23 @@ const Header = () => {
     }
   }
 
-  const navigation = [
-    { name: "Home", href: buildTenantPath(tenantSlug, '/') },
-    { name: "Sobre", href: buildTenantPath(tenantSlug, '/sobre') },
-    { name: "Profissionais", href: buildTenantPath(tenantSlug, '/profissionais') },
-    { name: "Encontros", href: buildTenantPath(tenantSlug, '/encontros') },
-    { name: "Diário Emocional", href: buildTenantPath(tenantSlug, loading ? '/diario-emocional/experiencia' : (user ? '/diario-emocional' : '/diario-emocional/experiencia')) },
-    { name: "Blog", href: buildTenantPath(tenantSlug, '/blog') },
-    { name: "Contato", href: buildTenantPath(tenantSlug, '/contato') },
+  const modulesEnabled = tenant?.modules_enabled;
+
+  const allNavigation = [
+    { name: "Home", href: buildTenantPath(tenantSlug, '/'), module: null },
+    { name: "Sobre", href: buildTenantPath(tenantSlug, '/sobre'), module: 'about' as const },
+    { name: "Profissionais", href: buildTenantPath(tenantSlug, '/profissionais'), module: 'professionals' as const },
+    { name: "Encontros", href: buildTenantPath(tenantSlug, '/encontros'), module: 'group_sessions' as const },
+    { name: "Diário Emocional", href: buildTenantPath(tenantSlug, loading ? '/diario-emocional/experiencia' : (user ? '/diario-emocional' : '/diario-emocional/experiencia')), module: 'mood_diary' as const },
+    { name: "Blog", href: buildTenantPath(tenantSlug, '/blog'), module: 'blog' as const },
+    { name: "Contato", href: buildTenantPath(tenantSlug, '/contato'), module: 'contact' as const },
   ]
+
+  const navigation = allNavigation.filter(item => {
+    if (!item.module) return true;
+    if (!modulesEnabled) return true;
+    return modulesEnabled[item.module] !== false;
+  })
 
   const isActive = (path: string) => location.pathname === path
 

@@ -285,7 +285,10 @@ export const ModulesConfigTab = ({ formData, setFormData }: TenantConfigTabsProp
     { key: 'mood_diary', label: 'Diário de Humor' },
     { key: 'ai_assistant', label: 'Assistente IA' },
     { key: 'professionals', label: 'Profissionais' },
-    { key: 'appointments', label: 'Agendamentos' }
+    { key: 'appointments', label: 'Agendamentos' },
+    { key: 'group_sessions', label: 'Encontros em Grupo' },
+    { key: 'contact', label: 'Contato' },
+    { key: 'about', label: 'Sobre' },
   ];
 
   const handleModuleToggle = (moduleKey: string, checked: boolean) => {
@@ -303,7 +306,10 @@ export const ModulesConfigTab = ({ formData, setFormData }: TenantConfigTabsProp
     mood_diary: "Habilita/desabilita o diário de humor para pacientes. Remove menu e funcionalidades relacionadas quando desabilitado",
     ai_assistant: "Habilita/desabilita o chat com assistente de IA. Remove botão de acesso quando desabilitado",
     professionals: "Habilita/desabilita listagem e perfis de profissionais. Remove menu 'Profissionais' quando desabilitado",
-    appointments: "Habilita/desabilita sistema de agendamento de consultas. Remove funcionalidades de booking quando desabilitado"
+    appointments: "Habilita/desabilita sistema de agendamento de consultas. Remove funcionalidades de booking quando desabilitado",
+    group_sessions: "Habilita/desabilita páginas de encontros e sessões em grupo. Remove menu 'Encontros' quando desabilitado",
+    contact: "Habilita/desabilita a página de contato. Remove link 'Contato' do menu quando desabilitado",
+    about: "Habilita/desabilita a página 'Sobre'. Remove link do menu quando desabilitado",
   };
 
   return (

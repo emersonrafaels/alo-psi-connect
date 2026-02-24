@@ -1,6 +1,6 @@
 import { useTenant } from './useTenant';
 
-export type ModuleName = 'blog' | 'mood_diary' | 'ai_assistant' | 'professionals' | 'appointments';
+export type ModuleName = 'blog' | 'mood_diary' | 'ai_assistant' | 'professionals' | 'appointments' | 'group_sessions' | 'contact' | 'about';
 
 /**
  * Hook para verificar se um módulo específico está habilitado para o tenant atual
