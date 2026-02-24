@@ -1,36 +1,45 @@
 
 
-## Corrigir emojis invertidos no slider de Estresse
+## Corrigir valores nulos exibidos como "/" no Diario Emocional
 
 ### Problema
 
-Na tabela `default_emotion_types`, o campo `default_emoji_set` do tipo "stress" esta com os emojis invertidos:
+Na pagina do Diario Emocional (`MoodDiary.tsx`), os campos `mood_score`, `energy_level` e `anxiety_level` sao exibidos diretamente como `{entry.mood_score}/10`, sem tratamento de null. Quando o usuario nao configurou a emocao "mood" (humor), o campo fica `null` no banco e a interface mostra apenas "/10" sem numero.
 
-| Valor | Atual (errado) | Correto |
-|-------|----------------|---------|
-| 1 | 😓 (estressado) | 🧘 (relaxado) |
-| 2 | 😥 (ansioso) | 😌 (calmo) |
-| 3 | 😐 (neutro) | 😐 (neutro) |
-| 4 | 😌 (calmo) | 😥 (ansioso) |
-| 5 | 🧘 (relaxado) | 😓 (estressado) |
+Isso acontece em dois locais:
+1. Card "Entrada de hoje" (linha 236-238)
+2. Lista "Entradas Recentes" (linhas 373-375)
 
-O esquema de cores ja esta correto (1=verde/baixo, 5=vermelho/alto), mas os emojis comunicam o oposto.
+### Causa raiz
 
-### Correcao
+O campo `mood_score` e preenchido a partir de `emotion_values['mood']` ao salvar (linha 87 do MoodEntry.tsx). Se o usuario nao tem a emocao "mood" habilitada, o valor fica `null`. O mesmo ocorre com `energy_level` e `anxiety_level`.
 
-Executar um UPDATE no banco de dados para inverter o emoji_set do tipo "stress":
+Ja existe um utilitario `formatEmotionValue` em `emotionFormatters.ts` que faz o fallback correto (busca em `emotion_values` primeiro, depois campo legado, e retorna "N/A" se nulo). Porem `MoodDiary.tsx` nao o utiliza.
 
-```sql
-UPDATE default_emotion_types
-SET default_emoji_set = '{"1":"🧘","2":"😌","3":"😐","4":"😥","5":"😓"}'
-WHERE emotion_type = 'stress';
-```
+### Solucao
 
-Tambem verificar e corrigir os registros de configuracao dos usuarios que ja possuem o stress configurado (tabela de configs de emocoes do usuario), para que herdem a correcao.
+Atualizar `MoodDiary.tsx` para usar `formatEmotionValue` nos dois locais de exibicao:
 
-### Escopo
+**Arquivo: `src/pages/MoodDiary.tsx`**
 
-- Correcao direta no banco de dados (1 UPDATE)
-- Verificar configs de usuarios existentes para aplicar a mesma correcao
-- Nenhum arquivo de codigo precisa ser alterado (o componente `DynamicEmotionSlider` le os emojis do banco)
+1. Adicionar import de `formatEmotionValue` de `@/utils/emotionFormatters`
+
+2. No card "Entrada de hoje" (linhas 236-238), trocar:
+   - `{todayEntry.mood_score}/10` por `{formatEmotionValue(todayEntry, 'mood', 'mood_score', 10)}`
+   - `{todayEntry.energy_level}/5` por `{formatEmotionValue(todayEntry, 'energy', 'energy_level')}`
+   - `{todayEntry.anxiety_level}/5` por `{formatEmotionValue(todayEntry, 'anxiety', 'anxiety_level')}`
+
+3. Na lista "Entradas Recentes" (linhas 373-375), trocar:
+   - `{entry.mood_score}/10` por `{formatEmotionValue(entry, 'mood', 'mood_score', 10)}`
+   - `{entry.energy_level}/5` por `{formatEmotionValue(entry, 'energy', 'energy_level')}`
+   - `{entry.anxiety_level}/5` por `{formatEmotionValue(entry, 'anxiety', 'anxiety_level')}`
+
+4. Corrigir o indicador de cor do mood (linha 380) para tratar null:
+   - Usar `getEmotionValue(entry, 'mood', 'mood_score')` com fallback para cor neutra
+
+### Resultado esperado
+
+- Entradas com valores preenchidos: exibem normalmente (ex: "4/10", "3/5")
+- Entradas com valores nulos: exibem "N/A" em vez de "/10" ou "/5"
+- Busca primeiro em `emotion_values`, depois no campo legado, garantindo compatibilidade
 
