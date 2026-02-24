@@ -1,41 +1,108 @@
 
 
-## Corrigir busca de instituicoes no cadastro de paciente
+## Configuracao de visibilidade de paginas por tenant
 
-### Problema
+### Situacao atual
 
-O componente `InstitutionSelector` passa o UUID da instituicao como `value` para o `Combobox`. A biblioteca `cmdk` filtra os itens comparando o texto digitado com o `value` de cada `CommandItem`. Como o `value` e um UUID (ex: `a1b2c3d4-...`), digitar o nome da instituicao nunca encontra correspondencia.
+O sistema ja possui a infraestrutura de `modules_enabled` no tenant, com 5 modulos (blog, mood_diary, ai_assistant, professionals, appointments). Porem:
 
-### Causa raiz
+- O hook `useModuleEnabled` so e usado no **footer** - o header e as rotas nao filtram nada
+- Paginas como "Encontros", "Sobre" e "Contato" nao estao na lista de modulos
+- Um usuario pode acessar diretamente a URL de um modulo desabilitado
 
-Em `src/components/register/InstitutionSelector.tsx`, linha 37:
+### Plano de correcao
 
-```typescript
-value: inst.id, // UUID - cmdk filtra por este campo
-label: inst.name,
-// keywords NAO esta sendo passado
+**1. Expandir a lista de modulos** (`src/hooks/useModuleEnabled.tsx`)
+
+Adicionar novos modulos ao type `ModuleName`:
+
+```text
+'blog' | 'mood_diary' | 'ai_assistant' | 'professionals' | 'appointments' | 'group_sessions' | 'contact' | 'about'
 ```
 
-O componente `Combobox` ja suporta `keywords` (linha 24 e 94 do combobox.tsx), mas o `InstitutionSelector` nao usa essa propriedade.
+**2. Atualizar o painel admin** (`src/components/admin/TenantConfigTabs.tsx`)
 
-### Correcao
+Adicionar os novos modulos ao array `modules` e `moduleTooltips` no `ModulesConfigTab`:
 
-**Arquivo: `src/components/register/InstitutionSelector.tsx`**
+| Modulo | Label | Tooltip |
+|--------|-------|---------|
+| group_sessions | Encontros em Grupo | Habilita/desabilita paginas de encontros e sessoes em grupo |
+| contact | Contato | Habilita/desabilita a pagina de contato no menu |
+| about | Sobre | Habilita/desabilita a pagina "Sobre" no menu |
 
-Adicionar `keywords: [inst.name]` ao mapeamento de opcoes para que o `cmdk` faca a busca pelo nome da instituicao:
+**3. Filtrar navegacao no Header** (`src/components/ui/header.tsx`)
 
-```typescript
-value: inst.id,
-label: inst.name,
-keywords: [inst.name],
-badge: ( ... )
+Usar `useTenant` para acessar `modules_enabled` e filtrar o array `navigation` antes de renderizar. Mapear cada item do menu para seu modulo correspondente:
+
+```text
+"Profissionais" -> professionals
+"Encontros" -> group_sessions
+"Diario Emocional" -> mood_diary
+"Blog" -> blog
+"Contato" -> contact
+"Sobre" -> about
+"Home" -> sempre visivel
 ```
 
-Isso faz com que o `cmdk` use o nome da instituicao para filtrar, mantendo o UUID como valor de selecao.
+**4. Criar componente ModuleGuard** (`src/components/ModuleGuard.tsx`)
 
-### Escopo
+Componente wrapper que verifica se o modulo esta habilitado. Se nao, redireciona para a home do tenant. Sera usado nas rotas do App.tsx:
 
-- 1 arquivo alterado: `src/components/register/InstitutionSelector.tsx`
-- Alteracao de 1 linha (adicionar `keywords`)
-- Sem impacto em outros componentes
+```typescript
+const ModuleGuard = ({ module, children }) => {
+  const enabled = useModuleEnabled(module);
+  const { tenant } = useTenant();
+  if (!enabled) return <Navigate to={buildTenantPath(tenant?.slug, '/')} />;
+  return children;
+};
+```
+
+**5. Proteger rotas no App.tsx** (`src/App.tsx`)
+
+Envolver rotas de modulos com `ModuleGuard`:
+
+- `/blog`, `/blog/:slug` -> `ModuleGuard module="blog"`
+- `/profissionais`, `/profissional/:id` -> `ModuleGuard module="professionals"`
+- `/encontros`, `/encontros/:sessionId`, `/meus-encontros` -> `ModuleGuard module="group_sessions"`
+- `/diario-emocional/*` -> `ModuleGuard module="mood_diary"`
+- `/contato` -> `ModuleGuard module="contact"`
+- `/sobre` -> `ModuleGuard module="about"`
+- Repetir para rotas com prefixo `/medcos/`
+
+**6. Atualizar tipo Tenant** (`src/types/tenant.ts`)
+
+Adicionar os novos campos ao tipo `modules_enabled`:
+
+```typescript
+modules_enabled?: {
+  blog?: boolean;
+  mood_diary?: boolean;
+  ai_assistant?: boolean;
+  professionals?: boolean;
+  appointments?: boolean;
+  group_sessions?: boolean;
+  contact?: boolean;
+  about?: boolean;
+  [key: string]: boolean | undefined;
+};
+```
+
+### Arquivos afetados
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| `src/types/tenant.ts` | Adicionar novos modulos ao tipo |
+| `src/hooks/useModuleEnabled.tsx` | Expandir ModuleName type |
+| `src/components/admin/TenantConfigTabs.tsx` | Adicionar modulos ao painel |
+| `src/components/ui/header.tsx` | Filtrar navegacao por modulo |
+| `src/components/ModuleGuard.tsx` | **Novo arquivo** - guard de rota |
+| `src/App.tsx` | Envolver rotas com ModuleGuard |
+
+### Resultado esperado
+
+- Admin pode habilitar/desabilitar 8 modulos por tenant
+- Header esconde automaticamente links de modulos desabilitados
+- Footer ja funciona (usa useModuleEnabled)
+- Acesso direto via URL redireciona para home se modulo desabilitado
+- Modulos habilitados por padrao (fallback seguro)
 
