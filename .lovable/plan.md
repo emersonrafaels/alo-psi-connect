@@ -1,108 +1,75 @@
 
+Objetivo: corrigir o comportamento do toggle de módulos no Admin (tenant), para que ao desabilitar e salvar, o valor permaneça desabilitado após reabrir/atualizar.
 
-## Configuracao de visibilidade de paginas por tenant
+Diagnóstico encontrado no código atual:
 
-### Situacao atual
+1) O estado do formulário permite editar `modules_enabled` no tab “Módulos”:
+- Arquivo: `src/components/admin/TenantConfigTabs.tsx`
+- `ModulesConfigTab` escreve em `formData.modules_enabled`.
 
-O sistema ja possui a infraestrutura de `modules_enabled` no tenant, com 5 modulos (blog, mood_diary, ai_assistant, professionals, appointments). Porem:
+2) Porém esse campo não está sendo carregado nem persistido no modal:
+- Arquivo: `src/components/admin/TenantEditorModal.tsx`
+- `formData` inicial não declara `modules_enabled`.
+- No `useEffect` que preenche o formulário ao editar tenant, `modules_enabled` não é copiado de `tenant`.
+- No `tenantData` enviado no `handleSubmit`, `modules_enabled` não é incluído no payload.
+- Resultado: o usuário marca/desmarca localmente, mas o banco nunca recebe essa mudança; ao reabrir, volta para o valor antigo (que hoje está `true` para os módulos existentes).
 
-- O hook `useModuleEnabled` so e usado no **footer** - o header e as rotas nao filtram nada
-- Paginas como "Encontros", "Sobre" e "Contato" nao estao na lista de modulos
-- Um usuario pode acessar diretamente a URL de um modulo desabilitado
+3) Evidência no banco:
+- `tenants.modules_enabled` está salvo apenas com os módulos antigos e habilitados (`blog`, `mood_diary`, `ai_assistant`, `professionals`, `appointments`) para os tenants principais.
+- Isso confirma que os novos toggles não estão sendo persistidos.
 
-### Plano de correcao
+Plano de implementação:
 
-**1. Expandir a lista de modulos** (`src/hooks/useModuleEnabled.tsx`)
+Fase 1 — Persistência correta de `modules_enabled` no TenantEditorModal
+1. Atualizar o tipo local `Tenant` em `src/components/admin/TenantEditorModal.tsx` para incluir:
+   - `modules_enabled?: { ... }` com todas as chaves atuais (`blog`, `mood_diary`, `ai_assistant`, `professionals`, `appointments`, `group_sessions`, `contact`, `about`).
+2. Incluir `modules_enabled` no estado inicial de `formData` (modo novo tenant):
+   - Definir defaults explícitos como `true` para evitar comportamento ambíguo.
+3. Incluir `modules_enabled` no preenchimento de `formData` no `useEffect` quando estiver editando tenant:
+   - Carregar do banco se existir.
+   - Aplicar fallback com default `true` por módulo quando não existir (compatibilidade com tenants antigos).
+4. Incluir `modules_enabled` no objeto `tenantData` do `handleSubmit`:
+   - Persistir exatamente o mapa atualizado de módulos.
+   - Garantir que booleans sejam enviados como boolean (sem string/null).
 
-Adicionar novos modulos ao type `ModuleName`:
+Fase 2 — Sincronização de UI após salvar (evitar percepção de “voltou”)
+5. Após sucesso do update:
+   - Manter o `onSuccess()` (já chama `refetch` em `/admin/tenants`).
+   - Garantir que o refetch seja aguardado/consumido antes de próxima edição para evitar abrir modal com estado antigo em cache local da tela.
+6. (Opcional recomendado) Ao fechar e reabrir o modal rapidamente:
+   - Reidratar sempre a partir do objeto recém-refetchado, não de estado antigo em memória.
 
-```text
-'blog' | 'mood_diary' | 'ai_assistant' | 'professionals' | 'appointments' | 'group_sessions' | 'contact' | 'about'
-```
+Fase 3 — Robustez para tenants legados
+7. Padronizar normalização dos módulos:
+   - Se `modules_enabled` vier parcial, completar com defaults.
+   - Isso evita que módulos novos apareçam com comportamento inconsistente em tenants antigos.
 
-**2. Atualizar o painel admin** (`src/components/admin/TenantConfigTabs.tsx`)
+Validações de aceite (teste manual end-to-end):
+1. Abrir `/admin/tenants`, editar tenant “medcos”, aba “Módulos”.
+2. Desabilitar “Blog” e “Contato”, clicar “Atualizar”.
+3. Fechar e reabrir o mesmo tenant:
+   - Os checkboxes devem permanecer desmarcados.
+4. Recarregar a página (`F5`) e reabrir:
+   - Deve continuar desabilitado.
+5. Verificar no banco (SELECT em `tenants.modules_enabled`):
+   - Deve refletir `blog: false`, `contact: false` (e demais chaves preservadas).
+6. Validar comportamento no frontend do tenant:
+   - Links do header dessas páginas ocultos.
+   - Acesso direto por URL redirecionado pelo `ModuleGuard`.
 
-Adicionar os novos modulos ao array `modules` e `moduleTooltips` no `ModulesConfigTab`:
+Riscos e mitigação:
+- Risco: sobrescrever config antiga ao salvar.
+  - Mitigação: sempre mesclar com defaults + estado atual do formulário.
+- Risco: tenants sem chave nova.
+  - Mitigação: fallback explícito por módulo.
+- Risco: percepção de rollback por latência/refetch.
+  - Mitigação: sincronização pós-mutation e reidratação consistente.
 
-| Modulo | Label | Tooltip |
-|--------|-------|---------|
-| group_sessions | Encontros em Grupo | Habilita/desabilita paginas de encontros e sessoes em grupo |
-| contact | Contato | Habilita/desabilita a pagina de contato no menu |
-| about | Sobre | Habilita/desabilita a pagina "Sobre" no menu |
+Arquivos a ajustar:
+- `src/components/admin/TenantEditorModal.tsx` (principal correção)
+- (Sem mudança estrutural de banco; não requer migration)
 
-**3. Filtrar navegacao no Header** (`src/components/ui/header.tsx`)
-
-Usar `useTenant` para acessar `modules_enabled` e filtrar o array `navigation` antes de renderizar. Mapear cada item do menu para seu modulo correspondente:
-
-```text
-"Profissionais" -> professionals
-"Encontros" -> group_sessions
-"Diario Emocional" -> mood_diary
-"Blog" -> blog
-"Contato" -> contact
-"Sobre" -> about
-"Home" -> sempre visivel
-```
-
-**4. Criar componente ModuleGuard** (`src/components/ModuleGuard.tsx`)
-
-Componente wrapper que verifica se o modulo esta habilitado. Se nao, redireciona para a home do tenant. Sera usado nas rotas do App.tsx:
-
-```typescript
-const ModuleGuard = ({ module, children }) => {
-  const enabled = useModuleEnabled(module);
-  const { tenant } = useTenant();
-  if (!enabled) return <Navigate to={buildTenantPath(tenant?.slug, '/')} />;
-  return children;
-};
-```
-
-**5. Proteger rotas no App.tsx** (`src/App.tsx`)
-
-Envolver rotas de modulos com `ModuleGuard`:
-
-- `/blog`, `/blog/:slug` -> `ModuleGuard module="blog"`
-- `/profissionais`, `/profissional/:id` -> `ModuleGuard module="professionals"`
-- `/encontros`, `/encontros/:sessionId`, `/meus-encontros` -> `ModuleGuard module="group_sessions"`
-- `/diario-emocional/*` -> `ModuleGuard module="mood_diary"`
-- `/contato` -> `ModuleGuard module="contact"`
-- `/sobre` -> `ModuleGuard module="about"`
-- Repetir para rotas com prefixo `/medcos/`
-
-**6. Atualizar tipo Tenant** (`src/types/tenant.ts`)
-
-Adicionar os novos campos ao tipo `modules_enabled`:
-
-```typescript
-modules_enabled?: {
-  blog?: boolean;
-  mood_diary?: boolean;
-  ai_assistant?: boolean;
-  professionals?: boolean;
-  appointments?: boolean;
-  group_sessions?: boolean;
-  contact?: boolean;
-  about?: boolean;
-  [key: string]: boolean | undefined;
-};
-```
-
-### Arquivos afetados
-
-| Arquivo | Alteracao |
-|---------|-----------|
-| `src/types/tenant.ts` | Adicionar novos modulos ao tipo |
-| `src/hooks/useModuleEnabled.tsx` | Expandir ModuleName type |
-| `src/components/admin/TenantConfigTabs.tsx` | Adicionar modulos ao painel |
-| `src/components/ui/header.tsx` | Filtrar navegacao por modulo |
-| `src/components/ModuleGuard.tsx` | **Novo arquivo** - guard de rota |
-| `src/App.tsx` | Envolver rotas com ModuleGuard |
-
-### Resultado esperado
-
-- Admin pode habilitar/desabilitar 8 modulos por tenant
-- Header esconde automaticamente links de modulos desabilitados
-- Footer ja funciona (usa useModuleEnabled)
-- Acesso direto via URL redireciona para home se modulo desabilitado
-- Modulos habilitados por padrao (fallback seguro)
-
+Resultado esperado:
+- O toggle de módulos passa a ser realmente persistido por tenant.
+- Desabilitar não “volta para habilitado”.
+- Consistência entre Admin, banco e navegação pública.
