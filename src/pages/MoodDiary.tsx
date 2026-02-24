@@ -17,7 +17,7 @@ import { useShareConfig } from '@/hooks/useShareConfig';
 import { generateProfessionalPDF, downloadPDF } from '@/utils/pdfGenerator';
 import { useToast } from '@/hooks/use-toast';
 import { getTodayLocalDateString, parseISODateLocal } from '@/lib/utils';
-import { calculateAverage, formatEmotionValue, getEmotionValue } from '@/utils/emotionFormatters';
+import { calculateAverage, getEmotionValue, getAllEmotions } from '@/utils/emotionFormatters';
 
 const MoodDiary = () => {
   const navigate = useNavigate();
@@ -153,7 +153,7 @@ const MoodDiary = () => {
   const todayEntry = entries.find(entry => entry.date === today);
   
   const recentEntries = entries.slice(0, 7);
-  const avgMood = calculateAverage(recentEntries.map(entry => entry.mood_score));
+  const avgMood = calculateAverage(recentEntries.map(entry => getEmotionValue(entry, 'mood', 'mood_score')));
 
   return (
     <div className="min-h-screen bg-background">
@@ -232,10 +232,12 @@ const MoodDiary = () => {
               {todayEntry ? (
                 <div className="p-4 bg-primary/5 rounded-lg space-y-2">
                   <p className="text-sm text-muted-foreground">Entrada de hoje:</p>
-                  <div className="flex gap-4">
-                    <span className="text-sm"><strong>Humor:</strong> {formatEmotionValue(todayEntry, 'mood', 'mood_score', 10)}</span>
-                    <span className="text-sm"><strong>Energia:</strong> {formatEmotionValue(todayEntry, 'energy', 'energy_level')}</span>
-                    <span className="text-sm"><strong>Ansiedade:</strong> {formatEmotionValue(todayEntry, 'anxiety', 'anxiety_level')}</span>
+                  <div className="flex gap-4 flex-wrap">
+                    {getAllEmotions(todayEntry, userConfigs).map(emotion => (
+                      <span key={emotion.key} className="text-sm">
+                        <strong>{emotion.name}:</strong> {emotion.value.toFixed(1)}/5
+                      </span>
+                    ))}
                   </div>
                   {todayEntry.journal_text && (
                     <p className="text-sm text-muted-foreground mt-2">
@@ -369,16 +371,19 @@ const MoodDiary = () => {
                             day: 'numeric'
                           })}
                         </p>
-                        <div className="flex gap-4 text-xs text-muted-foreground">
-                          <span>Humor: {formatEmotionValue(entry, 'mood', 'mood_score', 10)}</span>
-                          <span>Energia: {formatEmotionValue(entry, 'energy', 'energy_level')}</span>
-                          <span>Ansiedade: {formatEmotionValue(entry, 'anxiety', 'anxiety_level')}</span>
+                        <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
+                          {getAllEmotions(entry, userConfigs).map(emotion => (
+                            <span key={emotion.key}>{emotion.name}: {emotion.value.toFixed(1)}/5</span>
+                          ))}
                         </div>
                       </div>
                       <div className="text-right">
                         {(() => {
-                          const moodVal = getEmotionValue(entry, 'mood', 'mood_score');
-                          const colorClass = moodVal === null ? 'bg-muted' : moodVal >= 7 ? 'bg-green-500' : moodVal >= 4 ? 'bg-yellow-500' : 'bg-red-500';
+                          const emotions = getAllEmotions(entry, userConfigs);
+                          const moodEmotion = emotions.find(e => e.key === 'mood') || emotions[0];
+                          if (!moodEmotion) return <div className="w-3 h-3 rounded-full bg-muted" />;
+                          const val = moodEmotion.value;
+                          const colorClass = val >= 4 ? 'bg-green-500' : val >= 2.5 ? 'bg-yellow-500' : 'bg-red-500';
                           return <div className={`w-3 h-3 rounded-full ${colorClass}`} />;
                         })()}
                       </div>
