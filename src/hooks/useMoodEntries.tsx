@@ -213,7 +213,7 @@ export const useMoodEntries = () => {
   }, [user]);
 
   const createOrUpdateEntry = useCallback(async (entryData: Omit<MoodEntry, 'id' | 'user_id' | 'profile_id' | 'created_at' | 'updated_at'>) => {
-    if (!user || !profile) {
+    if (!user || !profile || !tenantId) {
       toast({
         title: "Erro",
         description: "Você precisa estar logado para salvar uma entrada.",
@@ -247,65 +247,32 @@ export const useMoodEntries = () => {
       
       console.log('🧹 Cleaned entry data:', normalizedEntryData);
       
-      // Check if entry already exists for this date
-      const existingEntry = await getEntryByDate(normalizedDate);
-      
-      if (existingEntry) {
-        // Update existing entry
-        const { data, error } = await supabase
-          .from('mood_entries')
-          .update(normalizedEntryData)
-          .eq('id', existingEntry.id)
-          .select()
-          .single();
-
-        if (error) {
-          console.error('❌ Supabase update error:', {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code
-          });
-          throw new Error(`Erro ao atualizar entrada: ${error.message}`);
-        }
-
-        console.log('✅ Entry updated successfully:', existingEntry.id);
-
-        fetchEntries();
-        return data;
-      } else {
-        // Create new entry
-        const { data, error } = await supabase
-          .from('mood_entries')
-          .insert({
+      const { data, error } = await supabase
+        .from('mood_entries')
+        .upsert(
+          {
             ...normalizedEntryData,
             user_id: user.id,
             profile_id: profile.id,
             tenant_id: tenantId,
-          })
-          .select()
-          .single();
+          },
+          { onConflict: 'user_id,date' }
+        )
+        .select()
+        .single();
 
-        if (error) {
-          console.error('❌ Supabase insert error:', {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code
-          });
-          throw new Error(`Erro ao criar entrada: ${error.message}`);
-        }
-
-        console.log('✅ Entry created successfully:', data.id);
-
-        toast({
-          title: "Sucesso",
-          description: "Entrada do diário criada com sucesso!",
-        });
-
-        fetchEntries();
-        return data;
+      if (error) {
+        console.error('Supabase upsert error:', error);
+        throw new Error(`Erro ao salvar entrada: ${error.message}`);
       }
+
+      console.log('Entry saved successfully:', data.id);
+      toast({
+        title: "Sucesso",
+        description: "Entrada do diário salva com sucesso!",
+      });
+      fetchEntries();
+      return data;
     } catch (error) {
       console.error('💥 Error in createOrUpdateEntry:', error);
       toast({
