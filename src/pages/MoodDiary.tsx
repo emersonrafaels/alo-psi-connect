@@ -17,7 +17,7 @@ import { useShareConfig } from '@/hooks/useShareConfig';
 import { generateProfessionalPDF, downloadPDF } from '@/utils/pdfGenerator';
 import { useToast } from '@/hooks/use-toast';
 import { getTodayLocalDateString, parseISODateLocal } from '@/lib/utils';
-import { calculateAverage } from '@/utils/emotionFormatters';
+import { calculateAverage, formatEmotionValue, getEmotionValue } from '@/utils/emotionFormatters';
 
 const MoodDiary = () => {
   const navigate = useNavigate();
@@ -233,9 +233,9 @@ const MoodDiary = () => {
                 <div className="p-4 bg-primary/5 rounded-lg space-y-2">
                   <p className="text-sm text-muted-foreground">Entrada de hoje:</p>
                   <div className="flex gap-4">
-                    <span className="text-sm"><strong>Humor:</strong> {todayEntry.mood_score}/10</span>
-                    <span className="text-sm"><strong>Energia:</strong> {todayEntry.energy_level}/5</span>
-                    <span className="text-sm"><strong>Ansiedade:</strong> {todayEntry.anxiety_level}/5</span>
+                    <span className="text-sm"><strong>Humor:</strong> {formatEmotionValue(todayEntry, 'mood', 'mood_score', 10)}</span>
+                    <span className="text-sm"><strong>Energia:</strong> {formatEmotionValue(todayEntry, 'energy', 'energy_level')}</span>
+                    <span className="text-sm"><strong>Ansiedade:</strong> {formatEmotionValue(todayEntry, 'anxiety', 'anxiety_level')}</span>
                   </div>
                   {todayEntry.journal_text && (
                     <p className="text-sm text-muted-foreground mt-2">
@@ -370,16 +370,17 @@ const MoodDiary = () => {
                           })}
                         </p>
                         <div className="flex gap-4 text-xs text-muted-foreground">
-                          <span>Humor: {entry.mood_score}/10</span>
-                          <span>Energia: {entry.energy_level}/5</span>
-                          <span>Ansiedade: {entry.anxiety_level}/5</span>
+                          <span>Humor: {formatEmotionValue(entry, 'mood', 'mood_score', 10)}</span>
+                          <span>Energia: {formatEmotionValue(entry, 'energy', 'energy_level')}</span>
+                          <span>Ansiedade: {formatEmotionValue(entry, 'anxiety', 'anxiety_level')}</span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className={`w-3 h-3 rounded-full ${
-                          entry.mood_score >= 7 ? 'bg-green-500' : 
-                          entry.mood_score >= 4 ? 'bg-yellow-500' : 'bg-red-500'
-                        }`} />
+                        {(() => {
+                          const moodVal = getEmotionValue(entry, 'mood', 'mood_score');
+                          const colorClass = moodVal === null ? 'bg-muted' : moodVal >= 7 ? 'bg-green-500' : moodVal >= 4 ? 'bg-yellow-500' : 'bg-red-500';
+                          return <div className={`w-3 h-3 rounded-full ${colorClass}`} />;
+                        })()}
                       </div>
                     </div>
                   ))}
