@@ -1,68 +1,66 @@
 
 
-## Exibir todas as emocoes preenchidas dinamicamente no Diario Emocional
+## Corrigir falha ao salvar entrada no Diario Emocional
 
 ### Problema
 
-A pagina `MoodDiary.tsx` exibe apenas 3 emocoes fixas (Humor, Energia, Ansiedade), usando campos legados (`mood_score`, `energy_level`, `anxiety_level`). Porem os usuarios podem ter configurado emocoes diferentes (ex: foco, motivacao, estresse). Quando uma dessas 3 emocoes fixas nao esta preenchida, aparece "/10" ou "/5".
+O erro no console e claro: `duplicate key value violates unique constraint "mood_entries_user_id_date_key"`.
 
-### Dados do banco confirmam
+A funcao `createOrUpdateEntry` faz um check-then-act:
+1. Chama `getEntryByDate(date)` para verificar se ja existe entrada
+2. Se existir, faz UPDATE; se nao, faz INSERT
 
-Entradas recentes possuem `emotion_values` com emocoes variadas:
-- `{anxiety:1, focus:2, mood:4, motivation:4, stress:2}` (sem energy)
-- `{anxiety:2, energy:1, focus:2, mood:2, motivation:1, stress:2}` (6 emocoes)
-- `{anxiety:1}` (apenas 1 emocao)
+Porem `getEntryByDate` tem um guard `if (!user || !profile || !tenantId) return null`. Se `tenantId` ainda nao carregou quando o usuario clica "Salvar", a funcao retorna `null` silenciosamente, a logica interpreta como "nao existe entrada", tenta INSERT e falha no constraint `UNIQUE (user_id, date)`.
 
 ### Solucao
 
-Substituir as 3 linhas fixas por renderizacao dinamica usando `getAllEmotions()`, que ja existe em `emotionFormatters.ts`. Esta funcao:
-1. Le todas as emocoes de `emotion_values`
-2. Faz fallback para campos legados se `emotion_values` estiver vazio
-3. Retorna nome, valor e emoji de cada emocao preenchida
+Substituir o padrao check-then-act por **upsert** do Supabase, que e atomico e resolve a race condition:
 
-### Alteracoes no arquivo `src/pages/MoodDiary.tsx`
+**Arquivo: `src/hooks/useMoodEntries.tsx`**
 
-**1. Importar `getAllEmotions` e `getEmotionDisplayName`**
+1. Adicionar guard para `tenantId` em `createOrUpdateEntry` (linha 216):
+   ```typescript
+   if (!user || !profile || !tenantId) {
+   ```
 
-Adicionar ao import existente de `emotionFormatters`.
+2. Substituir o bloco check-then-act (linhas 250-308) por upsert:
+   ```typescript
+   const { data, error } = await supabase
+     .from('mood_entries')
+     .upsert(
+       {
+         ...normalizedEntryData,
+         user_id: user.id,
+         profile_id: profile.id,
+         tenant_id: tenantId,
+       },
+       { onConflict: 'user_id,date' }
+     )
+     .select()
+     .single();
 
-**2. Card "Entrada de hoje" (linhas 235-238)**
+   if (error) {
+     console.error('Supabase upsert error:', error);
+     throw new Error(`Erro ao salvar entrada: ${error.message}`);
+   }
 
-Trocar as 3 spans fixas por um map dinamico:
+   console.log('Entry saved successfully:', data.id);
+   toast({
+     title: "Sucesso",
+     description: "Entrada do diario salva com sucesso!",
+   });
+   fetchEntries();
+   return data;
+   ```
 
-```tsx
-<div className="flex gap-4 flex-wrap">
-  {getAllEmotions(todayEntry, userConfigs).map(emotion => (
-    <span key={emotion.key} className="text-sm">
-      <strong>{emotion.name}:</strong> {emotion.value.toFixed(1)}/5
-    </span>
-  ))}
-</div>
-```
+### Por que upsert
 
-**3. Lista "Entradas Recentes" (linhas 372-375)**
+- Atomico: nao ha janela entre o SELECT e o INSERT onde outra operacao pode interferir
+- Mais simples: elimina a necessidade de `getEntryByDate` antes de salvar
+- Resolve o bug: mesmo se `tenantId` demorar a carregar, o guard impede a execucao prematura
 
-Mesma abordagem dinamica:
+### Escopo
 
-```tsx
-<div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
-  {getAllEmotions(entry, userConfigs).map(emotion => (
-    <span key={emotion.key}>{emotion.name}: {emotion.value.toFixed(1)}/5</span>
-  ))}
-</div>
-```
-
-**4. Indicador de cor (linhas 379-383)**
-
-Usar a primeira emocao disponivel (ou mood se existir) para o indicador de cor, com fallback para `bg-muted` se nenhuma emocao existir.
-
-**5. Card de estatisticas "Humor Medio"**
-
-Ajustar para calcular a media a partir de `emotion_values.mood` quando `mood_score` for null, usando `getEmotionValue`.
-
-### Resultado esperado
-
-- Todas as emocoes preenchidas aparecem na listagem (nao apenas 3 fixas)
-- Nenhum valor "/5" ou "/10" vazio -- so mostra emocoes que tem dados
-- Nomes corretos via configuracao do usuario (ex: "Foco" em vez de "focus")
+- 1 arquivo editado: `src/hooks/useMoodEntries.tsx`
+- Nenhuma mudanca no banco de dados
 
