@@ -15,6 +15,7 @@ import WhatsAppFloat from "@/components/ui/whatsapp-float";
 import ScrollToTopButton from "@/components/ui/scroll-to-top-button";
 import { FirstLoginWelcome } from "@/components/FirstLoginWelcome";
 import { DomainRedirect } from "@/components/DomainRedirect";
+import { ModuleGuard } from "@/components/ModuleGuard";
 
 // Pages
 import Index from "./pages/Index";
@@ -126,19 +127,19 @@ const AppWithShortcuts = () => {
     <ThemeWrapper>
       <Routes>
       <Route path="/" element={<Index />} />
-      <Route path="/sobre" element={<About />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
-      <Route path="/profissionais" element={<Professionals />} />
-      <Route path="/profissional/:id" element={<Professional />} />
-      <Route path="/professional/:id" element={<Professional />} />
-      <Route path="/agendar" element={<Schedule />} />
-      <Route path="/agendamento" element={<Appointment />} />
-      <Route path="/agendamento/:token" element={<AppointmentAccess />} />
-      <Route path="/confirmacao-agendamento" element={<BookingConfirmation />} />
+      <Route path="/sobre" element={<ModuleGuard module="about"><About /></ModuleGuard>} />
+          <Route path="/blog" element={<ModuleGuard module="blog"><Blog /></ModuleGuard>} />
+          <Route path="/blog/:slug" element={<ModuleGuard module="blog"><BlogPost /></ModuleGuard>} />
+      <Route path="/profissionais" element={<ModuleGuard module="professionals"><Professionals /></ModuleGuard>} />
+      <Route path="/profissional/:id" element={<ModuleGuard module="professionals"><Professional /></ModuleGuard>} />
+      <Route path="/professional/:id" element={<ModuleGuard module="professionals"><Professional /></ModuleGuard>} />
+      <Route path="/agendar" element={<ModuleGuard module="appointments"><Schedule /></ModuleGuard>} />
+      <Route path="/agendamento" element={<ModuleGuard module="appointments"><Appointment /></ModuleGuard>} />
+      <Route path="/agendamento/:token" element={<ModuleGuard module="appointments"><AppointmentAccess /></ModuleGuard>} />
+      <Route path="/confirmacao-agendamento" element={<ModuleGuard module="appointments"><BookingConfirmation /></ModuleGuard>} />
       <Route path="/pagamento-sucesso" element={<PaymentSuccess />} />
       <Route path="/pagamento-cancelado" element={<PaymentCancelled />} />
-      <Route path="/contato" element={<Contact />} />
+      <Route path="/contato" element={<ModuleGuard module="contact"><Contact /></ModuleGuard>} />
       <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
       <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
       <Route path="/termos-servico" element={<TermsOfService />} />
@@ -164,29 +165,29 @@ const AppWithShortcuts = () => {
       <Route path="/reagendar/:appointmentId" element={<RescheduleAppointment />} />
       
       {/* Rotas do Diário Emocional */}
-      <Route path="/diario-emocional" element={<MoodDiary />} />
-      <Route path="/diario-emocional/experiencia" element={<MoodExperience />} />
-      <Route path="/diario-emocional/nova-entrada" element={<MoodEntry />} />
-      <Route path="/diario-emocional/historico" element={<MoodHistory />} />
-      <Route path="/diario-emocional/analises" element={<MoodAnalytics />} />
-      <Route path="/diario-emocional/configurar" element={<EmotionConfigPage />} />
+      <Route path="/diario-emocional" element={<ModuleGuard module="mood_diary"><MoodDiary /></ModuleGuard>} />
+      <Route path="/diario-emocional/experiencia" element={<ModuleGuard module="mood_diary"><MoodExperience /></ModuleGuard>} />
+      <Route path="/diario-emocional/nova-entrada" element={<ModuleGuard module="mood_diary"><MoodEntry /></ModuleGuard>} />
+      <Route path="/diario-emocional/historico" element={<ModuleGuard module="mood_diary"><MoodHistory /></ModuleGuard>} />
+      <Route path="/diario-emocional/analises" element={<ModuleGuard module="mood_diary"><MoodAnalytics /></ModuleGuard>} />
+      <Route path="/diario-emocional/configurar" element={<ModuleGuard module="mood_diary"><EmotionConfigPage /></ModuleGuard>} />
       
       {/* Rotas de Encontros em Grupo */}
-      <Route path="/encontros" element={<GroupSessions />} />
-      <Route path="/encontros/:sessionId" element={<GroupSessionDetail />} />
-      <Route path="/meus-encontros" element={<MyGroupSessions />} />
-      <Route path="/gerenciar-encontros" element={<ProtectedRoute requiredRole="facilitator"><ManageGroupSessions /></ProtectedRoute>} />
+      <Route path="/encontros" element={<ModuleGuard module="group_sessions"><GroupSessions /></ModuleGuard>} />
+      <Route path="/encontros/:sessionId" element={<ModuleGuard module="group_sessions"><GroupSessionDetail /></ModuleGuard>} />
+      <Route path="/meus-encontros" element={<ModuleGuard module="group_sessions"><MyGroupSessions /></ModuleGuard>} />
+      <Route path="/gerenciar-encontros" element={<ProtectedRoute requiredRole="facilitator"><ModuleGuard module="group_sessions"><ManageGroupSessions /></ModuleGuard></ProtectedRoute>} />
       
       {/* Rotas Medcos (duplicadas com prefixo /medcos) */}
       <Route path="/medcos" element={<Index />} />
-      <Route path="/medcos/sobre" element={<About />} />
-      <Route path="/medcos/blog" element={<Blog />} />
-      <Route path="/medcos/blog/:slug" element={<BlogPost />} />
-      <Route path="/medcos/profissionais" element={<Professionals />} />
-      <Route path="/medcos/profissional/:id" element={<Professional />} />
-      <Route path="/medcos/agendar" element={<Schedule />} />
-      <Route path="/medcos/agendamento" element={<Appointment />} />
-      <Route path="/medcos/contato" element={<Contact />} />
+      <Route path="/medcos/sobre" element={<ModuleGuard module="about"><About /></ModuleGuard>} />
+      <Route path="/medcos/blog" element={<ModuleGuard module="blog"><Blog /></ModuleGuard>} />
+      <Route path="/medcos/blog/:slug" element={<ModuleGuard module="blog"><BlogPost /></ModuleGuard>} />
+      <Route path="/medcos/profissionais" element={<ModuleGuard module="professionals"><Professionals /></ModuleGuard>} />
+      <Route path="/medcos/profissional/:id" element={<ModuleGuard module="professionals"><Professional /></ModuleGuard>} />
+      <Route path="/medcos/agendar" element={<ModuleGuard module="appointments"><Schedule /></ModuleGuard>} />
+      <Route path="/medcos/agendamento" element={<ModuleGuard module="appointments"><Appointment /></ModuleGuard>} />
+      <Route path="/medcos/contato" element={<ModuleGuard module="contact"><Contact /></ModuleGuard>} />
       <Route path="/medcos/trabalhe-conosco" element={<WorkWithUs />} />
       
       {/* Rotas de cadastro Medcos */}
@@ -195,18 +196,18 @@ const AppWithShortcuts = () => {
       <Route path="/medcos/cadastro/profissional" element={<ProfessionalForm />} />
       
       {/* Rotas de diário emocional Medcos */}
-      <Route path="/medcos/diario-emocional" element={<MoodDiary />} />
-      <Route path="/medcos/diario-emocional/experiencia" element={<MoodExperience />} />
-      <Route path="/medcos/diario-emocional/nova-entrada" element={<MoodEntry />} />
-      <Route path="/medcos/diario-emocional/historico" element={<MoodHistory />} />
-      <Route path="/medcos/diario-emocional/analises" element={<MoodAnalytics />} />
-      <Route path="/medcos/diario-emocional/configurar" element={<EmotionConfigPage />} />
+      <Route path="/medcos/diario-emocional" element={<ModuleGuard module="mood_diary"><MoodDiary /></ModuleGuard>} />
+      <Route path="/medcos/diario-emocional/experiencia" element={<ModuleGuard module="mood_diary"><MoodExperience /></ModuleGuard>} />
+      <Route path="/medcos/diario-emocional/nova-entrada" element={<ModuleGuard module="mood_diary"><MoodEntry /></ModuleGuard>} />
+      <Route path="/medcos/diario-emocional/historico" element={<ModuleGuard module="mood_diary"><MoodHistory /></ModuleGuard>} />
+      <Route path="/medcos/diario-emocional/analises" element={<ModuleGuard module="mood_diary"><MoodAnalytics /></ModuleGuard>} />
+      <Route path="/medcos/diario-emocional/configurar" element={<ModuleGuard module="mood_diary"><EmotionConfigPage /></ModuleGuard>} />
       
       {/* Rotas de Encontros Medcos */}
-      <Route path="/medcos/encontros" element={<GroupSessions />} />
-      <Route path="/medcos/encontros/:sessionId" element={<GroupSessionDetail />} />
-      <Route path="/medcos/meus-encontros" element={<MyGroupSessions />} />
-      <Route path="/medcos/gerenciar-encontros" element={<ProtectedRoute requiredRole="facilitator"><ManageGroupSessions /></ProtectedRoute>} />
+      <Route path="/medcos/encontros" element={<ModuleGuard module="group_sessions"><GroupSessions /></ModuleGuard>} />
+      <Route path="/medcos/encontros/:sessionId" element={<ModuleGuard module="group_sessions"><GroupSessionDetail /></ModuleGuard>} />
+      <Route path="/medcos/meus-encontros" element={<ModuleGuard module="group_sessions"><MyGroupSessions /></ModuleGuard>} />
+      <Route path="/medcos/gerenciar-encontros" element={<ProtectedRoute requiredRole="facilitator"><ModuleGuard module="group_sessions"><ManageGroupSessions /></ModuleGuard></ProtectedRoute>} />
       
       {/* Rotas do Portal Institucional */}
       <Route 

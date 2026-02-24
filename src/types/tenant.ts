@@ -72,6 +72,9 @@ export interface Tenant {
     ai_assistant?: boolean;
     professionals?: boolean;
     appointments?: boolean;
+    group_sessions?: boolean;
+    contact?: boolean;
+    about?: boolean;
     [key: string]: boolean | undefined;
   };
   cta_primary_text?: string;
