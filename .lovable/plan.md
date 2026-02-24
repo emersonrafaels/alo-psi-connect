@@ -1,45 +1,68 @@
 
 
-## Corrigir valores nulos exibidos como "/" no Diario Emocional
+## Exibir todas as emocoes preenchidas dinamicamente no Diario Emocional
 
 ### Problema
 
-Na pagina do Diario Emocional (`MoodDiary.tsx`), os campos `mood_score`, `energy_level` e `anxiety_level` sao exibidos diretamente como `{entry.mood_score}/10`, sem tratamento de null. Quando o usuario nao configurou a emocao "mood" (humor), o campo fica `null` no banco e a interface mostra apenas "/10" sem numero.
+A pagina `MoodDiary.tsx` exibe apenas 3 emocoes fixas (Humor, Energia, Ansiedade), usando campos legados (`mood_score`, `energy_level`, `anxiety_level`). Porem os usuarios podem ter configurado emocoes diferentes (ex: foco, motivacao, estresse). Quando uma dessas 3 emocoes fixas nao esta preenchida, aparece "/10" ou "/5".
 
-Isso acontece em dois locais:
-1. Card "Entrada de hoje" (linha 236-238)
-2. Lista "Entradas Recentes" (linhas 373-375)
+### Dados do banco confirmam
 
-### Causa raiz
-
-O campo `mood_score` e preenchido a partir de `emotion_values['mood']` ao salvar (linha 87 do MoodEntry.tsx). Se o usuario nao tem a emocao "mood" habilitada, o valor fica `null`. O mesmo ocorre com `energy_level` e `anxiety_level`.
-
-Ja existe um utilitario `formatEmotionValue` em `emotionFormatters.ts` que faz o fallback correto (busca em `emotion_values` primeiro, depois campo legado, e retorna "N/A" se nulo). Porem `MoodDiary.tsx` nao o utiliza.
+Entradas recentes possuem `emotion_values` com emocoes variadas:
+- `{anxiety:1, focus:2, mood:4, motivation:4, stress:2}` (sem energy)
+- `{anxiety:2, energy:1, focus:2, mood:2, motivation:1, stress:2}` (6 emocoes)
+- `{anxiety:1}` (apenas 1 emocao)
 
 ### Solucao
 
-Atualizar `MoodDiary.tsx` para usar `formatEmotionValue` nos dois locais de exibicao:
+Substituir as 3 linhas fixas por renderizacao dinamica usando `getAllEmotions()`, que ja existe em `emotionFormatters.ts`. Esta funcao:
+1. Le todas as emocoes de `emotion_values`
+2. Faz fallback para campos legados se `emotion_values` estiver vazio
+3. Retorna nome, valor e emoji de cada emocao preenchida
 
-**Arquivo: `src/pages/MoodDiary.tsx`**
+### Alteracoes no arquivo `src/pages/MoodDiary.tsx`
 
-1. Adicionar import de `formatEmotionValue` de `@/utils/emotionFormatters`
+**1. Importar `getAllEmotions` e `getEmotionDisplayName`**
 
-2. No card "Entrada de hoje" (linhas 236-238), trocar:
-   - `{todayEntry.mood_score}/10` por `{formatEmotionValue(todayEntry, 'mood', 'mood_score', 10)}`
-   - `{todayEntry.energy_level}/5` por `{formatEmotionValue(todayEntry, 'energy', 'energy_level')}`
-   - `{todayEntry.anxiety_level}/5` por `{formatEmotionValue(todayEntry, 'anxiety', 'anxiety_level')}`
+Adicionar ao import existente de `emotionFormatters`.
 
-3. Na lista "Entradas Recentes" (linhas 373-375), trocar:
-   - `{entry.mood_score}/10` por `{formatEmotionValue(entry, 'mood', 'mood_score', 10)}`
-   - `{entry.energy_level}/5` por `{formatEmotionValue(entry, 'energy', 'energy_level')}`
-   - `{entry.anxiety_level}/5` por `{formatEmotionValue(entry, 'anxiety', 'anxiety_level')}`
+**2. Card "Entrada de hoje" (linhas 235-238)**
 
-4. Corrigir o indicador de cor do mood (linha 380) para tratar null:
-   - Usar `getEmotionValue(entry, 'mood', 'mood_score')` com fallback para cor neutra
+Trocar as 3 spans fixas por um map dinamico:
+
+```tsx
+<div className="flex gap-4 flex-wrap">
+  {getAllEmotions(todayEntry, userConfigs).map(emotion => (
+    <span key={emotion.key} className="text-sm">
+      <strong>{emotion.name}:</strong> {emotion.value.toFixed(1)}/5
+    </span>
+  ))}
+</div>
+```
+
+**3. Lista "Entradas Recentes" (linhas 372-375)**
+
+Mesma abordagem dinamica:
+
+```tsx
+<div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
+  {getAllEmotions(entry, userConfigs).map(emotion => (
+    <span key={emotion.key}>{emotion.name}: {emotion.value.toFixed(1)}/5</span>
+  ))}
+</div>
+```
+
+**4. Indicador de cor (linhas 379-383)**
+
+Usar a primeira emocao disponivel (ou mood se existir) para o indicador de cor, com fallback para `bg-muted` se nenhuma emocao existir.
+
+**5. Card de estatisticas "Humor Medio"**
+
+Ajustar para calcular a media a partir de `emotion_values.mood` quando `mood_score` for null, usando `getEmotionValue`.
 
 ### Resultado esperado
 
-- Entradas com valores preenchidos: exibem normalmente (ex: "4/10", "3/5")
-- Entradas com valores nulos: exibem "N/A" em vez de "/10" ou "/5"
-- Busca primeiro em `emotion_values`, depois no campo legado, garantindo compatibilidade
+- Todas as emocoes preenchidas aparecem na listagem (nao apenas 3 fixas)
+- Nenhum valor "/5" ou "/10" vazio -- so mostra emocoes que tem dados
+- Nomes corretos via configuracao do usuario (ex: "Foco" em vez de "focus")
 
