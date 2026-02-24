@@ -150,7 +150,18 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     // Domain redirect configuration
     domain_redirect_enabled: false,
     domain_redirect_from: [] as string[],
-    domain_redirect_to: ""
+    domain_redirect_to: "",
+    // Modules enabled
+    modules_enabled: {
+      blog: true,
+      mood_diary: true,
+      ai_assistant: true,
+      professionals: true,
+      appointments: true,
+      group_sessions: true,
+      contact: true,
+      about: true,
+    } as Record<string, boolean>,
   });
   const [loading, setLoading] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
@@ -214,7 +225,19 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         // Domain redirect configuration
         domain_redirect_enabled: tenant.domain_redirect_enabled ?? false,
         domain_redirect_from: tenant.domain_redirect_from || [],
-        domain_redirect_to: tenant.domain_redirect_to || ""
+        domain_redirect_to: tenant.domain_redirect_to || "",
+        // Modules enabled - merge with defaults for legacy tenants
+        modules_enabled: {
+          blog: true,
+          mood_diary: true,
+          ai_assistant: true,
+          professionals: true,
+          appointments: true,
+          group_sessions: true,
+          contact: true,
+          about: true,
+          ...((tenant as any).modules_enabled || {}),
+        },
       });
     } else {
       setFormData({
@@ -273,7 +296,17 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         // Domain redirect configuration
         domain_redirect_enabled: false,
         domain_redirect_from: [] as string[],
-        domain_redirect_to: ""
+        domain_redirect_to: "",
+        modules_enabled: {
+          blog: true,
+          mood_diary: true,
+          ai_assistant: true,
+          professionals: true,
+          appointments: true,
+          group_sessions: true,
+          contact: true,
+          about: true,
+        },
       });
     }
   }, [tenant]);
@@ -475,7 +508,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         },
         favicon_url: formData.favicon_url || null,
         fallback_professional_image: formData.fallback_professional_image || null,
-        is_active: formData.is_active
+        is_active: formData.is_active,
+        modules_enabled: formData.modules_enabled
       };
 
       if (tenant) {
