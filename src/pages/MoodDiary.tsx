@@ -235,7 +235,7 @@ const MoodDiary = () => {
                   <div className="flex gap-4 flex-wrap">
                     {getAllEmotions(todayEntry, userConfigs).map(emotion => (
                       <span key={emotion.key} className="text-sm">
-                        <strong>{emotion.name}:</strong> {emotion.value.toFixed(1)}/5
+                        <strong>{emotion.name}:</strong> {Math.round(emotion.value)}/5
                       </span>
                     ))}
                   </div>
@@ -373,7 +373,7 @@ const MoodDiary = () => {
                         </p>
                         <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
                           {getAllEmotions(entry, userConfigs).map(emotion => (
-                            <span key={emotion.key}>{emotion.name}: {emotion.value.toFixed(1)}/5</span>
+                            <span key={emotion.key}>{emotion.name}: {Math.round(emotion.value)}/5</span>
                           ))}
                         </div>
                       </div>

@@ -258,11 +258,22 @@ const MoodEntry = () => {
 
   // COMPORTAMENTO ESTÁTICO - Sem carregamento automático de dados
   useEffect(() => {
-    if (!user || loading || !profile) {
+    if (!user || loading || !profile || configsLoading) {
       return;
     }
+    // Inicializar emotion_values com defaults se estiver vazio
+    if (Object.keys(formData.emotion_values).length === 0 && activeConfigs.length > 0) {
+      const initialEmotionValues: Record<string, number> = {};
+      activeConfigs.forEach(config => {
+        initialEmotionValues[config.emotion_type] = Math.floor((config.scale_min + config.scale_max) / 2);
+      });
+      setFormData(prev => ({
+        ...prev,
+        emotion_values: initialEmotionValues,
+      }));
+    }
     setInitialized(true);
-  }, [user, profile, loading]);
+  }, [user, profile, loading, configsLoading, activeConfigs]);
 
   // COMPORTAMENTO ESTÁTICO - Sem recarregamento por mudança de data
 
