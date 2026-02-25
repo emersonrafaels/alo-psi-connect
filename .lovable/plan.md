@@ -1,66 +1,55 @@
 
 
-## Corrigir falha ao salvar entrada no Diario Emocional
+## Correcoes no Diario Emocional: formato inteiro e valores default
 
-### Problema
+### Problema 1: Valores com casa decimal desnecessaria
 
-O erro no console e claro: `duplicate key value violates unique constraint "mood_entries_user_id_date_key"`.
+Todos os valores de emocoes sao exibidos com `.toFixed(1)`, resultando em "4.0/5" em vez de "4/5". Como os valores sao sempre inteiros (sliders de 1 a 5), a casa decimal e desnecessaria.
 
-A funcao `createOrUpdateEntry` faz um check-then-act:
-1. Chama `getEntryByDate(date)` para verificar se ja existe entrada
-2. Se existir, faz UPDATE; se nao, faz INSERT
+**Locais afetados em `src/pages/MoodDiary.tsx`:**
+- Linha 238: `emotion.value.toFixed(1)` no card "Entrada de hoje"
+- Linha 376: `emotion.value.toFixed(1)` na lista "Entradas Recentes"
 
-Porem `getEntryByDate` tem um guard `if (!user || !profile || !tenantId) return null`. Se `tenantId` ainda nao carregou quando o usuario clica "Salvar", a funcao retorna `null` silenciosamente, a logica interpreta como "nao existe entrada", tenta INSERT e falha no constraint `UNIQUE (user_id, date)`.
+**Correcao:** Trocar `.toFixed(1)` por `Math.round()` nos dois locais.
 
-### Solucao
+---
 
-Substituir o padrao check-then-act por **upsert** do Supabase, que e atomico e resolve a race condition:
+### Problema 2: Emocoes default nao salvas
 
-**Arquivo: `src/hooks/useMoodEntries.tsx`**
+Quando o usuario cria uma nova entrada, o formulario inicializa `emotion_values` como `{}` vazio (linha 46 de MoodEntry.tsx). Os valores default so sao preenchidos se `checkExistingEntry` for chamado (linhas 160-163). No modo estatico atual, a inicializacao (linhas 260-265) nao chama essa funcao, entao o formulario fica com `emotion_values` vazio.
 
-1. Adicionar guard para `tenantId` em `createOrUpdateEntry` (linha 216):
-   ```typescript
-   if (!user || !profile || !tenantId) {
-   ```
+Se o usuario so move um slider (ex: energia), apenas esse valor e salvo em `emotion_values`. As demais emocoes ficam sem valor.
 
-2. Substituir o bloco check-then-act (linhas 250-308) por upsert:
-   ```typescript
-   const { data, error } = await supabase
-     .from('mood_entries')
-     .upsert(
-       {
-         ...normalizedEntryData,
-         user_id: user.id,
-         profile_id: profile.id,
-         tenant_id: tenantId,
-       },
-       { onConflict: 'user_id,date' }
-     )
-     .select()
-     .single();
+**Correcao em `src/pages/MoodEntry.tsx`:**
 
-   if (error) {
-     console.error('Supabase upsert error:', error);
-     throw new Error(`Erro ao salvar entrada: ${error.message}`);
-   }
+Na inicializacao (useEffect linha 260-265), apos verificar que user/profile estao carregados, inicializar `emotion_values` com os valores default de todas as emocoes ativas:
 
-   console.log('Entry saved successfully:', data.id);
-   toast({
-     title: "Sucesso",
-     description: "Entrada do diario salva com sucesso!",
-   });
-   fetchEntries();
-   return data;
-   ```
+```typescript
+useEffect(() => {
+  if (!user || loading || !profile || configsLoading) {
+    return;
+  }
+  // Inicializar emotion_values com defaults se estiver vazio
+  if (Object.keys(formData.emotion_values).length === 0 && activeConfigs.length > 0) {
+    const initialEmotionValues: Record<string, number> = {};
+    activeConfigs.forEach(config => {
+      initialEmotionValues[config.emotion_type] = Math.floor((config.scale_min + config.scale_max) / 2);
+    });
+    setFormData(prev => ({
+      ...prev,
+      emotion_values: initialEmotionValues,
+    }));
+  }
+  setInitialized(true);
+}, [user, profile, loading, configsLoading, activeConfigs]);
+```
 
-### Por que upsert
+Isso garante que todas as emocoes configuradas tenham valor default ao abrir o formulario, mesmo que o usuario nao mova os sliders.
 
-- Atomico: nao ha janela entre o SELECT e o INSERT onde outra operacao pode interferir
-- Mais simples: elimina a necessidade de `getEntryByDate` antes de salvar
-- Resolve o bug: mesmo se `tenantId` demorar a carregar, o guard impede a execucao prematura
+---
 
-### Escopo
+### Arquivos editados
 
-- 1 arquivo editado: `src/hooks/useMoodEntries.tsx`
-- Nenhuma mudanca no banco de dados
+- `src/pages/MoodDiary.tsx` - trocar `.toFixed(1)` por `Math.round()` (2 locais)
+- `src/pages/MoodEntry.tsx` - inicializar emotion_values com defaults na montagem do componente
 
