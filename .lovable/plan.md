@@ -1,32 +1,22 @@
 
-## Corrigir URL base nos emails de encontros
+
+## Alterar tempo de liberacao do botao "Entrar na Reuniao"
 
 ### Problema
-
-No arquivo `supabase/functions/send-group-session-notification/index.ts`, linha 85, a URL base esta hardcoded como `https://alopsi.com.br`. Conforme as diretrizes da marca, todos os links devem usar `https://redebemestar.com.br` como dominio base para todos os tenants.
-
-Isso faz com que os botoes no email (como "Ver Todos os Encontros", "Ver Encontro Publicado", "Ver Proximos Encontros") apontem para o dominio errado.
+Atualmente o botao "Entrar na Reuniao" e liberado 60 minutos antes do inicio da sessao. O usuario deseja que seja liberado apenas 15 minutos antes.
 
 ### Correcao
 
-**Arquivo:** `supabase/functions/send-group-session-notification/index.ts`
+**Arquivo:** `src/components/group-sessions/MeetingLinkButton.tsx`
 
-Linha 85 - Trocar:
-```
-const siteBaseUrl = "https://alopsi.com.br";
-```
-Por:
-```
-const siteBaseUrl = "https://redebemestar.com.br";
-```
+Duas alteracoes na mesma logica:
 
-### Impacto
+1. **Linha 17** - Estado inicial: trocar `<= 60` por `<= 15`
+2. **Linha 20** - Checagem no intervalo: trocar `<= 60` por `<= 15`
+3. **Linha 53** - Tooltip: atualizar texto de "Disponivel 1h antes" para "Disponivel 15min antes do evento"
 
-Todos os links gerados nos emails de encontros passarao a usar o dominio correto:
-- Confirmacao de inscricao: `https://redebemestar.com.br/{tenant}/encontros`
-- Aprovacao/rejeicao de sessao: `https://redebemestar.com.br/{tenant}/encontros`
-- Cancelamento de sessao: `https://redebemestar.com.br/{tenant}/encontros`
+### Escopo
+- 1 arquivo editado
+- 3 linhas alteradas
+- Sem necessidade de deploy de edge function
 
-### Deploy
-
-A edge function `send-group-session-notification` sera redeployada automaticamente apos a alteracao.
