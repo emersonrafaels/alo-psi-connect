@@ -82,7 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
     const bccEmails = await getBccEmails(supabase, session.tenant_id);
 
     const primaryColor = tenantColor.startsWith("#") ? tenantColor : `hsl(${tenantColor})`;
-    const siteBaseUrl = "https://alopsi.com.br";
+    const siteBaseUrl = "https://redebemestar.com.br";
     const tenantPath = tenantSlug !== "default" ? `/${tenantSlug}` : "";
 
     // Format session date
