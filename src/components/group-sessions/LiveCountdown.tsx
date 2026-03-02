@@ -21,13 +21,9 @@ export const LiveCountdown = ({ sessionDate, startTime }: LiveCountdownProps) =>
   // Only show when < 24h
   if (diff > 24 * 3600000) return null;
 
+  // When session has started, let the parent page handle the "live" state
   if (diff <= 0) {
-    return (
-      <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-destructive/10 border border-destructive/30 animate-pulse">
-        <Clock className="w-5 h-5 text-destructive" />
-        <span className="font-bold text-destructive">🔴 Acontecendo agora!</span>
-      </div>
-    );
+    return null;
   }
 
   const hours = Math.floor(diff / 3600000);

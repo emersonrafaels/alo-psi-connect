@@ -14,8 +14,8 @@ export const SessionCountdown = ({ sessionDate, startTime }: SessionCountdownPro
   const daysUntil = differenceInDays(sessionDateTime, now);
   const hoursUntil = differenceInHours(sessionDateTime, now);
 
-  if (daysUntil < 0 || hoursUntil < 0) {
-    return null; // Session has passed
+  if (daysUntil < 0 || hoursUntil < 0 || now >= sessionDateTime) {
+    return null; // Session has passed or is live
   }
 
   // When < 24h, LiveCountdown handles the display

@@ -99,7 +99,10 @@ const GroupSessionDetail = () => {
 
   const sessionDate = parseISO(session.session_date);
   const sessionDateTime = parseISO(`${session.session_date}T${session.start_time}`);
-  const isPast = session.status === 'completed' || sessionDateTime < new Date();
+  const endDateTime = new Date(sessionDateTime.getTime() + (session.duration_minutes || 60) * 60000);
+  const now = new Date();
+  const isLive = now >= sessionDateTime && now <= endDateTime;
+  const isPast = session.status === 'completed' || now > endDateTime;
   const formattedDate = format(sessionDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   const formattedTime = session.start_time.slice(0, 5);
   const isOrganizedByTenant = session.organizer_type === 'tenant';
@@ -158,10 +161,26 @@ const GroupSessionDetail = () => {
                       Evento já realizado
                     </Badge>
                   )}
-                  {!isPast && <SessionCountdown sessionDate={session.session_date} startTime={session.start_time} />}
+                  {isLive && (
+                    <Badge className="gap-1 bg-red-600 text-white animate-pulse border-red-600">
+                      <span className="w-2 h-2 rounded-full bg-white animate-ping inline-block" />
+                      Acontecendo agora
+                    </Badge>
+                  )}
+                  {!isPast && !isLive && <SessionCountdown sessionDate={session.session_date} startTime={session.start_time} />}
                 </div>
 
-                {!isPast && <LiveCountdown sessionDate={session.session_date} startTime={session.start_time} />}
+                {isLive && (
+                  <div className="flex items-center gap-3 px-5 py-4 rounded-xl bg-destructive/10 border border-destructive/30">
+                    <div className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600" />
+                    </div>
+                    <span className="font-bold text-destructive text-lg">Este evento está acontecendo agora!</span>
+                  </div>
+                )}
+
+                {!isPast && !isLive && <LiveCountdown sessionDate={session.session_date} startTime={session.start_time} />}
 
                 <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
                   {session.title}
@@ -189,7 +208,7 @@ const GroupSessionDetail = () => {
                         <p className="text-sm text-muted-foreground">{session.duration_minutes || 60} minutos</p>
                       </div>
                     </div>
-                    {!isPast && session.meeting_link && (
+                    {(!isPast || isLive) && session.meeting_link && (
                       <MeetingLinkButton
                         meetingLink={session.meeting_link}
                         sessionDate={session.session_date}
