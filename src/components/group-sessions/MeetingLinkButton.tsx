@@ -50,7 +50,7 @@ export const MeetingLinkButton = ({ meetingLink, sessionDate, startTime, isRegis
         <TooltipTrigger asChild>
           <Button variant="outline" size="sm" className="w-full gap-2" disabled>
             <Lock className="w-4 h-4" />
-            Entrar na Reunião
+            Disponível 15min antes
           </Button>
         </TooltipTrigger>
         <TooltipContent>
