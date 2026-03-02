@@ -1,55 +1,32 @@
 
+## Corrigir URL base nos emails de encontros
 
-## Correcoes no Diario Emocional: formato inteiro e valores default
+### Problema
 
-### Problema 1: Valores com casa decimal desnecessaria
+No arquivo `supabase/functions/send-group-session-notification/index.ts`, linha 85, a URL base esta hardcoded como `https://alopsi.com.br`. Conforme as diretrizes da marca, todos os links devem usar `https://redebemestar.com.br` como dominio base para todos os tenants.
 
-Todos os valores de emocoes sao exibidos com `.toFixed(1)`, resultando em "4.0/5" em vez de "4/5". Como os valores sao sempre inteiros (sliders de 1 a 5), a casa decimal e desnecessaria.
+Isso faz com que os botoes no email (como "Ver Todos os Encontros", "Ver Encontro Publicado", "Ver Proximos Encontros") apontem para o dominio errado.
 
-**Locais afetados em `src/pages/MoodDiary.tsx`:**
-- Linha 238: `emotion.value.toFixed(1)` no card "Entrada de hoje"
-- Linha 376: `emotion.value.toFixed(1)` na lista "Entradas Recentes"
+### Correcao
 
-**Correcao:** Trocar `.toFixed(1)` por `Math.round()` nos dois locais.
+**Arquivo:** `supabase/functions/send-group-session-notification/index.ts`
 
----
-
-### Problema 2: Emocoes default nao salvas
-
-Quando o usuario cria uma nova entrada, o formulario inicializa `emotion_values` como `{}` vazio (linha 46 de MoodEntry.tsx). Os valores default so sao preenchidos se `checkExistingEntry` for chamado (linhas 160-163). No modo estatico atual, a inicializacao (linhas 260-265) nao chama essa funcao, entao o formulario fica com `emotion_values` vazio.
-
-Se o usuario so move um slider (ex: energia), apenas esse valor e salvo em `emotion_values`. As demais emocoes ficam sem valor.
-
-**Correcao em `src/pages/MoodEntry.tsx`:**
-
-Na inicializacao (useEffect linha 260-265), apos verificar que user/profile estao carregados, inicializar `emotion_values` com os valores default de todas as emocoes ativas:
-
-```typescript
-useEffect(() => {
-  if (!user || loading || !profile || configsLoading) {
-    return;
-  }
-  // Inicializar emotion_values com defaults se estiver vazio
-  if (Object.keys(formData.emotion_values).length === 0 && activeConfigs.length > 0) {
-    const initialEmotionValues: Record<string, number> = {};
-    activeConfigs.forEach(config => {
-      initialEmotionValues[config.emotion_type] = Math.floor((config.scale_min + config.scale_max) / 2);
-    });
-    setFormData(prev => ({
-      ...prev,
-      emotion_values: initialEmotionValues,
-    }));
-  }
-  setInitialized(true);
-}, [user, profile, loading, configsLoading, activeConfigs]);
+Linha 85 - Trocar:
+```
+const siteBaseUrl = "https://alopsi.com.br";
+```
+Por:
+```
+const siteBaseUrl = "https://redebemestar.com.br";
 ```
 
-Isso garante que todas as emocoes configuradas tenham valor default ao abrir o formulario, mesmo que o usuario nao mova os sliders.
+### Impacto
 
----
+Todos os links gerados nos emails de encontros passarao a usar o dominio correto:
+- Confirmacao de inscricao: `https://redebemestar.com.br/{tenant}/encontros`
+- Aprovacao/rejeicao de sessao: `https://redebemestar.com.br/{tenant}/encontros`
+- Cancelamento de sessao: `https://redebemestar.com.br/{tenant}/encontros`
 
-### Arquivos editados
+### Deploy
 
-- `src/pages/MoodDiary.tsx` - trocar `.toFixed(1)` por `Math.round()` (2 locais)
-- `src/pages/MoodEntry.tsx` - inicializar emotion_values com defaults na montagem do componente
-
+A edge function `send-group-session-notification` sera redeployada automaticamente apos a alteracao.
