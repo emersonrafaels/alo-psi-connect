@@ -13,10 +13,10 @@ interface MeetingLinkButtonProps {
 
 export const MeetingLinkButton = ({ meetingLink, sessionDate, startTime, isRegistered }: MeetingLinkButtonProps) => {
   const sessionDateTime = parseISO(`${sessionDate}T${startTime}`);
-  const [isUnlocked, setIsUnlocked] = useState(() => differenceInMinutes(sessionDateTime, new Date()) <= 60);
+  const [isUnlocked, setIsUnlocked] = useState(() => differenceInMinutes(sessionDateTime, new Date()) <= 15);
 
   useEffect(() => {
-    const check = () => setIsUnlocked(differenceInMinutes(sessionDateTime, new Date()) <= 60);
+    const check = () => setIsUnlocked(differenceInMinutes(sessionDateTime, new Date()) <= 15);
     const interval = setInterval(check, 30000);
     return () => clearInterval(interval);
   }, [sessionDateTime.getTime()]);
@@ -54,7 +54,7 @@ export const MeetingLinkButton = ({ meetingLink, sessionDate, startTime, isRegis
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Disponível 1h antes do evento</p>
+          <p>Disponível 15min antes do evento</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
