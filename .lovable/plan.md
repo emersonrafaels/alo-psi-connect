@@ -1,22 +1,24 @@
 
 
-## Alterar tempo de liberacao do botao "Entrar na Reuniao"
-
-### Problema
-Atualmente o botao "Entrar na Reuniao" e liberado 60 minutos antes do inicio da sessao. O usuario deseja que seja liberado apenas 15 minutos antes.
+## Alterar texto do botao bloqueado
 
 ### Correcao
 
 **Arquivo:** `src/components/group-sessions/MeetingLinkButton.tsx`
 
-Duas alteracoes na mesma logica:
+Trocar o texto do botao desabilitado de "Entrar na Reuniao" para "Disponivel 15min antes", mantendo o icone de cadeado.
 
-1. **Linha 17** - Estado inicial: trocar `<= 60` por `<= 15`
-2. **Linha 20** - Checagem no intervalo: trocar `<= 60` por `<= 15`
-3. **Linha 53** - Tooltip: atualizar texto de "Disponivel 1h antes" para "Disponivel 15min antes do evento"
+**Linha 52** - Alterar o texto dentro do botao:
+```
+// Antes
+<Lock className="w-4 h-4" />
+Entrar na Reunião
+
+// Depois
+<Lock className="w-4 h-4" />
+Disponível 15min antes
+```
 
 ### Escopo
-- 1 arquivo editado
-- 3 linhas alteradas
-- Sem necessidade de deploy de edge function
+- 1 arquivo, 1 linha alterada
 
