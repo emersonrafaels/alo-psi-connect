@@ -44,9 +44,19 @@ interface InstitutionWellbeingDashboardProps {
   institutionId: string;
 }
 
+const metricOptions = {
+  mood: { label: 'Humor médio', key: 'avg_mood' as const, color: 'hsl(var(--chart-2))' },
+  anxiety: { label: 'Ansiedade média', key: 'avg_anxiety' as const, color: 'hsl(var(--chart-3))' },
+  energy: { label: 'Energia média', key: 'avg_energy' as const, color: 'hsl(var(--chart-4))' },
+  sleep: { label: 'Sono médio', key: 'avg_sleep' as const, color: 'hsl(var(--chart-5))' },
+};
+
+type MetricKey = keyof typeof metricOptions;
+
 export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWellbeingDashboardProps) => {
   const [periodDays, setPeriodDays] = useState(90);
   const [insightsOpen, setInsightsOpen] = useState(true);
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('mood');
   const { data: metrics, isLoading } = useInstitutionWellbeing(institutionId, periodDays);
   
   const activeNotes = metrics?.activeNotes || [];
@@ -335,18 +345,36 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
                 </ChartContainer>
               </div>
               <div>
-                <p className="text-sm font-medium mb-2">Humor médio por dia</p>
-                <ChartContainer config={{ mood: { label: "Humor médio", color: "hsl(var(--chart-2))" } }} className="h-[180px] w-full">
-                  <BarChart data={metrics.daily_entries.map(e => ({
-                    date: new Date(e.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-                    mood: e.avg_mood ? Number(e.avg_mood.toFixed(1)) : 0
-                  }))}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Select value={selectedMetric} onValueChange={(v: typeof selectedMetric) => setSelectedMetric(v)}>
+                    <SelectTrigger className="h-7 w-auto text-sm font-medium gap-1 border-none shadow-none px-0 focus:ring-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mood">Humor médio</SelectItem>
+                      <SelectItem value="anxiety">Ansiedade média</SelectItem>
+                      <SelectItem value="energy">Energia média</SelectItem>
+                      <SelectItem value="sleep">Sono médio</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs text-muted-foreground">por dia</span>
+                </div>
+                <ChartContainer config={{ value: { label: metricOptions[selectedMetric].label, color: metricOptions[selectedMetric].color } }} className="h-[180px] w-full">
+                  <BarChart data={metrics.daily_entries.map(e => {
+                    const raw = e[metricOptions[selectedMetric].key];
+                    return {
+                      date: new Date(e.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                      value: raw ? Number(Number(raw).toFixed(1)) : 0
+                    };
+                  })}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} domain={[0, 5]} />
-                    <ReferenceLine y={3} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ value: "Alerta", fontSize: 10, fill: "hsl(var(--destructive))" }} />
+                    {selectedMetric === 'mood' && (
+                      <ReferenceLine y={3} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ value: "Alerta", fontSize: 10, fill: "hsl(var(--destructive))" }} />
+                    )}
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="mood" fill="hsl(var(--chart-2))" radius={3} />
+                    <Bar dataKey="value" fill={metricOptions[selectedMetric].color} radius={3} />
                   </BarChart>
                 </ChartContainer>
               </div>
