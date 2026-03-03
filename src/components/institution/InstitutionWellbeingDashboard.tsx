@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -315,50 +315,45 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
               </div>
             </div>
           </div>
+
+          {/* Gráficos inline */}
+          {metrics.daily_entries && metrics.daily_entries.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+              <div>
+                <p className="text-sm font-medium mb-2">Registros por dia</p>
+                <ChartContainer config={{ count: { label: "Diários", color: "hsl(var(--primary))" } }} className="h-[180px] w-full">
+                  <BarChart data={metrics.daily_entries.map(e => ({
+                    date: new Date(e.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                    count: e.entries_count
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="count" fill="hsl(var(--primary))" radius={3} />
+                  </BarChart>
+                </ChartContainer>
+              </div>
+              <div>
+                <p className="text-sm font-medium mb-2">Humor médio por dia</p>
+                <ChartContainer config={{ mood: { label: "Humor médio", color: "hsl(var(--chart-2))" } }} className="h-[180px] w-full">
+                  <BarChart data={metrics.daily_entries.map(e => ({
+                    date: new Date(e.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                    mood: e.avg_mood ? Number(e.avg_mood.toFixed(1)) : 0
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} domain={[0, 5]} />
+                    <ReferenceLine y={3} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ value: "Alerta", fontSize: 10, fill: "hsl(var(--destructive))" }} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="mood" fill="hsl(var(--chart-2))" radius={3} />
+                  </BarChart>
+                </ChartContainer>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* Gráfico: Contagem Diária de Diários */}
-      {metrics.daily_entries && metrics.daily_entries.length > 0 && (
-        <Card>
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              <CardTitle>Diários Emocionais por Dia</CardTitle>
-            </div>
-            <CardDescription>Quantidade de registros diários no período</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={{
-              count: {
-                label: "Diários",
-                color: "hsl(var(--primary))",
-              },
-            }}>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={metrics.daily_entries.map(e => ({
-                  date: new Date(e.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-                  count: e.entries_count
-                }))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                  />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    allowDecimals={false}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={4} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Seção: Métricas de Bem-Estar */}
       <Card>
