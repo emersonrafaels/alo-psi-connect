@@ -1,23 +1,38 @@
 
 
-## Adicionar aviso LGPD no Diário Emocional
+## Adicionar grafico de contagem diaria de diarios emocionais
 
-Reutilizar o mesmo padrão visual do `LGPDNotice` do portal institucional, mas com texto adaptado para o contexto do diário emocional do usuário.
+### Alteracao
 
-### Alteração
+**Arquivo:** `src/components/institution/InstitutionWellbeingDashboard.tsx`
 
-**Arquivo:** `src/pages/MoodDiary.tsx`
+Adicionar um novo `Card` com um grafico de barras (`BarChart` do recharts) mostrando a contagem de diarios emocionais por dia, usando o campo `entries_count` ja disponivel em `metrics.daily_entries`.
 
-- Importar `LGPDNotice` de `@/components/institution/LGPDNotice`
-- Criar um componente inline `MoodDiaryLGPDNotice` (ou reutilizar o padrão do `Collapsible` + `Alert` do `LGPDNotice`) com texto adaptado:
-  - Título: "Seus dados são protegidos"
-  - Corpo: Explicar que os dados do diário são criptografados, anonimizados quando compartilhados com instituições, e tratados conforme a LGPD
-  - Link para política de privacidade
-- Inserir logo após o header/descrição (linha ~171), antes dos Quick Stats
+O grafico sera inserido entre a secao "Visao Geral" (linha 317) e a secao "Metricas de Bem-Estar" (linha 319), com:
 
-Como o `LGPDNotice` existente tem texto específico para instituições ("dados agregados e anônimos"), criarei um componente similar mas com mensagem voltada ao usuário final.
+- Titulo: "Diários Emocionais por Dia"
+- Descricao: "Quantidade de registros diários no período"
+- Grafico de barras com eixo X = data formatada (dd/MM), eixo Y = contagem
+- Usando `ChartContainer` + `BarChart` + `Bar` do recharts (mesmo padrao do `UsageChart`)
+- Cor primaria para as barras
+- Tooltip com contagem
+
+### Dados
+
+Os dados ja existem em `metrics.daily_entries` com a estrutura:
+```typescript
+{ date: string, entries_count: number, avg_mood, avg_anxiety, ... }
+```
+
+Basta mapear para o formato do grafico:
+```typescript
+const dailyCountData = metrics.daily_entries.map(e => ({
+  date: new Date(e.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+  count: e.entries_count
+}));
+```
 
 ### Escopo
-- 1 arquivo editado: `src/pages/MoodDiary.tsx`
-- Componente inline usando mesmo padrão visual (Collapsible + Alert + Shield icon)
+- 1 arquivo editado: `src/components/institution/InstitutionWellbeingDashboard.tsx`
+- Imports adicionais: `ChartContainer, ChartTooltip, ChartTooltipContent` de `@/components/ui/chart`, `BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer` de `recharts`
 
