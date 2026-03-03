@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
@@ -10,8 +10,10 @@ import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Calendar, Plus, TrendingUp, Heart, BarChart3, Share2, Mail, Download, Settings } from 'lucide-react';
+import { Calendar, Plus, TrendingUp, Heart, BarChart3, Share2, Mail, Download, Settings, Shield, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { shareWhatsApp, shareTelegram, shareEmail, copyToClipboard } from '@/utils/shareHelpers';
 import { useShareConfig } from '@/hooks/useShareConfig';
 import { generateProfessionalPDF, downloadPDF } from '@/utils/pdfGenerator';
@@ -169,6 +171,40 @@ const MoodDiary = () => {
               Acompanhe seu bem-estar emocional diariamente e descubra padrões que podem melhorar sua qualidade de vida.
             </p>
           </div>
+
+          {/* LGPD Notice */}
+          <Collapsible>
+            <Alert className="border-primary/30 bg-primary/5 dark:bg-primary/10 p-0">
+              <CollapsibleTrigger className="flex items-center gap-2 w-full text-left p-4 hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors rounded-lg">
+                <Shield className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-primary font-medium text-sm">
+                  Seus dados são protegidos
+                </span>
+                <ChevronRight className="h-4 w-4 ml-auto text-primary transition-transform [[data-state=open]>&]:rotate-90" />
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent>
+                <AlertDescription className="text-muted-foreground px-4 pb-4 pt-0">
+                  <p className="mb-2">
+                    Em conformidade com a <strong>LGPD</strong>, seus dados do diário emocional são <strong>criptografados e protegidos</strong>. 
+                    Quando compartilhados com instituições parceiras, são sempre <strong>anonimizados e agregados</strong>, impossibilitando a identificação individual.
+                  </p>
+                  <p className="text-sm">
+                    Você tem total controle sobre seus dados e pode solicitar exclusão a qualquer momento.
+                  </p>
+                  <Link 
+                    to={buildTenantPath(tenant?.slug || 'alopsi', '/politica-privacidade')} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 hover:underline mt-2"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Ver Política de Privacidade
+                  </Link>
+                </AlertDescription>
+              </CollapsibleContent>
+            </Alert>
+          </Collapsible>
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
