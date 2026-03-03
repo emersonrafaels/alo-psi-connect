@@ -1,27 +1,27 @@
 
 
-## Reorganizar grafico de contagem diaria e adicionar graficos complementares
+## Corrigir cores dos gráficos no dark mode
 
 ### Problema
-O grafico "Diarios Emocionais por Dia" ocupa um card inteiro sozinho e fica desproporcional. Precisa ser integrado melhor no layout.
+As variáveis CSS `--chart-2`, `--chart-3`, `--chart-4`, `--chart-5` usadas pelo gráfico de métricas não existem em `src/index.css`. O navegador resolve como valor vazio, resultando em barras pretas — invisíveis no dark mode.
 
-### Solucao
+### Solução
 
-Mover o grafico de contagem diaria para dentro do card "Visao Geral" (linhas 260-319), abaixo dos 4 cards de metricas, e reduzir sua altura. Adicionar tambem um mini grafico de taxa de participacao ao lado, criando um grid 2 colunas com dois graficos menores e mais uteis.
+**Arquivo: `src/index.css`**
 
-**Arquivo:** `src/components/institution/InstitutionWellbeingDashboard.tsx`
+Adicionar as variáveis `--chart-1` a `--chart-5` tanto no `:root` (light) quanto no `.dark` com cores adequadas para cada tema:
 
-1. **Remover** o card standalone "Diarios Emocionais por Dia" (linhas 321-361)
-2. **Dentro do card "Visao Geral"** (apos o grid de 4 metricas, linha 317), adicionar um grid de 2 colunas com:
-   - **Coluna 1**: Grafico de barras "Registros por dia" (altura reduzida: 180px em vez de 300px)
-   - **Coluna 2**: Grafico de barras "Participacao por dia" mostrando o numero de alunos unicos por dia (usando `entries_count` ja disponivel, e adicionando uma linha de referencia com o total de alunos vinculados)
+- Light mode: tons vibrantes visíveis em fundo claro
+- Dark mode: tons mais claros/saturados visíveis em fundo escuro
 
-Para a participacao por dia, os dados ja estao em `daily_entries` mas so temos `entries_count`. Vou usar esse mesmo dado com label diferente e adicionar uma `ReferenceLine` com `totalStudentsLinked` para dar contexto visual.
+Cores planejadas (HSL):
+| Variável | Light | Dark |
+|----------|-------|------|
+| `--chart-1` | `280 63% 50%` (roxo/primary) | `280 63% 65%` |
+| `--chart-2` | `142 71% 45%` (verde) | `142 71% 55%` |
+| `--chart-3` | `38 92% 50%` (laranja) | `38 92% 60%` |
+| `--chart-4` | `200 80% 50%` (azul) | `200 80% 65%` |
+| `--chart-5` | `330 62% 55%` (rosa) | `330 62% 70%` |
 
-3. Importar `ReferenceLine` do recharts
-
-### Resultado
-- Layout mais compacto: 2 graficos lado a lado dentro do card existente
-- Graficos menores (180px) e mais proporcionais
-- Contexto visual melhor com linha de referencia de total de alunos
+Nenhuma mudança nos componentes — apenas definir as variáveis CSS que já estão sendo referenciadas.
 
