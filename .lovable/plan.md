@@ -1,38 +1,27 @@
 
 
-## Adicionar grafico de contagem diaria de diarios emocionais
+## Reorganizar grafico de contagem diaria e adicionar graficos complementares
 
-### Alteracao
+### Problema
+O grafico "Diarios Emocionais por Dia" ocupa um card inteiro sozinho e fica desproporcional. Precisa ser integrado melhor no layout.
+
+### Solucao
+
+Mover o grafico de contagem diaria para dentro do card "Visao Geral" (linhas 260-319), abaixo dos 4 cards de metricas, e reduzir sua altura. Adicionar tambem um mini grafico de taxa de participacao ao lado, criando um grid 2 colunas com dois graficos menores e mais uteis.
 
 **Arquivo:** `src/components/institution/InstitutionWellbeingDashboard.tsx`
 
-Adicionar um novo `Card` com um grafico de barras (`BarChart` do recharts) mostrando a contagem de diarios emocionais por dia, usando o campo `entries_count` ja disponivel em `metrics.daily_entries`.
+1. **Remover** o card standalone "Diarios Emocionais por Dia" (linhas 321-361)
+2. **Dentro do card "Visao Geral"** (apos o grid de 4 metricas, linha 317), adicionar um grid de 2 colunas com:
+   - **Coluna 1**: Grafico de barras "Registros por dia" (altura reduzida: 180px em vez de 300px)
+   - **Coluna 2**: Grafico de barras "Participacao por dia" mostrando o numero de alunos unicos por dia (usando `entries_count` ja disponivel, e adicionando uma linha de referencia com o total de alunos vinculados)
 
-O grafico sera inserido entre a secao "Visao Geral" (linha 317) e a secao "Metricas de Bem-Estar" (linha 319), com:
+Para a participacao por dia, os dados ja estao em `daily_entries` mas so temos `entries_count`. Vou usar esse mesmo dado com label diferente e adicionar uma `ReferenceLine` com `totalStudentsLinked` para dar contexto visual.
 
-- Titulo: "Diários Emocionais por Dia"
-- Descricao: "Quantidade de registros diários no período"
-- Grafico de barras com eixo X = data formatada (dd/MM), eixo Y = contagem
-- Usando `ChartContainer` + `BarChart` + `Bar` do recharts (mesmo padrao do `UsageChart`)
-- Cor primaria para as barras
-- Tooltip com contagem
+3. Importar `ReferenceLine` do recharts
 
-### Dados
-
-Os dados ja existem em `metrics.daily_entries` com a estrutura:
-```typescript
-{ date: string, entries_count: number, avg_mood, avg_anxiety, ... }
-```
-
-Basta mapear para o formato do grafico:
-```typescript
-const dailyCountData = metrics.daily_entries.map(e => ({
-  date: new Date(e.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-  count: e.entries_count
-}));
-```
-
-### Escopo
-- 1 arquivo editado: `src/components/institution/InstitutionWellbeingDashboard.tsx`
-- Imports adicionais: `ChartContainer, ChartTooltip, ChartTooltipContent` de `@/components/ui/chart`, `BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer` de `recharts`
+### Resultado
+- Layout mais compacto: 2 graficos lado a lado dentro do card existente
+- Graficos menores (180px) e mais proporcionais
+- Contexto visual melhor com linha de referencia de total de alunos
 
