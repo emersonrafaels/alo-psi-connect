@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -315,6 +317,48 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
           </div>
         </CardContent>
       </Card>
+
+      {/* Gráfico: Contagem Diária de Diários */}
+      {metrics.daily_entries && metrics.daily_entries.length > 0 && (
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              <CardTitle>Diários Emocionais por Dia</CardTitle>
+            </div>
+            <CardDescription>Quantidade de registros diários no período</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={{
+              count: {
+                label: "Diários",
+                color: "hsl(var(--primary))",
+              },
+            }}>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={metrics.daily_entries.map(e => ({
+                  date: new Date(e.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                  count: e.entries_count
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    allowDecimals={false}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={4} />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Seção: Métricas de Bem-Estar */}
       <Card>
