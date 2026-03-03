@@ -98,6 +98,13 @@ All colors MUST be HSL.
     --wellz-pink-light: 330 50% 96%;  /* Rosa claro do background */
     
     /* Coupon badge colors */
+    /* Chart colors */
+    --chart-1: 280 63% 50%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 200 80% 50%;
+    --chart-5: 330 62% 55%;
+
     --coupon-from: 160 84% 39%;       /* Emerald */
     --coupon-to: 142 71% 45%;         /* Green */
     --wellz-pink-border: 310 35% 70%; /* Rosa da borda das fotos */
@@ -168,6 +175,13 @@ All colors MUST be HSL.
     --wellz-pink-light: 310 20% 15%;
     --wellz-pink-border: 310 35% 50%;
     --wellz-text-title: 270 40% 80%;
+
+    /* Chart colors - dark mode */
+    --chart-1: 280 63% 65%;
+    --chart-2: 142 71% 55%;
+    --chart-3: 38 92% 60%;
+    --chart-4: 200 80% 65%;
+    --chart-5: 330 62% 70%;
   }
 }
 
