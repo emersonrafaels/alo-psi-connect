@@ -109,19 +109,32 @@ export const useEmotionConfig = () => {
   };
 
   // Initialize user with default basic emotions if they have none
+  // Emoji corrections for known issues from the database
+  const EMOJI_CORRECTIONS: Record<string, Record<string, string>> = {
+    focus: { '1': '😶', '2': '🤔', '3': '🎯', '4': '🎯', '5': '🎯' },
+  };
+
+  const applyEmojiCorrections = (emotionType: string, emojiSet: Record<string, string>) => {
+    if (EMOJI_CORRECTIONS[emotionType]) {
+      return { ...emojiSet, ...EMOJI_CORRECTIONS[emotionType] };
+    }
+    return emojiSet;
+  };
+
   const initializeDefaultConfigs = async () => {
     if (!user || userConfigs.length > 0) return;
 
-    const basicEmotions = defaultTypes.filter(type => type.category === 'basic');
+    const advancedEmotions = ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus'];
+    const emotionsForInit = defaultTypes.filter(type => advancedEmotions.includes(type.emotion_type));
     
-    const configs = basicEmotions.map((emotion, index) => ({
+    const configs = emotionsForInit.map((emotion, index) => ({
       user_id: user.id,
       emotion_type: emotion.emotion_type,
       display_name: emotion.display_name,
       description: emotion.description,
       scale_min: emotion.default_scale_min,
       scale_max: emotion.default_scale_max,
-      emoji_set: emotion.default_emoji_set,
+      emoji_set: applyEmojiCorrections(emotion.emotion_type, emotion.default_emoji_set),
       color_scheme: emotion.default_color_scheme,
       is_enabled: true,
       order_position: index,
@@ -319,7 +332,7 @@ export const useEmotionConfig = () => {
       description: emotion.description,
       scale_min: emotion.default_scale_min,
       scale_max: emotion.default_scale_max,
-      emoji_set: emotion.default_emoji_set,
+      emoji_set: applyEmojiCorrections(emotion.emotion_type, emotion.default_emoji_set),
       color_scheme: emotion.default_color_scheme,
       is_enabled: true,
       order_position: index,
