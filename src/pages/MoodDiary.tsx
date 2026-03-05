@@ -226,7 +226,7 @@ const MoodDiary = () => {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="flex-1 min-w-0">
                   <Select value={selectedStatEmotion} onValueChange={setSelectedStatEmotion}>
-                    <SelectTrigger className="h-auto border-none p-0 text-sm font-medium shadow-none focus:ring-0 [&>svg]:h-3 [&>svg]:w-3">
+                    <SelectTrigger className="h-auto border border-border/50 rounded-md px-2 py-1 text-sm font-medium shadow-none hover:bg-muted/80 transition-colors focus:ring-1 focus:ring-primary/30 [&>svg]:h-3 [&>svg]:w-3">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
