@@ -97,7 +97,10 @@ export const useEmotionConfig = () => {
         .order('order_position', { ascending: true });
 
       if (error) throw error;
-      const configs = (data || []) as unknown as EmotionConfig[];
+      const configs = (data || []).map((config: any) => ({
+        ...config,
+        emoji_set: applyEmojiCorrections(config.emotion_type, config.emoji_set),
+      })) as EmotionConfig[];
       setUserConfigs(configs);
       setCurrentTemplate(detectCurrentTemplate(configs));
     } catch (err) {
