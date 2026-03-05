@@ -11,6 +11,7 @@ import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Calendar, Plus, TrendingUp, Heart, BarChart3, Share2, Mail, Download, Settings, Shield, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -27,8 +28,9 @@ const MoodDiary = () => {
   const { profile } = useUserProfile();
   const { tenant } = useTenant();
   const { entries, loading: entriesLoading } = useMoodEntries();
-  const { userConfigs } = useEmotionConfig();
+  const { userConfigs, activeConfigs } = useEmotionConfig();
   const { toast } = useToast();
+  const [selectedStatEmotion, setSelectedStatEmotion] = useState('mood');
   const { getShareConfig } = useShareConfig();
 
   // Redirect non-authenticated users to experience page
@@ -155,7 +157,19 @@ const MoodDiary = () => {
   const todayEntry = entries.find(entry => entry.date === today);
   
   const recentEntries = entries.slice(0, 7);
-  const avgMood = calculateAverage(recentEntries.map(entry => getEmotionValue(entry, 'mood', 'mood_score')));
+  
+  // Legacy field mapping for backward compatibility
+  const legacyFieldMap: Record<string, string> = {
+    mood: 'mood_score',
+    energy: 'energy_level',
+    anxiety: 'anxiety_level',
+  };
+  const selectedConfig = activeConfigs.find(c => c.emotion_type === selectedStatEmotion);
+  const selectedScaleMax = selectedConfig?.scale_max || 5;
+  const selectedDisplayName = selectedConfig?.display_name || 'Humor';
+  const avgSelected = calculateAverage(
+    recentEntries.map(entry => getEmotionValue(entry, selectedStatEmotion, legacyFieldMap[selectedStatEmotion] as any))
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -210,12 +224,25 @@ const MoodDiary = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="border-primary/20">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Humor Médio (7 dias)</CardTitle>
-                <Heart className="h-4 w-4 text-primary" />
+                <div className="flex-1 min-w-0">
+                  <Select value={selectedStatEmotion} onValueChange={setSelectedStatEmotion}>
+                    <SelectTrigger className="h-auto border-none p-0 text-sm font-medium shadow-none focus:ring-0 [&>svg]:h-3 [&>svg]:w-3">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activeConfigs.map(config => (
+                        <SelectItem key={config.emotion_type} value={config.emotion_type}>
+                          {config.display_name} (7 dias)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Heart className="h-4 w-4 text-primary flex-shrink-0" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {recentEntries.length > 0 ? `${avgMood.toFixed(1)}/10` : 'Sem dados'}
+                  {recentEntries.length > 0 ? `${Math.round(avgSelected)}/${selectedScaleMax}` : 'Sem dados'}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {recentEntries.length > 0 ? 'Baseado nas últimas entradas' : 'Adicione sua primeira entrada'}
