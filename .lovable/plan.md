@@ -1,40 +1,30 @@
 
 
-## Duas alterações
+## Ajustar card de Humor Médio: escala /5 + seletor de emoções
 
-### 1. Template padrão: basic → advanced
+### Problema
+O card "Humor Médio (7 dias)" mostra `/10` fixo e não permite alternar entre as diferentes emoções configuradas pelo usuário.
 
-**Arquivo:** `src/hooks/useEmotionConfig.tsx`
+### Solução
 
-Na função `initializeDefaultConfigs` (linha 115), trocar o filtro de `type.category === 'basic'` para incluir as emoções do template avançado. Como os `defaultTypes` vêm do banco com categorias variadas, a forma mais segura é filtrar pelos emotion_types do template advanced diretamente:
+**Arquivo: `src/pages/MoodDiary.tsx`**
 
-```typescript
-const advancedEmotions = ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus'];
-const emotionsForInit = defaultTypes.filter(type => advancedEmotions.includes(type.emotion_type));
-```
+1. **Adicionar estado** `selectedStatEmotion` (default: `'mood'`) para controlar qual emoção está exibida no primeiro card.
 
-### 2. Corrigir emoji do Foco
+2. **Substituir o card fixo** por um card dinâmico que:
+   - Usa um `Select` dropdown no header para escolher entre as emoções ativas do usuário (vindas de `activeConfigs` do `useEmotionConfig`)
+   - Calcula a média com base na emoção selecionada usando `getEmotionValue` com a key correspondente
+   - Exibe a escala correta (`/5`) baseada no `scale_max` da config da emoção selecionada (em vez do `/10` hardcoded)
 
-**Arquivo:** `src/utils/emotionFormatters.ts`
+3. **Lógica de cálculo**:
+   - Buscar o `scale_max` da emoção selecionada em `activeConfigs`
+   - Usar `calculateAverage` com os valores das últimas 7 entradas para a emoção selecionada
+   - Mapear emotion_type para legacy fields quando aplicável (mood→mood_score, energy→energy_level, anxiety→anxiety_level)
 
-O emoji do `focus` no `getDefaultEmoji` já está como 🎯 (correto). O problema é que o emoji vem do banco de dados (`default_emotion_types.default_emoji_set`), e quando o template é aplicado, ele copia esse emoji_set do banco para `emotion_configurations`.
+### Imports adicionais
+- `Select, SelectContent, SelectItem, SelectTrigger, SelectValue` de `@/components/ui/select`
+- Usar `activeConfigs` do hook `useEmotionConfig` (já importado)
 
-Para corrigir para usuários existentes e futuros, preciso:
-
-1. Atualizar o `default_emotion_types` no banco via SQL — alterar o `default_emoji_set` do `focus` para usar 🎯 em vez de 😵
-2. Atualizar os `emotion_configurations` existentes que tenham `focus` com emoji errado
-
-**Execução via Supabase:**
-```sql
-UPDATE default_emotion_types 
-SET default_emoji_set = jsonb_set(default_emoji_set, '{3}', '"🎯"')
-WHERE emotion_type = 'focus';
-```
-
-Porém, como não tenho certeza da estrutura exata do JSON no banco, vou adicionar uma correção no código: na `initializeDefaultConfigs` e no `applyTemplate`, sobrescrever o emoji_set do `focus` com valores corretos baseados no `getDefaultEmoji` do `emotionFormatters.ts`.
-
-**Abordagem mais pragmática:** Adicionar um mapeamento de correção de emojis no `useEmotionConfig.tsx` que é aplicado ao criar configs, garantindo que `focus` use 🎯 independente do que venha do banco.
-
-### Resumo de arquivos
-- `src/hooks/useEmotionConfig.tsx` — mudar default de basic para advanced + fix emoji do focus na criação
+### Resultado
+O card mostrará "Humor Médio (7 dias)" por padrão com escala `/5`, mas permitirá trocar para qualquer emoção configurada (Ansiedade, Energia, Estresse, Motivação, Foco) via dropdown.
 
