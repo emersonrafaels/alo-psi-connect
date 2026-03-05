@@ -1,27 +1,40 @@
 
 
-## Corrigir cores dos gráficos no dark mode
+## Duas alterações
 
-### Problema
-As variáveis CSS `--chart-2`, `--chart-3`, `--chart-4`, `--chart-5` usadas pelo gráfico de métricas não existem em `src/index.css`. O navegador resolve como valor vazio, resultando em barras pretas — invisíveis no dark mode.
+### 1. Template padrão: basic → advanced
 
-### Solução
+**Arquivo:** `src/hooks/useEmotionConfig.tsx`
 
-**Arquivo: `src/index.css`**
+Na função `initializeDefaultConfigs` (linha 115), trocar o filtro de `type.category === 'basic'` para incluir as emoções do template avançado. Como os `defaultTypes` vêm do banco com categorias variadas, a forma mais segura é filtrar pelos emotion_types do template advanced diretamente:
 
-Adicionar as variáveis `--chart-1` a `--chart-5` tanto no `:root` (light) quanto no `.dark` com cores adequadas para cada tema:
+```typescript
+const advancedEmotions = ['mood', 'anxiety', 'energy', 'stress', 'motivation', 'focus'];
+const emotionsForInit = defaultTypes.filter(type => advancedEmotions.includes(type.emotion_type));
+```
 
-- Light mode: tons vibrantes visíveis em fundo claro
-- Dark mode: tons mais claros/saturados visíveis em fundo escuro
+### 2. Corrigir emoji do Foco
 
-Cores planejadas (HSL):
-| Variável | Light | Dark |
-|----------|-------|------|
-| `--chart-1` | `280 63% 50%` (roxo/primary) | `280 63% 65%` |
-| `--chart-2` | `142 71% 45%` (verde) | `142 71% 55%` |
-| `--chart-3` | `38 92% 50%` (laranja) | `38 92% 60%` |
-| `--chart-4` | `200 80% 50%` (azul) | `200 80% 65%` |
-| `--chart-5` | `330 62% 55%` (rosa) | `330 62% 70%` |
+**Arquivo:** `src/utils/emotionFormatters.ts`
 
-Nenhuma mudança nos componentes — apenas definir as variáveis CSS que já estão sendo referenciadas.
+O emoji do `focus` no `getDefaultEmoji` já está como 🎯 (correto). O problema é que o emoji vem do banco de dados (`default_emotion_types.default_emoji_set`), e quando o template é aplicado, ele copia esse emoji_set do banco para `emotion_configurations`.
+
+Para corrigir para usuários existentes e futuros, preciso:
+
+1. Atualizar o `default_emotion_types` no banco via SQL — alterar o `default_emoji_set` do `focus` para usar 🎯 em vez de 😵
+2. Atualizar os `emotion_configurations` existentes que tenham `focus` com emoji errado
+
+**Execução via Supabase:**
+```sql
+UPDATE default_emotion_types 
+SET default_emoji_set = jsonb_set(default_emoji_set, '{3}', '"🎯"')
+WHERE emotion_type = 'focus';
+```
+
+Porém, como não tenho certeza da estrutura exata do JSON no banco, vou adicionar uma correção no código: na `initializeDefaultConfigs` e no `applyTemplate`, sobrescrever o emoji_set do `focus` com valores corretos baseados no `getDefaultEmoji` do `emotionFormatters.ts`.
+
+**Abordagem mais pragmática:** Adicionar um mapeamento de correção de emojis no `useEmotionConfig.tsx` que é aplicado ao criar configs, garantindo que `focus` use 🎯 independente do que venha do banco.
+
+### Resumo de arquivos
+- `src/hooks/useEmotionConfig.tsx` — mudar default de basic para advanced + fix emoji do focus na criação
 
