@@ -322,23 +322,45 @@ export const ModulesConfigTab = ({ formData, setFormData }: TenantConfigTabsProp
           </p>
           
           {modules.map(module => (
-            <div key={module.key} className="flex items-center space-x-3 p-3 rounded-lg border">
-              <Checkbox
-                id={`module_${module.key}`}
-                checked={formData.modules_enabled?.[module.key] !== false}
-                onCheckedChange={(checked) => handleModuleToggle(module.key, checked as boolean)}
-              />
-              <Label htmlFor={`module_${module.key}`} className="cursor-pointer flex-1">
-                {module.label}
-              </Label>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <p>{moduleTooltips[module.key]}</p>
-                </TooltipContent>
-              </Tooltip>
+            <div key={module.key}>
+              <div className="flex items-center space-x-3 p-3 rounded-lg border">
+                <Checkbox
+                  id={`module_${module.key}`}
+                  checked={formData.modules_enabled?.[module.key] !== false}
+                  onCheckedChange={(checked) => handleModuleToggle(module.key, checked as boolean)}
+                />
+                <Label htmlFor={`module_${module.key}`} className="cursor-pointer flex-1">
+                  {module.label}
+                </Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>{moduleTooltips[module.key]}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              {module.key === 'mood_diary' && formData.modules_enabled?.['mood_diary'] !== false && (
+                <div className="flex items-center space-x-3 p-3 ml-6 mt-1 rounded-lg border border-dashed">
+                  <Checkbox
+                    id="module_mood_diary_guest_disabled"
+                    checked={formData.modules_enabled?.['mood_diary_guest_disabled'] === true}
+                    onCheckedChange={(checked) => handleModuleToggle('mood_diary_guest_disabled', checked as boolean)}
+                  />
+                  <Label htmlFor="module_mood_diary_guest_disabled" className="cursor-pointer flex-1 text-sm">
+                    Bloquear acesso para não logados
+                  </Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Quando ativado, a página de experiência do diário emocional só é acessível para usuários logados</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
             </div>
           ))}
         </div>

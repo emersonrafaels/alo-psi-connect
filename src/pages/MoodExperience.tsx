@@ -66,6 +66,13 @@ const MoodExperience = () => {
     }
   }, [user, authLoading, navigate, tenant]);
 
+  // Block guest access if tenant has mood_diary_guest_disabled enabled
+  useEffect(() => {
+    if (!authLoading && !user && tenant?.modules_enabled?.mood_diary_guest_disabled === true) {
+      navigate(buildTenantPath(tenant?.slug || 'alopsi', '/auth'), { replace: true });
+    }
+  }, [user, authLoading, navigate, tenant]);
+
   // Show loading while checking authentication or loading configuration
   if (authLoading || configLoading) {
     return (

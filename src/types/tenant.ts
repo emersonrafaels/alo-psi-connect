@@ -69,6 +69,7 @@ export interface Tenant {
   modules_enabled?: {
     blog?: boolean;
     mood_diary?: boolean;
+    mood_diary_guest_disabled?: boolean;
     ai_assistant?: boolean;
     professionals?: boolean;
     appointments?: boolean;
