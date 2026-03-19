@@ -906,7 +906,7 @@ const PatientForm = () => {
   const canProceedStep2 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf;
   const canProceedStep3 = (formData.estudanteStatus === 'formado' || formData.instituicaoEnsino);
   const canProceedStepEmergency = contatosEmergencia.some(c => 
-    c.nome && c.relacao && (c.relacao !== 'outro' || c.relacaoOutro) && (c.telefone || c.email)
+    c.nome && c.relacao && (c.relacao !== 'outro' || c.relacaoOutro) && c.telefone
   );
   const canProceedStepPhoto = true; // Foto é sempre opcional
   const canProceedStepPassword = user ? true : (formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha);
