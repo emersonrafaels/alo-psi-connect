@@ -983,7 +983,8 @@ const PatientForm = () => {
                       (currentStep === 1 && !canProceedStep1) ||
                       (currentStep === 2 && !canProceedStep2) ||
                       (currentStep === 3 && !canProceedStep3) ||
-                      (currentStep === 4 && !canProceedStep3_5)
+                      (currentStep === 4 && !canProceedStepEmergency) ||
+                      (currentStep === 5 && !canProceedStepPhoto)
                     }
                     className="flex items-center gap-2"
                   >
