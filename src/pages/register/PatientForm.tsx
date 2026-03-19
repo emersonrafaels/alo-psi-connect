@@ -611,7 +611,128 @@ const PatientForm = () => {
     </div>
   );
 
-  const renderStep3_5 = () => {
+  const updateEmergencyContact = (index: number, field: keyof EmergencyContact, value: string) => {
+    setContatosEmergencia(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const addEmergencyContact = () => {
+    if (contatosEmergencia.length < 3) {
+      setContatosEmergencia(prev => [...prev, { ...emptyContact }]);
+    }
+  };
+
+  const removeEmergencyContact = (index: number) => {
+    if (contatosEmergencia.length > 1) {
+      setContatosEmergencia(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const renderStepEmergency = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 text-muted-foreground mb-2">
+        <Users className="h-5 w-5" />
+        <p className="text-sm">
+          Cadastre pelo menos 1 contato de emergência (máximo 3). Informe telefone e/ou email.
+        </p>
+      </div>
+
+      {contatosEmergencia.map((contato, index) => (
+        <div key={index} className="border border-border rounded-lg p-4 space-y-4 relative">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-foreground">Contato {index + 1}</h4>
+            {contatosEmergencia.length > 1 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive"
+                onClick={() => removeEmergencyContact(index)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          <div>
+            <Label>Nome do contato <span className="text-destructive">*</span></Label>
+            <Input
+              value={contato.nome}
+              onChange={(e) => updateEmergencyContact(index, 'nome', e.target.value)}
+              placeholder="Nome completo do contato"
+            />
+          </div>
+
+          <div>
+            <Label>Relação <span className="text-destructive">*</span></Label>
+            <Combobox
+              options={RELATION_OPTIONS}
+              value={contato.relacao}
+              onValueChange={(value) => updateEmergencyContact(index, 'relacao', value)}
+              placeholder="Selecione a relação..."
+              searchPlaceholder="Buscar relação..."
+              emptyText="Nenhuma relação encontrada."
+            />
+            {contato.relacao === 'outro' && (
+              <Input
+                className="mt-2"
+                value={contato.relacaoOutro}
+                onChange={(e) => updateEmergencyContact(index, 'relacaoOutro', e.target.value)}
+                placeholder="Especifique a relação"
+              />
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="flex items-center gap-1">
+                <Phone className="h-3 w-3" /> Telefone
+              </Label>
+              <Input
+                value={contato.telefone}
+                onChange={(e) => updateEmergencyContact(index, 'telefone', e.target.value)}
+                placeholder="(00) 00000-0000"
+                inputMode="tel"
+              />
+            </div>
+            <div>
+              <Label className="flex items-center gap-1">
+                <Mail className="h-3 w-3" /> Email
+              </Label>
+              <Input
+                type="email"
+                value={contato.email}
+                onChange={(e) => updateEmergencyContact(index, 'email', e.target.value)}
+                placeholder="email@exemplo.com"
+              />
+            </div>
+          </div>
+
+          {/* Validation hint */}
+          {contato.nome && contato.relacao && !contato.telefone && !contato.email && (
+            <p className="text-sm text-destructive">Informe pelo menos um telefone ou email.</p>
+          )}
+        </div>
+      ))}
+
+      {contatosEmergencia.length < 3 && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={addEmergencyContact}
+          className="w-full flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Adicionar contato ({contatosEmergencia.length}/3)
+        </Button>
+      )}
+    </div>
+  );
+
+  const renderStepPhoto = () => {
     const previewAvatar = selectedPhotoFile 
       ? URL.createObjectURL(selectedPhotoFile)
       : photoPreviewUrl || formData.fotoPerfilUrl;
