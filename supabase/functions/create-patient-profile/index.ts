@@ -95,7 +95,8 @@ serve(async (req) => {
       instituicaoEnsino,
       telefone,
       existingUserId,
-      tenantSlug: requestTenantSlug
+      tenantSlug: requestTenantSlug,
+      contatosEmergencia
     } = await req.json();
 
     console.log('Creating patient profile for:', email);
@@ -359,6 +360,39 @@ serve(async (req) => {
         }
       } else {
         console.log('Institution link already exists');
+      }
+    }
+
+    // Save emergency contacts
+    if (contatosEmergencia && Array.isArray(contatosEmergencia) && contatosEmergencia.length > 0) {
+      console.log('Saving emergency contacts:', contatosEmergencia.length);
+
+      // Delete existing contacts for this patient first (in case of re-registration)
+      await supabase
+        .from('patient_emergency_contacts')
+        .delete()
+        .eq('patient_id', patientData.id);
+
+      const contactsToInsert = contatosEmergencia
+        .filter((c: any) => c.nome && c.relacao && (c.telefone || c.email))
+        .map((c: any) => ({
+          patient_id: patientData.id,
+          nome: c.nome,
+          relacao: c.relacao,
+          telefone: c.telefone || null,
+          email: c.email || null,
+        }));
+
+      if (contactsToInsert.length > 0) {
+        const { error: contactsError } = await supabase
+          .from('patient_emergency_contacts')
+          .insert(contactsToInsert);
+
+        if (contactsError) {
+          console.error('Error saving emergency contacts:', contactsError);
+        } else {
+          console.log('Emergency contacts saved successfully');
+        }
       }
     }
 

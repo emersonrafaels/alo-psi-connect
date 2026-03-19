@@ -13,7 +13,7 @@ import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Check, Eye, EyeOff, X, Camera } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Eye, EyeOff, X, Camera, Plus, Trash2, Phone, Mail, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
@@ -27,6 +27,27 @@ import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { PhotoUpload } from '@/components/ui/photo-upload';
 import { useProfileManager } from '@/hooks/useProfileManager';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Combobox } from '@/components/ui/combobox';
+
+interface EmergencyContact {
+  nome: string;
+  relacao: string;
+  relacaoOutro: string;
+  telefone: string;
+  email: string;
+}
+
+const RELATION_OPTIONS = [
+  { value: 'pai_mae', label: 'Pai/Mãe' },
+  { value: 'conjuge', label: 'Cônjuge' },
+  { value: 'irmao_irma', label: 'Irmão/Irmã' },
+  { value: 'filho_filha', label: 'Filho/Filha' },
+  { value: 'amigo_amiga', label: 'Amigo/Amiga' },
+  { value: 'tutor_responsavel', label: 'Tutor/Responsável' },
+  { value: 'outro', label: 'Outro' },
+];
+
+const emptyContact: EmergencyContact = { nome: '', relacao: '', relacaoOutro: '', telefone: '', email: '' };
 
 const PatientForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -48,9 +69,11 @@ const PatientForm = () => {
   const googleData = location.state?.googleData || null;
   const { uploadProfilePhoto } = useProfileManager();
 
+  const [contatosEmergencia, setContatosEmergencia] = useState<EmergencyContact[]>([{ ...emptyContact }]);
+
   const [formData, setFormData] = useState({
     ehEstudante: '',
-    estudanteStatus: '', // Changed from ehEstudante to match function
+    estudanteStatus: '',
     nome: googleData?.fullName || '',
     email: user?.email || googleData?.email || '',
     dataNascimento: '',
@@ -59,12 +82,12 @@ const PatientForm = () => {
     sexualidade: '',
     cpf: '',
     instituicaoEnsino: '',
-    instituicao: '', // Added for consistency
+    instituicao: '',
     comoConheceu: '',
     senha: '',
     confirmarSenha: '',
-    password: '', // Added for edge function compatibility
-    telefone: '', // Added for edge function compatibility
+    password: '',
+    telefone: '',
     fotoPerfilUrl: googleData?.picture || ''
   });
 
@@ -123,7 +146,7 @@ const PatientForm = () => {
     }
   }, [googleData, formData.fotoPerfilUrl, photoPreviewUrl]);
   
-  const totalSteps = user ? 4 : 5; // +1 passo para foto
+  const totalSteps = user ? 5 : 6;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleNext = async () => {
@@ -191,7 +214,7 @@ const PatientForm = () => {
           body: {
             nome: formData.nome,
             email: formData.email,
-            password: '', // Google users don't need password
+            password: '',
             dataNascimento: formData.dataNascimento,
             genero: formData.genero,
             cpf: formData.cpf,
@@ -199,8 +222,14 @@ const PatientForm = () => {
             ehEstudante: formData.ehEstudante === 'estudante',
             instituicaoEnsino: formData.ehEstudante === 'estudante' ? formData.instituicaoEnsino : null,
             telefone: '',
-            existingUserId: session.user.id, // Pass existing user ID for Google users
-            tenantSlug: tenant?.slug || 'alopsi' // ⭐ Enviar tenant explicitamente
+            existingUserId: session.user.id,
+            tenantSlug: tenant?.slug || 'alopsi',
+            contatosEmergencia: contatosEmergencia.map(c => ({
+              nome: c.nome,
+              relacao: c.relacao === 'outro' ? c.relacaoOutro : RELATION_OPTIONS.find(o => o.value === c.relacao)?.label || c.relacao,
+              telefone: c.telefone || null,
+              email: c.email || null,
+            }))
           }
         });
 
@@ -277,7 +306,13 @@ const PatientForm = () => {
           ehEstudante: formData.ehEstudante === 'estudante',
           instituicaoEnsino: formData.ehEstudante === 'estudante' ? formData.instituicaoEnsino : null,
           telefone: '',
-          tenantSlug: tenant?.slug || 'alopsi' // ⭐ Enviar tenant explicitamente
+          tenantSlug: tenant?.slug || 'alopsi',
+          contatosEmergencia: contatosEmergencia.map(c => ({
+            nome: c.nome,
+            relacao: c.relacao === 'outro' ? c.relacaoOutro : RELATION_OPTIONS.find(o => o.value === c.relacao)?.label || c.relacao,
+            telefone: c.telefone || null,
+            email: c.email || null,
+          }))
         }
       });
 
@@ -588,7 +623,128 @@ const PatientForm = () => {
     </div>
   );
 
-  const renderStep3_5 = () => {
+  const updateEmergencyContact = (index: number, field: keyof EmergencyContact, value: string) => {
+    setContatosEmergencia(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const addEmergencyContact = () => {
+    if (contatosEmergencia.length < 3) {
+      setContatosEmergencia(prev => [...prev, { ...emptyContact }]);
+    }
+  };
+
+  const removeEmergencyContact = (index: number) => {
+    if (contatosEmergencia.length > 1) {
+      setContatosEmergencia(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const renderStepEmergency = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 text-muted-foreground mb-2">
+        <Users className="h-5 w-5" />
+        <p className="text-sm">
+          Cadastre pelo menos 1 contato de emergência (máximo 3). Informe telefone e/ou email.
+        </p>
+      </div>
+
+      {contatosEmergencia.map((contato, index) => (
+        <div key={index} className="border border-border rounded-lg p-4 space-y-4 relative">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-foreground">Contato {index + 1}</h4>
+            {contatosEmergencia.length > 1 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive"
+                onClick={() => removeEmergencyContact(index)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          <div>
+            <Label>Nome do contato <span className="text-destructive">*</span></Label>
+            <Input
+              value={contato.nome}
+              onChange={(e) => updateEmergencyContact(index, 'nome', e.target.value)}
+              placeholder="Nome completo do contato"
+            />
+          </div>
+
+          <div>
+            <Label>Relação <span className="text-destructive">*</span></Label>
+            <Combobox
+              options={RELATION_OPTIONS}
+              value={contato.relacao}
+              onValueChange={(value) => updateEmergencyContact(index, 'relacao', value)}
+              placeholder="Selecione a relação..."
+              searchPlaceholder="Buscar relação..."
+              emptyText="Nenhuma relação encontrada."
+            />
+            {contato.relacao === 'outro' && (
+              <Input
+                className="mt-2"
+                value={contato.relacaoOutro}
+                onChange={(e) => updateEmergencyContact(index, 'relacaoOutro', e.target.value)}
+                placeholder="Especifique a relação"
+              />
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="flex items-center gap-1">
+                <Phone className="h-3 w-3" /> Telefone
+              </Label>
+              <Input
+                value={contato.telefone}
+                onChange={(e) => updateEmergencyContact(index, 'telefone', e.target.value)}
+                placeholder="(00) 00000-0000"
+                inputMode="tel"
+              />
+            </div>
+            <div>
+              <Label className="flex items-center gap-1">
+                <Mail className="h-3 w-3" /> Email
+              </Label>
+              <Input
+                type="email"
+                value={contato.email}
+                onChange={(e) => updateEmergencyContact(index, 'email', e.target.value)}
+                placeholder="email@exemplo.com"
+              />
+            </div>
+          </div>
+
+          {/* Validation hint */}
+          {contato.nome && contato.relacao && !contato.telefone && !contato.email && (
+            <p className="text-sm text-destructive">Informe pelo menos um telefone ou email.</p>
+          )}
+        </div>
+      ))}
+
+      {contatosEmergencia.length < 3 && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={addEmergencyContact}
+          className="w-full flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Adicionar contato ({contatosEmergencia.length}/3)
+        </Button>
+      )}
+    </div>
+  );
+
+  const renderStepPhoto = () => {
     const previewAvatar = selectedPhotoFile 
       ? URL.createObjectURL(selectedPhotoFile)
       : photoPreviewUrl || formData.fotoPerfilUrl;
@@ -749,9 +905,12 @@ const PatientForm = () => {
   const canProceedStep1 = formData.estudanteStatus !== '';
   const canProceedStep2 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf;
   const canProceedStep3 = (formData.estudanteStatus === 'formado' || formData.instituicaoEnsino);
-  const canProceedStep3_5 = true; // Foto é sempre opcional
-  const canProceedStep4 = user ? true : (formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha);
-  const canSubmit = user ? canProceedStep3_5 : canProceedStep4;
+  const canProceedStepEmergency = contatosEmergencia.some(c => 
+    c.nome && c.relacao && (c.relacao !== 'outro' || c.relacaoOutro) && (c.telefone || c.email)
+  );
+  const canProceedStepPhoto = true; // Foto é sempre opcional
+  const canProceedStepPassword = user ? true : (formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha);
+  const canSubmit = user ? canProceedStepPhoto : canProceedStepPassword;
 
   return (
     <div className="min-h-screen bg-background">
@@ -784,13 +943,16 @@ const PatientForm = () => {
                 currentStep={currentStep}
                 totalSteps={totalSteps}
                 onStepClick={handleStepClick}
-                stepTitles={user ? ['Perfil', 'Dados Pessoais', 'Informações', 'Foto'] : ['Perfil', 'Dados Pessoais', 'Informações', 'Foto', 'Senha']}
+                stepTitles={user 
+                  ? ['Perfil', 'Dados Pessoais', 'Informações', 'Emergência', 'Foto'] 
+                  : ['Perfil', 'Dados Pessoais', 'Informações', 'Emergência', 'Foto', 'Senha']}
               />
               <CardTitle className="text-center text-xl">
                 {currentStep === 1 ? 'Defina seu perfil' :
                  currentStep === 2 ? 'Seus dados pessoais' :
                  currentStep === 3 ? 'Informações adicionais' :
-                 currentStep === 4 ? '📸 Foto de perfil (opcional)' :
+                 currentStep === 4 ? '🆘 Contato de Emergência' :
+                 currentStep === 5 ? '📸 Foto de perfil (opcional)' :
                  'Defina sua senha'}
               </CardTitle>
             </CardHeader>
@@ -799,8 +961,9 @@ const PatientForm = () => {
               {currentStep === 1 && renderStep1()}
               {currentStep === 2 && renderStep2()}
               {currentStep === 3 && renderStep3()}
-              {currentStep === 4 && renderStep3_5()}
-              {currentStep === 5 && renderStep4()}
+              {currentStep === 4 && renderStepEmergency()}
+              {currentStep === 5 && renderStepPhoto()}
+              {currentStep === 6 && renderStep4()}
 
               <div className="flex justify-between pt-6">
                 <Button
@@ -820,7 +983,8 @@ const PatientForm = () => {
                       (currentStep === 1 && !canProceedStep1) ||
                       (currentStep === 2 && !canProceedStep2) ||
                       (currentStep === 3 && !canProceedStep3) ||
-                      (currentStep === 4 && !canProceedStep3_5)
+                      (currentStep === 4 && !canProceedStepEmergency) ||
+                      (currentStep === 5 && !canProceedStepPhoto)
                     }
                     className="flex items-center gap-2"
                   >
