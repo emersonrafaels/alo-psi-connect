@@ -146,7 +146,7 @@ const PatientForm = () => {
     }
   }, [googleData, formData.fotoPerfilUrl, photoPreviewUrl]);
   
-  const totalSteps = user ? 4 : 5; // +1 passo para foto
+  const totalSteps = user ? 5 : 6;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleNext = async () => {
