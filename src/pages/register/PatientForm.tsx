@@ -701,7 +701,7 @@ const PatientForm = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label className="flex items-center gap-1">
-                <Phone className="h-3 w-3" /> Telefone
+                <Phone className="h-3 w-3" /> Telefone <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={contato.telefone}
