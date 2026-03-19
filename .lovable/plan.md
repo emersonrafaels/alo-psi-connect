@@ -1,73 +1,105 @@
 
 
-## Dois problemas para resolver
+## Adicionar Contato de Emergência ao cadastro de paciente
 
-### 1. Emoji do Foco não atualizado para usuários existentes
+### O que muda
 
-O `EMOJI_CORRECTIONS` só é aplicado na criação de configs (initializeDefaultConfigs/applyTemplate). Para usuários que já têm configs salvas, os emojis antigos persistem no banco.
+Inserir um novo step obrigatório **"Contato de Emergência"** entre o step 3 (Informações) e o step 4 (Foto). O paciente pode cadastrar de 1 a 3 contatos. Cada contato tem: nome, relação (combobox com opção "Outro"), e telefone e/ou email.
 
-**Solução:** Aplicar `applyEmojiCorrections` no `fetchUserConfigs`, corrigindo os emojis ao carregar os dados. Assim, mesmo configs existentes no banco terão os emojis corrigidos em memória. Além disso, criar uma migration SQL para atualizar os registros existentes no banco.
+### Alterações
 
-**Arquivo: `src/hooks/useEmotionConfig.tsx`** (linha 100)
+**1. `src/pages/register/PatientForm.tsx`**
+
+- Adicionar ao `formData` um array `contatosEmergencia` com tipo:
 ```typescript
-const configs = (data || []).map((config: any) => ({
-  ...config,
-  emoji_set: applyEmojiCorrections(config.emotion_type, config.emoji_set),
-})) as EmotionConfig[];
+interface EmergencyContact {
+  nome: string;
+  relacao: string;
+  relacaoOutro: string; // quando relação = "outro"
+  telefone: string;
+  email: string;
+}
 ```
+- Inicializar com 1 contato vazio.
+- Incrementar `totalSteps` de 5 para 6 (sem login) / 4 para 5 (com login).
+- Criar `renderStepEmergency()` — novo step 4 com:
+  - Lista de contatos (1 a 3), cada um em um card com campos:
+    - **Nome do contato** (Input, obrigatório)
+    - **Relação** (Combobox com opções: Pai/Mãe, Cônjuge, Irmão/Irmã, Filho/Filha, Amigo/Amiga, Tutor/Responsável, Outro) — ao selecionar "Outro", exibe input de texto livre
+    - **Telefone** (Input, pelo menos telefone ou email obrigatório)
+    - **Email** (Input, pelo menos telefone ou email obrigatório)
+  - Botão "Adicionar contato" (visível se < 3 contatos)
+  - Botão de remover contato (visível se > 1 contato)
+- Reajustar numeração dos steps seguintes (Foto vira 5, Senha vira 6).
+- Atualizar `stepTitles` para incluir "Emergência".
+- Adicionar validação `canProceedStepEmergency`: pelo menos 1 contato com nome, relação, e (telefone ou email) preenchidos.
+- Ajustar condições de `disabled` nos botões de navegação.
+- Passar `contatosEmergencia` no body do `supabase.functions.invoke('create-patient-profile')`.
 
-**Nova migration SQL:**
+**2. `supabase/functions/create-patient-profile/index.ts`**
+
+- Receber `contatosEmergencia` do body.
+- Após criar o paciente, inserir os contatos na tabela `patient_emergency_contacts`.
+
+**3. Nova migration SQL** — criar tabela `patient_emergency_contacts`:
 ```sql
-UPDATE emotion_configurations 
-SET emoji_set = jsonb_set(
-  jsonb_set(
-    jsonb_set(emoji_set, '{1}', '"😶"'),
-    '{2}', '"🤔"'
-  ),
-  '{3}', '"🎯"'
-)
-WHERE emotion_type = 'focus';
-```
+CREATE TABLE public.patient_emergency_contacts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id uuid REFERENCES public.pacientes(id) ON DELETE CASCADE NOT NULL,
+  nome text NOT NULL,
+  relacao text NOT NULL,
+  telefone text,
+  email text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
+  CONSTRAINT contact_info_required CHECK (telefone IS NOT NULL OR email IS NOT NULL)
+);
 
-### 2. Melhorar UX/UI do seletor no card de estatísticas
+ALTER TABLE public.patient_emergency_contacts ENABLE ROW LEVEL SECURITY;
 
-O seletor atual com borda e chevron parece um form input genérico, não combina com o visual dos outros cards.
+CREATE POLICY "Users can view their own emergency contacts"
+  ON public.patient_emergency_contacts FOR SELECT
+  USING (patient_id IN (
+    SELECT p.id FROM pacientes p
+    JOIN profiles pr ON p.profile_id = pr.id
+    WHERE pr.user_id = auth.uid()
+  ));
 
-**Solução:** Trocar para um design de "chip/tag" mais elegante — texto com ícone de chevron sutil inline, sem borda de input. Usar fundo levemente colorido com hover state para parecer clicável sem parecer formulário.
+CREATE POLICY "Users can insert their own emergency contacts"
+  ON public.patient_emergency_contacts FOR INSERT
+  WITH CHECK (patient_id IN (
+    SELECT p.id FROM pacientes p
+    JOIN profiles pr ON p.profile_id = pr.id
+    WHERE pr.user_id = auth.uid()
+  ));
 
-**Arquivo: `src/pages/MoodDiary.tsx`** (linhas 225-251)
+CREATE POLICY "Users can update their own emergency contacts"
+  ON public.patient_emergency_contacts FOR UPDATE
+  USING (patient_id IN (
+    SELECT p.id FROM pacientes p
+    JOIN profiles pr ON p.profile_id = pr.id
+    WHERE pr.user_id = auth.uid()
+  ));
 
-Redesign do card:
-- `CardTitle` com o nome da emoção selecionada como texto principal + "(7 dias)" como subtítulo
-- `Select` integrado de forma mais orgânica: trigger com estilo de chip/pill (fundo primary/10, rounded-full, padding horizontal)
-- Remover ícone Heart fixo, usar emoji da emoção selecionada no lugar
-- Manter o dropdown funcional
+CREATE POLICY "Users can delete their own emergency contacts"
+  ON public.patient_emergency_contacts FOR DELETE
+  USING (patient_id IN (
+    SELECT p.id FROM pacientes p
+    JOIN profiles pr ON p.profile_id = pr.id
+    WHERE pr.user_id = auth.uid()
+  ));
 
-```tsx
-<Card className="border-primary/20">
-  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-    <div className="flex-1 min-w-0">
-      <Select value={selectedStatEmotion} onValueChange={setSelectedStatEmotion}>
-        <SelectTrigger className="h-auto w-auto inline-flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-full px-3 py-1 text-sm font-medium border-none shadow-none transition-colors focus:ring-1 focus:ring-primary/30 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-primary/60">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {activeConfigs.map(config => (
-            <SelectItem key={config.emotion_type} value={config.emotion_type}>
-              {config.display_name} (7 dias)
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-    <Heart className="h-4 w-4 text-primary flex-shrink-0" />
-  </CardHeader>
-  ...
-</Card>
+CREATE POLICY "Admins can view all emergency contacts"
+  ON public.patient_emergency_contacts FOR SELECT
+  USING (is_admin(auth.uid()));
+
+CREATE POLICY "Service role full access"
+  ON public.patient_emergency_contacts FOR ALL
+  USING (true) WITH CHECK (true);
 ```
 
 ### Resumo de arquivos
-- `src/hooks/useEmotionConfig.tsx` — aplicar correções de emoji ao carregar configs
-- `src/pages/MoodDiary.tsx` — redesign do seletor para chip/pill style
-- Nova migration SQL — corrigir emojis de focus no banco
+- `src/pages/register/PatientForm.tsx` — novo step de contato de emergência
+- `supabase/functions/create-patient-profile/index.ts` — salvar contatos no banco
+- Nova migration SQL — tabela `patient_emergency_contacts` com RLS
 
