@@ -724,8 +724,8 @@ const PatientForm = () => {
           </div>
 
           {/* Validation hint */}
-          {contato.nome && contato.relacao && !contato.telefone && !contato.email && (
-            <p className="text-sm text-destructive">Informe pelo menos um telefone ou email.</p>
+          {contato.nome && contato.relacao && !contato.telefone && (
+            <p className="text-sm text-destructive">Informe o telefone do contato.</p>
           )}
         </div>
       ))}
