@@ -306,7 +306,13 @@ const PatientForm = () => {
           ehEstudante: formData.ehEstudante === 'estudante',
           instituicaoEnsino: formData.ehEstudante === 'estudante' ? formData.instituicaoEnsino : null,
           telefone: '',
-          tenantSlug: tenant?.slug || 'alopsi' // ⭐ Enviar tenant explicitamente
+          tenantSlug: tenant?.slug || 'alopsi',
+          contatosEmergencia: contatosEmergencia.map(c => ({
+            nome: c.nome,
+            relacao: c.relacao === 'outro' ? c.relacaoOutro : RELATION_OPTIONS.find(o => o.value === c.relacao)?.label || c.relacao,
+            telefone: c.telefone || null,
+            email: c.email || null,
+          }))
         }
       });
 
