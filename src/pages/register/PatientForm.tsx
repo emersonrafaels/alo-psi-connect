@@ -648,7 +648,7 @@ const PatientForm = () => {
       <div className="flex items-center gap-2 text-muted-foreground mb-2">
         <Users className="h-5 w-5" />
         <p className="text-sm">
-          Cadastre pelo menos 1 contato de emergência (máximo 3). Informe telefone e/ou email.
+          Cadastre pelo menos 1 contato de emergência (máximo 3). Telefone é obrigatório.
         </p>
       </div>
 
@@ -701,7 +701,7 @@ const PatientForm = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label className="flex items-center gap-1">
-                <Phone className="h-3 w-3" /> Telefone
+                <Phone className="h-3 w-3" /> Telefone <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={contato.telefone}
@@ -724,8 +724,8 @@ const PatientForm = () => {
           </div>
 
           {/* Validation hint */}
-          {contato.nome && contato.relacao && !contato.telefone && !contato.email && (
-            <p className="text-sm text-destructive">Informe pelo menos um telefone ou email.</p>
+          {contato.nome && contato.relacao && !contato.telefone && (
+            <p className="text-sm text-destructive">Informe o telefone do contato.</p>
           )}
         </div>
       ))}
@@ -906,7 +906,7 @@ const PatientForm = () => {
   const canProceedStep2 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf;
   const canProceedStep3 = (formData.estudanteStatus === 'formado' || formData.instituicaoEnsino);
   const canProceedStepEmergency = contatosEmergencia.some(c => 
-    c.nome && c.relacao && (c.relacao !== 'outro' || c.relacaoOutro) && (c.telefone || c.email)
+    c.nome && c.relacao && (c.relacao !== 'outro' || c.relacaoOutro) && c.telefone
   );
   const canProceedStepPhoto = true; // Foto é sempre opcional
   const canProceedStepPassword = user ? true : (formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha);
