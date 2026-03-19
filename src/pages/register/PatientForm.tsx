@@ -69,9 +69,11 @@ const PatientForm = () => {
   const googleData = location.state?.googleData || null;
   const { uploadProfilePhoto } = useProfileManager();
 
+  const [contatosEmergencia, setContatosEmergencia] = useState<EmergencyContact[]>([{ ...emptyContact }]);
+
   const [formData, setFormData] = useState({
     ehEstudante: '',
-    estudanteStatus: '', // Changed from ehEstudante to match function
+    estudanteStatus: '',
     nome: googleData?.fullName || '',
     email: user?.email || googleData?.email || '',
     dataNascimento: '',
@@ -80,12 +82,12 @@ const PatientForm = () => {
     sexualidade: '',
     cpf: '',
     instituicaoEnsino: '',
-    instituicao: '', // Added for consistency
+    instituicao: '',
     comoConheceu: '',
     senha: '',
     confirmarSenha: '',
-    password: '', // Added for edge function compatibility
-    telefone: '', // Added for edge function compatibility
+    password: '',
+    telefone: '',
     fotoPerfilUrl: googleData?.picture || ''
   });
 
