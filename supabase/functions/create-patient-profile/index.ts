@@ -95,7 +95,8 @@ serve(async (req) => {
       instituicaoEnsino,
       telefone,
       existingUserId,
-      tenantSlug: requestTenantSlug
+      tenantSlug: requestTenantSlug,
+      contatosEmergencia
     } = await req.json();
 
     console.log('Creating patient profile for:', email);
