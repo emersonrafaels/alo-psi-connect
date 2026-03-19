@@ -905,9 +905,12 @@ const PatientForm = () => {
   const canProceedStep1 = formData.estudanteStatus !== '';
   const canProceedStep2 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf;
   const canProceedStep3 = (formData.estudanteStatus === 'formado' || formData.instituicaoEnsino);
-  const canProceedStep3_5 = true; // Foto é sempre opcional
-  const canProceedStep4 = user ? true : (formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha);
-  const canSubmit = user ? canProceedStep3_5 : canProceedStep4;
+  const canProceedStepEmergency = contatosEmergencia.some(c => 
+    c.nome && c.relacao && (c.relacao !== 'outro' || c.relacaoOutro) && (c.telefone || c.email)
+  );
+  const canProceedStepPhoto = true; // Foto é sempre opcional
+  const canProceedStepPassword = user ? true : (formData.senha && formData.confirmarSenha && formData.senha === formData.confirmarSenha);
+  const canSubmit = user ? canProceedStepPhoto : canProceedStepPassword;
 
   return (
     <div className="min-h-screen bg-background">
@@ -940,13 +943,16 @@ const PatientForm = () => {
                 currentStep={currentStep}
                 totalSteps={totalSteps}
                 onStepClick={handleStepClick}
-                stepTitles={user ? ['Perfil', 'Dados Pessoais', 'Informações', 'Foto'] : ['Perfil', 'Dados Pessoais', 'Informações', 'Foto', 'Senha']}
+                stepTitles={user 
+                  ? ['Perfil', 'Dados Pessoais', 'Informações', 'Emergência', 'Foto'] 
+                  : ['Perfil', 'Dados Pessoais', 'Informações', 'Emergência', 'Foto', 'Senha']}
               />
               <CardTitle className="text-center text-xl">
                 {currentStep === 1 ? 'Defina seu perfil' :
                  currentStep === 2 ? 'Seus dados pessoais' :
                  currentStep === 3 ? 'Informações adicionais' :
-                 currentStep === 4 ? '📸 Foto de perfil (opcional)' :
+                 currentStep === 4 ? '🆘 Contato de Emergência' :
+                 currentStep === 5 ? '📸 Foto de perfil (opcional)' :
                  'Defina sua senha'}
               </CardTitle>
             </CardHeader>
@@ -955,8 +961,9 @@ const PatientForm = () => {
               {currentStep === 1 && renderStep1()}
               {currentStep === 2 && renderStep2()}
               {currentStep === 3 && renderStep3()}
-              {currentStep === 4 && renderStep3_5()}
-              {currentStep === 5 && renderStep4()}
+              {currentStep === 4 && renderStepEmergency()}
+              {currentStep === 5 && renderStepPhoto()}
+              {currentStep === 6 && renderStep4()}
 
               <div className="flex justify-between pt-6">
                 <Button
