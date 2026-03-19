@@ -648,7 +648,7 @@ const PatientForm = () => {
       <div className="flex items-center gap-2 text-muted-foreground mb-2">
         <Users className="h-5 w-5" />
         <p className="text-sm">
-          Cadastre pelo menos 1 contato de emergência (máximo 3). Informe telefone e/ou email.
+          Cadastre pelo menos 1 contato de emergência (máximo 3). Telefone é obrigatório.
         </p>
       </div>
 
