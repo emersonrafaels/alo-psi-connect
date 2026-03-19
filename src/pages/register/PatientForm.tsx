@@ -13,7 +13,7 @@ import Footer from '@/components/ui/footer';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Check, Eye, EyeOff, X, Camera } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Eye, EyeOff, X, Camera, Plus, Trash2, Phone, Mail, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ExistingAccountModal } from '@/components/ExistingAccountModal';
 import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
@@ -27,6 +27,27 @@ import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { PhotoUpload } from '@/components/ui/photo-upload';
 import { useProfileManager } from '@/hooks/useProfileManager';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Combobox } from '@/components/ui/combobox';
+
+interface EmergencyContact {
+  nome: string;
+  relacao: string;
+  relacaoOutro: string;
+  telefone: string;
+  email: string;
+}
+
+const RELATION_OPTIONS = [
+  { value: 'pai_mae', label: 'Pai/Mãe' },
+  { value: 'conjuge', label: 'Cônjuge' },
+  { value: 'irmao_irma', label: 'Irmão/Irmã' },
+  { value: 'filho_filha', label: 'Filho/Filha' },
+  { value: 'amigo_amiga', label: 'Amigo/Amiga' },
+  { value: 'tutor_responsavel', label: 'Tutor/Responsável' },
+  { value: 'outro', label: 'Outro' },
+];
+
+const emptyContact: EmergencyContact = { nome: '', relacao: '', relacaoOutro: '', telefone: '', email: '' };
 
 const PatientForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
