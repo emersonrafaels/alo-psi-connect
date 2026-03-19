@@ -2098,6 +2098,47 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_emergency_contacts: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          nome: string
+          patient_id: string
+          relacao: string
+          telefone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          nome: string
+          patient_id: string
+          relacao: string
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          nome?: string
+          patient_id?: string
+          relacao?: string
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_emergency_contacts_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_institutions: {
         Row: {
           created_at: string
