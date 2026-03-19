@@ -214,7 +214,7 @@ const PatientForm = () => {
           body: {
             nome: formData.nome,
             email: formData.email,
-            password: '', // Google users don't need password
+            password: '',
             dataNascimento: formData.dataNascimento,
             genero: formData.genero,
             cpf: formData.cpf,
@@ -222,8 +222,14 @@ const PatientForm = () => {
             ehEstudante: formData.ehEstudante === 'estudante',
             instituicaoEnsino: formData.ehEstudante === 'estudante' ? formData.instituicaoEnsino : null,
             telefone: '',
-            existingUserId: session.user.id, // Pass existing user ID for Google users
-            tenantSlug: tenant?.slug || 'alopsi' // ⭐ Enviar tenant explicitamente
+            existingUserId: session.user.id,
+            tenantSlug: tenant?.slug || 'alopsi',
+            contatosEmergencia: contatosEmergencia.map(c => ({
+              nome: c.nome,
+              relacao: c.relacao === 'outro' ? c.relacaoOutro : RELATION_OPTIONS.find(o => o.value === c.relacao)?.label || c.relacao,
+              telefone: c.telefone || null,
+              email: c.email || null,
+            }))
           }
         });
 
