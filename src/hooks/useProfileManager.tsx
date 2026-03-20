@@ -12,6 +12,8 @@ export interface ProfileData {
   cpf?: string;
   foto_perfil_url?: string;
   como_conheceu?: string;
+  raca?: string;
+  sexualidade?: string;
 }
 
 export const useProfileManager = () => {
