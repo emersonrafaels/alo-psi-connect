@@ -535,7 +535,7 @@ const Profile = () => {
                         {patientData.instituicao_ensino && (
                           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                             <span className="text-sm font-medium text-muted-foreground">Instituição de ensino</span>
-                            <span className="text-sm font-medium">{patientData.instituicao_ensino}</span>
+                            <span className="text-sm font-medium">{patientData.institution_name || patientData.instituicao_ensino}</span>
                           </div>
                         )}
                       </div>
