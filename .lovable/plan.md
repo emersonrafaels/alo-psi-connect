@@ -1,43 +1,43 @@
 
 
-## Adicionar informações completas ao perfil do paciente
+## Corrigir Instituição de Ensino e Relação no Perfil do Paciente
 
-### Situação atual
-O perfil do paciente exibe apenas: Nome, Email, Data de nascimento, Gênero, CPF e Como conheceu. Mas há mais dados disponíveis no banco que foram coletados no cadastro.
+### Problemas identificados
 
-### Dados disponíveis para adicionar
+1. **Instituição de ensino mostra UUID**: O campo `instituicao_ensino` na tabela `pacientes` armazena o UUID da instituição (não o nome). O perfil exibe esse UUID diretamente.
 
-| Campo | Tabela | Tipo |
-|-------|--------|------|
-| Raça/Etnia | `profiles.raca` | Editável |
-| Sexualidade | `profiles.sexualidade` | Editável |
-| Estudante/Formado | `pacientes.eh_estudante` | Somente leitura |
-| Instituição de ensino | `pacientes.instituicao_ensino` | Somente leitura |
-| Contatos de emergência | `patient_emergency_contacts` | Visualização + edição |
+2. **Relação vazia nos contatos**: O formulário de cadastro salva a relação como **label** (ex: "Pai/Mãe"), mas o Select no perfil usa **value** (ex: "pai_mae"). Os valores carregados do banco não correspondem a nenhuma opção do Select, então aparece vazio.
 
 ### Alterações
 
-**1. `src/pages/Profile.tsx`** — Tab "Informações Pessoais" do paciente (linhas 380-514)
+**`src/pages/Profile.tsx`**
 
-- Adicionar campos `raca` e `sexualidade` ao `formData` state e ao `useEffect` de população
-- Adicionar os campos no formulário após Gênero:
-  - **Raça/Etnia** (Select: Branca, Preta, Parda, Amarela, Indígena, Prefiro não informar)
-  - **Sexualidade** (Select: Heterossexual, Homossexual, Bissexual, Pansexual, Assexual, Prefiro não informar)
-- Adicionar uma nova tab "Emergência" (transformar grid de 2 tabs para 3) ou uma seção extra dentro de "Informações Pessoais"
+1. **Resolver nome da instituição**: Na query de `fetchPatientData`, fazer um lookup em `educational_institutions` usando o UUID de `instituicao_ensino` para exibir o nome real.
 
-**2. `src/pages/Profile.tsx`** — Nova seção de Contatos de Emergência
+```typescript
+// Após buscar patientData, resolver nome da instituição
+if (data?.instituicao_ensino) {
+  const { data: inst } = await supabase
+    .from('educational_institutions')
+    .select('name')
+    .eq('id', data.instituicao_ensino)
+    .maybeSingle();
+  if (inst) data.institution_name = inst.name;
+}
+```
 
-- Buscar dados de `pacientes` (eh_estudante, instituicao_ensino) e `patient_emergency_contacts` via queries ao carregar
-- Exibir seção "Informações Acadêmicas" com status estudante e instituição (somente leitura, vem do cadastro)
-- Exibir seção "Contatos de Emergência" com os contatos cadastrados, permitindo visualizar e editar (adicionar/remover até 3)
+Exibir `patientData.institution_name || patientData.instituicao_ensino` na UI.
 
-**3. Estrutura de tabs atualizada para paciente**
+2. **Corrigir relação nos contatos**: Ao carregar contatos do banco, fazer mapeamento reverso de label para value. Se o valor armazenado é "Pai/Mãe", converter para "pai_mae" para que o Select funcione. Se não encontrar match, manter o valor original (pode ser texto livre do campo "Outro").
 
-Mudar de 2 tabs para 3:
-- Informações Pessoais (nome, email, nascimento, gênero, raça, sexualidade, cpf, como conheceu)
-- Saúde & Emergência (status acadêmico + contatos de emergência editáveis)
-- Instituição (mantém como está)
+```typescript
+const labelToValue = (label: string) => {
+  const found = relationOptions.find(o => o.label === label || o.value === label);
+  return found?.value || label;
+};
+```
 
-### Resumo de arquivos
-- `src/pages/Profile.tsx` — adicionar campos, nova tab, buscar dados adicionais
+### Resumo
+- 1 arquivo: `src/pages/Profile.tsx`
+- 2 correções: lookup de nome da instituição + mapeamento de relação
 
