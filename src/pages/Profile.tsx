@@ -131,6 +131,18 @@ const Profile = () => {
         .maybeSingle();
       
       if (data) {
+        // Resolve institution name from UUID
+        if (data.instituicao_ensino) {
+          const { data: inst } = await supabase
+            .from('educational_institutions')
+            .select('name')
+            .eq('id', data.instituicao_ensino)
+            .maybeSingle();
+          if (inst) {
+            (data as any).institution_name = inst.name;
+          }
+        }
+        
         setPatientData(data);
         
         // Fetch emergency contacts
@@ -141,10 +153,16 @@ const Profile = () => {
           .order('created_at');
         
         if (contacts && contacts.length > 0) {
+          // Map relation labels back to values for the Select component
+          const labelToValue = (label: string) => {
+            const found = relationOptions.find(o => o.label === label || o.value === label);
+            return found?.value || label;
+          };
+          
           setEmergencyContacts(contacts.map((c: any) => ({
             id: c.id,
             nome: c.nome,
-            relacao: c.relacao,
+            relacao: labelToValue(c.relacao),
             telefone: c.telefone || '',
             email: c.email || ''
           })));
@@ -517,7 +535,7 @@ const Profile = () => {
                         {patientData.instituicao_ensino && (
                           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                             <span className="text-sm font-medium text-muted-foreground">Instituição de ensino</span>
-                            <span className="text-sm font-medium">{patientData.instituicao_ensino}</span>
+                            <span className="text-sm font-medium">{patientData.institution_name || patientData.instituicao_ensino}</span>
                           </div>
                         )}
                       </div>
