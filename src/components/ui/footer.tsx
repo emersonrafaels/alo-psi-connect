@@ -187,8 +187,8 @@ const Footer = () => {
                 </div>}
               {(tenant?.contact_email || true) && <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
-                  <a href={`mailto:${tenant?.contact_email || 'redebemestar1@gmail.com'}`} className="hover:opacity-100 transition-opacity">
-                    {tenant?.contact_email || 'redebemestar1@gmail.com'}
+                  <a href={`mailto:${tenant?.contact_email && tenant.contact_email !== 'contato@alopsi.com.br' ? tenant.contact_email : 'redebemestar1@gmail.com'}`} className="hover:opacity-100 transition-opacity">
+                    {tenant?.contact_email && tenant.contact_email !== 'contato@alopsi.com.br' ? tenant.contact_email : 'redebemestar1@gmail.com'}
                   </a>
                 </div>}
               
