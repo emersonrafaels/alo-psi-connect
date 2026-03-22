@@ -33,41 +33,55 @@ const About = () => {
         {/* Background abstrato para Rede Bem-Estar */}
         {isRedeBemEstar ? (
           <>
-            <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/70" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#5B218E] via-[#5B218E]/90 to-[#5B218E]/70" />
             {/* Formas orgânicas SVG */}
             <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 1200 600" preserveAspectRatio="none">
-              <circle cx="200" cy="150" r="300" fill="hsl(var(--accent))" />
-              <circle cx="900" cy="400" r="250" fill="hsl(var(--secondary))" />
-              <circle cx="600" cy="100" r="180" fill="hsl(var(--accent))" />
-              <ellipse cx="1000" cy="100" rx="200" ry="120" fill="hsl(var(--secondary))" />
+              <circle cx="200" cy="150" r="300" fill="#E281BB" />
+              <circle cx="900" cy="400" r="250" fill="#97D3D9" />
+              <circle cx="600" cy="100" r="180" fill="#E281BB" />
+              <ellipse cx="1000" cy="100" rx="200" ry="120" fill="#97D3D9" />
             </svg>
             <div className="container mx-auto px-4 relative z-10">
-              <div className="max-w-3xl">
-                <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 text-primary-foreground leading-tight">
-                  Bem-estar universitário com continuidade, contexto e inteligência
-                </h1>
-                <p className="text-lg lg:text-xl text-primary-foreground/80 mb-10 leading-relaxed max-w-2xl">
-                  A Rede Bem-Estar integra acompanhamento individual, leitura coletiva e apoio institucional 
-                  para fortalecer permanência, aprendizado e saúde emocional no ambiente acadêmico.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button
-                    size="lg"
-                    onClick={() => document.getElementById('manifesto')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="bg-background text-primary hover:bg-background/90 font-semibold"
-                  >
-                    Conhecer a plataforma
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}
-                    className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
-                  >
-                    <Building2 className="mr-2 h-5 w-5" />
-                    Sou uma instituição
-                  </Button>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div>
+                  <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 text-white leading-tight">
+                    Bem-estar universitário com continuidade, contexto e inteligência
+                  </h1>
+                  <p className="text-lg lg:text-xl text-white/80 mb-10 leading-relaxed max-w-2xl">
+                    A Rede Bem-Estar integra acompanhamento individual, leitura coletiva e apoio institucional 
+                    para fortalecer permanência, aprendizado e saúde emocional no ambiente acadêmico.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button
+                      size="lg"
+                      onClick={() => document.getElementById('manifesto')?.scrollIntoView({ behavior: 'smooth' })}
+                      className="bg-white text-[#5B218E] hover:bg-white/90 font-bold shadow-lg"
+                    >
+                      Conhecer a plataforma
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="lg"
+                      onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}
+                      className="border-2 border-white text-white hover:bg-white/15 font-semibold bg-transparent"
+                    >
+                      <Building2 className="mr-2 h-5 w-5" />
+                      Sou uma instituição
+                    </Button>
+                  </div>
+                </div>
+                <div className="hidden lg:block relative">
+                  <div className="relative rounded-2xl overflow-hidden shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-500">
+                    <img
+                      src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&h=400&fit=crop"
+                      alt="Estudantes universitários em campus"
+                      className="w-full h-[400px] object-cover"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#5B218E]/40 to-transparent" />
+                  </div>
+                  <div className="absolute -bottom-4 -left-4 w-24 h-24 rounded-full bg-[#E281BB]/30 blur-xl" />
+                  <div className="absolute -top-4 -right-4 w-32 h-32 rounded-full bg-[#97D3D9]/30 blur-xl" />
                 </div>
               </div>
             </div>
@@ -107,18 +121,21 @@ const About = () => {
 
       {/* SEÇÃO 2: Manifesto (apenas Rede Bem-Estar) */}
       {isRedeBemEstar && (
-        <section id="manifesto" className="py-24 lg:py-32 bg-background">
+        <section id="manifesto" className="py-24 lg:py-32 bg-primary/5">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-3xl lg:text-4xl font-light text-foreground leading-snug tracking-tight mb-8">
-                Cuidar não é intervir pontualmente.
-                <br />
-                <span className="text-primary font-semibold">É acompanhar ao longo do tempo.</span>
-              </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                O bem-estar universitário não se resolve em ações isoladas. Ele exige leitura contínua, 
-                contexto e responsabilidade institucional.
-              </p>
+            <div className="max-w-3xl mx-auto text-center relative">
+              <span className="text-6xl lg:text-8xl text-primary/10 font-serif absolute -top-8 left-1/2 -translate-x-1/2 select-none">"</span>
+              <div className="border-l-4 border-primary pl-8 text-left md:border-l-0 md:pl-0 md:text-center md:border-t-0">
+                <h2 className="text-3xl lg:text-4xl font-light text-foreground leading-snug tracking-tight mb-8">
+                  Cuidar não é intervir pontualmente.
+                  <br />
+                  <span className="text-primary font-semibold">É acompanhar ao longo do tempo.</span>
+                </h2>
+                <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                  O bem-estar universitário não se resolve em ações isoladas. Ele exige leitura contínua, 
+                  contexto e responsabilidade institucional.
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -138,6 +155,7 @@ const About = () => {
                   : "Acesso rápido a psicólogos e psiquiatras, trilhas e grupos de apoio.",
                 color: "border-t-primary",
                 bgColor: "from-primary/10 to-primary/20",
+                image: "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=400&h=200&fit=crop",
               },
               {
                 icon: Users,
@@ -147,6 +165,7 @@ const About = () => {
                   : "Suporte individual e orientação para manejo de turma e bem-estar.",
                 color: "border-t-accent",
                 bgColor: "from-accent/10 to-accent/20",
+                image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&h=200&fit=crop",
               },
               {
                 icon: Building2,
@@ -156,15 +175,28 @@ const About = () => {
                   : "Visão consolidada por painéis anônimos que apoiam decisões, acolhimento e permanência.",
                 color: "border-t-primary",
                 bgColor: "from-primary/10 to-primary/20",
+                image: "https://images.unsplash.com/photo-1562774053-701939374585?w=400&h=200&fit=crop",
               },
             ].map((item, index) => {
               const Icon = item.icon;
               return (
-                <Card key={index} className={`border-t-4 ${item.color} hover:shadow-xl transition-all group`}>
-                  <CardHeader className="text-center">
-                    <div className={`w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center bg-gradient-to-br ${item.bgColor} group-hover:scale-110 transition-transform`}>
-                      <Icon className="w-12 h-12 text-primary" />
+                <Card key={index} className={`border-t-4 ${item.color} hover:shadow-xl transition-all group overflow-hidden hover:scale-[1.02]`}>
+                  {isRedeBemEstar && (
+                    <div className="h-40 overflow-hidden">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
+                      />
                     </div>
+                  )}
+                  <CardHeader className="text-center">
+                    {!isRedeBemEstar && (
+                      <div className={`w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center bg-gradient-to-br ${item.bgColor} group-hover:scale-110 transition-transform`}>
+                        <Icon className="w-12 h-12 text-primary" />
+                      </div>
+                    )}
                     <CardTitle className="text-2xl">{item.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -188,26 +220,10 @@ const About = () => {
           <div className="max-w-4xl mx-auto space-y-8">
             {(isRedeBemEstar
               ? [
-                  {
-                    icon: Heart,
-                    title: "Acompanhamento contínuo",
-                    description: "Registro e suporte ao longo do tempo, não apenas em momentos críticos.",
-                  },
-                  {
-                    icon: Eye,
-                    title: "Leitura de contexto",
-                    description: "Compreensão das dinâmicas acadêmicas, períodos e pressões que afetam o bem-estar.",
-                  },
-                  {
-                    icon: Users,
-                    title: "Apoio estruturado",
-                    description: "Acesso a suporte clínico individual, trilhas de autocuidado e grupos temáticos.",
-                  },
-                  {
-                    icon: BarChart3,
-                    title: "Inteligência institucional",
-                    description: "Dados agregados e anônimos que orientam decisões estratégicas das instituições.",
-                  },
+                  { icon: Heart, title: "Acompanhamento contínuo", description: "Registro e suporte ao longo do tempo, não apenas em momentos críticos." },
+                  { icon: Eye, title: "Leitura de contexto", description: "Compreensão das dinâmicas acadêmicas, períodos e pressões que afetam o bem-estar." },
+                  { icon: Users, title: "Apoio estruturado", description: "Acesso a suporte clínico individual, trilhas de autocuidado e grupos temáticos." },
+                  { icon: BarChart3, title: "Inteligência institucional", description: "Dados agregados e anônimos que orientam decisões estratégicas das instituições." },
                 ]
               : [
                   { icon: ClipboardList, title: "Triagem Rápida", description: "Avaliação inicial para entender suas necessidades e direcionar para o melhor suporte." },
@@ -219,15 +235,19 @@ const About = () => {
             ).map((item, index, arr) => {
               const Icon = item.icon;
               const isLast = index === arr.length - 1;
+              const stepNum = String(index + 1).padStart(2, '0');
               return (
                 <div key={index} className="relative">
                   <div className="flex items-start gap-6">
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 relative">
+                      {isRedeBemEstar && (
+                        <span className="absolute -top-3 -left-3 text-4xl font-bold text-primary/10 select-none">{stepNum}</span>
+                      )}
                       <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary">
                         <Icon className="w-8 h-8 text-primary" />
                       </div>
                     </div>
-                    <Card className="flex-1 hover:shadow-lg transition-all">
+                    <Card className={`flex-1 hover:shadow-lg transition-all ${isRedeBemEstar && index % 2 === 1 ? 'bg-primary/5' : ''}`}>
                       <CardHeader>
                         <CardTitle className="text-xl">{item.title}</CardTitle>
                         <CardDescription className="text-base">{item.description}</CardDescription>
@@ -346,49 +366,65 @@ const About = () => {
                   </li>
                 ))}
               </ul>
-              <Button variant="default" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}>
+              <Button
+                size="lg"
+                onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}
+                className="bg-primary text-white hover:bg-primary/90 font-semibold"
+              >
                 {isRedeBemEstar ? "Solicitar demonstração" : "Quero Ver um Exemplo de Painel"}
               </Button>
             </div>
-            <Card className="bg-card border-2 border-primary/20 hover:border-primary/40 hover:shadow-2xl transition-all">
-              <CardContent className="p-8">
-                <h3 className="text-xl font-semibold mb-6 text-foreground flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5" />
-                  {isRedeBemEstar ? "Painel ilustrativo" : "Exemplo de Painel"}
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-end gap-2 h-40 bg-primary/5 rounded-lg p-4">
-                    <div className="w-full bg-primary/60 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '65%' }} />
-                    <div className="w-full bg-primary/70 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '85%' }} />
-                    <div className="w-full bg-primary/50 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '55%' }} />
-                    <div className="w-full bg-primary/65 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '75%' }} />
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
-                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
-                        <TrendingUp className="w-5 h-5 text-primary" />
-                      </div>
-                      <p className="text-2xl font-bold mb-1">87%</p>
-                      <p className="text-xs opacity-90">Adesão</p>
-                    </div>
-                    <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
-                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
-                        <BarChart3 className="w-5 h-5 text-primary" />
-                      </div>
-                      <p className="text-2xl font-bold mb-1">4.8</p>
-                      <p className="text-xs opacity-90">Avaliação</p>
-                    </div>
-                    <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
-                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
-                        <Calendar className="w-5 h-5 text-primary" />
-                      </div>
-                      <p className="text-2xl font-bold mb-1">320</p>
-                      <p className="text-xs opacity-90">Atendimentos</p>
-                    </div>
-                  </div>
+            <div className="space-y-6">
+              {isRedeBemEstar && (
+                <div className="rounded-2xl overflow-hidden shadow-lg">
+                  <img
+                    src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=300&fit=crop"
+                    alt="Dashboard de dados institucionais"
+                    className="w-full h-48 object-cover"
+                    loading="lazy"
+                  />
                 </div>
-              </CardContent>
-            </Card>
+              )}
+              <Card className="bg-card border-2 border-primary/20 hover:border-primary/40 hover:shadow-2xl transition-all">
+                <CardContent className="p-8">
+                  <h3 className="text-xl font-semibold mb-6 text-foreground flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    {isRedeBemEstar ? "Painel ilustrativo" : "Exemplo de Painel"}
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex items-end gap-2 h-40 bg-primary/5 rounded-lg p-4">
+                      <div className="w-full bg-primary/60 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '65%' }} />
+                      <div className="w-full bg-primary/70 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '85%' }} />
+                      <div className="w-full bg-primary/50 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '55%' }} />
+                      <div className="w-full bg-primary/65 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '75%' }} />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
+                        <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+                          <TrendingUp className="w-5 h-5 text-primary" />
+                        </div>
+                        <p className="text-2xl font-bold mb-1">87%</p>
+                        <p className="text-xs opacity-90">Adesão</p>
+                      </div>
+                      <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
+                        <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+                          <BarChart3 className="w-5 h-5 text-primary" />
+                        </div>
+                        <p className="text-2xl font-bold mb-1">4.8</p>
+                        <p className="text-xs opacity-90">Avaliação</p>
+                      </div>
+                      <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
+                        <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+                          <Calendar className="w-5 h-5 text-primary" />
+                        </div>
+                        <p className="text-2xl font-bold mb-1">320</p>
+                        <p className="text-xs opacity-90">Atendimentos</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
@@ -456,50 +492,54 @@ const About = () => {
       {/* SEÇÃO 9: FAQ */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-4">Perguntas Frequentes</h2>
-          <p className="text-center text-muted-foreground mb-16">
-            Tire suas dúvidas sobre {getTenantName()}
-          </p>
-          <Accordion type="single" collapsible className="max-w-3xl mx-auto">
-            {[
-              {
-                question: "Como funciona a confidencialidade?",
-                answer: "Todos os atendimentos seguem o sigilo profissional previsto nos códigos de ética da Psicologia e Medicina. Dados assistenciais individuais não são compartilhados com a instituição. Apenas relatórios agregados e anônimos são gerados para orientar ações institucionais.",
-              },
-              {
-                question: "Como são os relatórios institucionais?",
-                answer: "Os relatórios são sempre agregados e anonimizados, mostrando tendências gerais como temas mais buscados, períodos de maior demanda e correlações com o calendário acadêmico. Nenhum dado individual é identificável nesses relatórios.",
-              },
-              {
-                question: "Há cobertura de planos ou bolsas?",
-                answer: "Sim, trabalhamos com diferentes modelos: convênio institucional (custeado pela faculdade), planos de saúde parceiros e programa de bolsas para estudantes em situação de vulnerabilidade. Consulte sua instituição sobre as opções disponíveis.",
-              },
-              {
-                question: "Qual o tempo médio para iniciar?",
-                answer: "Após a triagem inicial, o tempo médio para o primeiro atendimento é de 3 a 5 dias úteis. Em casos de urgência identificados na triagem, priorizamos o atendimento em até 24 horas.",
-              },
-              {
-                question: "Como faço para agendar?",
-                answer: "Basta clicar em 'Agendar Atendimento' no topo da página, preencher o formulário de triagem inicial e escolher o profissional e horário que melhor se adequam à sua rotina. Você receberá confirmação por e-mail e SMS.",
-              },
-              {
-                question: "Como minha instituição pode entrar?",
-                answer: "Entre em contato através do botão 'Sou uma instituição' para agendar uma reunião com nosso time. Faremos uma apresentação personalizada, demonstração da plataforma e discussão sobre modelos de implementação adequados à sua instituição.",
-              },
-            ].map((item, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-left hover:text-primary">
-                  <div className="flex items-center gap-3">
-                    <HelpCircle className="w-5 h-5 text-primary flex-shrink-0" />
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-4 justify-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                <HelpCircle className="w-7 h-7 text-primary" />
+              </div>
+              <h2 className="text-3xl font-bold">Perguntas Frequentes</h2>
+            </div>
+            <p className="text-center text-muted-foreground mb-16">
+              Tire suas dúvidas sobre {getTenantName()}
+            </p>
+            <Accordion type="single" collapsible>
+              {[
+                {
+                  question: "Como funciona a confidencialidade?",
+                  answer: "Todos os atendimentos seguem o sigilo profissional previsto nos códigos de ética da Psicologia e Medicina. Dados assistenciais individuais não são compartilhados com a instituição. Apenas relatórios agregados e anônimos são gerados para orientar ações institucionais.",
+                },
+                {
+                  question: "Como são os relatórios institucionais?",
+                  answer: "Os relatórios são sempre agregados e anonimizados, mostrando tendências gerais como temas mais buscados, períodos de maior demanda e correlações com o calendário acadêmico. Nenhum dado individual é identificável nesses relatórios.",
+                },
+                {
+                  question: "Há cobertura de planos ou bolsas?",
+                  answer: "Sim, trabalhamos com diferentes modelos: convênio institucional (custeado pela faculdade), planos de saúde parceiros e programa de bolsas para estudantes em situação de vulnerabilidade. Consulte sua instituição sobre as opções disponíveis.",
+                },
+                {
+                  question: "Qual o tempo médio para iniciar?",
+                  answer: "Após a triagem inicial, o tempo médio para o primeiro atendimento é de 3 a 5 dias úteis. Em casos de urgência identificados na triagem, priorizamos o atendimento em até 24 horas.",
+                },
+                {
+                  question: "Como faço para agendar?",
+                  answer: "Basta clicar em 'Agendar Atendimento' no topo da página, preencher o formulário de triagem inicial e escolher o profissional e horário que melhor se adequam à sua rotina. Você receberá confirmação por e-mail e SMS.",
+                },
+                {
+                  question: "Como minha instituição pode entrar?",
+                  answer: "Entre em contato através do botão 'Sou uma instituição' para agendar uma reunião com nosso time. Faremos uma apresentação personalizada, demonstração da plataforma e discussão sobre modelos de implementação adequados à sua instituição.",
+                },
+              ].map((item, index) => (
+                <AccordionItem key={index} value={`item-${index}`}>
+                  <AccordionTrigger className="text-left hover:text-primary">
                     <span className="font-medium">{item.question}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground leading-relaxed pl-8">
-                  {item.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed">
+                    {item.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
         </div>
       </section>
 
