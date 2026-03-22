@@ -185,10 +185,10 @@ const Footer = () => {
                     {tenant.contact_phone}
                   </a>
                 </div>}
-              {tenant?.contact_email && <div className="flex items-center gap-2">
+              {(tenant?.contact_email || true) && <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
-                  <a href={`mailto:${tenant.contact_email}`} className="hover:opacity-100 transition-opacity">
-                    {tenant.contact_email}
+                  <a href={`mailto:${tenant?.contact_email || 'redebemestar1@gmail.com'}`} className="hover:opacity-100 transition-opacity">
+                    {tenant?.contact_email || 'redebemestar1@gmail.com'}
                   </a>
                 </div>}
               
