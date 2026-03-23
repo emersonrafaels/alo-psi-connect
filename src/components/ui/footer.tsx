@@ -1,14 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { GlobalCacheButton } from "./global-cache-button";
-import { useNewsletter } from "@/hooks/useNewsletter";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { buildTenantPath } from "@/utils/tenantHelpers";
 import { useModuleEnabled } from "@/hooks/useModuleEnabled";
-import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Mail, MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, MessageCircle, Heart, MessageCircleIcon } from "lucide-react";
+import { MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, MessageCircle, Heart, MessageCircleIcon, Mail } from "lucide-react";
 const Footer = () => {
   const {
     isAdmin
@@ -16,12 +13,6 @@ const Footer = () => {
   const {
     tenant
   } = useTenant();
-  const {
-    subscribe,
-    isLoading
-  } = useNewsletter();
-  const [email, setEmail] = useState("");
-  const [nome, setNome] = useState("");
   const { resolvedTheme } = useTheme();
   const tenantSlug = tenant?.slug || 'alopsi';
   
@@ -45,18 +36,6 @@ const Footer = () => {
   const blogEnabled = useModuleEnabled('blog');
   const professionalsEnabled = useModuleEnabled('professionals');
   const appointmentsEnabled = useModuleEnabled('appointments');
-  const handleNewsletterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    const success = await subscribe({
-      email,
-      nome: nome || undefined
-    });
-    if (success) {
-      setEmail("");
-      setNome("");
-    }
-  };
   const usefulLinks = [{
     name: "Sobre Nós",
     href: buildTenantPath(tenantSlug, "/sobre"),
@@ -105,26 +84,7 @@ const Footer = () => {
   };
   return <footer className="bg-[hsl(var(--footer-bg))] text-[hsl(var(--footer-text))]">
       <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-          {/* Newsletter */}
-          <div className="lg:col-span-1">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Mail className="w-5 h-5" />
-              Newsletter
-            </h3>
-            <p className="text-sm opacity-80 mb-4">
-              Receba dicas de saúde emocional e novidades sobre nossos serviços diretamente no seu email.
-            </p>
-            <form onSubmit={handleNewsletterSubmit} className="space-y-3">
-              <Input type="text" placeholder="Seu nome (opcional)" value={nome} onChange={e => setNome(e.target.value)} className="bg-transparent border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60" />
-              <div className="flex gap-2">
-                <Input type="email" placeholder="Seu e-mail" value={email} onChange={e => setEmail(e.target.value)} required className="bg-transparent border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60" />
-                <Button type="submit" variant="accent" size="sm" disabled={isLoading || !email}>
-                  {isLoading ? "..." : "→"}
-                </Button>
-              </div>
-            </form>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
           {/* Links Úteis */}
           <div className="lg:col-span-1">

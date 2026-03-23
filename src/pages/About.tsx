@@ -368,7 +368,7 @@ const About = () => {
               </ul>
               <Button
                 size="lg"
-                onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}
+                onClick={() => { navigate(buildTenantPath(tenantSlug, '/contato')); window.scrollTo(0, 0); }}
                 className="bg-primary text-white hover:bg-primary/90 font-semibold"
               >
                 {isRedeBemEstar ? "Solicitar demonstração" : "Quero Ver um Exemplo de Painel"}
@@ -435,7 +435,7 @@ const About = () => {
           <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto ${isRedeBemEstar ? 'gap-8' : ''}`}>
             <div>
               <h2 className={`font-bold mb-6 ${isRedeBemEstar ? 'text-2xl' : 'text-3xl'}`}>
-                {isRedeBemEstar ? "Base clínica, ética e de privacidade" : "Governança Clínica, Ética e LGPD"}
+                {isRedeBemEstar ? "Base clínica, ética e privacidade" : "Governança Clínica, Ética e LGPD"}
               </h2>
               <p className={`text-muted-foreground mb-8 leading-relaxed ${isRedeBemEstar ? 'text-sm' : ''}`}>
                 Atendimento por profissionais habilitados, protocolos clínicos, supervisões e 
