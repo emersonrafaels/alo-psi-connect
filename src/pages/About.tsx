@@ -391,37 +391,24 @@ const About = () => {
                     <BarChart3 className="w-5 h-5" />
                     {isRedeBemEstar ? "Painel ilustrativo" : "Exemplo de Painel"}
                   </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-end gap-2 h-40 bg-primary/5 rounded-lg p-4">
-                      <div className="w-full bg-primary/60 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '65%' }} />
-                      <div className="w-full bg-primary/70 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '85%' }} />
-                      <div className="w-full bg-primary/50 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '55%' }} />
-                      <div className="w-full bg-primary/65 hover:bg-primary rounded-t transition-all cursor-pointer" style={{ height: '75%' }} />
+                    <div className="flex items-end justify-center gap-6 h-48 bg-primary/5 rounded-lg p-6 pt-8">
+                      {[
+                        { label: 'Adesão', value: '87%', height: '87%' },
+                        { label: 'Avaliação', value: '4.8/5', height: '96%' },
+                        { label: 'Atendimentos', value: '320/mês', height: '100%' },
+                      ].map((metric) => (
+                        <div key={metric.label} className="flex flex-col items-center gap-1 w-full">
+                          <span className="text-sm font-bold text-primary">{metric.value}</span>
+                          <div className="w-full flex items-end" style={{ height: '120px' }}>
+                            <div
+                              className="w-full bg-primary/60 hover:bg-primary rounded-t transition-all cursor-pointer"
+                              style={{ height: metric.height }}
+                            />
+                          </div>
+                          <span className="text-xs text-muted-foreground mt-1">{metric.label}</span>
+                        </div>
+                      ))}
                     </div>
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
-                        <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
-                          <TrendingUp className="w-5 h-5 text-primary" />
-                        </div>
-                        <p className="text-2xl font-bold mb-1">87%</p>
-                        <p className="text-xs opacity-90">Adesão</p>
-                      </div>
-                      <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
-                        <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
-                          <BarChart3 className="w-5 h-5 text-primary" />
-                        </div>
-                        <p className="text-2xl font-bold mb-1">4.8</p>
-                        <p className="text-xs opacity-90">Avaliação</p>
-                      </div>
-                      <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 transition-all cursor-pointer border-2 border-primary/20 hover:border-primary/40 hover:scale-105 group">
-                        <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
-                          <Calendar className="w-5 h-5 text-primary" />
-                        </div>
-                        <p className="text-2xl font-bold mb-1">320</p>
-                        <p className="text-xs opacity-90">Atendimentos</p>
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </div>
