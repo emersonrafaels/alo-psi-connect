@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { GlobalCacheButton } from "./global-cache-button";
-import { useNewsletter } from "@/hooks/useNewsletter";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { buildTenantPath } from "@/utils/tenantHelpers";
 import { useModuleEnabled } from "@/hooks/useModuleEnabled";
-import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Mail, MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, MessageCircle, Heart, MessageCircleIcon } from "lucide-react";
+import { useTheme } from "next-themes";
+import { MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, MessageCircle, Heart, MessageCircleIcon, Mail } from "lucide-react";
 const Footer = () => {
   const {
     isAdmin
