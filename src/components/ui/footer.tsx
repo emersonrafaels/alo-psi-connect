@@ -14,7 +14,6 @@ const Footer = () => {
     tenant
   } = useTenant();
   const { resolvedTheme } = useTheme();
-  const { resolvedTheme } = useTheme();
   const tenantSlug = tenant?.slug || 'alopsi';
   
   // Use footer-specific logo with fallback to main logo
@@ -37,18 +36,6 @@ const Footer = () => {
   const blogEnabled = useModuleEnabled('blog');
   const professionalsEnabled = useModuleEnabled('professionals');
   const appointmentsEnabled = useModuleEnabled('appointments');
-  const handleNewsletterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    const success = await subscribe({
-      email,
-      nome: nome || undefined
-    });
-    if (success) {
-      setEmail("");
-      setNome("");
-    }
-  };
   const usefulLinks = [{
     name: "Sobre Nós",
     href: buildTenantPath(tenantSlug, "/sobre"),
