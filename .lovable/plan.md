@@ -1,21 +1,25 @@
 
 
-## Ajustes na página Sobre e rodapé
+## Corrigir coerência entre gráfico e métricas no painel ilustrativo
 
-### Alterações
+### Problema
+O gráfico de barras tem 4 barras com alturas (65%, 85%, 55%, 75%) que não representam nenhuma das 3 métricas abaixo (87% Adesão, 4.8 Avaliação, 320 Atendimentos). As barras e os números contam histórias diferentes.
 
-**1. `src/pages/About.tsx` (linha 371)** — Redirecionar "Solicitar demonstração" para o topo da página de contato
-- Mudar `navigate(buildTenantPath(tenantSlug, '/contato'))` para incluir scroll to top após navegação, usando `window.scrollTo(0, 0)` após o navigate, ou simplesmente navegando sem hash (já deveria ir ao topo — verificar se há algo impedindo)
+### Solução
+Redesenhar o painel para que o gráfico reflita as métricas. Substituir as 4 barras genéricas por 3 barras que representam visualmente as 3 métricas:
 
-**2. `src/pages/About.tsx` (linha 438)** — Corrigir texto
-- Trocar `"Base clínica, ética e de privacidade"` por `"Base clínica, ética e privacidade"`
+**`src/pages/About.tsx` (linhas 395-422)**
 
-**3. `src/components/ui/footer.tsx` (linhas 109-127)** — Remover coluna Newsletter
-- Remover o bloco inteiro do Newsletter (`<div className="lg:col-span-1">` com form)
-- Ajustar grid de `lg:grid-cols-5` para `lg:grid-cols-4`
-- Remover imports não utilizados: `useNewsletter`, estados `email`/`nome`, `handleNewsletterSubmit`
+- Substituir o gráfico de barras por 3 barras rotuladas que correspondem às métricas:
+  - **Adesão**: 87% de altura (label "87%")
+  - **Avaliação**: 96% de altura (4.8/5.0 = 96%)
+  - **Atendimentos**: barra cheia como referência (320/mês)
+- Adicionar labels embaixo de cada barra com o nome da métrica
+- Remover os 3 cards separados abaixo — integrar os valores diretamente no gráfico (valor no topo de cada barra)
+- Layout mais limpo: gráfico de barras com labels inline, sem duplicação de informação
 
-### Arquivos
-- `src/pages/About.tsx` — 2 alterações pontuais
-- `src/components/ui/footer.tsx` — remoção da coluna newsletter + cleanup
+Resultado: um único gráfico coerente onde barras e números contam a mesma história.
+
+### Arquivo
+- `src/pages/About.tsx` — linhas 395-422
 
