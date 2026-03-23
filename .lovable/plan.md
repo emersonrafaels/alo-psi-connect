@@ -1,25 +1,73 @@
 
 
-## Corrigir coerência entre gráfico e métricas no painel ilustrativo
+## Refinamento da Página "Sobre" — Aderência ao Manual de Marca
 
-### Problema
-O gráfico de barras tem 4 barras com alturas (65%, 85%, 55%, 75%) que não representam nenhuma das 3 métricas abaixo (87% Adesão, 4.8 Avaliação, 320 Atendimentos). As barras e os números contam histórias diferentes.
+### Resumo
+Refinar toda a página About.tsx para refletir o posicionamento institucional, paleta de cores, linguagem e padrão visual da Rede Bem-Estar conforme o manual de marca.
 
-### Solução
-Redesenhar o painel para que o gráfico reflita as métricas. Substituir as 4 barras genéricas por 3 barras que representam visualmente as 3 métricas:
+---
 
-**`src/pages/About.tsx` (linhas 395-422)**
+### Alterações por seção
 
-- Substituir o gráfico de barras por 3 barras rotuladas que correspondem às métricas:
-  - **Adesão**: 87% de altura (label "87%")
-  - **Avaliação**: 96% de altura (4.8/5.0 = 96%)
-  - **Atendimentos**: barra cheia como referência (320/mês)
-- Adicionar labels embaixo de cada barra com o nome da métrica
-- Remover os 3 cards separados abaixo — integrar os valores diretamente no gráfico (valor no topo de cada barra)
-- Layout mais limpo: gráfico de barras com labels inline, sem duplicação de informação
+**1. Hero — Ajustar textos e CTAs**
+- Subtítulo: trocar para "Integramos suporte individual, leitura coletiva e dados institucionais para acompanhar a saúde emocional ao longo do tempo."
+- CTA primário: "Conhecer a solução" (substituir "Conhecer a plataforma")
+- CTA secundário: "Falar com a equipe" (substituir "Sou uma instituição")
+- Adicionar formas orgânicas SVG mais suaves no fundo (curvas fluidas em vez de apenas círculos)
+- Aplicar cores do manual: Deep Care Purple, Soft Empathy Pink, Calm Mint
 
-Resultado: um único gráfico coerente onde barras e números contam a mesma história.
+**2. Manifesto — Destacar "acompanhar"**
+- Adicionar destaque sutil (italic + underline decorativo) na palavra "acompanhar"
+- Aumentar espaço em branco ao redor (py-32)
+- Fundo Balance White (#F4F4F4) em vez de primary/5
 
-### Arquivo
-- `src/pages/About.tsx` — linhas 395-422
+**3. Para Quem É — Refinamento de linguagem**
+- Manter estrutura, refinar textos para evitar linguagem de marketplace
+- Aplicar cores do manual nos border-top (roxo, rosa, verde-água)
+
+**4. Como Estruturamos o Cuidado — Refinamento visual**
+- Usar cores alternadas do manual (roxo, rosa, verde-água) nos ícones
+- Refinar textos para linguagem RBE (evitar "atendimento", usar "acompanhamento")
+
+**5. Diferenciais — Aplicar paleta e tom**
+- Aplicar hover com cores do manual
+- Refinar linguagem: "Agilidade no acesso" → "Continuidade no acesso"
+
+**6. Dados — Atualizar textos conforme briefing**
+- Subtítulo: "Leituras agregadas que ajudam instituições a identificar padrões, antecipar riscos e agir com mais precisão"
+- Adicionar frase: "Permite sair de decisões reativas para uma gestão contínua do bem-estar"
+- CTA: manter "Solicitar demonstração"
+
+**7. Governança — Atualizar título**
+- Título: "Base clínica, ética e de privacidade" (conforme briefing item 12)
+- Tom discreto e institucional mantido
+
+**8. Time — Reduzir aparência marketplace**
+- Título: "Equipe clínica e operação dedicada ao contexto acadêmico"
+- Subtítulo: "Profissionais selecionados, supervisionados e alinhados às demandas do ambiente universitário"
+- Remover badges de especialidade dos cards (reduz aparência marketplace)
+- Simplificar cards: avatar + nome + profissão + bio curta apenas
+
+**9. FAQ — Ajustar linguagem**
+- Substituir "agendar" → "iniciar acompanhamento"
+- Substituir "atendimento" → "acompanhamento" nos textos das respostas
+- Remover pergunta "Como faço para agendar?" ou reformular para "Como inicio meu acompanhamento?"
+
+**10. Pattern visual e fundos**
+- Adicionar divisores orgânicos SVG entre seções (ondas suaves)
+- Fundo das seções alternando entre branco (#F4F4F4) e transparente
+- Remover bg-muted/30 e bg-muted/50, usar cores do manual
+
+**11. Tipografia e espaçamento**
+- Garantir font-family Inter em todos os títulos
+- Aumentar espaçamento entre seções (py-24 mínimo para RBE)
+- Títulos mais respiráveis (tracking-tight, leading-snug)
+
+---
+
+### Arquivo editado
+- `src/pages/About.tsx` — refatoração completa do conteúdo RBE
+
+### Nota sobre a Governança
+O briefing pede "Base clínica, ética e de privacidade" (item 12), mas a memória de marca diz "Base clínica, ética e privacidade" (sem "de"). Seguirei a memória de marca que é a referência mais recente.
 
