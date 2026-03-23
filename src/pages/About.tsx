@@ -14,6 +14,19 @@ import { useProfessionals } from "@/hooks/useProfessionals";
 import { getIllustrativeAvatar } from "@/utils/avatarHelpers";
 import { Target, Eye, Lightbulb, ClipboardList, UserCheck, Video, Heart, BarChart3, ShieldCheck, GraduationCap, Users, Building2, Focus, Hospital, Zap, AlertTriangle, Link2, Lock, TrendingUp, Calendar, HelpCircle, ArrowRight } from "lucide-react";
 
+// Divisor orgânico SVG entre seções
+const WaveDivider = ({ flip = false, color = "#5B218E" }: { flip?: boolean; color?: string }) => (
+  <div className={`w-full overflow-hidden leading-[0] ${flip ? 'rotate-180' : ''}`}>
+    <svg viewBox="0 0 1200 80" preserveAspectRatio="none" className="w-full h-[40px]">
+      <path
+        d="M0,40 C200,80 400,0 600,40 C800,80 1000,0 1200,40 L1200,80 L0,80 Z"
+        fill={color}
+        fillOpacity="0.06"
+      />
+    </svg>
+  </div>
+);
+
 const About = () => {
   const navigate = useNavigate();
   const { tenant } = useTenant();
@@ -25,31 +38,29 @@ const About = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background font-sans">
       <Header />
 
       {/* SEÇÃO 1: Hero */}
       <section className="relative overflow-hidden py-24 lg:py-32">
-        {/* Background abstrato para Rede Bem-Estar */}
         {isRedeBemEstar ? (
           <>
             <div className="absolute inset-0 bg-gradient-to-br from-[#5B218E] via-[#5B218E]/90 to-[#5B218E]/70" />
-            {/* Formas orgânicas SVG */}
-            <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 1200 600" preserveAspectRatio="none">
-              <circle cx="200" cy="150" r="300" fill="#E281BB" />
-              <circle cx="900" cy="400" r="250" fill="#97D3D9" />
-              <circle cx="600" cy="100" r="180" fill="#E281BB" />
-              <ellipse cx="1000" cy="100" rx="200" ry="120" fill="#97D3D9" />
+            {/* Formas orgânicas SVG — curvas fluidas */}
+            <svg className="absolute inset-0 w-full h-full opacity-[0.08]" viewBox="0 0 1200 600" preserveAspectRatio="none">
+              <path d="M0,300 Q300,100 600,300 T1200,300 L1200,600 L0,600 Z" fill="#E281BB" />
+              <path d="M0,400 Q400,200 800,400 T1200,350 L1200,600 L0,600 Z" fill="#97D3D9" />
+              <ellipse cx="150" cy="100" rx="200" ry="140" fill="#E281BB" opacity="0.5" />
+              <ellipse cx="1050" cy="120" rx="180" ry="100" fill="#97D3D9" opacity="0.5" />
             </svg>
             <div className="container mx-auto px-4 relative z-10">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div>
-                  <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 text-white leading-tight">
+                  <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 text-white leading-tight tracking-tight">
                     Bem-estar universitário com continuidade, contexto e inteligência
                   </h1>
                   <p className="text-lg lg:text-xl text-white/80 mb-10 leading-relaxed max-w-2xl">
-                    A Rede Bem-Estar integra acompanhamento individual, leitura coletiva e apoio institucional 
-                    para fortalecer permanência, aprendizado e saúde emocional no ambiente acadêmico.
+                    Integramos suporte individual, leitura coletiva e dados institucionais para acompanhar a saúde emocional ao longo do tempo.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4">
                     <Button
@@ -57,7 +68,7 @@ const About = () => {
                       onClick={() => document.getElementById('manifesto')?.scrollIntoView({ behavior: 'smooth' })}
                       className="bg-white text-[#5B218E] hover:bg-white/90 font-bold shadow-lg"
                     >
-                      Conhecer a plataforma
+                      Conhecer a solução
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                     <Button
@@ -66,7 +77,7 @@ const About = () => {
                       className="border-2 border-white text-white hover:bg-white/15 font-semibold bg-transparent"
                     >
                       <Building2 className="mr-2 h-5 w-5" />
-                      Sou uma instituição
+                      Falar com a equipe
                     </Button>
                   </div>
                 </div>
@@ -121,30 +132,36 @@ const About = () => {
 
       {/* SEÇÃO 2: Manifesto (apenas Rede Bem-Estar) */}
       {isRedeBemEstar && (
-        <section id="manifesto" className="py-24 lg:py-32 bg-primary/5">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center relative">
-              <span className="text-6xl lg:text-8xl text-primary/10 font-serif absolute -top-8 left-1/2 -translate-x-1/2 select-none">"</span>
-              <div className="border-l-4 border-primary pl-8 text-left md:border-l-0 md:pl-0 md:text-center md:border-t-0">
-                <h2 className="text-3xl lg:text-4xl font-light text-foreground leading-snug tracking-tight mb-8">
-                  Cuidar não é intervir pontualmente.
-                  <br />
-                  <span className="text-primary font-semibold">É acompanhar ao longo do tempo.</span>
-                </h2>
-                <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                  O bem-estar universitário não se resolve em ações isoladas. Ele exige leitura contínua, 
-                  contexto e responsabilidade institucional.
-                </p>
+        <>
+          <WaveDivider color="#5B218E" />
+          <section id="manifesto" className="py-28 lg:py-36 bg-[#F4F4F4]">
+            <div className="container mx-auto px-4">
+              <div className="max-w-3xl mx-auto text-center relative">
+                <span className="text-6xl lg:text-8xl text-[#5B218E]/10 font-serif absolute -top-8 left-1/2 -translate-x-1/2 select-none">"</span>
+                <div className="md:text-center">
+                  <h2 className="text-3xl lg:text-4xl font-light text-foreground leading-snug tracking-tight mb-8">
+                    Cuidar não é intervir pontualmente.
+                    <br />
+                    <span className="text-[#5B218E] font-semibold">
+                      É <em className="underline decoration-[#E281BB]/60 decoration-2 underline-offset-4">acompanhar</em> ao longo do tempo.
+                    </span>
+                  </h2>
+                  <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                    O bem-estar universitário não se resolve em ações isoladas. Ele exige leitura contínua, 
+                    contexto e responsabilidade institucional.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+          <WaveDivider color="#5B218E" flip />
+        </>
       )}
 
       {/* SEÇÃO 3: Para Quem É */}
-      <section className="py-20 bg-background">
+      <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-16">Para Quem É</h2>
+          <h2 className="text-3xl font-bold text-center mb-16 tracking-tight">Para Quem É</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {[
               {
@@ -153,7 +170,7 @@ const About = () => {
                 description: isRedeBemEstar
                   ? "Acompanhamento acessível com suporte contínuo ao longo da jornada acadêmica."
                   : "Acesso rápido a psicólogos e psiquiatras, trilhas e grupos de apoio.",
-                color: "border-t-primary",
+                borderColor: isRedeBemEstar ? "border-t-[#5B218E]" : "border-t-primary",
                 bgColor: "from-primary/10 to-primary/20",
                 image: "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=400&h=200&fit=crop",
               },
@@ -163,7 +180,7 @@ const About = () => {
                 description: isRedeBemEstar
                   ? "Ferramentas e suporte para lidar com carga emocional, dinâmica de turma e permanência."
                   : "Suporte individual e orientação para manejo de turma e bem-estar.",
-                color: "border-t-accent",
+                borderColor: isRedeBemEstar ? "border-t-[#E281BB]" : "border-t-accent",
                 bgColor: "from-accent/10 to-accent/20",
                 image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&h=200&fit=crop",
               },
@@ -173,14 +190,14 @@ const About = () => {
                 description: isRedeBemEstar
                   ? "Visão estruturada e dados agregados para orientar decisões e fortalecer o ambiente acadêmico."
                   : "Visão consolidada por painéis anônimos que apoiam decisões, acolhimento e permanência.",
-                color: "border-t-primary",
+                borderColor: isRedeBemEstar ? "border-t-[#97D3D9]" : "border-t-primary",
                 bgColor: "from-primary/10 to-primary/20",
                 image: "https://images.unsplash.com/photo-1562774053-701939374585?w=400&h=200&fit=crop",
               },
             ].map((item, index) => {
               const Icon = item.icon;
               return (
-                <Card key={index} className={`border-t-4 ${item.color} hover:shadow-xl transition-all group overflow-hidden hover:scale-[1.02]`}>
+                <Card key={index} className={`border-t-4 ${item.borderColor} hover:shadow-xl transition-all group overflow-hidden hover:scale-[1.02]`}>
                   {isRedeBemEstar && (
                     <div className="h-40 overflow-hidden">
                       <img
@@ -212,25 +229,26 @@ const About = () => {
       </section>
 
       {/* SEÇÃO 4: Como Funciona / Como Estruturamos o Cuidado */}
-      <section className="py-20 bg-muted/30">
+      {isRedeBemEstar && <WaveDivider color="#97D3D9" />}
+      <section className={isRedeBemEstar ? "py-24 bg-[#F4F4F4]" : "py-20 bg-muted/30"}>
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-16">
+          <h2 className="text-3xl font-bold text-center mb-16 tracking-tight">
             {isRedeBemEstar ? "Como estruturamos o cuidado" : "Como Funciona"}
           </h2>
           <div className="max-w-4xl mx-auto space-y-8">
             {(isRedeBemEstar
               ? [
-                  { icon: Heart, title: "Acompanhamento contínuo", description: "Registro e suporte ao longo do tempo, não apenas em momentos críticos." },
-                  { icon: Eye, title: "Leitura de contexto", description: "Compreensão das dinâmicas acadêmicas, períodos e pressões que afetam o bem-estar." },
-                  { icon: Users, title: "Apoio estruturado", description: "Acesso a suporte clínico individual, trilhas de autocuidado e grupos temáticos." },
-                  { icon: BarChart3, title: "Inteligência institucional", description: "Dados agregados e anônimos que orientam decisões estratégicas das instituições." },
+                  { icon: Heart, title: "Acompanhamento contínuo", description: "Registro e suporte ao longo do tempo, não apenas em momentos críticos.", iconColor: "text-[#5B218E]", iconBg: "bg-[#5B218E]/10", borderColor: "border-[#5B218E]" },
+                  { icon: Eye, title: "Leitura de contexto", description: "Compreensão das dinâmicas acadêmicas, períodos e pressões que afetam o bem-estar.", iconColor: "text-[#E281BB]", iconBg: "bg-[#E281BB]/10", borderColor: "border-[#E281BB]" },
+                  { icon: Users, title: "Apoio estruturado", description: "Acesso a suporte clínico individual, trilhas de autocuidado e grupos temáticos.", iconColor: "text-[#97D3D9]", iconBg: "bg-[#97D3D9]/10", borderColor: "border-[#97D3D9]" },
+                  { icon: BarChart3, title: "Inteligência institucional", description: "Dados agregados e anônimos que orientam decisões estratégicas das instituições.", iconColor: "text-[#5B218E]", iconBg: "bg-[#5B218E]/10", borderColor: "border-[#5B218E]" },
                 ]
               : [
-                  { icon: ClipboardList, title: "Triagem Rápida", description: "Avaliação inicial para entender suas necessidades e direcionar para o melhor suporte." },
-                  { icon: UserCheck, title: "Escolha de Profissional", description: "Acesso a psicólogos e psiquiatras especializados no contexto universitário médico." },
-                  { icon: Video, title: "Atendimento Online", description: "Flexibilidade para escolher o formato que melhor se adapta à sua rotina." },
-                  { icon: Heart, title: "Planos de Autocuidado e Grupos Temáticos", description: "Trilhas personalizadas e grupos de apoio para diferentes necessidades." },
-                  { icon: BarChart3, title: "Relatórios Institucionais", description: "Para a instituição: dados agregados e anônimos que orientam ações de prevenção." },
+                  { icon: ClipboardList, title: "Triagem Rápida", description: "Avaliação inicial para entender suas necessidades e direcionar para o melhor suporte.", iconColor: "text-primary", iconBg: "bg-primary/10", borderColor: "border-primary" },
+                  { icon: UserCheck, title: "Escolha de Profissional", description: "Acesso a psicólogos e psiquiatras especializados no contexto universitário médico.", iconColor: "text-primary", iconBg: "bg-primary/10", borderColor: "border-primary" },
+                  { icon: Video, title: "Atendimento Online", description: "Flexibilidade para escolher o formato que melhor se adapta à sua rotina.", iconColor: "text-primary", iconBg: "bg-primary/10", borderColor: "border-primary" },
+                  { icon: Heart, title: "Planos de Autocuidado e Grupos Temáticos", description: "Trilhas personalizadas e grupos de apoio para diferentes necessidades.", iconColor: "text-primary", iconBg: "bg-primary/10", borderColor: "border-primary" },
+                  { icon: BarChart3, title: "Relatórios Institucionais", description: "Para a instituição: dados agregados e anônimos que orientam ações de prevenção.", iconColor: "text-primary", iconBg: "bg-primary/10", borderColor: "border-primary" },
                 ]
             ).map((item, index, arr) => {
               const Icon = item.icon;
@@ -241,31 +259,32 @@ const About = () => {
                   <div className="flex items-start gap-6">
                     <div className="flex-shrink-0 relative">
                       {isRedeBemEstar && (
-                        <span className="absolute -top-3 -left-3 text-4xl font-bold text-primary/10 select-none">{stepNum}</span>
+                        <span className="absolute -top-3 -left-3 text-4xl font-bold text-[#5B218E]/10 select-none">{stepNum}</span>
                       )}
-                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary">
-                        <Icon className="w-8 h-8 text-primary" />
+                      <div className={`w-16 h-16 rounded-full ${item.iconBg} flex items-center justify-center border-2 ${item.borderColor}`}>
+                        <Icon className={`w-8 h-8 ${item.iconColor}`} />
                       </div>
                     </div>
-                    <Card className={`flex-1 hover:shadow-lg transition-all ${isRedeBemEstar && index % 2 === 1 ? 'bg-primary/5' : ''}`}>
+                    <Card className="flex-1 hover:shadow-lg transition-all">
                       <CardHeader>
                         <CardTitle className="text-xl">{item.title}</CardTitle>
                         <CardDescription className="text-base">{item.description}</CardDescription>
                       </CardHeader>
                     </Card>
                   </div>
-                  {!isLast && <div className="absolute left-8 top-16 w-0.5 h-8 bg-primary/30" />}
+                  {!isLast && <div className="absolute left-8 top-16 w-0.5 h-8 bg-[#5B218E]/20" />}
                 </div>
               );
             })}
           </div>
         </div>
       </section>
+      {isRedeBemEstar && <WaveDivider color="#97D3D9" flip />}
 
       {/* SEÇÃO 5: Diferenciais */}
-      <section className="py-20 bg-muted/50">
+      <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-16">Nossos Diferenciais</h2>
+          <h2 className="text-3xl font-bold text-center mb-16 tracking-tight">Nossos Diferenciais</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {[
               {
@@ -284,9 +303,9 @@ const About = () => {
               },
               {
                 icon: Zap,
-                title: isRedeBemEstar ? "Agilidade no acesso" : "Início rápido",
+                title: isRedeBemEstar ? "Continuidade no acesso" : "Início rápido",
                 description: isRedeBemEstar
-                  ? "Tempo reduzido entre a busca por ajuda e o início do acompanhamento"
+                  ? "Suporte contínuo ao longo do tempo, com redução de barreiras de acesso"
                   : "Tempo médio reduzido para primeira sessão",
               },
               {
@@ -313,9 +332,9 @@ const About = () => {
             ].map((item, index) => {
               const Icon = item.icon;
               return (
-                <div key={index} className="flex items-start gap-4 p-6 bg-card rounded-lg hover:shadow-lg transition-all border border-border hover:border-primary/50">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-6 h-6 text-primary" />
+                <div key={index} className={`flex items-start gap-4 p-6 bg-card rounded-xl hover:shadow-lg transition-all border border-border ${isRedeBemEstar ? 'hover:border-[#5B218E]/40' : 'hover:border-primary/50'}`}>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${isRedeBemEstar ? 'bg-[#5B218E]/10' : 'bg-primary/10'}`}>
+                    <Icon className={`w-6 h-6 ${isRedeBemEstar ? 'text-[#5B218E]' : 'text-primary'}`} />
                   </div>
                   <div>
                     <h4 className="font-semibold mb-1">{item.title}</h4>
@@ -328,21 +347,27 @@ const About = () => {
         </div>
       </section>
 
-      {/* SEÇÃO 6: Dados / Indicadores (expandida para Rede Bem-Estar) */}
-      <section className={isRedeBemEstar ? "py-28 bg-muted/30" : "py-20 bg-muted/30"}>
+      {/* SEÇÃO 6: Dados / Indicadores */}
+      {isRedeBemEstar && <WaveDivider color="#E281BB" />}
+      <section className={isRedeBemEstar ? "py-28 bg-[#F4F4F4]" : "py-20 bg-muted/30"}>
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
             <div>
-              <h2 className={`font-bold mb-6 ${isRedeBemEstar ? 'text-3xl lg:text-4xl' : 'text-3xl'}`}>
+              <h2 className={`font-bold mb-6 tracking-tight ${isRedeBemEstar ? 'text-3xl lg:text-4xl' : 'text-3xl'}`}>
                 {isRedeBemEstar
                   ? "Dados que ampliam a capacidade de cuidar"
                   : "Dados que Transformam Decisões"}
               </h2>
-              <p className={`text-muted-foreground mb-6 leading-relaxed ${isRedeBemEstar ? 'text-lg' : ''}`}>
+              <p className={`text-muted-foreground mb-4 leading-relaxed ${isRedeBemEstar ? 'text-lg' : ''}`}>
                 {isRedeBemEstar
-                  ? "Leituras agregadas que ajudam instituições a agir com mais precisão, orientando ações de prevenção e fortalecimento do ambiente acadêmico."
+                  ? "Leituras agregadas que ajudam instituições a identificar padrões, antecipar riscos e agir com mais precisão."
                   : "Veja métricas agregadas e anônimas que ajudam sua instituição a tomar decisões baseadas em dados reais:"}
               </p>
+              {isRedeBemEstar && (
+                <p className="text-muted-foreground mb-6 leading-relaxed text-base italic border-l-2 border-[#E281BB]/40 pl-4">
+                  Permite sair de decisões reativas para uma gestão contínua do bem-estar.
+                </p>
+              )}
               <ul className="space-y-3 mb-8">
                 {(isRedeBemEstar
                   ? [
@@ -359,8 +384,8 @@ const About = () => {
                     ]
                 ).map((item, index) => (
                   <li key={index} className="flex items-center gap-3 group">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
-                      <TrendingUp className="w-5 h-5 flex-shrink-0 text-primary" />
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center group-hover:scale-105 transition-all ${isRedeBemEstar ? 'bg-[#5B218E]/10' : 'bg-primary/10'}`}>
+                      <TrendingUp className={`w-5 h-5 flex-shrink-0 ${isRedeBemEstar ? 'text-[#5B218E]' : 'text-primary'}`} />
                     </div>
                     <span className="group-hover:translate-x-1 transition-transform">{item}</span>
                   </li>
@@ -369,7 +394,7 @@ const About = () => {
               <Button
                 size="lg"
                 onClick={() => { navigate(buildTenantPath(tenantSlug, '/contato')); window.scrollTo(0, 0); }}
-                className="bg-primary text-white hover:bg-primary/90 font-semibold"
+                className={isRedeBemEstar ? "bg-[#5B218E] text-white hover:bg-[#5B218E]/90 font-semibold" : "bg-primary text-white hover:bg-primary/90 font-semibold"}
               >
                 {isRedeBemEstar ? "Solicitar demonstração" : "Quero Ver um Exemplo de Painel"}
               </Button>
@@ -385,23 +410,23 @@ const About = () => {
                   />
                 </div>
               )}
-              <Card className="bg-card border-2 border-primary/20 hover:border-primary/40 hover:shadow-2xl transition-all">
+              <Card className={`bg-card border-2 hover:shadow-2xl transition-all ${isRedeBemEstar ? 'border-[#5B218E]/20 hover:border-[#5B218E]/40' : 'border-primary/20 hover:border-primary/40'}`}>
                 <CardContent className="p-8">
                   <h3 className="text-xl font-semibold mb-6 text-foreground flex items-center gap-2">
                     <BarChart3 className="w-5 h-5" />
                     {isRedeBemEstar ? "Painel ilustrativo" : "Exemplo de Painel"}
                   </h3>
-                    <div className="flex items-end justify-center gap-6 h-48 bg-primary/5 rounded-lg p-6 pt-8">
+                    <div className={`flex items-end justify-center gap-6 h-48 rounded-lg p-6 pt-8 ${isRedeBemEstar ? 'bg-[#5B218E]/5' : 'bg-primary/5'}`}>
                       {[
-                        { label: 'Adesão', value: '87%', height: '87%' },
-                        { label: 'Avaliação', value: '4.8/5', height: '96%' },
-                        { label: 'Atendimentos', value: '320/mês', height: '100%' },
+                        { label: 'Adesão', value: '87%', height: '87%', barColor: isRedeBemEstar ? 'bg-[#5B218E]/60 hover:bg-[#5B218E]' : 'bg-primary/60 hover:bg-primary' },
+                        { label: 'Avaliação', value: '4.8/5', height: '96%', barColor: isRedeBemEstar ? 'bg-[#E281BB]/60 hover:bg-[#E281BB]' : 'bg-primary/60 hover:bg-primary' },
+                        { label: 'Acompanhamentos', value: '320/mês', height: '100%', barColor: isRedeBemEstar ? 'bg-[#97D3D9]/60 hover:bg-[#97D3D9]' : 'bg-primary/60 hover:bg-primary' },
                       ].map((metric) => (
                         <div key={metric.label} className="flex flex-col items-center gap-1 w-full">
-                          <span className="text-sm font-bold text-primary">{metric.value}</span>
+                          <span className={`text-sm font-bold ${isRedeBemEstar ? 'text-[#5B218E]' : 'text-primary'}`}>{metric.value}</span>
                           <div className="w-full flex items-end" style={{ height: '120px' }}>
                             <div
-                              className="w-full bg-primary/60 hover:bg-primary rounded-t transition-all cursor-pointer"
+                              className={`w-full ${metric.barColor} rounded-t transition-all cursor-pointer`}
                               style={{ height: metric.height }}
                             />
                           </div>
@@ -415,17 +440,18 @@ const About = () => {
           </div>
         </div>
       </section>
+      {isRedeBemEstar && <WaveDivider color="#E281BB" flip />}
 
-      {/* SEÇÃO 7: Governança (reduzida para Rede Bem-Estar) */}
-      <section className={isRedeBemEstar ? "py-12 bg-muted/20" : "py-20 bg-gradient-to-br from-primary/5 to-accent/5"}>
+      {/* SEÇÃO 7: Governança */}
+      <section className={isRedeBemEstar ? "py-24 bg-background" : "py-20 bg-gradient-to-br from-primary/5 to-accent/5"}>
         <div className="container mx-auto px-4">
-          <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto ${isRedeBemEstar ? 'gap-8' : ''}`}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
             <div>
-              <h2 className={`font-bold mb-6 ${isRedeBemEstar ? 'text-2xl' : 'text-3xl'}`}>
+              <h2 className={`font-bold mb-6 tracking-tight ${isRedeBemEstar ? 'text-2xl lg:text-3xl' : 'text-3xl'}`}>
                 {isRedeBemEstar ? "Base clínica, ética e privacidade" : "Governança Clínica, Ética e LGPD"}
               </h2>
-              <p className={`text-muted-foreground mb-8 leading-relaxed ${isRedeBemEstar ? 'text-sm' : ''}`}>
-                Atendimento por profissionais habilitados, protocolos clínicos, supervisões e 
+              <p className="text-muted-foreground mb-8 leading-relaxed">
+                Acompanhamento por profissionais habilitados, protocolos clínicos, supervisões e 
                 auditoria de qualidade. Dados assistenciais ficam sob sigilo, relatórios 
                 institucionais são sempre agregados e anonimizados.
               </p>
@@ -442,11 +468,11 @@ const About = () => {
               ].map((item, index) => {
                 const Icon = item.icon;
                 return (
-                  <Card key={index} className={`text-center hover:shadow-lg transition-all border-2 hover:border-primary/50 ${isRedeBemEstar ? 'p-4' : 'p-6'}`}>
-                    <div className={`mx-auto mb-3 rounded-full bg-primary/10 flex items-center justify-center ${isRedeBemEstar ? 'w-10 h-10' : 'w-12 h-12'}`}>
-                      <Icon className={`text-primary ${isRedeBemEstar ? 'w-5 h-5' : 'w-6 h-6'}`} />
+                  <Card key={index} className={`text-center hover:shadow-lg transition-all border hover:border-[#5B218E]/30 rounded-xl ${isRedeBemEstar ? 'p-5' : 'p-6 border-2 hover:border-primary/50'}`}>
+                    <div className={`mx-auto mb-3 rounded-full flex items-center justify-center ${isRedeBemEstar ? 'w-11 h-11 bg-[#5B218E]/10' : 'w-12 h-12 bg-primary/10'}`}>
+                      <Icon className={`${isRedeBemEstar ? 'w-5 h-5 text-[#5B218E]' : 'w-6 h-6 text-primary'}`} />
                     </div>
-                    <p className={`font-medium ${isRedeBemEstar ? 'text-xs' : 'text-sm'}`}>{item.label}</p>
+                    <p className={`font-medium ${isRedeBemEstar ? 'text-sm' : 'text-sm'}`}>{item.label}</p>
                   </Card>
                 );
               })}
@@ -455,18 +481,19 @@ const About = () => {
         </div>
       </section>
 
-      {/* SEÇÃO 8: Time (reduzido para Rede Bem-Estar) */}
-      <section className={isRedeBemEstar ? "py-14 bg-background" : "py-20 bg-background"}>
+      {/* SEÇÃO 8: Time */}
+      {isRedeBemEstar && <WaveDivider color="#97D3D9" />}
+      <section className={isRedeBemEstar ? "py-24 bg-[#F4F4F4]" : "py-20 bg-background"}>
         <div className="container mx-auto px-4">
-          <h2 className={`font-bold text-center mb-4 ${isRedeBemEstar ? 'text-2xl' : 'text-3xl'}`}>
-            {isRedeBemEstar ? "Equipe clínica e de operações" : "Nosso Time"}
+          <h2 className={`font-bold text-center mb-4 tracking-tight ${isRedeBemEstar ? 'text-2xl lg:text-3xl' : 'text-3xl'}`}>
+            {isRedeBemEstar ? "Equipe clínica e operação dedicada ao contexto acadêmico" : "Nosso Time"}
           </h2>
           <p className="text-center text-muted-foreground mb-16 max-w-2xl mx-auto">
             {isRedeBemEstar
-              ? "Profissionais qualificados e alinhados às demandas do contexto acadêmico"
+              ? "Profissionais selecionados, supervisionados e alinhados às demandas do ambiente universitário"
               : "Equipe clínica especializada e time de operações dedicados ao público médico"}
           </p>
-          <TeamSection navigate={navigate} tenantSlug={tenantSlug} limit={isRedeBemEstar ? 4 : 6} />
+          <TeamSection navigate={navigate} tenantSlug={tenantSlug} limit={isRedeBemEstar ? 4 : 6} isRedeBemEstar={isRedeBemEstar} />
           <div className="text-center mt-12">
             <Button variant="outline" size="lg" onClick={() => navigate(buildTenantPath(tenantSlug, '/profissionais'))}>
               Ver Todos os Profissionais
@@ -475,49 +502,78 @@ const About = () => {
           </div>
         </div>
       </section>
+      {isRedeBemEstar && <WaveDivider color="#97D3D9" flip />}
 
       {/* SEÇÃO 9: FAQ */}
-      <section className="py-20 bg-muted/30">
+      <section className={isRedeBemEstar ? "py-24 bg-background" : "py-20 bg-muted/30"}>
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-4 justify-center mb-4">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                <HelpCircle className="w-7 h-7 text-primary" />
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isRedeBemEstar ? 'bg-[#5B218E]/10' : 'bg-primary/10'}`}>
+                <HelpCircle className={`w-7 h-7 ${isRedeBemEstar ? 'text-[#5B218E]' : 'text-primary'}`} />
               </div>
-              <h2 className="text-3xl font-bold">Perguntas Frequentes</h2>
+              <h2 className="text-3xl font-bold tracking-tight">Perguntas Frequentes</h2>
             </div>
             <p className="text-center text-muted-foreground mb-16">
               Tire suas dúvidas sobre {getTenantName()}
             </p>
             <Accordion type="single" collapsible>
-              {[
-                {
-                  question: "Como funciona a confidencialidade?",
-                  answer: "Todos os atendimentos seguem o sigilo profissional previsto nos códigos de ética da Psicologia e Medicina. Dados assistenciais individuais não são compartilhados com a instituição. Apenas relatórios agregados e anônimos são gerados para orientar ações institucionais.",
-                },
-                {
-                  question: "Como são os relatórios institucionais?",
-                  answer: "Os relatórios são sempre agregados e anonimizados, mostrando tendências gerais como temas mais buscados, períodos de maior demanda e correlações com o calendário acadêmico. Nenhum dado individual é identificável nesses relatórios.",
-                },
-                {
-                  question: "Há cobertura de planos ou bolsas?",
-                  answer: "Sim, trabalhamos com diferentes modelos: convênio institucional (custeado pela faculdade), planos de saúde parceiros e programa de bolsas para estudantes em situação de vulnerabilidade. Consulte sua instituição sobre as opções disponíveis.",
-                },
-                {
-                  question: "Qual o tempo médio para iniciar?",
-                  answer: "Após a triagem inicial, o tempo médio para o primeiro atendimento é de 3 a 5 dias úteis. Em casos de urgência identificados na triagem, priorizamos o atendimento em até 24 horas.",
-                },
-                {
-                  question: "Como faço para agendar?",
-                  answer: "Basta clicar em 'Agendar Atendimento' no topo da página, preencher o formulário de triagem inicial e escolher o profissional e horário que melhor se adequam à sua rotina. Você receberá confirmação por e-mail e SMS.",
-                },
-                {
-                  question: "Como minha instituição pode entrar?",
-                  answer: "Entre em contato através do botão 'Sou uma instituição' para agendar uma reunião com nosso time. Faremos uma apresentação personalizada, demonstração da plataforma e discussão sobre modelos de implementação adequados à sua instituição.",
-                },
-              ].map((item, index) => (
+              {(isRedeBemEstar
+                ? [
+                    {
+                      question: "Como funciona a confidencialidade?",
+                      answer: "Todo o acompanhamento segue o sigilo profissional previsto nos códigos de ética da Psicologia e Medicina. Dados assistenciais individuais não são compartilhados com a instituição. Apenas relatórios agregados e anônimos são gerados para orientar ações institucionais.",
+                    },
+                    {
+                      question: "Como são os relatórios institucionais?",
+                      answer: "Os relatórios são sempre agregados e anonimizados, mostrando tendências gerais como temas mais buscados, períodos de maior demanda e correlações com o calendário acadêmico. Nenhum dado individual é identificável nesses relatórios.",
+                    },
+                    {
+                      question: "Há cobertura de planos ou bolsas?",
+                      answer: "Sim, trabalhamos com diferentes modelos: convênio institucional (custeado pela instituição), planos de saúde parceiros e programa de bolsas para estudantes em situação de vulnerabilidade. Consulte sua instituição sobre as opções disponíveis.",
+                    },
+                    {
+                      question: "Qual o tempo médio para iniciar o acompanhamento?",
+                      answer: "Após a triagem inicial, o tempo médio para o primeiro acompanhamento é de 3 a 5 dias úteis. Em casos de urgência identificados na triagem, priorizamos o suporte em até 24 horas.",
+                    },
+                    {
+                      question: "Como inicio meu acompanhamento?",
+                      answer: "Basta acessar a plataforma, preencher o formulário de triagem inicial e escolher o profissional e horário que melhor se adequam à sua rotina. Você receberá confirmação por e-mail e SMS.",
+                    },
+                    {
+                      question: "Como minha instituição pode participar?",
+                      answer: "Entre em contato através do botão 'Falar com a equipe' para uma reunião com nosso time. Faremos uma apresentação personalizada, demonstração da plataforma e discussão sobre modelos de implementação adequados à sua instituição.",
+                    },
+                  ]
+                : [
+                    {
+                      question: "Como funciona a confidencialidade?",
+                      answer: "Todos os atendimentos seguem o sigilo profissional previsto nos códigos de ética da Psicologia e Medicina. Dados assistenciais individuais não são compartilhados com a instituição. Apenas relatórios agregados e anônimos são gerados para orientar ações institucionais.",
+                    },
+                    {
+                      question: "Como são os relatórios institucionais?",
+                      answer: "Os relatórios são sempre agregados e anonimizados, mostrando tendências gerais como temas mais buscados, períodos de maior demanda e correlações com o calendário acadêmico. Nenhum dado individual é identificável nesses relatórios.",
+                    },
+                    {
+                      question: "Há cobertura de planos ou bolsas?",
+                      answer: "Sim, trabalhamos com diferentes modelos: convênio institucional (custeado pela faculdade), planos de saúde parceiros e programa de bolsas para estudantes em situação de vulnerabilidade. Consulte sua instituição sobre as opções disponíveis.",
+                    },
+                    {
+                      question: "Qual o tempo médio para iniciar?",
+                      answer: "Após a triagem inicial, o tempo médio para o primeiro atendimento é de 3 a 5 dias úteis. Em casos de urgência identificados na triagem, priorizamos o atendimento em até 24 horas.",
+                    },
+                    {
+                      question: "Como faço para agendar?",
+                      answer: "Basta clicar em 'Agendar Atendimento' no topo da página, preencher o formulário de triagem inicial e escolher o profissional e horário que melhor se adequam à sua rotina. Você receberá confirmação por e-mail e SMS.",
+                    },
+                    {
+                      question: "Como minha instituição pode entrar?",
+                      answer: "Entre em contato através do botão 'Sou uma instituição' para agendar uma reunião com nosso time. Faremos uma apresentação personalizada, demonstração da plataforma e discussão sobre modelos de implementação adequados à sua instituição.",
+                    },
+                  ]
+              ).map((item, index) => (
                 <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="text-left hover:text-primary">
+                  <AccordionTrigger className={`text-left ${isRedeBemEstar ? 'hover:text-[#5B218E]' : 'hover:text-primary'}`}>
                     <span className="font-medium">{item.question}</span>
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground leading-relaxed">
@@ -540,10 +596,12 @@ const TeamSection = ({
   navigate,
   tenantSlug,
   limit = 6,
+  isRedeBemEstar = false,
 }: {
   navigate: any;
   tenantSlug: string;
   limit?: number;
+  isRedeBemEstar?: boolean;
 }) => {
   const { data: professionals, isLoading } = useProfessionals(limit);
   
@@ -561,10 +619,6 @@ const TeamSection = ({
               <Skeleton className="h-6 w-3/4 mx-auto mb-2" />
               <Skeleton className="h-4 w-1/2 mx-auto mb-3" />
               <Skeleton className="h-16 w-full mb-4" />
-              <div className="flex gap-2 justify-center">
-                <Skeleton className="h-6 w-20" />
-                <Skeleton className="h-6 w-20" />
-              </div>
             </CardContent>
           </Card>
         ))}
@@ -584,25 +638,26 @@ const TeamSection = ({
     <div className={`grid grid-cols-1 md:grid-cols-2 ${limit <= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-8 max-w-6xl mx-auto`}>
       {professionals.map(professional => {
         const photoUrl = professional.foto_perfil_url || getIllustrativeAvatar(null, null, professional.display_name);
-        const specialties = professional.servicos_normalizados || [];
         const bio = professional.resumo_profissional || `Profissional qualificado com registro ${professional.crp_crm || 'ativo'}.`;
+        const specialties = professional.servicos_normalizados || [];
         return (
-          <Card key={professional.id} className="text-center hover:shadow-xl transition-all group">
+          <Card key={professional.id} className="text-center hover:shadow-xl transition-all group rounded-xl">
             <CardContent className="pt-8">
-              <Avatar className="w-24 h-24 mx-auto mb-4 ring-4 ring-primary/10 group-hover:ring-primary/30 transition-all">
+              <Avatar className={`w-24 h-24 mx-auto mb-4 ring-4 group-hover:ring-[#5B218E]/30 transition-all ${isRedeBemEstar ? 'ring-[#5B218E]/10' : 'ring-primary/10 group-hover:ring-primary/30'}`}>
                 <AvatarImage src={photoUrl} alt={professional.display_name} />
-                <AvatarFallback className="text-xl bg-gradient-to-br from-primary/20 to-accent/20">
+                <AvatarFallback className={`text-xl ${isRedeBemEstar ? 'bg-gradient-to-br from-[#5B218E]/20 to-[#E281BB]/20' : 'bg-gradient-to-br from-primary/20 to-accent/20'}`}>
                   {getInitials(professional.display_name)}
                 </AvatarFallback>
               </Avatar>
               <h3 className="font-bold text-lg mb-1">{professional.display_name}</h3>
-              <p className="text-sm text-primary font-medium mb-3">
+              <p className={`text-sm font-medium mb-3 ${isRedeBemEstar ? 'text-[#5B218E]' : 'text-primary'}`}>
                 {professional.profissao || 'Profissional de Saúde'}
               </p>
               <p className="text-xs text-muted-foreground mb-4 leading-relaxed line-clamp-3">
                 {bio}
               </p>
-              {specialties.length > 0 && (
+              {/* Mostrar especialidades apenas para não-RBE (reduz aparência marketplace) */}
+              {!isRedeBemEstar && specialties.length > 0 && (
                 <div className="flex flex-wrap gap-2 justify-center">
                   {specialties.slice(0, 3).map((specialty, idx) => (
                     <Badge key={idx} variant="secondary" className="text-xs">
