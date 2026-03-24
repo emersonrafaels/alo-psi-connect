@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { InstitutionalDashboardModal } from "@/components/InstitutionalDashboardModal";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/ui/header";
@@ -42,6 +43,7 @@ const Index = () => {
   const tenantSlug = tenant?.slug || 'alopsi';
   const [featuredProfessionals, setFeaturedProfessionals] = useState<FeaturedProfessional[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dashboardModalOpen, setDashboardModalOpen] = useState(false);
 
   useEffect(() => {
     if (tenant) fetchFeaturedProfessionals();
@@ -159,7 +161,7 @@ const Index = () => {
             <Button size="lg" className="bg-white text-[#5B218E] hover:bg-white/90 font-semibold px-8" onClick={() => navigate(buildTenantPath(tenantSlug, '/sobre'))}>
               Conhecer a solução
             </Button>
-            <Button size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10 font-semibold px-8" onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}>
+            <Button size="lg" className="border-2 border-white bg-transparent text-white hover:bg-white/10 font-semibold px-8" onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}>
               Falar com a equipe
             </Button>
           </div>
@@ -301,7 +303,7 @@ const Index = () => {
               Permite sair de decisões reativas para uma gestão contínua do bem-estar
             </p>
             <div className="text-center">
-              <Button variant="outline" className="border-[#5B218E]/30 text-[#5B218E] hover:bg-[#5B218E]/5" onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}>
+              <Button className="bg-[#5B218E] text-white hover:bg-[#5B218E]/90" onClick={() => setDashboardModalOpen(true)}>
                 Ver exemplo de painel <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
@@ -450,7 +452,7 @@ const Index = () => {
             <Button size="lg" className="bg-white text-[#5B218E] hover:bg-white/90 font-semibold px-8" onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}>
               Falar com a equipe
             </Button>
-            <Button size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10 font-semibold px-8" onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}>
+            <Button size="lg" className="border-2 border-white bg-transparent text-white hover:bg-white/10 font-semibold px-8" onClick={() => navigate(buildTenantPath(tenantSlug, '/contato'))}>
               Agendar apresentação
             </Button>
           </div>
@@ -458,6 +460,7 @@ const Index = () => {
       </section>
 
       <Footer />
+      <InstitutionalDashboardModal open={dashboardModalOpen} onOpenChange={setDashboardModalOpen} />
     </div>
   );
 };

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { buildTenantPath, DEFAULT_TENANT_SLUG } from "@/utils/tenantHelpers";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { getIllustrativeAvatar } from "@/utils/avatarHelpers";
 import { Target, Eye, Lightbulb, ClipboardList, UserCheck, Video, Heart, BarChart3, ShieldCheck, GraduationCap, Users, Building2, Focus, Hospital, Zap, AlertTriangle, Link2, Lock, TrendingUp, Calendar, HelpCircle, ArrowRight } from "lucide-react";
+import { InstitutionalDashboardModal } from "@/components/InstitutionalDashboardModal";
 
 // Divisor orgânico SVG entre seções
 const WaveDivider = ({ flip = false, color = "#5B218E" }: { flip?: boolean; color?: string }) => (
@@ -32,6 +34,7 @@ const About = () => {
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || DEFAULT_TENANT_SLUG;
   const isRedeBemEstar = tenantSlug !== 'medcos';
+  const [dashboardModalOpen, setDashboardModalOpen] = useState(false);
 
   const getTenantName = () => {
     return tenant?.slug === 'medcos' ? 'A MEDCOS' : 'A Rede Bem-Estar';
@@ -393,10 +396,10 @@ const About = () => {
               </ul>
               <Button
                 size="lg"
-                onClick={() => { navigate(buildTenantPath(tenantSlug, '/contato')); window.scrollTo(0, 0); }}
+                onClick={() => setDashboardModalOpen(true)}
                 className={isRedeBemEstar ? "bg-[#5B218E] text-white hover:bg-[#5B218E]/90 font-semibold" : "bg-primary text-white hover:bg-primary/90 font-semibold"}
               >
-                {isRedeBemEstar ? "Solicitar demonstração" : "Quero Ver um Exemplo de Painel"}
+                {isRedeBemEstar ? "Ver exemplo de painel" : "Quero Ver um Exemplo de Painel"}
               </Button>
             </div>
             <div className="space-y-6">
@@ -603,6 +606,7 @@ const About = () => {
       </section>
 
       <Footer />
+      <InstitutionalDashboardModal open={dashboardModalOpen} onOpenChange={setDashboardModalOpen} />
     </div>
   );
 };
