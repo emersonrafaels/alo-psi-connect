@@ -1,20 +1,30 @@
 
 
-## Renomear e melhorar UX/UI da seção de indicadores
+## Corrigir overflow e melhorar UX/UI dos cards de Impacto
 
-### Alterações em `src/pages/About.tsx` (linhas 413-434)
+### Problema
+O texto "320/mês" e "Acompanhamentos" estão transbordando dos cards — os cards são pequenos demais para o conteúdo, especialmente em telas médias.
 
-**1. Título**: "Indicadores de impacto" → "Impacto"
+### Solução
 
-**2. Melhorar UX/UI dos big numbers**:
-- Remover o ícone BarChart3 do título (mais clean)
-- Cada métrica ganha um card individual com fundo sutil (`bg-[#5B218E]/5`, `bg-[#E281BB]/10`, `bg-[#97D3D9]/10`), `rounded-xl`, e padding generoso
-- Números maiores: `text-5xl` em vez de `text-4xl`
-- Labels com `font-medium` e `text-base` para melhor legibilidade
-- Adicionar uma descrição curta abaixo de cada label (ex: "dos estudantes continuam o acompanhamento", "satisfação média dos estudantes", "suportes estruturados realizados")
-- Remover o Card wrapper externo pesado — usar grid direto com 3 mini-cards independentes
-- Responsivo: `grid-cols-1 sm:grid-cols-3`
+**`src/pages/About.tsx` (linhas 413-428)**
+
+1. **Reduzir tamanho do número**: `text-5xl` → `text-4xl` para caber melhor
+2. **Abreviar label longo**: "Acompanhamentos" → "Acompanham." ou manter mas com `text-sm` e `truncate` — melhor: manter o texto completo mas usar `min-w-0` e `break-words`
+3. **Aumentar padding horizontal**: `p-8` → `px-4 py-8 sm:px-6` para dar mais respiro
+4. **Usar `gap-4`** entre cards em vez de `gap-6` para dar mais espaço a cada card
+5. **Tornar responsivo**: em mobile usar `grid-cols-1`, em tablet `grid-cols-3` com tamanhos proporcionais
+6. **Adicionar borda sutil** e `shadow-sm` para dar profundidade sem peso
+7. **Valor "320/mês"**: separar número e unidade — "320" grande + "/mês" menor ao lado, evitando overflow
+8. **Melhorar hierarquia visual**: label em `text-sm font-semibold uppercase tracking-wide` acima do número (inverte a ordem para padrão dashboard)
+
+Layout refinado por card:
+```
+[Label pequeno uppercase]  ← "ADESÃO"
+[Número grande]            ← "87%"
+[Descrição]                ← "dos estudantes continuam..."
+```
 
 ### Arquivo
-- `src/pages/About.tsx`
+- `src/pages/About.tsx` — linhas 413-428
 
