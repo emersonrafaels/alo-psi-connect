@@ -411,29 +411,25 @@ const About = () => {
                 </div>
               )}
               <Card className={`bg-card border-2 hover:shadow-2xl transition-all ${isRedeBemEstar ? 'border-[#5B218E]/20 hover:border-[#5B218E]/40' : 'border-primary/20 hover:border-primary/40'}`}>
-                <CardContent className="p-8">
-                  <h3 className="text-xl font-semibold mb-6 text-foreground flex items-center gap-2">
+                <CardContent className="p-10">
+                  <h3 className="text-xl font-semibold mb-8 text-foreground flex items-center gap-2">
                     <BarChart3 className="w-5 h-5" />
-                    {isRedeBemEstar ? "Painel ilustrativo" : "Exemplo de Painel"}
+                    {isRedeBemEstar ? "Indicadores de impacto" : "Exemplo de Painel"}
                   </h3>
-                    <div className={`flex items-end justify-center gap-6 h-48 rounded-lg p-6 pt-8 ${isRedeBemEstar ? 'bg-[#5B218E]/5' : 'bg-primary/5'}`}>
-                      {[
-                        { label: 'Adesão', value: '87%', height: '87%', barColor: isRedeBemEstar ? 'bg-[#5B218E]/60 hover:bg-[#5B218E]' : 'bg-primary/60 hover:bg-primary' },
-                        { label: 'Avaliação', value: '4.8/5', height: '96%', barColor: isRedeBemEstar ? 'bg-[#E281BB]/60 hover:bg-[#E281BB]' : 'bg-primary/60 hover:bg-primary' },
-                        { label: 'Acompanhamentos', value: '320/mês', height: '100%', barColor: isRedeBemEstar ? 'bg-[#97D3D9]/60 hover:bg-[#97D3D9]' : 'bg-primary/60 hover:bg-primary' },
-                      ].map((metric) => (
-                        <div key={metric.label} className="flex flex-col items-center gap-1 w-full">
-                          <span className={`text-sm font-bold ${isRedeBemEstar ? 'text-[#5B218E]' : 'text-primary'}`}>{metric.value}</span>
-                          <div className="w-full flex items-end" style={{ height: '120px' }}>
-                            <div
-                              className={`w-full ${metric.barColor} rounded-t transition-all cursor-pointer`}
-                              style={{ height: metric.height }}
-                            />
-                          </div>
-                          <span className="text-xs text-muted-foreground mt-1">{metric.label}</span>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="grid grid-cols-3 gap-8">
+                    {[
+                      { label: 'Adesão', value: '87%', color: '#5B218E' },
+                      { label: 'Avaliação', value: '4.8/5', color: '#E281BB' },
+                      { label: 'Acompanhamentos', value: '320/mês', color: '#97D3D9' },
+                    ].map((metric) => (
+                      <div key={metric.label} className="flex flex-col items-center gap-2 py-6">
+                        <span className="text-4xl font-bold" style={{ color: isRedeBemEstar ? metric.color : undefined }}>
+                          {metric.value}
+                        </span>
+                        <span className="text-sm text-muted-foreground">{metric.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </div>
