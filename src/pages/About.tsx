@@ -33,6 +33,7 @@ const About = () => {
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || DEFAULT_TENANT_SLUG;
   const isRedeBemEstar = tenantSlug !== 'medcos';
+  const [dashboardModalOpen, setDashboardModalOpen] = useState(false);
 
   const getTenantName = () => {
     return tenant?.slug === 'medcos' ? 'A MEDCOS' : 'A Rede Bem-Estar';
