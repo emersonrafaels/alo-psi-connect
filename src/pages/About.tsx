@@ -14,6 +14,7 @@ import { buildTenantPath, DEFAULT_TENANT_SLUG } from "@/utils/tenantHelpers";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { getIllustrativeAvatar } from "@/utils/avatarHelpers";
 import { Target, Eye, Lightbulb, ClipboardList, UserCheck, Video, Heart, BarChart3, ShieldCheck, GraduationCap, Users, Building2, Focus, Hospital, Zap, AlertTriangle, Link2, Lock, TrendingUp, Calendar, HelpCircle, ArrowRight } from "lucide-react";
+import { InstitutionalDashboardModal } from "@/components/InstitutionalDashboardModal";
 
 // Divisor orgânico SVG entre seções
 const WaveDivider = ({ flip = false, color = "#5B218E" }: { flip?: boolean; color?: string }) => (
@@ -605,6 +606,7 @@ const About = () => {
       </section>
 
       <Footer />
+      <InstitutionalDashboardModal open={dashboardModalOpen} onOpenChange={setDashboardModalOpen} />
     </div>
   );
 };
