@@ -412,23 +412,23 @@ const About = () => {
               )}
               {isRedeBemEstar ? (
                 <>
-                  <h3 className="text-xl font-semibold mb-6 text-foreground">Impacto</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {[
-                      { label: 'Adesão', valueMain: '87', valueSuffix: '%', desc: 'dos estudantes continuam o acompanhamento', bg: 'bg-[#5B218E]/5', color: '#5B218E' },
-                      { label: 'Avaliação', valueMain: '4.8', valueSuffix: '/5', desc: 'satisfação média dos estudantes', bg: 'bg-[#E281BB]/10', color: '#E281BB' },
-                      { label: 'Acompanhamentos', valueMain: '320', valueSuffix: '/mês', desc: 'suportes estruturados realizados', bg: 'bg-[#97D3D9]/10', color: '#97D3D9' },
-                    ].map((metric) => (
-                      <div key={metric.label} className={`${metric.bg} border border-border/40 shadow-sm rounded-xl px-4 py-8 sm:px-6 flex flex-col items-center text-center min-w-0`}>
-                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{metric.label}</span>
-                        <div className="flex items-baseline gap-0.5">
-                          <span className="text-4xl font-bold leading-tight" style={{ color: metric.color }}>{metric.valueMain}</span>
-                          <span className="text-lg font-semibold" style={{ color: metric.color }}>{metric.valueSuffix}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground mt-3 max-w-[160px] leading-relaxed">{metric.desc}</span>
-                      </div>
-                    ))}
-                  </div>
+                   <h3 className="text-2xl font-bold mb-6 text-foreground">Impacto</h3>
+                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                     {[
+                       { label: 'Adesão', valueMain: '87', valueSuffix: '%', desc: 'dos estudantes continuam o acompanhamento', bg: 'bg-[#5B218E]/5', color: '#5B218E' },
+                       { label: 'Avaliação', valueMain: '4.8', valueSuffix: '/5', desc: 'satisfação média dos estudantes', bg: 'bg-[#E281BB]/10', color: '#E281BB' },
+                       { label: 'Acompanhamentos', valueMain: '320', valueSuffix: '/mês', desc: 'suportes estruturados realizados', bg: 'bg-[#97D3D9]/10', color: '#97D3D9' },
+                     ].map((metric) => (
+                       <div key={metric.label} className={`${metric.bg} border border-border/40 shadow-sm rounded-xl px-4 py-8 sm:px-6 flex flex-col items-center text-center min-w-0`}>
+                         <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{metric.label}</span>
+                         <div className="flex items-baseline gap-0.5">
+                           <span className="text-5xl font-extrabold leading-tight" style={{ color: metric.color }}>{metric.valueMain}</span>
+                           <span className="text-xl font-bold" style={{ color: metric.color }}>{metric.valueSuffix}</span>
+                         </div>
+                         <span className="text-sm font-medium text-muted-foreground mt-3 max-w-[160px] leading-relaxed">{metric.desc}</span>
+                       </div>
+                     ))}
+                   </div>
                 </>
               ) : (
                 <Card className="bg-card border-2 hover:shadow-2xl transition-all border-primary/20 hover:border-primary/40">
