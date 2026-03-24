@@ -43,6 +43,7 @@ const Index = () => {
   const tenantSlug = tenant?.slug || 'alopsi';
   const [featuredProfessionals, setFeaturedProfessionals] = useState<FeaturedProfessional[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dashboardModalOpen, setDashboardModalOpen] = useState(false);
 
   useEffect(() => {
     if (tenant) fetchFeaturedProfessionals();
@@ -459,6 +460,7 @@ const Index = () => {
       </section>
 
       <Footer />
+      <InstitutionalDashboardModal open={dashboardModalOpen} onOpenChange={setDashboardModalOpen} />
     </div>
   );
 };

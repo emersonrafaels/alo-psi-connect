@@ -393,10 +393,10 @@ const About = () => {
               </ul>
               <Button
                 size="lg"
-                onClick={() => { navigate(buildTenantPath(tenantSlug, '/contato')); window.scrollTo(0, 0); }}
+                onClick={() => setDashboardModalOpen(true)}
                 className={isRedeBemEstar ? "bg-[#5B218E] text-white hover:bg-[#5B218E]/90 font-semibold" : "bg-primary text-white hover:bg-primary/90 font-semibold"}
               >
-                {isRedeBemEstar ? "Solicitar demonstração" : "Quero Ver um Exemplo de Painel"}
+                {isRedeBemEstar ? "Ver exemplo de painel" : "Quero Ver um Exemplo de Painel"}
               </Button>
             </div>
             <div className="space-y-6">
