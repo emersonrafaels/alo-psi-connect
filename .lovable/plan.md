@@ -1,15 +1,20 @@
 
 
-## Ajustar painel ilustrativo na seção de Dados
+## Renomear e melhorar UX/UI da seção de indicadores
 
-### Alterações em `src/pages/About.tsx` (linhas 413-438)
+### Alterações em `src/pages/About.tsx` (linhas 413-434)
 
-1. **Título**: Trocar "Painel ilustrativo" → "Indicadores de impacto"
-2. **Remover gráficos de barras** e substituir por layout de **big numbers**:
-   - **87%** Adesão
-   - **4.8/5** Avaliação
-   - **320/mês** Acompanhamentos
-3. Layout: 3 colunas lado a lado, cada uma com número grande (`text-4xl font-bold`) + label abaixo (`text-sm text-muted-foreground`)
-4. Cores nos números: roxo, rosa e verde-água respectivamente (paleta RBE)
-5. Remover o container de barras (`h-48`) e simplificar para um grid clean com padding generoso
+**1. Título**: "Indicadores de impacto" → "Impacto"
+
+**2. Melhorar UX/UI dos big numbers**:
+- Remover o ícone BarChart3 do título (mais clean)
+- Cada métrica ganha um card individual com fundo sutil (`bg-[#5B218E]/5`, `bg-[#E281BB]/10`, `bg-[#97D3D9]/10`), `rounded-xl`, e padding generoso
+- Números maiores: `text-5xl` em vez de `text-4xl`
+- Labels com `font-medium` e `text-base` para melhor legibilidade
+- Adicionar uma descrição curta abaixo de cada label (ex: "dos estudantes continuam o acompanhamento", "satisfação média dos estudantes", "suportes estruturados realizados")
+- Remover o Card wrapper externo pesado — usar grid direto com 3 mini-cards independentes
+- Responsivo: `grid-cols-1 sm:grid-cols-3`
+
+### Arquivo
+- `src/pages/About.tsx`
 
