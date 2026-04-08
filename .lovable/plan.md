@@ -1,18 +1,25 @@
 
 
-## Adicionar opção "Outros" nos comboboxes de Instituição e Curso
+## Unir etapas Formação + Resumo e remover referência de preço
 
-### Alteração em `src/components/register/EducationStep.tsx`
+### 1. Unir Step 4 (Formação) e Step 5 (Resumo) em uma única etapa
 
-No componente `CreatableCombobox`, adicionar:
+**Em `src/pages/register/ProfessionalForm.tsx`:**
+- Alterar `totalSteps` de 9 para 8
+- Combinar `renderStep4` e `renderStep5` em um único `renderStep4` que renderiza `EducationStep` + `ProfessionalSummaryField`
+- Renumerar steps 6→5, 7→6, 8→7, 9→8
+- Atualizar títulos do card header (remover "Resumo profissional", renomear step 4 para "Formação e Resumo")
+- Atualizar `canProceedStep` validations (step 4 agora exige formações + resumo)
+- Atualizar renderização condicional e lógica de navegação
+- Atualizar `defaultTitles` no `TimelineProgress` (remover "Resumo" da lista)
 
-1. **Novo state `isCustom`** — controla se o campo está no modo de digitação livre
-2. **Opção fixa "Outros"** no final da lista do combobox — ao selecionar, fecha o popover e ativa o modo custom (`isCustom = true`)
-3. **Quando `isCustom = true`**, renderizar um `Input` de texto livre em vez do botão do combobox, com um botão "Voltar para lista" para retornar ao combobox
-4. O valor digitado no input é propagado via `onChange` normalmente
+### 2. Remover referência de mercado do PriceInput
 
-Isso substitui o comportamento atual de "Usar: ..." por uma UX mais explícita com a opção "Outros" visível na lista.
+**Em `src/components/register/PriceInput.tsx`:**
+- Remover o bloco `bg-blue-50` com as 3 faixas de preço (Iniciante/Intermediário/Experiente)
+- Manter apenas o Label e o Input de preço
 
-### Arquivo impactado
-- `src/components/register/EducationStep.tsx`
+### Arquivos impactados
+- `src/pages/register/ProfessionalForm.tsx`
+- `src/components/register/PriceInput.tsx`
 
