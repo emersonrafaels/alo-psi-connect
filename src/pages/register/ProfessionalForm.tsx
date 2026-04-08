@@ -848,7 +848,7 @@ const ProfessionalForm = () => {
     </div>
   );
 
-  const renderStep8 = () => (
+  const renderStep7 = () => (
     <div className="space-y-6">
       <div>
         <Label htmlFor="senha">Senha <span className="text-red-500">*</span></Label>
@@ -911,7 +911,7 @@ const ProfessionalForm = () => {
     </div>
   );
 
-  const renderStep9 = () => (
+  const renderStep8 = () => (
     <ProfilePreview 
       formData={formData} 
       onEdit={(step) => setCurrentStep(step)} 
