@@ -9,7 +9,7 @@ const STEP_TIMES = {
   1: 2, // Dados pessoais
   2: 2, // Dados profissionais
   3: 1, // Foto
-  4: 3, // Resumo profissional
+  4: 4, // Formação + Resumo
   5: 2, // Especialidades e preço
   6: 3, // Horários
   7: 1, // Senha

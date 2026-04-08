@@ -185,7 +185,7 @@ const ProfessionalForm = () => {
     }
   }, [user, toast]);
 
-  const totalSteps = 9;
+  const totalSteps = 8;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleNext = async () => {
@@ -781,19 +781,16 @@ const ProfessionalForm = () => {
         value={formData.formacoes}
         onChange={(formacoes) => updateFormData('formacoes', formacoes)}
       />
+      <div className="mt-8 pt-8 border-t">
+        <ProfessionalSummaryField
+          value={formData.resumoProfissional}
+          onChange={(value) => updateFormData('resumoProfissional', value)}
+        />
+      </div>
     </div>
   );
 
   const renderStep5 = () => (
-    <div className="space-y-6">
-      <ProfessionalSummaryField
-        value={formData.resumoProfissional}
-        onChange={(value) => updateFormData('resumoProfissional', value)}
-      />
-    </div>
-  );
-
-  const renderStep6 = () => (
     <div className="space-y-6">
       <SpecialtiesSelector
         value={formData.especialidades}
@@ -807,7 +804,7 @@ const ProfessionalForm = () => {
     </div>
   );
 
-  const renderStep7 = () => (
+  const renderStep6 = () => (
     <div className="space-y-6">
       <div>
         <Label className="text-base font-medium mb-4 block">
@@ -851,7 +848,7 @@ const ProfessionalForm = () => {
     </div>
   );
 
-  const renderStep8 = () => (
+  const renderStep7 = () => (
     <div className="space-y-6">
       <div>
         <Label htmlFor="senha">Senha <span className="text-red-500">*</span></Label>
@@ -914,7 +911,7 @@ const ProfessionalForm = () => {
     </div>
   );
 
-  const renderStep9 = () => (
+  const renderStep8 = () => (
     <ProfilePreview 
       formData={formData} 
       onEdit={(step) => setCurrentStep(step)} 
@@ -924,12 +921,11 @@ const ProfessionalForm = () => {
   const canProceedStep1 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf && validateCPF(formData.cpf);
   const canProceedStep2 = formData.profissao && formData.possuiEPsi && formData.crpCrm;
   const canProceedStep3 = !!(selectedPhotoFile || photoPreviewUrl || formData.fotoPerfilUrl);
-  const canProceedStep4 = formData.formacoes.length > 0;
-  const canProceedStep5 = formData.resumoProfissional && formData.resumoProfissional.length >= 100;
-  const canProceedStep6 = formData.especialidades.length > 0 && formData.precoConsulta;
-  const canProceedStep7 = formData.intervaloHorarios && formData.horarios.length > 0;
-  const canProceedStep8 = formData.senha && formData.senha.length >= 6 && formData.confirmarSenha && formData.senha === formData.confirmarSenha;
-  const canSubmit = canProceedStep8;
+  const canProceedStep4 = formData.formacoes.length > 0 && formData.resumoProfissional && formData.resumoProfissional.length >= 100;
+  const canProceedStep5 = formData.especialidades.length > 0 && formData.precoConsulta;
+  const canProceedStep6 = formData.intervaloHorarios && formData.horarios.length > 0;
+  const canProceedStep7 = formData.senha && formData.senha.length >= 6 && formData.confirmarSenha && formData.senha === formData.confirmarSenha;
+  const canSubmit = canProceedStep7;
 
   return (
     <div className="min-h-screen bg-background">
@@ -970,11 +966,10 @@ const ProfessionalForm = () => {
                  {currentStep === 1 ? 'Seus dados pessoais' :
                   currentStep === 2 ? 'Informações profissionais' :
                   currentStep === 3 ? 'Perfil e contatos' :
-                  currentStep === 4 ? 'Formação acadêmica' :
-                  currentStep === 5 ? 'Resumo profissional' :
-                  currentStep === 6 ? 'Suas especialidades' :
-                  currentStep === 7 ? 'Horários de atendimento' :
-                  currentStep === 8 ? 'Credenciais de acesso' :
+                  currentStep === 4 ? 'Formação e resumo profissional' :
+                  currentStep === 5 ? 'Suas especialidades' :
+                  currentStep === 6 ? 'Horários de atendimento' :
+                  currentStep === 7 ? 'Credenciais de acesso' :
                   'Revise suas informações'}
               </CardTitle>
             </CardHeader>
@@ -988,7 +983,6 @@ const ProfessionalForm = () => {
               {currentStep === 6 && renderStep6()}
               {currentStep === 7 && renderStep7()}
               {currentStep === 8 && renderStep8()}
-              {currentStep === 9 && renderStep9()}
 
               <div className="flex justify-between pt-6">
                 <Button
@@ -1003,7 +997,7 @@ const ProfessionalForm = () => {
 
                 {currentStep < totalSteps ? (
                   <Button
-                    onClick={currentStep === 8 ? () => setCurrentStep(9) : handleNext}
+                    onClick={currentStep === 7 ? () => setCurrentStep(8) : handleNext}
                     disabled={
                       (currentStep === 1 && !canProceedStep1) ||
                       (currentStep === 2 && !canProceedStep2) ||
@@ -1011,13 +1005,12 @@ const ProfessionalForm = () => {
                       (currentStep === 4 && !canProceedStep4) ||
                       (currentStep === 5 && !canProceedStep5) ||
                       (currentStep === 6 && !canProceedStep6) ||
-                      (currentStep === 7 && !canProceedStep7) ||
-                      (currentStep === 8 && !canProceedStep8)
+                      (currentStep === 7 && !canProceedStep7)
                     }
                     variant="teal"
                     className="flex items-center gap-2"
                   >
-                    {currentStep === 8 ? 'Revisar cadastro' : 'Prosseguir'}
+                    {currentStep === 7 ? 'Revisar cadastro' : 'Prosseguir'}
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 ) : (
