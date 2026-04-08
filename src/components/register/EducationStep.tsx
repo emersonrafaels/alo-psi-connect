@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -116,6 +117,7 @@ function CreatableCombobox({
 }: CreatableComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [isCustom, setIsCustom] = useState(false);
 
   const filtered = useMemo(() => {
     if (!search) return options;
@@ -123,7 +125,33 @@ function CreatableCombobox({
     return options.filter((o) => o.toLowerCase().includes(lower));
   }, [options, search]);
 
-  const exactMatch = options.some((o) => o.toLowerCase() === search.toLowerCase());
+  if (isCustom) {
+    return (
+      <div>
+        <Label>{label} {required && <span className="text-destructive">*</span>}</Label>
+        <div className="flex gap-2">
+          <Input
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={`Digite o nome...`}
+            className="flex-1"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="shrink-0 text-xs"
+            onClick={() => {
+              onChange('');
+              setIsCustom(false);
+            }}
+          >
+            Voltar para lista
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -183,20 +211,19 @@ function CreatableCombobox({
                     {option}
                   </CommandItem>
                 ))}
-                {search.trim() && !exactMatch && (
-                  <CommandItem
-                    value={`__custom__${search}`}
-                    onSelect={() => {
-                      onChange(search.trim());
-                      setOpen(false);
-                      setSearch('');
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Usar: &quot;{search.trim()}&quot;
-                  </CommandItem>
-                )}
+                <CommandItem
+                  value="__outros__"
+                  onSelect={() => {
+                    onChange('');
+                    setOpen(false);
+                    setSearch('');
+                    setIsCustom(true);
+                  }}
+                  className="cursor-pointer border-t mt-1 pt-2"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Outros
+                </CommandItem>
               </CommandGroup>
             </CommandList>
           </Command>
