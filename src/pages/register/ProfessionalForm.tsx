@@ -790,7 +790,7 @@ const ProfessionalForm = () => {
     </div>
   );
 
-  const renderStep6 = () => (
+  const renderStep5 = () => (
     <div className="space-y-6">
       <SpecialtiesSelector
         value={formData.especialidades}
@@ -804,7 +804,7 @@ const ProfessionalForm = () => {
     </div>
   );
 
-  const renderStep7 = () => (
+  const renderStep6 = () => (
     <div className="space-y-6">
       <div>
         <Label className="text-base font-medium mb-4 block">
