@@ -185,7 +185,7 @@ const ProfessionalForm = () => {
     }
   }, [user, toast]);
 
-  const totalSteps = 9;
+  const totalSteps = 8;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleNext = async () => {
