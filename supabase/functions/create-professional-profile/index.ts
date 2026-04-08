@@ -282,7 +282,7 @@ serve(async (req) => {
   
   try {
     requestData = await req.json();
-    const { profileData, professionalData, horariosData, userId, tenantSlug: requestTenantSlug } = requestData;
+    const { profileData, professionalData, horariosData, formacoes, userId, tenantSlug: requestTenantSlug } = requestData;
 
     // Detect tenant from multiple sources
     const origin = req.headers.get('origin') || '';
@@ -701,6 +701,29 @@ serve(async (req) => {
       }
 
       console.log('Schedules processed successfully');
+    }
+
+    // Handle education entries if provided
+    if (formacoes && formacoes.length > 0) {
+      console.log('📚 Saving education entries:', formacoes.length);
+      
+      const educationEntries = formacoes.map((f: any) => ({
+        professional_id: professional.id,
+        institution_name: f.institution,
+        course_name: f.course,
+        graduation_year: f.year
+      }));
+
+      const { error: educationError } = await supabaseAdmin
+        .from('professional_education')
+        .insert(educationEntries);
+
+      if (educationError) {
+        console.error('Education creation error:', educationError);
+        // Don't throw - education is saved but not critical for registration
+      } else {
+        console.log('✅ Education entries saved successfully');
+      }
     }
 
     // Send confirmation email for new professional users

@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Edit2, Check, Clock, DollarSign, Calendar } from 'lucide-react';
+import { Edit2, Check, Clock, DollarSign, Calendar, GraduationCap } from 'lucide-react';
 import { getIllustrativeAvatar, hasCustomPhoto } from '@/utils/avatarHelpers';
 
 interface ProfilePreviewProps {
@@ -123,6 +123,37 @@ export const ProfilePreview = ({ formData, onEdit }: ProfilePreviewProps) => {
 
           <Separator />
 
+          {/* Formação Acadêmica */}
+          {formData.formacoes && formData.formacoes.length > 0 && (
+            <>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                    <h5 className="font-medium">Formação Acadêmica</h5>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit(4)}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {formData.formacoes.map((f: any, i: number) => (
+                    <div key={i} className="text-sm text-muted-foreground">
+                      <p className="font-medium text-foreground">{f.course}</p>
+                      <p>{f.institution} • {f.year}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
+
           {/* Resumo Profissional */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -131,7 +162,7 @@ export const ProfilePreview = ({ formData, onEdit }: ProfilePreviewProps) => {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => onEdit(4)}
+                onClick={() => onEdit(5)}
               >
                 <Edit2 className="h-4 w-4" />
               </Button>
@@ -151,35 +182,7 @@ export const ProfilePreview = ({ formData, onEdit }: ProfilePreviewProps) => {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => onEdit(5)}
-              >
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.especialidades.map((esp: string) => (
-                <Badge key={esp} variant="outline">{esp}</Badge>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Preço */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Preço da Consulta</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold">
-                R$ {parseFloat(formData.precoConsulta || '0').toFixed(2)}
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onEdit(5)}
+                onClick={() => onEdit(6)}
               >
                 <Edit2 className="h-4 w-4" />
               </Button>
@@ -199,7 +202,7 @@ export const ProfilePreview = ({ formData, onEdit }: ProfilePreviewProps) => {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => onEdit(6)}
+                onClick={() => onEdit(7)}
               >
                 <Edit2 className="h-4 w-4" />
               </Button>
