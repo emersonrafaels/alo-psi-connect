@@ -26,6 +26,7 @@ import { TimelineProgress } from '@/components/register/TimelineProgress';
 import { FieldWithTooltip } from '@/components/register/FieldWithTooltip';
 import { ProfessionalSummaryField } from '@/components/register/ProfessionalSummaryField';
 import { ProfilePreview } from '@/components/register/ProfilePreview';
+import { EducationStep, EducationEntry } from '@/components/register/EducationStep';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 import { BirthDateInput } from '@/components/register/BirthDateInput';
@@ -86,7 +87,8 @@ const ProfessionalForm = () => {
     especialidades: [] as string[],
     horarios: [] as any[],
     precoConsulta: '', // Novo campo obrigatório
-    intervaloHorarios: '50' // Fixado em 50 minutos
+    intervaloHorarios: '50', // Fixado em 50 minutos
+    formacoes: [] as EducationEntry[]
   });
 
   // Salvar foto do Google automaticamente se disponível
@@ -183,7 +185,7 @@ const ProfessionalForm = () => {
     }
   }, [user, toast]);
 
-  const totalSteps = 8;
+  const totalSteps = 9;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   const handleNext = async () => {
@@ -262,6 +264,9 @@ const ProfessionalForm = () => {
         foto_perfil_url: null,
         possui_e_psi: formData.possuiEPsi === 'sim',
         servicos_raw: formData.especialidades.length > 0 ? formData.especialidades.join(', ') : null,
+        formacao_raw: formData.formacoes.length > 0 
+          ? formData.formacoes.map(f => `${f.course} - ${f.institution} (${f.year})`).join('; ')
+          : null,
         preco_consulta: formData.precoConsulta ? parseFloat(formData.precoConsulta) : null,
         tempo_consulta: 50,
         ativo: true,
@@ -282,6 +287,7 @@ const ProfessionalForm = () => {
           profileData,
           professionalData,
           horariosData: horariosData.length > 0 ? horariosData : null,
+          formacoes: formData.formacoes.length > 0 ? formData.formacoes : null,
           tenantSlug: tenant?.slug || 'alopsi'
         }
       });
@@ -771,6 +777,15 @@ const ProfessionalForm = () => {
 
   const renderStep4 = () => (
     <div className="space-y-6">
+      <EducationStep
+        value={formData.formacoes}
+        onChange={(formacoes) => updateFormData('formacoes', formacoes)}
+      />
+    </div>
+  );
+
+  const renderStep5 = () => (
+    <div className="space-y-6">
       <ProfessionalSummaryField
         value={formData.resumoProfissional}
         onChange={(value) => updateFormData('resumoProfissional', value)}
@@ -778,7 +793,7 @@ const ProfessionalForm = () => {
     </div>
   );
 
-  const renderStep5 = () => (
+  const renderStep6 = () => (
     <div className="space-y-6">
       <SpecialtiesSelector
         value={formData.especialidades}
