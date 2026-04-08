@@ -921,12 +921,11 @@ const ProfessionalForm = () => {
   const canProceedStep1 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf && validateCPF(formData.cpf);
   const canProceedStep2 = formData.profissao && formData.possuiEPsi && formData.crpCrm;
   const canProceedStep3 = !!(selectedPhotoFile || photoPreviewUrl || formData.fotoPerfilUrl);
-  const canProceedStep4 = formData.formacoes.length > 0;
-  const canProceedStep5 = formData.resumoProfissional && formData.resumoProfissional.length >= 100;
-  const canProceedStep6 = formData.especialidades.length > 0 && formData.precoConsulta;
-  const canProceedStep7 = formData.intervaloHorarios && formData.horarios.length > 0;
-  const canProceedStep8 = formData.senha && formData.senha.length >= 6 && formData.confirmarSenha && formData.senha === formData.confirmarSenha;
-  const canSubmit = canProceedStep8;
+  const canProceedStep4 = formData.formacoes.length > 0 && formData.resumoProfissional && formData.resumoProfissional.length >= 100;
+  const canProceedStep5 = formData.especialidades.length > 0 && formData.precoConsulta;
+  const canProceedStep6 = formData.intervaloHorarios && formData.horarios.length > 0;
+  const canProceedStep7 = formData.senha && formData.senha.length >= 6 && formData.confirmarSenha && formData.senha === formData.confirmarSenha;
+  const canSubmit = canProceedStep7;
 
   return (
     <div className="min-h-screen bg-background">
@@ -967,11 +966,10 @@ const ProfessionalForm = () => {
                  {currentStep === 1 ? 'Seus dados pessoais' :
                   currentStep === 2 ? 'Informações profissionais' :
                   currentStep === 3 ? 'Perfil e contatos' :
-                  currentStep === 4 ? 'Formação acadêmica' :
-                  currentStep === 5 ? 'Resumo profissional' :
-                  currentStep === 6 ? 'Suas especialidades' :
-                  currentStep === 7 ? 'Horários de atendimento' :
-                  currentStep === 8 ? 'Credenciais de acesso' :
+                  currentStep === 4 ? 'Formação e resumo profissional' :
+                  currentStep === 5 ? 'Suas especialidades' :
+                  currentStep === 6 ? 'Horários de atendimento' :
+                  currentStep === 7 ? 'Credenciais de acesso' :
                   'Revise suas informações'}
               </CardTitle>
             </CardHeader>
