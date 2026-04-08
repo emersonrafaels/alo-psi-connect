@@ -781,15 +781,12 @@ const ProfessionalForm = () => {
         value={formData.formacoes}
         onChange={(formacoes) => updateFormData('formacoes', formacoes)}
       />
-    </div>
-  );
-
-  const renderStep5 = () => (
-    <div className="space-y-6">
-      <ProfessionalSummaryField
-        value={formData.resumoProfissional}
-        onChange={(value) => updateFormData('resumoProfissional', value)}
-      />
+      <div className="mt-8 pt-8 border-t">
+        <ProfessionalSummaryField
+          value={formData.resumoProfissional}
+          onChange={(value) => updateFormData('resumoProfissional', value)}
+        />
+      </div>
     </div>
   );
 
