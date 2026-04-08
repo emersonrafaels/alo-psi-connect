@@ -670,7 +670,7 @@ const ProfessionalForm = () => {
           <p className="text-xs text-muted-foreground text-center max-w-[280px]">
             {selectedPhotoFile 
               ? 'Foto selecionada. Ela será salva após finalizar o cadastro.' 
-              : 'Adicione uma foto de perfil para que os pacientes possam reconhecê-lo'}
+              : <span>A foto de perfil é <strong className="text-destructive">obrigatória</strong> para o cadastro</span>}
           </p>
         </div>
 
@@ -721,7 +721,7 @@ const ProfessionalForm = () => {
             }}
             onPhotoUrlChange={(url) => updateFormData('fotoPerfilUrl', url)}
             currentPhotoUrl={photoPreviewUrl || formData.fotoPerfilUrl}
-            label="Foto de Perfil"
+            label="Foto de Perfil *"
           />
           {googleData?.picture && photoPreviewUrl && (
             <Badge variant="secondary" className="text-xs">
@@ -908,7 +908,7 @@ const ProfessionalForm = () => {
 
   const canProceedStep1 = formData.nome && formData.email && formData.dataNascimento && formData.genero && formData.cpf && validateCPF(formData.cpf);
   const canProceedStep2 = formData.profissao && formData.possuiEPsi && formData.crpCrm;
-  const canProceedStep3 = true; // Campos opcionais
+  const canProceedStep3 = !!(selectedPhotoFile || photoPreviewUrl || formData.fotoPerfilUrl);
   const canProceedStep4 = formData.resumoProfissional && formData.resumoProfissional.length >= 100;
   const canProceedStep5 = formData.especialidades.length > 0 && formData.precoConsulta;
   const canProceedStep6 = formData.intervaloHorarios && formData.horarios.length > 0;
