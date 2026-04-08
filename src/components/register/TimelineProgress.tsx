@@ -20,8 +20,8 @@ export const TimelineProgress = ({ currentStep, totalSteps, onStepClick, stepTit
   
   // Títulos padrão (profissional) ou customizados
   const defaultTitles = [
-    'Dados Pessoais', 'Profissão', 'Perfil', 'Formação',
-    'Resumo', 'Especialidades', 'Horários', 'Credenciais', 'Revisão'
+    'Dados Pessoais', 'Profissão', 'Perfil', 'Formação e Resumo',
+    'Especialidades', 'Horários', 'Credenciais', 'Revisão'
   ];
   
   const titles = stepTitles || defaultTitles;
