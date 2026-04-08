@@ -1,55 +1,47 @@
 
 
-## Redesign da Pagina /sobre — Direcao Produto & SaaS (V2)
+## Redesign da pagina /sobre baseado no HTML exportado do Stitch
 
-### Conceito
-Transformar a pagina Sobre de um layout institucional-editorial para um design limpo e modular no estilo SaaS, que destaque a inteligencia funcional da plataforma mantendo tom caloroso e inclusivo. Inspirado na direcao "Produto & SaaS (V2)" do Stitch.
+### Objetivo
+Reescrever `src/pages/About.tsx` para replicar fielmente o layout do HTML do Stitch (Produto & SaaS V2), mantendo toda a logica de tenant existente.
 
----
+### Secoes do novo layout (baseado no HTML de referencia)
 
-### Estrutura final (secoes)
+1. **Hero** — Fundo limpo (sem gradiente pesado), texto grande a esquerda com headline "Inteligencia emocional a servico da educacao", subtitulo, e badges "Dados Longitudinais" + "Privacidade Garantida". Sem imagem a direita, sem mockup card.
 
-1. **Hero** — Layout limpo, texto a esquerda + ilustracao/mockup a direita. Fundo gradiente suave (nao full-purple como atual). Tipografia Plus Jakarta Sans. CTAs com contraste claro.
+2. **Por que existimos** — Grid 2 colunas: imagem placeholder a esquerda (rounded-3xl com overlay gradient), texto a direita com titulo, paragrafo, e 2 items com icone (Monitoramento Preventivo, Literacia Emocional).
 
-2. **Por Que Existimos** — Nova secao narrativa com texto curto e emocional sobre a origem da RBE. Fundo branco, grande respiro. Substitui o "Manifesto" atual (que e muito editorial).
+3. **Nossa Identidade (Bento Grid)** — Layout assimetrico: card grande 2x2 "Especialistas de Alma" com texto, card "50k+ Vidas impactadas" em roxo, card "Pedagogia" em teal, card "Tecnologia" em cinza.
 
-3. **Modulos da Plataforma** — Nova secao central com 3 cards modulares destacando funcionalidades: Diario Emocional, Escuta Profissional, Recursos e Trilhas. Cada card com icone, titulo, descricao curta e link para a feature. Visual de "produto".
+4. **Engenharia do Cuidado (Modulos)** — 3 cards modulares: Diario de Emocoes (com barra de progresso), Escalas Cientificas (com barras visuais), Capsulas de Resiliencia (com play button). Labels "Module 01/02/03".
 
-4. **Nossa Filosofia** — 4 pilares do cuidado em grid clean (substitui "Como estruturamos o cuidado"). Remover numeracao/timeline, usar cards horizontais com icone + texto.
+5. **Nossa Meta (Dados)** — Fundo roxo escuro (primary), texto branco, metricas "98% Acuracia" e "15min Tempo Medio", imagem de dashboard a direita. Integrar botao "Ver exemplo de painel" com InstitutionalDashboardModal.
 
-5. **Para Quem E** — Manter 3 cards (Estudantes, Docentes, Instituicoes). Remover imagens Unsplash, usar icones + fundo suave colorido. Mais limpo e modular.
+6. **Instituicoes parceiras** — Logos placeholder em texto (EDUTECH.CO, GLOBAL_LEARN, etc.) em grayscale.
 
-6. **Dados e Inteligencia** — Manter secao de dados com metricas e botao "Ver exemplo de painel". Simplificar layout — remover imagem Unsplash decorativa. Foco nos numeros e CTA.
+7. **CTA Final** — Card arredondado com borda gradient top, titulo "Pronto para humanizar sua gestao?", dois botoes: "Solicitar Demonstracao" e "Baixar PDF Metodologico".
 
-7. **Diferenciais** — Manter grid 3x2 mas com visual mais limpo (cards com borda fina, sem hover pesado).
-
-8. **Governanca** — Manter compacto, 2x2 grid.
-
-9. **Equipe** — Manter TeamSection existente.
-
-10. **FAQ** — Manter Accordion existente.
-
-11. **CTA Final** — Fundo gradiente suave (nao full-purple). Texto caloroso: "Vamos cuidar juntos". Botoes visiveis.
-
----
+### Secoes removidas vs atual
+- Remover: "Para Quem E", "Nossa Filosofia", "Diferenciais", "Governanca" (simplificar)
+- Manter: TeamSection (equipe), FAQ, InstitutionalDashboardModal
+- A branch `medcos` (non-RBE) mantem layout simplificado atual
 
 ### Mudancas visuais principais
-
-- **Hero**: Fundo `bg-gradient-to-br from-[#5B218E] via-[#5B218E]/85 to-[#97D3D9]/30` (mais suave, com toque mint). Remover formas organicas SVG pesadas. Manter imagem a direita mas com mockup mais clean.
-- **Remover WaveDividers** entre todas as secoes — substituir por espacamento generoso e backgrounds alternados (#FFF / #F4F4F4).
-- **Cards**: Borda fina, sombra suave, cantos arredondados (rounded-2xl). Sem hover-scale.
-- **Tipografia**: Manter font-sans (ja configurado). Titulos mais leves (font-semibold em vez de font-bold em subtitulos).
-- **Nova secao "Modulos"**: 3 cards com icone grande, titulo, descricao e botao "Explorar" que linka para /diario-emocional, /profissionais, /encontros.
-- **Cores**: Manter paleta existente mas com uso mais contido — roxo para acentos, backgrounds predominantemente brancos/cinza claro.
+- Tipografia: usar `font-['Plus_Jakarta_Sans']` para headlines, corpo em sans padrao
+- Cores: `#420073` (primary deep), `#5B218E` (primary-container), `#29676c` (secondary/teal), `#f9f9f9` (background)
+- Cards: `rounded-3xl`, `cloud-shadow` (box-shadow: 0 12px 40px -4px rgba(26,28,28,0.06))
+- Sem borders explicitas (usar tonal layering conforme DESIGN.md)
+- Secoes com backgrounds alternados: `#f9f9f9`, `#f3f3f3`, `#ffffff`, `#420073`
 
 ### Preservacoes
-- Toda a logica de tenant (isRedeBemEstar / medcos)
+- Logica tenant (isRedeBemEstar / medcos)
 - InstitutionalDashboardModal
 - TeamSection com fetch de profissionais
-- Navegacao (Header/Footer)
-- FAQ content
-- Rotas reais em todos os links
+- FAQ Accordion
+- Header / Footer
+- Navegacao com rotas reais
+- Scroll-to-top useEffect
 
 ### Arquivo afetado
-- `src/pages/About.tsx` — reescrita completa (~650 linhas)
+- `src/pages/About.tsx` — reescrita completa (~750 linhas)
 
