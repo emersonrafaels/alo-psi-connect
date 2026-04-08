@@ -983,7 +983,6 @@ const ProfessionalForm = () => {
               {currentStep === 6 && renderStep6()}
               {currentStep === 7 && renderStep7()}
               {currentStep === 8 && renderStep8()}
-              {currentStep === 9 && renderStep9()}
 
               <div className="flex justify-between pt-6">
                 <Button
@@ -998,7 +997,7 @@ const ProfessionalForm = () => {
 
                 {currentStep < totalSteps ? (
                   <Button
-                    onClick={currentStep === 8 ? () => setCurrentStep(9) : handleNext}
+                    onClick={currentStep === 7 ? () => setCurrentStep(8) : handleNext}
                     disabled={
                       (currentStep === 1 && !canProceedStep1) ||
                       (currentStep === 2 && !canProceedStep2) ||
@@ -1006,13 +1005,12 @@ const ProfessionalForm = () => {
                       (currentStep === 4 && !canProceedStep4) ||
                       (currentStep === 5 && !canProceedStep5) ||
                       (currentStep === 6 && !canProceedStep6) ||
-                      (currentStep === 7 && !canProceedStep7) ||
-                      (currentStep === 8 && !canProceedStep8)
+                      (currentStep === 7 && !canProceedStep7)
                     }
                     variant="teal"
                     className="flex items-center gap-2"
                   >
-                    {currentStep === 8 ? 'Revisar cadastro' : 'Prosseguir'}
+                    {currentStep === 7 ? 'Revisar cadastro' : 'Prosseguir'}
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 ) : (
