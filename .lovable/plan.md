@@ -1,8 +1,18 @@
 
-## Remover opção "Quero atender" da página de tipo de usuário
 
-### Alteração
-Em `src/pages/register/UserType.tsx`, remover o segundo `Card` ("Quero atender" / "Continuar como Profissional") e manter apenas o card "Quero ser atendido". Ajustar o layout para centralizar o card único (remover grid de 2 colunas).
+## Adicionar opção "Outros" nos comboboxes de Instituição e Curso
+
+### Alteração em `src/components/register/EducationStep.tsx`
+
+No componente `CreatableCombobox`, adicionar:
+
+1. **Novo state `isCustom`** — controla se o campo está no modo de digitação livre
+2. **Opção fixa "Outros"** no final da lista do combobox — ao selecionar, fecha o popover e ativa o modo custom (`isCustom = true`)
+3. **Quando `isCustom = true`**, renderizar um `Input` de texto livre em vez do botão do combobox, com um botão "Voltar para lista" para retornar ao combobox
+4. O valor digitado no input é propagado via `onChange` normalmente
+
+Isso substitui o comportamento atual de "Usar: ..." por uma UX mais explícita com a opção "Outros" visível na lista.
 
 ### Arquivo impactado
-- `src/pages/register/UserType.tsx` — remover card profissional, ajustar layout para card único centralizado (`max-w-md mx-auto` em vez de `grid md:grid-cols-2`)
+- `src/components/register/EducationStep.tsx`
+
