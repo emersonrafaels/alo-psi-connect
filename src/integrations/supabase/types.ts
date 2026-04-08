@@ -2188,6 +2188,44 @@ export type Database = {
           },
         ]
       }
+      professional_education: {
+        Row: {
+          course_name: string
+          created_at: string | null
+          graduation_year: number
+          id: string
+          institution_name: string
+          professional_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          course_name: string
+          created_at?: string | null
+          graduation_year: number
+          id?: string
+          institution_name: string
+          professional_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          course_name?: string
+          created_at?: string | null
+          graduation_year?: number
+          id?: string
+          institution_name?: string
+          professional_id?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_education_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_institutions: {
         Row: {
           created_at: string
