@@ -60,7 +60,7 @@ export const ProfessionalSummaryField = ({ value, onChange }: ProfessionalSummar
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <Label htmlFor="resumoProfissional">
           Resumo Profissional <span className="text-red-500">*</span>

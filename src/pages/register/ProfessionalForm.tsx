@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-import { ChevronLeft, ChevronRight, Eye, EyeOff, Check, Clock, X, Brain, Stethoscope, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, EyeOff, Check, Clock, X, Brain, Stethoscope, Users, GraduationCap, FileText } from 'lucide-react';
 import { PhotoUpload } from '@/components/ui/photo-upload';
 import { Badge } from '@/components/ui/badge';
 import { useProfileManager } from '@/hooks/useProfileManager';
@@ -776,12 +776,23 @@ const ProfessionalForm = () => {
   };
 
   const renderStep4 = () => (
-    <div className="space-y-6">
-      <EducationStep
-        value={formData.formacoes}
-        onChange={(formacoes) => updateFormData('formacoes', formacoes)}
-      />
-      <div className="mt-8 pt-8 border-t">
+    <div className="space-y-8">
+      <div className="space-y-4">
+        <h3 className="text-base font-semibold flex items-center gap-2">
+          <GraduationCap className="h-5 w-5 text-primary" />
+          Formação Acadêmica
+        </h3>
+        <EducationStep
+          value={formData.formacoes}
+          onChange={(formacoes) => updateFormData('formacoes', formacoes)}
+        />
+      </div>
+
+      <div className="border-t pt-8 space-y-4">
+        <h3 className="text-base font-semibold flex items-center gap-2">
+          <FileText className="h-5 w-5 text-primary" />
+          Resumo Profissional
+        </h3>
         <ProfessionalSummaryField
           value={formData.resumoProfissional}
           onChange={(value) => updateFormData('resumoProfissional', value)}
