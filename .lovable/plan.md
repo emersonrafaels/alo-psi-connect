@@ -1,25 +1,24 @@
 
 
-## Unir etapas Formação + Resumo e remover referência de preço
+## Melhorar alinhamento de Formação e Resumo (Step 4)
 
-### 1. Unir Step 4 (Formação) e Step 5 (Resumo) em uma única etapa
+### Problema
+As duas seções (Formação Acadêmica e Resumo Profissional) estão dentro de um mesmo `div` com `space-y-6`, mas a separação visual entre elas é inconsistente — o `div` do resumo usa `mt-8 pt-8 border-t` que conflita com o `space-y-6` do container pai, e não há títulos de seção claros para distinguir os dois blocos.
 
-**Em `src/pages/register/ProfessionalForm.tsx`:**
-- Alterar `totalSteps` de 9 para 8
-- Combinar `renderStep4` e `renderStep5` em um único `renderStep4` que renderiza `EducationStep` + `ProfessionalSummaryField`
-- Renumerar steps 6→5, 7→6, 8→7, 9→8
-- Atualizar títulos do card header (remover "Resumo profissional", renomear step 4 para "Formação e Resumo")
-- Atualizar `canProceedStep` validations (step 4 agora exige formações + resumo)
-- Atualizar renderização condicional e lógica de navegação
-- Atualizar `defaultTitles` no `TimelineProgress` (remover "Resumo" da lista)
+### Solução
 
-### 2. Remover referência de mercado do PriceInput
+**Em `src/pages/register/ProfessionalForm.tsx` (renderStep4):**
+- Adicionar títulos de seção (`h3`) para "Formação Acadêmica" e "Resumo Profissional" com ícones, criando separação visual clara
+- Aumentar o espaçamento do container para `space-y-8`
+- Usar um separador (`border-t`) consistente entre as seções
+- Remover o `mt-8` redundante do wrapper do resumo
 
-**Em `src/components/register/PriceInput.tsx`:**
-- Remover o bloco `bg-blue-50` com as 3 faixas de preço (Iniciante/Intermediário/Experiente)
-- Manter apenas o Label e o Input de preço
+**Em `src/components/register/EducationStep.tsx`:**
+- Remover o texto descritivo redundante (já que o título da seção no pai vai cumprir esse papel), ou mantê-lo mas com espaçamento uniforme
 
-### Arquivos impactados
-- `src/pages/register/ProfessionalForm.tsx`
-- `src/components/register/PriceInput.tsx`
+**Em `src/components/register/ProfessionalSummaryField.tsx`:**
+- Ajustar `space-y-3` para `space-y-4` para consistência com o EducationStep que usa `space-y-6`
+
+### Resultado
+As duas seções ficam visualmente separadas com títulos claros, espaçamento uniforme e uma linha divisória consistente entre elas.
 
