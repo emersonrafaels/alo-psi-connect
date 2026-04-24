@@ -39,11 +39,12 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error('[Cache Invalidation] Error:', error);
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error.message 
+        error: message 
       }),
       {
         status: 400,
