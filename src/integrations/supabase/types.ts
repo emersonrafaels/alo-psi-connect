@@ -3230,6 +3230,135 @@ export type Database = {
           },
         ]
       }
+      whatsapp_auth_codes: {
+        Row: {
+          attempts: number | null
+          code_hash: string
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          phone: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          code_hash: string
+          created_at?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          phone: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          code_hash?: string
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          phone?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_conversation_state: {
+        Row: {
+          current_step: string
+          expires_at: string | null
+          payload: Json | null
+          phone: string
+          profile_id: string | null
+          started_at: string | null
+          tenant_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          current_step: string
+          expires_at?: string | null
+          payload?: Json | null
+          phone: string
+          profile_id?: string | null
+          started_at?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          current_step?: string
+          expires_at?: string | null
+          payload?: Json | null
+          phone?: string
+          profile_id?: string | null
+          started_at?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_messages_log: {
+        Row: {
+          created_at: string | null
+          direction: string | null
+          id: string
+          message_text: string | null
+          message_type: string | null
+          phone: string | null
+          raw_payload: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          direction?: string | null
+          id?: string
+          message_text?: string | null
+          message_type?: string | null
+          phone?: string | null
+          raw_payload?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          direction?: string | null
+          id?: string
+          message_text?: string | null
+          message_type?: string | null
+          phone?: string | null
+          raw_payload?: Json | null
+        }
+        Relationships: []
+      }
+      whatsapp_profile_links: {
+        Row: {
+          last_used_at: string | null
+          phone: string
+          profile_id: string | null
+          status: string | null
+          tenant_id: string | null
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          last_used_at?: string | null
+          phone: string
+          profile_id?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          last_used_at?: string | null
+          phone?: string
+          profile_id?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       institution_metrics: {
