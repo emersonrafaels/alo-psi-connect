@@ -78,11 +78,12 @@ A prática da auto-compaixão não é apenas um ato de bondade para consigo mesm
     );
 
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error('[Fix Post] Erro:', error);
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error.message 
+        error: message 
       }),
       { 
         status: 500,

@@ -256,11 +256,12 @@ const handler = async (req: Request): Promise<Response> => {
             console.log('✅ Email extracted successfully:', userEmail);
           }
         } catch (error) {
+          const err = error as { name?: string; message?: string; stack?: string };
           console.error('❌ Error fetching user email:', error);
           console.error('❌ Error details:', {
-            name: error?.name,
-            message: error?.message,
-            stack: error?.stack
+            name: err?.name,
+            message: err?.message,
+            stack: err?.stack
           });
           console.warn('⚠️ Continuing without email - tokens will still be saved');
           // userEmail permanece '' e o fluxo continua normalmente

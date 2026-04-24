@@ -146,11 +146,12 @@ serve(async (req) => {
     });
     
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error('[Find Professional] Error:', error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'Internal server error'
+        error: message || 'Internal server error'
       }),
       {
         status: 400,
@@ -212,7 +213,7 @@ function applyAdditionalFilters(professionals: any[], params: any) {
   // Professions filter
   if (params.professions.length > 0) {
     filtered = filtered.filter(p => 
-      p.profissao && params.professions.some(prof => 
+      p.profissao && params.professions.some((prof: string) => 
         p.profissao.toLowerCase().includes(prof.toLowerCase())
       )
     );
