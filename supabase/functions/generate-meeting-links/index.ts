@@ -163,10 +163,11 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error('[Generate Meeting Links] Erro geral:', error);
     return new Response(JSON.stringify({ 
       success: false,
-      error: error.message 
+      error: message 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
