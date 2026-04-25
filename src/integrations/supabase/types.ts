@@ -1964,6 +1964,56 @@ export type Database = {
           },
         ]
       }
+      mood_entry_analyses: {
+        Row: {
+          buddy_message: string | null
+          created_at: string
+          id: string
+          mood_entry_id: string
+          raw_payload: Json | null
+          risk_level:
+            | Database["public"]["Enums"]["mood_analysis_risk_level"]
+            | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          buddy_message?: string | null
+          created_at?: string
+          id?: string
+          mood_entry_id: string
+          raw_payload?: Json | null
+          risk_level?:
+            | Database["public"]["Enums"]["mood_analysis_risk_level"]
+            | null
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          buddy_message?: string | null
+          created_at?: string
+          id?: string
+          mood_entry_id?: string
+          raw_payload?: Json | null
+          risk_level?:
+            | Database["public"]["Enums"]["mood_analysis_risk_level"]
+            | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mood_entry_analyses_mood_entry_id_fkey"
+            columns: ["mood_entry_id"]
+            isOneToOne: false
+            referencedRelation: "mood_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mood_factors: {
         Row: {
           created_at: string | null
@@ -3772,6 +3822,7 @@ export type Database = {
         | "export_data"
         | "manage_permissions"
         | "view_audit_log"
+      mood_analysis_risk_level: "healthy" | "attention" | "alert" | "critical"
       payment_status: "pending_payment" | "paid" | "failed"
     }
     CompositeTypes: {
@@ -3934,6 +3985,7 @@ export const Constants = {
         "manage_permissions",
         "view_audit_log",
       ],
+      mood_analysis_risk_level: ["healthy", "attention", "alert", "critical"],
       payment_status: ["pending_payment", "paid", "failed"],
     },
   },

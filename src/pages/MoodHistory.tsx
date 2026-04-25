@@ -13,8 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Search, Edit, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, Calendar, Search, Edit, Trash2, Plus, Sparkles } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useMoodEntryAnalyses, RISK_LEVEL_META } from '@/hooks/useMoodEntryAnalyses';
 
 const MoodHistory = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const MoodHistory = () => {
   const { userConfigs } = useEmotionConfig();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
+  const { data: analysesMap } = useMoodEntryAnalyses(entries.map(e => e.id));
 
   // Redirect non-authenticated users
   if (!user) {
@@ -249,6 +251,34 @@ const MoodHistory = () => {
                                   </AlertDialog>
                                 </div>
                               </div>
+
+                              {/* AI Analysis: risk badge + buddy message */}
+                              {(() => {
+                                const analysis = analysesMap?.get(entry.id);
+                                if (!analysis) return null;
+                                const meta = analysis.risk_level ? RISK_LEVEL_META[analysis.risk_level] : null;
+                                return (
+                                  <div className="space-y-2 border-t pt-3">
+                                    {meta && (
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge variant="outline" className={meta.badgeClass}>
+                                          <Sparkles className="h-3 w-3 mr-1" />
+                                          {meta.emoji} Análise IA: {meta.label}
+                                        </Badge>
+                                        <span className="text-xs text-muted-foreground">via {analysis.source}</span>
+                                      </div>
+                                    )}
+                                    {analysis.buddy_message && (
+                                      <div className="bg-primary/5 border-l-4 border-primary/40 rounded-md p-3">
+                                        <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                                          <Sparkles className="h-3 w-3" /> Mensagem do Buddy
+                                        </p>
+                                        <p className="text-sm italic">{analysis.buddy_message}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
 
                               {/* Entry Details - Dynamic Emotions */}
                               {(() => {
