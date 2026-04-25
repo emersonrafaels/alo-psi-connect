@@ -187,18 +187,21 @@ export const getAllEmotions = (
 ): Array<{ key: string; value: number; emoji: string; name: string }> => {
   const emotions: Array<{ key: string; value: number; emoji: string; name: string }> = [];
 
-  // Busca em emotion_values (dinâmico)
+  // Busca em emotion_values (dinâmico) - filtra apenas valores numéricos válidos.
+  // Metadados de IA (risk_level, buddy_message, source, etc.) são armazenados em
+  // mood_entry_analyses e nunca devem aparecer como emoção aqui.
   if ('emotion_values' in entry && entry.emotion_values && typeof entry.emotion_values === 'object') {
     const emotionValues = entry.emotion_values as Record<string, any>;
     Object.entries(emotionValues).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        emotions.push({
-          key,
-          value: Number(value),
-          emoji: getDefaultEmoji(key),
-          name: getEmotionDisplayName(key, userConfigs)
-        });
-      }
+      if (value === null || value === undefined) return;
+      const numeric = typeof value === 'number' ? value : Number(value);
+      if (!Number.isFinite(numeric)) return;
+      emotions.push({
+        key,
+        value: numeric,
+        emoji: getDefaultEmoji(key),
+        name: getEmotionDisplayName(key, userConfigs)
+      });
     });
   }
 
