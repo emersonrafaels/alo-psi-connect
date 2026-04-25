@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
+import { useMoodEntryAnalyses, RISK_LEVEL_META } from '@/hooks/useMoodEntryAnalyses';
 import { useEmotionConfig } from '@/hooks/useEmotionConfig';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
