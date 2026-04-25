@@ -30,6 +30,8 @@ const MoodDiary = () => {
   const { profile } = useUserProfile();
   const { tenant } = useTenant();
   const { entries, loading: entriesLoading } = useMoodEntries();
+  const entryIds = entries.map(e => e.id);
+  const { data: analysesMap } = useMoodEntryAnalyses(entryIds);
   const { userConfigs, activeConfigs } = useEmotionConfig();
   const { toast } = useToast();
   const [selectedStatEmotion, setSelectedStatEmotion] = useState('mood');
