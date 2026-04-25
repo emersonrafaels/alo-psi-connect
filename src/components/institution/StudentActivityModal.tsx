@@ -7,7 +7,8 @@ import { useStudentActivityData, MoodEntry, TopEmotion, StudentTriageHistory } f
 import { RiskLevel } from '@/hooks/useStudentTriage';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Activity, Brain, Zap, Moon, BookOpen, ClipboardCheck, Heart, AlertTriangle, CheckCircle2, Play, Clock } from 'lucide-react';
+import { Activity, Brain, Zap, Moon, BookOpen, ClipboardCheck, Heart, AlertTriangle, CheckCircle2, Play, Clock, Sparkles } from 'lucide-react';
+import { useMoodEntryAnalyses, RISK_LEVEL_META } from '@/hooks/useMoodEntryAnalyses';
 
 interface StudentActivityModalProps {
   open: boolean;
