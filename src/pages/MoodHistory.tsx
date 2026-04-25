@@ -263,7 +263,7 @@ const MoodHistory = () => {
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <Badge variant="outline" className={meta.badgeClass}>
                                           <Sparkles className="h-3 w-3 mr-1" />
-                                          {meta.emoji} Análise IA: {meta.label}
+                                          {meta.emoji} Análise Medcos Track: {meta.label}
                                         </Badge>
                                         <span className="text-xs text-muted-foreground">via {analysis.source}</span>
                                       </div>
