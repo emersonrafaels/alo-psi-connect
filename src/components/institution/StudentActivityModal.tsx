@@ -70,6 +70,8 @@ function MoodScoreDisplay({ value, label, icon: Icon }: { value: number | null; 
 }
 
 function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: MoodEntry[]; topEmotions: TopEmotion[]; lastTriageDate?: string }) {
+  const { data: analysesMap } = useMoodEntryAnalyses(entries.map(e => e.id), entries.length > 0);
+
   if (entries.length === 0) {
     return (
       <div className="py-8 text-center text-muted-foreground text-sm">
