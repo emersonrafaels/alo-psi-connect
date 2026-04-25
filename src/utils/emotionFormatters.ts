@@ -57,9 +57,13 @@ export const formatEmotionValue = (
  */
 export const DEFAULT_EMOTION_NAMES: Record<string, string> = {
   mood: 'Humor',
+  mood_score: 'Humor',
   energy: 'Energia',
+  energy_level: 'Energia',
   anxiety: 'Ansiedade',
+  anxiety_level: 'Ansiedade',
   stress: 'Estresse',
+  stress_level: 'Estresse',
   motivation: 'Motivação',
   focus: 'Foco',
   gratitude: 'Gratidão',
@@ -79,12 +83,16 @@ export const DEFAULT_EMOTION_NAMES: Record<string, string> = {
 export const getDefaultEmoji = (emotionType: string): string => {
   const emojiMap: Record<string, string> = {
     mood: '😊',
+    mood_score: '😊',
     humor: '😊',
     energy: '⚡',
+    energy_level: '⚡',
     energia: '⚡',
     anxiety: '😰',
+    anxiety_level: '😰',
     ansiedade: '😰',
     stress: '😓',
+    stress_level: '😓',
     estresse: '😓',
     sleep_quality: '⭐',
     qualidade_sono: '⭐',
