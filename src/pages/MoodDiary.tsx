@@ -320,7 +320,7 @@ const MoodDiary = () => {
                         {meta && (
                           <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant="outline" className={meta.badgeClass}>
-                              {meta.emoji} Análise IA: {meta.label}
+                              {meta.emoji} Análise Medcos Track: {meta.label}
                             </Badge>
                             {todayAnalysis.source === 'evolution_api' && (
                               <Badge variant="outline" className="text-xs">
