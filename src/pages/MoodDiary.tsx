@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
+import { useMoodEntryAnalyses, RISK_LEVEL_META } from '@/hooks/useMoodEntryAnalyses';
 import { useEmotionConfig } from '@/hooks/useEmotionConfig';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
@@ -10,7 +11,8 @@ import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Calendar, Plus, TrendingUp, Heart, BarChart3, Share2, Mail, Download, Settings, Shield, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
+import { Calendar, Plus, TrendingUp, Heart, BarChart3, Share2, Mail, Download, Settings, Shield, ExternalLink, ChevronDown, ChevronRight, Sparkles, MessageCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -28,6 +30,8 @@ const MoodDiary = () => {
   const { profile } = useUserProfile();
   const { tenant } = useTenant();
   const { entries, loading: entriesLoading } = useMoodEntries();
+  const entryIds = entries.map(e => e.id);
+  const { data: analysesMap } = useMoodEntryAnalyses(entryIds);
   const { userConfigs, activeConfigs } = useEmotionConfig();
   const { toast } = useToast();
   const [selectedStatEmotion, setSelectedStatEmotion] = useState('mood');
@@ -307,6 +311,35 @@ const MoodDiary = () => {
                       "{todayEntry.journal_text.substring(0, 150)}..."
                     </p>
                   )}
+                  {(() => {
+                    const todayAnalysis = analysesMap?.get(todayEntry.id);
+                    if (!todayAnalysis) return null;
+                    const meta = todayAnalysis.risk_level ? RISK_LEVEL_META[todayAnalysis.risk_level] : null;
+                    return (
+                      <div className="mt-3 space-y-2">
+                        {meta && (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className={meta.badgeClass}>
+                              {meta.emoji} Análise IA: {meta.label}
+                            </Badge>
+                            {todayAnalysis.source === 'evolution_api' && (
+                              <Badge variant="outline" className="text-xs">
+                                via WhatsApp
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                        {todayAnalysis.buddy_message && (
+                          <div className="flex gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
+                            <Sparkles className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+                            <p className="text-sm text-foreground italic">
+                              {todayAnalysis.buddy_message}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : (
                 <div className="text-center py-8">
