@@ -311,6 +311,35 @@ const MoodDiary = () => {
                       "{todayEntry.journal_text.substring(0, 150)}..."
                     </p>
                   )}
+                  {(() => {
+                    const todayAnalysis = analysesMap?.get(todayEntry.id);
+                    if (!todayAnalysis) return null;
+                    const meta = todayAnalysis.risk_level ? RISK_LEVEL_META[todayAnalysis.risk_level] : null;
+                    return (
+                      <div className="mt-3 space-y-2">
+                        {meta && (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className={meta.badgeClass}>
+                              {meta.emoji} Análise IA: {meta.label}
+                            </Badge>
+                            {todayAnalysis.source === 'evolution_api' && (
+                              <Badge variant="outline" className="text-xs">
+                                via WhatsApp
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                        {todayAnalysis.buddy_message && (
+                          <div className="flex gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
+                            <Sparkles className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+                            <p className="text-sm text-foreground italic">
+                              {todayAnalysis.buddy_message}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : (
                 <div className="text-center py-8">
