@@ -25,6 +25,7 @@ const MoodHistory = () => {
   const { userConfigs } = useEmotionConfig();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
+  const { data: analysesMap } = useMoodEntryAnalyses(entries.map(e => e.id));
 
   // Redirect non-authenticated users
   if (!user) {
