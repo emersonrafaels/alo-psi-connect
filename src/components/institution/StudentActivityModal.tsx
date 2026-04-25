@@ -170,10 +170,19 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
       <div>
         <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Registros recentes</p>
         <div className="space-y-2">
-          {entries.slice(0, 14).map(entry => (
+          {entries.slice(0, 14).map(entry => {
+            const analysis = analysesMap?.get(entry.id);
+            const meta = analysis?.risk_level ? RISK_LEVEL_META[analysis.risk_level] : null;
+            return (
             <div key={entry.id} className="p-3 rounded-lg border bg-muted/20 space-y-1.5">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-medium">{format(new Date(entry.date + 'T12:00:00'), "dd 'de' MMMM", { locale: ptBR })}</span>
+                {meta && (
+                  <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${meta.badgeClass}`}>
+                    <Sparkles className="h-2.5 w-2.5 mr-0.5" />
+                    IA: {meta.label}
+                  </Badge>
+                )}
               </div>
               <div className="flex flex-wrap gap-3">
                 <MoodScoreDisplay value={entry.mood_score} label="Humor" icon={Activity} />
@@ -191,8 +200,14 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
               {entry.journal_text && (
                 <p className="text-xs text-muted-foreground italic line-clamp-2">"{entry.journal_text}"</p>
               )}
+              {analysis?.buddy_message && (
+                <p className="text-xs text-muted-foreground italic border-l-2 border-primary/40 pl-2 mt-1">
+                  <Sparkles className="h-2.5 w-2.5 inline mr-1" />{analysis.buddy_message}
+                </p>
+              )}
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
