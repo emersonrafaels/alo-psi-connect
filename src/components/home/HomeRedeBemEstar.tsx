@@ -785,7 +785,7 @@ const HomeRedeBemEstar = () => {
                             </span>
                           )}
                           <button
-                            onClick={() => navigate(`/professional/${p.id}`)}
+                            onClick={() => goToProfessional(p.id)}
                             className="px-5 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105"
                             style={{ background: "var(--rbe-primary-container)", color: "var(--rbe-on-primary)" }}
                           >
