@@ -76,9 +76,18 @@ const HomeRedeBemEstar = () => {
     };
   }, [tenant]);
 
-  const goToContact = () => navigate(buildTenantPath(tenantSlug, "/contato"));
-  const goToProfessionals = () =>
+  const goToContact = () => {
+    navigate(buildTenantPath(tenantSlug, "/contato"));
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  };
+  const goToProfessionals = () => {
     navigate(buildTenantPath(tenantSlug, "/profissionais"));
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  };
+  const goToProfessional = (id: number | string) => {
+    navigate(`/professional/${id}`);
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  };
   const scrollTo = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -776,7 +785,7 @@ const HomeRedeBemEstar = () => {
                             </span>
                           )}
                           <button
-                            onClick={() => navigate(`/professional/${p.id}`)}
+                            onClick={() => goToProfessional(p.id)}
                             className="px-5 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105"
                             style={{ background: "var(--rbe-primary-container)", color: "var(--rbe-on-primary)" }}
                           >
