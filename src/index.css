@@ -1013,3 +1013,41 @@ All colors MUST be HSL.
   max-height: 300px;
   overflow-y: auto;
 }
+/* ════════════════════════════════════════════════════════════════
+   RBE About page — Stitch "Serenity & Wisdom" design system
+   Scoped under .rbe-about-page so it never affects the rest of the app.
+   ════════════════════════════════════════════════════════════════ */
+.rbe-about-page {
+  --rbe-primary: #6F2DBD;
+  --rbe-secondary: #6DE0D6;
+  --rbe-bg: #FAF9FF;
+  --rbe-lilac-light: #EFE6FF;
+  --rbe-turquoise-light: #DAF7F4;
+  --rbe-surface-variant: #F4F1FB;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.005em;
+}
+.rbe-about-page h1,
+.rbe-about-page h2,
+.rbe-about-page h3,
+.rbe-about-page h4,
+.rbe-about-page h5,
+.rbe-about-page h6 {
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+.rbe-about-page .rbe-rounded-huge {
+  border-radius: 2.5rem;
+}
+.rbe-about-page .rbe-organic-shape-1 {
+  border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
+}
+.rbe-about-page .rbe-organic-shape-2 {
+  border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+}
+.rbe-about-page .rbe-glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
