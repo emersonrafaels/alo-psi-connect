@@ -1,150 +1,105 @@
 
-# 🎨 Substituir página `/sobre` pelo novo design Stitch
+# Ajustes mobile e dark mode — página /sobre (Rede Bem-Estar)
 
-Vamos reconstruir a página **`/sobre`** da **Rede Bem-Estar (tenant `alopsi`)** seguindo fielmente o mock do Stitch enviado (`code-2.html` + `DESIGN-2.md` "Serenity & Wisdom"), mantendo o Header e Footer atuais do projeto e preservando o layout antigo apenas para o tenant **MEDCOS**.
+## Diagnóstico
 
----
+Após análise do `AboutRedeBemEstar.tsx` e dos tokens scoped em `src/index.css`, identifiquei dois grupos de problemas:
 
-## 1. Estratégia de tenant
+### 🌙 Dark mode (quebrado)
+A página foi construída com cores hardcoded (`bg-white`, `text-slate-700`, `text-slate-600`, `bg-slate-50`, `border-slate-100` etc.) e variáveis CSS fixas em hex (`--rbe-bg: #FAF9FF`, `--rbe-lilac-light: #EFE6FF`). No dark mode:
+- Texto cinza claro (`slate-600/700`) fica ilegível em fundo escuro
+- Cards `bg-white` quebram o contraste contra o `--background` escuro
+- Lilás claríssimo (`#EFE6FF`) some no dark
+- Seção "O que nos diferencia" usa `bg-white/10` sobre `--rbe-primary` — ok, mas ícones/textos brancos não invertem
+- Mockups do hero (Buddy, Check-in, Dashboard) ficam com fundo branco gritante
 
-- `src/pages/About.tsx` continua como roteador interno:
-  - Se `tenant.slug === 'medcos'` → renderiza o componente atual (mantido como `AboutMedcos`).
-  - Caso contrário (RBE / outros) → renderiza o novo `AboutRedeBemEstar` baseado no Stitch.
-- Header e Footer globais do projeto são mantidos (não substituiremos pelo nav/footer do mock).
-
----
-
-## 2. Tokens de design (sem quebrar o resto do site)
-
-O design Stitch usa cores e raios próprios. Para evitar conflito com o tema global, vou:
-
-- Adicionar **utilitários escopados** em `src/index.css` dentro de `@layer utilities`, prefixados com `rbe-about-*`:
-  - `--rbe-primary: #6F2DBD`
-  - `--rbe-secondary: #6DE0D6` (turquesa)
-  - `--rbe-bg: #FAFAFF`
-  - `--rbe-lilac-light: #F0E7FF`
-  - `--rbe-turquoise-light: #E0F9F7`
-  - `--rbe-surface-variant: #F4F3F9`
-- Classes utilitárias:
-  - `.rbe-organic-shape-1` / `.rbe-organic-shape-2` → border-radius "blob"
-  - `.rbe-glass-card` → glassmorphism com 12px backdrop-blur
-  - `.rbe-smile-curve` → o sorriso decorativo do mock
-  - `.rbe-rounded-huge` → `border-radius: 2.5rem`
-- Fonte **Plus Jakarta Sans** carregada via `<link>` em `index.html` (Google Fonts) e aplicada apenas dentro do escopo da nova página com a classe wrapper `.rbe-about-page` (`font-family: 'Plus Jakarta Sans', sans-serif`).
-
-Tudo escopado dentro de `.rbe-about-page` → zero impacto em outras páginas.
+### 📱 Mobile (1144px e abaixo)
+- **Hero**: composição de cards flutuantes usa `absolute` com larguras fixas (`w-56`, `w-48`, `w-64`, `w-44`) e `rotate` — em telas <420px estoura horizontalmente e gera scroll lateral
+- **Padding**: `px-6` no hero + `max-w-7xl` está ok, mas seções como "Por que existimos" usam `p-10` no mobile (apertado para o ícone 28×28 + texto)
+- **CTAs do hero**: `flex flex-wrap gap-4` com botões `px-8 py-4` — em 360px ficam empilhados mas sem `w-full`, ficando desalinhados
+- **Tipografia hero**: `text-4xl` em 360px ainda pode quebrar mal a headline longa
+- **"Como atuamos"**: linha pontilhada decorativa (`hidden md:block`) ok, mas os 3 passos viram coluna sem o número conectar visualmente
+- **"Cuidado que conversa…"**: cards flutuantes com `-right-4` / `-left-4` saem do container em telas estreitas
+- **Princípios (grid 6 col em lg)**: `grid-cols-2` no mobile com `p-6` e ícones grandes — fica ok mas o `text-[10px]` na descrição é difícil de ler
+- **Impacto**: `grid-cols-2` no mobile com `text-4xl` no número + título — ok, mas `p-8` aperta
+- **CTA final**: `p-12` no mobile com headline `text-3xl` — pode estourar em 360px
 
 ---
 
-## 3. Estrutura do novo componente
+## Plano de implementação
 
-Criar `src/components/about/AboutRedeBemEstar.tsx` com as seções, na ordem do mock:
+### 1. Tornar tokens RBE compatíveis com dark mode
+**Arquivo:** `src/index.css` (bloco `.rbe-about-page`)
 
-1. **Hero** — Badge "INOVAÇÃO EM SAÚDE MENTAL" pulsante, headline em roxo profundo, dois CTAs (`Conhecer plataforma` → `/profissionais`, `Falar com a equipe` → `/contato`) e composição à direita com **4 cards flutuantes**: Buddy, Check-in Diário (3 emojis), Dashboard "Engajamento Institucional 87.4%" e mini Diário Emocional. Blobs orgânicos turquesa + lilás de fundo.
-2. **Por que existimos** — Card branco grande com ícone `volunteer_activism` e citação "Cuidar melhor também é decidir melhor."
-3. **Missão / Visão / Propósito** — Grid 3 colunas. O card **Propósito** em roxo sólido com blob branco translúcido.
-4. **O que fazemos** — 4 cards em grid 2x2: Buddy, Diário Emocional, Escalas e Dados, Atendimento Especializado. Cada um com ícone + chip de categoria.
-5. **Para quem fazemos** — 3 cards com banner topo colorido: Estudantes (turquesa), Professores (lilás), Instituições (roxo claro).
-6. **Como atuamos** — Timeline horizontal com 3 passos numerados (Acolher / Mapear / Encaminhar), círculos roxos com badge turquesa e linha pontilhada conectora.
-7. **Cuidado que conversa com a realidade universitária** — Bloco lilás com imagem (foto de estudantes) + 3 bullets check à direita. Imagem placeholder (Unsplash) que poderá ser trocada depois.
-8. **Nossos princípios** — Grid de 6 cards pequenos: Ética, Privacidade, Escuta, Clareza, Cuidado Contínuo, Diversidade.
-9. **O que nos diferencia** — Seção full-bleed em roxo com 4 cards glass: IA Especializada, Resposta em Tempo Real, Protocolos Validados, Integração Nativa.
-10. **Impacto que queremos gerar** — 4 big numbers turquesa: +90%, +85%, 100%, 24/7.
-11. **CTA final** — Bloco roxo grande com botão turquesa "Solicitar demonstração gratuita" → navega para `/contato`.
+- Manter as variáveis hex atuais como **light mode**
+- Adicionar bloco `html.dark .rbe-about-page` (ou `.dark .rbe-about-page`) sobrescrevendo:
+  - `--rbe-bg: #0F0A1A` (roxo quase preto)
+  - `--rbe-surface-variant: #1A1230`
+  - `--rbe-lilac-light: #2A1B45` (lilás escuro com mesma vibe)
+  - `--rbe-turquoise-light: #1A3A38`
+  - `--rbe-primary: #B794F4` (clarear o roxo para contraste em fundo escuro)
+  - `--rbe-secondary: #6DE0D6` (mantém — funciona em ambos)
+- Adicionar tokens novos `--rbe-card`, `--rbe-card-border`, `--rbe-text`, `--rbe-text-muted`, `--rbe-text-strong` (light: white/slate-100/slate-700/slate-500/slate-900; dark: slate-900/slate-800/slate-200/slate-400/white)
 
-> A faixa "Instituições que confiam na nossa rede" do mock será **omitida** por enquanto (já existe seção de parceiros na home; podemos plugar depois se desejado).
+### 2. Substituir cores hardcoded no componente
+**Arquivo:** `src/components/about/AboutRedeBemEstar.tsx`
+
+Trocar globalmente (mantendo classes utilitárias Tailwind apontando para vars):
+- `bg-white` → `bg-[var(--rbe-card)]`
+- `text-slate-700` / `text-slate-600` → `text-[var(--rbe-text)]` / `text-[var(--rbe-text-muted)]`
+- `text-slate-800` / `text-slate-900` → `text-[var(--rbe-text-strong)]`
+- `text-slate-400` / `text-slate-500` → `text-[var(--rbe-text-muted)]`
+- `border-slate-100` / `border-slate-50` → `border-[var(--rbe-card-border)]`
+- `bg-slate-50` → `bg-[var(--rbe-surface-variant)]`
+
+Casos pontuais:
+- Mockup "Mini diary" (`bg-white p-4` com `bg-slate-100` nas linhas) → trocar para tokens
+- Mockup "Check-in" (`bg-white` com emojis) → `bg-[var(--rbe-card)]`
+- Banner CTA final em fundo `--rbe-primary` (já tem texto branco) — manter, mas no dark `--rbe-primary` clareia, então usar `--rbe-cta-bg` separado fixo (roxo escuro em ambos modos)
+
+### 3. Ajustes responsivos no hero
+**Arquivo:** `src/components/about/AboutRedeBemEstar.tsx`
+
+- Headline: `text-3xl sm:text-4xl lg:text-6xl` (era `text-4xl sm:text-5xl lg:text-6xl`)
+- Botões CTA: adicionar `w-full sm:w-auto` para alinhar bem no mobile
+- Composição de cards flutuantes:
+  - Adicionar wrapper com `overflow-hidden` no container do hero
+  - Reduzir tamanhos no mobile: `w-44 sm:w-56 lg:w-64` para o Buddy, `w-40 sm:w-48 lg:w-56` no Check-in, `w-52 sm:w-64 lg:w-72` no Dashboard
+  - Altura: `h-[380px] sm:h-[480px] lg:h-[600px]` (era 480/600)
+  - Reduzir as `rotate-3` / `-rotate-6` para `rotate-2` / `-rotate-3` no mobile via classe condicional (ou `sm:rotate-3`)
+
+### 4. Ajustes responsivos demais seções
+
+- **"Por que existimos"**: padding `p-6 sm:p-10 lg:p-20` (era `p-10 lg:p-20`); ícone wrapper `w-20 h-20 sm:w-28 sm:h-28`
+- **Mission/Vision/Propósito**: padding `p-6 sm:p-10 lg:p-12`
+- **Serviços (cards 2x2)**: `p-6 sm:p-8 lg:p-10`; ícone wrapper menor no mobile
+- **"Cuidado que conversa…"**: 
+  - Container `p-6 sm:p-10 lg:p-20` e `rounded-[32px] sm:rounded-[48px] lg:rounded-[64px]`
+  - Cards flutuantes: trocar `-right-4` por `right-2` e `-left-4` por `left-2` no mobile (`sm:-right-4 sm:-left-4`)
+- **Princípios**: `text-[11px] sm:text-[10px]` (descrição) — sim, aumentar no mobile para legibilidade
+- **Impacto**: `p-6 sm:p-8 lg:p-10`; número `text-3xl sm:text-4xl lg:text-5xl`
+- **CTA final**: `p-8 sm:p-12 lg:p-24`; headline `text-2xl sm:text-3xl lg:text-5xl`; botão `text-sm sm:text-base lg:text-lg` e `px-6 sm:px-10 lg:px-12 py-4 sm:py-5 lg:py-6`
+
+### 5. Garantir que não há scroll horizontal
+- Adicionar `overflow-x-hidden` no container raiz `.rbe-about-page` (via classe `overflow-x-hidden` no JSX) — protege contra os elementos `absolute` com `translate-x` que extrapolam viewport
+
+### 6. Verificação de imagem no dark mode
+- A imagem "grupo de estudantes" (Unsplash) com gradient overlay continua funcionando bem nos dois modos — sem alteração
 
 ---
 
-## 4. Ícones
+## Arquivos a modificar
 
-O mock usa **Material Symbols Outlined**. Para não adicionar uma nova fonte de ícones, vou mapear todos para **lucide-react** (já no projeto):
-
-| Mock | Lucide |
+| Arquivo | Alterações |
 |---|---|
-| `volunteer_activism` | `HeartHandshake` |
-| `track_changes` | `Target` |
-| `visibility` | `Eye` |
-| `auto_awesome` | `Sparkles` |
-| `smart_toy` | `Bot` |
-| `auto_stories` | `BookOpen` |
-| `insights` | `BarChart3` |
-| `psychology` | `Brain` |
-| `school` | `GraduationCap` |
-| `person_celebrate` | `UserCheck` |
-| `account_balance` | `Building2` |
-| `favorite` / `map` / `trending_up` | `Heart` / `Map` / `TrendingUp` |
-| `done_all` | `CheckCheck` |
-| `verified_user` / `lock` / `hearing` / `lightbulb` / `vital_signs` / `diversity_3` | `ShieldCheck` / `Lock` / `Ear` / `Lightbulb` / `Activity` / `Users` |
-| `bolt` / `clinical_notes` / `integration_instructions` | `Zap` / `ClipboardList` / `Workflow` |
-| `query_stats` | `LineChart` |
-| `play_circle` | `PlayCircle` |
+| `src/index.css` | Adicionar variantes dark dos tokens `--rbe-*` e novos tokens `--rbe-card`, `--rbe-card-border`, `--rbe-text*`, `--rbe-cta-bg` |
+| `src/components/about/AboutRedeBemEstar.tsx` | Substituir cores hardcoded por vars, ajustar tamanhos/paddings responsivos, adicionar `overflow-x-hidden`, `w-full sm:w-auto` nos CTAs |
 
----
+## Critérios de aceite
 
-## 5. Navegação dos CTAs
-
-- "Conhecer plataforma" → `/profissionais`
-- "Falar com a equipe" → `/contato`
-- "Solicitar demonstração gratuita" → `/contato`
-- Todos usam `useNavigate()` + `window.scrollTo(0,0)` (regra do projeto: scroll reset em navegação interna).
-
----
-
-## 6. Imagem da seção "Cuidado que conversa…"
-
-Para o mock, vou usar **Unsplash** como placeholder fiel ao briefing (grupo diverso de estudantes universitários brasileiros, ar livre):
-`https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&q=80`
-
-→ Você pode trocar depois enviando o asset definitivo para `src/assets/about-students.jpg`.
-
----
-
-## 7. Responsividade
-
-- Mobile-first conforme DESIGN-2.md (margens 20px, single-column).
-- Hero: composição de cards flutuantes vira **stack vertical** abaixo de `lg`.
-- Seções "O que fazemos" / "Para quem" / "Diferencial" / "Impacto" colapsam para 1 coluna em mobile, 2 em md, e voltam para o grid do mock em lg.
-- Timeline "Como atuamos" vira vertical em mobile (sem a linha pontilhada).
-
----
-
-## 8. Conteúdo (texto)
-
-Vou usar **exatamente os textos do mock** do Stitch (headlines, descrições, frases dos princípios e métricas). Como esses textos já refletem a narrativa da RBE ("acolhimento", "cuidado", "estudantes/professores/instituições"), não há conflito com a regra de terminologia atual ("cuidado" / "acompanhamento"). Único ajuste: garantir uso de "cuidado" (não "cuidado mental").
-
----
-
-## 9. Arquivos que vão ser criados/modificados
-
-**Criados:**
-- `src/components/about/AboutRedeBemEstar.tsx` — nova página (todas as seções acima).
-- `src/components/about/AboutMedcos.tsx` — extração 1:1 do conteúdo MEDCOS atual.
-
-**Modificados:**
-- `src/pages/About.tsx` — vira um *router* curto: lê `tenant.slug`, decide qual sub-componente renderizar, e mantém o `<Header />` + `<Footer />` como hoje.
-- `src/index.css` — adiciona o bloco `.rbe-about-page` com tokens (`--rbe-*`) e classes utilitárias (`rbe-organic-shape-1/2`, `rbe-glass-card`, `rbe-smile-curve`, `rbe-rounded-huge`).
-- `index.html` — adiciona `<link>` do Google Fonts para `Plus Jakarta Sans` (não-bloqueante, com `display=swap`).
-
-**Não tocados:** `Index.tsx` (home), Header, Footer, demais rotas.
-
----
-
-## 10. QA antes de entregar
-
-- Conferir `/sobre` no tenant **alopsi (RBE)** → vê o novo design.
-- Conferir `/medcos/sobre` → continua com o layout antigo do MEDCOS.
-- Verificar que nenhuma outra página (Home, Profissionais, Blog) mudou de tipografia ou cores (escopo confinado em `.rbe-about-page`).
-- Testar responsividade em 375px / 768px / 1280px.
-- Verificar dark mode: como a página é desenhada em fundo claro com cores específicas, vou **forçar o tema claro** apenas dentro de `.rbe-about-page` (fundo `--rbe-bg`, texto `--rbe-on-bg`), independente do toggle global — mantendo legibilidade. Posso fazer uma variante dark futuramente caso queira.
-
----
-
-## ▶️ Próximos passos depois desta aprovação
-
-Após sua aprovação, eu:
-1. Crio os 2 componentes + atualizo `About.tsx`.
-2. Insiro tokens/utilitários em `index.css` e fonte em `index.html`.
-3. Faço screenshot do resultado para você conferir.
-
-Quando estiver bom, na próxima rodada partimos para a **Home (`/`)** reaproveitando os mesmos tokens `--rbe-*`.
+- ✅ Sem scroll horizontal em viewport 360px
+- ✅ Hero com cards flutuantes legíveis e dentro do container em mobile
+- ✅ Toggle de dark mode no header preserva a página /sobre legível (texto, cards, ícones contrastando)
+- ✅ Imagem do grupo continua boa
+- ✅ Tipografia escala suavemente de 360px → 1920px
+- ✅ Outras páginas (Home, MEDCOS About) **não** são afetadas (tudo segue scoped em `.rbe-about-page`)

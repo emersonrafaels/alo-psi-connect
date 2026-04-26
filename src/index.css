@@ -1018,14 +1018,44 @@ All colors MUST be HSL.
    Scoped under .rbe-about-page so it never affects the rest of the app.
    ════════════════════════════════════════════════════════════════ */
 .rbe-about-page {
+  /* Brand */
   --rbe-primary: #6F2DBD;
   --rbe-secondary: #6DE0D6;
   --rbe-bg: #FAF9FF;
   --rbe-lilac-light: #EFE6FF;
   --rbe-turquoise-light: #DAF7F4;
   --rbe-surface-variant: #F4F1FB;
+  /* Surfaces & text — light */
+  --rbe-card: #FFFFFF;
+  --rbe-card-soft: #F8FAFC;            /* slate-50 */
+  --rbe-card-border: #F1F5F9;          /* slate-100 */
+  --rbe-text-strong: #0F172A;          /* slate-900 */
+  --rbe-text: #334155;                 /* slate-700 */
+  --rbe-text-muted: #64748B;           /* slate-500 */
+  --rbe-text-subtle: #94A3B8;          /* slate-400 */
+  /* Fixed dark surface used in the "diferenciais" + final CTA — keeps brand contrast in both modes */
+  --rbe-cta-bg: #6F2DBD;
+  --rbe-cta-text: #FFFFFF;
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   letter-spacing: -0.005em;
+}
+
+.dark .rbe-about-page {
+  --rbe-primary: #B794F4;              /* lighter purple for dark bg contrast */
+  --rbe-secondary: #6DE0D6;
+  --rbe-bg: #0F0A1A;
+  --rbe-lilac-light: #2A1B45;
+  --rbe-turquoise-light: #1A3A38;
+  --rbe-surface-variant: #1A1230;
+  --rbe-card: #1E1733;
+  --rbe-card-soft: #15102A;
+  --rbe-card-border: #2A1F45;
+  --rbe-text-strong: #F8FAFC;
+  --rbe-text: #E2E8F0;
+  --rbe-text-muted: #94A3B8;
+  --rbe-text-subtle: #64748B;
+  --rbe-cta-bg: #4A1D88;
+  --rbe-cta-text: #FFFFFF;
 }
 .rbe-about-page h1,
 .rbe-about-page h2,
