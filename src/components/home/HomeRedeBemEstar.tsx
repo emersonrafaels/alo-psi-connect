@@ -76,9 +76,18 @@ const HomeRedeBemEstar = () => {
     };
   }, [tenant]);
 
-  const goToContact = () => navigate(buildTenantPath(tenantSlug, "/contato"));
-  const goToProfessionals = () =>
+  const goToContact = () => {
+    navigate(buildTenantPath(tenantSlug, "/contato"));
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  };
+  const goToProfessionals = () => {
     navigate(buildTenantPath(tenantSlug, "/profissionais"));
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  };
+  const goToProfessional = (id: number | string) => {
+    navigate(`/professional/${id}`);
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  };
   const scrollTo = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
