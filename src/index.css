@@ -1081,3 +1081,86 @@ All colors MUST be HSL.
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
+
+/* ════════════════════════════════════════════════════════════════
+   RBE Home page — Stitch "The Human Editorial" design system
+   Scoped under .rbe-home-page so it never affects the rest of the app.
+   ════════════════════════════════════════════════════════════════ */
+.rbe-home-page {
+  /* MD3-inspired tokens */
+  --rbe-primary: #420073;
+  --rbe-primary-container: #5B218E;
+  --rbe-on-primary: #ffffff;
+  --rbe-secondary: #944076;
+  --rbe-secondary-container: #fd98d4;
+  --rbe-on-secondary-container: #7b2a5f;
+  --rbe-secondary-fixed: #ffd8eb;
+  --rbe-on-secondary-fixed: #3c002b;
+  --rbe-tertiary-fixed: #b0edf3;
+  --rbe-on-tertiary-fixed: #044f54;
+  --rbe-primary-fixed: #f1dbff;
+  --rbe-on-primary-fixed: #2d0050;
+  --rbe-surface: #f9f9f9;
+  --rbe-surface-container-lowest: #ffffff;
+  --rbe-surface-container-low: #f3f3f3;
+  --rbe-surface-container: #eeeeee;
+  --rbe-surface-container-high: #e8e8e8;
+  --rbe-on-surface: #1a1c1c;
+  --rbe-on-surface-variant: #4c4451;
+  --rbe-outline-variant: #cec3d3;
+  /* Brand accents */
+  --rbe-brand-purple: #5B218E;
+  --rbe-brand-mint: #97D3D9;
+  --rbe-brand-pink: #E281BB;
+  font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  background: var(--rbe-surface);
+  color: var(--rbe-on-surface);
+}
+
+.dark .rbe-home-page {
+  --rbe-primary: #deb7ff;
+  --rbe-primary-container: #5B218E;
+  --rbe-on-primary: #ffffff;
+  --rbe-secondary: #ffaedb;
+  --rbe-secondary-container: #7b2a5f;
+  --rbe-on-secondary-container: #ffd8eb;
+  --rbe-secondary-fixed: #4a1538;
+  --rbe-on-secondary-fixed: #ffd8eb;
+  --rbe-tertiary-fixed: #1f4a4e;
+  --rbe-on-tertiary-fixed: #b0edf3;
+  --rbe-primary-fixed: #3a1660;
+  --rbe-on-primary-fixed: #f1dbff;
+  --rbe-surface: #0F0A1A;
+  --rbe-surface-container-lowest: #1a1228;
+  --rbe-surface-container-low: #1E1733;
+  --rbe-surface-container: #251c3d;
+  --rbe-surface-container-high: #2d2347;
+  --rbe-on-surface: #E2E8F0;
+  --rbe-on-surface-variant: #B8AFC4;
+  --rbe-outline-variant: #4c4451;
+}
+
+.rbe-home-page h1,
+.rbe-home-page h2,
+.rbe-home-page h3,
+.rbe-home-page h4,
+.rbe-home-page h5,
+.rbe-home-page h6 {
+  font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.rbe-home-page .rbe-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.dark .rbe-home-page .rbe-glass {
+  background: rgba(30, 23, 51, 0.6);
+  border: 1px solid rgba(222, 183, 255, 0.1);
+}
+
+.rbe-home-page .rbe-organic-gradient {
+  background: linear-gradient(135deg, var(--rbe-primary) 0%, var(--rbe-primary-container) 100%);
+}
