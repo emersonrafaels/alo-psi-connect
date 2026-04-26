@@ -14,12 +14,12 @@ import { buildTenantPath, DEFAULT_TENANT_SLUG } from "@/utils/tenantHelpers";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { getIllustrativeAvatar } from "@/utils/avatarHelpers";
 import {
-  Target, Eye, Lightbulb, ClipboardList, UserCheck, Video, Heart, BarChart3,
-  ShieldCheck, GraduationCap, Users, Building2, Focus, Hospital, Zap,
+  ClipboardList, UserCheck, Video, Heart, BarChart3,
+  GraduationCap, Users, Building2, Focus, Hospital, Zap,
   AlertTriangle, Link2, Lock, TrendingUp, Calendar, HelpCircle, ArrowRight,
-  BookOpen, Headphones, Sparkles, Brain, Play, Activity, Monitor,
 } from "lucide-react";
 import { InstitutionalDashboardModal } from "@/components/InstitutionalDashboardModal";
+import AboutRedeBemEstar from "@/components/about/AboutRedeBemEstar";
 
 const About = () => {
   const navigate = useNavigate();
