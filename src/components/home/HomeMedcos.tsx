@@ -37,7 +37,7 @@ const WaveDivider = ({ flip = false, color = "#5B218E" }: { flip?: boolean; colo
   </div>
 );
 
-const Index = () => {
+const HomeMedcos = () => {
   const navigate = useNavigate();
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || 'alopsi';
@@ -465,4 +465,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default HomeMedcos;
