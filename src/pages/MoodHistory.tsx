@@ -17,8 +17,9 @@ import { ArrowLeft, Calendar, Search, Edit, Trash2, Plus, Sparkles } from 'lucid
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useMoodEntryAnalyses, RISK_LEVEL_META } from '@/hooks/useMoodEntryAnalyses';
 import { EmotionalSummaryCard } from '@/components/mood/EmotionalSummaryCard';
+import { RecurringThemes } from '@/components/mood/RecurringThemes';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Sparkle } from 'lucide-react';
 import { isPrimaryIndicator } from '@/utils/moodInsightHelpers';
 
 const MoodHistory = () => {
@@ -136,7 +137,21 @@ const MoodHistory = () => {
 
           {/* Resumo emocional */}
           {entries.length > 0 && (
-            <EmotionalSummaryCard entries={entries} userConfigs={userConfigs} />
+            <>
+              <EmotionalSummaryCard entries={entries} userConfigs={userConfigs} />
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/padrao'))}
+                  className="flex items-center gap-2"
+                >
+                  <Sparkle className="h-4 w-4" />
+                  Ver meu padrão emocional
+                </Button>
+              </div>
+              <RecurringThemes days={30} />
+            </>
           )}
 
           {/* Filters */}
