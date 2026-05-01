@@ -289,7 +289,9 @@ const MoodHistory = () => {
                                           <Sparkles className="h-3 w-3 mr-1" />
                                           {meta.emoji} Análise Medcos Track: {meta.label}
                                         </Badge>
-                                        <span className="text-xs text-muted-foreground">via {analysis.source}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                          via {analysis.source === 'evolution_api' ? 'Diário Emocional - WhatsApp' : analysis.source}
+                                        </span>
                                       </div>
                                     )}
                                     {analysis.buddy_message && (
