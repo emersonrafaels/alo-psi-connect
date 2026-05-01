@@ -23,6 +23,17 @@ interface InsightRequest {
   sessionId?: string;
 }
 
+function categorizeTheme(theme: string): string {
+  const t = theme.toLowerCase();
+  if (/\b(trabalho|carreira|profiss|chefe|empresa|escrit|emprego)\b/.test(t)) return 'trabalho';
+  if (/\b(estud|escola|faculdade|universidade|prova|aula|tcc)\b/.test(t)) return 'estudos';
+  if (/\b(relacion|namoro|casamento|amor|parceir|crush|familia|família|amig)\b/.test(t)) return 'relacionamento';
+  if (/\b(saúde|saude|sono|cansa|exerc|aliment|corpo|dor|doen)\b/.test(t)) return 'saude';
+  if (/\b(dinheiro|finan|conta|salário|salario|gasto|divida|dívida)\b/.test(t)) return 'financeiro';
+  if (/\b(lazer|hobby|descanso|viagem|diver|pass|fim de semana)\b/.test(t)) return 'lazer';
+  return 'outros';
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
