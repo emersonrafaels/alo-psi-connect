@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { InstitutionMoodAggregates } from '@/components/institutional/InstitutionMoodAggregates';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
