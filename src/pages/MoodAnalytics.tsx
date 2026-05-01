@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ArrowLeft, TrendingUp, Calendar, BarChart3, Heart } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { EmotionalSummaryCard } from '@/components/mood/EmotionalSummaryCard';
+import { generateChartCaption, generateDistributionCaption } from '@/utils/moodInsightHelpers';
 
 const MoodAnalytics = () => {
   const navigate = useNavigate();
