@@ -3409,6 +3409,36 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_rate_limit_cooldowns: {
+        Row: {
+          blocked_until: string
+          cooldown_seconds: number
+          metadata: Json | null
+          phone: string
+          reason: string | null
+          strike_level: number
+          updated_at: string | null
+        }
+        Insert: {
+          blocked_until: string
+          cooldown_seconds: number
+          metadata?: Json | null
+          phone: string
+          reason?: string | null
+          strike_level?: number
+          updated_at?: string | null
+        }
+        Update: {
+          blocked_until?: string
+          cooldown_seconds?: number
+          metadata?: Json | null
+          phone?: string
+          reason?: string | null
+          strike_level?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       institution_metrics: {
