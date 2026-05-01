@@ -388,6 +388,21 @@ const MoodDiary = () => {
                   </Button>
                   <Button 
                     variant="outline"
+                    onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/padrao'))}
+                    className="flex items-center gap-2"
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                    Meu Padrão Emocional
+                  </Button>
+                  <Button 
+                    onClick={() => window.open(`https://wa.me/5547994163?text=${encodeURIComponent('Olá, quero registrar meu diário emocional.')}`, '_blank')}
+                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Registrar pelo WhatsApp
+                  </Button>
+                  <Button 
+                    variant="outline"
                     onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/configurar'))}
                     className="flex items-center gap-2"
                   >
