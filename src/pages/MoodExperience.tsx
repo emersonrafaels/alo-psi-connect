@@ -372,7 +372,7 @@ const MoodExperience = () => {
                       <div className="space-y-2">
                         <Label htmlFor="sleep_hours" className="flex items-center gap-2">
                           <Moon className="h-4 w-4 text-blue-500" />
-                          Horas de Sono
+                          Horas de sono
                         </Label>
                         <Input
                           id="sleep_hours"

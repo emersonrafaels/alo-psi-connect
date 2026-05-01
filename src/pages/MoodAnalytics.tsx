@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ArrowLeft, TrendingUp, Calendar, BarChart3, Heart } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { EmotionalSummaryCard } from '@/components/mood/EmotionalSummaryCard';
+import { generateChartCaption, generateDistributionCaption } from '@/utils/moodInsightHelpers';
 
 const MoodAnalytics = () => {
   const navigate = useNavigate();
@@ -152,6 +154,11 @@ const MoodAnalytics = () => {
             </div>
           </div>
 
+          {/* Resumo emocional */}
+          {entries.length > 0 && (
+            <EmotionalSummaryCard entries={entries} />
+          )}
+
           {entries.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
@@ -231,7 +238,7 @@ const MoodAnalytics = () => {
                       Evolução do seu humor, energia e ansiedade
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-3">
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={last30Days}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -243,6 +250,9 @@ const MoodAnalytics = () => {
                         <Line type="monotone" dataKey="ansiedade" stroke="#ffc658" name="Ansiedade" />
                       </LineChart>
                     </ResponsiveContainer>
+                    <p className="text-sm text-muted-foreground italic">
+                      {generateChartCaption('mood', last30Days.map(d => d.humor))} {generateChartCaption('anxiety', last30Days.map(d => d.ansiedade))}
+                    </p>
                   </CardContent>
                 </Card>
               )}
@@ -255,7 +265,7 @@ const MoodAnalytics = () => {
                       <CardTitle>Tendências Semanais</CardTitle>
                       <CardDescription>Médias por semana</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-3">
                       <ResponsiveContainer width="100%" height={250}>
                         <BarChart data={weeklyData}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -265,6 +275,9 @@ const MoodAnalytics = () => {
                           <Bar dataKey="humor" fill="#8884d8" name="Humor" />
                         </BarChart>
                       </ResponsiveContainer>
+                      <p className="text-xs text-muted-foreground italic">
+                        {generateChartCaption('mood', weeklyData.map(w => w.humor))}
+                      </p>
                     </CardContent>
                   </Card>
                 )}
@@ -275,7 +288,7 @@ const MoodAnalytics = () => {
                     <CardTitle>Distribuição do Humor</CardTitle>
                     <CardDescription>Frequência por faixa de humor</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-3">
                     <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={moodDistribution}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -285,6 +298,9 @@ const MoodAnalytics = () => {
                         <Bar dataKey="count" fill="#8884d8" name="Entradas" />
                       </BarChart>
                     </ResponsiveContainer>
+                    <p className="text-xs text-muted-foreground italic">
+                      {generateDistributionCaption(Object.fromEntries(moodDistribution.map(m => [Number(m.range), m.count])))}
+                    </p>
                   </CardContent>
                 </Card>
               </div>

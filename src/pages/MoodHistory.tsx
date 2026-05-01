@@ -16,6 +16,10 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Search, Edit, Trash2, Plus, Sparkles } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useMoodEntryAnalyses, RISK_LEVEL_META } from '@/hooks/useMoodEntryAnalyses';
+import { EmotionalSummaryCard } from '@/components/mood/EmotionalSummaryCard';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
+import { isPrimaryIndicator } from '@/utils/moodInsightHelpers';
 
 const MoodHistory = () => {
   const navigate = useNavigate();
@@ -129,6 +133,11 @@ const MoodHistory = () => {
               Nova Entrada
             </Button>
           </div>
+
+          {/* Resumo emocional */}
+          {entries.length > 0 && (
+            <EmotionalSummaryCard entries={entries} userConfigs={userConfigs} />
+          )}
 
           {/* Filters */}
           <Card>
@@ -280,43 +289,64 @@ const MoodHistory = () => {
                                 );
                               })()}
 
-                              {/* Entry Details - Dynamic Emotions */}
+                              {/* Entry Details - Indicadores principais + emoções complementares */}
                               {(() => {
                                 const emotions = getAllEmotions(entry, userConfigs);
                                 const displayEmotions = emotions.filter(e => e.value > 0);
-                                
                                 if (displayEmotions.length === 0) return null;
-                                
+
+                                const renderEmotion = (emotion: typeof displayEmotions[number]) => {
+                                  const scale = userConfigs.find(c => c.emotion_type === emotion.key)?.scale_max || 5;
+                                  return (
+                                    <div key={emotion.key} className="flex items-center gap-2">
+                                      <span className="text-lg">{emotion.emoji}</span>
+                                      <div>
+                                        <div className="text-muted-foreground text-xs">{emotion.name}</div>
+                                        <div className="font-medium">{formatValue(emotion.value)}/{scale}</div>
+                                      </div>
+                                    </div>
+                                  );
+                                };
+
+                                const primary = displayEmotions.filter(e => isPrimaryIndicator(e.key));
+                                const complementary = displayEmotions.filter(e => !isPrimaryIndicator(e.key));
+
                                 return (
-                                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-sm">
-                                    {displayEmotions.map((emotion) => {
-                                      const scale = userConfigs.find(c => c.emotion_type === emotion.key)?.scale_max || 10;
-                                      return (
-                                        <div key={emotion.key} className="flex items-center gap-2">
-                                          <span className="text-lg">{emotion.emoji}</span>
-                                          <div>
-                                            <div className="text-muted-foreground text-xs">{emotion.name}</div>
-                                            <div className="font-medium">{formatValue(emotion.value)}/{scale}</div>
+                                  <div className="space-y-3">
+                                    {primary.length > 0 && (
+                                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-sm">
+                                        {primary.map(renderEmotion)}
+                                      </div>
+                                    )}
+                                    {complementary.length > 0 && (
+                                      <Collapsible>
+                                        <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                                          <ChevronDown className="h-3 w-3 transition-transform data-[state=open]:rotate-180" />
+                                          Ver dimensões emocionais ({complementary.length})
+                                        </CollapsibleTrigger>
+                                        <CollapsibleContent className="pt-2">
+                                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-sm">
+                                            {complementary.map(renderEmotion)}
                                           </div>
-                                        </div>
-                                      );
-                                    })}
+                                        </CollapsibleContent>
+                                      </Collapsible>
+                                    )}
                                   </div>
                                 );
                               })()}
 
-                              {/* Sleep Info */}
+                              {/* Horas e qualidade do sono */}
                               {(entry.sleep_hours || entry.sleep_quality) && (
-                                <div className="flex gap-4 text-sm border-t pt-3">
+                                <div className="flex gap-4 text-sm border-t pt-3 flex-wrap">
                                   {entry.sleep_hours && (
                                     <div className="flex items-center gap-2">
-                                      <span className="text-muted-foreground">😴 Sono:</span>
+                                      <span className="text-muted-foreground">😴 Horas de sono:</span>
                                       <span className="font-medium">{entry.sleep_hours}h</span>
                                     </div>
                                   )}
                                   {entry.sleep_quality && (
                                     <div className="flex items-center gap-2">
-                                      <span className="text-muted-foreground">⭐ Qualidade:</span>
+                                      <span className="text-muted-foreground">⭐ Qualidade do sono:</span>
                                       <span className="font-medium">{entry.sleep_quality}/5</span>
                                     </div>
                                   )}

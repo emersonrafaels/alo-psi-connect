@@ -8,6 +8,8 @@ import { Brain, Sparkles, AlertCircle, User, UserCheck, History, ChevronDown, Ch
 import { useAIInsights } from '@/hooks/useAIInsights';
 import InsightHistoryCard from './InsightHistoryCard';
 import { FormattedInsightText } from './FormattedInsightText';
+import { StructuredInsightView } from './mood/StructuredInsightView';
+import { parseInsightContent } from '@/utils/moodInsightHelpers';
 
 interface MoodEntry {
   date: string;
@@ -177,9 +179,17 @@ export const AIInsightsCard = ({ moodEntries, className }: AIInsightsCardProps) 
                 <Sparkles className="h-4 w-4 text-primary" />
                 <h4 className="font-medium">Seus Insights Personalizados</h4>
               </div>
-              <div className="bg-muted/50 rounded-lg p-4">
-                <FormattedInsightText text={insights} />
-              </div>
+              {(() => {
+                const parsed = parseInsightContent(insights);
+                if (parsed?.kind === 'structured') {
+                  return <StructuredInsightView insight={parsed.data} entriesCount={moodEntries.length} />;
+                }
+                return (
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <FormattedInsightText text={parsed?.kind === 'markdown' ? parsed.text : insights} />
+                  </div>
+                );
+              })()}
               <div className="text-xs text-muted-foreground">
                 Insights gerados por IA • Não substitui orientação profissional
               </div>

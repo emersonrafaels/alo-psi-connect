@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { sanitizeInsightText } from '@/utils/moodInsightHelpers';
 
 interface FormattedInsightTextProps {
   text: string;
@@ -8,8 +9,9 @@ interface FormattedInsightTextProps {
 export const FormattedInsightText = memo(({ text, className }: FormattedInsightTextProps) => {
   // Function to format the text with basic markdown-like styling
   const formatText = (content: string) => {
+    const sanitized = sanitizeInsightText(content);
     // Split by double line breaks to create paragraphs
-    const paragraphs = content.split('\n\n').filter(p => p.trim());
+    const paragraphs = sanitized.split('\n\n').filter(p => p.trim());
     
     return paragraphs.map((paragraph, index) => {
       // Check if it's a heading (starts with ## or **Title**)
