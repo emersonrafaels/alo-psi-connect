@@ -23,6 +23,17 @@ interface InsightRequest {
   sessionId?: string;
 }
 
+function categorizeTheme(theme: string): string {
+  const t = theme.toLowerCase();
+  if (/\b(trabalho|carreira|profiss|chefe|empresa|escrit|emprego)\b/.test(t)) return 'trabalho';
+  if (/\b(estud|escola|faculdade|universidade|prova|aula|tcc)\b/.test(t)) return 'estudos';
+  if (/\b(relacion|namoro|casamento|amor|parceir|crush|familia|família|amig)\b/.test(t)) return 'relacionamento';
+  if (/\b(saúde|saude|sono|cansa|exerc|aliment|corpo|dor|doen)\b/.test(t)) return 'saude';
+  if (/\b(dinheiro|finan|conta|salário|salario|gasto|divida|dívida)\b/.test(t)) return 'financeiro';
+  if (/\b(lazer|hobby|descanso|viagem|diver|pass|fim de semana)\b/.test(t)) return 'lazer';
+  return 'outros';
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -255,6 +266,47 @@ ${entriesText}`;
     }
 
     const insights = JSON.stringify(structured);
+
+    // Persist detected themes + buddy memory (best-effort, non-blocking on errors)
+    if (userId && Array.isArray(structured.detected_themes) && structured.detected_themes.length > 0) {
+      try {
+        const latestEntry = moodEntries[moodEntries.length - 1] as any;
+        if (latestEntry?.id) {
+          // Remove existing themes for this entry to avoid duplicates
+          await supabase
+            .from('mood_detected_themes')
+            .delete()
+            .eq('mood_entry_id', latestEntry.id)
+            .eq('user_id', userId);
+          const themeRows = structured.detected_themes.slice(0, 8).map((t: string) => ({
+            mood_entry_id: latestEntry.id,
+            user_id: userId,
+            theme: String(t).toLowerCase().slice(0, 80),
+            category: categorizeTheme(String(t)),
+            sentiment: structured.risk_level === 'healthy' ? 'positivo' : structured.risk_level === 'attention' ? 'neutro' : 'negativo',
+            confidence: structured.confidence === 'high' ? 0.9 : structured.confidence === 'medium' ? 0.7 : 0.5,
+          }));
+          if (themeRows.length > 0) {
+            await supabase.from('mood_detected_themes').insert(themeRows);
+          }
+        }
+
+        // Update buddy memory snapshot
+        await supabase
+          .from('mood_buddy_memory')
+          .upsert({
+            user_id: userId,
+            recent_themes: structured.detected_themes.slice(0, 6),
+            recent_observations: [
+              ...(structured.attention_points || []).slice(0, 3),
+              ...(structured.positive_patterns || []).slice(0, 2),
+            ],
+            last_message_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+      } catch (e) {
+        console.error('Failed to persist themes/buddy memory:', e);
+      }
+    }
 
     // Save insight to history
     const { data: historyEntry, error: historyError } = await supabase

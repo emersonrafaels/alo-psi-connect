@@ -62,6 +62,7 @@ import MoodExperience from "./pages/MoodExperience";
 import MoodEntry from "./pages/MoodEntry";
 import MoodHistory from "./pages/MoodHistory";
 import MoodAnalytics from "./pages/MoodAnalytics";
+import MoodPattern from "./pages/MoodPattern";
 import EmotionConfigPage from "./pages/EmotionConfigPage";
 
 // Admin pages
@@ -170,6 +171,7 @@ const AppWithShortcuts = () => {
       <Route path="/diario-emocional/nova-entrada" element={<ModuleGuard module="mood_diary"><MoodEntry /></ModuleGuard>} />
       <Route path="/diario-emocional/historico" element={<ModuleGuard module="mood_diary"><MoodHistory /></ModuleGuard>} />
       <Route path="/diario-emocional/analises" element={<ModuleGuard module="mood_diary"><MoodAnalytics /></ModuleGuard>} />
+      <Route path="/diario-emocional/padrao" element={<ModuleGuard module="mood_diary"><MoodPattern /></ModuleGuard>} />
       <Route path="/diario-emocional/configurar" element={<ModuleGuard module="mood_diary"><EmotionConfigPage /></ModuleGuard>} />
       
       {/* Rotas de Encontros em Grupo */}
@@ -201,6 +203,7 @@ const AppWithShortcuts = () => {
       <Route path="/medcos/diario-emocional/nova-entrada" element={<ModuleGuard module="mood_diary"><MoodEntry /></ModuleGuard>} />
       <Route path="/medcos/diario-emocional/historico" element={<ModuleGuard module="mood_diary"><MoodHistory /></ModuleGuard>} />
       <Route path="/medcos/diario-emocional/analises" element={<ModuleGuard module="mood_diary"><MoodAnalytics /></ModuleGuard>} />
+      <Route path="/medcos/diario-emocional/padrao" element={<ModuleGuard module="mood_diary"><MoodPattern /></ModuleGuard>} />
       <Route path="/medcos/diario-emocional/configurar" element={<ModuleGuard module="mood_diary"><EmotionConfigPage /></ModuleGuard>} />
       
       {/* Rotas de Encontros Medcos */}
