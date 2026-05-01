@@ -35,7 +35,7 @@ const MoodEntry = () => {
   const { user } = useAuth();
   const { profile, loading } = useUserProfile();
   const { tenant } = useTenant();
-  const { getEntryByDate, getEntryById, createOrUpdateEntry } = useMoodEntries();
+  const { entries: allEntries, getEntryByDate, getEntryById, createOrUpdateEntry } = useMoodEntries();
   const { toast } = useToast();
   const { activeConfigs, loading: configsLoading } = useEmotionConfig();
 
@@ -494,7 +494,7 @@ const MoodEntry = () => {
 
           {/* Comparação com registro anterior */}
           {currentEntry && (() => {
-            const previous = useMoodEntries().entries
+            const previous = allEntries
               .filter((e) => e.date < currentEntry.date)
               .sort((a, b) => b.date.localeCompare(a.date))[0];
             if (!previous) return null;
