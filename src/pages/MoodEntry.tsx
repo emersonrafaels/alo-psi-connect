@@ -418,7 +418,7 @@ const MoodEntry = () => {
     message += `💤 Qualidade do Sono: ${formData.sleep_quality[0]}/5\n`;
     
     if (formData.sleep_hours) {
-      message += `🕒 Horas de Sono: ${formData.sleep_hours}h\n`;
+      message += `🕒 Horas de sono: ${formData.sleep_hours}h\n`;
     }
     
     if (formData.tags.length > 0) {
@@ -610,7 +610,7 @@ const MoodEntry = () => {
               {/* Sleep */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="sleep_hours">Horas de Sono</Label>
+                  <Label htmlFor="sleep_hours">Horas de sono</Label>
                   <Input
                     id="sleep_hours"
                     type="number"
