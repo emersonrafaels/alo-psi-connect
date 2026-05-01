@@ -30,9 +30,10 @@ serve(async (req) => {
   }
 
   try {
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key não configurada');
+    if (!lovableApiKey && !openaiApiKey) {
+      throw new Error('Nenhuma chave de IA configurada (LOVABLE_API_KEY ou OPENAI_API_KEY).');
     }
 
     const { moodEntries, sessionId }: InsightRequest = await req.json();
