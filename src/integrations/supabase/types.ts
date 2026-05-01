@@ -1892,6 +1892,74 @@ export type Database = {
         }
         Relationships: []
       }
+      mood_buddy_memory: {
+        Row: {
+          last_message_at: string | null
+          preferred_tone: string | null
+          recent_observations: Json | null
+          recent_themes: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          last_message_at?: string | null
+          preferred_tone?: string | null
+          recent_observations?: Json | null
+          recent_themes?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          last_message_at?: string | null
+          preferred_tone?: string | null
+          recent_observations?: Json | null
+          recent_themes?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mood_detected_themes: {
+        Row: {
+          category: string
+          confidence: number
+          created_at: string
+          id: string
+          mood_entry_id: string
+          sentiment: string
+          theme: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          confidence?: number
+          created_at?: string
+          id?: string
+          mood_entry_id: string
+          sentiment?: string
+          theme: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          confidence?: number
+          created_at?: string
+          id?: string
+          mood_entry_id?: string
+          sentiment?: string
+          theme?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mood_detected_themes_mood_entry_id_fkey"
+            columns: ["mood_entry_id"]
+            isOneToOne: false
+            referencedRelation: "mood_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mood_entries: {
         Row: {
           anxiety_level: number | null
@@ -2045,6 +2113,96 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mood_period_analyses: {
+        Row: {
+          attention_points: Json | null
+          confidence: string | null
+          created_at: string
+          dominant_themes: Json | null
+          entries_count: number
+          id: string
+          metrics_snapshot: Json | null
+          period_end: string
+          period_start: string
+          period_type: string
+          positive_patterns: Json | null
+          risk_level: string | null
+          suggested_actions: Json | null
+          summary: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attention_points?: Json | null
+          confidence?: string | null
+          created_at?: string
+          dominant_themes?: Json | null
+          entries_count?: number
+          id?: string
+          metrics_snapshot?: Json | null
+          period_end: string
+          period_start: string
+          period_type?: string
+          positive_patterns?: Json | null
+          risk_level?: string | null
+          suggested_actions?: Json | null
+          summary?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attention_points?: Json | null
+          confidence?: string | null
+          created_at?: string
+          dominant_themes?: Json | null
+          entries_count?: number
+          id?: string
+          metrics_snapshot?: Json | null
+          period_end?: string
+          period_start?: string
+          period_type?: string
+          positive_patterns?: Json | null
+          risk_level?: string | null
+          suggested_actions?: Json | null
+          summary?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mood_user_goals: {
+        Row: {
+          created_at: string
+          goal_type: string
+          id: string
+          is_active: boolean
+          period: string
+          target_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goal_type?: string
+          id?: string
+          is_active?: boolean
+          period?: string
+          target_value?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          goal_type?: string
+          id?: string
+          is_active?: boolean
+          period?: string
+          target_value?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       newsletter_subscriptions: {
         Row: {
@@ -3583,6 +3741,10 @@ export type Database = {
           total_users: number
           type: string
         }[]
+      }
+      get_institution_mood_aggregates: {
+        Args: { p_institution_id: string; p_period_days?: number }
+        Returns: Json
       }
       get_institution_professional_ids: {
         Args: { _user_id: string }
