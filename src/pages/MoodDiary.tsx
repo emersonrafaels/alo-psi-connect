@@ -395,7 +395,7 @@ const MoodDiary = () => {
                     Meu Padrão Emocional
                   </Button>
                   <Button 
-                    onClick={() => window.open('https://wa.link/w1h4i0', '_blank')}
+                    onClick={() => window.open('https://wa.me/5511947994163?text=Ol%C3%A1%2C%20quero%20registrar%20meu%20diario%20emocional', '_blank')}
                     className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
                   >
                     <MessageCircle className="h-4 w-4" />
