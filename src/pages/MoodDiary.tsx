@@ -324,7 +324,7 @@ const MoodDiary = () => {
                             </Badge>
                             {todayAnalysis.source === 'evolution_api' && (
                               <Badge variant="outline" className="text-xs">
-                                via WhatsApp
+                                via Diário Emocional - WhatsApp
                               </Badge>
                             )}
                           </div>
