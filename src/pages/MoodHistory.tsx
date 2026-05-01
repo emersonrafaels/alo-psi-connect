@@ -134,6 +134,11 @@ const MoodHistory = () => {
             </Button>
           </div>
 
+          {/* Resumo emocional */}
+          {entries.length > 0 && (
+            <EmotionalSummaryCard entries={entries} userConfigs={userConfigs} />
+          )}
+
           {/* Filters */}
           <Card>
             <CardHeader>
