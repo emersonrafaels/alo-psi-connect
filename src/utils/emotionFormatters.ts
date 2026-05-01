@@ -73,6 +73,9 @@ export const DEFAULT_EMOTION_NAMES: Record<string, string> = {
   productivity: 'Produtividade',
   satisfaction: 'Satisfação',
   sleep_quality: 'Qualidade do Sono',
+  sleep_hours: 'Horas de sono',
+  sleepHours: 'Horas de sono',
+  horas_sono: 'Horas de sono',
   social_connection: 'Conexão Social',
   physical_health: 'Saúde Física',
 };
