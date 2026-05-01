@@ -122,67 +122,139 @@ serve(async (req) => {
       );
     }
 
-    // Prepare data for OpenAI
-    const entriesText = moodEntries.map(entry => 
-      `Data: ${entry.date}
-      Humor: ${entry.mood_score}/5
-      Energia: ${entry.energy_level}/5
-      Ansiedade: ${entry.anxiety_level}/5
-      Sono: ${entry.sleep_hours}h (qualidade: ${entry.sleep_quality}/5)
-      ${entry.journal_text ? `Diário: ${entry.journal_text}` : ''}
-      ${entry.tags?.length ? `Tags: ${entry.tags.join(', ')}` : ''}`
-    ).join('\n\n');
+    // Prepare data for the AI model (todos os termos em PT-BR para evitar saídas em inglês)
+    const entriesText = moodEntries.map(entry => {
+      const lines = [
+        `Data: ${entry.date}`,
+        `Humor: ${entry.mood_score ?? 'N/A'}/5`,
+        `Energia: ${entry.energy_level ?? 'N/A'}/5`,
+        `Ansiedade: ${entry.anxiety_level ?? 'N/A'}/5`,
+        `Horas de sono: ${entry.sleep_hours ?? 'N/A'}h (qualidade: ${entry.sleep_quality ?? 'N/A'}/5)`,
+      ];
+      if (entry.journal_text) lines.push(`Reflexão: ${entry.journal_text}`);
+      if (entry.tags?.length) lines.push(`Tags: ${entry.tags.join(', ')}`);
+      return lines.join('\n');
+    }).join('\n\n');
 
-    const systemPrompt = `Você é um assistente especializado em análise de bem-estar emocional. 
-    Analise os dados do diário emocional e forneça insights úteis e compassivos.
-    
-    Seus insights devem:
-    - Identificar padrões e tendências
-    - Sugerir correlações entre diferentes métricas
-    - Oferecer recomendações práticas e gentis
-    - Ser encorajador e positivo
-    - Focar em ações que a pessoa pode tomar
-    
-    FORMATAÇÃO OBRIGATÓRIA:
-    - Use **texto** para destacar pontos importantes
-    - Organize em seções com subtítulos claros
-    - Use quebras de linha para separar ideias
-    - Inclua listas quando apropriado
-    - Mantenha parágrafos curtos e bem estruturados
-    
-    Responda em português brasileiro, de forma empática e profissional.
-    Limite sua resposta a no máximo 300 palavras.`;
+    // Calcula nível de confiança com base no número de registros
+    const entriesCount = moodEntries.length;
+    const confidence: 'very_low' | 'low' | 'medium' | 'high' =
+      entriesCount <= 2 ? 'very_low' :
+      entriesCount <= 5 ? 'low' :
+      entriesCount <= 10 ? 'medium' : 'high';
 
-    const userPrompt = `Analise estes dados do diário emocional e forneça insights sobre padrões, tendências e sugestões de melhoria:
+    const systemPrompt = `Você é um assistente de bem-estar emocional da Rede Bem-Estar.
+Seu papel é ajudar a pessoa a refletir sobre seus registros de diário emocional, com tom acolhedor, humano, claro e cuidadoso.
 
-    ${entriesText}`;
+REGRAS OBRIGATÓRIAS:
+- Sempre responder em português brasileiro.
+- Use SOMENTE os termos: "Humor", "Energia", "Ansiedade", "Horas de sono", "Qualidade do sono", "Estresse".
+- NUNCA use termos em inglês como "Sleep Hours", "Mood Score", "Energy Level", "Anxiety Level".
+- NÃO diagnostique. NÃO prometa cura. NÃO substitua acompanhamento profissional.
+- Use linguagem cuidadosa: "pode haver uma relação", "parece estar associado", "vale observar".
+- Seja conciso: cada item das listas deve ter no máximo 1-2 frases curtas.
+- Quando há poucos registros, deixe isso explícito no resumo.`;
 
-    // Call OpenAI
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const userPrompt = `Analise estes registros do diário emocional e gere uma análise estruturada com padrões, pontos positivos, pontos de atenção, possíveis temas e sugestões práticas.
+
+Quantidade de registros: ${entriesCount}
+Nível de confiança esperado: ${confidence}
+
+Registros:
+
+${entriesText}`;
+
+    const insightTool = {
+      type: 'function',
+      function: {
+        name: 'emit_mood_insight',
+        description: 'Emite uma análise estruturada do diário emocional.',
+        parameters: {
+          type: 'object',
+          properties: {
+            summary: { type: 'string', description: 'Resumo curto e humano (1-2 frases) do estado emocional recente.' },
+            positive_patterns: { type: 'array', items: { type: 'string' }, description: 'Padrões positivos observados.' },
+            attention_points: { type: 'array', items: { type: 'string' }, description: 'Pontos que merecem atenção.' },
+            possible_triggers: { type: 'array', items: { type: 'string' }, description: 'Possíveis gatilhos ou influências (use linguagem cuidadosa).' },
+            suggested_actions: { type: 'array', items: { type: 'string' }, description: '2 a 4 sugestões práticas e gentis para os próximos dias.' },
+            detected_themes: { type: 'array', items: { type: 'string' }, description: 'Temas recorrentes (ex.: trabalho, sono, descanso, relacionamento, estudos).' },
+            risk_level: { type: 'string', enum: ['healthy', 'attention', 'alert', 'critical'] },
+            confidence: { type: 'string', enum: ['very_low', 'low', 'medium', 'high'] },
+          },
+          required: ['summary', 'positive_patterns', 'attention_points', 'possible_triggers', 'suggested_actions', 'detected_themes', 'risk_level', 'confidence'],
+          additionalProperties: false,
+        },
+      },
+    };
+
+    // Prefere Lovable AI Gateway; fallback para OpenAI
+    const useLovable = !!lovableApiKey;
+    const apiUrl = useLovable
+      ? 'https://ai.gateway.lovable.dev/v1/chat/completions'
+      : 'https://api.openai.com/v1/chat/completions';
+    const apiKey = useLovable ? lovableApiKey : openaiApiKey;
+    const model = useLovable ? 'google/gemini-2.5-flash' : 'gpt-4o-mini';
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
+          { role: 'user', content: userPrompt },
         ],
-        max_tokens: 500,
-        temperature: 0.7,
+        tools: [insightTool],
+        tool_choice: { type: 'function', function: { name: 'emit_mood_insight' } },
       }),
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      console.error('OpenAI API error:', error);
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Limite de requisições atingido. Tente novamente em instantes.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'Créditos de IA insuficientes. Adicione créditos em Settings → Workspace → Usage.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      const errText = await response.text();
+      console.error('AI gateway error:', response.status, errText);
       throw new Error('Erro ao gerar insights');
     }
 
     const data = await response.json();
-    const insights = data.choices[0].message.content;
+    const toolCall = data?.choices?.[0]?.message?.tool_calls?.[0];
+    let structured: any = null;
+    if (toolCall?.function?.arguments) {
+      try { structured = JSON.parse(toolCall.function.arguments); } catch (e) { console.error('Failed to parse tool args', e); }
+    }
+
+    // Garante o nível de confiança calculado no servidor
+    if (structured && typeof structured === 'object') {
+      structured.confidence = confidence;
+    } else {
+      // Fallback: usa o conteúdo de texto se o tool-call falhou
+      structured = {
+        summary: data?.choices?.[0]?.message?.content || 'Não foi possível gerar uma análise estruturada desta vez.',
+        positive_patterns: [],
+        attention_points: [],
+        possible_triggers: [],
+        suggested_actions: [],
+        detected_themes: [],
+        risk_level: 'healthy',
+        confidence,
+      };
+    }
+
+    const insights = JSON.stringify(structured);
 
     // Save insight to history
     const { data: historyEntry, error: historyError } = await supabase
