@@ -154,6 +154,11 @@ const MoodAnalytics = () => {
             </div>
           </div>
 
+          {/* Resumo emocional */}
+          {entries.length > 0 && (
+            <EmotionalSummaryCard entries={entries} />
+          )}
+
           {entries.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
