@@ -44,7 +44,7 @@ export function InstitutionMoodAggregates({ institutionId }: InstitutionMoodAggr
         p_period_days: Number(period),
       });
       if (error) throw error;
-      return data as AggregateData;
+      return data as unknown as AggregateData;
     },
   });
 
