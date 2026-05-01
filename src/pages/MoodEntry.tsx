@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { parseISODateLocal, getTodayLocalDateString, normalizeDateForStorage } from '@/lib/utils';
+import { EntryComparisonCard } from '@/components/mood/EntryComparisonCard';
 
 const MoodEntry = () => {
   const navigate = useNavigate();
@@ -490,6 +491,15 @@ const MoodEntry = () => {
               </AlertDescription>
             </Alert>
           )}
+
+          {/* Comparação com registro anterior */}
+          {currentEntry && (() => {
+            const previous = useMoodEntries().entries
+              .filter((e) => e.date < currentEntry.date)
+              .sort((a, b) => b.date.localeCompare(a.date))[0];
+            if (!previous) return null;
+            return <EntryComparisonCard current={currentEntry as any} previous={previous as any} />;
+          })()}
 
           {/* Auto-save Status */}
           {initialized && (
