@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ThumbsUp, ThumbsDown, MessageSquare, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { FormattedAIContent } from '@/components/ai/FormattedAIContent';
 
 interface InsightHistory {
   id: string;
