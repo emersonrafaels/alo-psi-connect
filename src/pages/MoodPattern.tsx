@@ -37,8 +37,25 @@ const MoodPattern = () => {
   const { entries, loading } = useMoodEntries();
   const { userConfigs } = useEmotionConfig();
   const [range, setRange] = useState<RangeKey>('30');
+  const [granularity, setGranularity] = useState<Granularity>('week');
+  const [selected, setSelected] = useState<string[]>([]);
   const days = Number(range);
   const { data: themes = [] } = useMoodThemes(days);
+
+  const enabledConfigs = useMemo(() => userConfigs.filter((c) => c.is_enabled), [userConfigs]);
+
+  useEffect(() => {
+    if (enabledConfigs.length === 0 || selected.length > 0) return;
+    const fallback = enabledConfigs.slice(0, 3).map((c) => c.emotion_type);
+    const saved = loadSelection('mood-dashboard:selected-emotions', fallback).filter((k) =>
+      enabledConfigs.some((c) => c.emotion_type === k)
+    );
+    setSelected(saved.length > 0 ? saved : fallback);
+  }, [enabledConfigs, selected.length]);
+
+  const toggleEmotion = (key: string) => {
+    setSelected((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+  };
 
   const { data: latestInsight } = useQuery({
     queryKey: ['mood-pattern-latest-insight', user?.id],
