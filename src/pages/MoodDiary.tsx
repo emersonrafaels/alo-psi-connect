@@ -23,6 +23,8 @@ import { generateProfessionalPDF, downloadPDF } from '@/utils/pdfGenerator';
 import { useToast } from '@/hooks/use-toast';
 import { getTodayLocalDateString, parseISODateLocal } from '@/lib/utils';
 import { calculateAverage, getEmotionValue, getAllEmotions } from '@/utils/emotionFormatters';
+import { MoodEntryDetailModal } from '@/components/mood/MoodEntryDetailModal';
+import type { MoodEntry } from '@/hooks/useMoodEntries';
 
 const MoodDiary = () => {
   const navigate = useNavigate();
