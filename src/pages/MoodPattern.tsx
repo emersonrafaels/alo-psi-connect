@@ -22,8 +22,7 @@ import { ConsistencyCalendar } from '@/components/mood/ConsistencyCalendar';
 import { TagImpactCard } from '@/components/mood/TagImpactCard';
 import { exportMoodReportPDF } from '@/utils/moodReportPDF';
 import { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { FormattedAIContent } from '@/components/ai/FormattedAIContent';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { parseISODateLocal } from '@/lib/utils';
 
