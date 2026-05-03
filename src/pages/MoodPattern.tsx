@@ -22,6 +22,8 @@ import { ConsistencyCalendar } from '@/components/mood/ConsistencyCalendar';
 import { TagImpactCard } from '@/components/mood/TagImpactCard';
 import { exportMoodReportPDF } from '@/utils/moodReportPDF';
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { parseISODateLocal } from '@/lib/utils';
 
@@ -147,9 +149,11 @@ const MoodPattern = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-foreground/90 whitespace-pre-line line-clamp-6">
-                      {latestInsight.insight_content}
-                    </p>
+                    <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:mt-3 prose-headings:mb-2 prose-p:my-2 prose-li:my-0.5 prose-strong:text-foreground">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {latestInsight.insight_content}
+                      </ReactMarkdown>
+                    </div>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -159,7 +163,7 @@ const MoodPattern = () => {
                       }
                     >
                       <BarChart3 className="h-4 w-4 mr-2" />
-                      Explorar nas Análises
+                      Explorar mais Análises
                     </Button>
                   </CardContent>
                 </Card>
