@@ -2114,6 +2114,36 @@ export type Database = {
           },
         ]
       }
+      mood_insight_analyses: {
+        Row: {
+          created_at: string
+          entries_count: number
+          id: string
+          llm_analysis: string
+          requested_at: string
+          tenant_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entries_count: number
+          id?: string
+          llm_analysis: string
+          requested_at?: string
+          tenant_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entries_count?: number
+          id?: string
+          llm_analysis?: string
+          requested_at?: string
+          tenant_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       mood_period_analyses: {
         Row: {
           attention_points: Json | null

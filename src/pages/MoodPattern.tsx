@@ -16,12 +16,16 @@ import { ArrowLeft, Download, Calendar } from 'lucide-react';
 import { EmotionalSummaryCard } from '@/components/mood/EmotionalSummaryCard';
 import { RecurringThemes } from '@/components/mood/RecurringThemes';
 import { ConsistencyGoalCard } from '@/components/mood/ConsistencyGoalCard';
+import { EmotionMultiSelect, loadSelection } from '@/components/mood/EmotionMultiSelect';
+import { DynamicTrendChart } from '@/components/mood/DynamicTrendChart';
+import { EmotionRankingCard } from '@/components/mood/EmotionRankingCard';
+import { EmotionCorrelationMatrix } from '@/components/mood/EmotionCorrelationMatrix';
+import { EmotionScatterCard } from '@/components/mood/EmotionScatterCard';
+import { type Granularity } from '@/utils/moodSeriesBuilder';
 import { exportMoodReportPDF } from '@/utils/moodReportPDF';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { parseISODateLocal } from '@/lib/utils';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { generateChartCaption } from '@/utils/moodInsightHelpers';
 
 type RangeKey = '7' | '30' | '90';
 
@@ -33,8 +37,25 @@ const MoodPattern = () => {
   const { entries, loading } = useMoodEntries();
   const { userConfigs } = useEmotionConfig();
   const [range, setRange] = useState<RangeKey>('30');
+  const [granularity, setGranularity] = useState<Granularity>('week');
+  const [selected, setSelected] = useState<string[]>([]);
   const days = Number(range);
   const { data: themes = [] } = useMoodThemes(days);
+
+  const enabledConfigs = useMemo(() => userConfigs.filter((c) => c.is_enabled), [userConfigs]);
+
+  useEffect(() => {
+    if (enabledConfigs.length === 0 || selected.length > 0) return;
+    const fallback = enabledConfigs.slice(0, 3).map((c) => c.emotion_type);
+    const saved = loadSelection('mood-dashboard:selected-emotions', fallback).filter((k) =>
+      enabledConfigs.some((c) => c.emotion_type === k)
+    );
+    setSelected(saved.length > 0 ? saved : fallback);
+  }, [enabledConfigs, selected.length]);
+
+  const toggleEmotion = (key: string) => {
+    setSelected((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+  };
 
   const { data: latestInsight } = useQuery({
     queryKey: ['mood-pattern-latest-insight', user?.id],
@@ -144,32 +165,47 @@ const MoodPattern = () => {
                 <ConsistencyGoalCard entries={entries} />
               </div>
 
-              {weeklyAvg.length > 1 && (
+              {enabledConfigs.length > 0 && (
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Visão semanal</CardTitle>
-                    <CardDescription>Média de humor, ansiedade e qualidade do sono por semana.</CardDescription>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Emoções no gráfico</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={weeklyAvg}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="semana" />
-                          <YAxis domain={[0, 5]} />
-                          <Tooltip />
-                          <Line type="monotone" dataKey="humor" stroke="hsl(var(--chart-1))" strokeWidth={2} />
-                          <Line type="monotone" dataKey="ansiedade" stroke="hsl(var(--chart-3))" strokeWidth={2} />
-                          <Line type="monotone" dataKey="sono" stroke="hsl(var(--chart-2))" strokeWidth={2} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {generateChartCaption('mood', weeklyAvg.map((w) => w.humor))}
-                    </p>
+                    <EmotionMultiSelect
+                      configs={enabledConfigs}
+                      selected={selected}
+                      onChange={setSelected}
+                      storageKey="mood-dashboard:selected-emotions"
+                    />
                   </CardContent>
                 </Card>
               )}
+
+              <DynamicTrendChart
+                entries={periodEntries}
+                configs={enabledConfigs}
+                selected={selected}
+                days={days}
+                granularity={granularity}
+                onGranularityChange={setGranularity}
+              />
+
+              <div className="grid gap-6 lg:grid-cols-2">
+                <EmotionRankingCard
+                  entries={entries}
+                  configs={enabledConfigs}
+                  days={days}
+                  selected={selected}
+                  onToggle={toggleEmotion}
+                />
+                <EmotionCorrelationMatrix
+                  entries={periodEntries}
+                  configs={enabledConfigs}
+                  selected={selected}
+                />
+              </div>
+
+              <EmotionScatterCard entries={periodEntries} configs={enabledConfigs} />
             </>
           )}
         </div>
