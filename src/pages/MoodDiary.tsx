@@ -531,6 +531,13 @@ const MoodDiary = () => {
           )}
         </div>
       </main>
+      <MoodEntryDetailModal
+        entry={selectedEntry}
+        analysis={selectedEntry ? analysesMap?.get(selectedEntry.id) ?? null : null}
+        open={!!selectedEntry}
+        onOpenChange={(o) => !o && setSelectedEntry(null)}
+        userConfigs={userConfigs}
+      />
       <Footer />
     </div>
   );
