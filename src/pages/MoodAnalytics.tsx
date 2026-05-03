@@ -1,129 +1,91 @@
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
+import { useEmotionConfig } from '@/hooks/useEmotionConfig';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
-import { parseISODateLocal } from '@/lib/utils';
 import { AIInsightsCard } from '@/components/AIInsightsCard';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { ArrowLeft, TrendingUp, Calendar, BarChart3, Heart } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, BarChart3, Calendar } from 'lucide-react';
+import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { EmotionalSummaryCard } from '@/components/mood/EmotionalSummaryCard';
-import { generateChartCaption, generateDistributionCaption } from '@/utils/moodInsightHelpers';
+import { EmotionMultiSelect, loadSelection } from '@/components/mood/EmotionMultiSelect';
+import { DynamicTrendChart } from '@/components/mood/DynamicTrendChart';
+import { EmotionRankingCard } from '@/components/mood/EmotionRankingCard';
+import { EmotionCorrelationMatrix } from '@/components/mood/EmotionCorrelationMatrix';
+import { EmotionScatterCard } from '@/components/mood/EmotionScatterCard';
+import { filterEntriesByDays, type Granularity } from '@/utils/moodSeriesBuilder';
+import { generateDistributionCaption } from '@/utils/moodInsightHelpers';
+
+const STORAGE_KEY = 'mood-dashboard:selected-emotions';
 
 const MoodAnalytics = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { tenant } = useTenant();
   const { entries, loading } = useMoodEntries();
+  const { userConfigs } = useEmotionConfig();
 
-  // Redirect non-authenticated users
+  const enabledConfigs = useMemo(() => userConfigs.filter((c) => c.is_enabled), [userConfigs]);
+
+  const [range, setRange] = useState<'7' | '30' | '90'>('30');
+  const [granularity, setGranularity] = useState<Granularity>('day');
+  const [selected, setSelected] = useState<string[]>([]);
+
+  // Initialize selection from storage or defaults
+  useEffect(() => {
+    if (enabledConfigs.length === 0 || selected.length > 0) return;
+    const fallback = enabledConfigs.slice(0, 3).map((c) => c.emotion_type);
+    const saved = loadSelection(STORAGE_KEY, fallback).filter((k) =>
+      enabledConfigs.some((c) => c.emotion_type === k)
+    );
+    setSelected(saved.length > 0 ? saved : fallback);
+  }, [enabledConfigs, selected.length]);
+
   if (!user) {
     navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/experiencia'));
     return null;
   }
 
-  // Prepare data for charts
-  const last30Days = entries
-    .filter(entry => {
-      const entryDate = parseISODateLocal(entry.date);
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      return entryDate >= thirtyDaysAgo;
-    })
-    .sort((a, b) => parseISODateLocal(a.date).getTime() - parseISODateLocal(b.date).getTime())
-    .map(entry => ({
-      date: parseISODateLocal(entry.date).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }),
-      humor: entry.mood_score,
-      energia: entry.energy_level,
-      ansiedade: entry.anxiety_level,
-      sono: entry.sleep_quality || 0,
-    }));
+  const days = Number(range);
+  const periodEntries = useMemo(() => filterEntriesByDays(entries, days), [entries, days]);
 
-  // Calculate averages
-  const calculateAverage = (field: keyof typeof entries[0]) => {
-    if (entries.length === 0) return 0;
-    const sum = entries.reduce((acc, entry) => {
-      const value = entry[field];
-      return acc + (typeof value === 'number' ? value : 0);
-    }, 0);
-    return Math.round((sum / entries.length) * 10) / 10;
-  };
-
-  const averages = {
-    mood: calculateAverage('mood_score'),
-    energy: calculateAverage('energy_level'),
-    anxiety: calculateAverage('anxiety_level'),
-    sleep: calculateAverage('sleep_quality'),
-  };
-
-  // Mood distribution (escala 1-5)
   const moodDistribution = [
-    { range: '1', count: entries.filter(e => e.mood_score === 1).length, color: '#ef4444', label: '😢' },
-    { range: '2', count: entries.filter(e => e.mood_score === 2).length, color: '#f97316', label: '😔' },
-    { range: '3', count: entries.filter(e => e.mood_score === 3).length, color: '#eab308', label: '😐' },
-    { range: '4', count: entries.filter(e => e.mood_score === 4).length, color: '#84cc16', label: '😊' },
-    { range: '5', count: entries.filter(e => e.mood_score === 5).length, color: '#22c55e', label: '🤩' },
+    { range: '1', count: entries.filter((e) => e.mood_score === 1).length, label: '😢' },
+    { range: '2', count: entries.filter((e) => e.mood_score === 2).length, label: '😔' },
+    { range: '3', count: entries.filter((e) => e.mood_score === 3).length, label: '😐' },
+    { range: '4', count: entries.filter((e) => e.mood_score === 4).length, label: '😊' },
+    { range: '5', count: entries.filter((e) => e.mood_score === 5).length, label: '🤩' },
   ];
 
-  // Weekly trends
-  const weeklyTrends = () => {
-    const weeks: Record<string, Array<typeof entries[0]>> = {};
-    
-    entries.forEach(entry => {
-      const date = parseISODateLocal(entry.date);
-      const startOfWeek = new Date(date);
-      startOfWeek.setDate(date.getDate() - date.getDay());
-      const weekKey = `${startOfWeek.getFullYear()}-${String(startOfWeek.getMonth() + 1).padStart(2, '0')}-${String(startOfWeek.getDate()).padStart(2, '0')}`;
-      
-      if (!weeks[weekKey]) weeks[weekKey] = [];
-      weeks[weekKey].push(entry);
-    });
-
-    return Object.entries(weeks)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-8) // Last 8 weeks
-      .map(([weekStart, weekEntries]) => ({
-        semana: new Date(weekStart).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }),
-        humor: Math.round((weekEntries.reduce((acc, e) => acc + e.mood_score, 0) / weekEntries.length) * 10) / 10,
-        energia: Math.round((weekEntries.reduce((acc, e) => acc + e.energy_level, 0) / weekEntries.length) * 10) / 10,
-        ansiedade: Math.round((weekEntries.reduce((acc, e) => acc + e.anxiety_level, 0) / weekEntries.length) * 10) / 10,
-        entradas: weekEntries.length,
-      }));
-  };
-
-  const weeklyData = weeklyTrends();
-
-  // Most common tags
   const tagFrequency = entries
-    .flatMap(entry => entry.tags || [])
+    .flatMap((entry) => entry.tags || [])
     .reduce((acc, tag) => {
       acc[tag] = (acc[tag] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-  const topTags = Object.entries(tagFrequency)
-    .sort(([,a], [,b]) => b - a)
-    .slice(0, 5);
+  const topTags = Object.entries(tagFrequency).sort(([, a], [, b]) => b - a).slice(0, 5);
+
+  const toggleEmotion = (key: string) => {
+    setSelected((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="animate-pulse space-y-6">
-              <div className="h-8 bg-muted rounded w-1/3"></div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-24 bg-muted rounded"></div>
-                ))}
-              </div>
-              <div className="h-64 bg-muted rounded"></div>
-            </div>
+          <div className="max-w-6xl mx-auto animate-pulse space-y-6">
+            <div className="h-8 bg-muted rounded w-1/3" />
+            <div className="h-64 bg-muted rounded" />
           </div>
         </main>
         <Footer />
@@ -137,7 +99,7 @@ const MoodAnalytics = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <Button
               variant="ghost"
               onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional'))}
@@ -146,17 +108,24 @@ const MoodAnalytics = () => {
               <ArrowLeft className="h-4 w-4" />
               Voltar
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold">Análises do Diário Emocional</h1>
-              <p className="text-muted-foreground">
-                Insights sobre seu bem-estar baseados em {entries.length} entradas
+            <div className="flex-1 min-w-[200px]">
+              <h1 className="text-2xl font-bold">Dashboard do seu bem-estar</h1>
+              <p className="text-muted-foreground text-sm">
+                {entries.length} entradas registradas. Escolha emoções, compare e descubra padrões.
               </p>
             </div>
+            <Tabs value={range} onValueChange={(v) => setRange(v as '7' | '30' | '90')}>
+              <TabsList>
+                <TabsTrigger value="7">7d</TabsTrigger>
+                <TabsTrigger value="30">30d</TabsTrigger>
+                <TabsTrigger value="90">90d</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
-          {/* Resumo emocional */}
+          {/* Resumo */}
           {entries.length > 0 && (
-            <EmotionalSummaryCard entries={entries} />
+            <EmotionalSummaryCard entries={entries} userConfigs={userConfigs} />
           )}
 
           {entries.length === 0 ? (
@@ -174,159 +143,79 @@ const MoodAnalytics = () => {
             </Card>
           ) : (
             <>
-              {/* Summary Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Multi-select */}
+              {enabledConfigs.length > 0 && (
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Humor Médio</CardTitle>
-                    <Heart className="h-4 w-4 text-primary dark:text-foreground" />
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Emoções no gráfico</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{averages.mood}/5</div>
-                    <p className="text-xs text-muted-foreground">
-                      {averages.mood >= 4 ? 'Excelente' : averages.mood >= 3 ? 'Bom' : 'Precisa atenção'}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Energia Média</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-secondary dark:text-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{averages.energy}/5</div>
-                    <p className="text-xs text-muted-foreground">
-                      {averages.energy >= 4 ? 'Alta' : averages.energy >= 3 ? 'Média' : 'Baixa'}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Ansiedade Média</CardTitle>
-                    <BarChart3 className="h-4 w-4 text-orange-500 dark:text-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{averages.anxiety}/5</div>
-                    <p className="text-xs text-muted-foreground">
-                      {averages.anxiety <= 2 ? 'Baixa' : averages.anxiety <= 3 ? 'Média' : 'Alta'}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total de Entradas</CardTitle>
-                    <Calendar className="h-4 w-4 text-accent dark:text-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{entries.length}</div>
-                    <p className="text-xs text-muted-foreground">
-                      Registros no total
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Daily Trends Chart */}
-              {last30Days.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Tendências dos Últimos 30 Dias</CardTitle>
-                    <CardDescription>
-                      Evolução do seu humor, energia e ansiedade
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={last30Days}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
-                        <Tooltip />
-                        <Line type="monotone" dataKey="humor" stroke="#8884d8" name="Humor" />
-                        <Line type="monotone" dataKey="energia" stroke="#82ca9d" name="Energia" />
-                        <Line type="monotone" dataKey="ansiedade" stroke="#ffc658" name="Ansiedade" />
-                      </LineChart>
-                    </ResponsiveContainer>
-                    <p className="text-sm text-muted-foreground italic">
-                      {generateChartCaption('mood', last30Days.map(d => d.humor))} {generateChartCaption('anxiety', last30Days.map(d => d.ansiedade))}
-                    </p>
+                    <EmotionMultiSelect
+                      configs={enabledConfigs}
+                      selected={selected}
+                      onChange={setSelected}
+                      storageKey={STORAGE_KEY}
+                    />
                   </CardContent>
                 </Card>
               )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Weekly Trends */}
-                {weeklyData.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Tendências Semanais</CardTitle>
-                      <CardDescription>Médias por semana</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={weeklyData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="semana" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="humor" fill="#8884d8" name="Humor" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                      <p className="text-xs text-muted-foreground italic">
-                        {generateChartCaption('mood', weeklyData.map(w => w.humor))}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+              {/* Trend chart */}
+              <DynamicTrendChart
+                entries={periodEntries}
+                configs={enabledConfigs}
+                selected={selected}
+                days={days}
+                granularity={granularity}
+                onGranularityChange={setGranularity}
+              />
 
-                {/* Mood Distribution */}
+              {/* Ranking + Correlation */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <EmotionRankingCard
+                  entries={entries}
+                  configs={enabledConfigs}
+                  days={days}
+                  selected={selected}
+                  onToggle={toggleEmotion}
+                />
+                <EmotionCorrelationMatrix
+                  entries={periodEntries}
+                  configs={enabledConfigs}
+                  selected={selected}
+                />
+              </div>
+
+              {/* Scatter */}
+              <EmotionScatterCard entries={periodEntries} configs={enabledConfigs} />
+
+              {/* Distribution + Tags */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Distribuição do Humor</CardTitle>
-                    <CardDescription>Frequência por faixa de humor</CardDescription>
+                    <CardDescription>Frequência por faixa de humor (todas entradas)</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <ResponsiveContainer width="100%" height={250}>
+                    <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={moodDistribution}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="range" />
                         <YAxis />
                         <Tooltip />
-                        <Bar dataKey="count" fill="#8884d8" name="Entradas" />
+                        <Bar dataKey="count" fill="hsl(var(--chart-1))" name="Entradas" />
                       </BarChart>
                     </ResponsiveContainer>
                     <p className="text-xs text-muted-foreground italic">
-                      {generateDistributionCaption(Object.fromEntries(moodDistribution.map(m => [Number(m.range), m.count])))}
+                      {generateDistributionCaption(Object.fromEntries(moodDistribution.map((m) => [Number(m.range), m.count])))}
                     </p>
                   </CardContent>
                 </Card>
-              </div>
 
-              {/* AI Insights */}
-              <AIInsightsCard 
-                moodEntries={entries.map(entry => ({
-                  date: entry.date,
-                  mood_score: entry.mood_score || 0,
-                  energy_level: entry.energy_level || 0,
-                  anxiety_level: entry.anxiety_level || 0,
-                  sleep_hours: entry.sleep_hours || 0,
-                  sleep_quality: entry.sleep_quality || 0,
-                  journal_text: entry.journal_text,
-                  tags: entry.tags
-                }))}
-                className="col-span-full"
-              />
-
-              {/* Additional Analytics */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Top Tags */}
                 {topTags.length > 0 && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>Tags Mais Frequentes</CardTitle>
+                      <CardTitle>Tags mais frequentes</CardTitle>
                       <CardDescription>Temas que mais aparecem nas suas entradas</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -336,8 +225,8 @@ const MoodAnalytics = () => {
                             <span className="font-medium">{tag}</span>
                             <div className="flex items-center gap-2">
                               <div className="w-20 bg-muted rounded-full h-2">
-                                <div 
-                                  className="bg-primary h-2 rounded-full" 
+                                <div
+                                  className="bg-primary h-2 rounded-full"
                                   style={{ width: `${(count / topTags[0][1]) * 100}%` }}
                                 />
                               </div>
@@ -349,50 +238,22 @@ const MoodAnalytics = () => {
                     </CardContent>
                   </Card>
                 )}
-
-                {/* Basic Insights */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Observações Rápidas</CardTitle>
-                    <CardDescription>Insights básicos sobre seus padrões</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3 text-sm">
-                      {averages.mood >= 4 && (
-                        <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                          <p className="text-green-700 dark:text-green-300">
-                            🎉 Seu humor tem estado consistentemente bom! Continue com as práticas que estão funcionando.
-                          </p>
-                        </div>
-                      )}
-                      
-                      {averages.anxiety >= 4 && (
-                        <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                          <p className="text-orange-700 dark:text-orange-300">
-                            ⚠️ Seus níveis de ansiedade estão elevados. Considere técnicas de relaxamento ou conversar com um profissional.
-                          </p>
-                        </div>
-                      )}
-                      
-                      {entries.length >= 7 && (
-                        <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                          <p className="text-blue-700 dark:text-blue-300">
-                            📊 Parabéns por manter a consistência! Você já tem {entries.length} entradas registradas.
-                          </p>
-                        </div>
-                      )}
-                      
-                      {averages.energy <= 2 && (
-                        <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                          <p className="text-yellow-700 dark:text-yellow-300">
-                            💤 Sua energia tem estado baixa. Verifique seus padrões de sono e considere atividades revitalizantes.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
+
+              {/* AI Insights */}
+              <AIInsightsCard
+                moodEntries={entries.map((entry) => ({
+                  date: entry.date,
+                  mood_score: entry.mood_score || 0,
+                  energy_level: entry.energy_level || 0,
+                  anxiety_level: entry.anxiety_level || 0,
+                  sleep_hours: entry.sleep_hours || 0,
+                  sleep_quality: entry.sleep_quality || 0,
+                  journal_text: entry.journal_text,
+                  tags: entry.tags,
+                }))}
+                className="col-span-full"
+              />
             </>
           )}
         </div>
