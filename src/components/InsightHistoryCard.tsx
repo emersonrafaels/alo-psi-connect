@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ThumbsUp, ThumbsDown, MessageSquare, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { FormattedAIContent } from '@/components/ai/FormattedAIContent';
 
 interface InsightHistory {
   id: string;
@@ -187,9 +188,7 @@ const InsightHistoryCard: React.FC<InsightHistoryCardProps> = ({
                     </CollapsibleTrigger>
 
                     <CollapsibleContent className="space-y-4">
-                      <div className="text-sm leading-relaxed">
-                        {insight.insight_content}
-                      </div>
+                      <FormattedAIContent content={insight.insight_content} />
 
                       {hasFeedback && insight.feedback_comment && (
                         <div className="bg-muted/50 p-3 rounded-lg">
