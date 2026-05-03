@@ -16,12 +16,16 @@ import { ArrowLeft, Download, Calendar } from 'lucide-react';
 import { EmotionalSummaryCard } from '@/components/mood/EmotionalSummaryCard';
 import { RecurringThemes } from '@/components/mood/RecurringThemes';
 import { ConsistencyGoalCard } from '@/components/mood/ConsistencyGoalCard';
+import { EmotionMultiSelect, loadSelection } from '@/components/mood/EmotionMultiSelect';
+import { DynamicTrendChart } from '@/components/mood/DynamicTrendChart';
+import { EmotionRankingCard } from '@/components/mood/EmotionRankingCard';
+import { EmotionCorrelationMatrix } from '@/components/mood/EmotionCorrelationMatrix';
+import { EmotionScatterCard } from '@/components/mood/EmotionScatterCard';
+import { type Granularity } from '@/utils/moodSeriesBuilder';
 import { exportMoodReportPDF } from '@/utils/moodReportPDF';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { parseISODateLocal } from '@/lib/utils';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { generateChartCaption } from '@/utils/moodInsightHelpers';
 
 type RangeKey = '7' | '30' | '90';
 
