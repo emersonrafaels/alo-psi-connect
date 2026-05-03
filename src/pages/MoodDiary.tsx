@@ -23,6 +23,8 @@ import { generateProfessionalPDF, downloadPDF } from '@/utils/pdfGenerator';
 import { useToast } from '@/hooks/use-toast';
 import { getTodayLocalDateString, parseISODateLocal } from '@/lib/utils';
 import { calculateAverage, getEmotionValue, getAllEmotions } from '@/utils/emotionFormatters';
+import { MoodEntryDetailModal } from '@/components/mood/MoodEntryDetailModal';
+import type { MoodEntry } from '@/hooks/useMoodEntries';
 
 const MoodDiary = () => {
   const navigate = useNavigate();
@@ -35,6 +37,7 @@ const MoodDiary = () => {
   const { userConfigs, activeConfigs } = useEmotionConfig();
   const { toast } = useToast();
   const [selectedStatEmotion, setSelectedStatEmotion] = useState('mood');
+  const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
   const { getShareConfig } = useShareConfig();
 
   // Redirect non-authenticated users to experience page
@@ -472,7 +475,19 @@ const MoodDiary = () => {
               <CardContent>
                 <div className="space-y-3">
                   {recentEntries.slice(0, 5).map((entry) => (
-                    <div key={entry.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <div
+                      key={entry.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedEntry(entry)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedEntry(entry);
+                        }
+                      }}
+                      className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/60 transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
                       <div className="space-y-1">
                         <p className="text-sm font-medium">
                           {parseISODateLocal(entry.date).toLocaleDateString('pt-BR', {
@@ -516,6 +531,13 @@ const MoodDiary = () => {
           )}
         </div>
       </main>
+      <MoodEntryDetailModal
+        entry={selectedEntry}
+        analysis={selectedEntry ? analysesMap?.get(selectedEntry.id) ?? null : null}
+        open={!!selectedEntry}
+        onOpenChange={(o) => !o && setSelectedEntry(null)}
+        userConfigs={userConfigs}
+      />
       <Footer />
     </div>
   );
