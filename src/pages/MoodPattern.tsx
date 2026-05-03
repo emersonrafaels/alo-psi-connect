@@ -165,32 +165,47 @@ const MoodPattern = () => {
                 <ConsistencyGoalCard entries={entries} />
               </div>
 
-              {weeklyAvg.length > 1 && (
+              {enabledConfigs.length > 0 && (
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Visão semanal</CardTitle>
-                    <CardDescription>Média de humor, ansiedade e qualidade do sono por semana.</CardDescription>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Emoções no gráfico</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={weeklyAvg}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="semana" />
-                          <YAxis domain={[0, 5]} />
-                          <Tooltip />
-                          <Line type="monotone" dataKey="humor" stroke="hsl(var(--chart-1))" strokeWidth={2} />
-                          <Line type="monotone" dataKey="ansiedade" stroke="hsl(var(--chart-3))" strokeWidth={2} />
-                          <Line type="monotone" dataKey="sono" stroke="hsl(var(--chart-2))" strokeWidth={2} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {generateChartCaption('mood', weeklyAvg.map((w) => w.humor))}
-                    </p>
+                    <EmotionMultiSelect
+                      configs={enabledConfigs}
+                      selected={selected}
+                      onChange={setSelected}
+                      storageKey="mood-dashboard:selected-emotions"
+                    />
                   </CardContent>
                 </Card>
               )}
+
+              <DynamicTrendChart
+                entries={periodEntries}
+                configs={enabledConfigs}
+                selected={selected}
+                days={days}
+                granularity={granularity}
+                onGranularityChange={setGranularity}
+              />
+
+              <div className="grid gap-6 lg:grid-cols-2">
+                <EmotionRankingCard
+                  entries={entries}
+                  configs={enabledConfigs}
+                  days={days}
+                  selected={selected}
+                  onToggle={toggleEmotion}
+                />
+                <EmotionCorrelationMatrix
+                  entries={periodEntries}
+                  configs={enabledConfigs}
+                  selected={selected}
+                />
+              </div>
+
+              <EmotionScatterCard entries={periodEntries} configs={enabledConfigs} />
             </>
           )}
         </div>
