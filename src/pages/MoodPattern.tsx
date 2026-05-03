@@ -148,11 +148,7 @@ const MoodPattern = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:mt-3 prose-headings:mb-2 prose-p:my-2 prose-li:my-0.5 prose-strong:text-foreground">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {latestInsight.insight_content}
-                      </ReactMarkdown>
-                    </div>
+                    <FormattedAIContent content={latestInsight.insight_content} />
                     <Button
                       variant="ghost"
                       size="sm"
