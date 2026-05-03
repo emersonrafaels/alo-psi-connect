@@ -475,7 +475,19 @@ const MoodDiary = () => {
               <CardContent>
                 <div className="space-y-3">
                   {recentEntries.slice(0, 5).map((entry) => (
-                    <div key={entry.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <div
+                      key={entry.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedEntry(entry)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedEntry(entry);
+                        }
+                      }}
+                      className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/60 transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
                       <div className="space-y-1">
                         <p className="text-sm font-medium">
                           {parseISODateLocal(entry.date).toLocaleDateString('pt-BR', {
