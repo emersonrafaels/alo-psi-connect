@@ -187,9 +187,7 @@ const InsightHistoryCard: React.FC<InsightHistoryCardProps> = ({
                     </CollapsibleTrigger>
 
                     <CollapsibleContent className="space-y-4">
-                      <div className="text-sm leading-relaxed">
-                        {insight.insight_content}
-                      </div>
+                      <FormattedAIContent content={insight.insight_content} />
 
                       {hasFeedback && insight.feedback_comment && (
                         <div className="bg-muted/50 p-3 rounded-lg">
