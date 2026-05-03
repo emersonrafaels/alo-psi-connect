@@ -37,6 +37,7 @@ const MoodDiary = () => {
   const { userConfigs, activeConfigs } = useEmotionConfig();
   const { toast } = useToast();
   const [selectedStatEmotion, setSelectedStatEmotion] = useState('mood');
+  const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
   const { getShareConfig } = useShareConfig();
 
   // Redirect non-authenticated users to experience page
