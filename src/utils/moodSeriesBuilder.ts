@@ -37,17 +37,51 @@ export function getScale(configs: EmotionConfig[], key: string): { min: number; 
   return { min: 1, max: 5 };
 }
 
-export function getEmotionColor(configs: EmotionConfig[], key: string, fallbackIdx = 0): string {
-  const c = getConfigFor(configs, key);
-  if (c?.color_scheme?.mid) return c.color_scheme.mid;
-  const fallbacks = [
-    'hsl(var(--chart-1))',
-    'hsl(var(--chart-2))',
-    'hsl(var(--chart-3))',
-    'hsl(var(--chart-4))',
-    'hsl(var(--chart-5))',
-  ];
-  return fallbacks[fallbackIdx % fallbacks.length];
+// Distinct, stable color per emotion. We don't read color_scheme.mid from configs
+// because the DB stores yellow (slider midpoint) for almost all emotions, which
+// would make every chart line look the same.
+const EMOTION_PALETTE: Record<string, string> = {
+  mood: 'hsl(142 71% 45%)',
+  energy: 'hsl(32 95% 55%)',
+  anxiety: 'hsl(0 78% 58%)',
+  stress: 'hsl(347 77% 50%)',
+  motivation: 'hsl(262 70% 58%)',
+  focus: 'hsl(217 85% 56%)',
+  gratitude: 'hsl(330 75% 60%)',
+  confidence: 'hsl(280 70% 55%)',
+  hope: 'hsl(195 80% 50%)',
+  creativity: 'hsl(295 75% 55%)',
+  productivity: 'hsl(173 70% 40%)',
+  satisfaction: 'hsl(45 90% 50%)',
+  sleep_quality: 'hsl(245 60% 60%)',
+  sleep_hours: 'hsl(220 50% 55%)',
+};
+
+const FALLBACK_PALETTE = [
+  'hsl(142 71% 45%)',
+  'hsl(32 95% 55%)',
+  'hsl(0 78% 58%)',
+  'hsl(217 85% 56%)',
+  'hsl(262 70% 58%)',
+  'hsl(330 75% 60%)',
+  'hsl(195 80% 50%)',
+  'hsl(173 70% 40%)',
+  'hsl(45 90% 50%)',
+  'hsl(295 75% 55%)',
+  'hsl(280 70% 55%)',
+  'hsl(347 77% 50%)',
+];
+
+function hashKey(key: string): number {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+export function getEmotionColor(_configs: EmotionConfig[], key: string, fallbackIdx = 0): string {
+  if (EMOTION_PALETTE[key]) return EMOTION_PALETTE[key];
+  const idx = (hashKey(key) + fallbackIdx) % FALLBACK_PALETTE.length;
+  return FALLBACK_PALETTE[idx];
 }
 
 export function filterEntriesByDays(entries: MoodEntry[], days: number): MoodEntry[] {
