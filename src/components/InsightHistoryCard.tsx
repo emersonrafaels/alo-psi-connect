@@ -10,6 +10,25 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FormattedAIContent } from '@/components/ai/FormattedAIContent';
 
+/** Remove markdown syntax for clean preview text. */
+const stripMarkdown = (text: string): string => {
+  if (!text) return '';
+  return text
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    .replace(/_(.+?)_/g, '$1')
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
+    .replace(/^\s*>\s?/gm, '')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 interface InsightHistory {
   id: string;
   insight_content: string;
@@ -149,8 +168,8 @@ const InsightHistoryCard: React.FC<InsightHistoryCardProps> = ({
               <div key={insight.id} className="border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">
                       {format(new Date(insight.created_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
                     </span>
                   </div>
@@ -167,9 +186,11 @@ const InsightHistoryCard: React.FC<InsightHistoryCardProps> = ({
 
                 <Collapsible open={isExpanded} onOpenChange={() => toggleExpanded(insight.id)}>
                   <div className="space-y-3">
-                    <div className="text-sm leading-relaxed line-clamp-3">
-                      {insight.insight_content}
-                    </div>
+                    {!isExpanded && (
+                      <div className="bg-muted/30 rounded-md p-3 text-sm leading-relaxed text-foreground/80 line-clamp-3">
+                        {stripMarkdown(insight.insight_content)}
+                      </div>
+                    )}
                     
                     <CollapsibleTrigger asChild>
                       <Button variant="ghost" size="sm" className="w-full">
