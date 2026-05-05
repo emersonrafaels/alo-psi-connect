@@ -3627,6 +3627,105 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_reminder_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          is_enabled: boolean
+          last_reminded_at: string | null
+          phone: string
+          reminder_hour_local: string | null
+          reminder_weekdays: Json | null
+          reminder_weekdays_label: string | null
+          tenant_id: string | null
+          timezone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          last_reminded_at?: string | null
+          phone: string
+          reminder_hour_local?: string | null
+          reminder_weekdays?: Json | null
+          reminder_weekdays_label?: string | null
+          tenant_id?: string | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          last_reminded_at?: string | null
+          phone?: string
+          reminder_hour_local?: string | null
+          reminder_weekdays?: Json | null
+          reminder_weekdays_label?: string | null
+          tenant_id?: string | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_specialist_requests: {
+        Row: {
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          latest_diaries_summary: string | null
+          metadata: Json
+          phone: string
+          requested_at: string
+          source: string
+          specialist_context: string | null
+          status: string
+          tenant_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          latest_diaries_summary?: string | null
+          metadata?: Json
+          phone: string
+          requested_at?: string
+          source?: string
+          specialist_context?: string | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          latest_diaries_summary?: string | null
+          metadata?: Json
+          phone?: string
+          requested_at?: string
+          source?: string
+          specialist_context?: string | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       institution_metrics: {

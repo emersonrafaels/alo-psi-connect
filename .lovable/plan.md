@@ -1,58 +1,68 @@
-# Renderizador unificado de conteúdo da IA com formatação aprimorada
+## Objetivo
 
-## Problema
+1. Consolidar todos os usuários e dados pessoais relacionados no tenant **Rede Bem Estar** (`472db0ac-0f45-4998-97da-490bc579efb1`), eliminando o uso paralelo do tenant **Medcos** (`3a9ae5ec-50a9-4674-b808-7735e5f0afb5`) para usuários — que está fazendo com que diários preenchidos via WhatsApp não apareçam na plataforma.
+2. Validar que o Jayme Neto (`jayme18393@gmail.com`) e seus 2 diários emocionais foram migrados corretamente.
+3. Melhorar a formatação visual do **Histórico de Insights** (preview cortado mostrando markdown cru, conforme print).
 
-A análise da IA é renderizada com `ReactMarkdown` cru + classes `prose` em `MoodPattern.tsx`. Como o backend devolve o texto com `##`/`###` mas sem linhas em branco entre blocos, o markdown vira parágrafo único: títulos viram texto preto pequeno, sem espaçamento e sem hierarquia (vide print).
+---
 
-Também temos outros pontos onde o mesmo conteúdo aparece sem markdown algum (`InsightHistoryCard`).
+## 1. Migração de tenant (via migration SQL)
 
-## Solução
+Estado atual no banco:
 
-### 1. Criar componente único `FormattedAIContent`
+| Tabela | Em Medcos | Em Rede Bem Estar | Sem tenant |
+|---|---|---|---|
+| `profiles` | 24 | 39 | – |
+| `mood_entries` | 35 | 997 | 1 |
+| `whatsapp_profile_links` | 1 | – | – |
+| `user_tenants` | (a verificar) | – | – |
 
-Arquivo: `src/components/ai/FormattedAIContent.tsx`
+Migration vai mover **todos** os registros das tabelas abaixo do tenant Medcos para o tenant Rede Bem Estar:
 
-Responsabilidades:
-- **Pré-processamento (`preformat`)** do texto bruto antes de renderizar:
-  - Normaliza `\r\n` → `\n`
-  - Colapsa 3+ linhas em branco em uma só
-  - Garante linha em branco **antes e depois** de qualquer `## Heading` (corrige o bug atual em que tudo cola)
-  - Converte bullets `•` / `·` para `- ` markdown
-- **Renderização** via `ReactMarkdown + remarkGfm` com `components` totalmente customizados (todos usando tokens semânticos do design system, nada de cores hard-coded):
-  - `h1`: 20px, `text-primary`, separador inferior, mt-6
-  - `h2`: 18px, `text-primary`, mt-5
-  - `h3`: 16px, semibold, **com barra vertical primária** à esquerda (chip visual) — visual claro de seção
-  - `h4`: 14px, semibold
-  - `p`: leading-relaxed, my-2.5
-  - `strong`: text-foreground destacado
-  - `ul`: bullets customizados (ponto colorido `bg-primary` via `::before`), espaçamento entre itens
-  - `ol`: marcadores numéricos coloridos `marker:text-primary`
-  - `blockquote`: borda esquerda `border-primary/60` + fundo `bg-primary/5`
-  - `code` inline e bloco com `bg-muted`
-  - `table` com bordas em `border-border` e header em `bg-muted`
-  - `a` abre em nova aba, `text-primary underline`
-  - `hr` com `border-border`
+- `profiles.tenant_id`
+- `user_tenants.tenant_id` (com tratamento de conflito por `unique(user_id, tenant_id)` — se já existir, apaga o duplicado)
+- `mood_entries.tenant_id` (incluindo o registro com `tenant_id IS NULL` do Jayme)
+- `mood_insight_analyses.tenant_id`
+- `whatsapp_profile_links.tenant_id`
+- `whatsapp_conversation_state.tenant_id`
+- `whatsapp_reminder_preferences.tenant_id`
+- `whatsapp_specialist_requests.tenant_id`
+- `pacientes.tenant_id`
 
-API: `<FormattedAIContent content={string} className?: string />`
+Tabelas **NÃO** movidas (não são "usuários", são dados de outras dimensões — institucional, profissional, conteúdo):
+`blog_posts`, `agendamentos`, `group_sessions`, `group_session_theme_suggestions`, `institution_*`, `professional_tenants`, `email_test_logs`, `system_configurations`.
 
-### 2. Substituir os usos atuais
+Se você preferir mover **literalmente tudo** (incluindo agendamentos, blog, sessões em grupo etc.), me avise antes de aprovar.
 
-| Arquivo | Mudança |
-|---|---|
-| `src/pages/MoodPattern.tsx` | Remover wrapper `prose` + `ReactMarkdown` inline; usar `<FormattedAIContent content={latestInsight.insight_content} />`. Limpar imports não usados (`ReactMarkdown`, `remarkGfm`). |
-| `src/components/InsightHistoryCard.tsx` | Onde hoje renderiza `{insight.insight_content}` como texto cru (linhas 170 e 191), passar a usar `<FormattedAIContent content={insight.insight_content} />`. Mantém o `line-clamp` no preview colapsado se houver. |
+## 2. Verificação do Jayme Neto
 
-### 3. Não mexer
+Após a migração, rodar SELECTs para confirmar:
 
-- `src/components/AIAssistantModal.tsx` já tem seu próprio renderizador customizado para o chat — fora do escopo desta tarefa para não regredir o estilo do chat.
+- `profiles` do `user_id=ceeef817-0d36-4efc-9d01-64c4c09acb2f` está em Rede Bem Estar.
+- Os 2 `mood_entries` (datas 2026-05-01 e 2026-05-05) estão com `tenant_id` correto.
+- O `whatsapp_profile_links` dele aponta para Rede Bem Estar.
+- Aparecem na listagem de pacientes/diários da plataforma.
 
-## Resumo de arquivos
+Reportar resultado no chat.
 
-**Criar**
-- `src/components/ai/FormattedAIContent.tsx`
+## 3. Formatação do Histórico de Insights
 
-**Editar**
-- `src/pages/MoodPattern.tsx` — usar o novo componente, remover imports não usados
-- `src/components/InsightHistoryCard.tsx` — usar o novo componente nos dois pontos onde o conteúdo é exibido
+Arquivo: `src/components/InsightHistoryCard.tsx`
 
-Sem novas dependências (`react-markdown` e `remark-gfm` já instalados).
+Hoje o **preview** (estado colapsado) renderiza `{insight.insight_content}` cru com `line-clamp-3`, exibindo `##`, `**`, `###` etc. (visível no print).
+
+Mudanças:
+
+- **Preview limpo**: criar helper `stripMarkdown(content)` que remove `#`, `*`, `_`, `>`, `-` de bullets e colapsa espaços, e usar no `line-clamp-3` em vez do conteúdo cru.
+- **Cabeçalho do card**: trocar o `<div className="text-sm leading-relaxed line-clamp-3">` por um bloco com fundo leve (`bg-muted/30 rounded-md p-3`) e tipografia `text-foreground/80`, dando hierarquia visual entre preview e conteúdo expandido.
+- **Conteúdo expandido**: já usa `<FormattedAIContent />` — manter, garantindo padding/separador entre data e conteúdo.
+- **Data**: adicionar pequeno destaque (ícone com cor primary, texto `font-medium`) para casar com o restante da página de Análises.
+
+Sem novas dependências.
+
+### Detalhes técnicos
+
+- `stripMarkdown` ficará inline no componente (função pura curta).
+- Manter compatibilidade com feedback (likes/comentários) — sem mudanças funcionais.
+- Migration SQL idempotente (`UPDATE ... WHERE tenant_id = 'medcos_id'`).
+- Para `user_tenants`, usar `DELETE` dos pares já existentes em alopsi antes do `UPDATE` para evitar violar `unique(user_id, tenant_id)`.
