@@ -1,68 +1,98 @@
+# Plano: Dataset Simulado de Pacientes para ML de Risco
+
 ## Objetivo
 
-1. Consolidar todos os usuários e dados pessoais relacionados no tenant **Rede Bem Estar** (`472db0ac-0f45-4998-97da-490bc579efb1`), eliminando o uso paralelo do tenant **Medcos** (`3a9ae5ec-50a9-4674-b808-7735e5f0afb5`) para usuários — que está fazendo com que diários preenchidos via WhatsApp não apareçam na plataforma.
-2. Validar que o Jayme Neto (`jayme18393@gmail.com`) e seus 2 diários emocionais foram migrados corretamente.
-3. Melhorar a formatação visual do **Histórico de Insights** (preview cortado mostrando markdown cru, conforme print).
+Gerar um arquivo `.csv` (e `.xlsx` opcional) com uma linha por paciente simulado, contendo todas as features que a plataforma coleta hoje, mais um rótulo `risk_label` (0 = sem risco, 1 = em risco) para treinar um modelo de classificação.
 
----
+O dataset será **100% sintético** (não usa dados reais de pacientes da base), mas seguirá fielmente o schema e as distribuições reais do sistema (escalas 1-5, faixas etárias, padrões de engajamento, etc.).
 
-## 1. Migração de tenant (via migration SQL)
+## Tamanho e estrutura
 
-Estado atual no banco:
+- **N = 5.000 pacientes simulados** (configurável)
+- ~30% rotulados como "em risco" para gerar uma base balanceada-ish
+- Saída: `/mnt/documents/pacientes_ml_dataset.csv` + `pacientes_ml_dataset.xlsx`
+- Bônus: `pacientes_ml_dictionary.csv` com descrição de cada coluna
 
-| Tabela | Em Medcos | Em Rede Bem Estar | Sem tenant |
-|---|---|---|---|
-| `profiles` | 24 | 39 | – |
-| `mood_entries` | 35 | 997 | 1 |
-| `whatsapp_profile_links` | 1 | – | – |
-| `user_tenants` | (a verificar) | – | – |
+## Features incluídas (≈60 colunas)
 
-Migration vai mover **todos** os registros das tabelas abaixo do tenant Medcos para o tenant Rede Bem Estar:
+Agrupadas por origem na plataforma:
 
-- `profiles.tenant_id`
-- `user_tenants.tenant_id` (com tratamento de conflito por `unique(user_id, tenant_id)` — se já existir, apaga o duplicado)
-- `mood_entries.tenant_id` (incluindo o registro com `tenant_id IS NULL` do Jayme)
-- `mood_insight_analyses.tenant_id`
-- `whatsapp_profile_links.tenant_id`
-- `whatsapp_conversation_state.tenant_id`
-- `whatsapp_reminder_preferences.tenant_id`
-- `whatsapp_specialist_requests.tenant_id`
-- `pacientes.tenant_id`
+### Demografia (`profiles` + `pacientes`)
+- `patient_id`, `idade`, `genero`, `estado`, `cidade_porte` (capital/interior)
+- `tipo_usuario` (sempre paciente), `is_student`, `nivel_educacional`
+- `dias_desde_cadastro`, `tem_foto_perfil`, `completou_onboarding`
 
-Tabelas **NÃO** movidas (não são "usuários", são dados de outras dimensões — institucional, profissional, conteúdo):
-`blog_posts`, `agendamentos`, `group_sessions`, `group_session_theme_suggestions`, `institution_*`, `professional_tenants`, `email_test_logs`, `system_configurations`.
+### Vínculo institucional (`patient_institutions`, `educational_institutions`)
+- `tem_instituicao`, `tipo_instituicao` (publica/privada), `enrollment_status`
+- `instituicao_tem_parceria`, `dias_vinculado_instituicao`
 
-Se você preferir mover **literalmente tudo** (incluindo agendamentos, blog, sessões em grupo etc.), me avise antes de aprovar.
+### Contatos de emergência (`patient_emergency_contacts`)
+- `qtd_contatos_emergencia` (0-3), `tem_contato_familiar`
 
-## 2. Verificação do Jayme Neto
+### Diário emocional — agregados de `mood_entries` (últimos 30/90 dias)
+- `total_entries_30d`, `total_entries_90d`, `dias_consecutivos_streak`
+- `avg_mood_30d`, `avg_anxiety_30d`, `avg_energy_30d`, `avg_sleep_quality_30d`, `avg_sleep_hours_30d`
+- `std_mood_30d`, `std_anxiety_30d` (volatilidade)
+- `min_mood_30d`, `max_anxiety_30d`
+- `tendencia_mood_30d` (slope linear), `tendencia_anxiety_30d`
+- `dias_mood_baixo` (mood ≤ 2), `dias_anxiety_alta` (anxiety ≥ 4)
+- `pct_dias_com_journal`, `avg_journal_length`
+- `general_score_avg` (composite per memória do projeto)
 
-Após a migração, rodar SELECTs para confirmar:
+### Emoções dinâmicas (`emotion_values`)
+- `top_emocao_1`, `top_emocao_2`, `top_emocao_3`
+- `pct_emocoes_negativas` (tristeza, raiva, medo, ansiedade)
+- `diversidade_emocional` (entropia)
 
-- `profiles` do `user_id=ceeef817-0d36-4efc-9d01-64c4c09acb2f` está em Rede Bem Estar.
-- Os 2 `mood_entries` (datas 2026-05-01 e 2026-05-05) estão com `tenant_id` correto.
-- O `whatsapp_profile_links` dele aponta para Rede Bem Estar.
-- Aparecem na listagem de pacientes/diários da plataforma.
+### Análises de IA (`mood_entry_analyses`, `mood_insight_analyses`)
+- `qtd_analyses_risk_high`, `qtd_analyses_risk_medium`, `ultima_risk_level`
+- `qtd_insights_gerados`
 
-Reportar resultado no chat.
+### Triagem institucional (`student_triage`)
+- `ja_triado`, `qtd_triagens`, `ultima_triagem_risk_level`, `ultima_triagem_priority`
+- `dias_desde_ultima_triagem`, `triagem_resolvida`
 
-## 3. Formatação do Histórico de Insights
+### Engajamento WhatsApp (`whatsapp_*`)
+- `usa_whatsapp`, `qtd_msgs_whatsapp_30d`, `dias_desde_ultima_msg_wpp`
+- `tem_lembretes_ativos`, `solicitou_especialista`
 
-Arquivo: `src/components/InsightHistoryCard.tsx`
+### Agendamentos (`agendamentos`)
+- `qtd_agendamentos_total`, `qtd_realizados`, `qtd_cancelados`, `qtd_no_show`
+- `dias_desde_ultimo_agendamento`, `tem_proximo_agendamento`
 
-Hoje o **preview** (estado colapsado) renderiza `{insight.insight_content}` cru com `line-clamp-3`, exibindo `##`, `**`, `###` etc. (visível no print).
+### Conteúdo / blog (`blog_post_views_tracking`, `blog_saved_posts`, `comments`)
+- `qtd_posts_lidos_30d`, `qtd_posts_salvos`, `qtd_comentarios`
+- `tempo_medio_leitura`
 
-Mudanças:
+### Sessões em grupo (`group_session_registrations`)
+- `qtd_inscricoes_grupos`, `qtd_grupos_compareceu`, `taxa_no_show_grupos`
 
-- **Preview limpo**: criar helper `stripMarkdown(content)` que remove `#`, `*`, `_`, `>`, `-` de bullets e colapsa espaços, e usar no `line-clamp-3` em vez do conteúdo cru.
-- **Cabeçalho do card**: trocar o `<div className="text-sm leading-relaxed line-clamp-3">` por um bloco com fundo leve (`bg-muted/30 rounded-md p-3`) e tipografia `text-foreground/80`, dando hierarquia visual entre preview e conteúdo expandido.
-- **Conteúdo expandido**: já usa `<FormattedAIContent />` — manter, garantindo padding/separador entre data e conteúdo.
-- **Data**: adicionar pequeno destaque (ícone com cor primary, texto `font-medium`) para casar com o restante da página de Análises.
+### Cupons e financeiro (`coupon_usage`, `user_booking_tracking`)
+- `usou_cupom`, `qtd_bookings_iniciados`, `taxa_conversao_booking`
 
-Sem novas dependências.
+### Rótulo
+- `risk_label` (0/1) — gerado a partir de uma função-verdade que combina pesadamente: anxiety alto, mood baixo, tendência negativa, triagem prévia, baixo engajamento, ausência de contatos de emergência. Adiciona ~10% de ruído para ser realista.
 
-### Detalhes técnicos
+## Lógica de geração
 
-- `stripMarkdown` ficará inline no componente (função pura curta).
-- Manter compatibilidade com feedback (likes/comentários) — sem mudanças funcionais.
-- Migration SQL idempotente (`UPDATE ... WHERE tenant_id = 'medcos_id'`).
-- Para `user_tenants`, usar `DELETE` dos pares já existentes em alopsi antes do `UPDATE` para evitar violar `unique(user_id, tenant_id)`.
+Script Python único (`/tmp/gen_dataset.py`):
+1. Define distribuições por feature (gaussianas truncadas, categorias com pesos baseados na realidade RBE)
+2. Gera correlações realistas (ex: alta ansiedade ↔ baixo sono ↔ mood baixo)
+3. Cria dois "modos": pacientes saudáveis vs em risco, com sobreposição
+4. Aplica função de risco (regra + ruído) → `risk_label`
+5. Salva CSV, XLSX e dicionário de dados
+
+Sem dependências extras — usa `numpy`, `pandas`, `openpyxl` (já disponíveis).
+
+## Entregáveis
+
+- `/mnt/documents/pacientes_ml_dataset.csv` (~5000 linhas × 60 colunas)
+- `/mnt/documents/pacientes_ml_dataset.xlsx` (mesmo conteúdo)
+- `/mnt/documents/pacientes_ml_dictionary.csv` (nome, tipo, descrição, range)
+- Resumo no chat: estatísticas básicas e distribuição do `risk_label`
+
+## Pontos a confirmar
+
+- N = 5.000 está bom? (posso fazer 1k, 10k, 50k)
+- Quer apenas CSV ou também XLSX?
+- Quer que eu inclua dados reais agregados/anonimizados em vez de 100% sintético? (Mais realista, mas requer cuidado com privacidade — recomendo sintético)
