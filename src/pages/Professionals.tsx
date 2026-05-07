@@ -890,7 +890,7 @@ const Professionals = () => {
                     <span>{filters.horarioInicio || '00:00'} - {filters.horarioFim || '23:59'}</span>
                   </div>
                 )}
-                {(filters.valorMin || filters.valorMax) && (
+                {showPrices && (filters.valorMin || filters.valorMax) && (
                   <div className="filter-badge">
                     <DollarSign className="h-3 w-3" />
                     <span>R$ {filters.valorMin || '0'} - {filters.valorMax || '∞'}</span>
@@ -984,7 +984,7 @@ const Professionals = () => {
                                 </button>
                               </Badge>
                             )}
-                            {(filters.valorMin || filters.valorMax) && (
+                            {showPrices && (filters.valorMin || filters.valorMax) && (
                               <Badge variant="secondary" className="gap-1 pr-1 text-xs flex-shrink-0">
                                 R$ {filters.valorMin || '0'} - {filters.valorMax || '∞'}
                                 <button
