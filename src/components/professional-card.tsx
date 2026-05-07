@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User, Star } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useShowPrices } from "@/hooks/useShowPrices"
 
 interface ProfessionalCardProps {
   id: number | string
@@ -29,6 +30,7 @@ const ProfessionalCard = ({
 }: ProfessionalCardProps) => {
   const navigate = useNavigate()
   const [showAllSpecialties, setShowAllSpecialties] = useState(false)
+  const showPrices = useShowPrices()
 
   const handleViewProfile = () => {
     navigate(`/professional/${id}`)
@@ -54,7 +56,7 @@ const ProfessionalCard = ({
 
             <div className="flex items-center gap-2 mb-3">
               <div className="flex items-center gap-1" />
-              {consultationPrice && (
+              {showPrices && consultationPrice && (
                 <span className="text-sm font-bold text-primary dark:text-white">
                   R$ {consultationPrice}
                 </span>
@@ -131,7 +133,7 @@ const ProfessionalCard = ({
                 <span className="text-sm font-medium text-foreground">{rating}</span>
               </div>
             </div>
-            {consultationPrice && (
+            {showPrices && consultationPrice && (
               <div className="text-right">
                 <span className="text-lg font-bold text-primary">R$ {consultationPrice}</span>
                 <p className="text-xs text-muted-foreground">por consulta</p>
