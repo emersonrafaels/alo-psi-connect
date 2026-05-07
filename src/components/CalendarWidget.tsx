@@ -9,6 +9,7 @@ import { ptBR } from "date-fns/locale"
 import { useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { useTenant } from "@/hooks/useTenant"
+import { useShowPrices } from "@/hooks/useShowPrices"
 import { buildTenantPath } from "@/utils/tenantHelpers"
 
 interface Session {
