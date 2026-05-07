@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, UserCheck, CreditCard, Search, Filter, Star, DollarSign, Clock } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
+import { useShowPrices } from "@/hooks/useShowPrices"
 
 interface Professional {
   id: number
@@ -22,6 +23,7 @@ interface Professional {
 }
 
 const Schedule = () => {
+  const showPrices = useShowPrices()
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -200,13 +202,14 @@ const Schedule = () => {
                     
                     <CardContent className="space-y-4">
                       {/* Price */}
-                      <div className="flex items-center justify-center gap-2">
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                        <span className="text-lg font-bold text-primary">
-                          {formatPrice(professional.preco_consulta)}
-                        </span>
-                      </div>
-
+                      {showPrices && (
+                        <div className="flex items-center justify-center gap-2">
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          <span className="text-lg font-bold text-primary">
+                            {formatPrice(professional.preco_consulta)}
+                          </span>
+                        </div>
+                      )}
                       {/* Rating */}
                       <div className="flex items-center justify-center gap-2">
                         <Star className="h-4 w-4 text-yellow-500 fill-current" />

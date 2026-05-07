@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client"
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
 import { useTenant } from "@/hooks/useTenant"
+import { useShowPrices } from "@/hooks/useShowPrices"
 import { buildTenantPath } from "@/utils/tenantHelpers"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -87,6 +88,7 @@ const Professionals = () => {
   const navigate = useNavigate()
   const { tenant } = useTenant()
   const tenantSlug = tenant?.slug || 'alopsi'
+  const showPrices = useShowPrices()
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [filteredProfessionals, setFilteredProfessionals] = useState<Professional[]>([])
   const [loading, setLoading] = useState(true)
@@ -888,7 +890,7 @@ const Professionals = () => {
                     <span>{filters.horarioInicio || '00:00'} - {filters.horarioFim || '23:59'}</span>
                   </div>
                 )}
-                {(filters.valorMin || filters.valorMax) && (
+                {showPrices && (filters.valorMin || filters.valorMax) && (
                   <div className="filter-badge">
                     <DollarSign className="h-3 w-3" />
                     <span>R$ {filters.valorMin || '0'} - {filters.valorMax || '∞'}</span>
@@ -982,7 +984,7 @@ const Professionals = () => {
                                 </button>
                               </Badge>
                             )}
-                            {(filters.valorMin || filters.valorMax) && (
+                            {showPrices && (filters.valorMin || filters.valorMax) && (
                               <Badge variant="secondary" className="gap-1 pr-1 text-xs flex-shrink-0">
                                 R$ {filters.valorMin || '0'} - {filters.valorMax || '∞'}
                                 <button
@@ -1303,6 +1305,7 @@ const Professionals = () => {
                           </AccordionItem>
 
                           {/* Valor */}
+                          {showPrices && (
                           <AccordionItem value="valor">
                             <AccordionTrigger className="text-sm font-semibold">
                               <div className="flex items-center gap-2">
@@ -1358,6 +1361,7 @@ const Professionals = () => {
                               </div>
                             </AccordionContent>
                           </AccordionItem>
+                          )}
                         </Accordion>
                       </div>
                     </ScrollArea>
@@ -1840,6 +1844,7 @@ const Professionals = () => {
                   </CardHeader>
                   <CardContent className="p-0 space-y-5">
                     {/* Price Range Slider */}
+                    {showPrices && (
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <label className="text-xs font-medium text-muted-foreground">Faixa de Preço</label>
@@ -1874,6 +1879,7 @@ const Professionals = () => {
                         </span>
                       </div>
                     </div>
+                    )}
 
                     {/* Coupon Toggle */}
                     {user && linkedInstitutions && linkedInstitutions.length > 0 && (
@@ -1974,7 +1980,7 @@ const Professionals = () => {
                       </Badge>
                     )}
 
-                    {(filters.valorMin || filters.valorMax) && (
+                    {showPrices && (filters.valorMin || filters.valorMax) && (
                       <Badge 
                         variant="secondary" 
                         className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
@@ -2028,7 +2034,7 @@ const Professionals = () => {
                     {filteredProfessionals.length} profissiona{filteredProfessionals.length !== 1 ? 'is' : 'l'} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
                   </p>
                   {/* Indicador de economia máxima */}
-                  {professionalsWithCoupons && professionalsWithCoupons.size > 0 && !filters.comCupom && (() => {
+                  {showPrices && professionalsWithCoupons && professionalsWithCoupons.size > 0 && !filters.comCupom && (() => {
                     const maxDiscount = Math.max(...Array.from(professionalsWithCoupons.values()).map(c => c.bestCoupon.potentialDiscount))
                     if (maxDiscount > 0) {
                       return (
@@ -2080,16 +2086,20 @@ const Professionals = () => {
                       <span>🔤</span> Nome (A-Z)
                     </span>
                   </SelectItem>
-                  <SelectItem value="preco_asc">
-                    <span className="flex items-center gap-2">
-                      <span>💰</span> Menor Preço
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="preco_desc">
-                    <span className="flex items-center gap-2">
-                      <span>💰</span> Maior Preço
-                    </span>
-                  </SelectItem>
+                  {showPrices && (
+                    <>
+                      <SelectItem value="preco_asc">
+                        <span className="flex items-center gap-2">
+                          <span>💰</span> Menor Preço
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="preco_desc">
+                        <span className="flex items-center gap-2">
+                          <span>💰</span> Maior Preço
+                        </span>
+                      </SelectItem>
+                    </>
+                  )}
                   <SelectItem value="destaque">
                     <span className="flex items-center gap-2">
                       <span>⭐</span> Destaque
@@ -2278,7 +2288,7 @@ const Professionals = () => {
                              </div>
 
                              {/* Preço e Cupom - Mostrado diretamente */}
-                             {professional.preco_consulta && (
+                             {showPrices && professional.preco_consulta && (
                                <>
                                  {professionalsWithCoupons?.has(professional.id) ? (() => {
                                     const couponData = professionalsWithCoupons.get(professional.id)!;

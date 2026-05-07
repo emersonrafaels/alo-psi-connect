@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CalendarWidget } from "@/components/CalendarWidget";
 import { stripHtmlTags } from "@/lib/utils";
 import { useTenant } from "@/hooks/useTenant";
+import { useShowPrices } from "@/hooks/useShowPrices";
 import { buildTenantPath } from "@/utils/tenantHelpers";
 interface Professional {
   id: number;
@@ -44,6 +45,7 @@ const Professional = () => {
   } = useToast();
   const navigate = useNavigate();
   const { tenant } = useTenant();
+  const showPrices = useShowPrices();
   const tenantSlug = tenant?.slug || 'alopsi';
   const [professional, setProfessional] = useState<Professional | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -225,12 +227,14 @@ const Professional = () => {
                   <span className="text-sm font-medium">5.0</span>
                   <span className="text-sm text-muted-foreground">(48 avaliações)</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-green-600" />
-                  <span className="text-lg font-bold text-primary">
-                    {formatPrice(professional.preco_consulta)}
-                  </span>
-                </div>
+                {showPrices && (
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-green-600" />
+                    <span className="text-lg font-bold text-primary">
+                      {formatPrice(professional.preco_consulta)}
+                    </span>
+                  </div>
+                )}
               </div>
               <Button size="lg" className="btn-gradient shadow-lg" onClick={handleScheduleClick}>
                 <Calendar className="h-4 w-4 mr-2" />

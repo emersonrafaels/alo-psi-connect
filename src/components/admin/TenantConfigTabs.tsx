@@ -364,6 +364,30 @@ export const ModulesConfigTab = ({ formData, setFormData }: TenantConfigTabsProp
             </div>
           ))}
         </div>
+
+        <div className="space-y-4 pt-4 border-t">
+          <h4 className="font-semibold">Exibição de Preços</h4>
+          <div className="flex items-center space-x-3 p-3 rounded-lg border">
+            <Checkbox
+              id="show_professional_prices"
+              checked={(formData as any).show_professional_prices !== false}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, show_professional_prices: checked as boolean })
+              }
+            />
+            <Label htmlFor="show_professional_prices" className="cursor-pointer flex-1">
+              Exibir preços dos profissionais
+            </Label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>Quando desativado, o valor da consulta deixa de aparecer em listagens, perfis e cards. O preço só será mostrado na etapa final de pagamento.</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
       </div>
     </TooltipProvider>
   );

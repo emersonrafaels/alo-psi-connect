@@ -162,6 +162,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
       contact: true,
       about: true,
     } as Record<string, boolean>,
+    show_professional_prices: true,
   });
   const [loading, setLoading] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
@@ -238,6 +239,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
           about: true,
           ...((tenant as any).modules_enabled || {}),
         },
+        show_professional_prices: (tenant as any).show_professional_prices !== false,
       });
     } else {
       setFormData({
@@ -307,6 +309,7 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
           contact: true,
           about: true,
         },
+        show_professional_prices: true,
       });
     }
   }, [tenant]);
@@ -509,7 +512,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         favicon_url: formData.favicon_url || null,
         fallback_professional_image: formData.fallback_professional_image || null,
         is_active: formData.is_active,
-        modules_enabled: formData.modules_enabled
+        modules_enabled: formData.modules_enabled,
+        show_professional_prices: formData.show_professional_prices,
       };
 
       if (tenant) {

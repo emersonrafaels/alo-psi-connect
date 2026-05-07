@@ -12,6 +12,7 @@ import { ArrowLeft, DollarSign, Clock, MapPin, Star, Tag, Sparkles } from "lucid
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useTenant } from '@/hooks/useTenant'
+import { useShowPrices } from '@/hooks/useShowPrices'
 import { buildTenantPath } from '@/utils/tenantHelpers'
 
 interface Professional {
@@ -40,6 +41,7 @@ const Appointment = () => {
   const navigate = useNavigate()
   const { toast } = useToast()
   const { tenant } = useTenant()
+  const showPrices = useShowPrices()
   const tenantSlug = tenant?.slug || 'alopsi'
   
   const [professional, setProfessional] = useState<Professional | null>(null)
@@ -283,7 +285,7 @@ const Appointment = () => {
                       </div>
                       
                       {/* Coupon Applied Box */}
-                      {couponCode && couponDiscount && professional.preco_consulta ? (
+                      {showPrices && couponCode && couponDiscount && professional.preco_consulta ? (
                         <div className="mt-4 bg-gradient-to-r from-emerald-50/90 to-green-50/90 dark:from-emerald-950/40 dark:to-green-950/40 border border-emerald-200/60 dark:border-emerald-800/60 rounded-lg p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
@@ -310,7 +312,7 @@ const Appointment = () => {
                             <span className="text-emerald-500">({couponCode})</span>
                           </div>
                         </div>
-                      ) : professional.preco_consulta ? (
+                      ) : showPrices && professional.preco_consulta ? (
                         <div className="flex items-center gap-1 mt-4">
                           <DollarSign className="h-4 w-4 text-green-600" />
                           <span className="font-semibold text-primary">
