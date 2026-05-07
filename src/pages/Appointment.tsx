@@ -12,6 +12,7 @@ import { ArrowLeft, DollarSign, Clock, MapPin, Star, Tag, Sparkles } from "lucid
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useTenant } from '@/hooks/useTenant'
+import { useShowPrices } from '@/hooks/useShowPrices'
 import { buildTenantPath } from '@/utils/tenantHelpers'
 
 interface Professional {
