@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, UserCheck, CreditCard, Search, Filter, Star, DollarSign, Clock } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
+import { useShowPrices } from "@/hooks/useShowPrices"
 
 interface Professional {
   id: number
