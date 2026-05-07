@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client"
 import Header from "@/components/ui/header"
 import Footer from "@/components/ui/footer"
 import { useTenant } from "@/hooks/useTenant"
+import { useShowPrices } from "@/hooks/useShowPrices"
 import { buildTenantPath } from "@/utils/tenantHelpers"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -87,6 +88,7 @@ const Professionals = () => {
   const navigate = useNavigate()
   const { tenant } = useTenant()
   const tenantSlug = tenant?.slug || 'alopsi'
+  const showPrices = useShowPrices()
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [filteredProfessionals, setFilteredProfessionals] = useState<Professional[]>([])
   const [loading, setLoading] = useState(true)
