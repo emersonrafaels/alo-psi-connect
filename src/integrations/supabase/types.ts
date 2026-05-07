@@ -3171,6 +3171,7 @@ export type Database = {
           privacy_url: string | null
           razao_social: string | null
           secondary_color: string | null
+          show_professional_prices: boolean
           slug: string
           social_facebook: string | null
           social_instagram: string | null
@@ -3261,6 +3262,7 @@ export type Database = {
           privacy_url?: string | null
           razao_social?: string | null
           secondary_color?: string | null
+          show_professional_prices?: boolean
           slug: string
           social_facebook?: string | null
           social_instagram?: string | null
@@ -3351,6 +3353,7 @@ export type Database = {
           privacy_url?: string | null
           razao_social?: string | null
           secondary_color?: string | null
+          show_professional_prices?: boolean
           slug?: string
           social_facebook?: string | null
           social_instagram?: string | null

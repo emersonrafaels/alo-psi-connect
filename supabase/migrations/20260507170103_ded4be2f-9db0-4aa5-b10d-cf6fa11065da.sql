@@ -1,0 +1,1 @@
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS show_professional_prices boolean NOT NULL DEFAULT true;

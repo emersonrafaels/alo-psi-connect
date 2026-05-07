@@ -105,7 +105,10 @@ export interface Tenant {
   terms_url?: string;
   privacy_url?: string;
   favicon_url?: string;
-  
+
+  // Show/hide professional prices on public pages
+  show_professional_prices?: boolean;
+
   // Cross-tenant navigation warning
   cross_tenant_navigation_warning_enabled?: boolean;
   cross_tenant_navigation_warning_title?: string;
