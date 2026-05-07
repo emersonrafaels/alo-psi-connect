@@ -2280,7 +2280,7 @@ const Professionals = () => {
                              </div>
 
                              {/* Preço e Cupom - Mostrado diretamente */}
-                             {professional.preco_consulta && (
+                             {showPrices && professional.preco_consulta && (
                                <>
                                  {professionalsWithCoupons?.has(professional.id) ? (() => {
                                     const couponData = professionalsWithCoupons.get(professional.id)!;
