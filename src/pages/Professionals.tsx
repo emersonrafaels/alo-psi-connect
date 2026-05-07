@@ -1305,6 +1305,7 @@ const Professionals = () => {
                           </AccordionItem>
 
                           {/* Valor */}
+                          {showPrices && (
                           <AccordionItem value="valor">
                             <AccordionTrigger className="text-sm font-semibold">
                               <div className="flex items-center gap-2">
