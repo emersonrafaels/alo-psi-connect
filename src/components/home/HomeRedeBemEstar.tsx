@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
+import { useShowPrices } from "@/hooks/useShowPrices";
 import { buildTenantPath } from "@/utils/tenantHelpers";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
