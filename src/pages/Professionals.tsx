@@ -1361,6 +1361,7 @@ const Professionals = () => {
                               </div>
                             </AccordionContent>
                           </AccordionItem>
+                          )}
                         </Accordion>
                       </div>
                     </ScrollArea>
