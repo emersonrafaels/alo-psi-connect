@@ -3726,6 +3726,33 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_error_logs: {
+        Row: {
+          error_code: string
+          id: number
+          message: string | null
+          node: string
+          timestamp: string
+          workflow: string
+        }
+        Insert: {
+          error_code: string
+          id?: number
+          message?: string | null
+          node: string
+          timestamp?: string
+          workflow: string
+        }
+        Update: {
+          error_code?: string
+          id?: number
+          message?: string | null
+          node?: string
+          timestamp?: string
+          workflow?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       institution_metrics: {
