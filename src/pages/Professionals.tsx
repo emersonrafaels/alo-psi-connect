@@ -2086,16 +2086,20 @@ const Professionals = () => {
                       <span>🔤</span> Nome (A-Z)
                     </span>
                   </SelectItem>
-                  <SelectItem value="preco_asc">
-                    <span className="flex items-center gap-2">
-                      <span>💰</span> Menor Preço
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="preco_desc">
-                    <span className="flex items-center gap-2">
-                      <span>💰</span> Maior Preço
-                    </span>
-                  </SelectItem>
+                  {showPrices && (
+                    <>
+                      <SelectItem value="preco_asc">
+                        <span className="flex items-center gap-2">
+                          <span>💰</span> Menor Preço
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="preco_desc">
+                        <span className="flex items-center gap-2">
+                          <span>💰</span> Maior Preço
+                        </span>
+                      </SelectItem>
+                    </>
+                  )}
                   <SelectItem value="destaque">
                     <span className="flex items-center gap-2">
                       <span>⭐</span> Destaque
