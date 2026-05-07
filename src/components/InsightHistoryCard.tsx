@@ -207,7 +207,7 @@ const InsightHistoryCard: React.FC<InsightHistoryCardProps> = ({
                   <div className="space-y-3">
                     {!isExpanded && (
                       <div className="bg-muted/30 rounded-md p-3 text-sm leading-relaxed text-foreground/80 line-clamp-3">
-                        {stripMarkdown(insight.insight_content)}
+                        {getInsightPreview(insight.insight_content)}
                       </div>
                     )}
                     
