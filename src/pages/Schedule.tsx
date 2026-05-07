@@ -23,6 +23,7 @@ interface Professional {
 }
 
 const Schedule = () => {
+  const showPrices = useShowPrices()
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -201,13 +202,14 @@ const Schedule = () => {
                     
                     <CardContent className="space-y-4">
                       {/* Price */}
-                      <div className="flex items-center justify-center gap-2">
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                        <span className="text-lg font-bold text-primary">
-                          {formatPrice(professional.preco_consulta)}
-                        </span>
-                      </div>
-
+                      {showPrices && (
+                        <div className="flex items-center justify-center gap-2">
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          <span className="text-lg font-bold text-primary">
+                            {formatPrice(professional.preco_consulta)}
+                          </span>
+                        </div>
+                      )}
                       {/* Rating */}
                       <div className="flex items-center justify-center gap-2">
                         <Star className="h-4 w-4 text-yellow-500 fill-current" />
