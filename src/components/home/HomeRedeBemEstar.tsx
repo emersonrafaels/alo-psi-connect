@@ -36,6 +36,7 @@ const HomeRedeBemEstar = () => {
   const navigate = useNavigate();
   const { tenant } = useTenant();
   const tenantSlug = tenant?.slug || "alopsi";
+  const showPrices = useShowPrices();
   const [featured, setFeatured] = useState<FeaturedProfessional[]>([]);
   const [loadingPros, setLoadingPros] = useState(true);
 
@@ -780,7 +781,7 @@ const HomeRedeBemEstar = () => {
                           </div>
                         )}
                         <div className="mt-auto flex items-center justify-between gap-3">
-                          {p.preco_consulta && (
+                          {showPrices && p.preco_consulta && (
                             <span className="text-sm font-bold" style={{ color: "var(--rbe-primary)" }}>
                               R$ {p.preco_consulta}
                             </span>
