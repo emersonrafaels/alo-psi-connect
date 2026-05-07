@@ -22,7 +22,7 @@ import { ConsistencyCalendar } from '@/components/mood/ConsistencyCalendar';
 import { TagImpactCard } from '@/components/mood/TagImpactCard';
 import { exportMoodReportPDF } from '@/utils/moodReportPDF';
 import { useState } from 'react';
-import { FormattedAIContent } from '@/components/ai/FormattedAIContent';
+import { StructuredInsightView } from '@/components/ai/StructuredInsightView';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { parseISODateLocal } from '@/lib/utils';
 
@@ -148,7 +148,7 @@ const MoodPattern = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <FormattedAIContent content={latestInsight.insight_content} />
+                    <StructuredInsightView content={latestInsight.insight_content} />
                     <Button
                       variant="ghost"
                       size="sm"

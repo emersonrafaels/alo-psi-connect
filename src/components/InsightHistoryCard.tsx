@@ -9,10 +9,29 @@ import { ThumbsUp, ThumbsDown, MessageSquare, ChevronDown, ChevronUp, Calendar }
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FormattedAIContent } from '@/components/ai/FormattedAIContent';
+import { StructuredInsightView } from '@/components/ai/StructuredInsightView';
 
-/** Remove markdown syntax for clean preview text. */
-const stripMarkdown = (text: string): string => {
+/** Build a clean plain-text preview from either JSON or markdown insight content. */
+const getInsightPreview = (text: string): string => {
   if (!text) return '';
+  const trimmed = text.trim();
+  if (trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed && typeof parsed === 'object') {
+        if (typeof parsed.summary === 'string' && parsed.summary.trim()) {
+          return parsed.summary.trim();
+        }
+        const firstArr =
+          parsed.attention_points || parsed.positive_patterns || parsed.suggested_actions;
+        if (Array.isArray(firstArr) && firstArr.length > 0) {
+          return firstArr.slice(0, 2).join(' ');
+        }
+      }
+    } catch {
+      // fall through to markdown stripping
+    }
+  }
   return text
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/`([^`]+)`/g, '$1')
@@ -188,7 +207,7 @@ const InsightHistoryCard: React.FC<InsightHistoryCardProps> = ({
                   <div className="space-y-3">
                     {!isExpanded && (
                       <div className="bg-muted/30 rounded-md p-3 text-sm leading-relaxed text-foreground/80 line-clamp-3">
-                        {stripMarkdown(insight.insight_content)}
+                        {getInsightPreview(insight.insight_content)}
                       </div>
                     )}
                     
@@ -209,7 +228,7 @@ const InsightHistoryCard: React.FC<InsightHistoryCardProps> = ({
                     </CollapsibleTrigger>
 
                     <CollapsibleContent className="space-y-4">
-                      <FormattedAIContent content={insight.insight_content} />
+                      <StructuredInsightView content={insight.insight_content} />
 
                       {hasFeedback && insight.feedback_comment && (
                         <div className="bg-muted/50 p-3 rounded-lg">
