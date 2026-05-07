@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CalendarWidget } from "@/components/CalendarWidget";
 import { stripHtmlTags } from "@/lib/utils";
 import { useTenant } from "@/hooks/useTenant";
+import { useShowPrices } from "@/hooks/useShowPrices";
 import { buildTenantPath } from "@/utils/tenantHelpers";
 interface Professional {
   id: number;
@@ -44,6 +45,7 @@ const Professional = () => {
   } = useToast();
   const navigate = useNavigate();
   const { tenant } = useTenant();
+  const showPrices = useShowPrices();
   const tenantSlug = tenant?.slug || 'alopsi';
   const [professional, setProfessional] = useState<Professional | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
