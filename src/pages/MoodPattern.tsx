@@ -148,7 +148,7 @@ const MoodPattern = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <FormattedAIContent content={latestInsight.insight_content} />
+                    <StructuredInsightView content={latestInsight.insight_content} />
                     <Button
                       variant="ghost"
                       size="sm"
