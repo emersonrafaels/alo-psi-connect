@@ -1844,6 +1844,7 @@ const Professionals = () => {
                   </CardHeader>
                   <CardContent className="p-0 space-y-5">
                     {/* Price Range Slider */}
+                    {showPrices && (
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <label className="text-xs font-medium text-muted-foreground">Faixa de Preço</label>
@@ -1878,6 +1879,7 @@ const Professionals = () => {
                         </span>
                       </div>
                     </div>
+                    )}
 
                     {/* Coupon Toggle */}
                     {user && linkedInstitutions && linkedInstitutions.length > 0 && (
@@ -1978,7 +1980,7 @@ const Professionals = () => {
                       </Badge>
                     )}
 
-                    {(filters.valorMin || filters.valorMax) && (
+                    {showPrices && (filters.valorMin || filters.valorMax) && (
                       <Badge 
                         variant="secondary" 
                         className="gap-1 cursor-pointer hover:bg-destructive/10 group transition-all"
@@ -2032,7 +2034,7 @@ const Professionals = () => {
                     {filteredProfessionals.length} profissiona{filteredProfessionals.length !== 1 ? 'is' : 'l'} encontrado{filteredProfessionals.length !== 1 ? 's' : ''}
                   </p>
                   {/* Indicador de economia máxima */}
-                  {professionalsWithCoupons && professionalsWithCoupons.size > 0 && !filters.comCupom && (() => {
+                  {showPrices && professionalsWithCoupons && professionalsWithCoupons.size > 0 && !filters.comCupom && (() => {
                     const maxDiscount = Math.max(...Array.from(professionalsWithCoupons.values()).map(c => c.bestCoupon.potentialDiscount))
                     if (maxDiscount > 0) {
                       return (
