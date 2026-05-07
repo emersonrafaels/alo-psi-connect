@@ -39,6 +39,7 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
   const [loadingTimes, setLoadingTimes] = useState(false)
   const navigate = useNavigate()
   const { tenant } = useTenant()
+  const showPrices = useShowPrices()
   const tenantSlug = tenant?.slug || 'alopsi'
 
   // Generate available dates for the next 30 days
@@ -427,7 +428,7 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
                 <p className="font-medium text-primary">
                   🕒 {formatTime(selectedTime)}
                 </p>
-                {price && couponFinal ? (
+                {showPrices && price && couponFinal ? (
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground line-through">
                       💰 R$ {parseFloat(price).toFixed(0)}
@@ -441,7 +442,7 @@ export const CalendarWidget = ({ sessions, professionalId, professionalName, pri
                       </Badge>
                     </div>
                   </div>
-                ) : price && (
+                ) : showPrices && price && (
                   <p className="text-sm text-muted-foreground">
                     💰 R$ {parseFloat(price).toFixed(0)}
                   </p>
