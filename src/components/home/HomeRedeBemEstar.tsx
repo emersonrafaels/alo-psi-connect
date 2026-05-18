@@ -14,7 +14,7 @@ import {
   MessageCircle, ShieldCheck, Bell, Activity, Eye, Battery,
   ArrowUpRight, Zap, Quote,
 } from "lucide-react";
-import heroImg from "@/assets/home-rbe-hero.jpg";
+import heroImg from "@/assets/students-hero.png";
 import ameImg from "@/assets/home-rbe-ame.jpg";
 
 interface FeaturedProfessional {
