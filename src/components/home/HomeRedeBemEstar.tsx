@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import heroImg from "@/assets/students-hero.png";
 import ameImg from "@/assets/home-rbe-ame.jpg";
+import buddyImg from "@/assets/buddy-main.png";
+import buddyChat from "@/assets/buddy-chat.png";
 
 interface FeaturedProfessional {
   id: number;
@@ -345,26 +347,13 @@ const HomeRedeBemEstar = () => {
                  style={{ background: "color-mix(in srgb, var(--rbe-tertiary-fixed) 25%, transparent)" }}>
               <div className="absolute inset-0 opacity-40 blur-2xl pointer-events-none"
                    style={{ background: "radial-gradient(circle at 30% 30%, var(--rbe-secondary-fixed), transparent 50%)" }} />
-              <div className="relative z-10 flex gap-2 sm:gap-4 items-end translate-y-4 sm:translate-y-8">
-                {/* Phone mock */}
-                <div className="w-32 sm:w-44 aspect-[9/19] rounded-[1.75rem] sm:rounded-[2.5rem] p-1.5 sm:p-2 shadow-2xl"
-                     style={{ background: "#0f172a", border: "3px solid #1e293b" }}>
-                  <div className="w-full h-full rounded-[1.4rem] sm:rounded-[2rem] overflow-hidden relative flex flex-col items-center justify-center p-3 sm:p-4"
-                       style={{ background: "var(--rbe-primary-fixed)" }}>
-                    <div className="text-[0.55rem] sm:text-[0.6rem] uppercase tracking-widest absolute top-4 sm:top-6"
-                         style={{ color: "color-mix(in srgb, var(--rbe-primary) 40%, transparent)" }}>
-                      Buddy
-                    </div>
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center"
-                         style={{ background: "var(--rbe-primary-container)" }}>
-                      <Bot className="w-9 h-9 sm:w-11 sm:h-11 text-white" />
-                    </div>
-                    <div className="mt-4 w-full h-1 rounded-full" style={{ background: "color-mix(in srgb, var(--rbe-primary) 15%, transparent)" }} />
-                    <div className="mt-2 w-2/3 h-1 rounded-full" style={{ background: "color-mix(in srgb, var(--rbe-primary) 15%, transparent)" }} />
-                  </div>
+              <div className="relative z-10 flex gap-2 sm:gap-4 items-end translate-y-4 sm:translate-y-8 flex-col sm:flex-row">
+                {/* Buddy character */}
+                <div className="flex justify-center">
+                  <img src={buddyImg} alt="Buddy" className="w-40 sm:w-56 h-auto object-contain" />
                 </div>
                 {/* Dashboard mock */}
-                <div className="w-44 sm:w-56 aspect-[4/3] rounded-2xl shadow-xl p-3 sm:p-4 -mb-4 -ml-8 sm:-ml-12 relative z-20"
+                <div className="w-44 sm:w-56 aspect-[4/3] rounded-2xl shadow-xl p-3 sm:p-4 sm:-mb-4 sm:-ml-8 relative z-20"
                      style={{ background: "var(--rbe-surface-container-lowest)", border: "1px solid color-mix(in srgb, var(--rbe-outline-variant) 30%, transparent)" }}>
                   <div className="flex justify-between items-center mb-3 sm:mb-4">
                     <div className="w-12 h-2 rounded-full" style={{ background: "var(--rbe-surface-container)" }} />
@@ -410,25 +399,18 @@ const HomeRedeBemEstar = () => {
             </div>
           </div>
           <div className="grid md:grid-cols-12 gap-6 sm:gap-8">
-            {/* Buddy chat card */}
-            <div className="md:col-span-8 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col justify-center min-h-[320px] sm:min-h-[400px]"
+            {/* Buddy removed — chat card expanded to fill space */}
+            <div className="md:col-span-12 lg:col-span-8 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col justify-center min-h-[320px] sm:min-h-[400px]"
                  style={{
-                   background: "var(--rbe-surface-container-lowest)",
-                   border: "1px solid color-mix(in srgb, var(--rbe-outline-variant) 15%, transparent)",
+                   background: "linear-gradient(135deg, rgba(255,255,255,0.96), rgba(250,250,251,0.96))",
+                   border: "1px solid rgba(0,0,0,0.04)",
                  }}>
-              <div className="absolute top-0 right-0 p-12 pointer-events-none">
-                <div className="w-48 sm:w-64 h-48 sm:h-64 rounded-full opacity-30 blur-3xl animate-pulse"
-                     style={{ background: "var(--rbe-tertiary-fixed)" }} />
-              </div>
-              {/* small decorative Buddy */}
-              <div className="absolute top-6 right-6 pointer-events-none">
-                <BuddyCharacter size="sm" animated />
-              </div>
-              <div className="max-w-md relative z-10 space-y-5 sm:space-y-6">
+              {/* decorative circle removed per design request */}
+              <div className="max-w-3xl relative z-10 space-y-5 sm:space-y-6">
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0"
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0"
                        style={{ background: "var(--rbe-secondary)" }}>
-                    <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    <img src={buddyChat} alt="Buddy chat" className="w-full h-full object-cover" />
                   </div>
                   <div className="rbe-glass px-3 sm:px-4 py-2 rounded-full"
                        style={{ border: "1px solid color-mix(in srgb, var(--rbe-secondary-container) 30%, transparent)" }}>
@@ -444,9 +426,9 @@ const HomeRedeBemEstar = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0"
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0"
                        style={{ background: "var(--rbe-secondary)" }}>
-                    <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    <img src={buddyChat} alt="Buddy chat" className="w-full h-full object-cover" />
                   </div>
                   <div className="rbe-glass px-3 sm:px-4 py-2 rounded-full"
                        style={{ border: "1px solid color-mix(in srgb, var(--rbe-secondary-container) 30%, transparent)" }}>
@@ -467,8 +449,8 @@ const HomeRedeBemEstar = () => {
               </div>
             </div>
             {/* Diário card */}
-            <div className="md:col-span-4 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between min-h-[280px]"
-                 style={{ background: "var(--rbe-secondary-fixed)" }}>
+              <div className="md:col-span-4 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between min-h-[280px]"
+                style={{ background: "var(--rbe-surface)" }}>
               <div>
                 <BookOpen className="w-8 h-8 mb-4" style={{ color: "var(--rbe-on-secondary-fixed)" }} />
                 <h4 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: "var(--rbe-on-secondary-fixed)" }}>
@@ -881,7 +863,7 @@ const HomeRedeBemEstar = () => {
                      style={{ background: "linear-gradient(180deg, #075E54 0%, #128C7E 100%)" }}>
                   <div className="w-9 h-9 rounded-full flex items-center justify-center"
                        style={{ background: "#fff" }}>
-                    <Bot className="w-5 h-5" style={{ color: "var(--rbe-primary-container)" }} />
+                    <img src={buddyChat} alt="Buddy chat" className="w-full h-full object-cover rounded-full" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-semibold truncate">Buddy · Rede Bem-Estar</p>
