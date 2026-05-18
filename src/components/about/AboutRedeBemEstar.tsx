@@ -132,9 +132,9 @@ const AboutRedeBemEstar = () => {
               A universidade é um período de transformação, mas também de intensa pressão. Existimos
               para garantir que o crescimento intelectual não venha acompanhado de exaustão emocional.
             </p>
-            <div className="inline-block px-5 sm:px-6 py-3 bg-[var(--rbe-cta-bg)] text-[var(--rbe-secondary)] rounded-2xl text-base sm:text-lg lg:text-xl font-extrabold italic">
+            {/* <div className="inline-block px-5 sm:px-6 py-3 bg-[var(--rbe-cta-bg)] text-[var(--rbe-secondary)] rounded-2xl text-base sm:text-lg lg:text-xl font-extrabold italic">
               "Cuidar melhor também é decidir melhor."
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
@@ -184,7 +184,7 @@ const AboutRedeBemEstar = () => {
             {[
               { Icon: Bot, title: "Buddy", desc: "Apoio emocional por IA que oferece suporte 24/7, escuta ativa e triagem inteligente para casos de risco.", chip: "IA Ativa", bg: "bg-[var(--rbe-secondary)]/20" },
               { Icon: BookOpen, title: "Diário Emocional", desc: "Ferramenta de autoconhecimento onde o estudante registra emoções e identifica padrões de bem-estar.", chip: "Autocuidado", bg: "bg-[var(--rbe-lilac-light)]" },
-              { Icon: BarChart3, title: "Escalas e Dados", desc: "Dashboards estratégicos para gestores mapearem a saúde mental coletiva e prevenirem a evasão.", chip: "Big Data", bg: "bg-[var(--rbe-secondary)]/20" },
+              { Icon: BarChart3, title: "Gestão por Dados", desc: "Dashboards estratégicos para gestores mapearem a saúde mental coletiva e prevenirem a evasão.", chip: "Big Data", bg: "bg-[var(--rbe-secondary)]/20" },
               { Icon: Brain, title: "Atendimento Especializado", desc: "Encaminhamento ágil para psicólogos parceiros quando o sistema detecta sinais de alerta.", chip: "Rede Humana", bg: "bg-[var(--rbe-lilac-light)]" },
             ].map(({ Icon, title, desc, chip, bg }) => (
               <div key={title} className="bg-[var(--rbe-card)] p-6 sm:p-8 lg:p-10 rbe-rounded-huge flex gap-4 sm:gap-6 items-start hover:shadow-xl transition-all">

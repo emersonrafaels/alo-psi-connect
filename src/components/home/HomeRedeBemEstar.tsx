@@ -6,6 +6,7 @@ import { useShowPrices } from "@/hooks/useShowPrices";
 import { buildTenantPath } from "@/utils/tenantHelpers";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
+import BuddyCharacter from "@/components/hero/BuddyCharacter";
 import {
   Heart, Clock, Users, Brain, EyeOff, Bot, BookOpen, Sparkles,
   ClipboardCheck, LineChart, LayoutDashboard, FileText, Stethoscope,
@@ -403,6 +404,10 @@ const HomeRedeBemEstar = () => {
                 Onde a tecnologia encontra o coração.
               </h3>
             </div>
+            {/* Decorative Buddy on larger screens */}
+            <div className="hidden md:flex items-center">
+              <BuddyCharacter size="lg" animated />
+            </div>
           </div>
           <div className="grid md:grid-cols-12 gap-6 sm:gap-8">
             {/* Buddy chat card */}
@@ -414,6 +419,10 @@ const HomeRedeBemEstar = () => {
               <div className="absolute top-0 right-0 p-12 pointer-events-none">
                 <div className="w-48 sm:w-64 h-48 sm:h-64 rounded-full opacity-30 blur-3xl animate-pulse"
                      style={{ background: "var(--rbe-tertiary-fixed)" }} />
+              </div>
+              {/* small decorative Buddy */}
+              <div className="absolute top-6 right-6 pointer-events-none">
+                <BuddyCharacter size="sm" animated />
               </div>
               <div className="max-w-md relative z-10 space-y-5 sm:space-y-6">
                 <div className="flex items-center gap-3 sm:gap-4">
