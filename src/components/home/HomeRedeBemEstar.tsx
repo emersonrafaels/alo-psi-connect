@@ -395,7 +395,7 @@ const HomeRedeBemEstar = () => {
             </div>
             {/* Decorative Buddy on larger screens */}
             <div className="hidden md:flex items-center">
-              <BuddyCharacter size="lg" animated />
+              {/* <BuddyCharacter size="lg" animated /> */}
             </div>
           </div>
           <div className="grid md:grid-cols-12 gap-6 sm:gap-8">
