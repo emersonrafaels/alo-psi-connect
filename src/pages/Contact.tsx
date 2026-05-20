@@ -3,6 +3,16 @@ import Footer from "@/components/ui/footer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+
+const SUBJECT_OPTIONS = [
+  "Sou estudante e gostaria de ser atendido.",
+  "Sou terapeuta e gostaria de oferecer meus serviços.",
+  "Sou representante de uma instituição/empresa e gostaria de contar com os serviços da Rede Bem-Estar.",
+  "Não sou estudante, mas gostaria de agendar um atendimento.",
+  "Apenas gostaria de entender mais a respeito dos serviços oferecidos.",
+  "Outros",
+];
 import { MapPin, Phone, Mail, Clock } from "lucide-react"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
