@@ -52,12 +52,27 @@ const Contact = () => {
       return;
     }
 
+    if (formData.subject === "Outros" && !formData.customSubject.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Descreva o assunto",
+        description: "Por favor, descreva o assunto quando selecionar 'Outros'."
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+
+    const finalSubject = formData.subject === "Outros" ? formData.customSubject : formData.subject;
 
     try {
       const { data, error } = await supabase.functions.invoke('send-contact-email', {
         body: {
-          ...formData,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          subject: finalSubject,
+          message: formData.message,
           tenantId: tenant?.id
         }
       });
@@ -75,6 +90,7 @@ const Contact = () => {
         email: '',
         phone: '',
         subject: '',
+        customSubject: '',
         message: ''
       });
 
