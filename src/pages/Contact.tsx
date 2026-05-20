@@ -3,6 +3,16 @@ import Footer from "@/components/ui/footer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+
+const SUBJECT_OPTIONS = [
+  "Sou estudante e gostaria de ser atendido.",
+  "Sou terapeuta e gostaria de oferecer meus serviços.",
+  "Sou representante de uma instituição/empresa e gostaria de contar com os serviços da Rede Bem-Estar.",
+  "Não sou estudante, mas gostaria de agendar um atendimento.",
+  "Apenas gostaria de entender mais a respeito dos serviços oferecidos.",
+  "Outros",
+];
 import { MapPin, Phone, Mail, Clock } from "lucide-react"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
@@ -15,6 +25,7 @@ const Contact = () => {
     email: '',
     phone: '',
     subject: '',
+    customSubject: '',
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,12 +52,27 @@ const Contact = () => {
       return;
     }
 
+    if (formData.subject === "Outros" && !formData.customSubject.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Descreva o assunto",
+        description: "Por favor, descreva o assunto quando selecionar 'Outros'."
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+
+    const finalSubject = formData.subject === "Outros" ? formData.customSubject : formData.subject;
 
     try {
       const { data, error } = await supabase.functions.invoke('send-contact-email', {
         body: {
-          ...formData,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          subject: finalSubject,
+          message: formData.message,
           tenantId: tenant?.id
         }
       });
@@ -64,6 +90,7 @@ const Contact = () => {
         email: '',
         phone: '',
         subject: '',
+        customSubject: '',
         message: ''
       });
 
@@ -137,13 +164,31 @@ const Contact = () => {
               
                 <div>
                 <label className="block text-sm font-medium mb-2">Assunto *</label>
-                <Input 
-                  name="subject"
+                <Select
                   value={formData.subject}
-                  onChange={handleInputChange}
-                  placeholder="Qual o motivo do contato?" 
-                  required
-                />
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, subject: value, customSubject: value === "Outros" ? prev.customSubject : '' }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o motivo do contato" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUBJECT_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formData.subject === "Outros" && (
+                  <Input
+                    name="customSubject"
+                    value={formData.customSubject}
+                    onChange={handleInputChange}
+                    placeholder="Descreva o assunto"
+                    required
+                    className="mt-2"
+                  />
+                )}
                 </div>
 
                 <div>
