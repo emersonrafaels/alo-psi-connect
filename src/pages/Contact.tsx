@@ -25,6 +25,7 @@ const Contact = () => {
     email: '',
     phone: '',
     subject: '',
+    customSubject: '',
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
