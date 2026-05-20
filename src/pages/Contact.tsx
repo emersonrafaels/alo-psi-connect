@@ -164,13 +164,31 @@ const Contact = () => {
               
                 <div>
                 <label className="block text-sm font-medium mb-2">Assunto *</label>
-                <Input 
-                  name="subject"
+                <Select
                   value={formData.subject}
-                  onChange={handleInputChange}
-                  placeholder="Qual o motivo do contato?" 
-                  required
-                />
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, subject: value, customSubject: value === "Outros" ? prev.customSubject : '' }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o motivo do contato" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUBJECT_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formData.subject === "Outros" && (
+                  <Input
+                    name="customSubject"
+                    value={formData.customSubject}
+                    onChange={handleInputChange}
+                    placeholder="Descreva o assunto"
+                    required
+                    className="mt-2"
+                  />
+                )}
                 </div>
 
                 <div>
