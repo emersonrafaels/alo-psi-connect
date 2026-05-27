@@ -12,13 +12,19 @@ interface AdminAuthData {
 }
 
 export const useAdminAuth = (): AdminAuthData => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkAdminRoles = async () => {
+      // Wait for auth session to be restored before deciding
+      if (authLoading) {
+        setLoading(true);
+        return;
+      }
+
       if (!user) {
         setIsAdmin(false);
         setRoles([]);
@@ -55,7 +61,8 @@ export const useAdminAuth = (): AdminAuthData => {
     };
 
     checkAdminRoles();
-  }, [user]);
+  }, [user, authLoading]);
+
 
   const hasRole = (role: UserRole) => {
     // Implement role hierarchy: super_admin > admin > moderator

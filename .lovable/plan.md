@@ -1,48 +1,23 @@
-# Adicionar filtros à página de Triagem
+## Problema
 
-Adicionar uma barra de filtros à página `/triagem` (e ao reaproveitamento em `/admin/pacientes-completo`), permitindo refinar a listagem de pacientes por múltiplos critérios.
+Ao clicar em "Acessar Admin", a página `/admin` carrega por um instante e redireciona de volta para `/`.
 
-## Filtros propostos
+Causa: race condition de autenticação em `src/hooks/useAdminAuth.tsx`. O hook usa `user` vindo de `useAuth`, mas não observa o `loading` do `useAuth`. Em uma navegação dura para `/admin`, o `useAuth` ainda está restaurando a sessão (`user = null`, `loading = true`), o `useAdminAuth` roda o efeito com `!user`, marca `isAdmin = false` e `loading = false`, e o `AdminLayout` faz `<Navigate to="/" />` antes da sessão ser restaurada.
 
-**Solicitados:**
-- **Gênero** — multi-select (Feminino, Masculino, Não-binário, Outro, Não informado)
-- **Faixa de idade** — range slider (0–100) ou presets (<18, 18–24, 25–34, 35–49, 50+)
-- **Instituição** — multi-select dinâmico (lista das instituições presentes nos pacientes)
-- **Quantidade de diário (30d)** — range numérico (mín/máx)
-- **Quantidade de encontros** — range numérico (futuros + passados)
-- **Quantidade de consultas** — range numérico (futuras + passadas)
+## Correção
 
-**Adicionais sugeridos:**
-- **É estudante** — Sim / Não / Todos
-- **Último login** — Nunca / ≤7d / ≤30d / >30d
-- **Criado em** — últimos 7/30/90/365 dias / todos
-- **Tem diário registrado** — Sim / Não (atalho para "diário total > 0")
+Editar **`src/hooks/useAdminAuth.tsx`**:
 
-Todos os filtros operam em conjunto (AND) com a busca textual já existente. Botão "Limpar filtros" e badge com contador de filtros ativos.
+1. Importar `loading: authLoading` de `useAuth()`.
+2. No `useEffect`, enquanto `authLoading` for `true`, manter `loading = true` e não decidir nada — apenas retornar cedo (sem zerar roles).
+3. Adicionar `authLoading` no array de dependências do `useEffect`.
+4. Só quando `authLoading === false`:
+   - se `!user` → `isAdmin=false`, `roles=[]`, `loading=false`.
+   - se `user` → buscar roles como hoje.
 
-## Implementação
+Isso garante que `AdminLayout` continue mostrando o skeleton até a sessão estar pronta, em vez de redirecionar prematuramente.
 
-### UI
-Novo componente `src/components/triagem/PatientsTriageFilters.tsx`:
-- Linha de filtros acima da tabela (após a barra de busca).
-- Usa `Popover` + `Badge` para filtros multi-select compactos (mesmo padrão do `AnalyticsFilters`).
-- Range numéricos via dois `Input type="number"` (mín/máx).
-- Faixa etária via presets em `Select` (mais simples que slider).
-- Botão "Limpar" aparece quando há filtros ativos.
+## Fora de escopo
 
-### Estado e filtragem
-Em `src/components/triagem/PatientsTriageView.tsx`:
-- Adicionar estado `filters` com a forma definida em `PatientsTriageFilters`.
-- **Filtrar no client-side** sobre `data.rows` (o edge function já retorna a página atual com todos os campos necessários: `genero`, `data_nascimento`, `institutions`, `mood`, `sessions`, `appointments`, `eh_estudante`, `last_sign_in_at`, `created_at`).
-- Aplicar filtros antes da renderização da tabela e do CSV export (export reflete o filtro ativo).
-
-### Observação sobre paginação
-Como a filtragem é client-side sobre a página atual (50 itens), filtros podem reduzir o número de linhas visíveis em uma página. Para a primeira versão, manter assim e exibir aviso "X de Y nesta página após filtros". Caso a UX exija filtragem global, em iteração futura mover os filtros para o edge function `admin-patients-overview` (parâmetros adicionais no body).
-
-### Arquivos
-- **Criar** `src/components/triagem/PatientsTriageFilters.tsx`
-- **Editar** `src/components/triagem/PatientsTriageView.tsx` — integrar filtros, aplicar lógica de filtragem, ajustar contador e CSV
-
-### Fora de escopo
-- Sem mudanças no edge function, hooks, RLS, ou rotas.
-- Sem mudanças no drawer de detalhes.
+- Nenhuma mudança em `AdminLayout`, rotas, `ProtectedRoute`, ou outros hooks.
+- Sem mudanças visuais.
