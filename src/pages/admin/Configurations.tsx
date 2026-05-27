@@ -136,6 +136,15 @@ export default function Configurations() {
       icon: Shield,
       component: AnonymizationConfig,
       category: 'users'
+    },
+    {
+      id: 'patient-full-view-access',
+      title: 'Acesso: Pacientes (completo)',
+      description: 'Gerencie quem pode acessar a visão completa de pacientes',
+      icon: Shield,
+      component: PatientFullViewAccessConfig,
+      category: 'users',
+      requiresSuperAdmin: true
     }
   ];
 
