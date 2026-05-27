@@ -165,6 +165,7 @@ const AppWithShortcuts = () => {
       
       {/* Rotas de Agendamentos */}
       <Route path="/agendamentos" element={<MyAppointments />} />
+      <Route path="/triagem" element={<Triagem />} />
       <Route path="/reagendar/:appointmentId" element={<RescheduleAppointment />} />
       
       {/* Rotas do Diário Emocional */}
