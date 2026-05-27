@@ -300,6 +300,8 @@ const AppWithShortcuts = () => {
       <Route path="/admin/encontros" element={<AdminLayout><GroupSessionsAdmin /></AdminLayout>} />
       <Route path="/admin/tests" element={<AdminLayout><AdminTests /></AdminLayout>} />
       <Route path="/admin/demo-data" element={<AdminLayout><DemoData /></AdminLayout>} />
+      <Route path="/admin/pacientes-completo" element={<AdminLayout><PatientsFullView /></AdminLayout>} />
+
       <Route 
         path="/admin/ai-management" 
         element={
