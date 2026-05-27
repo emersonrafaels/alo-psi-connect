@@ -198,6 +198,7 @@ export const AdminSidebar = () => {
   const { state } = useSidebar();
   const location = useLocation();
   const { hasRole } = useAdminAuth();
+  const { hasAccess: hasPatientFullView } = usePatientFullViewAccess();
   const currentPath = location.pathname;
 
   const isActive = (path: string) => {
@@ -207,6 +208,18 @@ export const AdminSidebar = () => {
     return currentPath.startsWith(path);
   };
 
+  const extraGroups = hasPatientFullView
+    ? [{
+        label: 'Acesso Especial',
+        items: [{
+          title: 'Pacientes (completo)',
+          url: '/admin/pacientes-completo',
+          icon: Users,
+          requiredRole: null as any,
+        }],
+      }]
+    : [];
+
   return (
     <Sidebar
       side="left"
@@ -214,7 +227,7 @@ export const AdminSidebar = () => {
       collapsible="icon"
     >
       <SidebarContent>
-        {adminMenuGroups.map((group) => {
+        {[...adminMenuGroups, ...extraGroups].map((group) => {
           const visibleItems = group.items.filter(item => 
             !item.requiredRole || hasRole(item.requiredRole as any)
           );
