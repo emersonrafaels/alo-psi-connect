@@ -40,6 +40,7 @@ const Header = () => {
   const { hasRole: isInstitutionAdmin, loading: institutionAdminLoading } = useUserRole('institution_admin')
   const { hasRole: isFacilitator, loading: facilitatorLoading } = useUserRole('facilitator')
   const { canCreateSessions } = useCanCreateSessions()
+  const { hasAccess: hasTriagemAccess } = usePatientFullViewAccess()
 
   // Usar o slug da URL para navegação (sempre consistente com a rota atual)
   const tenantSlug = getTenantSlugFromPath(location.pathname)
