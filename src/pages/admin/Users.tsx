@@ -14,12 +14,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
 import { useEmailResend } from '@/hooks/useEmailResend';
-import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle, Building2, MoreVertical, Search, Star } from 'lucide-react';
+import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle, Building2, MoreVertical, Search, Star, Eye, EyeOff } from 'lucide-react';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { useToast } from '@/hooks/use-toast';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import { UserSearchBar } from '@/components/admin/UserSearchBar';
 import { UserTenantsEditor } from '@/components/admin/UserTenantsEditor';
+import { useTriageAllowedList, useToggleTriageAccess } from '@/hooks/useTriageAccessToggle';
 
 interface UserProfile {
   id: string;
