@@ -136,6 +136,15 @@ export default function Configurations() {
       icon: Shield,
       component: AnonymizationConfig,
       category: 'users'
+    },
+    {
+      id: 'patient-full-view-access',
+      title: 'Acesso: Pacientes (completo)',
+      description: 'Gerencie quem pode acessar a visão completa de pacientes',
+      icon: Shield,
+      component: PatientFullViewAccessConfig,
+      category: 'users',
+      requiresSuperAdmin: true
     }
   ];
 
@@ -143,7 +152,9 @@ export default function Configurations() {
   const systemConfigs = configCards
     .filter(c => c.category === 'system')
     .filter(c => !c.requiresSuperAdmin || isSuperAdmin);
-  const userConfigs = configCards.filter(c => c.category === 'users');
+  const userConfigs = configCards
+    .filter(c => c.category === 'users')
+    .filter(c => !c.requiresSuperAdmin || isSuperAdmin);
 
   const selectedConfigData = configCards.find(c => c.id === selectedConfig);
 
