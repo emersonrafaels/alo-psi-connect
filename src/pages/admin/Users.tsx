@@ -59,6 +59,8 @@ export default function AdminUsers() {
   const { tenantFilter } = useAdminTenant();
   const { toast } = useToast();
   const { filteredUsers, filters, setFilters, activeFiltersCount } = useUserSearch(users);
+  const { data: triageAllowed } = useTriageAllowedList();
+  const toggleTriage = useToggleTriageAccess();
 
   useEffect(() => {
     fetchUsers();
