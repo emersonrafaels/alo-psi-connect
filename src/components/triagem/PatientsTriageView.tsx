@@ -142,6 +142,12 @@ export default function PatientsTriageView({
         />
       </div>
 
+      <PatientsTriageFilters
+        filters={filters}
+        onChange={setFilters}
+        availableInstitutions={availableInstitutions}
+      />
+
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
