@@ -91,6 +91,7 @@ import GroupSessionsAdmin from "@/pages/admin/GroupSessionsAdmin";
 import DemoData from "@/pages/admin/DemoData";
 import AIManagement from "@/pages/admin/AIManagement";
 import AdminInstitutionPortal from "@/pages/admin/AdminInstitutionPortal";
+import PatientsFullView from "@/pages/admin/PatientsFullView";
 
 import "./App.css";
 
@@ -299,6 +300,8 @@ const AppWithShortcuts = () => {
       <Route path="/admin/encontros" element={<AdminLayout><GroupSessionsAdmin /></AdminLayout>} />
       <Route path="/admin/tests" element={<AdminLayout><AdminTests /></AdminLayout>} />
       <Route path="/admin/demo-data" element={<AdminLayout><DemoData /></AdminLayout>} />
+      <Route path="/admin/pacientes-completo" element={<AdminLayout><PatientsFullView /></AdminLayout>} />
+
       <Route 
         path="/admin/ai-management" 
         element={
