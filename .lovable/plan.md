@@ -1,23 +1,21 @@
-## Problema
+## Plano: Botão "Habilitar/Desabilitar ver Triagem" no menu Ações
 
-Ao clicar em "Acessar Admin", a página `/admin` carrega por um instante e redireciona de volta para `/`.
+No `src/pages/admin/Users.tsx`, adicionar um item no `DropdownMenu` de Ações (após "Gerenciar Instituições") que alterna o usuário na lista `system_configurations` → `admin_access / patient_full_view_allowed_users` (mesma lista usada pelo card em Configurações).
 
-Causa: race condition de autenticação em `src/hooks/useAdminAuth.tsx`. O hook usa `user` vindo de `useAuth`, mas não observa o `loading` do `useAuth`. Em uma navegação dura para `/admin`, o `useAuth` ainda está restaurando a sessão (`user = null`, `loading = true`), o `useAdminAuth` roda o efeito com `!user`, marca `isAdmin = false` e `loading = false`, e o `AdminLayout` faz `<Navigate to="/" />` antes da sessão ser restaurada.
+### Implementação
 
-## Correção
+1. **Novo hook** `src/hooks/useTriageAccessToggle.tsx`:
+   - `useTriageAllowedList()` → React Query que lê a configuração e retorna `{ id, list }`.
+   - `useToggleTriageAccess()` → mutation que adiciona/remove o `user_id` na lista, faz `update` se `id` existir, `insert` caso contrário, e invalida `['triage-allowed-list']` + `['patient-full-view-access']`.
 
-Editar **`src/hooks/useAdminAuth.tsx`**:
+2. **`src/pages/admin/Users.tsx`**:
+   - Importar o hook e o ícone `Eye` / `EyeOff` do lucide-react.
+   - Consumir `useTriageAllowedList()` uma vez no componente.
+   - Para cada usuário, calcular `hasTriageAccess = list.includes(user.user_id)`.
+   - Adicionar `<DropdownMenuItem>` logo após "Gerenciar Instituições":
+     - Label dinâmico: "Habilitar ver Triagem" ou "Desabilitar ver Triagem".
+     - Desabilitado quando `!user.user_id` ou o usuário tem role `admin`/`super_admin` (acesso já automático), com tooltip/legenda discreta.
+     - `onClick` chama a mutation com toast de sucesso/erro.
 
-1. Importar `loading: authLoading` de `useAuth()`.
-2. No `useEffect`, enquanto `authLoading` for `true`, manter `loading = true` e não decidir nada — apenas retornar cedo (sem zerar roles).
-3. Adicionar `authLoading` no array de dependências do `useEffect`.
-4. Só quando `authLoading === false`:
-   - se `!user` → `isAdmin=false`, `roles=[]`, `loading=false`.
-   - se `user` → buscar roles como hoje.
-
-Isso garante que `AdminLayout` continue mostrando o skeleton até a sessão estar pronta, em vez de redirecionar prematuramente.
-
-## Fora de escopo
-
-- Nenhuma mudança em `AdminLayout`, rotas, `ProtectedRoute`, ou outros hooks.
-- Sem mudanças visuais.
+### Fora de escopo
+- Nenhuma mudança no schema, no card de Configurações, no `usePatientFullViewAccess`, ou em rotas/permissões da página `/triagem`. Apenas adiciona um atalho de gestão no menu de Ações.

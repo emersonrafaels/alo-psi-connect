@@ -14,12 +14,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { DeletedUsersTable } from '@/components/admin/DeletedUsersTable';
 import { useEmailResend } from '@/hooks/useEmailResend';
-import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle, Building2, MoreVertical, Search, Star } from 'lucide-react';
+import { Users as UsersIcon, User, Calendar, Settings, Trash2, Mail, KeyRound, Stethoscope, Heart, AlertCircle, Building2, MoreVertical, Search, Star, Eye, EyeOff } from 'lucide-react';
 import { useAdminTenant } from '@/contexts/AdminTenantContext';
 import { useToast } from '@/hooks/use-toast';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import { UserSearchBar } from '@/components/admin/UserSearchBar';
 import { UserTenantsEditor } from '@/components/admin/UserTenantsEditor';
+import { useTriageAllowedList, useToggleTriageAccess } from '@/hooks/useTriageAccessToggle';
 
 interface UserProfile {
   id: string;
@@ -58,6 +59,8 @@ export default function AdminUsers() {
   const { tenantFilter } = useAdminTenant();
   const { toast } = useToast();
   const { filteredUsers, filters, setFilters, activeFiltersCount } = useUserSearch(users);
+  const { data: triageAllowed } = useTriageAllowedList();
+  const toggleTriage = useToggleTriageAccess();
 
   useEffect(() => {
     fetchUsers();
@@ -537,6 +540,32 @@ export default function AdminUsers() {
                       <Building2 className="h-4 w-4 mr-2" />
                       Gerenciar Instituições
                     </DropdownMenuItem>
+
+                    {(() => {
+                      const hasAdminRole = (user.roles || []).some((r) => r === 'admin' || r === 'super_admin');
+                      const hasTriageAccess = !!user.user_id && (triageAllowed?.list || []).includes(user.user_id);
+                      const disabled = !user.user_id || hasAdminRole || toggleTriage.isPending;
+                      return (
+                        <DropdownMenuItem
+                          disabled={disabled}
+                          onClick={() => {
+                            if (!user.user_id) return;
+                            toggleTriage.mutate({ userId: user.user_id, enable: !hasTriageAccess });
+                          }}
+                        >
+                          {hasTriageAccess ? (
+                            <EyeOff className="h-4 w-4 mr-2" />
+                          ) : (
+                            <Eye className="h-4 w-4 mr-2" />
+                          )}
+                          {hasAdminRole
+                            ? 'Ver Triagem (acesso automático)'
+                            : hasTriageAccess
+                            ? 'Desabilitar ver Triagem'
+                            : 'Habilitar ver Triagem'}
+                        </DropdownMenuItem>
+                      );
+                    })()}
 
                           <DropdownMenuItem
                             onSelect={(e) => {
