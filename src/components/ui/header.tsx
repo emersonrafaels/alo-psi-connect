@@ -241,6 +241,12 @@ const Header = () => {
                     <Settings className="h-4 w-4 mr-2" />
                     Meu Perfil
                   </DropdownMenuItem>
+                  {hasTriagemAccess && (
+                    <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/triagem'))}>
+                      <ClipboardList className="h-4 w-4 mr-2" />
+                      Triagem
+                    </DropdownMenuItem>
+                  )}
                   {isAuthor && (
                     <DropdownMenuItem onClick={() => navigate('/admin/blog')}>
                       <FileText className="h-4 w-4 mr-2" />
