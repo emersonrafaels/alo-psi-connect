@@ -541,6 +541,32 @@ export default function AdminUsers() {
                       Gerenciar Instituições
                     </DropdownMenuItem>
 
+                    {(() => {
+                      const hasAdminRole = (user.roles || []).some((r) => r === 'admin' || r === 'super_admin');
+                      const hasTriageAccess = !!user.user_id && (triageAllowed?.list || []).includes(user.user_id);
+                      const disabled = !user.user_id || hasAdminRole || toggleTriage.isPending;
+                      return (
+                        <DropdownMenuItem
+                          disabled={disabled}
+                          onClick={() => {
+                            if (!user.user_id) return;
+                            toggleTriage.mutate({ userId: user.user_id, enable: !hasTriageAccess });
+                          }}
+                        >
+                          {hasTriageAccess ? (
+                            <EyeOff className="h-4 w-4 mr-2" />
+                          ) : (
+                            <Eye className="h-4 w-4 mr-2" />
+                          )}
+                          {hasAdminRole
+                            ? 'Ver Triagem (acesso automático)'
+                            : hasTriageAccess
+                            ? 'Desabilitar ver Triagem'
+                            : 'Habilitar ver Triagem'}
+                        </DropdownMenuItem>
+                      );
+                    })()}
+
                           <DropdownMenuItem
                             onSelect={(e) => {
                               e.preventDefault();
