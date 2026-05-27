@@ -12,3 +12,11 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /medcos/
+Disallow: /auth
+Disallow: /perfil
+Disallow: /agendamentos
+Disallow: /portal-institucional
+
+Sitemap: https://redebemestar.com.br/sitemap.xml

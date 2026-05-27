@@ -1,30 +1,24 @@
-# Atualização do favicon (ícone do Google)
+## Plano: melhorar indexação no Google
 
-## Objetivo
-Garantir que o ícone exibido nos resultados de busca do Google e na aba do navegador seja o logo oficial da Rede Bem-Estar, servido a partir do próprio domínio (favicons externos via S3 podem ser ignorados pelo Google).
+### 1. Corrigir `index.html`
+- Alterar `lang="en"` → `lang="pt-BR"`
+- Adicionar `<link rel="canonical" href="https://redebemestar.com.br/" />`
+- Adicionar JSON-LD `Organization` com nome, URL e logo
 
-## Mudanças
+### 2. Criar `public/sitemap.xml` via gerador
+- Criar `scripts/generate-sitemap.ts` com `BASE_URL = "https://redebemestar.com.br"`
+- Incluir rotas públicas indexáveis: `/`, `/sobre`, `/blog`, `/profissionais`, `/agendar`, `/contato`, `/trabalhe-conosco`, `/politica-privacidade`, `/termos-servico`, `/cadastro/tipo-usuario`
+- Incluir dinamicamente posts publicados do blog (consulta Supabase)
+- Excluir rotas `/medcos/*`, `/admin/*`, `/auth*`, perfis, fluxos privados, `*`
+- Adicionar `predev` e `prebuild` no `package.json` para rodar o script
 
-### 1. Baixar o logo oficial para `public/`
-- Baixar `https://alopsi-website.s3.us-east-1.amazonaws.com/rede_bem_estar/logos/logo_redebemestar_icon_1.png`
-- Salvar como `public/favicon.png` (versão principal, alta resolução)
-- Gerar também `public/favicon-32x32.png` e `public/favicon-16x16.png` (tamanhos otimizados para o Google)
-- Substituir o `public/favicon.ico` existente por uma nova versão gerada a partir do logo (browsers ainda requisitam `/favicon.ico` por padrão)
+### 3. Atualizar `public/robots.txt`
+- Adicionar `Sitemap: https://redebemestar.com.br/sitemap.xml`
+- Adicionar `Disallow: /admin/` e `Disallow: /medcos/` no bloco `*`
 
-### 2. Atualizar `index.html`
-Substituir a linha 39 (favicon apontando para URL externa do S3) por referências locais:
-
-```html
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
-```
-
-## Por que isso resolve o problema do Google
-- O Google prefere favicons servidos no mesmo domínio do site (`/favicon.ico` na raiz).
-- Favicons hospedados em CDN externa (S3) frequentemente são ignorados ou demoram a aparecer.
-- Múltiplos tamanhos garantem renderização correta em diferentes contextos (SERP, aba, bookmark, mobile).
-
-## Observação
-Após o deploy, o Google pode levar de alguns dias a algumas semanas para atualizar o favicon nos resultados de busca — isso depende do próximo rastreamento do site.
+### 4. Resultado esperado
+- Google descobre todas as páginas via sitemap
+- Idioma correto detectado (pt-BR)
+- Canonical aponta para o domínio oficial
+- JSON-LD melhora aparição em SERP (knowledge panel, logo)
+- Próximo crawl indexará mais páginas além da home e /medcos
