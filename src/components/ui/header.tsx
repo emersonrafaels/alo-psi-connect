@@ -381,6 +381,16 @@ const Header = () => {
                     <Settings className="h-5 w-5 opacity-70" />
                     Meu Perfil
                   </Link>
+                  {hasTriagemAccess && (
+                    <Link
+                      to={buildTenantPath(tenantSlug, '/triagem')}
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <ClipboardList className="h-5 w-5 opacity-70" />
+                      Triagem
+                    </Link>
+                  )}
                   {isAuthor && (
                     <Link
                       to="/admin/blog"
