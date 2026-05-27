@@ -152,7 +152,9 @@ export default function Configurations() {
   const systemConfigs = configCards
     .filter(c => c.category === 'system')
     .filter(c => !c.requiresSuperAdmin || isSuperAdmin);
-  const userConfigs = configCards.filter(c => c.category === 'users');
+  const userConfigs = configCards
+    .filter(c => c.category === 'users')
+    .filter(c => !c.requiresSuperAdmin || isSuperAdmin);
 
   const selectedConfigData = configCards.find(c => c.id === selectedConfig);
 
