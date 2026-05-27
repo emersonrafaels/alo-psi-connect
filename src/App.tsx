@@ -92,6 +92,7 @@ import DemoData from "@/pages/admin/DemoData";
 import AIManagement from "@/pages/admin/AIManagement";
 import AdminInstitutionPortal from "@/pages/admin/AdminInstitutionPortal";
 import PatientsFullView from "@/pages/admin/PatientsFullView";
+import Triagem from "@/pages/Triagem";
 
 import "./App.css";
 
