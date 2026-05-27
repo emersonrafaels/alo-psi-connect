@@ -33,6 +33,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { usePatientFullViewAccess } from '@/hooks/usePatientFullViewAccess';
 
 const adminMenuGroups = [
   {
