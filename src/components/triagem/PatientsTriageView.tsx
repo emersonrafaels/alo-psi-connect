@@ -14,6 +14,7 @@ import { usePatientFullViewAccess } from '@/hooks/usePatientFullViewAccess';
 import { PatientFullViewDrawer } from '@/components/admin/PatientFullViewDrawer';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import PatientsTriageFilters, { defaultFilters, applyTriageFilters, type TriageFilters } from './PatientsTriageFilters';
 
 const fmt = (iso?: string | null) => {
   if (!iso) return '—';
@@ -69,6 +70,7 @@ export default function PatientsTriageView({
 
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+  const [filters, setFilters] = useState<TriageFilters>(defaultFilters);
   const debounced = useDebounce(search, 300);
 
   const { data, isLoading } = useAdminPatientsOverview({
@@ -78,6 +80,17 @@ export default function PatientsTriageView({
   });
 
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+
+  const filteredRows = useMemo(
+    () => (data?.rows ? applyTriageFilters(data.rows, filters) : []),
+    [data, filters],
+  );
+
+  const availableInstitutions = useMemo(() => {
+    const set = new Set<string>();
+    data?.rows?.forEach((r) => r.institutions.forEach((i) => set.add(i.name)));
+    return Array.from(set).sort();
+  }, [data]);
 
   const pageCount = useMemo(
     () => (data ? Math.ceil(data.total / data.pageSize) : 0),
@@ -93,8 +106,8 @@ export default function PatientsTriageView({
   }
 
   const exportCSV = () => {
-    if (!data?.rows?.length) return;
-    const csv = toCSV(data.rows);
+    if (!filteredRows.length) return;
+    const csv = toCSV(filteredRows);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -129,6 +142,12 @@ export default function PatientsTriageView({
         />
       </div>
 
+      <PatientsTriageFilters
+        filters={filters}
+        onChange={setFilters}
+        availableInstitutions={availableInstitutions}
+      />
+
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -148,12 +167,12 @@ export default function PatientsTriageView({
               <TableRow><TableCell colSpan={8} className="text-center py-8">
                 <Loader2 className="h-5 w-5 animate-spin inline" />
               </TableCell></TableRow>
-            ) : data?.rows?.length === 0 ? (
+            ) : filteredRows.length === 0 ? (
               <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                 Nenhum paciente encontrado.
               </TableCell></TableRow>
             ) : (
-              data?.rows?.map((r) => (
+              filteredRows.map((r) => (
                 <TableRow
                   key={r.profile_id}
                   className="cursor-pointer"
@@ -202,10 +221,10 @@ export default function PatientsTriageView({
         </Table>
       </div>
 
-      {data && data.total > data.pageSize && (
+      {data && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {data.total} pacientes · página {page + 1} de {pageCount}
+            {filteredRows.length} de {data.rows.length} nesta página · {data.total} no total · página {page + 1} de {pageCount}
           </p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>

@@ -1,33 +1,48 @@
-## Adicionar "Triagem" no menu do usuário
+# Adicionar filtros à página de Triagem
 
-### Mudança
-Mover o acesso à listagem completa de pacientes do menu admin para o menu do usuário (dropdown do avatar, ao lado de "Meus Agendamentos", "Encontros", "Meu Perfil"), com o rótulo **"Triagem"**, gated pelo mesmo `usePatientFullViewAccess`.
+Adicionar uma barra de filtros à página `/triagem` (e ao reaproveitamento em `/admin/pacientes-completo`), permitindo refinar a listagem de pacientes por múltiplos critérios.
 
-### Nova rota
-- `/triagem` (fora do `AdminLayout`) — renderiza dentro do shell público com `Header`/`Footer`, protegida por `ProtectedRoute` + checagem de `usePatientFullViewAccess`. Sem acesso → redireciona para `/`.
+## Filtros propostos
 
-### Página
-- Novo `src/pages/Triagem.tsx`: wrapper que reaproveita a UI atual de `PatientsFullView` (tabela + drawer + CSV). Extrair o conteúdo em um componente compartilhado `src/components/triagem/PatientsTriageView.tsx` para que tanto `/triagem` (usuário) quanto `/admin/pacientes-completo` (admin) reutilizem o mesmo componente sem duplicação.
-  - `PatientsFullView.tsx` (admin) passa a ser um wrapper fino também.
-  - O componente compartilhado mantém: busca, paginação, CSV, drawer com tabs (Perfil, Conta, Instituições, Diário, Encontros) — sem mudanças funcionais.
+**Solicitados:**
+- **Gênero** — multi-select (Feminino, Masculino, Não-binário, Outro, Não informado)
+- **Faixa de idade** — range slider (0–100) ou presets (<18, 18–24, 25–34, 35–49, 50+)
+- **Instituição** — multi-select dinâmico (lista das instituições presentes nos pacientes)
+- **Quantidade de diário (30d)** — range numérico (mín/máx)
+- **Quantidade de encontros** — range numérico (futuros + passados)
+- **Quantidade de consultas** — range numérico (futuras + passadas)
 
-### Header (menu do usuário)
-`src/components/ui/header.tsx`:
-- Importar `usePatientFullViewAccess` e ícone `ClipboardList` (ou `Stethoscope`).
-- No dropdown desktop (após "Meu Perfil", antes do bloco admin): se `hasAccess`, mostrar `DropdownMenuItem` "Triagem" navegando para `/triagem` (via `buildTenantPath(tenantSlug, '/triagem')`).
-- Espelhar no menu mobile (mesmo bloco ~linhas 347–374).
+**Adicionais sugeridos:**
+- **É estudante** — Sim / Não / Todos
+- **Último login** — Nunca / ≤7d / ≤30d / >30d
+- **Criado em** — últimos 7/30/90/365 dias / todos
+- **Tem diário registrado** — Sim / Não (atalho para "diário total > 0")
 
-### AdminSidebar
-- Manter o item "Pacientes (completo)" como está — ainda funciona via `/admin/pacientes-completo` (mesma view compartilhada). Sem mudança aqui. (Posso remover se preferir; me diga.)
+Todos os filtros operam em conjunto (AND) com a busca textual já existente. Botão "Limpar filtros" e badge com contador de filtros ativos.
 
-### App.tsx
-- Adicionar rota `/triagem` renderizando `<Triagem />` dentro do shell público (mesmo padrão de `/perfil`, `/agendamentos`, `/meus-encontros`).
+## Implementação
 
-### Sem mudanças
-- Edge function `admin-patients-overview`, hooks (`usePatientFullViewAccess`, `useAdminPatientsOverview`), config de allow-list em `Configurations.tsx`, schema do banco.
+### UI
+Novo componente `src/components/triagem/PatientsTriageFilters.tsx`:
+- Linha de filtros acima da tabela (após a barra de busca).
+- Usa `Popover` + `Badge` para filtros multi-select compactos (mesmo padrão do `AnalyticsFilters`).
+- Range numéricos via dois `Input type="number"` (mín/máx).
+- Faixa etária via presets em `Select` (mais simples que slider).
+- Botão "Limpar" aparece quando há filtros ativos.
 
-### Passos de teste
-1. Logar como usuário na allow-list → "Triagem" aparece no menu do avatar.
-2. Clicar → abre `/triagem` com header/footer do site (não o layout admin) e mostra a listagem.
-3. Logar como usuário sem permissão → item não aparece; acessar URL direta redireciona para `/`.
-4. Drawer, CSV, busca e paginação funcionam igual ao admin.
+### Estado e filtragem
+Em `src/components/triagem/PatientsTriageView.tsx`:
+- Adicionar estado `filters` com a forma definida em `PatientsTriageFilters`.
+- **Filtrar no client-side** sobre `data.rows` (o edge function já retorna a página atual com todos os campos necessários: `genero`, `data_nascimento`, `institutions`, `mood`, `sessions`, `appointments`, `eh_estudante`, `last_sign_in_at`, `created_at`).
+- Aplicar filtros antes da renderização da tabela e do CSV export (export reflete o filtro ativo).
+
+### Observação sobre paginação
+Como a filtragem é client-side sobre a página atual (50 itens), filtros podem reduzir o número de linhas visíveis em uma página. Para a primeira versão, manter assim e exibir aviso "X de Y nesta página após filtros". Caso a UX exija filtragem global, em iteração futura mover os filtros para o edge function `admin-patients-overview` (parâmetros adicionais no body).
+
+### Arquivos
+- **Criar** `src/components/triagem/PatientsTriageFilters.tsx`
+- **Editar** `src/components/triagem/PatientsTriageView.tsx` — integrar filtros, aplicar lógica de filtragem, ajustar contador e CSV
+
+### Fora de escopo
+- Sem mudanças no edge function, hooks, RLS, ou rotas.
+- Sem mudanças no drawer de detalhes.
