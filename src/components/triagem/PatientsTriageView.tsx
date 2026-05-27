@@ -53,7 +53,17 @@ const toCSV = (rows: PatientOverviewRow[]) => {
   return [headers.map(escape).join(','), ...lines].join('\n');
 };
 
-export default function PatientsFullView() {
+interface Props {
+  title?: string;
+  subtitle?: string;
+  redirectOnDenied?: string;
+}
+
+export default function PatientsTriageView({
+  title = 'Listagem Completa de Pacientes',
+  subtitle = 'Visão consolidada de todos os pacientes da plataforma.',
+  redirectOnDenied = '/admin',
+}: Props) {
   const navigate = useNavigate();
   const { hasAccess, loading: accessLoading } = usePatientFullViewAccess();
 
@@ -78,7 +88,7 @@ export default function PatientsFullView() {
     return <div className="p-6"><Loader2 className="h-5 w-5 animate-spin" /></div>;
   }
   if (!hasAccess) {
-    navigate('/admin', { replace: true });
+    navigate(redirectOnDenied, { replace: true });
     return null;
   }
 
@@ -100,10 +110,8 @@ export default function PatientsFullView() {
         <div className="flex items-center gap-3">
           <Users className="h-6 w-6" />
           <div>
-            <h1 className="text-2xl font-bold">Listagem Completa de Pacientes</h1>
-            <p className="text-sm text-muted-foreground">
-              Visão consolidada de todos os pacientes da plataforma.
-            </p>
+            <h1 className="text-2xl font-bold">{title}</h1>
+            <p className="text-sm text-muted-foreground">{subtitle}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2">
