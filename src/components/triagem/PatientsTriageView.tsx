@@ -106,8 +106,8 @@ export default function PatientsTriageView({
   }
 
   const exportCSV = () => {
-    if (!data?.rows?.length) return;
-    const csv = toCSV(data.rows);
+    if (!filteredRows.length) return;
+    const csv = toCSV(filteredRows);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
