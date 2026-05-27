@@ -14,6 +14,7 @@ import { usePatientFullViewAccess } from '@/hooks/usePatientFullViewAccess';
 import { PatientFullViewDrawer } from '@/components/admin/PatientFullViewDrawer';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import PatientsTriageFilters, { defaultFilters, applyTriageFilters, type TriageFilters } from './PatientsTriageFilters';
 
 const fmt = (iso?: string | null) => {
   if (!iso) return '—';
