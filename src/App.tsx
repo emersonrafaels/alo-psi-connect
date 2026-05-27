@@ -92,6 +92,7 @@ import DemoData from "@/pages/admin/DemoData";
 import AIManagement from "@/pages/admin/AIManagement";
 import AdminInstitutionPortal from "@/pages/admin/AdminInstitutionPortal";
 import PatientsFullView from "@/pages/admin/PatientsFullView";
+import Triagem from "@/pages/Triagem";
 
 import "./App.css";
 
@@ -164,6 +165,7 @@ const AppWithShortcuts = () => {
       
       {/* Rotas de Agendamentos */}
       <Route path="/agendamentos" element={<MyAppointments />} />
+      <Route path="/triagem" element={<Triagem />} />
       <Route path="/reagendar/:appointmentId" element={<RescheduleAppointment />} />
       
       {/* Rotas do Diário Emocional */}

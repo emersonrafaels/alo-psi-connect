@@ -4,7 +4,7 @@ import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
 import { useState, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -17,6 +17,7 @@ import { useAuthorRole } from "@/hooks/useAuthorRole"
 import { useTenant } from "@/hooks/useTenant"
 import { useUserRole } from "@/hooks/useUserRole"
 import { useCanCreateSessions } from "@/hooks/useCanCreateSessions"
+import { usePatientFullViewAccess } from "@/hooks/usePatientFullViewAccess"
 import { TenantBranding } from "@/components/TenantBranding"
 import { buildTenantPath, getTenantSlugFromPath } from "@/utils/tenantHelpers"
 import { UnderConstructionModal } from "@/components/UnderConstructionModal"
@@ -39,6 +40,7 @@ const Header = () => {
   const { hasRole: isInstitutionAdmin, loading: institutionAdminLoading } = useUserRole('institution_admin')
   const { hasRole: isFacilitator, loading: facilitatorLoading } = useUserRole('facilitator')
   const { canCreateSessions } = useCanCreateSessions()
+  const { hasAccess: hasTriagemAccess } = usePatientFullViewAccess()
 
   // Usar o slug da URL para navegação (sempre consistente com a rota atual)
   const tenantSlug = getTenantSlugFromPath(location.pathname)
@@ -239,6 +241,12 @@ const Header = () => {
                     <Settings className="h-4 w-4 mr-2" />
                     Meu Perfil
                   </DropdownMenuItem>
+                  {hasTriagemAccess && (
+                    <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/triagem'))}>
+                      <ClipboardList className="h-4 w-4 mr-2" />
+                      Triagem
+                    </DropdownMenuItem>
+                  )}
                   {isAuthor && (
                     <DropdownMenuItem onClick={() => navigate('/admin/blog')}>
                       <FileText className="h-4 w-4 mr-2" />
@@ -373,6 +381,16 @@ const Header = () => {
                     <Settings className="h-5 w-5 opacity-70" />
                     Meu Perfil
                   </Link>
+                  {hasTriagemAccess && (
+                    <Link
+                      to={buildTenantPath(tenantSlug, '/triagem')}
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <ClipboardList className="h-5 w-5 opacity-70" />
+                      Triagem
+                    </Link>
+                  )}
                   {isAuthor && (
                     <Link
                       to="/admin/blog"
