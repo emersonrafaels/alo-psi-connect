@@ -70,6 +70,7 @@ export default function PatientsTriageView({
 
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+  const [filters, setFilters] = useState<TriageFilters>(defaultFilters);
   const debounced = useDebounce(search, 300);
 
   const { data, isLoading } = useAdminPatientsOverview({
@@ -79,6 +80,17 @@ export default function PatientsTriageView({
   });
 
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+
+  const filteredRows = useMemo(
+    () => (data?.rows ? applyTriageFilters(data.rows, filters) : []),
+    [data, filters],
+  );
+
+  const availableInstitutions = useMemo(() => {
+    const set = new Set<string>();
+    data?.rows?.forEach((r) => r.institutions.forEach((i) => set.add(i.name)));
+    return Array.from(set).sort();
+  }, [data]);
 
   const pageCount = useMemo(
     () => (data ? Math.ceil(data.total / data.pageSize) : 0),
