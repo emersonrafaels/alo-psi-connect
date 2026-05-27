@@ -91,6 +91,7 @@ import GroupSessionsAdmin from "@/pages/admin/GroupSessionsAdmin";
 import DemoData from "@/pages/admin/DemoData";
 import AIManagement from "@/pages/admin/AIManagement";
 import AdminInstitutionPortal from "@/pages/admin/AdminInstitutionPortal";
+import PatientsFullView from "@/pages/admin/PatientsFullView";
 
 import "./App.css";
 
