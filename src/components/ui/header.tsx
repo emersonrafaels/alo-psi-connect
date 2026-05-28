@@ -414,14 +414,6 @@ const Header = () => {
         )}
       </div>
 
-      {/* Under Construction Modal */}
-      <UnderConstructionModal
-        open={showConstructionModal}
-        onOpenChange={setShowConstructionModal}
-        title={targetTenant?.cross_tenant_navigation_warning_title}
-        message={targetTenant?.cross_tenant_navigation_warning_message}
-        tenantName={targetTenant?.name || ''}
-      />
     </header>
   )
 }
