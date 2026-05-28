@@ -146,29 +146,7 @@ const Header = () => {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center space-x-4 flex-shrink-0">
-            {/* Logo Secundário (Outro Tenant) - Dinâmico */}
-            {otherTenant && (() => {
-              // Use switcher-specific logos if available, otherwise fall back to main logos
-              const switcherLogoUrl = isDarkMode 
-                ? (otherTenant.switcher_logo_url_dark || otherTenant.logo_url_dark)
-                : (otherTenant.switcher_logo_url || otherTenant.logo_url);
-              return (
-                <button 
-                  onClick={() => handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'alopsi' ? '/' : `/${otherTenant.slug}`)}
-                  className="flex items-center bg-background hover:bg-muted rounded-lg px-3 py-2 transition-colors cursor-pointer shadow-md border border-border"
-                  title={`Ir para ${otherTenant.name}`}
-                >
-                  <img 
-                    src={switcherLogoUrl || '/placeholder.svg'}
-                    alt={otherTenant.name}
-                    className="h-8 w-auto object-contain"
-                  />
-                </button>
-              );
-            })()}
-            
-            {/* Separador Visual */}
-            <div className="h-8 w-px bg-border opacity-30" />
+
             
             <ThemeToggle />
             {user ? (
