@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/useAuth"
@@ -20,15 +19,10 @@ import { useCanCreateSessions } from "@/hooks/useCanCreateSessions"
 import { usePatientFullViewAccess } from "@/hooks/usePatientFullViewAccess"
 import { TenantBranding } from "@/components/TenantBranding"
 import { buildTenantPath, getTenantSlugFromPath } from "@/utils/tenantHelpers"
-import { UnderConstructionModal } from "@/components/UnderConstructionModal"
-import { supabase } from "@/integrations/supabase/client"
-import { Tenant } from "@/types/tenant"
+
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [showConstructionModal, setShowConstructionModal] = useState(false)
-  const [targetTenant, setTargetTenant] = useState<Tenant | null>(null)
-  const [allTenants, setAllTenants] = useState<Tenant[]>([])
   const location = useLocation()
   const navigate = useNavigate()
   const { user, loading, signOut } = useAuth()
@@ -45,41 +39,6 @@ const Header = () => {
   // Usar o slug da URL para navegação (sempre consistente com a rota atual)
   const tenantSlug = getTenantSlugFromPath(location.pathname)
 
-  // Fetch all active tenants for the switcher
-  useEffect(() => {
-    const fetchTenants = async () => {
-      const { data } = await supabase
-        .from('tenants')
-        .select('id, slug, name, logo_url, logo_url_dark, switcher_logo_url, switcher_logo_url_dark, cross_tenant_navigation_warning_enabled, cross_tenant_navigation_warning_title, cross_tenant_navigation_warning_message')
-        .eq('is_active', true)
-      if (data) setAllTenants(data as unknown as Tenant[])
-    }
-    fetchTenants()
-  }, [])
-
-  // Find the other tenant for the switcher
-  const otherTenant = allTenants.find(t => t.slug !== tenantSlug)
-  
-  // Theme-aware logo selection for switcher
-  const { resolvedTheme } = useTheme()
-  const isDarkMode = resolvedTheme === 'dark'
-
-  // Fetch target tenant config when needed
-  const handleTenantNavigation = async (targetSlug: string, targetPath: string) => {
-    const { data: targetTenantData } = await supabase
-      .from('tenants')
-      .select('*')
-      .eq('slug', targetSlug)
-      .eq('is_active', true)
-      .single()
-
-    if (targetTenantData?.cross_tenant_navigation_warning_enabled) {
-      setTargetTenant(targetTenantData as unknown as Tenant)
-      setShowConstructionModal(true)
-    } else {
-      navigate(targetPath)
-    }
-  }
 
   const modulesEnabled = tenant?.modules_enabled;
 
@@ -146,29 +105,7 @@ const Header = () => {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center space-x-4 flex-shrink-0">
-            {/* Logo Secundário (Outro Tenant) - Dinâmico */}
-            {otherTenant && (() => {
-              // Use switcher-specific logos if available, otherwise fall back to main logos
-              const switcherLogoUrl = isDarkMode 
-                ? (otherTenant.switcher_logo_url_dark || otherTenant.logo_url_dark)
-                : (otherTenant.switcher_logo_url || otherTenant.logo_url);
-              return (
-                <button 
-                  onClick={() => handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'alopsi' ? '/' : `/${otherTenant.slug}`)}
-                  className="flex items-center bg-background hover:bg-muted rounded-lg px-3 py-2 transition-colors cursor-pointer shadow-md border border-border"
-                  title={`Ir para ${otherTenant.name}`}
-                >
-                  <img 
-                    src={switcherLogoUrl || '/placeholder.svg'}
-                    alt={otherTenant.name}
-                    className="h-8 w-auto object-contain"
-                  />
-                </button>
-              );
-            })()}
-            
-            {/* Separador Visual */}
-            <div className="h-8 w-px bg-border opacity-30" />
+
             
             <ThemeToggle />
             {user ? (
@@ -422,33 +359,13 @@ const Header = () => {
               </p>
               
               {/* Tenant Switcher + Theme Toggle */}
-              <div className="flex items-center justify-between gap-3 mb-4 px-1">
-                {otherTenant && (() => {
-                  const mobileSwitcherLogoUrl = isDarkMode 
-                    ? (otherTenant.switcher_logo_url_dark || otherTenant.logo_url_dark)
-                    : (otherTenant.switcher_logo_url || otherTenant.logo_url);
-                  return (
-                    <button 
-                      onClick={() => {
-                        handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'alopsi' ? '/' : `/${otherTenant.slug}`);
-                        setIsMenuOpen(false);
-                      }}
-                      className="flex-1 flex items-center justify-center bg-background hover:bg-muted rounded-lg px-4 py-3 transition-colors cursor-pointer shadow-sm border border-border"
-                      title={`Ir para ${otherTenant.name}`}
-                    >
-                      <img 
-                        src={mobileSwitcherLogoUrl || '/placeholder.svg'}
-                        alt={otherTenant.name}
-                        className="h-7 w-auto object-contain"
-                      />
-                    </button>
-                  );
-                })()}
+              <div className="flex items-center justify-end gap-3 mb-4 px-1">
                 <div className="flex items-center gap-2">
                   <ThemeToggle />
                   {isAdmin && <GlobalCacheButton variant="minimal" />}
                 </div>
               </div>
+
 
               {/* Botões de Autenticação */}
               {user ? (
@@ -494,14 +411,6 @@ const Header = () => {
         )}
       </div>
 
-      {/* Under Construction Modal */}
-      <UnderConstructionModal
-        open={showConstructionModal}
-        onOpenChange={setShowConstructionModal}
-        title={targetTenant?.cross_tenant_navigation_warning_title}
-        message={targetTenant?.cross_tenant_navigation_warning_message}
-        tenantName={targetTenant?.name || ''}
-      />
     </header>
   )
 }
