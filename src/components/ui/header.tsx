@@ -26,9 +26,6 @@ import { Tenant } from "@/types/tenant"
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [showConstructionModal, setShowConstructionModal] = useState(false)
-  const [targetTenant, setTargetTenant] = useState<Tenant | null>(null)
-  const [allTenants, setAllTenants] = useState<Tenant[]>([])
   const location = useLocation()
   const navigate = useNavigate()
   const { user, loading, signOut } = useAuth()
@@ -45,41 +42,6 @@ const Header = () => {
   // Usar o slug da URL para navegação (sempre consistente com a rota atual)
   const tenantSlug = getTenantSlugFromPath(location.pathname)
 
-  // Fetch all active tenants for the switcher
-  useEffect(() => {
-    const fetchTenants = async () => {
-      const { data } = await supabase
-        .from('tenants')
-        .select('id, slug, name, logo_url, logo_url_dark, switcher_logo_url, switcher_logo_url_dark, cross_tenant_navigation_warning_enabled, cross_tenant_navigation_warning_title, cross_tenant_navigation_warning_message')
-        .eq('is_active', true)
-      if (data) setAllTenants(data as unknown as Tenant[])
-    }
-    fetchTenants()
-  }, [])
-
-  // Find the other tenant for the switcher
-  const otherTenant = allTenants.find(t => t.slug !== tenantSlug)
-  
-  // Theme-aware logo selection for switcher
-  const { resolvedTheme } = useTheme()
-  const isDarkMode = resolvedTheme === 'dark'
-
-  // Fetch target tenant config when needed
-  const handleTenantNavigation = async (targetSlug: string, targetPath: string) => {
-    const { data: targetTenantData } = await supabase
-      .from('tenants')
-      .select('*')
-      .eq('slug', targetSlug)
-      .eq('is_active', true)
-      .single()
-
-    if (targetTenantData?.cross_tenant_navigation_warning_enabled) {
-      setTargetTenant(targetTenantData as unknown as Tenant)
-      setShowConstructionModal(true)
-    } else {
-      navigate(targetPath)
-    }
-  }
 
   const modulesEnabled = tenant?.modules_enabled;
 
