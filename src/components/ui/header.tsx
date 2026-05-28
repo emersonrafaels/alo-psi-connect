@@ -400,33 +400,13 @@ const Header = () => {
               </p>
               
               {/* Tenant Switcher + Theme Toggle */}
-              <div className="flex items-center justify-between gap-3 mb-4 px-1">
-                {otherTenant && (() => {
-                  const mobileSwitcherLogoUrl = isDarkMode 
-                    ? (otherTenant.switcher_logo_url_dark || otherTenant.logo_url_dark)
-                    : (otherTenant.switcher_logo_url || otherTenant.logo_url);
-                  return (
-                    <button 
-                      onClick={() => {
-                        handleTenantNavigation(otherTenant.slug, otherTenant.slug === 'alopsi' ? '/' : `/${otherTenant.slug}`);
-                        setIsMenuOpen(false);
-                      }}
-                      className="flex-1 flex items-center justify-center bg-background hover:bg-muted rounded-lg px-4 py-3 transition-colors cursor-pointer shadow-sm border border-border"
-                      title={`Ir para ${otherTenant.name}`}
-                    >
-                      <img 
-                        src={mobileSwitcherLogoUrl || '/placeholder.svg'}
-                        alt={otherTenant.name}
-                        className="h-7 w-auto object-contain"
-                      />
-                    </button>
-                  );
-                })()}
+              <div className="flex items-center justify-end gap-3 mb-4 px-1">
                 <div className="flex items-center gap-2">
                   <ThemeToggle />
                   {isAdmin && <GlobalCacheButton variant="minimal" />}
                 </div>
               </div>
+
 
               {/* Botões de Autenticação */}
               {user ? (
