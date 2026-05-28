@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/useAuth"
@@ -20,9 +19,7 @@ import { useCanCreateSessions } from "@/hooks/useCanCreateSessions"
 import { usePatientFullViewAccess } from "@/hooks/usePatientFullViewAccess"
 import { TenantBranding } from "@/components/TenantBranding"
 import { buildTenantPath, getTenantSlugFromPath } from "@/utils/tenantHelpers"
-import { UnderConstructionModal } from "@/components/UnderConstructionModal"
-import { supabase } from "@/integrations/supabase/client"
-import { Tenant } from "@/types/tenant"
+
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
