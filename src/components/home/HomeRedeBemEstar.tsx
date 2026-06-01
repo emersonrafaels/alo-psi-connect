@@ -450,7 +450,10 @@ const HomeRedeBemEstar = () => {
             </div>
             {/* Diário card */}
               <div className="md:col-span-4 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between min-h-[280px]"
-                style={{ background: "var(--rbe-surface)" }}>
+                style={{
+                  background: "var(--rbe-surface)",
+                  border: "1px solid color-mix(in srgb, var(--rbe-outline-variant) 65%, transparent)",
+                }}>
               <div>
                 <BookOpen className="w-8 h-8 mb-4" style={{ color: "var(--rbe-on-secondary-fixed)" }} />
                 <h4 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: "var(--rbe-on-secondary-fixed)" }}>

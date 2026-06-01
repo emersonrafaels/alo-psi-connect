@@ -83,6 +83,10 @@ All colors MUST be HSL.
 
     /* Header text colors - theme aware */
     --header-text: var(--header-text-light, 0 0% 100%);
+
+    /* Footer colors - theme aware */
+    --footer-bg: var(--footer-bg-light, 280 63% 34%);
+    --footer-text: var(--footer-text-light, 0 0% 100%);
     
     /* Button colors - theme aware */
     --btn-primary-bg: var(--btn-primary-bg-light, 199 89% 48%);
@@ -160,6 +164,10 @@ All colors MUST be HSL.
 
     /* Header text colors - dark mode */
     --header-text: var(--header-text-dark, 0 0% 100%);
+
+    /* Footer colors - dark mode */
+    --footer-bg: var(--footer-bg-dark, 280 63% 16%);
+    --footer-text: var(--footer-text-dark, 210 40% 98%);
     
     /* Button colors - dark mode */
     --btn-primary-bg: var(--btn-primary-bg-dark, 199 89% 48%);
