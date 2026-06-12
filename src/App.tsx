@@ -93,6 +93,9 @@ import AIManagement from "@/pages/admin/AIManagement";
 import AdminInstitutionPortal from "@/pages/admin/AdminInstitutionPortal";
 import PatientsFullView from "@/pages/admin/PatientsFullView";
 import Triagem from "@/pages/Triagem";
+import EmotionalScales from "./pages/EmotionalScales";
+import ScaleResponse from "./pages/ScaleResponse";
+import MyEmotions from "./pages/MyEmotions";
 
 import "./App.css";
 
@@ -182,6 +185,14 @@ const AppWithShortcuts = () => {
       <Route path="/encontros/:sessionId" element={<ModuleGuard module="group_sessions"><GroupSessionDetail /></ModuleGuard>} />
       <Route path="/meus-encontros" element={<ModuleGuard module="group_sessions"><MyGroupSessions /></ModuleGuard>} />
       <Route path="/gerenciar-encontros" element={<ProtectedRoute requiredRole="facilitator"><ModuleGuard module="group_sessions"><ManageGroupSessions /></ModuleGuard></ProtectedRoute>} />
+
+      {/* Escalas Emocionais */}
+      <Route path="/escalas" element={<EmotionalScales />} />
+      <Route path="/escalas/:code" element={<ScaleResponse />} />
+      <Route path="/minhas-emocoes" element={<MyEmotions />} />
+      <Route path="/medcos/escalas" element={<EmotionalScales />} />
+      <Route path="/medcos/escalas/:code" element={<ScaleResponse />} />
+      <Route path="/medcos/minhas-emocoes" element={<MyEmotions />} />
       
       {/* Rotas Medcos (duplicadas com prefixo /medcos) */}
       <Route path="/medcos" element={<Index />} />
