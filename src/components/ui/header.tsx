@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList, HeartPulse } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -168,6 +168,10 @@ const Header = () => {
                     <Users className="h-4 w-4 mr-2" />
                     {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/minhas-emocoes'))}>
+                    <HeartPulse className="h-4 w-4 mr-2" />
+                    Minhas Emoções
+                  </DropdownMenuItem>
                   {isProfessional && (
                     <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/professional-profile'))}>
                       <Briefcase className="h-4 w-4 mr-2" />
@@ -299,6 +303,14 @@ const Header = () => {
                   >
                     <Users className="h-5 w-5 opacity-70" />
                     {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
+                  </Link>
+                  <Link
+                    to={buildTenantPath(tenantSlug, '/minhas-emocoes')}
+                    className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <HeartPulse className="h-5 w-5 opacity-70" />
+                    Minhas Emoções
                   </Link>
                   {isProfessional && (
                     <Link
