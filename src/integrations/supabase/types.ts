@@ -1060,6 +1060,148 @@ export type Database = {
         }
         Relationships: []
       }
+      emotional_scale_items: {
+        Row: {
+          created_at: string
+          id: string
+          option_labels: Json
+          position: number
+          scale_id: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_labels?: Json
+          position: number
+          scale_id: string
+          text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_labels?: Json
+          position?: number
+          scale_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emotional_scale_items_scale_id_fkey"
+            columns: ["scale_id"]
+            isOneToOne: false
+            referencedRelation: "emotional_scales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emotional_scale_responses: {
+        Row: {
+          answers: Json
+          created_at: string
+          id: string
+          normalized_score: number
+          raw_score: number
+          scale_code: string
+          scale_id: string
+          severity: string
+          taken_at: string
+          user_id: string
+        }
+        Insert: {
+          answers: Json
+          created_at?: string
+          id?: string
+          normalized_score: number
+          raw_score: number
+          scale_code: string
+          scale_id: string
+          severity: string
+          taken_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          normalized_score?: number
+          raw_score?: number
+          scale_code?: string
+          scale_id?: string
+          severity?: string
+          taken_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emotional_scale_responses_scale_id_fkey"
+            columns: ["scale_id"]
+            isOneToOne: false
+            referencedRelation: "emotional_scales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emotional_scales: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          description: string | null
+          display_order: number
+          estimated_minutes: number
+          frequency_days: number
+          id: string
+          instructions: string | null
+          iseu_direction: string
+          iseu_weight: number
+          item_max: number
+          item_min: number
+          name: string
+          reverse_items: number[]
+          short_description: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          estimated_minutes?: number
+          frequency_days?: number
+          id?: string
+          instructions?: string | null
+          iseu_direction?: string
+          iseu_weight?: number
+          item_max?: number
+          item_min?: number
+          name: string
+          reverse_items?: number[]
+          short_description?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          estimated_minutes?: number
+          frequency_days?: number
+          id?: string
+          instructions?: string | null
+          iseu_direction?: string
+          iseu_weight?: number
+          item_max?: number
+          item_min?: number
+          name?: string
+          reverse_items?: number[]
+          short_description?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       google_calendar_events: {
         Row: {
           created_at: string
@@ -1849,6 +1991,39 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      iseu_scores: {
+        Row: {
+          band: string
+          components: Json
+          computed_at: string
+          id: string
+          scales_used: number
+          score: number
+          user_id: string
+          weights_total: number
+        }
+        Insert: {
+          band: string
+          components?: Json
+          computed_at?: string
+          id?: string
+          scales_used?: number
+          score: number
+          user_id: string
+          weights_total?: number
+        }
+        Update: {
+          band?: string
+          components?: Json
+          computed_at?: string
+          id?: string
+          scales_used?: number
+          score?: number
+          user_id?: string
+          weights_total?: number
+        }
+        Relationships: []
       }
       media_library: {
         Row: {
@@ -3862,6 +4037,25 @@ export type Database = {
         Returns: boolean
       }
       clean_old_chat_sessions: { Args: never; Returns: undefined }
+      compute_iseu_score: {
+        Args: { _user_id: string }
+        Returns: {
+          band: string
+          components: Json
+          computed_at: string
+          id: string
+          scales_used: number
+          score: number
+          user_id: string
+          weights_total: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "iseu_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_current_tenant_id: { Args: never; Returns: string }
       get_institution_alerts: {
         Args: { p_institution_id: string }
