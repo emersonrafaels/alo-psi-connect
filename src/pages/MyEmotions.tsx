@@ -24,8 +24,9 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  ReferenceArea,
 } from "recharts";
-import { HeartPulse, ArrowUp, ArrowDown, Minus, ClipboardList } from "lucide-react";
+import { HeartPulse, ArrowUp, ArrowDown, Minus, ClipboardList, TrendingUp, TrendingDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const MyEmotions = () => {
