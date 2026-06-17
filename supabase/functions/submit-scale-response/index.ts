@@ -178,6 +178,19 @@ Deno.serve(async (req) => {
       else if (rawScore <= 21) severity = 'moderada';
       else severity = 'grave';
       break;
+    case 'MHCSF': {
+      // Keyes classification: counts of "high" (4-5) and "low" (0-1) frequency answers
+      const emoPositions = [1, 2, 3];
+      const socPsyPositions = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+      const highEmo = emoPositions.filter((p) => scored[p - 1] >= 4).length;
+      const lowEmo = emoPositions.filter((p) => scored[p - 1] <= 1).length;
+      const highSocPsy = socPsyPositions.filter((p) => scored[p - 1] >= 4).length;
+      const lowSocPsy = socPsyPositions.filter((p) => scored[p - 1] <= 1).length;
+      if (highEmo >= 1 && highSocPsy >= 6) severity = 'florescimento';
+      else if (lowEmo >= 1 && lowSocPsy >= 6) severity = 'definhamento';
+      else severity = 'moderado';
+      break;
+    }
   }
 
   // Insert response as the user (preserves RLS audit)
@@ -191,6 +204,7 @@ Deno.serve(async (req) => {
       raw_score: rawScore,
       normalized_score: Number(normalized.toFixed(2)),
       severity,
+      subscale_scores: subscaleScores,
     })
     .select()
     .single();
