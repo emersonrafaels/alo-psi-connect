@@ -164,7 +164,7 @@ const ScaleResponse = () => {
 
               {result.response.subscale_scores && (
                 <div className="rounded-xl border p-4">
-                  <div className="text-xs text-muted-foreground mb-3">Subescalas (0–100)</div>
+                  <div className="text-xs text-muted-foreground mb-3">Subescalas</div>
                   <div className="h-44">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
