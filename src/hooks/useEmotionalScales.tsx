@@ -111,6 +111,38 @@ export function useUserScaleResponses(scaleCode?: string) {
   });
 }
 
+/**
+ * Returns the codes of active ISEU-weighted scales the current user has NOT yet answered
+ * (within the 180-day ISEU window). When empty, the ISEU-RBE can be computed.
+ */
+export function useMissingIseuScales() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["iseu-missing-scales", user?.id],
+    enabled: !!user,
+    queryFn: async (): Promise<string[]> => {
+      const [scalesRes, respRes] = await Promise.all([
+        supabase
+          .from("emotional_scales" as any)
+          .select("code")
+          .eq("active", true)
+          .gt("iseu_weight", 0),
+        supabase
+          .from("emotional_scale_responses" as any)
+          .select("scale_code, taken_at")
+          .eq("user_id", user!.id)
+          .gte("taken_at", new Date(Date.now() - 180 * 86_400_000).toISOString()),
+      ]);
+      if (scalesRes.error) throw scalesRes.error;
+      if (respRes.error) throw respRes.error;
+      const answered = new Set(((respRes.data as any[]) ?? []).map((r) => r.scale_code));
+      return ((scalesRes.data as any[]) ?? [])
+        .map((s) => s.code as string)
+        .filter((code) => !answered.has(code));
+    },
+  });
+}
+
 export function useLatestResponseByScale() {
   const { user } = useAuth();
   return useQuery({
