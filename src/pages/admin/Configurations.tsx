@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { AdminTenantProvider } from '@/contexts/AdminTenantContext';
 import { AdminTenantSelector } from '@/components/admin/AdminTenantSelector';
 import { PatientFullViewAccessConfig } from '@/components/admin/PatientFullViewAccessConfig';
+import { ScaleFrequencyBypassConfig } from '@/components/admin/config/ScaleFrequencyBypassConfig';
 
 interface ConfigCard {
   id: string;
