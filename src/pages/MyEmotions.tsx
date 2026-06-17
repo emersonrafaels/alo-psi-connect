@@ -62,7 +62,7 @@ const MyEmotions = () => {
     [iseu],
   );
 
-  // For variation column: precompute previous score per scale within the filtered list
+  // For variation column: precompute previous raw_score per scale within the filtered list
   const rowsWithDelta = useMemo(() => {
     if (!responses) return [];
     const grouped: Record<string, typeof responses> = {};
@@ -77,7 +77,7 @@ const MyEmotions = () => {
       let prev: number | null = null;
       for (const r of arr) {
         prevById[r.id] = prev;
-        prev = Number(r.normalized_score);
+        prev = Number(r.raw_score);
       }
     });
     return responses.map((r) => ({ ...r, prev: prevById[r.id] }));
