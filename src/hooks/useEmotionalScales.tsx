@@ -189,14 +189,16 @@ export function useSubmitScaleResponse() {
         body: payload,
       });
       if (error) {
-        // Try to surface structured error from edge function
         const ctx: any = (error as any).context;
-        if (ctx?.body) {
+        if (ctx && typeof ctx.json === "function") {
           try {
-            const parsed = typeof ctx.body === "string" ? JSON.parse(ctx.body) : ctx.body;
-            throw Object.assign(new Error(parsed.message || parsed.error || error.message), { details: parsed });
+            const parsed = await ctx.json();
+            throw Object.assign(
+              new Error(parsed.message || parsed.error || error.message),
+              { details: parsed }
+            );
           } catch (e: any) {
-            if (e.details) throw e;
+            if (e?.details) throw e;
           }
         }
         throw error;
