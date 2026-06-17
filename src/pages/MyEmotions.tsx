@@ -130,20 +130,11 @@ const MyEmotions = () => {
                   {ISEU_BAND_LABEL[latestIseu.band]}
                 </Badge>
               ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    Responda todas as escalas para calcular seu ISEU-RBE.
-                  </p>
-                  {missingScales && missingScales.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {missingScales.map((code) => (
-                        <Badge key={code} variant="secondary" className="text-[10px]">
-                          {code}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  {missingScales && missingScales.length > 0
+                    ? `- Preencha ${missingScales.length} escala${missingScales.length === 1 ? "" : "s"} restante${missingScales.length === 1 ? "" : "s"}, para ter o valor calculado.`
+                    : "Responda todas as escalas para calcular seu ISEU-RBE."}
+                </p>
               )}
             </CardContent>
           </Card>
