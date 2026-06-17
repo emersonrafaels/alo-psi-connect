@@ -1105,6 +1105,7 @@ export type Database = {
           scale_code: string
           scale_id: string
           severity: string
+          subscale_scores: Json | null
           taken_at: string
           user_id: string
         }
@@ -1117,6 +1118,7 @@ export type Database = {
           scale_code: string
           scale_id: string
           severity: string
+          subscale_scores?: Json | null
           taken_at?: string
           user_id: string
         }
@@ -1129,6 +1131,7 @@ export type Database = {
           scale_code?: string
           scale_id?: string
           severity?: string
+          subscale_scores?: Json | null
           taken_at?: string
           user_id?: string
         }
@@ -1160,6 +1163,7 @@ export type Database = {
           name: string
           reverse_items: number[]
           short_description: string | null
+          subscales: Json | null
           updated_at: string
         }
         Insert: {
@@ -1179,6 +1183,7 @@ export type Database = {
           name: string
           reverse_items?: number[]
           short_description?: string | null
+          subscales?: Json | null
           updated_at?: string
         }
         Update: {
@@ -1198,6 +1203,7 @@ export type Database = {
           name?: string
           reverse_items?: number[]
           short_description?: string | null
+          subscales?: Json | null
           updated_at?: string
         }
         Relationships: []

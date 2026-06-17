@@ -7,6 +7,8 @@ import {
   useEmotionalScale,
   useSubmitScaleResponse,
   useUserScaleResponses,
+  severityBand,
+  ISEU_BAND_COLOR,
 } from "@/hooks/useEmotionalScales";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
@@ -17,6 +19,22 @@ import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from "recharts";
+
+const MHCSF_INTERPRETATION: Record<string, { title: string; text: string }> = {
+  florescimento: {
+    title: "Você está em florescimento",
+    text: "Seus indicadores apontam alta presença de bem-estar emocional, social e psicológico nas últimas semanas. Continue cultivando o que tem feito bem a você.",
+  },
+  moderado: {
+    title: "Saúde mental moderada",
+    text: "Você apresenta bem-estar em algumas áreas, mas há espaço para fortalecer outras. Pequenas práticas constantes (sono, conexões, propósito) costumam fazer diferença.",
+  },
+  definhamento: {
+    title: "Sinais de definhamento",
+    text: "Os indicadores sugerem baixa presença de bem-estar. Considere conversar com um profissional de cuidado — buscar apoio é um passo importante.",
+  },
+};
 
 const ScaleResponse = () => {
   const { code } = useParams<{ code: string }>();
@@ -125,8 +143,78 @@ const ScaleResponse = () => {
 
               <div className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground">Severidade:</span>
-                <Badge variant="outline" className="capitalize">{result.response.severity}</Badge>
+                {(() => {
+                  const band = severityBand(scale.code, result.response.severity);
+                  return (
+                    <Badge
+                      variant="outline"
+                      className="capitalize"
+                      style={{ borderColor: ISEU_BAND_COLOR[band], color: ISEU_BAND_COLOR[band] }}
+                    >
+                      {result.response.severity}
+                    </Badge>
+                  );
+                })()}
               </div>
+
+              {scale.code === "MHCSF" && MHCSF_INTERPRETATION[result.response.severity] && (
+                <div className="rounded-xl border-l-4 border-primary bg-primary/5 p-4">
+                  <div className="font-medium mb-1">
+                    {MHCSF_INTERPRETATION[result.response.severity].title}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {MHCSF_INTERPRETATION[result.response.severity].text}
+                  </p>
+                </div>
+              )}
+
+              {result.response.subscale_scores && (
+                <div className="rounded-xl border p-4">
+                  <div className="text-xs text-muted-foreground mb-3">Subescalas (0–100)</div>
+                  <div className="h-44">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        layout="vertical"
+                        data={Object.values(result.response.subscale_scores).map((s) => ({
+                          name: s.label,
+                          score: s.normalized,
+                        }))}
+                        margin={{ left: 16, right: 24, top: 4, bottom: 4 }}
+                      >
+                        <XAxis type="number" domain={[0, 100]} hide />
+                        <YAxis
+                          type="category"
+                          dataKey="name"
+                          width={140}
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <Bar dataKey="score" radius={[6, 6, 6, 6]}>
+                          {Object.values(result.response.subscale_scores).map((s, i) => {
+                            const color =
+                              s.normalized >= 75
+                                ? ISEU_BAND_COLOR.verde
+                                : s.normalized >= 55
+                                ? ISEU_BAND_COLOR.amarelo
+                                : s.normalized >= 35
+                                ? ISEU_BAND_COLOR.laranja
+                                : ISEU_BAND_COLOR.vermelho;
+                            return <Cell key={i} fill={color} />;
+                          })}
+                          <LabelList
+                            dataKey="score"
+                            position="right"
+                            formatter={(v: number) => `${Math.round(v)}`}
+                            style={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
+                          />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
 
               {delta != null && (
                 <div className="text-sm bg-muted/30 rounded-xl p-3">
