@@ -38,6 +38,7 @@ export interface ScaleResponse {
   raw_score: number;
   normalized_score: number;
   severity: string;
+  subscale_scores?: Record<string, { label: string; raw: number; normalized: number }> | null;
   taken_at: string;
   created_at: string;
 }
