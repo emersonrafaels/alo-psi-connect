@@ -113,6 +113,15 @@ export default function Configurations() {
       category: 'system',
       requiresSuperAdmin: true
     },
+    {
+      id: 'scale-frequency-bypass',
+      title: 'Escalas: bypass de frequência',
+      description: 'Emails que podem responder escalas sem o bloqueio de 180 dias',
+      icon: Shield,
+      component: ScaleFrequencyBypassConfig,
+      category: 'system',
+      requiresSuperAdmin: true
+    },
     // Cadastro e Usuários
     {
       id: 'featured',
