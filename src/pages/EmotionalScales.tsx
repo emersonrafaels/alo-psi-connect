@@ -146,7 +146,19 @@ const EmotionalScales = () => {
               <History className="h-4 w-4 mr-2" />
               Ver meu histórico
             </Button>
+        </div>
+
+        {missingScales && missingScales.length > 0 && (
+          <div className="mb-6 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4">
+            <div className="text-sm font-medium">
+              Faltam {missingScales.length} escala{missingScales.length === 1 ? "" : "s"} para calcular seu ISEU-RBE
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Responda: <span className="font-medium">{missingScales.join(", ")}</span>
+            </div>
           </div>
+        )}
+
         </div>
 
         {isLoading ? (
