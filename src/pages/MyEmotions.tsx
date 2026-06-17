@@ -144,6 +144,10 @@ const MyEmotions = () => {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                     <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <ReferenceArea y1={75} y2={100} fill={ISEU_BAND_COLOR.verde} fillOpacity={0.06} />
+                    <ReferenceArea y1={55} y2={75} fill={ISEU_BAND_COLOR.amarelo} fillOpacity={0.06} />
+                    <ReferenceArea y1={35} y2={55} fill={ISEU_BAND_COLOR.laranja} fillOpacity={0.06} />
+                    <ReferenceArea y1={0} y2={35} fill={ISEU_BAND_COLOR.vermelho} fillOpacity={0.06} />
                     <Tooltip
                       contentStyle={{
                         background: "hsl(var(--popover))",
