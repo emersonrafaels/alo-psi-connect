@@ -43,6 +43,7 @@ const MyEmotions = () => {
     filterScale === "ALL" ? undefined : filterScale,
   );
   const { data: allResponses } = useUserScaleResponses();
+  const { data: missingScales } = useMissingIseuScales();
 
   if (!authLoading && !user) {
     navigate(buildTenantPath(slug, "/auth"));
