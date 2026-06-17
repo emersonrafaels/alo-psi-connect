@@ -7,6 +7,7 @@ import {
   useEmotionalScales,
   useIseuHistory,
   useUserScaleResponses,
+  useMissingIseuScales,
   ISEU_BAND_LABEL,
   ISEU_BAND_COLOR,
 } from "@/hooks/useEmotionalScales";
