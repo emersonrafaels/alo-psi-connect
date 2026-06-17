@@ -111,7 +111,13 @@ const MyEmotions = () => {
             <CardHeader>
               <CardDescription>ISEU-RBE atual</CardDescription>
               <CardTitle className="text-4xl">
-                {iseuLoading ? <Skeleton className="h-10 w-24" /> : latestIseu?.score ?? "—"}
+                {iseuLoading ? (
+                  <Skeleton className="h-10 w-24" />
+                ) : latestIseu ? (
+                  latestIseu.score
+                ) : (
+                  <span className="text-muted-foreground text-2xl">—</span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -124,9 +130,20 @@ const MyEmotions = () => {
                   {ISEU_BAND_LABEL[latestIseu.band]}
                 </Badge>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Responda pelo menos uma escala para calcular seu índice.
-                </p>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Responda todas as escalas para calcular seu ISEU-RBE.
+                  </p>
+                  {missingScales && missingScales.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {missingScales.map((code) => (
+                        <Badge key={code} variant="secondary" className="text-[10px]">
+                          {code}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -138,8 +155,10 @@ const MyEmotions = () => {
             </CardHeader>
             <CardContent className="h-48">
               {iseuChartData.length === 0 ? (
-                <div className="h-full grid place-items-center text-sm text-muted-foreground">
-                  Sem dados ainda.
+                <div className="h-full grid place-items-center text-center text-sm text-muted-foreground px-4">
+                  {missingScales && missingScales.length > 0
+                    ? `Faltam ${missingScales.length} escala${missingScales.length === 1 ? "" : "s"} (${missingScales.join(", ")}) para começar a calcular o ISEU-RBE.`
+                    : "Sem dados ainda."}
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
