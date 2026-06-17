@@ -207,6 +207,7 @@ export function useSubmitScaleResponse() {
       queryClient.invalidateQueries({ queryKey: ["scale-responses"] });
       queryClient.invalidateQueries({ queryKey: ["scale-responses-latest"] });
       queryClient.invalidateQueries({ queryKey: ["iseu-history"] });
+      queryClient.invalidateQueries({ queryKey: ["iseu-missing-scales"] });
     },
   });
 }
