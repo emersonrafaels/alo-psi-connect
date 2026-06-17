@@ -298,7 +298,6 @@ const MyEmotions = () => {
                       <th className="py-2 pr-3">Data</th>
                       <th className="py-2 pr-3">Escala</th>
                       <th className="py-2 pr-3">Pontuação</th>
-                      <th className="py-2 pr-3">Saúde (0–100)</th>
                       <th className="py-2 pr-3">Severidade</th>
                       <th className="py-2 pr-3">Variação</th>
                     </tr>
@@ -306,7 +305,7 @@ const MyEmotions = () => {
                   <tbody>
                     {rowsWithDelta.map((r) => {
                       const delta =
-                        r.prev != null ? Number((Number(r.normalized_score) - r.prev).toFixed(1)) : null;
+                        r.prev != null ? Number((Number(r.raw_score) - r.prev).toFixed(1)) : null;
                       return (
                         <tr key={r.id} className="border-b last:border-b-0 hover:bg-muted/40">
                           <td className="py-2 pr-3 whitespace-nowrap">
@@ -314,7 +313,6 @@ const MyEmotions = () => {
                           </td>
                           <td className="py-2 pr-3 font-medium">{r.scale_code}</td>
                           <td className="py-2 pr-3">{r.raw_score}</td>
-                          <td className="py-2 pr-3">{r.normalized_score}</td>
                           <td className="py-2 pr-3 capitalize">{r.severity}</td>
                           <td className="py-2 pr-3">
                             {delta == null ? (
