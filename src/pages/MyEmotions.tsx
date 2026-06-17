@@ -7,6 +7,7 @@ import {
   useEmotionalScales,
   useIseuHistory,
   useUserScaleResponses,
+  useMissingIseuScales,
   ISEU_BAND_LABEL,
   ISEU_BAND_COLOR,
 } from "@/hooks/useEmotionalScales";
@@ -42,6 +43,7 @@ const MyEmotions = () => {
     filterScale === "ALL" ? undefined : filterScale,
   );
   const { data: allResponses } = useUserScaleResponses();
+  const { data: missingScales } = useMissingIseuScales();
 
   if (!authLoading && !user) {
     navigate(buildTenantPath(slug, "/auth"));
@@ -60,7 +62,7 @@ const MyEmotions = () => {
     [iseu],
   );
 
-  // For variation column: precompute previous score per scale within the filtered list
+  // For variation column: precompute previous raw_score per scale within the filtered list
   const rowsWithDelta = useMemo(() => {
     if (!responses) return [];
     const grouped: Record<string, typeof responses> = {};
@@ -75,7 +77,7 @@ const MyEmotions = () => {
       let prev: number | null = null;
       for (const r of arr) {
         prevById[r.id] = prev;
-        prev = Number(r.normalized_score);
+        prev = Number(r.raw_score);
       }
     });
     return responses.map((r) => ({ ...r, prev: prevById[r.id] }));
@@ -109,7 +111,13 @@ const MyEmotions = () => {
             <CardHeader>
               <CardDescription>ISEU-RBE atual</CardDescription>
               <CardTitle className="text-4xl">
-                {iseuLoading ? <Skeleton className="h-10 w-24" /> : latestIseu?.score ?? "—"}
+                {iseuLoading ? (
+                  <Skeleton className="h-10 w-24" />
+                ) : latestIseu ? (
+                  latestIseu.score
+                ) : (
+                  <span className="text-muted-foreground text-2xl">—</span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -122,9 +130,20 @@ const MyEmotions = () => {
                   {ISEU_BAND_LABEL[latestIseu.band]}
                 </Badge>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Responda pelo menos uma escala para calcular seu índice.
-                </p>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Responda todas as escalas para calcular seu ISEU-RBE.
+                  </p>
+                  {missingScales && missingScales.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {missingScales.map((code) => (
+                        <Badge key={code} variant="secondary" className="text-[10px]">
+                          {code}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -136,8 +155,10 @@ const MyEmotions = () => {
             </CardHeader>
             <CardContent className="h-48">
               {iseuChartData.length === 0 ? (
-                <div className="h-full grid place-items-center text-sm text-muted-foreground">
-                  Sem dados ainda.
+                <div className="h-full grid place-items-center text-center text-sm text-muted-foreground px-4">
+                  {missingScales && missingScales.length > 0
+                    ? `Faltam ${missingScales.length} escala${missingScales.length === 1 ? "" : "s"} (${missingScales.join(", ")}) para começar a calcular o ISEU-RBE.`
+                    : "Sem dados ainda."}
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -178,13 +199,10 @@ const MyEmotions = () => {
                 .filter((r) => r.scale_code === s.code)
                 .slice(0, 6)
                 .reverse()
-                .map((r) => ({ v: Number(r.normalized_score) }));
+                .map((r) => ({ v: Number(r.raw_score) }));
               const last = items.length ? items[items.length - 1].v : null;
               const prev = items.length > 1 ? items[items.length - 2].v : null;
               const trend = last != null && prev != null ? Number((last - prev).toFixed(1)) : null;
-              const band = last != null
-                ? last >= 75 ? "verde" : last >= 55 ? "amarelo" : last >= 35 ? "laranja" : "vermelho"
-                : null;
               return (
                 <button
                   key={s.code}
@@ -212,7 +230,7 @@ const MyEmotions = () => {
                       <div className="text-2xl font-semibold leading-none">
                         {last != null ? Math.round(last) : "—"}
                       </div>
-                      <div className="text-[10px] text-muted-foreground mt-1">Índice de saúde</div>
+                      <div className="text-[10px] text-muted-foreground mt-1">Pontuação</div>
                     </div>
                     <div className="h-10 w-24">
                       {items.length > 1 ? (
@@ -221,12 +239,12 @@ const MyEmotions = () => {
                             <Line
                               type="monotone"
                               dataKey="v"
-                              stroke={band ? ISEU_BAND_COLOR[band as keyof typeof ISEU_BAND_COLOR] : "hsl(var(--primary))"}
+                              stroke="hsl(var(--primary))"
                               strokeWidth={2}
                               dot={false}
                               isAnimationActive={false}
                             />
-                            <YAxis hide domain={[0, 100]} />
+                            <YAxis hide domain={["auto", "auto"]} />
                           </LineChart>
                         </ResponsiveContainer>
                       ) : (
@@ -280,7 +298,6 @@ const MyEmotions = () => {
                       <th className="py-2 pr-3">Data</th>
                       <th className="py-2 pr-3">Escala</th>
                       <th className="py-2 pr-3">Pontuação</th>
-                      <th className="py-2 pr-3">Saúde (0–100)</th>
                       <th className="py-2 pr-3">Severidade</th>
                       <th className="py-2 pr-3">Variação</th>
                     </tr>
@@ -288,7 +305,7 @@ const MyEmotions = () => {
                   <tbody>
                     {rowsWithDelta.map((r) => {
                       const delta =
-                        r.prev != null ? Number((Number(r.normalized_score) - r.prev).toFixed(1)) : null;
+                        r.prev != null ? Number((Number(r.raw_score) - r.prev).toFixed(1)) : null;
                       return (
                         <tr key={r.id} className="border-b last:border-b-0 hover:bg-muted/40">
                           <td className="py-2 pr-3 whitespace-nowrap">
@@ -296,7 +313,6 @@ const MyEmotions = () => {
                           </td>
                           <td className="py-2 pr-3 font-medium">{r.scale_code}</td>
                           <td className="py-2 pr-3">{r.raw_score}</td>
-                          <td className="py-2 pr-3">{r.normalized_score}</td>
                           <td className="py-2 pr-3 capitalize">{r.severity}</td>
                           <td className="py-2 pr-3">
                             {delta == null ? (

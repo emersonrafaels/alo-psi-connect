@@ -211,11 +211,32 @@ Deno.serve(async (req) => {
 
   if (insErr) return jsonResponse({ error: insErr.message }, 500);
 
-  // Recompute ISEU
+  // Recompute ISEU (returns null when user hasn't answered all required scales yet)
   const { data: iseu } = await admin.rpc('compute_iseu_score', { _user_id: user.id });
+
+  // Compute missing scales for UI feedback when ISEU isn't ready yet
+  let missingScales: string[] = [];
+  if (!iseu) {
+    const { data: activeScales } = await admin
+      .from('emotional_scales')
+      .select('code')
+      .eq('active', true)
+      .gt('iseu_weight', 0);
+    const since = new Date(Date.now() - 180 * 86400_000).toISOString();
+    const { data: answered } = await admin
+      .from('emotional_scale_responses')
+      .select('scale_code')
+      .eq('user_id', user.id)
+      .gte('taken_at', since);
+    const answeredSet = new Set((answered ?? []).map((r: any) => r.scale_code));
+    missingScales = (activeScales ?? [])
+      .map((s: any) => s.code)
+      .filter((code: string) => !answeredSet.has(code));
+  }
 
   return jsonResponse({
     response: inserted,
     iseu: iseu ?? null,
+    missing_scales: missingScales,
   });
 });

@@ -110,8 +110,8 @@ const ScaleResponse = () => {
   const progress = items.length ? (answeredCount / items.length) * 100 : 0;
 
   if (result) {
-    const previousScore = previous?.normalized_score;
-    const current = result.response.normalized_score;
+    const previousScore = previous?.raw_score;
+    const current = result.response.raw_score;
     const delta = previousScore != null ? Number((current - previousScore).toFixed(1)) : null;
 
     return (
@@ -130,15 +130,9 @@ const ScaleResponse = () => {
               <CardDescription>{scale.name}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-muted/40 rounded-xl p-4">
-                  <div className="text-xs text-muted-foreground">Pontuação bruta</div>
-                  <div className="text-2xl font-semibold mt-1">{result.response.raw_score}</div>
-                </div>
-                <div className="bg-muted/40 rounded-xl p-4">
-                  <div className="text-xs text-muted-foreground">Índice de saúde (0–100)</div>
-                  <div className="text-2xl font-semibold mt-1">{result.response.normalized_score}</div>
-                </div>
+              <div className="bg-muted/40 rounded-xl p-4 max-w-xs">
+                <div className="text-xs text-muted-foreground">Pontuação</div>
+                <div className="text-2xl font-semibold mt-1">{result.response.raw_score}</div>
               </div>
 
               <div className="flex items-center gap-3">
@@ -170,7 +164,7 @@ const ScaleResponse = () => {
 
               {result.response.subscale_scores && (
                 <div className="rounded-xl border p-4">
-                  <div className="text-xs text-muted-foreground mb-3">Subescalas (0–100)</div>
+                  <div className="text-xs text-muted-foreground mb-3">Subescalas</div>
                   <div className="h-44">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
@@ -225,7 +219,7 @@ const ScaleResponse = () => {
                 </div>
               )}
 
-              {result.iseu && (
+              {result.iseu ? (
                 <div className="rounded-xl border p-4">
                   <div className="text-xs text-muted-foreground">ISEU-RBE atualizado</div>
                   <div className="flex items-center justify-between mt-1">
@@ -236,7 +230,16 @@ const ScaleResponse = () => {
                     Composto a partir de {result.iseu.scales_used} escala(s) do pack essencial.
                   </div>
                 </div>
-              )}
+              ) : (result as any).missing_scales && (result as any).missing_scales.length > 0 ? (
+                <div className="rounded-xl border border-dashed p-4">
+                  <div className="text-xs text-muted-foreground">ISEU-RBE</div>
+                  <p className="text-sm mt-1">
+                    Faltam {(result as any).missing_scales.length} escala
+                    {(result as any).missing_scales.length === 1 ? "" : "s"} para calcular seu ISEU-RBE:{" "}
+                    <span className="font-medium">{(result as any).missing_scales.join(", ")}</span>.
+                  </p>
+                </div>
+              ) : null}
 
               <div className="flex gap-3">
                 <Button onClick={() => navigate(buildTenantPath(slug, "/minhas-emocoes"))}>
