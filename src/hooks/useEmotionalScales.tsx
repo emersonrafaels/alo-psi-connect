@@ -192,3 +192,44 @@ export const ISEU_BAND_COLOR: Record<IseuScore["band"], string> = {
   laranja: "hsl(var(--chart-4))",
   vermelho: "hsl(var(--destructive))",
 };
+
+// Maps a scale-specific severity label to one of the ISEU bands for consistent coloring.
+export function severityBand(scaleCode: string, severity: string): IseuScore["band"] {
+  const s = (severity || "").toLowerCase();
+  switch (scaleCode) {
+    case "WHO5":
+      if (s === "ótimo") return "verde";
+      if (s === "bom") return "amarelo";
+      if (s === "baixo") return "laranja";
+      return "vermelho";
+    case "PHQ9":
+      if (s === "mínimo") return "verde";
+      if (s === "leve") return "amarelo";
+      if (s === "moderado") return "laranja";
+      return "vermelho";
+    case "GAD7":
+      if (s === "mínimo") return "verde";
+      if (s === "leve") return "amarelo";
+      if (s === "moderado") return "laranja";
+      return "vermelho";
+    case "PSS10":
+      if (s === "baixo") return "verde";
+      if (s === "moderado") return "amarelo";
+      return "vermelho";
+    case "ISI":
+      if (s === "sem insônia") return "verde";
+      if (s === "subliminar") return "amarelo";
+      if (s === "moderada") return "laranja";
+      return "vermelho";
+    case "MHCSF":
+      if (s === "florescimento") return "verde";
+      if (s === "moderado") return "amarelo";
+      return "vermelho";
+    default:
+      return "amarelo";
+  }
+}
+
+// Which scales measure "positive health" vs "symptoms/risk"
+export const POSITIVE_SCALES = new Set(["WHO5", "MHCSF"]);
+
