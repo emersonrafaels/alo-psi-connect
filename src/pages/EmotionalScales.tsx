@@ -5,6 +5,7 @@ import { buildTenantPath } from "@/utils/tenantHelpers";
 import {
   useEmotionalScales,
   useLatestResponseByScale,
+  useMissingIseuScales,
   severityBand,
   POSITIVE_SCALES,
   ISEU_BAND_COLOR,
