@@ -110,8 +110,8 @@ const ScaleResponse = () => {
   const progress = items.length ? (answeredCount / items.length) * 100 : 0;
 
   if (result) {
-    const previousScore = previous?.normalized_score;
-    const current = result.response.normalized_score;
+    const previousScore = previous?.raw_score;
+    const current = result.response.raw_score;
     const delta = previousScore != null ? Number((current - previousScore).toFixed(1)) : null;
 
     return (
@@ -130,15 +130,9 @@ const ScaleResponse = () => {
               <CardDescription>{scale.name}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-muted/40 rounded-xl p-4">
-                  <div className="text-xs text-muted-foreground">Pontuação bruta</div>
-                  <div className="text-2xl font-semibold mt-1">{result.response.raw_score}</div>
-                </div>
-                <div className="bg-muted/40 rounded-xl p-4">
-                  <div className="text-xs text-muted-foreground">Índice de saúde (0–100)</div>
-                  <div className="text-2xl font-semibold mt-1">{result.response.normalized_score}</div>
-                </div>
+              <div className="bg-muted/40 rounded-xl p-4 max-w-xs">
+                <div className="text-xs text-muted-foreground">Pontuação</div>
+                <div className="text-2xl font-semibold mt-1">{result.response.raw_score}</div>
               </div>
 
               <div className="flex items-center gap-3">
