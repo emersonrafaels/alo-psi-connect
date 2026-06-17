@@ -2,13 +2,20 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { buildTenantPath } from "@/utils/tenantHelpers";
-import { useEmotionalScales, useLatestResponseByScale } from "@/hooks/useEmotionalScales";
+import {
+  useEmotionalScales,
+  useLatestResponseByScale,
+  severityBand,
+  POSITIVE_SCALES,
+  ISEU_BAND_COLOR,
+  type EmotionalScale,
+} from "@/hooks/useEmotionalScales";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, ClipboardList, HeartPulse, ArrowRight, History } from "lucide-react";
+import { Clock, ClipboardList, HeartPulse, ArrowRight, History, Sparkles, Activity } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const EmotionalScales = () => {
@@ -31,6 +38,86 @@ const EmotionalScales = () => {
     const days = Math.ceil((next - Date.now()) / 86_400_000);
     if (days <= 0) return { available: true, label: "Disponível" };
     return { available: false, label: `Próxima em ${days} dia${days === 1 ? "" : "s"}` };
+  };
+
+  const positiveScales = (scales ?? []).filter((s) => POSITIVE_SCALES.has(s.code));
+  const symptomScales = (scales ?? []).filter((s) => !POSITIVE_SCALES.has(s.code));
+
+  const renderScaleCard = (scale: EmotionalScale) => {
+    const last = latestMap?.[scale.code];
+    const avail = getAvailability(scale.frequency_days, last?.taken_at);
+    const isNew = scale.code === "MHCSF";
+    const band = last ? severityBand(scale.code, last.severity) : null;
+
+    return (
+      <Card key={scale.id} className="rounded-2xl border-border/60 hover:shadow-md transition-shadow">
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <CardTitle className="text-lg">{scale.name}</CardTitle>
+                {isNew && (
+                  <Badge className="bg-primary/15 text-primary border-0 text-[10px] uppercase tracking-wide">
+                    Novo
+                  </Badge>
+                )}
+              </div>
+              <CardDescription>{scale.short_description}</CardDescription>
+            </div>
+            <Badge variant={avail.available ? "default" : "secondary"} className="shrink-0">
+              {avail.label}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" />
+              ~{scale.estimated_minutes} min
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <ClipboardList className="h-3.5 w-3.5" />
+              Frequência sugerida: {scale.frequency_days} dias
+            </span>
+          </div>
+
+          {last && (
+            <div className="text-sm bg-muted/40 rounded-lg p-3">
+              <div className="text-muted-foreground text-xs">Última aplicação</div>
+              <div className="flex items-center justify-between mt-1">
+                <span className="font-medium">
+                  {new Date(last.taken_at).toLocaleDateString("pt-BR")}
+                </span>
+                {band && (
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ background: ISEU_BAND_COLOR[band] }}
+                    />
+                    <Badge
+                      variant="outline"
+                      className="capitalize"
+                      style={{ borderColor: ISEU_BAND_COLOR[band], color: ISEU_BAND_COLOR[band] }}
+                    >
+                      {last.severity}
+                    </Badge>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          <Button
+            className="w-full"
+            variant={avail.available ? "default" : "outline"}
+            onClick={() => navigate(buildTenantPath(slug, `/escalas/${scale.code.toLowerCase()}`))}
+          >
+            {last ? "Responder novamente" : "Responder agora"}
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -67,57 +154,32 @@ const EmotionalScales = () => {
             ))}
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {scales?.map((scale) => {
-              const last = latestMap?.[scale.code];
-              const avail = getAvailability(scale.frequency_days, last?.taken_at);
-              return (
-                <Card key={scale.id} className="rounded-2xl border-border/60 hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <CardTitle className="text-lg">{scale.name}</CardTitle>
-                        <CardDescription className="mt-1">{scale.short_description}</CardDescription>
-                      </div>
-                      <Badge variant={avail.available ? "default" : "secondary"}>{avail.label}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        ~{scale.estimated_minutes} min
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <ClipboardList className="h-3.5 w-3.5" />
-                        Frequência sugerida: {scale.frequency_days} dias
-                      </span>
-                    </div>
+          <div className="space-y-10">
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <h2 className="text-lg font-semibold">Saúde mental positiva</h2>
+                <span className="text-xs text-muted-foreground">
+                  mede florescimento e bem-estar
+                </span>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                {positiveScales.map(renderScaleCard)}
+              </div>
+            </section>
 
-                    {last && (
-                      <div className="text-sm bg-muted/40 rounded-lg p-3">
-                        <div className="text-muted-foreground text-xs">Última aplicação</div>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="font-medium">
-                            {new Date(last.taken_at).toLocaleDateString("pt-BR")}
-                          </span>
-                          <Badge variant="outline" className="capitalize">{last.severity}</Badge>
-                        </div>
-                      </div>
-                    )}
-
-                    <Button
-                      className="w-full"
-                      variant={avail.available ? "default" : "outline"}
-                      onClick={() => navigate(buildTenantPath(slug, `/escalas/${scale.code.toLowerCase()}`))}
-                    >
-                      {last ? "Responder novamente" : "Responder agora"}
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <Activity className="h-4 w-4 text-primary" />
+                <h2 className="text-lg font-semibold">Sintomas e risco</h2>
+                <span className="text-xs text-muted-foreground">
+                  identifica sinais clínicos para acompanhamento
+                </span>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                {symptomScales.map(renderScaleCard)}
+              </div>
+            </section>
           </div>
         )}
       </main>
