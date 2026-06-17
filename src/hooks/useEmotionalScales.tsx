@@ -231,29 +231,31 @@ export function severityBand(scaleCode: string, severity: string): IseuScore["ba
   const s = (severity || "").toLowerCase();
   switch (scaleCode) {
     case "WHO5":
-      if (s === "ótimo") return "verde";
+      // New: adequado / baixo / muito baixo. Legacy: ótimo / bom / baixo / muito baixo.
+      if (s === "adequado" || s === "ótimo") return "verde";
       if (s === "bom") return "amarelo";
       if (s === "baixo") return "laranja";
-      return "vermelho";
+      return "vermelho"; // muito baixo
     case "PHQ9":
       if (s === "mínimo") return "verde";
       if (s === "leve") return "amarelo";
       if (s === "moderado") return "laranja";
       return "vermelho";
     case "GAD7":
-      if (s === "mínimo") return "verde";
+      // New uses feminine: mínima / leve / moderada / severa. Legacy: mínimo / moderado / grave.
+      if (s === "mínima" || s === "mínimo") return "verde";
       if (s === "leve") return "amarelo";
-      if (s === "moderado") return "laranja";
-      return "vermelho";
+      if (s === "moderada" || s === "moderado") return "laranja";
+      return "vermelho"; // severa / grave
     case "PSS10":
       if (s === "baixo") return "verde";
       if (s === "moderado") return "amarelo";
       return "vermelho";
     case "ISI":
-      if (s === "sem insônia") return "verde";
+      if (s === "sem insônia significativa" || s === "sem insônia") return "verde";
       if (s === "subliminar") return "amarelo";
       if (s === "moderada") return "laranja";
-      return "vermelho";
+      return "vermelho"; // severa / grave
     case "MHCSF":
       if (s === "florescimento") return "verde";
       if (s === "moderado") return "amarelo";

@@ -1,41 +1,35 @@
-## Ajustes no ISEU-RBE e na visualização das respostas
+## Atualizar faixas de severidade das escalas conforme a tabela de referência
 
-### 1. Só calcular ISEU-RBE quando TODAS as escalas ativas estiverem respondidas
+Ajustes apenas em rótulos/faixas; não muda cálculo bruto, normalização nem pesos do ISEU.
 
-**Comportamento atual:** o ISEU-RBE é recalculado a cada resposta enviada, mesmo que o usuário só tenha respondido 1 ou 2 escalas. Isso gera um índice parcial enganoso.
+### 1. `supabase/functions/submit-scale-response/index.ts` — switch `severity`
 
-**Novo comportamento:**
-- A função `compute_iseu_score` (Postgres) passará a verificar se o usuário possui pelo menos uma resposta para **cada escala ativa** (WHO-5, MHC-SF, PHQ-9, GAD-7, PSS-10, ISI). Enquanto faltar qualquer uma, a função **não insere** em `iseu_scores` e retorna `null`.
-- Edge function `submit-scale-response`: continua chamando `compute_iseu_score`, mas trata `null` como "ainda incompleto" e devolve no payload `{ iseu: null, missing_scales: [...] }` para o frontend exibir feedback.
-- Frontend `/minhas-emocoes`:
-  - Card "ISEU-RBE atual": quando não houver ISEU calculado, mostrar mensagem "Responda todas as escalas para calcular seu ISEU-RBE" + lista das escalas que faltam, em vez de "—".
-  - Gráfico "Evolução do ISEU-RBE": exibir estado vazio com a mesma mensagem quando `iseu` estiver vazio.
-- Frontend `/escalas`: nos cards das escalas ainda não respondidas, manter o destaque atual; adicionar um aviso global no topo: "Faltam X escalas para calcular seu ISEU-RBE" enquanto houver pendências.
+| Escala | Faixa (raw) | Severidade |
+|---|---|---|
+| **WHO-5** (0–25) | 18–25 | `adequado` |
+| | 13–17 | `baixo` |
+| | 0–12 | `muito baixo` |
+| **MHC-SF** | (sem mudança — `florescimento` / `moderado` / `definhamento`) | |
+| **PHQ-9** | 0–4 / 5–9 / 10–14 / 15–19 / 20–27 | `mínimo` / `leve` / `moderado` / `moderadamente grave` / `grave` *(já correto)* |
+| **GAD-7** | 0–4 / 5–9 / 10–14 / 15–21 | `mínima` / `leve` / `moderada` / `severa` *(gênero feminino)* |
+| **PSS-10** | 0–13 / 14–26 / 27–40 | `baixo` / `moderado` / `alto` *(já correto)* |
+| **ISI** | 0–7 / 8–14 / 15–21 / 22–28 | `sem insônia significativa` / `subliminar` / `moderada` / `severa` |
 
-### 2. Remover a coluna/indicador "Saúde (0–100)" — exibir apenas a pontuação
+WHO-5 deixa de usar a conversão `raw*4` para classificação — passa a usar o raw direto (0–25), com os pontos de corte da imagem (≤12 ≈ <50/100 → muito baixo).
 
-**Comportamento atual:** várias telas mostram o `normalized_score` (0–100) rotulado como "Saúde" ou "Índice de saúde".
+### 2. `src/hooks/useEmotionalScales.tsx` — `severityBand()`
 
-**Mudanças no frontend (apenas apresentação, sem alterar o cálculo nem o banco):**
+Atualizar o mapeamento severidade→banda ISEU para os novos rótulos:
 
-- `src/pages/MyEmotions.tsx`:
-  - Tabela "Histórico de aplicações": remover a coluna **"Saúde (0–100)"**. Manter Data, Escala, **Pontuação**, Severidade, Variação.
-  - Coluna "Variação": passar a calcular o delta sobre `raw_score` (pontuação), não sobre `normalized_score`.
-  - Cards de sparkline por escala: trocar o número grande e o sparkline para usarem `raw_score` (pontuação bruta), e remover o rótulo "Índice de saúde". O eixo Y do sparkline deixa de ser fixo 0–100 e passa a auto-ajustar. A cor da linha deixa de depender da faixa do ISEU (verde/amarelo/laranja/vermelho) e passa a usar `hsl(var(--primary))`, já que a pontuação bruta não é comparável entre escalas.
-- `src/pages/ScaleResponse.tsx`: na tela de resultado individual, ocultar o valor normalizado (0–100) e exibir apenas a pontuação bruta + severidade + (quando houver) subescalas.
+- **WHO-5**: `adequado` → verde, `baixo` → laranja, `muito baixo` → vermelho. (Sem faixa intermediária amarela — a escala tem 3 níveis.)
+- **GAD-7**: `mínima` → verde, `leve` → amarelo, `moderada` → laranja, `severa` → vermelho.
+- **ISI**: `sem insônia significativa` → verde, `subliminar` → amarelo, `moderada` → laranja, `severa` → vermelho.
 
-O `normalized_score` continua sendo calculado e salvo no banco — é insumo do ISEU-RBE — apenas deixa de aparecer na UI do paciente.
+### 3. Histórico — sem migração
 
-### Arquivos afetados
-
-- Migração SQL: redefinir `public.compute_iseu_score(_user_id uuid)` com verificação de completude.
-- `supabase/functions/submit-scale-response/index.ts` — retornar `missing_scales` quando ISEU ficar nulo.
-- `src/hooks/useEmotionalScales.tsx` — tipos do retorno, helper `missingScales`.
-- `src/pages/MyEmotions.tsx` — remoção da coluna, ajuste de sparklines, estados vazios.
-- `src/pages/ScaleResponse.tsx` — ocultar normalized.
-- `src/pages/EmotionalScales.tsx` — banner "faltam X escalas".
+Respostas antigas no banco mantêm os rótulos antigos (`ótimo`, `bom`, `mínimo` masculino p/ GAD-7, `sem insônia`, `grave` p/ ISI). O `severityBand()` continuará reconhecendo-os para colorir corretamente (fallback amarelo já trata casos desconhecidos). Novas respostas usarão os rótulos atualizados.
 
 ### Fora do escopo
 
-- Nenhuma alteração de pesos, severidades ou conteúdo das escalas.
-- O cálculo interno (`normalized_score`, pesos, subescalas) permanece igual.
+- Pesos do ISEU, cálculo do `normalized_score`, conteúdo dos itens e UI permanecem inalterados.
+- Sem alteração no banco de dados (sem migração).
