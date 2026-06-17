@@ -41,6 +41,7 @@ const MyEmotions = () => {
   const { data: responses, isLoading: respLoading } = useUserScaleResponses(
     filterScale === "ALL" ? undefined : filterScale,
   );
+  const { data: allResponses } = useUserScaleResponses();
 
   if (!authLoading && !user) {
     navigate(buildTenantPath(slug, "/auth"));
