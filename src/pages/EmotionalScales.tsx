@@ -27,6 +27,7 @@ const EmotionalScales = () => {
 
   const { data: scales, isLoading } = useEmotionalScales();
   const { data: latestMap } = useLatestResponseByScale();
+  const { data: missingScales } = useMissingIseuScales();
 
   if (!authLoading && !user) {
     navigate(buildTenantPath(slug, "/auth"));
