@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Frequency check (180 days) unless force + admin
+  // Frequency check (180 days) unless force + admin, or email is whitelisted
   let isAdmin = false;
   if (payload.force) {
     const { data: roles } = await admin
@@ -86,7 +86,29 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id);
     isAdmin = !!roles?.some((r) => r.role === 'admin' || r.role === 'super_admin');
   }
-  if (!(payload.force && isAdmin)) {
+
+  // Check email whitelist (bypass frequency block)
+  let emailBypass = false;
+  if (user.email) {
+    const { data: cfg } = await admin
+      .from('system_configurations')
+      .select('value')
+      .eq('category', 'emotional_scales')
+      .eq('key', 'frequency_bypass_emails')
+      .is('tenant_id', null)
+      .maybeSingle();
+    if (cfg?.value) {
+      try {
+        const raw = typeof cfg.value === 'string' ? JSON.parse(cfg.value) : cfg.value;
+        const list: string[] = Array.isArray(raw) ? raw : [];
+        emailBypass = list.map((e) => e.toLowerCase()).includes(user.email.toLowerCase());
+      } catch {
+        emailBypass = false;
+      }
+    }
+  }
+
+  if (!(payload.force && isAdmin) && !emailBypass) {
     const since = new Date(Date.now() - scale.frequency_days * 86400_000).toISOString();
     const { data: recent } = await admin
       .from('emotional_scale_responses')
