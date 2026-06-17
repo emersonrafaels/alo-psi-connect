@@ -147,10 +147,9 @@ Deno.serve(async (req) => {
   let severity = 'desconhecido';
   switch (scale.code) {
     case 'WHO5': {
-      const who5Raw = rawScore * 4; // 0..100 (sum*4)
-      if (who5Raw >= 70) severity = 'ótimo';
-      else if (who5Raw >= 50) severity = 'bom';
-      else if (who5Raw >= 28) severity = 'baixo';
+      // Raw 0..25 — cutoffs ~ <13 (baixo bem-estar) e <50/100 (muito baixo)
+      if (rawScore >= 18) severity = 'adequado';
+      else if (rawScore >= 13) severity = 'baixo';
       else severity = 'muito baixo';
       break;
     }
@@ -162,10 +161,10 @@ Deno.serve(async (req) => {
       else severity = 'grave';
       break;
     case 'GAD7':
-      if (rawScore <= 4) severity = 'mínimo';
+      if (rawScore <= 4) severity = 'mínima';
       else if (rawScore <= 9) severity = 'leve';
-      else if (rawScore <= 14) severity = 'moderado';
-      else severity = 'grave';
+      else if (rawScore <= 14) severity = 'moderada';
+      else severity = 'severa';
       break;
     case 'PSS10':
       if (rawScore <= 13) severity = 'baixo';
@@ -173,10 +172,10 @@ Deno.serve(async (req) => {
       else severity = 'alto';
       break;
     case 'ISI':
-      if (rawScore <= 7) severity = 'sem insônia';
+      if (rawScore <= 7) severity = 'sem insônia significativa';
       else if (rawScore <= 14) severity = 'subliminar';
       else if (rawScore <= 21) severity = 'moderada';
-      else severity = 'grave';
+      else severity = 'severa';
       break;
     case 'MHCSF': {
       // Keyes classification: counts of "high" (4-5) and "low" (0-1) frequency answers
