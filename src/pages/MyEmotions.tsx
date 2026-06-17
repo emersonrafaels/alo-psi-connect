@@ -199,13 +199,10 @@ const MyEmotions = () => {
                 .filter((r) => r.scale_code === s.code)
                 .slice(0, 6)
                 .reverse()
-                .map((r) => ({ v: Number(r.normalized_score) }));
+                .map((r) => ({ v: Number(r.raw_score) }));
               const last = items.length ? items[items.length - 1].v : null;
               const prev = items.length > 1 ? items[items.length - 2].v : null;
               const trend = last != null && prev != null ? Number((last - prev).toFixed(1)) : null;
-              const band = last != null
-                ? last >= 75 ? "verde" : last >= 55 ? "amarelo" : last >= 35 ? "laranja" : "vermelho"
-                : null;
               return (
                 <button
                   key={s.code}
@@ -233,7 +230,7 @@ const MyEmotions = () => {
                       <div className="text-2xl font-semibold leading-none">
                         {last != null ? Math.round(last) : "—"}
                       </div>
-                      <div className="text-[10px] text-muted-foreground mt-1">Índice de saúde</div>
+                      <div className="text-[10px] text-muted-foreground mt-1">Pontuação</div>
                     </div>
                     <div className="h-10 w-24">
                       {items.length > 1 ? (
@@ -242,12 +239,12 @@ const MyEmotions = () => {
                             <Line
                               type="monotone"
                               dataKey="v"
-                              stroke={band ? ISEU_BAND_COLOR[band as keyof typeof ISEU_BAND_COLOR] : "hsl(var(--primary))"}
+                              stroke="hsl(var(--primary))"
                               strokeWidth={2}
                               dot={false}
                               isAnimationActive={false}
                             />
-                            <YAxis hide domain={[0, 100]} />
+                            <YAxis hide domain={["auto", "auto"]} />
                           </LineChart>
                         </ResponsiveContainer>
                       ) : (
