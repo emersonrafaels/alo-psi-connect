@@ -170,6 +170,80 @@ const MyEmotions = () => {
           </Card>
         </div>
 
+        {/* Per-scale sparklines */}
+        {scales && scales.length > 0 && (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+            {scales.map((s) => {
+              const items = (allResponses ?? [])
+                .filter((r) => r.scale_code === s.code)
+                .slice(0, 6)
+                .reverse()
+                .map((r) => ({ v: Number(r.normalized_score) }));
+              const last = items.length ? items[items.length - 1].v : null;
+              const prev = items.length > 1 ? items[items.length - 2].v : null;
+              const trend = last != null && prev != null ? Number((last - prev).toFixed(1)) : null;
+              const band = last != null
+                ? last >= 75 ? "verde" : last >= 55 ? "amarelo" : last >= 35 ? "laranja" : "vermelho"
+                : null;
+              return (
+                <button
+                  key={s.code}
+                  onClick={() => setFilterScale(s.code)}
+                  className="text-left rounded-2xl border border-border/60 p-4 hover:border-primary/40 hover:shadow-sm transition-all bg-card"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <div className="text-xs text-muted-foreground">{s.code}</div>
+                      <div className="text-sm font-medium truncate">{s.short_description}</div>
+                    </div>
+                    {trend != null && (
+                      <span
+                        className={`inline-flex items-center gap-0.5 text-xs ${
+                          trend > 0 ? "text-success" : trend < 0 ? "text-destructive" : "text-muted-foreground"
+                        }`}
+                      >
+                        {trend > 0 ? <TrendingUp className="h-3 w-3" /> : trend < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+                        {trend > 0 ? "+" : ""}{trend}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-end justify-between gap-2">
+                    <div>
+                      <div className="text-2xl font-semibold leading-none">
+                        {last != null ? Math.round(last) : "—"}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-1">Índice de saúde</div>
+                    </div>
+                    <div className="h-10 w-24">
+                      {items.length > 1 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={items}>
+                            <Line
+                              type="monotone"
+                              dataKey="v"
+                              stroke={band ? ISEU_BAND_COLOR[band as keyof typeof ISEU_BAND_COLOR] : "hsl(var(--primary))"}
+                              strokeWidth={2}
+                              dot={false}
+                              isAnimationActive={false}
+                            />
+                            <YAxis hide domain={[0, 100]} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full grid place-items-center text-[10px] text-muted-foreground">
+                          {items.length === 0 ? "Sem dados" : "1 aplicação"}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+
+
         {/* History table */}
         <Card className="rounded-2xl">
           <CardHeader className="flex flex-row items-center justify-between gap-4">
