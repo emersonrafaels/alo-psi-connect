@@ -18,6 +18,7 @@ export interface EmotionalScale {
   estimated_minutes: number;
   active: boolean;
   display_order: number;
+  subscales?: Record<string, { label: string; items: number[] }> | null;
 }
 
 export interface EmotionalScaleItem {
