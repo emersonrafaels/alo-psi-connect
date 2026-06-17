@@ -219,7 +219,7 @@ const ScaleResponse = () => {
                 </div>
               )}
 
-              {result.iseu && (
+              {result.iseu ? (
                 <div className="rounded-xl border p-4">
                   <div className="text-xs text-muted-foreground">ISEU-RBE atualizado</div>
                   <div className="flex items-center justify-between mt-1">
@@ -230,7 +230,16 @@ const ScaleResponse = () => {
                     Composto a partir de {result.iseu.scales_used} escala(s) do pack essencial.
                   </div>
                 </div>
-              )}
+              ) : (result as any).missing_scales && (result as any).missing_scales.length > 0 ? (
+                <div className="rounded-xl border border-dashed p-4">
+                  <div className="text-xs text-muted-foreground">ISEU-RBE</div>
+                  <p className="text-sm mt-1">
+                    Faltam {(result as any).missing_scales.length} escala
+                    {(result as any).missing_scales.length === 1 ? "" : "s"} para calcular seu ISEU-RBE:{" "}
+                    <span className="font-medium">{(result as any).missing_scales.join(", ")}</span>.
+                  </p>
+                </div>
+              ) : null}
 
               <div className="flex gap-3">
                 <Button onClick={() => navigate(buildTenantPath(slug, "/minhas-emocoes"))}>
