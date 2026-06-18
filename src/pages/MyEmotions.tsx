@@ -289,7 +289,7 @@ const MyEmotions = () => {
                       <th className="py-2 pr-3">Data</th>
                       <th className="py-2 pr-3">Escala</th>
                       <th className="py-2 pr-3">Pontuação</th>
-                      <th className="py-2 pr-3">Severidade</th>
+                      <th className="py-2 pr-3">Resultado</th>
                       <th className="py-2 pr-3">Variação</th>
                     </tr>
                   </thead>
