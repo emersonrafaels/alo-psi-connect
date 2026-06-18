@@ -233,31 +233,33 @@ export function severityBand(scaleCode: string, severity: string): IseuScore["ba
   const s = (severity || "").toLowerCase();
   switch (scaleCode) {
     case "WHO5":
-      // New: adequado / baixo / muito baixo. Legacy: ótimo / bom / baixo / muito baixo.
-      if (s === "adequado" || s === "ótimo") return "verde";
+      if (s.includes("adequado") || s === "ótimo") return "verde";
       if (s === "bom") return "amarelo";
-      if (s === "baixo") return "laranja";
-      return "vermelho"; // muito baixo
+      if (s.includes("muito baixo")) return "vermelho";
+      if (s.includes("baixo")) return "laranja";
+      return "vermelho";
     case "PHQ9":
-      if (s === "mínimo") return "verde";
-      if (s === "leve") return "amarelo";
-      if (s === "moderado") return "laranja";
+      if (s.includes("mínimo") || s.includes("mínimos")) return "verde";
+      if (s.includes("moderadamente grave")) return "vermelho";
+      if (s.includes("leve")) return "amarelo";
+      if (s.includes("moderado")) return "laranja";
       return "vermelho";
     case "GAD7":
-      // New uses feminine: mínima / leve / moderada / severa. Legacy: mínimo / moderado / grave.
-      if (s === "mínima" || s === "mínimo") return "verde";
-      if (s === "leve") return "amarelo";
-      if (s === "moderada" || s === "moderado") return "laranja";
-      return "vermelho"; // severa / grave
-    case "PSS10":
-      if (s === "baixo") return "verde";
-      if (s === "moderado") return "amarelo";
+      if (s.includes("mínima") || s.includes("mínimo")) return "verde";
+      if (s.includes("leve")) return "amarelo";
+      if (s.includes("moderada") || s.includes("moderado")) return "laranja";
       return "vermelho";
+    case "PSS10":
+      if (s.includes("alto")) return "vermelho";
+      if (s.includes("moderado")) return "amarelo";
+      if (s.includes("baixo")) return "verde";
+      return "amarelo";
     case "ISI":
-      if (s === "sem insônia significativa" || s === "sem insônia") return "verde";
-      if (s === "subliminar") return "amarelo";
-      if (s === "moderada") return "laranja";
-      return "vermelho"; // severa / grave
+      if (s.includes("sem insônia")) return "verde";
+      if (s.includes("subclínica") || s.includes("subliminar")) return "amarelo";
+      if (s.includes("severa")) return "vermelho";
+      if (s.includes("moderada")) return "laranja";
+      return "vermelho";
     case "MHCSF":
       if (s === "florescimento") return "verde";
       if (s === "moderado") return "amarelo";
