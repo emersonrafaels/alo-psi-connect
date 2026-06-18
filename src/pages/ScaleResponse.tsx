@@ -136,13 +136,12 @@ const ScaleResponse = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground">Severidade:</span>
+                <span className="text-sm text-muted-foreground">Resultado:</span>
                 {(() => {
                   const band = severityBand(scale.code, result.response.severity);
                   return (
                     <Badge
                       variant="outline"
-                      className="capitalize"
                       style={{ borderColor: ISEU_BAND_COLOR[band], color: ISEU_BAND_COLOR[band] }}
                     >
                       {result.response.severity}

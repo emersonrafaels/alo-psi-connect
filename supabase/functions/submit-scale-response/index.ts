@@ -169,35 +169,34 @@ Deno.serve(async (req) => {
   let severity = 'desconhecido';
   switch (scale.code) {
     case 'WHO5': {
-      // Raw 0..25 — cutoffs ~ <13 (baixo bem-estar) e <50/100 (muito baixo)
-      if (rawScore >= 18) severity = 'adequado';
-      else if (rawScore >= 13) severity = 'baixo';
-      else severity = 'muito baixo';
+      if (rawScore >= 18) severity = 'Bem-estar adequado';
+      else if (rawScore >= 13) severity = 'Bem-estar baixo';
+      else severity = 'Bem-estar muito baixo';
       break;
     }
     case 'PHQ9':
-      if (rawScore <= 4) severity = 'mínimo';
-      else if (rawScore <= 9) severity = 'leve';
-      else if (rawScore <= 14) severity = 'moderado';
-      else if (rawScore <= 19) severity = 'moderadamente grave';
-      else severity = 'grave';
+      if (rawScore <= 4) severity = 'Sintomas depressivos mínimos';
+      else if (rawScore <= 9) severity = 'Sintomas depressivos leves';
+      else if (rawScore <= 14) severity = 'Sintomas depressivos moderados';
+      else if (rawScore <= 19) severity = 'Sintomas depressivos moderadamente graves';
+      else severity = 'Sintomas depressivos graves';
       break;
     case 'GAD7':
-      if (rawScore <= 4) severity = 'mínima';
-      else if (rawScore <= 9) severity = 'leve';
-      else if (rawScore <= 14) severity = 'moderada';
-      else severity = 'severa';
+      if (rawScore <= 4) severity = 'Ansiedade mínima';
+      else if (rawScore <= 9) severity = 'Ansiedade leve';
+      else if (rawScore <= 14) severity = 'Ansiedade moderada';
+      else severity = 'Ansiedade severa';
       break;
     case 'PSS10':
-      if (rawScore <= 13) severity = 'baixo';
-      else if (rawScore <= 26) severity = 'moderado';
-      else severity = 'alto';
+      if (rawScore <= 13) severity = 'Estresse percebido baixo';
+      else if (rawScore <= 26) severity = 'Estresse percebido moderado';
+      else severity = 'Estresse percebido alto';
       break;
     case 'ISI':
-      if (rawScore <= 7) severity = 'sem insônia significativa';
-      else if (rawScore <= 14) severity = 'subliminar';
-      else if (rawScore <= 21) severity = 'moderada';
-      else severity = 'severa';
+      if (rawScore <= 7) severity = 'Sem insônia significativa';
+      else if (rawScore <= 14) severity = 'Insônia subclínica';
+      else if (rawScore <= 21) severity = 'Insônia clínica moderada';
+      else severity = 'Insônia clínica severa';
       break;
     case 'MHCSF': {
       // Keyes classification: counts of "high" (4-5) and "low" (0-1) frequency answers
