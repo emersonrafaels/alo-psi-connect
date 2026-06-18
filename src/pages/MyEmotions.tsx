@@ -304,7 +304,7 @@ const MyEmotions = () => {
                           </td>
                           <td className="py-2 pr-3 font-medium">{r.scale_code}</td>
                           <td className="py-2 pr-3">{r.raw_score}</td>
-                          <td className="py-2 pr-3 capitalize">{r.severity}</td>
+                          <td className="py-2 pr-3">{r.severity}</td>
                           <td className="py-2 pr-3">
                             {delta == null ? (
                               <span className="text-muted-foreground">—</span>
