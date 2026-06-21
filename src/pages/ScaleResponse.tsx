@@ -139,7 +139,7 @@ const ScaleResponse = () => {
                 <div className="text-2xl font-semibold mt-1">{result.response.raw_score}</div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <span className="text-sm text-muted-foreground">Resultado:</span>
                 {(() => {
                   const band = severityBand(scale.code, result.response.severity);
@@ -152,6 +152,17 @@ const ScaleResponse = () => {
                     </Badge>
                   );
                 })()}
+                {SCALE_EXPLAINERS[scale.code] && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-muted-foreground"
+                    onClick={() => setExplainerOpen(true)}
+                  >
+                    <Info className="h-3.5 w-3.5 mr-1" />
+                    Entenda este resultado
+                  </Button>
+                )}
               </div>
 
               {scale.code === "MHCSF" && MHCSF_INTERPRETATION[result.response.severity] && (
