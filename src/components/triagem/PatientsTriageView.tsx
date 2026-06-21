@@ -164,17 +164,19 @@ export default function PatientsTriageView({
               <TableHead>Criado</TableHead>
               <TableHead>Último login</TableHead>
               <TableHead className="text-center">Diário<br/><span className="text-xs font-normal">(30d/total)</span></TableHead>
+              <TableHead className="text-center">Escalas<br/><span className="text-xs font-normal">(preench/req)</span></TableHead>
+              <TableHead className="text-center">ISEU-RBE</TableHead>
               <TableHead className="text-center">Encontros<br/><span className="text-xs font-normal">(fut/pas)</span></TableHead>
               <TableHead className="text-center">Consultas<br/><span className="text-xs font-normal">(fut/pas)</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-8">
+              <TableRow><TableCell colSpan={10} className="text-center py-8">
                 <Loader2 className="h-5 w-5 animate-spin inline" />
               </TableCell></TableRow>
             ) : filteredRows.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+              <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                 Nenhum paciente encontrado.
               </TableCell></TableRow>
             ) : (
@@ -214,6 +216,39 @@ export default function PatientsTriageView({
                   <TableCell className="text-center text-sm">
                     {r.mood.last30}/{r.mood.total}
                   </TableCell>
+                  <TableCell className="text-center">
+                    {r.scales?.complete ? (
+                      <Badge className="text-xs bg-green-600">
+                        {r.scales.filled}/{r.scales.required}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs">
+                        {r.scales?.filled ?? 0}/{r.scales?.required ?? 0}
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {r.iseu?.score != null && r.iseu?.band ? (
+                      <Badge
+                        variant="outline"
+                        className="text-xs"
+                        style={{
+                          borderColor: ISEU_BAND_COLOR[r.iseu.band],
+                          color: ISEU_BAND_COLOR[r.iseu.band],
+                        }}
+                        title={ISEU_BAND_LABEL[r.iseu.band]}
+                      >
+                        {Math.round(r.iseu.score)} · {ISEU_BAND_LABEL[r.iseu.band]}
+                      </Badge>
+                    ) : (
+                      <span
+                        className="text-xs text-muted-foreground"
+                        title="Aguardando preenchimento de todas as escalas"
+                      >
+                        —
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-center text-sm">
                     {r.sessions.upcoming}/{r.sessions.past}
                   </TableCell>
@@ -223,6 +258,7 @@ export default function PatientsTriageView({
                 </TableRow>
               ))
             )}
+
           </TableBody>
         </Table>
       </div>
