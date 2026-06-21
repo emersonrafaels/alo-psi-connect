@@ -1,43 +1,59 @@
-## Objetivo
+# Práticas mais imersivas — Tela de Sessão
 
-Permitir aumentar/diminuir o zoom das imagens explicativas das escalas (WHO-5, PHQ-9, GAD-7, PSS-10, ISI, MHC-SF, ISEU-RBE) no `ScaleExplainerDialog`.
+Foco: `src/pages/praticas/PraticaSessao.tsx` e `src/components/praticas/BreathingCircle.tsx`. Sem mudar o índice, detalhe ou conclusão neste passo.
 
-## Mudanças
+## Conceito visual
 
-Apenas em `src/components/scales/ScaleExplainerDialog.tsx` (sem alterar consumidores nem APIs).
+Cena em camadas, cinematográfica mas calma (intensidade 3/5), usando a paleta atual (primary roxo + accent rosa + teal já existentes no tenant — sem hardcode de cor):
 
-### 1. Estado e modelo de zoom
-- Novo state `zoom: number` (1.0 = fit). Range: `0.5` a `4.0`, passo `0.25`.
-- Substituir a lógica atual de "maximizar = força 140%" por um zoom contínuo. Modo "maximizado" passa a controlar apenas o tamanho do dialog (95vw/95vh vs 3xl).
-- Reset de `zoom` para `1` ao abrir/fechar e ao alternar maximize.
-- `clampPan` usa o tamanho real da imagem multiplicado pelo zoom.
+```text
+┌──────────────────────────────────────────┐
+│  ░░░ gradiente radial primary→accent ░░░ │  ← fundo, drift lento
+│   · · ·   pontos luminosos flutuando · · │  ← partículas (~25)
+│        ╭───────────╮                     │
+│       (  halo glow  )                    │  ← aura pulsando c/ respiração
+│        ╰───────────╯                     │
+│            circle                        │  ← BreathingCircle (escala c/ fase)
+│         "Inspire 4s"                     │
+│        ▁▂▃▄▅▆ progresso                  │
+└──────────────────────────────────────────┘
+```
 
-### 2. Controles visuais (sempre visíveis quando a imagem está carregada)
-Barra flutuante no canto inferior central da área da imagem, com fundo `bg-background/90 backdrop-blur` e `border`:
-- Botão `−` (ZoomOut icon) — diminui em 0.25
-- Slider horizontal (Radix `Slider`, largura ~140px) ligado a `zoom`
-- Botão `+` (ZoomIn icon) — aumenta em 0.25
-- Label compacto `{Math.round(zoom*100)}%`
-- Botão `Reset` (RotateCcw icon) — volta para 1 e zera o pan
-- Todos com `aria-label`, desabilitados nos limites.
+## Mudanças por componente
 
-### 3. Interações adicionais
-- Scroll do mouse na área da imagem: ajusta zoom (`wheel` event, `preventDefault`, delta = ±0.1 ou ±0.25).
-- Atalhos de teclado quando o dialog está aberto: `+`/`=` → zoom in, `-` → zoom out, `0` → reset.
-- Click simples na imagem: mantém o comportamento atual (alternar maximize) somente quando `zoom === 1`. Se já houver zoom, click não toggla maximize (evita conflito).
-- Pan (arrastar) ativo sempre que `zoom > 1` (não mais condicionado a `maximized`).
+### 1. `PraticaSessao.tsx` — cena imersiva
+- Substituir o `bg-gradient-to-br from-primary…` por uma **cena em camadas absolutas**:
+  - Camada A: `radial-gradient` duplo (primary no centro-superior, accent no canto inferior), animado via `@keyframes auroraDrift` (background-position oscilando ~30s, ease-in-out).
+  - Camada B: SVG inline com ~25 círculos pequenos (`fill="hsl(var(--primary-foreground) / 0.4)"`), cada um com `animate-[float_*s_ease-in-out_infinite]` em durações 8-16s aleatórias, criando partículas flutuantes.
+  - Camada C: vinheta `radial-gradient(transparent → bg/40)` para foco central.
+  - Sincronia com pausa: aplicar `[animation-play-state:paused]` nas camadas quando `paused === true`.
+- **Header/footer**: deslizar para fora ao ficar idle por 4s sem interação (mouse/touch), com `opacity-0 -translate-y-2` / `translate-y-2`, voltar em `pointermove`. Em mobile o `tap` reexibe.
+- **Mobile**: viewport-lock — `100dvh` (não `100vh`), `overscroll-none`, `touch-none` no fundo. Headers compactam para `py-3` em `< sm`.
+- **Desktop**: layout permanece centrado; partículas e gradiente ocupam 100% da viewport.
+- Barra de progresso ganha um glow sutil (`shadow-[0_0_12px_hsl(var(--primary-foreground)/0.6)]`).
 
-### 4. Aplicação visual
-- A `<img>` recebe `transform: translate3d(x,y,0) scale(zoom)` com `transform-origin: center`.
-- Classes ajustadas: remover `min-h-[140%] min-w-[140%]`; usar `max-w-full max-h-[70vh]` no modo normal e `max-w-none max-h-none w-auto h-auto` no maximizado, deixando o `scale()` controlar o tamanho.
-- Cursor: `zoom-in` quando `zoom < max` e não está arrastando; `grab`/`grabbing` quando `zoom > 1`.
+### 2. `BreathingCircle.tsx` — halo respirante
+- Adicionar 2 anéis SVG concêntricos com `stroke-dasharray` rotacionando lentamente (10s linear) por trás dos 3 círculos atuais.
+- Aumentar contraste das camadas internas e adicionar `mix-blend-screen` no halo externo para fundir com o gradiente da cena.
+- Em mobile, manter `w-72 h-72`; em `sm+`, `w-[26rem] h-[26rem]` para mais presença em desktop.
 
-### 5. Detalhes técnicos
-- Importar `ZoomIn`, `ZoomOut`, `RotateCcw` de `lucide-react`.
-- Importar `Slider` de `@/components/ui/slider`.
-- Manter `Maximize2`/`Minimize2` no header como já existe.
-- Sem mudanças em props públicas → nenhum arquivo consumidor precisa ser tocado.
+### 3. Trilha sonora ambiente (toggle)
+- Estado novo `[ambient, setAmbient]` (default `true`).
+- Novo `<audio>` oculto com `loop`, volume `0.25`, src vindo de `public/audio/ambient-praticas.mp3` (placeholder vazio — usuário sobe depois) **ou** procedural via Web Audio (oscilador sine 110Hz + 220Hz com lowpass + LFO) — preferir Web Audio para evitar dependência de asset; auto-suspende quando paused.
+- Botão extra no footer: `<Music2/>` / `<Music2 c/strike>` ao lado do botão de mute do guia. `aria-label`s claros.
+- Persistência: salvar preferência em `localStorage` (`praticas:ambient`).
 
-## Fora do escopo
-- Pinch-zoom em touch (pode ser adicionado depois; o slider/botões já funcionam em mobile).
-- Persistir nível de zoom entre aberturas.
+### 4. Tokens novos em `index.css`
+- `@keyframes auroraDrift`, `@keyframes float`, `@keyframes haloPulse` no bloco global (não em `@layer`).
+- `--shadow-immersive: 0 0 60px hsl(var(--primary) / 0.4)` para o halo.
+
+## Acessibilidade
+- Respeitar `prefers-reduced-motion`: desligar `auroraDrift`, `float` e `haloPulse` (manter só o círculo respirando).
+- Todos os controles mantêm foco visível e `aria-label`.
+- Áudio ambiente nunca toca sem ação do usuário (já há clique para entrar na sessão).
+
+## Fora de escopo (deste passo)
+- Índice, Detalhe e Conclusão (mencionados no menu original mas não selecionados pelo usuário).
+- Asset de áudio real — fica como Web Audio procedural agora; você pode trocar por mp3 depois.
+
+Posso seguir?

@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
 interface BreathingCircleProps {
-  /** seconds for each phase */
   inspirar: number;
   segurar: number;
   expirar: number;
   paused?: boolean;
-  /** called whenever phase changes; useful for label/audio sync */
   onPhaseChange?: (phase: "inspirar" | "segurar" | "expirar") => void;
 }
 
@@ -33,7 +31,6 @@ export const BreathingCircle = ({
         const idx = PHASES.indexOf(phaseRef.current);
         let next: Phase = PHASES[(idx + 1) % PHASES.length];
         let dur = next === "inspirar" ? inspirar : next === "segurar" ? segurar : expirar;
-        // skip zero-duration phases (e.g. segurar=0)
         let safety = 0;
         while (dur <= 0 && safety < 3) {
           const i2 = PHASES.indexOf(next);
@@ -59,10 +56,39 @@ export const BreathingCircle = ({
     phase === "inspirar" ? "Inspire" : phase === "segurar" ? "Segure" : "Expire";
 
   return (
-    <div className="relative flex items-center justify-center w-72 h-72 sm:w-96 sm:h-96">
+    <div className="relative flex items-center justify-center w-72 h-72 sm:w-[26rem] sm:h-[26rem]">
+      {/* Rotating SVG rings */}
+      <svg
+        aria-hidden
+        className="absolute inset-0 w-full h-full pratica-halo-ring"
+        style={{
+          animation: paused ? "none" : "haloSpin 28s linear infinite",
+        }}
+        viewBox="0 0 200 200"
+        fill="none"
+      >
+        <circle
+          cx="100"
+          cy="100"
+          r="92"
+          stroke="hsl(var(--primary-foreground) / 0.35)"
+          strokeWidth="0.6"
+          strokeDasharray="2 6"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="78"
+          stroke="hsl(var(--primary-foreground) / 0.25)"
+          strokeWidth="0.4"
+          strokeDasharray="1 4"
+        />
+      </svg>
+
+      {/* Soft outer glow */}
       <div
         aria-hidden
-        className="absolute inset-0 rounded-full bg-primary/15 blur-2xl"
+        className="absolute inset-0 rounded-full bg-primary-foreground/20 blur-3xl pratica-halo mix-blend-screen"
         style={{
           transform: `scale(${scale})`,
           transition: `transform ${transitionDuration}s ease-in-out`,
@@ -70,7 +96,7 @@ export const BreathingCircle = ({
       />
       <div
         aria-hidden
-        className="absolute inset-6 rounded-full bg-primary/25"
+        className="absolute inset-6 rounded-full bg-primary-foreground/15 blur-2xl"
         style={{
           transform: `scale(${scale})`,
           transition: `transform ${transitionDuration}s ease-in-out`,
@@ -78,15 +104,26 @@ export const BreathingCircle = ({
       />
       <div
         aria-hidden
-        className="absolute inset-12 rounded-full bg-primary/40"
+        className="absolute inset-12 rounded-full bg-primary-foreground/25"
+        style={{
+          transform: `scale(${scale})`,
+          transition: `transform ${transitionDuration}s ease-in-out`,
+          boxShadow: "0 0 60px hsl(var(--primary-foreground) / 0.35)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="absolute inset-20 rounded-full bg-primary-foreground/40 backdrop-blur-sm"
         style={{
           transform: `scale(${scale})`,
           transition: `transform ${transitionDuration}s ease-in-out`,
         }}
       />
-      <div className="relative z-10 flex flex-col items-center text-primary-foreground">
-        <p className="font-serif text-3xl sm:text-4xl tracking-wide">{label}</p>
-        <p className="text-sm opacity-80 mt-2">{secondsLeft}s</p>
+      <div className="relative z-10 flex flex-col items-center text-primary-foreground select-none">
+        <p className="font-serif text-3xl sm:text-5xl tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.25)]">
+          {label}
+        </p>
+        <p className="text-sm sm:text-base opacity-80 mt-2">{secondsLeft}s</p>
       </div>
     </div>
   );
