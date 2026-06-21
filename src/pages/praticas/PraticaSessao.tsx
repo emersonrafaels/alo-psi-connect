@@ -349,7 +349,7 @@ const PraticaSessao = () => {
 
       {/* Controls — bottom on mobile, vertical side rail on sm+ */}
       <footer
-        className={`z-20 flex flex-wrap items-center justify-center gap-2 px-4 pb-6 sm:pb-0 sm:px-0 sm:gap-3 sm:flex-col sm:flex-nowrap sm:fixed sm:right-4 sm:top-1/2 sm:-translate-y-1/2 transition-all duration-500 sticky bottom-0 sm:static ${
+        className={`z-20 flex flex-wrap items-center justify-center gap-2 px-4 pb-6 sticky bottom-0 sm:sticky-none sm:fixed sm:bottom-auto sm:top-1/2 sm:right-4 sm:-translate-y-1/2 sm:px-0 sm:pb-0 sm:gap-3 sm:flex-col sm:flex-nowrap transition-all duration-500 ${
           chromeVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
         }`}
       >
