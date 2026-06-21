@@ -315,11 +315,11 @@ const PraticaSessao = () => {
       </header>
 
       {/* Main */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 sm:pr-24 text-center pb-32 sm:pb-8">
-        <h1 className="font-serif text-2xl sm:text-4xl mb-2 drop-shadow-[0_2px_18px_rgba(0,0,0,0.25)]">
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center pb-4">
+        <h1 className="font-serif text-2xl sm:text-3xl mb-1 drop-shadow-[0_2px_18px_rgba(0,0,0,0.25)]">
           {pratica?.titulo ?? "Respiração guiada"}
         </h1>
-        <p className="opacity-80 mb-6 sm:mb-10 max-w-md text-sm sm:text-base">
+        <p className="opacity-80 mb-3 sm:mb-4 max-w-md text-sm">
           {pratica?.subtitulo ?? "Acalme sua mente agora"}
         </p>
 
@@ -330,7 +330,7 @@ const PraticaSessao = () => {
           paused={paused}
         />
 
-        <div className="mt-8 sm:mt-12 w-full max-w-md">
+        <div className="mt-4 sm:mt-6 w-full max-w-md">
           <div className="h-2 rounded-full bg-white/15 overflow-hidden">
             <div
               className="h-full bg-primary-foreground/90 transition-all"
@@ -340,16 +340,16 @@ const PraticaSessao = () => {
               }}
             />
           </div>
-          <div className="flex items-center justify-between text-base sm:text-lg font-medium tabular-nums opacity-95 mt-3 drop-shadow-[0_1px_8px_rgba(0,0,0,0.35)]">
+          <div className="flex items-center justify-between text-sm sm:text-base font-medium tabular-nums opacity-95 mt-2 drop-shadow-[0_1px_8px_rgba(0,0,0,0.35)]">
             <span>{fmt(elapsed)}</span>
             <span>{fmt(totalSeg)}</span>
           </div>
         </div>
       </main>
 
-      {/* Controls — bottom on mobile, vertical side rail on sm+ */}
+      {/* Controls — bottom row */}
       <footer
-        className={`z-20 flex flex-wrap items-center justify-center gap-2 px-4 pb-6 sticky bottom-0 sm:sticky-none sm:fixed sm:bottom-auto sm:top-1/2 sm:right-4 sm:-translate-y-1/2 sm:px-0 sm:pb-0 sm:gap-3 sm:flex-col sm:flex-nowrap transition-all duration-500 ${
+        className={`relative z-20 flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 pb-4 sm:pb-6 transition-all duration-500 ${
           chromeVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
         }`}
       >
@@ -431,7 +431,9 @@ const PraticaSessao = () => {
           loop
           autoPlay
           muted={muted}
-          crossOrigin="anonymous"
+          preload="auto"
+          onError={(e) => console.warn("[pratica] audio error", audioUrl, e)}
+          onCanPlay={() => console.info("[pratica] audio canplay", audioUrl)}
           className="hidden"
         />
       )}
