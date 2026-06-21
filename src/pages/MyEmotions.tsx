@@ -27,10 +27,13 @@ import {
   CartesianGrid,
   ReferenceArea,
 } from "recharts";
-import { HeartPulse, ArrowUp, ArrowDown, Minus, ClipboardList, TrendingUp, TrendingDown } from "lucide-react";
+import { HeartPulse, ArrowUp, ArrowDown, Minus, ClipboardList, TrendingUp, TrendingDown, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScaleExplainerDialog } from "@/components/scales/ScaleExplainerDialog";
+import { SCALE_EXPLAINERS, ISEU_EXPLAINER } from "@/data/scaleExplainers";
 
 const MyEmotions = () => {
+  const [explainer, setExplainer] = useState<{ title: string; url: string } | null>(null);
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { tenant } = useTenant();
@@ -50,7 +53,8 @@ const MyEmotions = () => {
     return null;
   }
 
-  const latestIseu = iseu && iseu.length ? iseu[iseu.length - 1] : null;
+  const iseuComplete = !!missingScales && missingScales.length === 0;
+  const latestIseu = iseuComplete && iseu && iseu.length ? iseu[iseu.length - 1] : null;
 
   const iseuChartData = useMemo(
     () =>
@@ -109,7 +113,17 @@ const MyEmotions = () => {
         <div className="grid gap-4 md:grid-cols-3 mb-6">
           <Card className="rounded-2xl">
             <CardHeader>
-              <CardDescription>ISEU-RBE atual</CardDescription>
+              <div className="flex items-center justify-between gap-2">
+                <CardDescription>ISEU-RBE atual</CardDescription>
+                <button
+                  type="button"
+                  onClick={() => setExplainer({ title: "ISEU-RBE — Índice de Saúde Emocional Unificado", url: ISEU_EXPLAINER })}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  aria-label="Como funciona o ISEU-RBE"
+                >
+                  <Info className="h-4 w-4" />
+                </button>
+              </div>
               <CardTitle className="text-4xl">
                 {iseuLoading ? (
                   <Skeleton className="h-10 w-24" />
@@ -130,14 +144,23 @@ const MyEmotions = () => {
                   {ISEU_BAND_LABEL[latestIseu.band]}
                 </Badge>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  {missingScales && missingScales.length > 0
-                    ? `- Preencha ${missingScales.length} escala${missingScales.length === 1 ? "" : "s"} restante${missingScales.length === 1 ? "" : "s"}, para ter o valor calculado.`
-                    : "Responda todas as escalas para calcular seu ISEU-RBE."}
-                </p>
+                <div className="space-y-3">
+                  <Badge variant="secondary">Aguardando respostas</Badge>
+                  <p className="text-sm text-muted-foreground">
+                    {missingScales && missingScales.length > 0
+                      ? `Preencha ${missingScales.length} escala${missingScales.length === 1 ? "" : "s"} para calcular: ${missingScales.join(", ")}.`
+                      : "Responda todas as escalas para calcular seu ISEU-RBE."}
+                  </p>
+                  {missingScales && missingScales.length > 0 && (
+                    <Button size="sm" onClick={() => navigate(buildTenantPath(slug, "/escalas"))}>
+                      Responder agora
+                    </Button>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
+
 
           <Card className="rounded-2xl md:col-span-2">
             <CardHeader>
@@ -195,12 +218,29 @@ const MyEmotions = () => {
               const prev = items.length > 1 ? items[items.length - 2].v : null;
               const trend = last != null && prev != null ? Number((last - prev).toFixed(1)) : null;
               return (
-                <button
+                <div
                   key={s.code}
-                  onClick={() => setFilterScale(s.code)}
-                  className="text-left rounded-2xl border border-border/60 p-4 hover:border-primary/40 hover:shadow-sm transition-all bg-card"
+                  className="relative text-left rounded-2xl border border-border/60 bg-card hover:border-primary/40 hover:shadow-sm transition-all"
                 >
-                  <div className="flex items-start justify-between gap-2 mb-2">
+                  {SCALE_EXPLAINERS[s.code] && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExplainer({ title: s.name, url: SCALE_EXPLAINERS[s.code] });
+                      }}
+                      className="absolute top-2 right-2 z-10 p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-muted/60 transition-colors"
+                      aria-label={`Entenda ${s.code}`}
+                    >
+                      <Info className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setFilterScale(s.code)}
+                    className="w-full text-left p-4"
+                  >
+                  <div className="flex items-start justify-between gap-2 mb-2 pr-6">
                     <div className="min-w-0">
                       <div className="text-xs text-muted-foreground">{s.code}</div>
                       <div className="text-sm font-medium truncate">{s.short_description}</div>
@@ -245,7 +285,8 @@ const MyEmotions = () => {
                       )}
                     </div>
                   </div>
-                </button>
+                  </button>
+                </div>
               );
             })}
           </div>
@@ -334,6 +375,14 @@ const MyEmotions = () => {
         </Card>
       </main>
       <Footer />
+      {explainer && (
+        <ScaleExplainerDialog
+          open={!!explainer}
+          onOpenChange={(o) => !o && setExplainer(null)}
+          title={explainer.title}
+          imageUrl={explainer.url}
+        />
+      )}
     </div>
   );
 };

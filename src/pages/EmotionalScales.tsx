@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
@@ -16,14 +17,17 @@ import Footer from "@/components/ui/footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, ClipboardList, HeartPulse, ArrowRight, History, Sparkles, Activity } from "lucide-react";
+import { Clock, ClipboardList, HeartPulse, ArrowRight, History, Sparkles, Activity, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScaleExplainerDialog } from "@/components/scales/ScaleExplainerDialog";
+import { SCALE_EXPLAINERS, ISEU_EXPLAINER } from "@/data/scaleExplainers";
 
 const EmotionalScales = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { tenant } = useTenant();
   const slug = tenant?.slug || "alopsi";
+  const [explainer, setExplainer] = useState<{ title: string; url: string; code?: string } | null>(null);
 
   const { data: scales, isLoading } = useEmotionalScales();
   const { data: latestMap } = useLatestResponseByScale();
@@ -109,14 +113,28 @@ const EmotionalScales = () => {
             </div>
           )}
 
-          <Button
-            className="w-full"
-            variant={avail.available ? "default" : "outline"}
-            onClick={() => navigate(buildTenantPath(slug, `/escalas/${scale.code.toLowerCase()}`))}
-          >
-            {last ? "Responder novamente" : "Responder agora"}
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
+          <div className="flex gap-2">
+            {SCALE_EXPLAINERS[scale.code] && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setExplainer({ title: scale.name, url: SCALE_EXPLAINERS[scale.code], code: scale.code })}
+                aria-label={`Entenda ${scale.code}`}
+                title="Entenda esta escala"
+              >
+                <Info className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              className="flex-1"
+              variant={avail.available ? "default" : "outline"}
+              onClick={() => navigate(buildTenantPath(slug, `/escalas/${scale.code.toLowerCase()}`))}
+            >
+              {last ? "Responder novamente" : "Responder agora"}
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
@@ -137,7 +155,7 @@ const EmotionalScales = () => {
             Instrumentos clinicamente validados para acompanhar seu bem-estar ao longo do tempo.
             Suas respostas ficam registradas no seu histórico para que você acompanhe sua evolução.
           </p>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -146,19 +164,26 @@ const EmotionalScales = () => {
               <History className="h-4 w-4 mr-2" />
               Ver meu histórico
             </Button>
-        </div>
-
-        {missingScales && missingScales.length > 0 && (
-          <div className="mb-6 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4">
-            <div className="text-sm font-medium">
-              Faltam {missingScales.length} escala{missingScales.length === 1 ? "" : "s"} para calcular seu ISEU-RBE
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Responda: <span className="font-medium">{missingScales.join(", ")}</span>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExplainer({ title: "ISEU-RBE — Índice de Saúde Emocional Unificado", url: ISEU_EXPLAINER })}
+            >
+              <Info className="h-4 w-4 mr-2" />
+              Como funciona o ISEU-RBE
+            </Button>
           </div>
-        )}
 
+          {missingScales && missingScales.length > 0 && (
+            <div className="mt-6 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4">
+              <div className="text-sm font-medium">
+                Faltam {missingScales.length} escala{missingScales.length === 1 ? "" : "s"} para calcular seu ISEU-RBE
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Responda: <span className="font-medium">{missingScales.join(", ")}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {isLoading ? (
@@ -198,6 +223,20 @@ const EmotionalScales = () => {
         )}
       </main>
       <Footer />
+      {explainer && (
+        <ScaleExplainerDialog
+          open={!!explainer}
+          onOpenChange={(o) => !o && setExplainer(null)}
+          title={explainer.title}
+          imageUrl={explainer.url}
+          ctaLabel={explainer.code ? "Responder agora" : undefined}
+          onCta={
+            explainer.code
+              ? () => navigate(buildTenantPath(slug, `/escalas/${explainer.code!.toLowerCase()}`))
+              : undefined
+          }
+        />
+      )}
     </div>
   );
 };

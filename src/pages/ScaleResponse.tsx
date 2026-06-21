@@ -15,11 +15,13 @@ import Footer from "@/components/ui/footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from "recharts";
+import { ScaleExplainerDialog } from "@/components/scales/ScaleExplainerDialog";
+import { SCALE_EXPLAINERS } from "@/data/scaleExplainers";
 
 const MHCSF_INTERPRETATION: Record<string, { title: string; text: string }> = {
   florescimento: {
@@ -49,6 +51,8 @@ const ScaleResponse = () => {
   const submit = useSubmitScaleResponse();
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [result, setResult] = useState<Awaited<ReturnType<typeof submit.mutateAsync>> | null>(null);
+  const [explainerOpen, setExplainerOpen] = useState(false);
+
 
   if (!authLoading && !user) {
     navigate(buildTenantPath(slug, "/auth"));
@@ -135,7 +139,7 @@ const ScaleResponse = () => {
                 <div className="text-2xl font-semibold mt-1">{result.response.raw_score}</div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <span className="text-sm text-muted-foreground">Resultado:</span>
                 {(() => {
                   const band = severityBand(scale.code, result.response.severity);
@@ -148,6 +152,17 @@ const ScaleResponse = () => {
                     </Badge>
                   );
                 })()}
+                {SCALE_EXPLAINERS[scale.code] && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-muted-foreground"
+                    onClick={() => setExplainerOpen(true)}
+                  >
+                    <Info className="h-3.5 w-3.5 mr-1" />
+                    Entenda este resultado
+                  </Button>
+                )}
               </div>
 
               {scale.code === "MHCSF" && MHCSF_INTERPRETATION[result.response.severity] && (
@@ -252,6 +267,14 @@ const ScaleResponse = () => {
           </Card>
         </main>
         <Footer />
+        {SCALE_EXPLAINERS[scale.code] && (
+          <ScaleExplainerDialog
+            open={explainerOpen}
+            onOpenChange={setExplainerOpen}
+            title={scale.name}
+            imageUrl={SCALE_EXPLAINERS[scale.code]}
+          />
+        )}
       </div>
     );
   }
@@ -266,8 +289,23 @@ const ScaleResponse = () => {
 
         <Card className="rounded-2xl">
           <CardHeader>
-            <CardTitle>{scale.name}</CardTitle>
-            <CardDescription>{scale.instructions}</CardDescription>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <CardTitle>{scale.name}</CardTitle>
+                <CardDescription className="mt-1.5">{scale.instructions}</CardDescription>
+              </div>
+              {SCALE_EXPLAINERS[scale.code] && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => setExplainerOpen(true)}
+                >
+                  <Info className="h-4 w-4 mr-1.5" />
+                  Como funciona
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="text-xs text-muted-foreground flex justify-between">
@@ -329,6 +367,14 @@ const ScaleResponse = () => {
         </div>
       </main>
       <Footer />
+      {SCALE_EXPLAINERS[scale.code] && (
+        <ScaleExplainerDialog
+          open={explainerOpen}
+          onOpenChange={setExplainerOpen}
+          title={scale.name}
+          imageUrl={SCALE_EXPLAINERS[scale.code]}
+        />
+      )}
     </div>
   );
 };
