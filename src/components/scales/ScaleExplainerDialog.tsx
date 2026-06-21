@@ -53,7 +53,7 @@ export function ScaleExplainerDialog({
       <DialogContent
         className={cn(
           "p-0 overflow-hidden transition-all duration-200",
-          maximized ? "max-w-[95vw] w-[95vw] h-[95vh]" : "max-w-3xl",
+          maximized ? "max-w-[95vw] w-[95vw] h-[95vh] !flex flex-col gap-0" : "max-w-3xl",
         )}
       >
         <DialogHeader className="px-6 pt-6 pr-16">
