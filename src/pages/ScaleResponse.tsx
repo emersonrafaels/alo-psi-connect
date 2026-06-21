@@ -51,6 +51,8 @@ const ScaleResponse = () => {
   const submit = useSubmitScaleResponse();
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [result, setResult] = useState<Awaited<ReturnType<typeof submit.mutateAsync>> | null>(null);
+  const [explainerOpen, setExplainerOpen] = useState(false);
+
 
   if (!authLoading && !user) {
     navigate(buildTenantPath(slug, "/auth"));
