@@ -8,7 +8,7 @@ interface Comment {
   id: string;
   content: string;
   author_name: string;
-  author_email: string;
+  author_email?: string;
   user_id: string;
   created_at: string;
   updated_at: string;
