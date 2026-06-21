@@ -5,6 +5,7 @@ import { X, Pause, Play, Volume2, VolumeX, Music2, Music, Maximize2, Minimize2 }
 import { usePratica } from "@/hooks/usePraticas";
 import { BreathingCircle } from "@/components/praticas/BreathingCircle";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
+import { resolverAudioPratica } from "@/data/praticasAudios";
 
 const fmt = (s: number) => {
   const m = Math.floor(s / 60);
