@@ -202,6 +202,31 @@ export default function PatientsTriageFilters({ filters, onChange, availableInst
         </SelectContent>
       </Select>
 
+      {/* Escalas */}
+      <Select value={filters.scales} onValueChange={(v) => set('scales', v)}>
+        <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Escalas: todos</SelectItem>
+          <SelectItem value="complete">Escalas: completas</SelectItem>
+          <SelectItem value="incomplete">Escalas: incompletas</SelectItem>
+          <SelectItem value="none">Escalas: nenhuma</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {/* ISEU-RBE */}
+      <Select value={filters.iseuBand} onValueChange={(v) => set('iseuBand', v)}>
+        <SelectTrigger className="w-[180px] h-9"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">ISEU: todos</SelectItem>
+          <SelectItem value="verde">ISEU: Equilíbrio</SelectItem>
+          <SelectItem value="amarelo">ISEU: Atenção leve</SelectItem>
+          <SelectItem value="laranja">ISEU: Risco moderado</SelectItem>
+          <SelectItem value="vermelho">ISEU: Risco elevado</SelectItem>
+          <SelectItem value="none">ISEU: sem cálculo</SelectItem>
+        </SelectContent>
+      </Select>
+
+
       {active > 0 && (
         <Button variant="ghost" size="sm" onClick={() => onChange(defaultFilters)} className="gap-1">
           <X className="h-3 w-3" /> Limpar ({active})
