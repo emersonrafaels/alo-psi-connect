@@ -199,6 +199,19 @@ const AppWithShortcuts = () => {
       <Route path="/medcos/escalas" element={<EmotionalScales />} />
       <Route path="/medcos/escalas/:code" element={<ScaleResponse />} />
       <Route path="/medcos/minhas-emocoes" element={<MyEmotions />} />
+
+      {/* Práticas para Reequilíbrio Emocional (público) */}
+      <Route path="/praticas" element={<PraticasIndex />} />
+      <Route path="/praticas/:slug" element={<PraticaDetalhe />} />
+      <Route path="/praticas/:slug/sessao" element={<PraticaSessao />} />
+      <Route path="/praticas/:slug/checkout" element={<PraticaCheckout />} />
+      <Route path="/praticas/:slug/concluida" element={<PraticaConcluida />} />
+      <Route path="/medcos/praticas" element={<PraticasIndex />} />
+      <Route path="/medcos/praticas/:slug" element={<PraticaDetalhe />} />
+      <Route path="/medcos/praticas/:slug/sessao" element={<PraticaSessao />} />
+      <Route path="/medcos/praticas/:slug/checkout" element={<PraticaCheckout />} />
+      <Route path="/medcos/praticas/:slug/concluida" element={<PraticaConcluida />} />
+      
       
       {/* Rotas Medcos (duplicadas com prefixo /medcos) */}
       <Route path="/medcos" element={<Index />} />
