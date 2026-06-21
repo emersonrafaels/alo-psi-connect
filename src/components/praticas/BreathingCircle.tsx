@@ -56,8 +56,10 @@ export const BreathingCircle = ({
     phase === "inspirar" ? "Inspire" : phase === "segurar" ? "Segure" : "Expire";
 
   return (
-    <div className="relative flex items-center justify-center w-72 h-72 sm:w-[26rem] sm:h-[26rem]">
-      {/* Rotating SVG rings */}
+    <div
+      className="relative flex items-center justify-center"
+      style={{ width: "min(22rem, 42vh)", height: "min(22rem, 42vh)" }}
+    >
       <svg
         aria-hidden
         className="absolute inset-0 w-full h-full pratica-halo-ring"
