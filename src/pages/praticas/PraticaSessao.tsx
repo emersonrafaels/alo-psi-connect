@@ -188,6 +188,59 @@ const PraticaSessao = () => {
     navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`);
   };
 
+  // Fullscreen with iOS fallback
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const toggleFullscreen = async () => {
+    const doc: any = document;
+    const el: any = document.documentElement;
+    const inFs = !!(doc.fullscreenElement || doc.webkitFullscreenElement);
+    try {
+      if (inFs) {
+        if (doc.exitFullscreen) await doc.exitFullscreen();
+        else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+        setIsFullscreen(false);
+        el.classList.remove("pratica-fullscreen-fallback");
+      } else {
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+        else {
+          // iOS Safari fallback
+          el.classList.add("pratica-fullscreen-fallback");
+          window.scrollTo(0, 1);
+        }
+        setIsFullscreen(true);
+      }
+    } catch {
+      el.classList.toggle("pratica-fullscreen-fallback");
+      setIsFullscreen((v) => !v);
+    }
+  };
+
+  useEffect(() => {
+    const sync = () => {
+      const doc: any = document;
+      setIsFullscreen(!!(doc.fullscreenElement || doc.webkitFullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", sync);
+    document.addEventListener("webkitfullscreenchange", sync as any);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      document.removeEventListener("webkitfullscreenchange", sync as any);
+      window.removeEventListener("keydown", onKey);
+      const doc: any = document;
+      if (doc.fullscreenElement && doc.exitFullscreen) doc.exitFullscreen().catch(() => {});
+      else if (doc.webkitFullscreenElement && doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+      document.documentElement.classList.remove("pratica-fullscreen-fallback");
+    };
+  }, []);
+
   const progress = useMemo(
     () => Math.min(100, (elapsed / totalSeg) * 100),
     [elapsed, totalSeg]
