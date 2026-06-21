@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
@@ -16,8 +17,10 @@ import Footer from "@/components/ui/footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, ClipboardList, HeartPulse, ArrowRight, History, Sparkles, Activity } from "lucide-react";
+import { Clock, ClipboardList, HeartPulse, ArrowRight, History, Sparkles, Activity, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScaleExplainerDialog } from "@/components/scales/ScaleExplainerDialog";
+import { SCALE_EXPLAINERS, ISEU_EXPLAINER } from "@/data/scaleExplainers";
 
 const EmotionalScales = () => {
   const navigate = useNavigate();
