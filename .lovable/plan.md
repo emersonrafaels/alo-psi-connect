@@ -1,27 +1,24 @@
-## Objetivo
-Adicionar um modo de maximizar (lightbox fullscreen) às imagens explicativas das escalas e do ISEU-RBE, permitindo que o usuário amplie a imagem para visualização detalhada.
+Add click-and-drag panning to the scale explainer image when it is in maximized/fullscreen mode.
 
-## Escopo
-- Modificar apenas o componente `ScaleExplainerDialog`.
-- Não alterar dados, hooks, páginas ou backend.
+### What we will change
+Only `src/components/scales/ScaleExplainerDialog.tsx`.
 
-## Como será feito
-1. **Estado de maximização:** Adicionar estado `isMaximized` dentro do `ScaleExplainerDialog`.
-2. **Toggle na interface:** Incluir um botão com ícone `Maximize2` no cabeçalho, ao lado do título, para ativar/desativar o modo fullscreen. Ao maximizar, o botão muda para `Minimize2`.
-3. **Layout lightbox fullscreen:**
-   - Quando `isMaximized === true`, o conteúdo do diálogo ocupa `max-w-[95vw] max-h-[95vh]`, centralizado, com fundo do diálogo em branco/cartão e overlay escuro padrão do Radix.
-   - A imagem é exibida com `max-h-[85vh] object-contain` para aproveitar a tela sem cortar.
-   - Cabeçalho e rodapé permanecem visíveis, mas compactos.
-4. **Interações:**
-   - Clicar na imagem também alterna o modo maximizar.
-   - Pressionar `Esc` quando maximizado volta ao tamanho normal (e uma segunda `Esc` fecha o diálogo, comportamento padrão do Radix Dialog).
-   - Cursor `zoom-in`/`zoom-out` ao passar sobre a imagem para indicar ação.
-5. **Acessibilidade:** Manter `alt` descritivo e botões com `aria-label`.
+### Behavior
+- When the dialog is in normal size, image keeps current `object-contain` behavior and clicking it maximizes.
+- When maximized:
+  - The image is rendered at a larger intrinsic/zoomed size inside an `overflow-hidden` container.
+  - The user can click and drag to pan the image around and reveal parts outside the viewport.
+  - Cursor changes from `grab` (idle) to `grabbing` (dragging).
+  - Panning stops at the image edges so the user never sees empty space beyond it.
+  - A single click without dragging still minimizes the image (same as today).
+  - A drag gesture does not trigger minimize.
+- Pan position resets whenever the image is minimized or the dialog closes.
 
-## Arquivos envolvidos
-- `src/components/scales/ScaleExplainerDialog.tsx` (edição)
+### Technical notes
+- Add local state for `pan` (`{ x, y }`), `isDragging`, and `dragStart`/`lastPan` refs.
+- Attach `pointerdown`, `pointermove`, `pointerup`/`pointerleave` handlers to the image container.
+- Compute boundaries dynamically using the image and container element rects.
+- Preserve existing `maximize`/`minimize` header button and `Esc` key behavior.
 
-## Fora do escopo
-- Não alterar o diálogo base em `src/components/ui/dialog.tsx`.
-- Não adicionar zoom/pan de imagem (apenas maximizar o diálogo).
-- Não mudar as URLs das imagens explicativas.
+### Files changed
+- `src/components/scales/ScaleExplainerDialog.tsx`
