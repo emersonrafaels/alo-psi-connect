@@ -1,123 +1,43 @@
-# Práticas para Reequilíbrio Emocional
+## Objetivo
 
-Nova seção pública do site (não exige login) com 8 práticas guiadas curadas, agrupadas em 3 categorias. Inclui player guiado com animação + áudio, check-out emocional opcional ao final, tela de conclusão e CMS no admin.
+Permitir aumentar/diminuir o zoom das imagens explicativas das escalas (WHO-5, PHQ-9, GAD-7, PSS-10, ISI, MHC-SF, ISEU-RBE) no `ScaleExplainerDialog`.
 
-## Telas (rotas)
+## Mudanças
 
-| Rota | Tela | Referência |
-|---|---|---|
-| `/praticas` | Landing — hero, "Encontrar o que preciso agora", 3 grupos com 8 cards | HTML 2 + 3 |
-| `/praticas/:slug` | Detalhe da prática — descrição, ciência, configurações (duração, som) | HTML 1 |
-| `/praticas/:slug/sessao` | Player guiado em tela cheia — círculo de respiração + áudio + timer | HTML 6 |
-| `/praticas/:slug/checkout` | Check-out emocional — 5 estados + nota opcional | HTML 4 |
-| `/praticas/:slug/concluida` | Sessão concluída — resumo, ciência, compartilhar | HTML 5 |
+Apenas em `src/components/scales/ScaleExplainerDialog.tsx` (sem alterar consumidores nem APIs).
 
-Fluxo: landing → detalhe → sessão → check-out → concluída → volta para `/praticas`.
+### 1. Estado e modelo de zoom
+- Novo state `zoom: number` (1.0 = fit). Range: `0.5` a `4.0`, passo `0.25`.
+- Substituir a lógica atual de "maximizar = força 140%" por um zoom contínuo. Modo "maximizado" passa a controlar apenas o tamanho do dialog (95vw/95vh vs 3xl).
+- Reset de `zoom` para `1` ao abrir/fechar e ao alternar maximize.
+- `clampPan` usa o tamanho real da imagem multiplicado pelo zoom.
 
-## Conteúdo inicial (8 práticas, 3 grupos)
+### 2. Controles visuais (sempre visíveis quando a imagem está carregada)
+Barra flutuante no canto inferior central da área da imagem, com fundo `bg-background/90 backdrop-blur` e `border`:
+- Botão `−` (ZoomOut icon) — diminui em 0.25
+- Slider horizontal (Radix `Slider`, largura ~140px) ligado a `zoom`
+- Botão `+` (ZoomIn icon) — aumenta em 0.25
+- Label compacto `{Math.round(zoom*100)}%`
+- Botão `Reset` (RotateCcw icon) — volta para 1 e zera o pan
+- Todos com `aria-label`, desabilitados nos limites.
 
-- **Regular agora**: Respiração lenta ritmada (5min), Respiração abdominal (3min), Voltar ao presente pela respiração (4min), Quick Coherence (5min)
-- **Soltar o corpo**: Soltar a tensão do corpo (12min), Criar um espaço interno de calma (15min)
-- **Acolher e desacelerar**: Pausa de autocompaixão (8min), Desaceleração profunda (15min)
+### 3. Interações adicionais
+- Scroll do mouse na área da imagem: ajusta zoom (`wheel` event, `preventDefault`, delta = ±0.1 ou ±0.25).
+- Atalhos de teclado quando o dialog está aberto: `+`/`=` → zoom in, `-` → zoom out, `0` → reset.
+- Click simples na imagem: mantém o comportamento atual (alternar maximize) somente quando `zoom === 1`. Se já houver zoom, click não toggla maximize (evita conflito).
+- Pan (arrastar) ativo sempre que `zoom > 1` (não mais condicionado a `maximized`).
 
-Atalhos da seção "Encontrar o que preciso agora" (chips) já mapeiam para práticas específicas.
+### 4. Aplicação visual
+- A `<img>` recebe `transform: translate3d(x,y,0) scale(zoom)` com `transform-origin: center`.
+- Classes ajustadas: remover `min-h-[140%] min-w-[140%]`; usar `max-w-full max-h-[70vh]` no modo normal e `max-w-none max-h-none w-auto h-auto` no maximizado, deixando o `scale()` controlar o tamanho.
+- Cursor: `zoom-in` quando `zoom < max` e não está arrastando; `grab`/`grabbing` quando `zoom > 1`.
 
-## Modelo de dados (Supabase, editável pelo admin)
+### 5. Detalhes técnicos
+- Importar `ZoomIn`, `ZoomOut`, `RotateCcw` de `lucide-react`.
+- Importar `Slider` de `@/components/ui/slider`.
+- Manter `Maximize2`/`Minimize2` no header como já existe.
+- Sem mudanças em props públicas → nenhum arquivo consumidor precisa ser tocado.
 
-Tabelas novas no schema `public` (com GRANTs e RLS — leitura pública, escrita só admin via `has_role`):
-
-- **`praticas_grupos`**: `slug`, `nome`, `descricao`, `ordem`, `ativo`
-- **`praticas`**: `slug` (único), `grupo_id` (fk), `titulo`, `subtitulo`, `descricao_curta`, `corpo_ciencia` (markdown), `icone` (nome material symbol), `duracao_min_default`, `duracoes_disponiveis` (int[]), `ideal_para` (text), `categoria_badge` (text — ex: "EVIDÊNCIA"), `audio_url` (text, nullable), `tem_audio` (bool), `padrao_respiracao` (jsonb — ex: `{inspirar:4, segurar:0, expirar:6}`), `ordem`, `ativo`, `destaque` (bool)
-- **`praticas_atalhos`**: chips de "Encontrar o que preciso agora" — `texto`, `pratica_slug`, `ordem`
-- **`praticas_checkouts`**: registros do check-out — `pratica_id`, `user_id` (nullable, só preenchido se logado), `estado` (`calmo|energizado|leve|reflexivo|igual`), `nota`, `duracao_segundos`
-
-RLS:
-- `praticas_grupos`, `praticas`, `praticas_atalhos`: `SELECT` público (anon + authenticated) quando `ativo=true`; `INSERT/UPDATE/DELETE` apenas para `has_role(auth.uid(),'admin')` ou `'super_admin'`.
-- `praticas_checkouts`: `INSERT` público (anon e authenticated); `SELECT` apenas para o próprio `user_id` ou admin. Edge function `submit-pratica-checkout` registra (com service role) para evitar problemas de RLS quando anon.
-
-Migração faz seed inicial das 8 práticas + 3 grupos + 5 atalhos (textos extraídos das HTMLs de referência).
-
-## Áudio das práticas
-
-- Coluna `audio_url` aponta para arquivo no Supabase Storage (bucket público novo `praticas-audio`) ou URL externa.
-- Admin pode fazer upload do MP3 na tela de edição da prática.
-- Player usa `<audio>` HTML5 sincronizado com o timer da sessão.
-- Se `audio_url` for vazio e `tem_audio=false`, player roda em modo "apenas visual" (animação + timer silencioso).
-- Seed inicial deixa `audio_url` vazio (admin sobe depois). UI já funciona em modo visual.
-
-## Player guiado (componente `BreathingPlayer`)
-
-- Tela cheia, fundo gradiente roxo (palette das telas).
-- Círculo SVG que expande/contrai conforme `padrao_respiracao` (CSS `transform: scale` com `transition`).
-- Texto central rotaciona entre "Inspire" / "Segure" / "Expire".
-- Barra de progresso `currentTime / duracao`.
-- Controles: pause/play, encerrar (→ check-out), volume (se `tem_audio`).
-- Ao terminar duração, navega automaticamente para `/praticas/:slug/checkout`.
-
-## Check-out emocional
-
-- 5 botões grandes (Calmo, Energizado, Leve, Reflexivo, Igual) com ícones material symbols.
-- Textarea opcional para "alguma percepção".
-- "Concluir e Ver Resumo" → POST para edge function `submit-pratica-checkout` (passa `user_id` se houver sessão; anon caso contrário) → navega para tela concluída.
-- "Pular por enquanto" → pula direto para concluída.
-
-## CMS no admin
-
-Nova rota `/admin/praticas` (protegida por `requiredRole="admin"`), incluída no `AdminLayout` e no sidebar admin:
-
-- Lista de práticas (drag-drop para reordenar, toggle ativo/destaque).
-- Editor de prática: todos os campos da tabela + uploader de áudio para Storage + preview do padrão de respiração.
-- Gestão de grupos (CRUD simples).
-- Gestão de atalhos (chips).
-- Aba "Check-outs" — tabela read-only de respostas recentes para feedback qualitativo.
-
-## Frontend — hooks e componentes
-
-Novos hooks (React Query):
-- `usePraticas()` — lista pública agrupada
-- `usePratica(slug)` — detalhe
-- `usePraticasAtalhos()` — chips
-- `useAdminPraticas()` + mutations (CRUD)
-
-Novos componentes em `src/components/praticas/`:
-- `PraticasHero.tsx`, `EncontrarAgoraChips.tsx`, `PraticaCard.tsx`, `GrupoSection.tsx`
-- `BreathingPlayer.tsx`, `BreathingCircle.tsx`
-- `CheckoutEmocional.tsx`, `SessaoConcluida.tsx`
-- `CienciaCallout.tsx`, `BuscarApoioCTA.tsx`
-- Admin: `AdminPraticasList.tsx`, `AdminPraticaEditor.tsx`, `AdminGruposManager.tsx`
-
-Páginas novas em `src/pages/praticas/`:
-- `PraticasIndex.tsx`, `PraticaDetalhe.tsx`, `PraticaSessao.tsx`, `PraticaCheckout.tsx`, `PraticaConcluida.tsx`
-
-Página admin: `src/pages/admin/PraticasAdmin.tsx`.
-
-## Design
-
-- Reaproveita o sistema de design do tenant atual (semantic tokens em `index.css`) — **não** hardcodear cores. Mapeio as cores roxas das HTMLs de referência para `--primary` / `--primary-container` já existentes.
-- Tipografia: usa `font-headline` (Noto Serif via @fontsource já instalado) e `font-body` já configuradas. Se não estiverem, adiciono `@fontsource/noto-serif` e `@fontsource/plus-jakarta-sans` via `bun add` e registro em `tailwind.config.ts`.
-- Ícones: `lucide-react` (já no projeto) — mapeio cada `material symbol` da referência para o lucide equivalente (`Wind`, `HeartPulse`, `Eye`, `Activity`, `Sparkles`, etc.).
-- Animações: usa `animate-fade-in`, `animate-scale-in` já no `tailwind.config.ts`; círculo de respiração com transition CSS custom.
-
-## Navegação
-
-- Adiciono link "Práticas" no menu principal (Header/Navigation existentes) e no footer.
-- Rotas duplicadas para tenant `medcos`: `/medcos/praticas`, `/medcos/praticas/:slug`, etc. (mesmo padrão usado no `App.tsx`).
-- `ScrollToTop` automático ao navegar (já implementado globalmente).
-
-## SEO
-
-- Title: "Práticas para Reequilíbrio Emocional | Rede Bem-Estar" (<60 chars OK).
-- Meta description otimizada; H1 único por página; JSON-LD `HowTo` por prática.
-- Adicionar `/praticas` e cada `/praticas/:slug` ao `scripts/generate-sitemap.ts`.
-
-## Detalhes técnicos
-
-- Edge function `submit-pratica-checkout` (`verify_jwt = false`): valida com Zod, insere via service role, retorna `{ok:true}`.
-- Bucket `praticas-audio` criado público no Storage (migração SQL).
-- Sem `lovable-assets` para áudio do seed inicial (vazio) — admin faz upload posterior.
-
-## Fora do escopo (perguntar antes se quiser incluir)
-
-- Geração automática de áudio narrado via TTS.
-- Tracking analítico granular (tempo de pausa, abandono).
-- Versão mobile-only de app (PWA / instalação).
+## Fora do escopo
+- Pinch-zoom em touch (pode ser adicionado depois; o slider/botões já funcionam em mobile).
+- Persistir nível de zoom entre aberturas.
