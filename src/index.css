@@ -1206,3 +1206,9 @@ All colors MUST be HSL.
   .pratica-halo,
   .pratica-halo-ring { animation: none !important; }
 }
+.pratica-fullscreen-fallback,
+.pratica-fullscreen-fallback body {
+  overflow: hidden !important;
+  height: 100dvh !important;
+  margin: 0 !important;
+}

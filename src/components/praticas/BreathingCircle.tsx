@@ -120,10 +120,12 @@ export const BreathingCircle = ({
         }}
       />
       <div className="relative z-10 flex flex-col items-center text-primary-foreground select-none">
-        <p className="font-serif text-3xl sm:text-5xl tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.25)]">
+        <p className="font-serif text-3xl sm:text-5xl tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]">
           {label}
         </p>
-        <p className="text-sm sm:text-base opacity-80 mt-2">{secondsLeft}s</p>
+        <p className="text-2xl sm:text-3xl font-semibold tabular-nums mt-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)]">
+          {secondsLeft}s
+        </p>
       </div>
     </div>
   );
