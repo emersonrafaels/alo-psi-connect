@@ -96,6 +96,12 @@ import Triagem from "@/pages/Triagem";
 import EmotionalScales from "./pages/EmotionalScales";
 import ScaleResponse from "./pages/ScaleResponse";
 import MyEmotions from "./pages/MyEmotions";
+import PraticasIndex from "./pages/praticas/PraticasIndex";
+import PraticaDetalhe from "./pages/praticas/PraticaDetalhe";
+import PraticaSessao from "./pages/praticas/PraticaSessao";
+import PraticaCheckout from "./pages/praticas/PraticaCheckout";
+import PraticaConcluida from "./pages/praticas/PraticaConcluida";
+import PraticasAdmin from "@/pages/admin/PraticasAdmin";
 
 import "./App.css";
 
