@@ -37,7 +37,7 @@ export const CommentsList = ({ postId, refreshTrigger }: CommentsListProps) => {
     try {
       const { data, error } = await supabase
         .from('comments')
-        .select('*')
+        .select('id, content, author_name, user_id, created_at, updated_at, likes_count, parent_comment_id, reported_count')
         .eq('post_id', postId)
         .eq('status', 'approved')
         .order('created_at', { ascending: false });
