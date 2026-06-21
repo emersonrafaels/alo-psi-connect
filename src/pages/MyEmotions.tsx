@@ -27,10 +27,13 @@ import {
   CartesianGrid,
   ReferenceArea,
 } from "recharts";
-import { HeartPulse, ArrowUp, ArrowDown, Minus, ClipboardList, TrendingUp, TrendingDown } from "lucide-react";
+import { HeartPulse, ArrowUp, ArrowDown, Minus, ClipboardList, TrendingUp, TrendingDown, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScaleExplainerDialog } from "@/components/scales/ScaleExplainerDialog";
+import { SCALE_EXPLAINERS, ISEU_EXPLAINER } from "@/data/scaleExplainers";
 
 const MyEmotions = () => {
+  const [explainer, setExplainer] = useState<{ title: string; url: string } | null>(null);
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { tenant } = useTenant();
