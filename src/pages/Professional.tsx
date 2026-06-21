@@ -77,7 +77,7 @@ const Professional = () => {
           resumo, resumo_profissional, idiomas_raw, linkedin, possui_e_psi,
           servicos_raw, servicos_normalizados, formacao_raw, formacao_normalizada,
           preco_consulta, tempo_consulta, foto_perfil_url, ativo, em_destaque,
-          ordem_destaque, created_at, updated_at,
+          ordem_destaque,
           professional_tenants!inner(tenant_id)
         `)
         .eq('id', parseInt(id))
