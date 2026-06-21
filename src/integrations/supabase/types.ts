@@ -2607,6 +2607,184 @@ export type Database = {
           },
         ]
       }
+      praticas: {
+        Row: {
+          ativo: boolean
+          audio_url: string | null
+          categoria_badge: string | null
+          corpo_ciencia: string | null
+          created_at: string
+          descricao_curta: string | null
+          destaque: boolean
+          duracao_min_default: number
+          duracoes_disponiveis: number[]
+          grupo_id: string | null
+          icone: string | null
+          id: string
+          ideal_para: string | null
+          ordem: number
+          padrao_respiracao: Json
+          slug: string
+          subtitulo: string | null
+          tem_audio: boolean
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          audio_url?: string | null
+          categoria_badge?: string | null
+          corpo_ciencia?: string | null
+          created_at?: string
+          descricao_curta?: string | null
+          destaque?: boolean
+          duracao_min_default?: number
+          duracoes_disponiveis?: number[]
+          grupo_id?: string | null
+          icone?: string | null
+          id?: string
+          ideal_para?: string | null
+          ordem?: number
+          padrao_respiracao?: Json
+          slug: string
+          subtitulo?: string | null
+          tem_audio?: boolean
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          audio_url?: string | null
+          categoria_badge?: string | null
+          corpo_ciencia?: string | null
+          created_at?: string
+          descricao_curta?: string | null
+          destaque?: boolean
+          duracao_min_default?: number
+          duracoes_disponiveis?: number[]
+          grupo_id?: string | null
+          icone?: string | null
+          id?: string
+          ideal_para?: string | null
+          ordem?: number
+          padrao_respiracao?: Json
+          slug?: string
+          subtitulo?: string | null
+          tem_audio?: boolean
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "praticas_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "praticas_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      praticas_atalhos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          ordem: number
+          pratica_slug: string | null
+          texto: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          ordem?: number
+          pratica_slug?: string | null
+          texto: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          ordem?: number
+          pratica_slug?: string | null
+          texto?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      praticas_checkouts: {
+        Row: {
+          created_at: string
+          duracao_segundos: number | null
+          estado: string
+          id: string
+          nota: string | null
+          pratica_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duracao_segundos?: number | null
+          estado: string
+          id?: string
+          nota?: string | null
+          pratica_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duracao_segundos?: number | null
+          estado?: string
+          id?: string
+          nota?: string | null
+          pratica_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "praticas_checkouts_pratica_id_fkey"
+            columns: ["pratica_id"]
+            isOneToOne: false
+            referencedRelation: "praticas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      praticas_grupos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          ordem: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       professional_education: {
         Row: {
           course_name: string
