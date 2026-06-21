@@ -18,7 +18,8 @@ import {
   TrendingUp,
   Video,
   Database,
-  Brain
+  Brain,
+  Sparkles
 } from 'lucide-react';
 import {
   Sidebar,
