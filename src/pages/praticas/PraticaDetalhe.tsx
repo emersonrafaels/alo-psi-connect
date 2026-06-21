@@ -147,19 +147,18 @@ const PraticaDetalhe = () => {
             </div>
 
             <div>
-              <p className="text-sm font-medium mb-2">Som de guia</p>
+              <p className="text-sm font-medium mb-2">Trilha sonora</p>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setComSom(true)}
-                  disabled={!pratica.tem_audio || !pratica.audio_url}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all border disabled:opacity-40 disabled:cursor-not-allowed ${
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all border ${
                     comSom
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-card border-border hover:border-primary/50"
                   }`}
                 >
                   <Volume2 className="h-4 w-4" />
-                  Com áudio
+                  Com trilha
                 </button>
                 <button
                   onClick={() => setComSom(false)}
@@ -173,11 +172,9 @@ const PraticaDetalhe = () => {
                   Apenas visual
                 </button>
               </div>
-              {!pratica.tem_audio && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Esta prática está disponível apenas em modo visual no momento.
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                Música: Kevin MacLeod (incompetech.com) — CC-BY 4.0
+              </p>
             </div>
           </Card>
 
@@ -186,12 +183,13 @@ const PraticaDetalhe = () => {
               <Play className="h-5 w-5 mr-2" />
               Começar prática
             </Button>
-            {comSom && pratica.tem_audio && (
+            {comSom && (
               <p className="text-xs text-muted-foreground">
                 Prepare seus fones de ouvido para uma experiência imersiva.
               </p>
             )}
           </div>
+
         </section>
       </main>
       <Footer />
