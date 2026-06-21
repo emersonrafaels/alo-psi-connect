@@ -41,6 +41,10 @@ const PraticaSessao = () => {
   const somPref = params.get("som") === "1";
   const totalSeg = duracaoMin * 60;
 
+  const audioResolution = resolverAudioPratica(pratica?.audio_url, slug);
+  const audioUrl = audioResolution.url;
+
+
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(!somPref);
