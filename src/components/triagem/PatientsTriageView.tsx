@@ -42,6 +42,7 @@ const toCSV = (rows: PatientOverviewRow[]) => {
     'Nome', 'Email', 'Idade', 'Gênero', 'Estudante', 'Instituições',
     'Criado em', 'Último login', 'Diário (total)', 'Diário (30d)',
     'Encontros futuros', 'Encontros passados', 'Consultas futuras', 'Consultas passadas',
+    'Escalas preenchidas', 'Escalas requeridas', 'ISEU score', 'ISEU faixa',
   ];
   const escape = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const lines = rows.map((r) => [
@@ -52,9 +53,12 @@ const toCSV = (rows: PatientOverviewRow[]) => {
     r.mood.total, r.mood.last30,
     r.sessions.upcoming, r.sessions.past,
     r.appointments.upcoming, r.appointments.past,
+    r.scales?.filled ?? 0, r.scales?.required ?? 0,
+    r.iseu?.score ?? '', r.iseu?.band ? ISEU_BAND_LABEL[r.iseu.band] : '',
   ].map(escape).join(','));
   return [headers.map(escape).join(','), ...lines].join('\n');
 };
+
 
 interface Props {
   title?: string;
