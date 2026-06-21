@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { X, Pause, Play, Volume2, VolumeX, Music2, Music, Maximize2, Minimize2 } from "lucide-react";
 import { usePratica } from "@/hooks/usePraticas";
 import { BreathingCircle } from "@/components/praticas/BreathingCircle";
@@ -48,6 +49,12 @@ const PraticaSessao = () => {
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(!somPref);
+  const [volume, setVolume] = useState<number>(() => {
+    if (typeof window === "undefined") return 0.75;
+    const stored = window.localStorage.getItem("praticas:volume");
+    const n = stored === null ? NaN : Number(stored);
+    return Number.isFinite(n) && n >= 0 && n <= 1 ? n : 0.75;
+  });
   const [ambient, setAmbient] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     const stored = window.localStorage.getItem("praticas:ambient");
@@ -80,9 +87,16 @@ const PraticaSessao = () => {
     const a = audioRef.current;
     if (!a) return;
     a.muted = muted;
+    a.volume = volume;
     if (paused) a.pause();
     else a.play().catch(() => {});
-  }, [paused, muted]);
+  }, [paused, muted, volume]);
+
+  useEffect(() => {
+    window.localStorage.setItem("praticas:volume", String(volume));
+  }, [volume]);
+
+
 
   // Ambient procedural drone
   useEffect(() => {
@@ -340,16 +354,29 @@ const PraticaSessao = () => {
         }`}
       >
         {audioUrl && (
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setMuted((m) => !m)}
-            className="rounded-full bg-transparent border-white/30 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
-            aria-label={muted ? "Ativar trilha de meditação" : "Mutar trilha de meditação"}
-            title={muted ? "Trilha desligada" : "Trilha ativa"}
-          >
-            {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-          </Button>
+          <div className="flex items-center gap-2 rounded-full border border-white/30 bg-transparent pl-1 pr-3 py-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMuted((m) => !m)}
+              className="rounded-full h-9 w-9 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
+              aria-label={muted ? "Ativar trilha de meditação" : "Mutar trilha de meditação"}
+              title={muted ? "Trilha desligada" : `Volume ${Math.round(volume * 100)}%`}
+            >
+              {muted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </Button>
+            <Slider
+              value={[muted ? 0 : Math.round(volume * 100)]}
+              onValueChange={([v]) => {
+                setVolume(v / 100);
+                if (muted && v > 0) setMuted(false);
+              }}
+              max={100}
+              step={1}
+              aria-label="Volume da trilha"
+              className="w-24 sm:w-28"
+            />
+          </div>
         )}
         <Button
           variant="outline"
