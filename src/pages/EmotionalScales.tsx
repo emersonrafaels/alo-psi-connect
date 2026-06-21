@@ -155,7 +155,7 @@ const EmotionalScales = () => {
             Instrumentos clinicamente validados para acompanhar seu bem-estar ao longo do tempo.
             Suas respostas ficam registradas no seu histórico para que você acompanhe sua evolução.
           </p>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -164,19 +164,26 @@ const EmotionalScales = () => {
               <History className="h-4 w-4 mr-2" />
               Ver meu histórico
             </Button>
-        </div>
-
-        {missingScales && missingScales.length > 0 && (
-          <div className="mb-6 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4">
-            <div className="text-sm font-medium">
-              Faltam {missingScales.length} escala{missingScales.length === 1 ? "" : "s"} para calcular seu ISEU-RBE
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Responda: <span className="font-medium">{missingScales.join(", ")}</span>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExplainer({ title: "ISEU-RBE — Índice de Saúde Emocional Unificado", url: ISEU_EXPLAINER })}
+            >
+              <Info className="h-4 w-4 mr-2" />
+              Como funciona o ISEU-RBE
+            </Button>
           </div>
-        )}
 
+          {missingScales && missingScales.length > 0 && (
+            <div className="mt-6 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4">
+              <div className="text-sm font-medium">
+                Faltam {missingScales.length} escala{missingScales.length === 1 ? "" : "s"} para calcular seu ISEU-RBE
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Responda: <span className="font-medium">{missingScales.join(", ")}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {isLoading ? (
