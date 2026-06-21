@@ -15,6 +15,8 @@ import { PatientFullViewDrawer } from '@/components/admin/PatientFullViewDrawer'
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import PatientsTriageFilters, { defaultFilters, applyTriageFilters, type TriageFilters } from './PatientsTriageFilters';
+import { ISEU_BAND_LABEL, ISEU_BAND_COLOR } from '@/hooks/useEmotionalScales';
+
 
 const fmt = (iso?: string | null) => {
   if (!iso) return '—';
