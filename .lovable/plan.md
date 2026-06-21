@@ -1,32 +1,44 @@
-# Legibilidade dos números + Modo tela cheia
+## Objetivo
+Adicionar áudios de meditação públicos (livres de royalties / domínio público) às práticas, para que a sessão imersiva tenha uma trilha de voz/ambiente real enquanto não há áudios próprios gravados.
 
-## 1. Legibilidade dos números
+## Fontes
+Usar arquivos públicos hospedados em CDNs confiáveis (sem necessidade de upload), com licenças permissivas:
 
-Aumentar contraste e peso dos contadores na tela de Sessão (`PraticaSessao.tsx` + `BreathingCircle.tsx`):
+- **Pixabay Music / Meditation** (licença Pixabay, uso livre) — trilhas calmas instrumentais
+- **Internet Archive** — meditações guiadas em domínio público / Creative Commons
+- **Free Music Archive (FMA)** — faixas ambient CC0/CC-BY
 
-- **Segundos da fase** (dentro do círculo, hoje `text-sm opacity-80`): subir para `text-2xl sm:text-3xl font-semibold`, opacidade 100%, com `tabular-nums` (evita "pulinho" entre dígitos) e `drop-shadow` para destacar sobre o halo.
-- **Label da fase** ("Inspire/Segure/Expire"): já é grande; manter, mas adicionar `font-semibold` e `tabular-nums` no `{secondsLeft}s`.
-- **Tempo decorrido / total** (rodapé da barra de progresso): de `text-xs sm:text-sm opacity-80` para `text-base sm:text-lg font-medium tabular-nums opacity-95`, com leve `drop-shadow` para legibilidade sobre o gradiente.
-- **Barra de progresso**: subir altura de `h-1.5` para `h-2` para acompanhar a tipografia maior.
+Exemplos candidatos (URLs diretas .mp3):
+- Pixabay: "Meditation" ambient pad (~10 min, loopável)
+- Archive.org: "Guided Meditation for Relaxation" (CC)
+- FMA: Kevin MacLeod "Meditation Impromptu" (CC-BY)
 
-## 2. Botão de tela cheia (qualquer dispositivo)
+Validarei as URLs antes de aplicar (HEAD request) e farei fallback para 2-3 opções caso uma falhe.
 
-Novo botão no rodapé da sessão, ao lado dos botões de áudio:
+## Mudanças
 
-- Ícone `Maximize2` / `Minimize2` (lucide).
-- Usa a Fullscreen API padrão com fallback para iOS Safari (`webkitEnterFullscreen` no `<video>` não se aplica aqui — para iOS no iPhone a Fullscreen API do `documentElement` não existe, então fazemos um **fallback "imersivo"**: aplica classe que força `position: fixed; inset: 0; z-index: 9999` + esconde a barra de URL via `scrollTo(0,1)` e bloqueia scroll do body).
-- Detecta suporte: `document.fullscreenEnabled || document.webkitFullscreenEnabled`. Se nenhum, usa apenas o fallback CSS.
-- Escuta `fullscreenchange` / `webkitfullscreenchange` para sincronizar estado quando o usuário sair com ESC.
-- Ao sair da rota/desmontar: garante `exitFullscreen()` e remove a classe de fallback.
-- `aria-label` dinâmico: "Entrar em tela cheia" / "Sair da tela cheia".
-- Atalho de teclado: `F` alterna fullscreen.
+### 1. Mapeamento por grupo de prática
+Criar `src/data/praticasAudios.ts` com:
+- Mapa `slug` → URL de áudio (voz guiada quando existir)
+- Mapa `grupo_slug` → URL de som ambiente (fallback genérico)
+- Default global para qualquer prática sem match
 
-### Detalhes técnicos
+### 2. `PraticaSessao.tsx`
+- Se `pratica.audio_url` (do banco) existir → continua usando ele (prioridade)
+- Senão → usar URL do mapa por `slug`, depois por `grupo_id`, depois default
+- O elemento `<audio>` sempre é renderizado quando há URL resolvida
+- Toggle de voz (`Volume2/VolumeX`) passa a aparecer sempre que houver URL resolvida (não só quando `tem_audio` for true no banco)
+- Som ambiente procedural (Web Audio drone) permanece como está, controlado pelo toggle `Music2/Music`
 
-- Implementação inline no `PraticaSessao.tsx` (hook local `useFullscreen` com `useState` + `useEffect`); sem nova dependência.
-- Alvo do fullscreen: `document.documentElement` (cobre toda a aplicação enquanto na sessão).
-- Fallback iOS: classe `pratica-fullscreen-fallback` adicionada no `<html>` com `overflow: hidden; height: 100dvh` definida em `index.css`.
+### 3. Atribuição
+Adicionar pequena nota de créditos no rodapé do `PraticaDetalhe.tsx` (texto discreto: "Áudio: [fonte] — licença [x]") para cumprir CC-BY quando aplicável.
 
 ## Fora de escopo
-- Outras telas de Práticas (índice, detalhe, conclusão).
-- Mudanças no áudio ou no halo respirante.
+- Não vou subir arquivos para Lovable Assets nem Supabase Storage (são URLs externas públicas)
+- Não vou alterar o schema do banco nem o admin de práticas
+- Não vou mudar a animação de respiração nem o som ambiente procedural
+
+## Arquivos
+- novo: `src/data/praticasAudios.ts`
+- editar: `src/pages/praticas/PraticaSessao.tsx`
+- editar: `src/pages/praticas/PraticaDetalhe.tsx` (créditos)
