@@ -25,6 +25,8 @@ export interface TriageFilters {
   lastLogin: string; // 'all' | 'never' | '7' | '30' | 'over30'
   createdWithin: string; // 'all' | '7' | '30' | '90' | '365'
   hasDiary: string; // 'all' | 'yes' | 'no'
+  scales: string; // 'all' | 'complete' | 'incomplete' | 'none'
+  iseuBand: string; // 'all' | 'verde' | 'amarelo' | 'laranja' | 'vermelho' | 'none'
 }
 
 export const defaultFilters: TriageFilters = {
@@ -41,6 +43,8 @@ export const defaultFilters: TriageFilters = {
   lastLogin: 'all',
   createdWithin: 'all',
   hasDiary: 'all',
+  scales: 'all',
+  iseuBand: 'all',
 };
 
 export const countActive = (f: TriageFilters): number => {
@@ -55,8 +59,11 @@ export const countActive = (f: TriageFilters): number => {
   if (f.lastLogin !== 'all') c++;
   if (f.createdWithin !== 'all') c++;
   if (f.hasDiary !== 'all') c++;
+  if (f.scales !== 'all') c++;
+  if (f.iseuBand !== 'all') c++;
   return c;
 };
+
 
 const GENERO_OPTIONS = ['Feminino', 'Masculino', 'Não-binário', 'Outro', 'Não informado'];
 
