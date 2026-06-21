@@ -172,3 +172,7 @@ verify_jwt = false
 
 [functions.notify-institution-action]
 verify_jwt = false
+
+[functions.redeem-appointment-token]
+verify_jwt = false
+
