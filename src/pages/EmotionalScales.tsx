@@ -223,6 +223,20 @@ const EmotionalScales = () => {
         )}
       </main>
       <Footer />
+      {explainer && (
+        <ScaleExplainerDialog
+          open={!!explainer}
+          onOpenChange={(o) => !o && setExplainer(null)}
+          title={explainer.title}
+          imageUrl={explainer.url}
+          ctaLabel={explainer.code ? "Responder agora" : undefined}
+          onCta={
+            explainer.code
+              ? () => navigate(buildTenantPath(slug, `/escalas/${explainer.code!.toLowerCase()}`))
+              : undefined
+          }
+        />
+      )}
     </div>
   );
 };
