@@ -25,6 +25,8 @@ export interface TriageFilters {
   lastLogin: string; // 'all' | 'never' | '7' | '30' | 'over30'
   createdWithin: string; // 'all' | '7' | '30' | '90' | '365'
   hasDiary: string; // 'all' | 'yes' | 'no'
+  scales: string; // 'all' | 'complete' | 'incomplete' | 'none'
+  iseuBand: string; // 'all' | 'verde' | 'amarelo' | 'laranja' | 'vermelho' | 'none'
 }
 
 export const defaultFilters: TriageFilters = {
@@ -41,6 +43,8 @@ export const defaultFilters: TriageFilters = {
   lastLogin: 'all',
   createdWithin: 'all',
   hasDiary: 'all',
+  scales: 'all',
+  iseuBand: 'all',
 };
 
 export const countActive = (f: TriageFilters): number => {
@@ -55,8 +59,11 @@ export const countActive = (f: TriageFilters): number => {
   if (f.lastLogin !== 'all') c++;
   if (f.createdWithin !== 'all') c++;
   if (f.hasDiary !== 'all') c++;
+  if (f.scales !== 'all') c++;
+  if (f.iseuBand !== 'all') c++;
   return c;
 };
+
 
 const GENERO_OPTIONS = ['Feminino', 'Masculino', 'Não-binário', 'Outro', 'Não informado'];
 
@@ -195,6 +202,31 @@ export default function PatientsTriageFilters({ filters, onChange, availableInst
         </SelectContent>
       </Select>
 
+      {/* Escalas */}
+      <Select value={filters.scales} onValueChange={(v) => set('scales', v)}>
+        <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Escalas: todos</SelectItem>
+          <SelectItem value="complete">Escalas: completas</SelectItem>
+          <SelectItem value="incomplete">Escalas: incompletas</SelectItem>
+          <SelectItem value="none">Escalas: nenhuma</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {/* ISEU-RBE */}
+      <Select value={filters.iseuBand} onValueChange={(v) => set('iseuBand', v)}>
+        <SelectTrigger className="w-[180px] h-9"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">ISEU: todos</SelectItem>
+          <SelectItem value="verde">ISEU: Equilíbrio</SelectItem>
+          <SelectItem value="amarelo">ISEU: Atenção leve</SelectItem>
+          <SelectItem value="laranja">ISEU: Risco moderado</SelectItem>
+          <SelectItem value="vermelho">ISEU: Risco elevado</SelectItem>
+          <SelectItem value="none">ISEU: sem cálculo</SelectItem>
+        </SelectContent>
+      </Select>
+
+
       {active > 0 && (
         <Button variant="ghost" size="sm" onClick={() => onChange(defaultFilters)} className="gap-1">
           <X className="h-3 w-3" /> Limpar ({active})
@@ -292,6 +324,16 @@ export const applyTriageFilters = (rows: PatientOverviewRow[], f: TriageFilters)
     if (f.hasDiary === 'yes' && r.mood.total === 0) return false;
     if (f.hasDiary === 'no' && r.mood.total > 0) return false;
 
+    if (f.scales === 'complete' && !r.scales?.complete) return false;
+    if (f.scales === 'incomplete' && (r.scales?.complete || (r.scales?.filled ?? 0) === 0)) return false;
+    if (f.scales === 'none' && (r.scales?.filled ?? 0) > 0) return false;
+
+    if (f.iseuBand !== 'all') {
+      if (f.iseuBand === 'none' && r.iseu?.band) return false;
+      if (f.iseuBand !== 'none' && r.iseu?.band !== f.iseuBand) return false;
+    }
+
     return true;
   });
 };
+

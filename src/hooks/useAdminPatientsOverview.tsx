@@ -19,6 +19,8 @@ export interface PatientOverviewRow {
   mood: { total: number; last30: number; last_date: string | null };
   sessions: { upcoming: number; past: number };
   appointments: { upcoming: number; past: number };
+  scales: { filled: number; required: number; missing: string[]; complete: boolean };
+  iseu: { score: number | null; band: 'verde' | 'amarelo' | 'laranja' | 'vermelho' | null; computed_at: string | null };
 }
 
 export const useAdminPatientsOverview = (params: {
