@@ -5,6 +5,7 @@ import { X, Pause, Play, Volume2, VolumeX, Music2, Music, Maximize2, Minimize2 }
 import { usePratica } from "@/hooks/usePraticas";
 import { BreathingCircle } from "@/components/praticas/BreathingCircle";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
+import { resolverAudioPratica } from "@/data/praticasAudios";
 
 const fmt = (s: number) => {
   const m = Math.floor(s / 60);
@@ -39,6 +40,10 @@ const PraticaSessao = () => {
   const duracaoMin = Number(params.get("d") || pratica?.duracao_min_default || 5);
   const somPref = params.get("som") === "1";
   const totalSeg = duracaoMin * 60;
+
+  const audioResolution = resolverAudioPratica(pratica?.audio_url, slug);
+  const audioUrl = audioResolution.url;
+
 
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -334,13 +339,14 @@ const PraticaSessao = () => {
           chromeVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
         }`}
       >
-        {pratica?.tem_audio && pratica.audio_url && (
+        {audioUrl && (
           <Button
             variant="outline"
             size="icon"
             onClick={() => setMuted((m) => !m)}
             className="rounded-full bg-transparent border-white/30 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
-            aria-label={muted ? "Ativar voz guia" : "Mutar voz guia"}
+            aria-label={muted ? "Ativar trilha de meditação" : "Mutar trilha de meditação"}
+            title={muted ? "Trilha desligada" : "Trilha ativa"}
           >
             {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
           </Button>
@@ -391,13 +397,14 @@ const PraticaSessao = () => {
         </Button>
       </footer>
 
-      {pratica?.tem_audio && pratica.audio_url && (
+      {audioUrl && (
         <audio
           ref={audioRef}
-          src={pratica.audio_url}
+          src={audioUrl}
           loop
           autoPlay
           muted={muted}
+          crossOrigin="anonymous"
           className="hidden"
         />
       )}
