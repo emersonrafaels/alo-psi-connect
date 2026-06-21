@@ -285,7 +285,8 @@ const MyEmotions = () => {
                       )}
                     </div>
                   </div>
-                </button>
+                  </button>
+                </div>
               );
             })}
           </div>
