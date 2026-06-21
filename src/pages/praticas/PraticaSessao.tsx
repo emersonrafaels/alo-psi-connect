@@ -339,13 +339,14 @@ const PraticaSessao = () => {
           chromeVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
         }`}
       >
-        {pratica?.tem_audio && pratica.audio_url && (
+        {audioUrl && (
           <Button
             variant="outline"
             size="icon"
             onClick={() => setMuted((m) => !m)}
             className="rounded-full bg-transparent border-white/30 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
-            aria-label={muted ? "Ativar voz guia" : "Mutar voz guia"}
+            aria-label={muted ? "Ativar trilha de meditação" : "Mutar trilha de meditação"}
+            title={muted ? "Trilha desligada" : "Trilha ativa"}
           >
             {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
           </Button>
