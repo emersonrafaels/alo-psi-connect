@@ -1,23 +1,23 @@
 ## Plano
 
-Adicionar um controle deslizante de volume para a trilha sonora (Kevin MacLeod) na tela de sessão da prática (`/praticas/:slug/sessao`).
+Resolver o corte dos controles na sessão da prática em telas de notebook (sem fullscreen) movendo o conjunto de botões para uma barra vertical à direita e liberando rolagem do contêiner.
 
-## Alterações
+## Alterações em `src/pages/praticas/PraticaSessao.tsx`
 
-1. **`src/pages/praticas/PraticaSessao.tsx`**
-   - Adicionar estado `volume` (0–1) com persistência em `localStorage` (`praticas:volume`), valor padrão `0.75`.
-   - Aplicar `audioRef.current.volume` sempre que `volume` ou `muted` mudar.
-   - Substituir o botão de mudo por um grupo contendo:
-     - Toggle de mudo (`VolumeX` / `Volume2`).
-     - Slider de volume (componente `Slider` do shadcn) com largura reduzida (~80–96 px).
-   - Quando mutado, o slider continua visível; ao interagir no slider, desmutar automaticamente.
-   - Atualizar `aria-label` e tooltip/title do grupo para refletir volume e estado de mudo.
+1. **Permitir rolagem do contêiner da sessão**
+   - Trocar `overflow-hidden overscroll-none` por `overflow-y-auto` no wrapper raiz, mantendo `height: 100dvh` para preencher a viewport.
+   - `<main>` deixa de ser `flex-1` rígido: usa `min-h-full` + padding inferior para acomodar a barra lateral em telas estreitas.
 
-2. **`src/components/ui/slider.tsx`**
-   - Nenhuma alteração esperada; usar o componente existente.
+2. **Mover o `<footer>` para uma barra vertical lateral em `sm+`**
+   - Em telas `sm` e maiores: posicionar como coluna vertical fixa no lado direito (`fixed right-4 top-1/2 -translate-y-1/2`), com `flex-col` e `gap-3`. Os botões viram redondos e empilhados; o slider de volume gira para vertical (`orientation="vertical"`, altura ~96 px).
+   - Em telas `< sm`: mantém o comportamento atual (linha no rodapé, com `position: sticky bottom-0` para nunca sumir).
+   - Botões Pausar/Encerrar passam a usar `size="icon"` na lateral, com ícones (`Pause`/`Play` e `X`) e `title`/`aria-label` descritivos. No mobile mantêm o rótulo textual atual.
+
+3. **Auto-hide do chrome**
+   - A barra lateral também respeita `chromeVisible` (mesma transição de opacidade).
 
 ## Critério de aceitação
 
-- O usuário pode ajustar o volume da trilha sonora diretamente na tela de prática.
-- O volume escolhido persiste entre sessões.
-- O botão de mudo continua funcionando e reflete o estado visualmente.
+- Em notebook (~720 px de altura), todos os controles ficam visíveis sem precisar entrar em fullscreen.
+- Se ainda assim o conteúdo exceder a viewport, é possível rolar verticalmente.
+- Em mobile, o rodapé continua na parte inferior como hoje.

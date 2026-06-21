@@ -267,8 +267,8 @@ const PraticaSessao = () => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col text-primary-foreground overflow-hidden overscroll-none"
-      style={{ height: "100dvh" }}
+      className="fixed inset-0 z-50 flex flex-col text-primary-foreground overflow-y-auto"
+      style={{ minHeight: "100dvh" }}
       onPointerMove={wakeChrome}
       onTouchStart={wakeChrome}
     >
@@ -315,11 +315,11 @@ const PraticaSessao = () => {
       </header>
 
       {/* Main */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center">
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 sm:pr-24 text-center pb-32 sm:pb-8">
         <h1 className="font-serif text-2xl sm:text-4xl mb-2 drop-shadow-[0_2px_18px_rgba(0,0,0,0.25)]">
           {pratica?.titulo ?? "Respiração guiada"}
         </h1>
-        <p className="opacity-80 mb-8 sm:mb-12 max-w-md text-sm sm:text-base">
+        <p className="opacity-80 mb-6 sm:mb-10 max-w-md text-sm sm:text-base">
           {pratica?.subtitulo ?? "Acalme sua mente agora"}
         </p>
 
@@ -347,9 +347,9 @@ const PraticaSessao = () => {
         </div>
       </main>
 
-      {/* Footer */}
+      {/* Controls — bottom on mobile, vertical side rail on sm+ */}
       <footer
-        className={`relative z-10 flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 pb-6 sm:pb-10 transition-all duration-500 ${
+        className={`z-20 flex flex-wrap items-center justify-center gap-2 px-4 pb-6 sticky bottom-0 sm:sticky-none sm:fixed sm:bottom-auto sm:top-1/2 sm:right-4 sm:-translate-y-1/2 sm:px-0 sm:pb-0 sm:gap-3 sm:flex-col sm:flex-nowrap transition-all duration-500 ${
           chromeVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
         }`}
       >
