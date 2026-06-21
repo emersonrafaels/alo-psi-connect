@@ -289,8 +289,23 @@ const ScaleResponse = () => {
 
         <Card className="rounded-2xl">
           <CardHeader>
-            <CardTitle>{scale.name}</CardTitle>
-            <CardDescription>{scale.instructions}</CardDescription>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <CardTitle>{scale.name}</CardTitle>
+                <CardDescription className="mt-1.5">{scale.instructions}</CardDescription>
+              </div>
+              {SCALE_EXPLAINERS[scale.code] && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => setExplainerOpen(true)}
+                >
+                  <Info className="h-4 w-4 mr-1.5" />
+                  Como funciona
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="text-xs text-muted-foreground flex justify-between">
