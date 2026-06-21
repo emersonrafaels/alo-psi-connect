@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { X, Pause, Play, Volume2, VolumeX, Music2, Music } from "lucide-react";
+import { X, Pause, Play, Volume2, VolumeX, Music2, Music, Maximize2, Minimize2 } from "lucide-react";
 import { usePratica } from "@/hooks/usePraticas";
 import { BreathingCircle } from "@/components/praticas/BreathingCircle";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
@@ -188,6 +188,59 @@ const PraticaSessao = () => {
     navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`);
   };
 
+  // Fullscreen with iOS fallback
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const toggleFullscreen = async () => {
+    const doc: any = document;
+    const el: any = document.documentElement;
+    const inFs = !!(doc.fullscreenElement || doc.webkitFullscreenElement);
+    try {
+      if (inFs) {
+        if (doc.exitFullscreen) await doc.exitFullscreen();
+        else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+        setIsFullscreen(false);
+        el.classList.remove("pratica-fullscreen-fallback");
+      } else {
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+        else {
+          // iOS Safari fallback
+          el.classList.add("pratica-fullscreen-fallback");
+          window.scrollTo(0, 1);
+        }
+        setIsFullscreen(true);
+      }
+    } catch {
+      el.classList.toggle("pratica-fullscreen-fallback");
+      setIsFullscreen((v) => !v);
+    }
+  };
+
+  useEffect(() => {
+    const sync = () => {
+      const doc: any = document;
+      setIsFullscreen(!!(doc.fullscreenElement || doc.webkitFullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", sync);
+    document.addEventListener("webkitfullscreenchange", sync as any);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      document.removeEventListener("webkitfullscreenchange", sync as any);
+      window.removeEventListener("keydown", onKey);
+      const doc: any = document;
+      if (doc.fullscreenElement && doc.exitFullscreen) doc.exitFullscreen().catch(() => {});
+      else if (doc.webkitFullscreenElement && doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+      document.documentElement.classList.remove("pratica-fullscreen-fallback");
+    };
+  }, []);
+
   const progress = useMemo(
     () => Math.min(100, (elapsed / totalSeg) * 100),
     [elapsed, totalSeg]
@@ -259,7 +312,7 @@ const PraticaSessao = () => {
         />
 
         <div className="mt-8 sm:mt-12 w-full max-w-md">
-          <div className="h-1.5 rounded-full bg-white/15 overflow-hidden">
+          <div className="h-2 rounded-full bg-white/15 overflow-hidden">
             <div
               className="h-full bg-primary-foreground/90 transition-all"
               style={{
@@ -268,7 +321,7 @@ const PraticaSessao = () => {
               }}
             />
           </div>
-          <div className="flex items-center justify-between text-xs sm:text-sm opacity-80 mt-2">
+          <div className="flex items-center justify-between text-base sm:text-lg font-medium tabular-nums opacity-95 mt-3 drop-shadow-[0_1px_8px_rgba(0,0,0,0.35)]">
             <span>{fmt(elapsed)}</span>
             <span>{fmt(totalSeg)}</span>
           </div>
@@ -301,6 +354,16 @@ const PraticaSessao = () => {
           title={ambient ? "Som ambiente ativo" : "Som ambiente desligado"}
         >
           {ambient ? <Music2 className="h-5 w-5" /> : <Music className="h-5 w-5 opacity-50" />}
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleFullscreen}
+          className="rounded-full bg-transparent border-white/30 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
+          aria-label={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
+          title={isFullscreen ? "Sair da tela cheia (F)" : "Tela cheia (F)"}
+        >
+          {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
         </Button>
         <Button
           variant="secondary"
