@@ -34,6 +34,26 @@ export const AUDIO_DEFAULT = PRATICAS_AUDIO_TRACKS.meditationImpromptu1;
 
 export const AUDIO_CREDITS = "Música: Kevin MacLeod — CC-BY 4.0";
 
+// Catálogo selecionável pelo usuário (tela de detalhe)
+export interface TrackOption {
+  id: string;
+  label: string;
+  url: string | null; // null = sem trilha
+  mood?: string;
+}
+
+export const TRACK_CATALOG: TrackOption[] = [
+  { id: "auto", label: "Recomendada", url: null, mood: "Escolha automática para esta prática" },
+  { id: "meditation1", label: "Meditation Impromptu I", url: PRATICAS_AUDIO_TRACKS.meditationImpromptu1, mood: "Calma e foco" },
+  { id: "meditation2", label: "Meditation Impromptu II", url: PRATICAS_AUDIO_TRACKS.meditationImpromptu2, mood: "Suave e introspectivo" },
+  { id: "healing", label: "Healing", url: PRATICAS_AUDIO_TRACKS.healing, mood: "Relaxamento profundo" },
+  { id: "heartwarming", label: "Heartwarming", url: PRATICAS_AUDIO_TRACKS.heartwarming, mood: "Acolhimento" },
+  { id: "none", label: "Sem trilha", url: null, mood: "Apenas visual e som ambiente" },
+];
+
+export const getTrackById = (id: string | null | undefined): TrackOption | undefined =>
+  id ? TRACK_CATALOG.find((t) => t.id === id) : undefined;
+
 export interface AudioResolution {
   url: string;
   isFallback: boolean;
