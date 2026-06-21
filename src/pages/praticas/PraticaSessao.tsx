@@ -397,13 +397,14 @@ const PraticaSessao = () => {
         </Button>
       </footer>
 
-      {pratica?.tem_audio && pratica.audio_url && (
+      {audioUrl && (
         <audio
           ref={audioRef}
-          src={pratica.audio_url}
+          src={audioUrl}
           loop
           autoPlay
           muted={muted}
+          crossOrigin="anonymous"
           className="hidden"
         />
       )}
