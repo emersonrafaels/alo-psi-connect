@@ -96,6 +96,12 @@ import Triagem from "@/pages/Triagem";
 import EmotionalScales from "./pages/EmotionalScales";
 import ScaleResponse from "./pages/ScaleResponse";
 import MyEmotions from "./pages/MyEmotions";
+import PraticasIndex from "./pages/praticas/PraticasIndex";
+import PraticaDetalhe from "./pages/praticas/PraticaDetalhe";
+import PraticaSessao from "./pages/praticas/PraticaSessao";
+import PraticaCheckout from "./pages/praticas/PraticaCheckout";
+import PraticaConcluida from "./pages/praticas/PraticaConcluida";
+import PraticasAdmin from "@/pages/admin/PraticasAdmin";
 
 import "./App.css";
 
@@ -193,6 +199,19 @@ const AppWithShortcuts = () => {
       <Route path="/medcos/escalas" element={<EmotionalScales />} />
       <Route path="/medcos/escalas/:code" element={<ScaleResponse />} />
       <Route path="/medcos/minhas-emocoes" element={<MyEmotions />} />
+
+      {/* Práticas para Reequilíbrio Emocional (público) */}
+      <Route path="/praticas" element={<PraticasIndex />} />
+      <Route path="/praticas/:slug" element={<PraticaDetalhe />} />
+      <Route path="/praticas/:slug/sessao" element={<PraticaSessao />} />
+      <Route path="/praticas/:slug/checkout" element={<PraticaCheckout />} />
+      <Route path="/praticas/:slug/concluida" element={<PraticaConcluida />} />
+      <Route path="/medcos/praticas" element={<PraticasIndex />} />
+      <Route path="/medcos/praticas/:slug" element={<PraticaDetalhe />} />
+      <Route path="/medcos/praticas/:slug/sessao" element={<PraticaSessao />} />
+      <Route path="/medcos/praticas/:slug/checkout" element={<PraticaCheckout />} />
+      <Route path="/medcos/praticas/:slug/concluida" element={<PraticaConcluida />} />
+      
       
       {/* Rotas Medcos (duplicadas com prefixo /medcos) */}
       <Route path="/medcos" element={<Index />} />
@@ -314,6 +333,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/tests" element={<AdminLayout><AdminTests /></AdminLayout>} />
       <Route path="/admin/demo-data" element={<AdminLayout><DemoData /></AdminLayout>} />
       <Route path="/admin/pacientes-completo" element={<AdminLayout><PatientsFullView /></AdminLayout>} />
+      <Route path="/admin/praticas" element={<ProtectedRoute requiredRole="admin"><AdminLayout><PraticasAdmin /></AdminLayout></ProtectedRoute>} />
 
       <Route 
         path="/admin/ai-management" 

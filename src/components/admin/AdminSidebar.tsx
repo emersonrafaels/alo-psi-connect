@@ -18,7 +18,8 @@ import {
   TrendingUp,
   Video,
   Database,
-  Brain
+  Brain,
+  Sparkles
 } from 'lucide-react';
 import {
   Sidebar,
@@ -131,6 +132,12 @@ const adminMenuGroups = [
         url: '/admin/blog-analytics',
         icon: TrendingUp,
         requiredRole: null
+      },
+      {
+        title: 'Práticas',
+        url: '/admin/praticas',
+        icon: Sparkles,
+        requiredRole: 'admin' as const
       }
     ]
   },
