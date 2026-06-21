@@ -324,6 +324,16 @@ export const applyTriageFilters = (rows: PatientOverviewRow[], f: TriageFilters)
     if (f.hasDiary === 'yes' && r.mood.total === 0) return false;
     if (f.hasDiary === 'no' && r.mood.total > 0) return false;
 
+    if (f.scales === 'complete' && !r.scales?.complete) return false;
+    if (f.scales === 'incomplete' && (r.scales?.complete || (r.scales?.filled ?? 0) === 0)) return false;
+    if (f.scales === 'none' && (r.scales?.filled ?? 0) > 0) return false;
+
+    if (f.iseuBand !== 'all') {
+      if (f.iseuBand === 'none' && r.iseu?.band) return false;
+      if (f.iseuBand !== 'none' && r.iseu?.band !== f.iseuBand) return false;
+    }
+
     return true;
   });
 };
+
