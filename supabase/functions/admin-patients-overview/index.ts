@@ -184,8 +184,48 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Emotional scales: which codes each user has responded to
+      const scalesByUser: Record<string, Set<string>> = {};
+      if (userIds.length) {
+        const { data: resps } = await admin
+          .from("emotional_scale_responses")
+          .select("user_id, scale_code")
+          .in("user_id", userIds);
+        (resps || []).forEach((r: any) => {
+          if (!r.scale_code) return;
+          (scalesByUser[r.user_id] ||= new Set<string>()).add(r.scale_code);
+        });
+      }
+
+      // Required ISEU scales (active + iseu_weight > 0)
+      const { data: requiredScales } = await admin
+        .from("emotional_scales")
+        .select("code")
+        .eq("active", true)
+        .gt("iseu_weight", 0);
+      const requiredCodes: string[] = (requiredScales || []).map((s: any) => s.code).filter(Boolean);
+
+      // Latest ISEU score per user
+      const iseuByUser: Record<string, { score: number; band: string; computed_at: string }> = {};
+      if (userIds.length) {
+        const { data: iseuRows } = await admin
+          .from("iseu_scores")
+          .select("user_id, score, band, computed_at")
+          .in("user_id", userIds)
+          .order("computed_at", { ascending: false });
+        (iseuRows || []).forEach((r: any) => {
+          if (!iseuByUser[r.user_id]) {
+            iseuByUser[r.user_id] = { score: Number(r.score), band: r.band, computed_at: r.computed_at };
+          }
+        });
+      }
+
       const rows = (profiles || []).map((p: any) => {
         const pac = pacByProfile[p.id];
+        const filledSet = scalesByUser[p.user_id] || new Set<string>();
+        const missing = requiredCodes.filter((c) => !filledSet.has(c));
+        const complete = requiredCodes.length > 0 && missing.length === 0;
+        const latestIseu = iseuByUser[p.user_id] || null;
         return {
           profile_id: p.id,
           user_id: p.user_id,
@@ -204,8 +244,18 @@ Deno.serve(async (req) => {
           mood: moodAgg[p.user_id] || { total: 0, last30: 0, last_date: null },
           sessions: sessionAgg[p.user_id] || { upcoming: 0, past: 0 },
           appointments: apptAgg[p.user_id] || { upcoming: 0, past: 0 },
+          scales: {
+            filled: filledSet.size,
+            required: requiredCodes.length,
+            missing,
+            complete,
+          },
+          iseu: complete && latestIseu
+            ? { score: latestIseu.score, band: latestIseu.band, computed_at: latestIseu.computed_at }
+            : { score: null, band: null, computed_at: null },
         };
       });
+
 
       return json({ rows, total: count || 0, page, pageSize });
     }
