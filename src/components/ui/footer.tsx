@@ -74,6 +74,10 @@ const Footer = () => {
     href: buildTenantPath(tenantSlug, "/contato"),
     enabled: true
   }, {
+    name: "Práticas",
+    href: buildTenantPath(tenantSlug, "/praticas"),
+    enabled: true
+  }, {
     name: "Blog",
     href: buildTenantPath(tenantSlug, "/blog"),
     enabled: blogEnabled
