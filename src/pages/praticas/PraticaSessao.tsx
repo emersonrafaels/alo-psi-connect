@@ -382,11 +382,19 @@ const PraticaSessao = () => {
           variant="outline"
           size="icon"
           onClick={() => setAmbient((a) => !a)}
-          className="rounded-full bg-transparent border-white/30 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
+          className={`relative rounded-full bg-transparent text-primary-foreground hover:bg-white/10 hover:text-primary-foreground ${
+            ambient ? "border-white/60" : "border-white/20"
+          }`}
           aria-label={ambient ? "Desligar som ambiente" : "Ligar som ambiente"}
           title={ambient ? "Som ambiente ativo" : "Som ambiente desligado"}
         >
-          {ambient ? <Music2 className="h-5 w-5" /> : <Music className="h-5 w-5 opacity-50" />}
+          <Waves className="h-5 w-5" />
+          {!ambient && (
+            <span
+              aria-hidden
+              className="absolute left-1.5 right-1.5 top-1/2 h-px bg-current rotate-45 origin-center"
+            />
+          )}
         </Button>
         <Button
           variant="outline"
