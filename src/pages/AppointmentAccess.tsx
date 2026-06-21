@@ -51,75 +51,43 @@ const AppointmentAccess = () => {
 
   const fetchAppointmentByToken = async (tokenValue: string) => {
     try {
-      // Verificar se o token é válido e não expirou
-      const { data: tokenData, error: tokenError } = await supabase
-        .from('agendamento_tokens')
-        .select('*')
-        .eq('token', tokenValue)
-        .eq('used', false)
-        .gt('expires_at', new Date().toISOString())
-        .single()
-
-      if (tokenError || !tokenData) {
-        setError('Token inválido ou expirado')
-        setLoading(false)
-        return
-      }
-
-      // Buscar dados do agendamento
-      const { data: appointmentData, error: appointmentError } = await supabase
-        .from('agendamentos')
-        .select(`
-          *,
-          profissionais:professional_id (
-            display_name,
-            profissao,
-            telefone,
-            email_secundario
-          )
-        `)
-        .eq('id', tokenData.agendamento_id)
-        .single()
-
-      if (appointmentError || !appointmentData) {
-        setError('Agendamento não encontrado')
-        setLoading(false)
-        return
-      }
-
-      // Verificar se o email do token corresponde ao email do agendamento
-      if (tokenData.email !== appointmentData.email_paciente) {
-        setError('Token não corresponde ao agendamento')
-        setLoading(false)
-        return
-      }
-
-      setAppointment({
-        id: appointmentData.id,
-        nome_paciente: appointmentData.nome_paciente,
-        email_paciente: appointmentData.email_paciente,
-        telefone_paciente: appointmentData.telefone_paciente,
-        data_consulta: appointmentData.data_consulta,
-        horario: appointmentData.horario,
-        valor: appointmentData.valor,
-        status: appointmentData.status,
-        observacoes: appointmentData.observacoes,
-        profissionais: Array.isArray(appointmentData.profissionais) 
-          ? appointmentData.profissionais[0] 
-          : appointmentData.profissionais
+      const { data, error } = await supabase.functions.invoke('redeem-appointment-token', {
+        body: { token: tokenValue },
       })
 
-      // Marcar token como usado
-      await supabase
-        .from('agendamento_tokens')
-        .update({ used: true })
-        .eq('token', tokenValue)
+      if (error || !data || (data as any).error) {
+        const code = (data as any)?.error
+        if (code === 'appointment_not_found') {
+          setError('Agendamento não encontrado')
+        } else if (code === 'email_mismatch') {
+          setError('Token não corresponde ao agendamento')
+        } else {
+          setError('Token inválido ou expirado')
+        }
+        setLoading(false)
+        return
+      }
+
+      const appointmentPayload = (data as any).appointment
+      setAppointment({
+        id: appointmentPayload.id,
+        nome_paciente: appointmentPayload.nome_paciente,
+        email_paciente: appointmentPayload.email_paciente,
+        telefone_paciente: appointmentPayload.telefone_paciente,
+        data_consulta: appointmentPayload.data_consulta,
+        horario: appointmentPayload.horario,
+        valor: appointmentPayload.valor,
+        status: appointmentPayload.status,
+        observacoes: appointmentPayload.observacoes,
+        profissionais: Array.isArray(appointmentPayload.profissionais)
+          ? appointmentPayload.profissionais[0]
+          : appointmentPayload.profissionais,
+      })
 
       // Se não é usuário logado, oferecer criação de conta
       if (!user) {
         setShowAccountCreation(true)
       }
-
     } catch (error) {
       console.error('Erro ao buscar agendamento:', error)
       setError('Erro interno do servidor')
@@ -127,6 +95,7 @@ const AppointmentAccess = () => {
       setLoading(false)
     }
   }
+
 
   const handleSendMagicLink = async () => {
     if (!appointment?.email_paciente) return
