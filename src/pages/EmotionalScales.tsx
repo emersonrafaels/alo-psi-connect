@@ -27,6 +27,7 @@ const EmotionalScales = () => {
   const { user, loading: authLoading } = useAuth();
   const { tenant } = useTenant();
   const slug = tenant?.slug || "alopsi";
+  const [explainer, setExplainer] = useState<{ title: string; url: string; code?: string } | null>(null);
 
   const { data: scales, isLoading } = useEmotionalScales();
   const { data: latestMap } = useLatestResponseByScale();
