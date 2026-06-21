@@ -375,6 +375,14 @@ const MyEmotions = () => {
         </Card>
       </main>
       <Footer />
+      {explainer && (
+        <ScaleExplainerDialog
+          open={!!explainer}
+          onOpenChange={(o) => !o && setExplainer(null)}
+          title={explainer.title}
+          imageUrl={explainer.url}
+        />
+      )}
     </div>
   );
 };
