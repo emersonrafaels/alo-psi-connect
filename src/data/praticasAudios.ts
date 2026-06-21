@@ -32,7 +32,7 @@ export const AUDIO_POR_SLUG: Record<string, string> = {
 
 export const AUDIO_DEFAULT = PRATICAS_AUDIO_TRACKS.meditationImpromptu1;
 
-export const AUDIO_CREDITS = "Música: Kevin MacLeod (incompetech.com) — CC-BY 4.0";
+export const AUDIO_CREDITS = "Música: Kevin MacLeod — CC-BY 4.0";
 
 export interface AudioResolution {
   url: string;

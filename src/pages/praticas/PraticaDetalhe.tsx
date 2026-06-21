@@ -173,7 +173,7 @@ const PraticaDetalhe = () => {
                 </button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Música: Kevin MacLeod (incompetech.com) — CC-BY 4.0
+                Música: Kevin MacLeod — CC-BY 4.0
               </p>
             </div>
           </Card>
