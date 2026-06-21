@@ -27,7 +27,7 @@ const PraticaDetalhe = () => {
     if (pratica) {
       document.title = `${pratica.titulo} | Práticas | Rede Bem-Estar`;
       setDuracao(pratica.duracao_min_default);
-      setComSom(pratica.tem_audio && !!pratica.audio_url);
+      setComSom(true);
     }
   }, [pratica]);
 
