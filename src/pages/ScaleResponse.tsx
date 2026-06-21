@@ -267,6 +267,14 @@ const ScaleResponse = () => {
           </Card>
         </main>
         <Footer />
+        {SCALE_EXPLAINERS[scale.code] && (
+          <ScaleExplainerDialog
+            open={explainerOpen}
+            onOpenChange={setExplainerOpen}
+            title={scale.name}
+            imageUrl={SCALE_EXPLAINERS[scale.code]}
+          />
+        )}
       </div>
     );
   }
