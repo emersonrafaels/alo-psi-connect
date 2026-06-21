@@ -363,7 +363,7 @@ const PraticaSessao = () => {
               aria-label={muted ? "Ativar trilha de meditação" : "Mutar trilha de meditação"}
               title={muted ? "Trilha desligada" : `Volume ${Math.round(volume * 100)}%`}
             >
-              {muted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+              {muted || volume === 0 ? <VolumeOff className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
             </Button>
             <Slider
               value={[muted ? 0 : Math.round(volume * 100)]}
