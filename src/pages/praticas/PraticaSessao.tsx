@@ -312,7 +312,7 @@ const PraticaSessao = () => {
         />
 
         <div className="mt-8 sm:mt-12 w-full max-w-md">
-          <div className="h-1.5 rounded-full bg-white/15 overflow-hidden">
+          <div className="h-2 rounded-full bg-white/15 overflow-hidden">
             <div
               className="h-full bg-primary-foreground/90 transition-all"
               style={{
@@ -321,7 +321,7 @@ const PraticaSessao = () => {
               }}
             />
           </div>
-          <div className="flex items-center justify-between text-xs sm:text-sm opacity-80 mt-2">
+          <div className="flex items-center justify-between text-base sm:text-lg font-medium tabular-nums opacity-95 mt-3 drop-shadow-[0_1px_8px_rgba(0,0,0,0.35)]">
             <span>{fmt(elapsed)}</span>
             <span>{fmt(totalSeg)}</span>
           </div>
@@ -354,6 +354,16 @@ const PraticaSessao = () => {
           title={ambient ? "Som ambiente ativo" : "Som ambiente desligado"}
         >
           {ambient ? <Music2 className="h-5 w-5" /> : <Music className="h-5 w-5 opacity-50" />}
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleFullscreen}
+          className="rounded-full bg-transparent border-white/30 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
+          aria-label={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
+          title={isFullscreen ? "Sair da tela cheia (F)" : "Tela cheia (F)"}
+        >
+          {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
         </Button>
         <Button
           variant="secondary"
