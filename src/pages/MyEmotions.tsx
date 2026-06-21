@@ -113,7 +113,17 @@ const MyEmotions = () => {
         <div className="grid gap-4 md:grid-cols-3 mb-6">
           <Card className="rounded-2xl">
             <CardHeader>
-              <CardDescription>ISEU-RBE atual</CardDescription>
+              <div className="flex items-center justify-between gap-2">
+                <CardDescription>ISEU-RBE atual</CardDescription>
+                <button
+                  type="button"
+                  onClick={() => setExplainer({ title: "ISEU-RBE — Índice de Saúde Emocional Unificado", url: ISEU_EXPLAINER })}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  aria-label="Como funciona o ISEU-RBE"
+                >
+                  <Info className="h-4 w-4" />
+                </button>
+              </div>
               <CardTitle className="text-4xl">
                 {iseuLoading ? (
                   <Skeleton className="h-10 w-24" />
@@ -134,14 +144,23 @@ const MyEmotions = () => {
                   {ISEU_BAND_LABEL[latestIseu.band]}
                 </Badge>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  {missingScales && missingScales.length > 0
-                    ? `- Preencha ${missingScales.length} escala${missingScales.length === 1 ? "" : "s"} restante${missingScales.length === 1 ? "" : "s"}, para ter o valor calculado.`
-                    : "Responda todas as escalas para calcular seu ISEU-RBE."}
-                </p>
+                <div className="space-y-3">
+                  <Badge variant="secondary">Aguardando respostas</Badge>
+                  <p className="text-sm text-muted-foreground">
+                    {missingScales && missingScales.length > 0
+                      ? `Preencha ${missingScales.length} escala${missingScales.length === 1 ? "" : "s"} para calcular: ${missingScales.join(", ")}.`
+                      : "Responda todas as escalas para calcular seu ISEU-RBE."}
+                  </p>
+                  {missingScales && missingScales.length > 0 && (
+                    <Button size="sm" onClick={() => navigate(buildTenantPath(slug, "/escalas"))}>
+                      Responder agora
+                    </Button>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
+
 
           <Card className="rounded-2xl md:col-span-2">
             <CardHeader>
