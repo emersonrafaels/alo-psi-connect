@@ -113,14 +113,28 @@ const EmotionalScales = () => {
             </div>
           )}
 
-          <Button
-            className="w-full"
-            variant={avail.available ? "default" : "outline"}
-            onClick={() => navigate(buildTenantPath(slug, `/escalas/${scale.code.toLowerCase()}`))}
-          >
-            {last ? "Responder novamente" : "Responder agora"}
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
+          <div className="flex gap-2">
+            {SCALE_EXPLAINERS[scale.code] && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setExplainer({ title: scale.name, url: SCALE_EXPLAINERS[scale.code], code: scale.code })}
+                aria-label={`Entenda ${scale.code}`}
+                title="Entenda esta escala"
+              >
+                <Info className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              className="flex-1"
+              variant={avail.available ? "default" : "outline"}
+              onClick={() => navigate(buildTenantPath(slug, `/escalas/${scale.code.toLowerCase()}`))}
+            >
+              {last ? "Responder novamente" : "Responder agora"}
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
