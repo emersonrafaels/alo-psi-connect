@@ -53,7 +53,8 @@ const MyEmotions = () => {
     return null;
   }
 
-  const latestIseu = iseu && iseu.length ? iseu[iseu.length - 1] : null;
+  const iseuComplete = !!missingScales && missingScales.length === 0;
+  const latestIseu = iseuComplete && iseu && iseu.length ? iseu[iseu.length - 1] : null;
 
   const iseuChartData = useMemo(
     () =>
