@@ -28,9 +28,18 @@ export const BreathingCircle = ({
   const [secondsLeft, setSecondsLeft] = useState(inspirar);
   const phaseRef = useRef<Phase>("inspirar");
   const remainingRef = useRef<number>(inspirar);
+  const firstPhaseFiredRef = useRef(false);
 
+  // Dispara sino/feedback para a primeira fase ("Inspire") logo na montagem,
+  // já que o loop principal só notifica em transições subsequentes.
   useEffect(() => {
     if (paused) return;
+    // Dispara feedback de "Inspire" no primeiro start (loop só notifica em transições).
+    if (!firstPhaseFiredRef.current) {
+      firstPhaseFiredRef.current = true;
+      const initT = setTimeout(() => onPhaseChange?.("inspirar"), 200);
+      // não retorna o clear deste — queremos que dispare mesmo se o efeito reciclar em StrictMode
+    }
     const tick = setInterval(() => {
       remainingRef.current -= 0.1;
       if (remainingRef.current <= 0) {
