@@ -294,34 +294,62 @@ const PraticaSessao = () => {
     navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`);
   };
 
-  // Gong / sino curto em transição de fase
+  // Gong / sino curto em transição de fase — usa contexto isolado do drone ambiente.
   const playGong = useCallback((freq: number) => {
     try {
       const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
-      const ctx = audioCtxRef.current;
-      if (ctx.state === "suspended") ctx.resume();
-      const now = ctx.currentTime;
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
-      const osc = ctx.createOscillator();
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      const osc2 = ctx.createOscillator();
-      osc2.type = "sine";
-      osc2.frequency.value = freq * 2.01;
-      const g2 = ctx.createGain();
-      g2.gain.value = 0.35;
-      osc.connect(gain);
-      osc2.connect(g2).connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc2.start(now);
-      osc.stop(now + 1.25);
-      osc2.stop(now + 1.25);
-    } catch {}
+      if (!Ctx) return;
+      let ctx = gongCtxRef.current;
+      if (!ctx || ctx.state === "closed") {
+        ctx = new Ctx();
+        gongCtxRef.current = ctx;
+      }
+      const schedule = () => {
+        try {
+          const c = gongCtxRef.current;
+          if (!c || c.state === "closed") return;
+          const now = c.currentTime;
+          const gain = c.createGain();
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.exponentialRampToValueAtTime(0.28, now + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+          const osc = c.createOscillator();
+          osc.type = "sine";
+          osc.frequency.value = freq;
+          const osc2 = c.createOscillator();
+          osc2.type = "sine";
+          osc2.frequency.value = freq * 2.01;
+          const g2 = c.createGain();
+          g2.gain.value = 0.35;
+          const osc3 = c.createOscillator();
+          osc3.type = "sine";
+          osc3.frequency.value = freq * 0.5;
+          const g3 = c.createGain();
+          g3.gain.value = 0.15;
+          osc.connect(gain);
+          osc2.connect(g2).connect(gain);
+          osc3.connect(g3).connect(gain);
+          gain.connect(c.destination);
+          osc.start(now);
+          osc2.start(now);
+          osc3.start(now);
+          osc.stop(now + 1.45);
+          osc2.stop(now + 1.45);
+          osc3.stop(now + 1.45);
+        } catch (err) {
+          console.warn("[pratica] gong schedule failed", err);
+        }
+      };
+      // Garante que o contexto esteja "running" antes de agendar (importante em Safari/iOS).
+      const resumePromise = ctx.state === "suspended" ? ctx.resume() : Promise.resolve();
+      Promise.resolve(resumePromise).then(schedule).catch(schedule);
+      // Pulso visual no botão do sino para feedback de que tocou.
+      setGongPulse(true);
+      if (gongPulseTimerRef.current) window.clearTimeout(gongPulseTimerRef.current);
+      gongPulseTimerRef.current = window.setTimeout(() => setGongPulse(false), 280);
+    } catch (err) {
+      console.warn("[pratica] gong failed", err);
+    }
   }, []);
 
   const onPhaseChange = useCallback(
