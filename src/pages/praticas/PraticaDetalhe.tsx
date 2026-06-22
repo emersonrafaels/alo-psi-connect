@@ -11,7 +11,7 @@ import { usePratica } from "@/hooks/usePraticas";
 import { IconePratica } from "@/components/praticas/IconePratica";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 import { BREATHING_PRESETS, SCENE_THEMES } from "@/data/praticasPresets";
-import { TRACK_CATALOG } from "@/data/praticasAudios";
+import { TRACK_CATALOG, resolveTrackForPratica } from "@/data/praticasAudios";
 
 const PREVIEW_VOLUME = 0.5;
 const PREVIEW_DURATION_MS = 15000;
