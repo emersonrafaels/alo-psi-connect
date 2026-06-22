@@ -14,12 +14,15 @@ import {
   Bell,
   BellOff,
   Plus,
+  Type,
+  Sparkles,
 } from "lucide-react";
 import { usePratica } from "@/hooks/usePraticas";
 import { BreathingCircle } from "@/components/praticas/BreathingCircle";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 import { resolveTrackForPratica } from "@/data/praticasAudios";
 import { getPresetById, getThemeById } from "@/data/praticasPresets";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 const fmt = (s: number) => {
   const m = Math.floor(s / 60);
@@ -100,7 +103,19 @@ const PraticaSessao = () => {
   });
   const [ciclos, setCiclos] = useState(0);
   const [chromeVisible, setChromeVisible] = useState(true);
+  const [dimmed, setDimmed] = useState(false);
+  const [largeLabels, setLargeLabels] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("praticas:legendasGrandes") === "1";
+  });
+  const [intensity, setIntensity] = useState<number>(() => {
+    if (typeof window === "undefined") return 3;
+    const stored = Number(window.localStorage.getItem("praticas:intensidade"));
+    return Number.isFinite(stored) && stored >= 1 && stored <= 5 ? stored : 3;
+  });
+  const reducedMotion = usePrefersReducedMotion();
   const idleTimerRef = useRef<number | null>(null);
+  const dimTimerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -244,18 +259,30 @@ const PraticaSessao = () => {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
-  // Auto-hide chrome
+  // Auto-hide chrome + "modo sem tela" (dim after longer idle)
   const wakeChrome = () => {
     setChromeVisible(true);
+    setDimmed(false);
     if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     idleTimerRef.current = window.setTimeout(() => setChromeVisible(false), 4000);
+    if (dimTimerRef.current) window.clearTimeout(dimTimerRef.current);
+    dimTimerRef.current = window.setTimeout(() => setDimmed(true), 15000);
   };
   useEffect(() => {
     wakeChrome();
     return () => {
       if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+      if (dimTimerRef.current) window.clearTimeout(dimTimerRef.current);
     };
   }, []);
+
+  // Persist Sprint 1 toggles
+  useEffect(() => {
+    try { window.localStorage.setItem("praticas:legendasGrandes", largeLabels ? "1" : "0"); } catch {}
+  }, [largeLabels]);
+  useEffect(() => {
+    try { window.localStorage.setItem("praticas:intensidade", String(intensity)); } catch {}
+  }, [intensity]);
 
   const encerrar = () => {
     navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`);
@@ -365,6 +392,14 @@ const PraticaSessao = () => {
   );
 
 
+  // Particle count scales with user intensity (1..5) and is suppressed under reduced-motion.
+  const visibleParticles = useMemo(() => {
+    if (reducedMotion) return [] as typeof PARTICLES;
+    const count = Math.round((PARTICLES.length * intensity) / 5);
+    return PARTICLES.slice(0, count);
+  }, [reducedMotion, intensity]);
+  const auroraBlur = `blur(${40 + intensity * 12}px)`;
+  const auroraOpacity = 0.4 + intensity * 0.1;
 
   return (
     <div
@@ -372,16 +407,21 @@ const PraticaSessao = () => {
       style={{ minHeight: "100dvh" }}
       onPointerMove={wakeChrome}
       onTouchStart={wakeChrome}
+      onClick={() => { if (dimmed) wakeChrome(); }}
     >
       {/* Scene layers */}
       <div
         aria-hidden
         className={`absolute inset-0 ${tema.className}`}
-        style={{ animationPlayState: paused ? "paused" : "running" }}
+        style={{
+          animationPlayState: paused || reducedMotion ? "paused" : "running",
+          filter: auroraBlur,
+          opacity: auroraOpacity,
+        }}
       />
       <div aria-hidden className="absolute inset-0 pratica-scene-vignette" />
       <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
-        {PARTICLES.map((p, i) => (
+        {visibleParticles.map((p, i) => (
           <span
             key={i}
             className="absolute rounded-full bg-primary-foreground pratica-particle"
@@ -398,6 +438,20 @@ const PraticaSessao = () => {
           />
         ))}
       </div>
+
+      {/* "Modo sem tela" — dim overlay that escurece tudo menos o círculo respirando */}
+      <div
+        aria-hidden
+        className={`absolute inset-0 bg-black pointer-events-none transition-opacity duration-[2000ms] ${
+          dimmed ? "opacity-80" : "opacity-0"
+        }`}
+        style={{
+          maskImage:
+            "radial-gradient(circle at 50% 50%, transparent 18%, black 55%)",
+          WebkitMaskImage:
+            "radial-gradient(circle at 50% 50%, transparent 18%, black 55%)",
+        }}
+      />
 
       {/* Top bar */}
       <header
@@ -417,10 +471,18 @@ const PraticaSessao = () => {
 
       {/* Main */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center pb-4">
-        <h1 className="font-serif text-2xl sm:text-3xl mb-1 drop-shadow-[0_2px_18px_rgba(0,0,0,0.25)]">
+        <h1
+          className={`font-serif text-2xl sm:text-3xl mb-1 drop-shadow-[0_2px_18px_rgba(0,0,0,0.25)] transition-opacity duration-700 ${
+            dimmed ? "opacity-0" : "opacity-100"
+          }`}
+        >
           {pratica?.titulo ?? "Respiração guiada"}
         </h1>
-        <p className="opacity-80 mb-3 sm:mb-4 max-w-md text-sm">
+        <p
+          className={`opacity-80 mb-3 sm:mb-4 max-w-md text-sm transition-opacity duration-700 ${
+            dimmed ? "!opacity-0" : ""
+          }`}
+        >
           {pratica?.subtitulo ?? "Acalme sua mente agora"}
         </p>
 
@@ -430,6 +492,8 @@ const PraticaSessao = () => {
           expirar={padrao.expirar}
           paused={paused}
           onPhaseChange={onPhaseChange}
+          reducedMotion={reducedMotion}
+          largeLabels={largeLabels}
         />
 
         <div className="mt-4 sm:mt-6 w-full max-w-md">
@@ -511,6 +575,32 @@ const PraticaSessao = () => {
         >
           {sino ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
         </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setLargeLabels((v) => !v)}
+          className={`rounded-full bg-transparent text-primary-foreground hover:bg-white/10 hover:text-primary-foreground ${
+            largeLabels ? "border-white/60" : "border-white/20"
+          }`}
+          aria-label={largeLabels ? "Desativar legendas grandes" : "Ativar legendas grandes"}
+          title={largeLabels ? "Legendas grandes ativas" : "Legendas grandes desligadas"}
+          aria-pressed={largeLabels}
+        >
+          <Type className="h-5 w-5" />
+        </Button>
+        <div className="flex items-center gap-2 rounded-full border border-white/30 bg-transparent pl-3 pr-3 py-1">
+          <Sparkles className="h-4 w-4 opacity-90" aria-hidden />
+          <Slider
+            value={[intensity]}
+            onValueChange={([v]) => setIntensity(v)}
+            min={1}
+            max={5}
+            step={1}
+            aria-label="Intensidade visual"
+            className="w-20 sm:w-24"
+          />
+          <span className="text-xs tabular-nums opacity-80 w-3 text-center">{intensity}</span>
+        </div>
         <Button
           variant="outline"
           size="icon"
