@@ -31,6 +31,95 @@ const PraticaDetalhe = () => {
   const [trackId, setTrackId] = useState<string>("auto");
   const [temaId, setTemaId] = useState<string>("aurora");
 
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const previewFadeRef = useRef<number | null>(null);
+  const previewStopTimerRef = useRef<number | null>(null);
+
+  const stopPreview = (immediate = false) => {
+    if (previewStopTimerRef.current) {
+      window.clearTimeout(previewStopTimerRef.current);
+      previewStopTimerRef.current = null;
+    }
+    if (previewFadeRef.current) {
+      window.clearInterval(previewFadeRef.current);
+      previewFadeRef.current = null;
+    }
+    const a = previewAudioRef.current;
+    if (!a) {
+      setPreviewingId(null);
+      return;
+    }
+    if (immediate) {
+      a.pause();
+      a.src = "";
+      previewAudioRef.current = null;
+      setPreviewingId(null);
+      return;
+    }
+    // fade-out
+    const startVol = a.volume;
+    const steps = Math.max(1, Math.round(FADE_MS / 40));
+    let i = 0;
+    previewFadeRef.current = window.setInterval(() => {
+      i++;
+      const next = Math.max(0, startVol * (1 - i / steps));
+      if (a) a.volume = next;
+      if (i >= steps) {
+        if (previewFadeRef.current) window.clearInterval(previewFadeRef.current);
+        previewFadeRef.current = null;
+        a.pause();
+        a.src = "";
+        previewAudioRef.current = null;
+        setPreviewingId(null);
+      }
+    }, 40);
+  };
+
+  const startPreview = (id: string, url: string) => {
+    stopPreview(true);
+    const a = new Audio(url);
+    a.loop = false;
+    a.volume = 0;
+    previewAudioRef.current = a;
+    setPreviewingId(id);
+    a.play()
+      .then(() => {
+        // fade-in
+        const steps = Math.max(1, Math.round(FADE_MS / 40));
+        let i = 0;
+        previewFadeRef.current = window.setInterval(() => {
+          i++;
+          a.volume = Math.min(PREVIEW_VOLUME, (PREVIEW_VOLUME * i) / steps);
+          if (i >= steps) {
+            if (previewFadeRef.current) window.clearInterval(previewFadeRef.current);
+            previewFadeRef.current = null;
+          }
+        }, 40);
+        previewStopTimerRef.current = window.setTimeout(() => stopPreview(false), PREVIEW_DURATION_MS);
+      })
+      .catch((e) => {
+        console.warn("[pratica] preview falhou", url, e);
+        setPreviewingId(null);
+        previewAudioRef.current = null;
+      });
+  };
+
+  const handleTrackClick = (id: string, url: string | null) => {
+    setTrackId(id);
+    if (!url) {
+      stopPreview(true);
+      return;
+    }
+    if (previewingId === id) {
+      stopPreview(false);
+    } else {
+      startPreview(id, url);
+    }
+  };
+
+  useEffect(() => () => stopPreview(true), []);
+
   useEffect(() => {
     window.scrollTo(0, 0);
     if (pratica) {
