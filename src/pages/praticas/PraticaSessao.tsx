@@ -119,7 +119,10 @@ const PraticaSessao = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const gongCtxRef = useRef<AudioContext | null>(null);
   const ambientNodesRef = useRef<{ stop: () => void } | null>(null);
+  const gongPulseTimerRef = useRef<number | null>(null);
+  const [gongPulse, setGongPulse] = useState(false);
 
   useEffect(() => {
     if (paused) return;
