@@ -578,6 +578,32 @@ const PraticaSessao = () => {
         <Button
           variant="outline"
           size="icon"
+          onClick={() => setLargeLabels((v) => !v)}
+          className={`rounded-full bg-transparent text-primary-foreground hover:bg-white/10 hover:text-primary-foreground ${
+            largeLabels ? "border-white/60" : "border-white/20"
+          }`}
+          aria-label={largeLabels ? "Desativar legendas grandes" : "Ativar legendas grandes"}
+          title={largeLabels ? "Legendas grandes ativas" : "Legendas grandes desligadas"}
+          aria-pressed={largeLabels}
+        >
+          <Type className="h-5 w-5" />
+        </Button>
+        <div className="flex items-center gap-2 rounded-full border border-white/30 bg-transparent pl-3 pr-3 py-1">
+          <Sparkles className="h-4 w-4 opacity-90" aria-hidden />
+          <Slider
+            value={[intensity]}
+            onValueChange={([v]) => setIntensity(v)}
+            min={1}
+            max={5}
+            step={1}
+            aria-label="Intensidade visual"
+            className="w-20 sm:w-24"
+          />
+          <span className="text-xs tabular-nums opacity-80 w-3 text-center">{intensity}</span>
+        </div>
+        <Button
+          variant="outline"
+          size="icon"
           onClick={toggleFullscreen}
           className="rounded-full bg-transparent border-white/30 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
           aria-label={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
