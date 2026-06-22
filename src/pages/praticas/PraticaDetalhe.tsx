@@ -35,8 +35,20 @@ const PraticaDetalhe = () => {
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const previewFadeRef = useRef<number | null>(null);
   const previewStopTimerRef = useRef<number | null>(null);
+  const previewTokenRef = useRef(0);
+  const lastPlayPromiseRef = useRef<Promise<void> | null>(null);
 
-  const stopPreview = (immediate = false) => {
+  const getPreviewAudio = () => {
+    if (!previewAudioRef.current) {
+      const a = new Audio();
+      a.loop = false;
+      a.preload = "auto";
+      previewAudioRef.current = a;
+    }
+    return previewAudioRef.current;
+  };
+
+  const clearPreviewTimers = () => {
     if (previewStopTimerRef.current) {
       window.clearTimeout(previewStopTimerRef.current);
       previewStopTimerRef.current = null;
@@ -45,64 +57,86 @@ const PraticaDetalhe = () => {
       window.clearInterval(previewFadeRef.current);
       previewFadeRef.current = null;
     }
+  };
+
+  const stopPreview = async (immediate = false) => {
+    previewTokenRef.current++;
+    clearPreviewTimers();
     const a = previewAudioRef.current;
-    if (!a) {
-      setPreviewingId(null);
-      return;
-    }
+    setPreviewingId(null);
+    if (!a) return;
+
+    // aguarda play() pendente para evitar AbortError
+    try { await lastPlayPromiseRef.current; } catch {}
+
     if (immediate) {
-      a.pause();
-      a.src = "";
-      previewAudioRef.current = null;
-      setPreviewingId(null);
+      try { a.pause(); } catch {}
+      a.currentTime = 0;
       return;
     }
     // fade-out
     const startVol = a.volume;
     const steps = Math.max(1, Math.round(FADE_MS / 40));
     let i = 0;
+    await new Promise<void>((resolve) => {
+      previewFadeRef.current = window.setInterval(() => {
+        i++;
+        a.volume = Math.max(0, startVol * (1 - i / steps));
+        if (i >= steps) {
+          if (previewFadeRef.current) window.clearInterval(previewFadeRef.current);
+          previewFadeRef.current = null;
+          try { a.pause(); } catch {}
+          a.currentTime = 0;
+          resolve();
+        }
+      }, 40);
+    });
+  };
+
+  const startPreview = async (id: string, url: string) => {
+    const token = ++previewTokenRef.current;
+    clearPreviewTimers();
+    const a = getPreviewAudio();
+
+    // pausa instância atual sem zerar src antes do play
+    try { await lastPlayPromiseRef.current; } catch {}
+    if (token !== previewTokenRef.current) return;
+    try { a.pause(); } catch {}
+
+    a.src = url;
+    a.volume = 0;
+    setPreviewingId(id);
+
+    const playPromise = a.play();
+    lastPlayPromiseRef.current = playPromise;
+    try {
+      await playPromise;
+    } catch (e: any) {
+      if (e?.name !== "AbortError") console.warn("[pratica] preview falhou", url, e);
+      if (token === previewTokenRef.current) setPreviewingId(null);
+      return;
+    }
+    if (token !== previewTokenRef.current) return;
+
+    // fade-in
+    const steps = Math.max(1, Math.round(FADE_MS / 40));
+    let i = 0;
     previewFadeRef.current = window.setInterval(() => {
+      if (token !== previewTokenRef.current) {
+        if (previewFadeRef.current) window.clearInterval(previewFadeRef.current);
+        previewFadeRef.current = null;
+        return;
+      }
       i++;
-      const next = Math.max(0, startVol * (1 - i / steps));
-      if (a) a.volume = next;
+      a.volume = Math.min(PREVIEW_VOLUME, (PREVIEW_VOLUME * i) / steps);
       if (i >= steps) {
         if (previewFadeRef.current) window.clearInterval(previewFadeRef.current);
         previewFadeRef.current = null;
-        a.pause();
-        a.src = "";
-        previewAudioRef.current = null;
-        setPreviewingId(null);
       }
     }, 40);
-  };
-
-  const startPreview = (id: string, url: string) => {
-    stopPreview(true);
-    const a = new Audio(url);
-    a.loop = false;
-    a.volume = 0;
-    previewAudioRef.current = a;
-    setPreviewingId(id);
-    a.play()
-      .then(() => {
-        // fade-in
-        const steps = Math.max(1, Math.round(FADE_MS / 40));
-        let i = 0;
-        previewFadeRef.current = window.setInterval(() => {
-          i++;
-          a.volume = Math.min(PREVIEW_VOLUME, (PREVIEW_VOLUME * i) / steps);
-          if (i >= steps) {
-            if (previewFadeRef.current) window.clearInterval(previewFadeRef.current);
-            previewFadeRef.current = null;
-          }
-        }, 40);
-        previewStopTimerRef.current = window.setTimeout(() => stopPreview(false), PREVIEW_DURATION_MS);
-      })
-      .catch((e) => {
-        console.warn("[pratica] preview falhou", url, e);
-        setPreviewingId(null);
-        previewAudioRef.current = null;
-      });
+    previewStopTimerRef.current = window.setTimeout(() => {
+      if (token === previewTokenRef.current) stopPreview(false);
+    }, PREVIEW_DURATION_MS);
   };
 
   const handleTrackClick = (id: string, url: string | null) => {
@@ -118,7 +152,8 @@ const PraticaDetalhe = () => {
     }
   };
 
-  useEffect(() => () => stopPreview(true), []);
+  useEffect(() => () => { stopPreview(true); }, []);
+
 
   useEffect(() => {
     window.scrollTo(0, 0);
