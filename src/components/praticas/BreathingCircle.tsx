@@ -35,7 +35,11 @@ export const BreathingCircle = ({
   useEffect(() => {
     if (firstPhaseFiredRef.current) return;
     firstPhaseFiredRef.current = true;
-    const t = setTimeout(() => onPhaseChange?.("inspirar"), 150);
+    console.info("[breathing] scheduling initial inspirar gong");
+    const t = setTimeout(() => {
+      console.info("[breathing] firing initial inspirar gong, hasCb=", !!onPhaseChange);
+      onPhaseChange?.("inspirar");
+    }, 150);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
