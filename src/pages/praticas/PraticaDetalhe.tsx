@@ -162,6 +162,7 @@ const PraticaDetalhe = () => {
   }
 
   const iniciar = () => {
+    stopPreview(true);
     const params = new URLSearchParams();
     if (duracao) params.set("d", String(duracao));
     params.set("som", comSom ? "1" : "0");
