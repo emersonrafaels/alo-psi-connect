@@ -28,6 +28,17 @@ export const BreathingCircle = ({
   const [secondsLeft, setSecondsLeft] = useState(inspirar);
   const phaseRef = useRef<Phase>("inspirar");
   const remainingRef = useRef<number>(inspirar);
+  const firstPhaseFiredRef = useRef(false);
+
+  // Dispara sino/feedback para a primeira fase ("Inspire") logo na montagem,
+  // já que o loop principal só notifica em transições subsequentes.
+  useEffect(() => {
+    if (firstPhaseFiredRef.current) return;
+    firstPhaseFiredRef.current = true;
+    const t = setTimeout(() => onPhaseChange?.("inspirar"), 150);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (paused) return;
