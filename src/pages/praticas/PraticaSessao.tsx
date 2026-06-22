@@ -18,7 +18,7 @@ import {
 import { usePratica } from "@/hooks/usePraticas";
 import { BreathingCircle } from "@/components/praticas/BreathingCircle";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
-import { resolverAudioPratica, getTrackById } from "@/data/praticasAudios";
+import { resolveTrackForPratica } from "@/data/praticasAudios";
 import { getPresetById, getThemeById } from "@/data/praticasPresets";
 
 const fmt = (s: number) => {
@@ -71,12 +71,13 @@ const PraticaSessao = () => {
     : padraoBase;
   const cicloSegundos = Math.max(1, (padrao.inspirar || 0) + (padrao.segurar || 0) + (padrao.expirar || 0));
 
-  // Trilha — escolha do usuário sobrepõe o fallback
-  const trackEscolha = trackParam ? getTrackById(trackParam) : undefined;
-  const audioResolution = resolverAudioPratica(pratica?.audio_url, slug);
-  const audioUrl = trackEscolha
-    ? trackEscolha.url ?? null
-    : audioResolution.url;
+  // Trilha — escolha do usuário sobrepõe o fallback automático (slug/grupo)
+  const resolvedTrack = resolveTrackForPratica(
+    pratica?.audio_url,
+    slug,
+    trackParam,
+  );
+  const audioUrl = resolvedTrack.url;
 
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);

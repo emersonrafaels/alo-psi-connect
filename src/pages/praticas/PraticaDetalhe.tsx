@@ -11,7 +11,7 @@ import { usePratica } from "@/hooks/usePraticas";
 import { IconePratica } from "@/components/praticas/IconePratica";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 import { BREATHING_PRESETS, SCENE_THEMES } from "@/data/praticasPresets";
-import { TRACK_CATALOG } from "@/data/praticasAudios";
+import { TRACK_CATALOG, resolveTrackForPratica } from "@/data/praticasAudios";
 
 const PREVIEW_VOLUME = 0.5;
 const PREVIEW_DURATION_MS = 15000;
@@ -421,15 +421,21 @@ const PraticaDetalhe = () => {
               <p className="text-xs text-muted-foreground mt-3">
                 {(() => {
                   if (!comSom) return "Sem trilha musical — apenas som ambiente.";
-                  const activeId = previewingId ?? trackId;
-                  const t = TRACK_CATALOG.find((x) => x.id === activeId);
-                  if (activeId === "none" || (t && t.url === null)) {
+                  // Se estiver com prévia tocando, mostra a faixa da prévia;
+                  // caso contrário, mostra a faixa efetivamente selecionada (resolvendo "Recomendada").
+                  const idForLegend = previewingId ?? trackId;
+                  if (idForLegend === "none") {
                     return "Sem trilha musical — apenas som ambiente.";
                   }
-                  if (!t || activeId === "auto") {
-                    return "Música: seleção automática — Kevin MacLeod · CC-BY 4.0";
+                  const resolved = resolveTrackForPratica(
+                    pratica?.audio_url,
+                    pratica?.slug,
+                    idForLegend,
+                  );
+                  if (!resolved || resolved.url === null) {
+                    return "Sem trilha musical — apenas som ambiente.";
                   }
-                  return `Música: ${t.label} — Kevin MacLeod · CC-BY 4.0`;
+                  return `Música: ${resolved.label} — Kevin MacLeod · CC-BY 4.0`;
                 })()}
               </p>
             </div>

@@ -54,6 +54,9 @@ export const TRACK_CATALOG: TrackOption[] = [
 export const getTrackById = (id: string | null | undefined): TrackOption | undefined =>
   id ? TRACK_CATALOG.find((t) => t.id === id) : undefined;
 
+export const getTrackByUrl = (url: string | null | undefined): TrackOption | undefined =>
+  url ? TRACK_CATALOG.find((t) => t.url === url) : undefined;
+
 export interface AudioResolution {
   url: string;
   isFallback: boolean;
@@ -68,4 +71,27 @@ export const resolverAudioPratica = (
   if (slug && AUDIO_POR_SLUG[slug]) return { url: AUDIO_POR_SLUG[slug], isFallback: true };
   if (grupoSlug && AUDIO_POR_GRUPO[grupoSlug]) return { url: AUDIO_POR_GRUPO[grupoSlug], isFallback: true };
   return { url: AUDIO_DEFAULT, isFallback: true };
+};
+
+/**
+ * Resolve a faixa efetivamente reproduzida considerando a escolha do usuário.
+ * - "none" → sem trilha
+ * - id específico → essa faixa
+ * - "auto" / vazio → resolução automática por slug/grupo (com fallback default)
+ */
+export const resolveTrackForPratica = (
+  praticaAudioUrl: string | null | undefined,
+  slug: string | null | undefined,
+  selectedTrackId: string | null | undefined,
+  grupoSlug?: string | null,
+): TrackOption => {
+  if (selectedTrackId === "none") {
+    return TRACK_CATALOG.find((t) => t.id === "none")!;
+  }
+  if (selectedTrackId && selectedTrackId !== "auto") {
+    const t = getTrackById(selectedTrackId);
+    if (t) return t;
+  }
+  const res = resolverAudioPratica(praticaAudioUrl, slug, grupoSlug);
+  return getTrackByUrl(res.url) ?? TRACK_CATALOG.find((t) => t.url === AUDIO_DEFAULT)!;
 };
