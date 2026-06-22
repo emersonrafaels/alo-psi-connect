@@ -1,34 +1,46 @@
-## Diagnóstico
 
-1. **Sobreposição de prévias / AbortError**: o controlador atual cria um `new Audio(url)` a cada clique e chama `stopPreview(true)` (que faz `pause()` + `src = ""`) antes do `play()` anterior resolver. Em cliques rápidos sobram instâncias órfãs tocando em paralelo e o navegador dispara `AbortError`.
+## Objetivo
 
-2. **Crédito "Música: Kevin MacLeod" parece travado**: o texto é estático e não reflete a trilha selecionada/tocando, dando impressão de bug.
+Corrigir o player de prévia de músicas em Práticas (sobreposição de faixas e legenda travada em "Meditation Impromptu I"), garantindo que a faixa tocada e o crédito exibido sempre reflitam a seleção atual, inclusive quando "Recomendada" estiver ativa.
 
-## Correções
+## Escopo
 
-### 1. `PraticaDetalhe.tsx` — controller de prévia robusto
+### 1. Prévia de áudio sem sobreposição (`src/pages/praticas/PraticaDetalhe.tsx`)
 
-- Manter **um único** `HTMLAudioElement` em `useRef` e reaproveitar trocando apenas `src` (não criar nova `Audio` a cada clique).
-- Usar um `requestIdRef` (token incremental) para ignorar callbacks de play/fade de requisições antigas.
-- Sequenciar corretamente: `await audio.play()` em try/catch; só iniciar fade-in/timers se o token ainda for o atual.
-- `stopPreview`: limpar timers/intervals, fazer fade-out e só então `pause()` (sem zerar `src`, para não interromper outro `play()` em curso). Usar `audio.pause()` + `audio.currentTime = 0`.
-- Ignorar `AbortError` silenciosamente (não logar warning ruidoso) — manter warning só para erros reais.
-- Garantir que clicar no card já ativo (mesmo `id`) pare; clicar em outro pare o anterior e inicie o novo, sem corrida.
-- Cleanup no unmount permanece.
+- Manter uma única instância `HTMLAudioElement` em `useRef` (reaproveitada entre trocas).
+- Introduzir `requestIdRef` (token incremental): cada clique de prévia incrementa o token; callbacks assíncronos (`play()`, fade-in, timers) só aplicam efeito se o token ainda for o atual.
+- `stopPreview()`:
+  - Cancela timers de fade-in/fade-out.
+  - Executa fade-out curto, depois `pause()` e `currentTime = 0`.
+  - NÃO limpa `src` (evita recarregamentos desnecessários).
+- `playPreview(track)`:
+  - Chama `stopPreview()` primeiro.
+  - Atualiza `src` apenas se mudou.
+  - `await audio.play()` com `try/catch` que ignora `AbortError` silenciosamente.
+- Cleanup no `useEffect` de desmontagem para parar áudio e timers.
 
-### 2. `PraticaDetalhe.tsx` — crédito dinâmico
+### 2. Legenda dinâmica da faixa selecionada
 
-Trocar o texto fixo por algo como:
-- Se houver prévia tocando ou `trackId` válido: `Música: <Nome da trilha> — Kevin MacLeod · CC-BY 4.0`.
-- Se "Sem trilha": `Sem trilha musical — apenas som ambiente`.
-- Se "Recomendada (auto)": `Música: seleção automática — Kevin MacLeod · CC-BY 4.0`.
+- Resolver o nome real da faixa a partir do `selectedTrackId`, inclusive quando for `recomendada` (usar o mesmo mapeamento de `praticasPresets`/grupo/slug que já define a faixa tocada).
+- Formatos exibidos:
+  - Faixa nomeada: `Música: <nome resolvido> — Kevin MacLeod · CC-BY 4.0`
+  - "Sem trilha": `Sem trilha musical — apenas som ambiente`
+  - "Recomendada": exibe o nome efetivamente resolvido (não mais texto genérico).
+
+### 3. Sincronia com `PraticaSessao.tsx`
+
+- Garantir que o player da sessão use a mesma função de resolução de faixa (via parâmetro `t` da URL ou fallback "Recomendada") e troque corretamente quando o usuário muda a seleção no detalhe antes de iniciar.
+
+## Detalhes técnicos
+
+- Extrair a lógica de resolução de faixa para um helper compartilhado (ex.: `resolveTrackForPratica(pratica, selectedTrackId)`) usado tanto em `PraticaDetalhe.tsx` quanto em `PraticaSessao.tsx`.
+- Não alterar o catálogo (`praticasAudios.ts`, `praticasPresets.ts`) — apenas consumo.
+- Não tocar em estilos/UI fora da legenda.
 
 ## Validação
 
-- Clicar rapidamente em 4 trilhas seguidas → apenas a última toca; sem erros no console.
-- Selecionar "Sem trilha" durante prévia → áudio para imediatamente; legenda muda.
-- Selecionar cada card → legenda mostra o nome correspondente.
-
-## Arquivos
-
-- `src/pages/praticas/PraticaDetalhe.tsx`
+- Cliques rápidos em diferentes faixas: apenas a última toca, sem sobreposição.
+- Selecionar "Sem trilha": prévia para imediatamente; legenda muda para "Sem trilha musical".
+- Selecionar "Recomendada" em práticas distintas: legenda mostra o nome resolvido (ex.: "Healing", "Heartwarming", "Meditation Impromptu II") conforme grupo/slug.
+- Iniciar sessão após trocar a seleção: `PraticaSessao` toca a mesma faixa exibida no detalhe.
+- Sem erros `AbortError` no console.
