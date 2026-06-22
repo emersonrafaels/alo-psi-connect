@@ -33,19 +33,13 @@ export const BreathingCircle = ({
   // Dispara sino/feedback para a primeira fase ("Inspire") logo na montagem,
   // já que o loop principal só notifica em transições subsequentes.
   useEffect(() => {
-    if (firstPhaseFiredRef.current) return;
-    firstPhaseFiredRef.current = true;
-    console.info("[breathing] scheduling initial inspirar gong");
-    const t = setTimeout(() => {
-      console.info("[breathing] firing initial inspirar gong, hasCb=", !!onPhaseChange);
-      onPhaseChange?.("inspirar");
-    }, 150);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     if (paused) return;
+    // Dispara feedback de "Inspire" no primeiro start (loop só notifica em transições).
+    if (!firstPhaseFiredRef.current) {
+      firstPhaseFiredRef.current = true;
+      const initT = setTimeout(() => onPhaseChange?.("inspirar"), 200);
+      // não retorna o clear deste — queremos que dispare mesmo se o efeito reciclar em StrictMode
+    }
     const tick = setInterval(() => {
       remainingRef.current -= 0.1;
       if (remainingRef.current <= 0) {
