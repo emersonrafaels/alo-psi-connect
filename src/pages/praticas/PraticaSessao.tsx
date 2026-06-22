@@ -392,6 +392,14 @@ const PraticaSessao = () => {
   );
 
 
+  // Particle count scales with user intensity (1..5) and is suppressed under reduced-motion.
+  const visibleParticles = useMemo(() => {
+    if (reducedMotion) return [] as typeof PARTICLES;
+    const count = Math.round((PARTICLES.length * intensity) / 5);
+    return PARTICLES.slice(0, count);
+  }, [reducedMotion, intensity]);
+  const auroraBlur = `blur(${40 + intensity * 12}px)`;
+  const auroraOpacity = 0.4 + intensity * 0.1;
 
   return (
     <div
@@ -399,16 +407,21 @@ const PraticaSessao = () => {
       style={{ minHeight: "100dvh" }}
       onPointerMove={wakeChrome}
       onTouchStart={wakeChrome}
+      onClick={() => { if (dimmed) wakeChrome(); }}
     >
       {/* Scene layers */}
       <div
         aria-hidden
         className={`absolute inset-0 ${tema.className}`}
-        style={{ animationPlayState: paused ? "paused" : "running" }}
+        style={{
+          animationPlayState: paused || reducedMotion ? "paused" : "running",
+          filter: auroraBlur,
+          opacity: auroraOpacity,
+        }}
       />
       <div aria-hidden className="absolute inset-0 pratica-scene-vignette" />
       <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
-        {PARTICLES.map((p, i) => (
+        {visibleParticles.map((p, i) => (
           <span
             key={i}
             className="absolute rounded-full bg-primary-foreground pratica-particle"
@@ -425,6 +438,20 @@ const PraticaSessao = () => {
           />
         ))}
       </div>
+
+      {/* "Modo sem tela" — dim overlay that escurece tudo menos o círculo respirando */}
+      <div
+        aria-hidden
+        className={`absolute inset-0 bg-black pointer-events-none transition-opacity duration-[2000ms] ${
+          dimmed ? "opacity-80" : "opacity-0"
+        }`}
+        style={{
+          maskImage:
+            "radial-gradient(circle at 50% 50%, transparent 18%, black 55%)",
+          WebkitMaskImage:
+            "radial-gradient(circle at 50% 50%, transparent 18%, black 55%)",
+        }}
+      />
 
       {/* Top bar */}
       <header
@@ -444,10 +471,18 @@ const PraticaSessao = () => {
 
       {/* Main */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center pb-4">
-        <h1 className="font-serif text-2xl sm:text-3xl mb-1 drop-shadow-[0_2px_18px_rgba(0,0,0,0.25)]">
+        <h1
+          className={`font-serif text-2xl sm:text-3xl mb-1 drop-shadow-[0_2px_18px_rgba(0,0,0,0.25)] transition-opacity duration-700 ${
+            dimmed ? "opacity-0" : "opacity-100"
+          }`}
+        >
           {pratica?.titulo ?? "Respiração guiada"}
         </h1>
-        <p className="opacity-80 mb-3 sm:mb-4 max-w-md text-sm">
+        <p
+          className={`opacity-80 mb-3 sm:mb-4 max-w-md text-sm transition-opacity duration-700 ${
+            dimmed ? "!opacity-0" : ""
+          }`}
+        >
           {pratica?.subtitulo ?? "Acalme sua mente agora"}
         </p>
 
@@ -457,6 +492,8 @@ const PraticaSessao = () => {
           expirar={padrao.expirar}
           paused={paused}
           onPhaseChange={onPhaseChange}
+          reducedMotion={reducedMotion}
+          largeLabels={largeLabels}
         />
 
         <div className="mt-4 sm:mt-6 w-full max-w-md">
