@@ -355,7 +355,7 @@ const PraticaSessao = () => {
     [elapsed, totalSeg]
   );
 
-  const restanteSeg = Math.max(0, totalSeg - elapsed);
+
 
   return (
     <div
