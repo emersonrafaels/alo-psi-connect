@@ -119,10 +119,18 @@ const PraticaSessao = () => {
 
   // Voice/trilha audio
   useEffect(() => {
+    if (audioUrl) console.info("[pratica] track resolvido", audioUrl);
+  }, [audioUrl]);
+
+  useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
     a.muted = muted;
     a.volume = volume;
+    // garante recarregar quando o src muda em runtime
+    if (a.src && !a.src.endsWith(audioUrl ?? "")) {
+      try { a.load(); } catch {}
+    }
     if (paused) a.pause();
     else a.play().catch(() => {});
   }, [paused, muted, volume, audioUrl]);
@@ -549,6 +557,7 @@ const PraticaSessao = () => {
 
       {audioUrl && (
         <audio
+          key={audioUrl}
           ref={audioRef}
           src={audioUrl}
           loop

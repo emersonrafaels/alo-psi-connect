@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
@@ -6,12 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Clock, Brain, Play, ShieldCheck, Volume2, VolumeX, Wind, Palette, Music } from "lucide-react";
+import { ArrowLeft, Clock, Brain, Play, ShieldCheck, Volume2, VolumeX, Wind, Palette, Music, Pause, Waves } from "lucide-react";
 import { usePratica } from "@/hooks/usePraticas";
 import { IconePratica } from "@/components/praticas/IconePratica";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 import { BREATHING_PRESETS, SCENE_THEMES } from "@/data/praticasPresets";
 import { TRACK_CATALOG } from "@/data/praticasAudios";
+
+const PREVIEW_VOLUME = 0.5;
+const PREVIEW_DURATION_MS = 15000;
+const FADE_MS = 400;
 
 const PraticaDetalhe = () => {
   const { slug } = useParams();
@@ -26,6 +30,95 @@ const PraticaDetalhe = () => {
   const [presetId, setPresetId] = useState<string>("padrao");
   const [trackId, setTrackId] = useState<string>("auto");
   const [temaId, setTemaId] = useState<string>("aurora");
+
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const previewFadeRef = useRef<number | null>(null);
+  const previewStopTimerRef = useRef<number | null>(null);
+
+  const stopPreview = (immediate = false) => {
+    if (previewStopTimerRef.current) {
+      window.clearTimeout(previewStopTimerRef.current);
+      previewStopTimerRef.current = null;
+    }
+    if (previewFadeRef.current) {
+      window.clearInterval(previewFadeRef.current);
+      previewFadeRef.current = null;
+    }
+    const a = previewAudioRef.current;
+    if (!a) {
+      setPreviewingId(null);
+      return;
+    }
+    if (immediate) {
+      a.pause();
+      a.src = "";
+      previewAudioRef.current = null;
+      setPreviewingId(null);
+      return;
+    }
+    // fade-out
+    const startVol = a.volume;
+    const steps = Math.max(1, Math.round(FADE_MS / 40));
+    let i = 0;
+    previewFadeRef.current = window.setInterval(() => {
+      i++;
+      const next = Math.max(0, startVol * (1 - i / steps));
+      if (a) a.volume = next;
+      if (i >= steps) {
+        if (previewFadeRef.current) window.clearInterval(previewFadeRef.current);
+        previewFadeRef.current = null;
+        a.pause();
+        a.src = "";
+        previewAudioRef.current = null;
+        setPreviewingId(null);
+      }
+    }, 40);
+  };
+
+  const startPreview = (id: string, url: string) => {
+    stopPreview(true);
+    const a = new Audio(url);
+    a.loop = false;
+    a.volume = 0;
+    previewAudioRef.current = a;
+    setPreviewingId(id);
+    a.play()
+      .then(() => {
+        // fade-in
+        const steps = Math.max(1, Math.round(FADE_MS / 40));
+        let i = 0;
+        previewFadeRef.current = window.setInterval(() => {
+          i++;
+          a.volume = Math.min(PREVIEW_VOLUME, (PREVIEW_VOLUME * i) / steps);
+          if (i >= steps) {
+            if (previewFadeRef.current) window.clearInterval(previewFadeRef.current);
+            previewFadeRef.current = null;
+          }
+        }, 40);
+        previewStopTimerRef.current = window.setTimeout(() => stopPreview(false), PREVIEW_DURATION_MS);
+      })
+      .catch((e) => {
+        console.warn("[pratica] preview falhou", url, e);
+        setPreviewingId(null);
+        previewAudioRef.current = null;
+      });
+  };
+
+  const handleTrackClick = (id: string, url: string | null) => {
+    setTrackId(id);
+    if (!url) {
+      stopPreview(true);
+      return;
+    }
+    if (previewingId === id) {
+      stopPreview(false);
+    } else {
+      startPreview(id, url);
+    }
+  };
+
+  useEffect(() => () => stopPreview(true), []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -69,6 +162,7 @@ const PraticaDetalhe = () => {
   }
 
   const iniciar = () => {
+    stopPreview(true);
     const params = new URLSearchParams();
     if (duracao) params.set("d", String(duracao));
     params.set("som", comSom ? "1" : "0");
@@ -252,21 +346,36 @@ const PraticaDetalhe = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {TRACK_CATALOG.map((t) => {
                     const active = trackId === t.id;
+                    const isPreviewing = previewingId === t.id;
+                    const canPreview = !!t.url;
                     return (
                       <button
                         key={t.id}
-                        onClick={() => setTrackId(t.id)}
-                        className={`text-left px-4 py-2.5 rounded-lg border transition-all ${
+                        onClick={() => handleTrackClick(t.id, t.url)}
+                        className={`relative text-left px-4 py-2.5 pr-11 rounded-lg border transition-all ${
                           active
                             ? "bg-primary text-primary-foreground border-primary"
                             : "bg-card border-border hover:border-primary/50"
                         }`}
                       >
-                        <div className="text-sm font-medium">{t.label}</div>
+                        <div className="text-sm font-medium flex items-center gap-2">
+                          {t.label}
+                          {isPreviewing && <Waves className="h-3.5 w-3.5 animate-pulse" aria-hidden />}
+                        </div>
                         {t.mood && (
                           <div className={`text-xs mt-0.5 ${active ? "opacity-90" : "text-muted-foreground"}`}>
-                            {t.mood}
+                            {isPreviewing ? "Prévia tocando…" : t.mood}
                           </div>
+                        )}
+                        {canPreview && (
+                          <span
+                            className={`absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-7 w-7 rounded-full border ${
+                              active ? "border-primary-foreground/40" : "border-border"
+                            }`}
+                            aria-label={isPreviewing ? "Parar prévia" : "Ouvir prévia"}
+                          >
+                            {isPreviewing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                          </span>
                         )}
                       </button>
                     );
