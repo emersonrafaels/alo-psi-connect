@@ -1,46 +1,66 @@
+## Status atual
 
-## Objetivo
+A maior parte do plano original já foi implementada. Resta o que está listado abaixo, agrupado por contexto.
 
-Corrigir o player de prévia de músicas em Práticas (sobreposição de faixas e legenda travada em "Meditation Impromptu I"), garantindo que a faixa tocada e o crédito exibido sempre reflitam a seleção atual, inclusive quando "Recomendada" estiver ativa.
+### Já implementado (não refazer)
+- Ícones de áudio inativo (`VolumeOff`, `Waves` / `WavesOff`, `Bell` / `BellOff`).
+- Catálogo de trilhas com prévia (`TRACK_CATALOG`, hot-swap sem sobreposição, legenda resolvida).
+- Presets de respiração (`BREATHING_PRESETS`) e temas de cena (`SCENE_THEMES`).
+- Sino/gong de transição, vibração háptica, indicador de ciclo, pausa por `visibilitychange`, botão "+1 min", fullscreen com fallback iOS, som ambiente procedural.
+- Check-out pós-sessão básico (`praticas_checkouts`) e tela "Concluída" com share nativo.
 
-## Escopo
+---
 
-### 1. Prévia de áudio sem sobreposição (`src/pages/praticas/PraticaDetalhe.tsx`)
+## Etapas restantes (priorizadas)
 
-- Manter uma única instância `HTMLAudioElement` em `useRef` (reaproveitada entre trocas).
-- Introduzir `requestIdRef` (token incremental): cada clique de prévia incrementa o token; callbacks assíncronos (`play()`, fade-in, timers) só aplicam efeito se o token ainda for o atual.
-- `stopPreview()`:
-  - Cancela timers de fade-in/fade-out.
-  - Executa fade-out curto, depois `pause()` e `currentTime = 0`.
-  - NÃO limpa `src` (evita recarregamentos desnecessários).
-- `playPreview(track)`:
-  - Chama `stopPreview()` primeiro.
-  - Atualiza `src` apenas se mudou.
-  - `await audio.play()` com `try/catch` que ignora `AbortError` silenciosamente.
-- Cleanup no `useEffect` de desmontagem para parar áudio e timers.
+### Sprint 1 — UX e acessibilidade (baixo custo, alto impacto)
 
-### 2. Legenda dinâmica da faixa selecionada
+1. **D1 · Reduced motion** (`PraticaSessao.tsx`, CSS global)
+   - Hook `usePrefersReducedMotion`; quando ativo: remove `PARTICLES`, desabilita animação de aurora (gradiente estático), congela `praticaFloat`.
 
-- Resolver o nome real da faixa a partir do `selectedTrackId`, inclusive quando for `recomendada` (usar o mesmo mapeamento de `praticasPresets`/grupo/slug que já define a faixa tocada).
-- Formatos exibidos:
-  - Faixa nomeada: `Música: <nome resolvido> — Kevin MacLeod · CC-BY 4.0`
-  - "Sem trilha": `Sem trilha musical — apenas som ambiente`
-  - "Recomendada": exibe o nome efetivamente resolvido (não mais texto genérico).
+2. **D3 · Legendas grandes de fase** (`BreathingCircle.tsx`)
+   - Texto "Inspire / Segure / Expire" abaixo do círculo, opção em "modo legibilidade" (font-size maior, peso 600, contraste reforçado). Toggle persistido em `localStorage` (`praticas:legendasGrandes`).
 
-### 3. Sincronia com `PraticaSessao.tsx`
+3. **A4 · Modo "sem tela"** (`PraticaSessao.tsx`)
+   - Após N segundos sem interação, escurece toda a cena (overlay `bg-black/70`) deixando apenas o círculo respirando visível. Sai do modo a qualquer toque. Reusa `idleTimerRef` já existente.
 
-- Garantir que o player da sessão use a mesma função de resolução de faixa (via parâmetro `t` da URL ou fallback "Recomendada") e troque corretamente quando o usuário muda a seleção no detalhe antes de iniciar.
+4. **B4 · Slider de intensidade visual** (`PraticaSessao.tsx`)
+   - Slider 1–5 controlando densidade de partículas e blur da aurora em runtime (CSS var `--pratica-intensity`). Persistir em `localStorage`.
 
-## Detalhes técnicos
+### Sprint 2 — Pós-sessão e continuidade
 
-- Extrair a lógica de resolução de faixa para um helper compartilhado (ex.: `resolveTrackForPratica(pratica, selectedTrackId)`) usado tanto em `PraticaDetalhe.tsx` quanto em `PraticaSessao.tsx`.
-- Não alterar o catálogo (`praticasAudios.ts`, `praticasPresets.ts`) — apenas consumo.
-- Não tocar em estilos/UI fora da legenda.
+5. **C1 · Integrar check-out ao diário emocional** (`PraticaCheckout.tsx`)
+   - Ao concluir, além de gravar em `praticas_checkouts`, criar/atualizar entrada do dia em `mood_entries` (campo `humor` mapeado do estado escolhido). Usar `upsert` com `onConflict: 'user_id,date'` (regra já existente).
 
-## Validação
+6. **C2 · Resumo do ciclo respiratório** (`PraticaConcluida.tsx`)
+   - Receber via query string (`?ciclos=` e `?dur=`) total de ciclos completos, duração efetiva e tempo médio por ciclo. Exibir em card destacado antes do "O que a ciência sugere".
 
-- Cliques rápidos em diferentes faixas: apenas a última toca, sem sobreposição.
-- Selecionar "Sem trilha": prévia para imediatamente; legenda muda para "Sem trilha musical".
-- Selecionar "Recomendada" em práticas distintas: legenda mostra o nome resolvido (ex.: "Healing", "Heartwarming", "Meditation Impromptu II") conforme grupo/slug.
-- Iniciar sessão após trocar a seleção: `PraticaSessao` toca a mesma faixa exibida no detalhe.
-- Sem erros `AbortError` no console.
+7. **C4 · Streak e calendário** (`PraticaConcluida.tsx` + nova query)
+   - Calcular streak (dias consecutivos com prática) a partir de `praticas_checkouts.created_at` do usuário. Pequeno calendário 30 dias com pontos preenchidos.
+
+8. **D4 · Persistência de progresso** (`PraticaSessao.tsx` + `PraticaDetalhe.tsx`)
+   - Ao encerrar antes do fim, salvar `{slug, elapsed, duracao, ts}` em `localStorage:praticas:retomar`. Na tela de detalhe, banner "Continuar sessão anterior (3:20 restantes)" se for o mesmo `slug` e <30 min.
+
+### Sprint 3 — Personalização e conteúdo
+
+9. **A5 · Lembrete diário** (nova seção em `PraticaDetalhe.tsx` ou `/configuracoes`)
+    - Reaproveitar a tabela já existente `whatsapp_reminder_preferences` ou criar `praticas_lembretes` (cron via edge function `daily-reminders`). UI: hora + dias da semana.
+
+10. **A2 · Voz-guia (TTS)** (edge function `praticas-tts` + cache)
+    - Lovable AI `gpt-4o-mini-tts`, vozes alloy/sage/shimmer, pt-BR. Geração sob demanda dos cues "Inspire / Segure / Expire" + contagem regressiva. Cache por preset em Supabase Storage (`praticas-tts/{preset}_{voz}.mp3`).
+
+11. **E2 · Recomendação contextual** (`PraticasIndex.tsx`)
+    - Ler última triagem do usuário; se ansiedade alta → destacar "Respiração 4-7-8" e similares; se sono ruim → "Body scan"; se nenhum → comportamento atual.
+
+12. **C3 · Selo compartilhável** (`PraticaConcluida.tsx`)
+    - Gerar imagem via Canvas (1080×1080) com título da prática, minutos, data e logo. Botão "Baixar selo" além do share atual.
+
+### Backlog (sem prioridade definida)
+
+- **D2** Modo alto contraste (toggle global).
+- **E1** Upload de áudio próprio por psicólogo da rede (admin) — `audio_url` já existe.
+- **E3** Sessões em sequência (rotina matinal: encadear 2–3 práticas).
+
+## Como prosseguir
+
+Confirme qual sprint (1, 2 ou 3) — ou itens individuais por número — devo implementar agora. Se quiser priorizar diferente, indique a ordem.
