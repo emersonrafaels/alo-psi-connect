@@ -346,21 +346,36 @@ const PraticaDetalhe = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {TRACK_CATALOG.map((t) => {
                     const active = trackId === t.id;
+                    const isPreviewing = previewingId === t.id;
+                    const canPreview = !!t.url;
                     return (
                       <button
                         key={t.id}
-                        onClick={() => setTrackId(t.id)}
-                        className={`text-left px-4 py-2.5 rounded-lg border transition-all ${
+                        onClick={() => handleTrackClick(t.id, t.url)}
+                        className={`relative text-left px-4 py-2.5 pr-11 rounded-lg border transition-all ${
                           active
                             ? "bg-primary text-primary-foreground border-primary"
                             : "bg-card border-border hover:border-primary/50"
                         }`}
                       >
-                        <div className="text-sm font-medium">{t.label}</div>
+                        <div className="text-sm font-medium flex items-center gap-2">
+                          {t.label}
+                          {isPreviewing && <Waves className="h-3.5 w-3.5 animate-pulse" aria-hidden />}
+                        </div>
                         {t.mood && (
                           <div className={`text-xs mt-0.5 ${active ? "opacity-90" : "text-muted-foreground"}`}>
-                            {t.mood}
+                            {isPreviewing ? "Prévia tocando…" : t.mood}
                           </div>
+                        )}
+                        {canPreview && (
+                          <span
+                            className={`absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-7 w-7 rounded-full border ${
+                              active ? "border-primary-foreground/40" : "border-border"
+                            }`}
+                            aria-label={isPreviewing ? "Parar prévia" : "Ouvir prévia"}
+                          >
+                            {isPreviewing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                          </span>
                         )}
                       </button>
                     );
