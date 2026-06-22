@@ -557,6 +557,7 @@ const PraticaSessao = () => {
 
       {audioUrl && (
         <audio
+          key={audioUrl}
           ref={audioRef}
           src={audioUrl}
           loop
