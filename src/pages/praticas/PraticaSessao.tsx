@@ -14,12 +14,15 @@ import {
   Bell,
   BellOff,
   Plus,
+  Type,
+  Sparkles,
 } from "lucide-react";
 import { usePratica } from "@/hooks/usePraticas";
 import { BreathingCircle } from "@/components/praticas/BreathingCircle";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 import { resolveTrackForPratica } from "@/data/praticasAudios";
 import { getPresetById, getThemeById } from "@/data/praticasPresets";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 const fmt = (s: number) => {
   const m = Math.floor(s / 60);
@@ -100,7 +103,19 @@ const PraticaSessao = () => {
   });
   const [ciclos, setCiclos] = useState(0);
   const [chromeVisible, setChromeVisible] = useState(true);
+  const [dimmed, setDimmed] = useState(false);
+  const [largeLabels, setLargeLabels] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("praticas:legendasGrandes") === "1";
+  });
+  const [intensity, setIntensity] = useState<number>(() => {
+    if (typeof window === "undefined") return 3;
+    const stored = Number(window.localStorage.getItem("praticas:intensidade"));
+    return Number.isFinite(stored) && stored >= 1 && stored <= 5 ? stored : 3;
+  });
+  const reducedMotion = usePrefersReducedMotion();
   const idleTimerRef = useRef<number | null>(null);
+  const dimTimerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
