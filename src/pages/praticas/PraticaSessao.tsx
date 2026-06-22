@@ -601,9 +601,9 @@ const PraticaSessao = () => {
           variant="outline"
           size="icon"
           onClick={() => setSino((s) => !s)}
-          className={`rounded-full bg-transparent text-primary-foreground hover:bg-white/10 hover:text-primary-foreground ${
+          className={`rounded-full bg-transparent text-primary-foreground hover:bg-white/10 hover:text-primary-foreground relative ${
             sino ? "border-white/60" : "border-white/20"
-          }`}
+          } ${sino && gongPulse ? "ring-2 ring-white/70 scale-110" : ""} transition-all duration-200`}
           aria-label={sino ? "Desligar sino de transição" : "Ligar sino de transição"}
           title={sino ? "Sino de transição ativo" : "Sino de transição desligado"}
         >
