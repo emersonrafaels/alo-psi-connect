@@ -18,7 +18,7 @@ import {
 import { usePratica } from "@/hooks/usePraticas";
 import { BreathingCircle } from "@/components/praticas/BreathingCircle";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
-import { resolverAudioPratica, getTrackById } from "@/data/praticasAudios";
+import { resolveTrackForPratica } from "@/data/praticasAudios";
 import { getPresetById, getThemeById } from "@/data/praticasPresets";
 
 const fmt = (s: number) => {
