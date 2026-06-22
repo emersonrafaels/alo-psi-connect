@@ -419,7 +419,18 @@ const PraticaDetalhe = () => {
               )}
 
               <p className="text-xs text-muted-foreground mt-3">
-                Música: Kevin MacLeod — CC-BY 4.0
+                {(() => {
+                  if (!comSom) return "Sem trilha musical — apenas som ambiente.";
+                  const activeId = previewingId ?? trackId;
+                  const t = TRACK_CATALOG.find((x) => x.id === activeId);
+                  if (activeId === "none" || (t && t.url === null)) {
+                    return "Sem trilha musical — apenas som ambiente.";
+                  }
+                  if (!t || activeId === "auto") {
+                    return "Música: seleção automática — Kevin MacLeod · CC-BY 4.0";
+                  }
+                  return `Música: ${t.label} — Kevin MacLeod · CC-BY 4.0`;
+                })()}
               </p>
             </div>
           </Card>
