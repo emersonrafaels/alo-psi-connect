@@ -6,6 +6,10 @@ interface BreathingCircleProps {
   expirar: number;
   paused?: boolean;
   onPhaseChange?: (phase: "inspirar" | "segurar" | "expirar") => void;
+  /** Use a static visual (no scale transition / spinning ring) for users that prefer reduced motion. */
+  reducedMotion?: boolean;
+  /** Bigger and bolder phase label / counter for accessibility ("legendas grandes"). */
+  largeLabels?: boolean;
 }
 
 const PHASES = ["inspirar", "segurar", "expirar"] as const;
@@ -17,6 +21,8 @@ export const BreathingCircle = ({
   expirar,
   paused = false,
   onPhaseChange,
+  reducedMotion = false,
+  largeLabels = false,
 }: BreathingCircleProps) => {
   const [phase, setPhase] = useState<Phase>("inspirar");
   const [secondsLeft, setSecondsLeft] = useState(inspirar);
@@ -48,12 +54,23 @@ export const BreathingCircle = ({
     return () => clearInterval(tick);
   }, [paused, inspirar, segurar, expirar, onPhaseChange]);
 
-  const scale = phase === "inspirar" ? 1 : phase === "segurar" ? 1 : 0.55;
+  const dynamicScale = phase === "inspirar" ? 1 : phase === "segurar" ? 1 : 0.55;
+  const scale = reducedMotion ? 0.85 : dynamicScale;
   const transitionDuration =
     phase === "inspirar" ? inspirar : phase === "segurar" ? segurar : expirar;
+  const transition = reducedMotion
+    ? "none"
+    : `transform ${transitionDuration}s ease-in-out`;
 
   const label =
     phase === "inspirar" ? "Inspire" : phase === "segurar" ? "Segure" : "Expire";
+
+  const labelClass = largeLabels
+    ? "font-serif text-5xl sm:text-7xl tracking-wide font-semibold drop-shadow-[0_2px_14px_rgba(0,0,0,0.55)]"
+    : "font-serif text-3xl sm:text-5xl tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]";
+  const counterClass = largeLabels
+    ? "text-4xl sm:text-5xl font-bold tabular-nums mt-3 drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]"
+    : "text-2xl sm:text-3xl font-semibold tabular-nums mt-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)]";
 
   return (
     <div
@@ -64,7 +81,7 @@ export const BreathingCircle = ({
         aria-hidden
         className="absolute inset-0 w-full h-full pratica-halo-ring"
         style={{
-          animation: paused ? "none" : "haloSpin 28s linear infinite",
+          animation: paused || reducedMotion ? "none" : "haloSpin 28s linear infinite",
         }}
         viewBox="0 0 200 200"
         fill="none"
@@ -91,43 +108,30 @@ export const BreathingCircle = ({
       <div
         aria-hidden
         className="absolute inset-0 rounded-full bg-primary-foreground/20 blur-3xl pratica-halo mix-blend-screen"
-        style={{
-          transform: `scale(${scale})`,
-          transition: `transform ${transitionDuration}s ease-in-out`,
-        }}
+        style={{ transform: `scale(${scale})`, transition }}
       />
       <div
         aria-hidden
         className="absolute inset-6 rounded-full bg-primary-foreground/15 blur-2xl"
-        style={{
-          transform: `scale(${scale})`,
-          transition: `transform ${transitionDuration}s ease-in-out`,
-        }}
+        style={{ transform: `scale(${scale})`, transition }}
       />
       <div
         aria-hidden
         className="absolute inset-12 rounded-full bg-primary-foreground/25"
         style={{
           transform: `scale(${scale})`,
-          transition: `transform ${transitionDuration}s ease-in-out`,
+          transition,
           boxShadow: "0 0 60px hsl(var(--primary-foreground) / 0.35)",
         }}
       />
       <div
         aria-hidden
         className="absolute inset-20 rounded-full bg-primary-foreground/40 backdrop-blur-sm"
-        style={{
-          transform: `scale(${scale})`,
-          transition: `transform ${transitionDuration}s ease-in-out`,
-        }}
+        style={{ transform: `scale(${scale})`, transition }}
       />
       <div className="relative z-10 flex flex-col items-center text-primary-foreground select-none">
-        <p className="font-serif text-3xl sm:text-5xl tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]">
-          {label}
-        </p>
-        <p className="text-2xl sm:text-3xl font-semibold tabular-nums mt-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)]">
-          {secondsLeft}s
-        </p>
+        <p className={labelClass}>{label}</p>
+        <p className={counterClass}>{secondsLeft}s</p>
       </div>
     </div>
   );
