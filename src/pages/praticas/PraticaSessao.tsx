@@ -259,18 +259,30 @@ const PraticaSessao = () => {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
-  // Auto-hide chrome
+  // Auto-hide chrome + "modo sem tela" (dim after longer idle)
   const wakeChrome = () => {
     setChromeVisible(true);
+    setDimmed(false);
     if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     idleTimerRef.current = window.setTimeout(() => setChromeVisible(false), 4000);
+    if (dimTimerRef.current) window.clearTimeout(dimTimerRef.current);
+    dimTimerRef.current = window.setTimeout(() => setDimmed(true), 15000);
   };
   useEffect(() => {
     wakeChrome();
     return () => {
       if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+      if (dimTimerRef.current) window.clearTimeout(dimTimerRef.current);
     };
   }, []);
+
+  // Persist Sprint 1 toggles
+  useEffect(() => {
+    try { window.localStorage.setItem("praticas:legendasGrandes", largeLabels ? "1" : "0"); } catch {}
+  }, [largeLabels]);
+  useEffect(() => {
+    try { window.localStorage.setItem("praticas:intensidade", String(intensity)); } catch {}
+  }, [intensity]);
 
   const encerrar = () => {
     navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`);
