@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
@@ -6,12 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Clock, Brain, Play, ShieldCheck, Volume2, VolumeX, Wind, Palette, Music } from "lucide-react";
+import { ArrowLeft, Clock, Brain, Play, ShieldCheck, Volume2, VolumeX, Wind, Palette, Music, Pause, Waves } from "lucide-react";
 import { usePratica } from "@/hooks/usePraticas";
 import { IconePratica } from "@/components/praticas/IconePratica";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 import { BREATHING_PRESETS, SCENE_THEMES } from "@/data/praticasPresets";
 import { TRACK_CATALOG } from "@/data/praticasAudios";
+
+const PREVIEW_VOLUME = 0.5;
+const PREVIEW_DURATION_MS = 15000;
+const FADE_MS = 400;
 
 const PraticaDetalhe = () => {
   const { slug } = useParams();
