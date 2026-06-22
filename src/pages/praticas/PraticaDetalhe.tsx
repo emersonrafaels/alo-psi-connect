@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Clock, Brain, Play, ShieldCheck, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, Clock, Brain, Play, ShieldCheck, Volume2, VolumeX, Wind, Palette, Music } from "lucide-react";
 import { usePratica } from "@/hooks/usePraticas";
 import { IconePratica } from "@/components/praticas/IconePratica";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
+import { BREATHING_PRESETS, SCENE_THEMES } from "@/data/praticasPresets";
+import { TRACK_CATALOG } from "@/data/praticasAudios";
 
 const PraticaDetalhe = () => {
   const { slug } = useParams();
@@ -21,6 +23,9 @@ const PraticaDetalhe = () => {
 
   const [duracao, setDuracao] = useState<number | null>(null);
   const [comSom, setComSom] = useState(true);
+  const [presetId, setPresetId] = useState<string>("padrao");
+  const [trackId, setTrackId] = useState<string>("auto");
+  const [temaId, setTemaId] = useState<string>("aurora");
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -28,6 +33,10 @@ const PraticaDetalhe = () => {
       document.title = `${pratica.titulo} | Práticas | Rede Bem-Estar`;
       setDuracao(pratica.duracao_min_default);
       setComSom(true);
+      setPresetId("padrao");
+      setTrackId("auto");
+      const stored = typeof window !== "undefined" ? window.localStorage.getItem("praticas:tema") : null;
+      setTemaId(stored ?? "aurora");
     }
   }, [pratica]);
 
@@ -63,6 +72,10 @@ const PraticaDetalhe = () => {
     const params = new URLSearchParams();
     if (duracao) params.set("d", String(duracao));
     params.set("som", comSom ? "1" : "0");
+    if (presetId && presetId !== "padrao") params.set("preset", presetId);
+    if (trackId && trackId !== "auto") params.set("t", trackId);
+    if (temaId && temaId !== "aurora") params.set("tema", temaId);
+    if (typeof window !== "undefined") window.localStorage.setItem("praticas:tema", temaId);
     navigate(`${basePath}/praticas/${pratica.slug}/sessao?${params.toString()}`);
   };
 
@@ -71,12 +84,7 @@ const PraticaDetalhe = () => {
       <Header />
       <main className="flex-1">
         <section className="container mx-auto px-4 py-10 max-w-4xl">
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="mb-6 -ml-3"
-          >
+          <Button variant="ghost" size="sm" asChild className="mb-6 -ml-3">
             <Link to={`${basePath}/praticas`}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Todas as práticas
@@ -105,9 +113,7 @@ const PraticaDetalhe = () => {
                   <Clock className="h-4 w-4" />
                   {pratica.duracao_min_default} min
                 </span>
-                {pratica.ideal_para && (
-                  <span>· Ideal para: {pratica.ideal_para}</span>
-                )}
+                {pratica.ideal_para && <span>· Ideal para: {pratica.ideal_para}</span>}
               </div>
             </div>
           </div>
@@ -127,8 +133,11 @@ const PraticaDetalhe = () => {
           <Card className="p-6 md:p-8 mb-8">
             <h2 className="font-serif text-2xl text-primary mb-5">Configurações</h2>
 
+            {/* Duração */}
             <div className="mb-6">
-              <p className="text-sm font-medium mb-2">Duração</p>
+              <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" /> Duração
+              </p>
               <div className="flex flex-wrap gap-2">
                 {(pratica.duracoes_disponiveis ?? []).map((d) => (
                   <button
@@ -146,9 +155,75 @@ const PraticaDetalhe = () => {
               </div>
             </div>
 
-            <div>
-              <p className="text-sm font-medium mb-2">Trilha sonora</p>
+            {/* Padrão de respiração */}
+            <div className="mb-6">
+              <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                <Wind className="h-4 w-4 text-primary" /> Padrão de respiração
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {BREATHING_PRESETS.map((p) => {
+                  const active = presetId === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setPresetId(p.id)}
+                      className={`text-left px-4 py-3 rounded-xl border transition-all ${
+                        active
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <div className="text-sm font-medium">{p.label}</div>
+                      <div className={`text-xs mt-0.5 ${active ? "opacity-90" : "text-muted-foreground"}`}>
+                        {p.description}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Tema da cena */}
+            <div className="mb-6">
+              <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                <Palette className="h-4 w-4 text-primary" /> Tema visual
+              </p>
               <div className="flex flex-wrap gap-2">
+                {SCENE_THEMES.map((t) => {
+                  const active = temaId === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setTemaId(t.id)}
+                      className={`inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full text-sm transition-all border ${
+                        active
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card border-border hover:border-primary/50"
+                      }`}
+                      title={t.label}
+                    >
+                      <span className="flex items-center -space-x-1">
+                        {t.swatch.map((c, i) => (
+                          <span
+                            key={i}
+                            className="h-4 w-4 rounded-full border border-background/40"
+                            style={{ background: c }}
+                          />
+                        ))}
+                      </span>
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Trilha sonora */}
+            <div>
+              <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                <Music className="h-4 w-4 text-primary" /> Trilha sonora
+              </p>
+              <div className="flex flex-wrap gap-2 mb-3">
                 <button
                   onClick={() => setComSom(true)}
                   className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all border ${
@@ -172,7 +247,34 @@ const PraticaDetalhe = () => {
                   Apenas visual
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
+
+              {comSom && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {TRACK_CATALOG.map((t) => {
+                    const active = trackId === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => setTrackId(t.id)}
+                        className={`text-left px-4 py-2.5 rounded-lg border transition-all ${
+                          active
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-card border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="text-sm font-medium">{t.label}</div>
+                        {t.mood && (
+                          <div className={`text-xs mt-0.5 ${active ? "opacity-90" : "text-muted-foreground"}`}>
+                            {t.mood}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground mt-3">
                 Música: Kevin MacLeod — CC-BY 4.0
               </p>
             </div>
@@ -189,7 +291,6 @@ const PraticaDetalhe = () => {
               </p>
             )}
           </div>
-
         </section>
       </main>
       <Footer />

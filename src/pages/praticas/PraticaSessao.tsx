@@ -1,12 +1,25 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { X, Pause, Play, Volume2, VolumeOff, Waves, Maximize2, Minimize2 } from "lucide-react";
+import {
+  X,
+  Pause,
+  Play,
+  Volume2,
+  VolumeOff,
+  Waves,
+  Maximize2,
+  Minimize2,
+  Bell,
+  BellOff,
+  Plus,
+} from "lucide-react";
 import { usePratica } from "@/hooks/usePraticas";
 import { BreathingCircle } from "@/components/praticas/BreathingCircle";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
-import { resolverAudioPratica } from "@/data/praticasAudios";
+import { resolverAudioPratica, getTrackById } from "@/data/praticasAudios";
+import { getPresetById, getThemeById } from "@/data/praticasPresets";
 
 const fmt = (s: number) => {
   const m = Math.floor(s / 60);
@@ -14,7 +27,6 @@ const fmt = (s: number) => {
   return `${m}:${String(r).padStart(2, "0")}`;
 };
 
-// Deterministic pseudo-random for particle positions
 const PARTICLES = Array.from({ length: 26 }, (_, i) => {
   const seed = (i * 9301 + 49297) % 233280;
   const rand = seed / 233280;
@@ -40,11 +52,31 @@ const PraticaSessao = () => {
 
   const duracaoMin = Number(params.get("d") || pratica?.duracao_min_default || 5);
   const somPref = params.get("som") === "1";
-  const totalSeg = duracaoMin * 60;
+  const presetParam = params.get("preset");
+  const trackParam = params.get("t");
+  const temaParam = params.get("tema");
 
+  const baseTotalSeg = duracaoMin * 60;
+  const [extraSec, setExtraSec] = useState(0);
+  const totalSeg = baseTotalSeg + extraSec;
+
+  // Tema da cena
+  const tema = useMemo(() => getThemeById(temaParam), [temaParam]);
+
+  // Padrão de respiração — preset sobrepõe o padrão do banco
+  const presetCustom = useMemo(() => getPresetById(presetParam), [presetParam]);
+  const padraoBase = pratica?.padrao_respiracao ?? { inspirar: 4, segurar: 0, expirar: 6 };
+  const padrao = presetCustom && presetCustom.id !== "padrao"
+    ? { inspirar: presetCustom.inspirar, segurar: presetCustom.segurar, expirar: presetCustom.expirar }
+    : padraoBase;
+  const cicloSegundos = Math.max(1, (padrao.inspirar || 0) + (padrao.segurar || 0) + (padrao.expirar || 0));
+
+  // Trilha — escolha do usuário sobrepõe o fallback
+  const trackEscolha = trackParam ? getTrackById(trackParam) : undefined;
   const audioResolution = resolverAudioPratica(pratica?.audio_url, slug);
-  const audioUrl = audioResolution.url;
-
+  const audioUrl = trackEscolha
+    ? trackEscolha.url ?? null
+    : audioResolution.url;
 
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -60,15 +92,18 @@ const PraticaSessao = () => {
     const stored = window.localStorage.getItem("praticas:ambient");
     return stored === null ? true : stored === "1";
   });
+  const [sino, setSino] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const stored = window.localStorage.getItem("praticas:sino");
+    return stored === null ? true : stored === "1";
+  });
+  const [ciclos, setCiclos] = useState(0);
   const [chromeVisible, setChromeVisible] = useState(true);
   const idleTimerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Web Audio ambient drone
   const audioCtxRef = useRef<AudioContext | null>(null);
   const ambientNodesRef = useRef<{ stop: () => void } | null>(null);
-
-  const padrao = pratica?.padrao_respiracao ?? { inspirar: 4, segurar: 0, expirar: 6 };
 
   useEffect(() => {
     if (paused) return;
@@ -82,7 +117,7 @@ const PraticaSessao = () => {
     }
   }, [elapsed, totalSeg, basePath, slug, navigate]);
 
-  // Voice guide audio
+  // Voice/trilha audio
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
@@ -90,13 +125,15 @@ const PraticaSessao = () => {
     a.volume = volume;
     if (paused) a.pause();
     else a.play().catch(() => {});
-  }, [paused, muted, volume]);
+  }, [paused, muted, volume, audioUrl]);
 
   useEffect(() => {
     window.localStorage.setItem("praticas:volume", String(volume));
   }, [volume]);
 
-
+  useEffect(() => {
+    window.localStorage.setItem("praticas:sino", sino ? "1" : "0");
+  }, [sino]);
 
   // Ambient procedural drone
   useEffect(() => {
@@ -132,12 +169,11 @@ const PraticaSessao = () => {
       osc1.frequency.value = 110;
       const osc2 = ctx.createOscillator();
       osc2.type = "sine";
-      osc2.frequency.value = 164.81; // E3
+      osc2.frequency.value = 164.81;
       const osc3 = ctx.createOscillator();
       osc3.type = "triangle";
       osc3.frequency.value = 220;
 
-      // LFO for slow shimmer
       const lfo = ctx.createOscillator();
       lfo.frequency.value = 0.08;
       const lfoGain = ctx.createGain();
@@ -173,7 +209,7 @@ const PraticaSessao = () => {
         },
       };
     } catch {
-      // ignore audio errors
+      // ignore
     }
 
     return stop;
@@ -189,6 +225,15 @@ const PraticaSessao = () => {
   useEffect(() => {
     document.title = pratica ? `${pratica.titulo} — em sessão` : "Sessão";
   }, [pratica]);
+
+  // Pausa inteligente — pausa quando aba perde foco
+  useEffect(() => {
+    const onVis = () => {
+      if (document.hidden) setPaused(true);
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
 
   // Auto-hide chrome
   const wakeChrome = () => {
@@ -207,6 +252,52 @@ const PraticaSessao = () => {
     navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`);
   };
 
+  // Gong / sino curto em transição de fase
+  const playGong = useCallback((freq: number) => {
+    try {
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") ctx.resume();
+      const now = ctx.currentTime;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const osc2 = ctx.createOscillator();
+      osc2.type = "sine";
+      osc2.frequency.value = freq * 2.01;
+      const g2 = ctx.createGain();
+      g2.gain.value = 0.35;
+      osc.connect(gain);
+      osc2.connect(g2).connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc2.start(now);
+      osc.stop(now + 1.25);
+      osc2.stop(now + 1.25);
+    } catch {}
+  }, []);
+
+  const onPhaseChange = useCallback(
+    (next: "inspirar" | "segurar" | "expirar") => {
+      if (sino) {
+        const freq = next === "inspirar" ? 528 : next === "segurar" ? 440 : 396;
+        playGong(freq);
+        if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+          try {
+            (navigator as Navigator).vibrate?.(next === "inspirar" ? [40] : [25]);
+          } catch {}
+        }
+      }
+      if (next === "inspirar") setCiclos((c) => c + 1);
+    },
+    [sino, playGong]
+  );
+
   // Fullscreen with iOS fallback
   const [isFullscreen, setIsFullscreen] = useState(false);
   const toggleFullscreen = async () => {
@@ -223,7 +314,6 @@ const PraticaSessao = () => {
         if (el.requestFullscreen) await el.requestFullscreen();
         else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
         else {
-          // iOS Safari fallback
           el.classList.add("pratica-fullscreen-fallback");
           window.scrollTo(0, 1);
         }
@@ -265,6 +355,8 @@ const PraticaSessao = () => {
     [elapsed, totalSeg]
   );
 
+
+
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col text-primary-foreground overflow-y-auto"
@@ -275,7 +367,7 @@ const PraticaSessao = () => {
       {/* Scene layers */}
       <div
         aria-hidden
-        className="absolute inset-0 pratica-scene-aurora"
+        className={`absolute inset-0 ${tema.className}`}
         style={{ animationPlayState: paused ? "paused" : "running" }}
       />
       <div aria-hidden className="absolute inset-0 pratica-scene-vignette" />
@@ -328,6 +420,7 @@ const PraticaSessao = () => {
           segurar={padrao.segurar}
           expirar={padrao.expirar}
           paused={paused}
+          onPhaseChange={onPhaseChange}
         />
 
         <div className="mt-4 sm:mt-6 w-full max-w-md">
@@ -342,12 +435,13 @@ const PraticaSessao = () => {
           </div>
           <div className="flex items-center justify-between text-sm sm:text-base font-medium tabular-nums opacity-95 mt-2 drop-shadow-[0_1px_8px_rgba(0,0,0,0.35)]">
             <span>{fmt(elapsed)}</span>
+            <span className="opacity-80">Ciclo {ciclos}</span>
             <span>{fmt(totalSeg)}</span>
           </div>
         </div>
       </main>
 
-      {/* Controls — bottom row */}
+      {/* Controls */}
       <footer
         className={`relative z-20 flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 pb-4 sm:pb-6 transition-all duration-500 ${
           chromeVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
@@ -360,7 +454,7 @@ const PraticaSessao = () => {
               size="icon"
               onClick={() => setMuted((m) => !m)}
               className="rounded-full h-9 w-9 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
-              aria-label={muted ? "Ativar trilha de meditação" : "Mutar trilha de meditação"}
+              aria-label={muted ? "Ativar trilha" : "Mutar trilha"}
               title={muted ? "Trilha desligada" : `Volume ${Math.round(volume * 100)}%`}
             >
               {muted || volume === 0 ? <VolumeOff className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
@@ -399,6 +493,18 @@ const PraticaSessao = () => {
         <Button
           variant="outline"
           size="icon"
+          onClick={() => setSino((s) => !s)}
+          className={`rounded-full bg-transparent text-primary-foreground hover:bg-white/10 hover:text-primary-foreground ${
+            sino ? "border-white/60" : "border-white/20"
+          }`}
+          aria-label={sino ? "Desligar sino de transição" : "Ligar sino de transição"}
+          title={sino ? "Sino de transição ativo" : "Sino de transição desligado"}
+        >
+          {sino ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
           onClick={toggleFullscreen}
           className="rounded-full bg-transparent border-white/30 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
           aria-label={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
@@ -421,6 +527,15 @@ const PraticaSessao = () => {
               <Pause className="h-5 w-5 mr-2" /> Pausar
             </>
           )}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setExtraSec((s) => s + 60)}
+          className="rounded-full bg-transparent border-white/30 text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
+          title="Estender duração em 1 minuto"
+        >
+          <Plus className="h-4 w-4 mr-1" /> 1 min
         </Button>
         <Button
           variant="outline"
