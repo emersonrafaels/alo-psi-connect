@@ -246,6 +246,7 @@ const PraticaSessao = () => {
     return () => {
       ambientNodesRef.current?.stop();
       audioCtxRef.current?.close().catch(() => {});
+      gongCtxRef.current?.close().catch(() => {});
     };
   }, []);
 
