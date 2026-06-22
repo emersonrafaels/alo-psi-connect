@@ -267,6 +267,8 @@ const PraticaSessao = () => {
   const wakeChrome = () => {
     setChromeVisible(true);
     setDimmed(false);
+    // Aproveita o gesto do usuário para destravar autoplay do sino
+    try { gongCtxRef.current?.resume?.(); } catch {}
     if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     idleTimerRef.current = window.setTimeout(() => setChromeVisible(false), 4000);
     if (dimTimerRef.current) window.clearTimeout(dimTimerRef.current);
