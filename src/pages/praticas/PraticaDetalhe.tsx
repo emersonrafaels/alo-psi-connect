@@ -297,6 +297,41 @@ const PraticaDetalhe = () => {
               </div>
             </div>
 
+            {/* Opções específicas da prática (opcoes_extra) */}
+            {pratica.opcoes_extra && Object.keys(pratica.opcoes_extra).length > 0 && (
+              <div className="mb-6 space-y-4">
+                {Object.entries(pratica.opcoes_extra).map(([key, cfg]) => {
+                  if (!cfg || typeof cfg !== "object" || !("options" in cfg)) return null;
+                  const c = cfg as { label: string; options: string[] };
+                  const sel = extras[key];
+                  return (
+                    <div key={key}>
+                      <p className="text-sm font-medium mb-2">{c.label}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {c.options.map((opt) => {
+                          const active = sel === opt;
+                          return (
+                            <button
+                              key={opt}
+                              onClick={() => setExtras((e) => ({ ...e, [key]: opt }))}
+                              className={`px-3 py-1.5 rounded-full text-sm transition-all border ${
+                                active
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-card border-border hover:border-primary/50"
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+
             {/* Padrão de respiração */}
             <div className="mb-6">
               <p className="text-sm font-medium mb-2 flex items-center gap-2">
