@@ -127,6 +127,8 @@ const PraticaSessao = () => {
   const ambientNodesRef = useRef<{ stop: () => void } | null>(null);
   const gongPulseTimerRef = useRef<number | null>(null);
   const [gongPulse, setGongPulse] = useState(false);
+  const startBellFiredRef = useRef(false);
+  const endBellFiredRef = useRef(false);
 
   useEffect(() => {
     if (paused) return;
@@ -136,9 +138,17 @@ const PraticaSessao = () => {
 
   useEffect(() => {
     if (elapsed >= totalSeg && totalSeg > 0) {
+      if (sino && !endBellFiredRef.current) {
+        endBellFiredRef.current = true;
+        try { playGong(396); } catch {}
+        const navTimer = window.setTimeout(() => {
+          navigate(`${basePath}/praticas/${slug}/checkout?dur=${totalSeg}`);
+        }, 700);
+        return () => window.clearTimeout(navTimer);
+      }
       navigate(`${basePath}/praticas/${slug}/checkout?dur=${totalSeg}`);
     }
-  }, [elapsed, totalSeg, basePath, slug, navigate]);
+  }, [elapsed, totalSeg, basePath, slug, navigate, sino]);
 
   // Voice/trilha audio
   useEffect(() => {
@@ -273,6 +283,11 @@ const PraticaSessao = () => {
     setDimmed(false);
     // Aproveita o gesto do usuário para destravar autoplay do sino
     try { gongCtxRef.current?.resume?.(); } catch {}
+    // Sino de abertura: toca uma única vez na primeira interação do usuário na sessão.
+    if (sino && !startBellFiredRef.current) {
+      startBellFiredRef.current = true;
+      try { playGong(396); } catch {}
+    }
     if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     idleTimerRef.current = window.setTimeout(() => setChromeVisible(false), 4000);
     if (dimTimerRef.current) window.clearTimeout(dimTimerRef.current);
@@ -295,6 +310,14 @@ const PraticaSessao = () => {
   }, [intensity]);
 
   const encerrar = () => {
+    if (sino && !endBellFiredRef.current) {
+      endBellFiredRef.current = true;
+      try { playGong(396); } catch {}
+      window.setTimeout(() => {
+        navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`);
+      }, 600);
+      return;
+    }
     navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`);
   };
 
@@ -358,17 +381,12 @@ const PraticaSessao = () => {
 
   const onPhaseChange = useCallback(
     (next: BreathingPhase) => {
-      if (sino) {
-        const freq =
-          next === "inspirar" || next === "inspirar_curta"
-            ? 528
-            : next === "segurar" || next === "segurar_pos_expirar"
-              ? 440
-              : 396;
-        playGong(freq);
+      // Apenas o início de um novo ciclo (inspiração) toca o sino — evita 3-4 sinos por ciclo.
+      if (sino && next === "inspirar") {
+        playGong(528);
         if (typeof navigator !== "undefined" && "vibrate" in navigator) {
           try {
-            (navigator as Navigator).vibrate?.(next === "inspirar" ? [40] : [25]);
+            (navigator as Navigator).vibrate?.([40]);
           } catch {}
         }
       }
@@ -376,6 +394,19 @@ const PraticaSessao = () => {
     },
     [sino, playGong]
   );
+
+  // Callback estável para a Pausa de 3 minutos — sino apenas em transição real de etapa.
+  const onPausaEtapaChange = useCallback(
+    (i: number) => {
+      if (sino && i > 0) playGong(440);
+    },
+    [sino, playGong]
+  );
+
+  // Callback estável para o Grounding — sino suave ao avançar de passo.
+  const onGroundingAvancar = useCallback(() => {
+    if (sino) playGong(528);
+  }, [sino, playGong]);
 
   // Fullscreen with iOS fallback
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -541,11 +572,12 @@ const PraticaSessao = () => {
           <PausaTresMinutosSessao
             paused={paused}
             largeLabels={largeLabels}
-            onEtapaChange={(i) => { if (sino && i > 0) playGong(440); }}
+            onEtapaChange={onPausaEtapaChange}
           />
         ) : slug === "grounding-54321" ? (
           <GroundingSessao
             largeLabels={largeLabels}
+            onAvancar={onGroundingAvancar}
             onConcluir={() => navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`)}
           />
         ) : (

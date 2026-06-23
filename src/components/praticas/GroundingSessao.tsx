@@ -7,6 +7,8 @@ interface Props {
   /** Modo: observar, marcar itens (checkbox local) ou escrever palavras. */
   modo?: "observar" | "marcar itens" | "escrever palavras";
   onConcluir?: () => void;
+  /** Disparado quando o usuário avança para o próximo passo (ou conclui). */
+  onAvancar?: () => void;
 }
 
 const PASSOS = [
@@ -17,13 +19,14 @@ const PASSOS = [
   { numero: 1, sentido: "sabor na boca", emoji: "👅" },
 ];
 
-export const GroundingSessao = ({ largeLabels = false, modo = "observar", onConcluir }: Props) => {
+export const GroundingSessao = ({ largeLabels = false, modo = "observar", onConcluir, onAvancar }: Props) => {
   const [idx, setIdx] = useState(0);
   const [marcados, setMarcados] = useState<boolean[]>([]);
   const [texto, setTexto] = useState("");
   const passo = PASSOS[idx];
 
   const proximo = () => {
+    onAvancar?.();
     if (idx >= PASSOS.length - 1) {
       onConcluir?.();
       return;
