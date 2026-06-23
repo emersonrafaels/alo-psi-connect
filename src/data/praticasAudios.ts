@@ -8,7 +8,8 @@ export const PRATICAS_AUDIO_TRACKS = {
   meditationImpromptu1: `${BASE}/Meditation%20Impromptu%2001.mp3`,
   meditationImpromptu2: `${BASE}/Meditation%20Impromptu%2002.mp3`,
   healing: `${BASE}/Healing.mp3`,
-  heartwarming: `${BASE}/Heartwarming.mp3`,
+  relaxingPiano: `${BASE}/Relaxing%20Piano%20Music.mp3`,
+  tranquility: `${BASE}/Tranquility.mp3`,
 } as const;
 
 // Por grupo (slug do grupo) — fallback temático
@@ -19,11 +20,11 @@ export const AUDIO_POR_GRUPO: Record<string, string> = {
 // Por slug específico — sobrepõe o grupo
 export const AUDIO_POR_SLUG: Record<string, string> = {
   "suspiro-de-alivio": PRATICAS_AUDIO_TRACKS.healing,
-  "pausa-tres-minutos": PRATICAS_AUDIO_TRACKS.heartwarming,
+  "pausa-tres-minutos": PRATICAS_AUDIO_TRACKS.tranquility,
   "grounding-54321": PRATICAS_AUDIO_TRACKS.meditationImpromptu2,
   "respiracao-lenta-ritmada": PRATICAS_AUDIO_TRACKS.meditationImpromptu1,
   "respiracao-quatro-etapas": PRATICAS_AUDIO_TRACKS.meditationImpromptu2,
-  "respiracao-478": PRATICAS_AUDIO_TRACKS.heartwarming,
+  "respiracao-478": PRATICAS_AUDIO_TRACKS.relaxingPiano,
 };
 
 export const AUDIO_DEFAULT = PRATICAS_AUDIO_TRACKS.meditationImpromptu1;
@@ -40,12 +41,14 @@ export interface TrackOption {
 
 export const TRACK_CATALOG: TrackOption[] = [
   { id: "auto", label: "Recomendada", url: null, mood: "Escolha automática para esta prática" },
-  { id: "meditation1", label: "Meditation Impromptu I", url: PRATICAS_AUDIO_TRACKS.meditationImpromptu1, mood: "Calma e foco" },
-  { id: "meditation2", label: "Meditation Impromptu II", url: PRATICAS_AUDIO_TRACKS.meditationImpromptu2, mood: "Suave e introspectivo" },
+  { id: "meditation1", label: "Meditação I", url: PRATICAS_AUDIO_TRACKS.meditationImpromptu1, mood: "Piano sereno para respirar" },
+  { id: "meditation2", label: "Meditação II", url: PRATICAS_AUDIO_TRACKS.meditationImpromptu2, mood: "Suave e introspectivo" },
   { id: "healing", label: "Healing", url: PRATICAS_AUDIO_TRACKS.healing, mood: "Relaxamento profundo" },
-  { id: "heartwarming", label: "Heartwarming", url: PRATICAS_AUDIO_TRACKS.heartwarming, mood: "Acolhimento" },
+  { id: "relaxingPiano", label: "Piano relaxante", url: PRATICAS_AUDIO_TRACKS.relaxingPiano, mood: "Ambiente leve e calmo" },
+  { id: "tranquility", label: "Tranquility", url: PRATICAS_AUDIO_TRACKS.tranquility, mood: "Atmosfera tranquila para yoga" },
   { id: "none", label: "Sem trilha", url: null, mood: "Apenas visual e som ambiente" },
 ];
+
 
 export const getTrackById = (id: string | null | undefined): TrackOption | undefined =>
   id ? TRACK_CATALOG.find((t) => t.id === id) : undefined;
