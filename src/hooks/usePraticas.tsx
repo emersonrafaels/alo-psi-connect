@@ -10,6 +10,12 @@ export interface PraticaGrupo {
   ativo: boolean;
 }
 
+export interface PraticaOpcaoExtra {
+  label: string;
+  options: string[];
+  default: string;
+}
+
 export interface Pratica {
   id: string;
   slug: string;
@@ -25,7 +31,8 @@ export interface Pratica {
   categoria_badge: string | null;
   audio_url: string | null;
   tem_audio: boolean;
-  padrao_respiracao: { inspirar: number; segurar: number; expirar: number };
+  padrao_respiracao: { inspirar: number; segurar: number; expirar: number; segurar_pos_expirar?: number; inspirar_curta?: number };
+  opcoes_extra: Record<string, PraticaOpcaoExtra>;
   ordem: number;
   ativo: boolean;
   destaque: boolean;
