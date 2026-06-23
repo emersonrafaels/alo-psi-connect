@@ -35,10 +35,6 @@ const PraticasIndex = () => {
     return map;
   }, [praticas]);
 
-  const goTo = (slug: string | null) => {
-    if (!slug) return;
-    navigate(`${basePath}/praticas/${slug}`);
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
