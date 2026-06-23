@@ -305,6 +305,14 @@ const PraticaSessao = () => {
   }, [intensity]);
 
   const encerrar = () => {
+    if (sino && !endBellFiredRef.current) {
+      endBellFiredRef.current = true;
+      try { playGong(396); } catch {}
+      window.setTimeout(() => {
+        navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`);
+      }, 600);
+      return;
+    }
     navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`);
   };
 
