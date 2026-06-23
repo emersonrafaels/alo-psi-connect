@@ -62,25 +62,44 @@ const PraticasIndex = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 relative">
-        {/* Decorative background blobs */}
+        {/* Decorative mesh background */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-0"
+          style={{ backgroundImage: "var(--gradient-mesh)" }}
+        />
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden -z-0">
-          <div className="absolute -top-32 -left-24 w-[420px] h-[420px] rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute top-[40vh] -right-24 w-[480px] h-[480px] rounded-full bg-accent/20 blur-3xl" />
-          <div className="absolute top-[100vh] left-1/3 w-[360px] h-[360px] rounded-full bg-primary/5 blur-3xl" />
+          <div
+            className="absolute -top-32 -left-24 w-[460px] h-[460px] rounded-full blur-3xl opacity-80 motion-safe:animate-pulse"
+            style={{ backgroundImage: "var(--gradient-soft)", animationDuration: "8s" }}
+          />
+          <div
+            className="absolute top-[35vh] -right-24 w-[520px] h-[520px] rounded-full blur-3xl opacity-70 motion-safe:animate-pulse"
+            style={{ backgroundImage: "var(--gradient-soft-accent)", animationDuration: "10s" }}
+          />
+          <div
+            className="absolute top-[110vh] left-1/3 w-[380px] h-[380px] rounded-full blur-3xl opacity-60"
+            style={{ backgroundImage: "var(--gradient-soft)" }}
+          />
         </div>
 
         {/* HERO */}
-        <section className="relative">
+        <section
+          className="relative"
+          style={{ backgroundImage: "var(--gradient-hero)" }}
+        >
           <div className="container relative mx-auto px-4 py-20 md:py-28 max-w-5xl text-center">
             <Badge
               variant="secondary"
-              className="mb-6 uppercase tracking-wider bg-primary/10 text-primary border border-primary/20"
+              className="mb-6 uppercase tracking-wider bg-gradient-to-r from-primary/15 to-accent/15 text-primary border border-primary/20 backdrop-blur-sm"
             >
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
               Práticas de autorregulação
             </Badge>
-            <h1 className="font-serif text-5xl md:text-7xl text-primary leading-[1.05] tracking-tight mb-6">
-              Encontre uma prática para o que você{" "}
+            <h1 className="font-serif text-5xl md:text-7xl leading-[1.05] tracking-tight mb-6">
+              <span className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+                Encontre uma prática para o que você
+              </span>{" "}
               <span className="text-foreground">precisa agora</span>.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4">
@@ -91,11 +110,20 @@ const PraticasIndex = () => {
               De 2 a 10 minutos · Áudio, texto e orientação visual
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              <Button size="lg" onClick={() => scrollToId("destaque")} className="group">
+              <Button
+                size="lg"
+                onClick={() => scrollToId("destaque")}
+                className="group bg-gradient-to-r from-primary to-primary/85 hover:from-primary hover:to-accent transition-all hover:shadow-[var(--shadow-glow)]"
+              >
                 Encontrar uma prática
                 <Search className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-0.5" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => scrollToId("grupos")}>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => scrollToId("grupos")}
+                className="backdrop-blur-sm bg-card/50 hover:bg-card"
+              >
                 Explorar todas
               </Button>
             </div>
@@ -105,7 +133,10 @@ const PraticasIndex = () => {
         {/* PILL BAR — atalhos do banco */}
         {atalhos && atalhos.length > 0 && (
           <section id="atalhos" className="relative container mx-auto px-4 pb-8 max-w-6xl">
-            <div className="rounded-full bg-card/70 backdrop-blur-md border border-border/60 shadow-sm p-2 flex items-center gap-2 overflow-x-auto">
+            <div
+              className="rounded-full backdrop-blur-md border border-border/60 shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.2)] p-2 flex items-center gap-2 overflow-x-auto"
+              style={{ backgroundImage: "var(--gradient-card)" }}
+            >
               <div className="hidden md:flex items-center gap-2 px-4 border-r border-border/60 shrink-0">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium text-foreground whitespace-nowrap">
@@ -118,7 +149,7 @@ const PraticasIndex = () => {
                     <Link
                       key={a.id}
                       to={`${basePath}/praticas/${a.pratica_slug}`}
-                      className="px-4 py-2 rounded-full bg-primary/5 hover:bg-primary/10 text-primary text-sm font-medium whitespace-nowrap transition-colors border border-primary/15"
+                      className="px-4 py-2 rounded-full bg-gradient-to-r from-primary/5 to-accent/5 hover:from-primary/15 hover:to-accent/15 text-primary text-sm font-medium whitespace-nowrap transition-all border border-primary/15 hover:border-primary/30 hover:shadow-sm"
                     >
                       {a.texto}
                     </Link>
@@ -139,86 +170,111 @@ const PraticasIndex = () => {
         {/* DESTAQUE */}
         {destaque && (
           <section id="destaque" className="relative container mx-auto px-4 py-12 max-w-6xl">
-            <Card className="relative overflow-hidden rounded-[40px] p-8 md:p-14 bg-card/70 backdrop-blur-md border-border/60 shadow-sm">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div className="space-y-6">
-                  <Badge
-                    variant="secondary"
-                    className="bg-accent/30 text-accent-foreground border border-accent"
-                  >
-                    Uma sugestão para agora
-                  </Badge>
-                  <h2 className="font-serif text-3xl md:text-5xl text-primary leading-tight">
-                    {destaque.titulo}
-                  </h2>
-                  {destaque.descricao_curta && (
-                    <p className="text-base md:text-lg text-muted-foreground">
-                      {destaque.descricao_curta}
-                    </p>
-                  )}
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <Button asChild size="lg" className="group">
-                      <Link to={`${basePath}/praticas/${destaque.slug}`}>
-                        <Play className="h-4 w-4 mr-2" />
-                        Começar prática de {destaque.duracao_min_default} minutos
-                      </Link>
-                    </Button>
-                    <Button asChild size="lg" variant="outline">
-                      <Link to={`${basePath}/praticas/${destaque.slug}`}>Ver orientações</Link>
-                    </Button>
+            <div
+              className="rounded-[40px] p-[1.5px] shadow-[var(--shadow-glow)]"
+              style={{ backgroundImage: "var(--gradient-border)" }}
+            >
+              <Card
+                className="relative overflow-hidden rounded-[39px] p-8 md:p-14 backdrop-blur-xl border-0"
+                style={{ backgroundImage: "var(--gradient-card)" }}
+              >
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -top-24 -right-24 w-[360px] h-[360px] rounded-full blur-3xl opacity-60"
+                  style={{ backgroundImage: "var(--gradient-soft-accent)" }}
+                />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative">
+                  <div className="space-y-6">
+                    <Badge
+                      variant="secondary"
+                      className="bg-gradient-to-r from-accent/30 to-primary/20 text-accent-foreground border border-accent/40 backdrop-blur-sm"
+                    >
+                      Uma sugestão para agora
+                    </Badge>
+                    <h2 className="font-serif text-3xl md:text-5xl leading-tight bg-gradient-to-br from-primary via-primary to-accent bg-clip-text text-transparent">
+                      {destaque.titulo}
+                    </h2>
+                    {destaque.descricao_curta && (
+                      <p className="text-base md:text-lg text-muted-foreground">
+                        {destaque.descricao_curta}
+                      </p>
+                    )}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <Button
+                        asChild
+                        size="lg"
+                        className="group bg-gradient-to-r from-primary to-primary/85 hover:from-primary hover:to-accent transition-all hover:shadow-[var(--shadow-glow)]"
+                      >
+                        <Link to={`${basePath}/praticas/${destaque.slug}`}>
+                          <Play className="h-4 w-4 mr-2" />
+                          Começar prática de {destaque.duracao_min_default} minutos
+                        </Link>
+                      </Button>
+                      <Button asChild size="lg" variant="outline" className="backdrop-blur-sm bg-card/50">
+                        <Link to={`${basePath}/praticas/${destaque.slug}`}>Ver orientações</Link>
+                      </Button>
+                    </div>
                   </div>
-                </div>
 
-                {/* Circular visual */}
-                <div className="flex flex-col items-center justify-center">
-                  <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
-                    <span className="absolute inset-0 rounded-full border border-primary/30 animate-ping opacity-40" />
-                    <span className="absolute inset-6 rounded-full border border-accent/40" />
-                    <div className="w-full h-full rounded-full border-2 border-dashed border-primary/20 flex items-center justify-center relative">
-                      <svg className="absolute inset-0 w-full h-full -rotate-90" aria-hidden>
-                        <circle
-                          cx="50%"
-                          cy="50%"
-                          r="48%"
-                          fill="transparent"
-                          stroke="url(#destaque-gradient)"
-                          strokeWidth={8}
-                          strokeLinecap="round"
-                          strokeDasharray="100 100"
-                        />
-                        <defs>
-                          <linearGradient id="destaque-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="hsl(var(--primary))" />
-                            <stop offset="100%" stopColor="hsl(var(--primary) / 0.4)" />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                      <div className="text-center z-10 bg-card/80 backdrop-blur-xl w-4/5 h-4/5 rounded-full flex flex-col items-center justify-center shadow-lg border border-border/60">
-                        <span className="text-5xl font-bold text-primary">
-                          {destaque.duracao_min_default}
-                        </span>
-                        <span className="text-xs text-muted-foreground uppercase tracking-widest mt-1">
-                          minutos
-                        </span>
-                        {destaque.ideal_para && (
-                          <span className="text-xs text-muted-foreground mt-3 px-4 text-center">
-                            {destaque.ideal_para}
+                  {/* Circular visual */}
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
+                      <span
+                        className="absolute -inset-4 rounded-full blur-2xl opacity-70"
+                        style={{ backgroundImage: "var(--gradient-soft)" }}
+                      />
+                      <span className="absolute inset-0 rounded-full border border-primary/30 animate-ping opacity-40" />
+                      <span className="absolute inset-6 rounded-full border border-accent/40" />
+                      <div className="w-full h-full rounded-full border-2 border-dashed border-primary/20 flex items-center justify-center relative">
+                        <svg className="absolute inset-0 w-full h-full -rotate-90" aria-hidden>
+                          <circle
+                            cx="50%"
+                            cy="50%"
+                            r="48%"
+                            fill="transparent"
+                            stroke="url(#destaque-gradient)"
+                            strokeWidth={8}
+                            strokeLinecap="round"
+                            strokeDasharray="100 100"
+                          />
+                          <defs>
+                            <linearGradient id="destaque-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="hsl(var(--primary))" />
+                              <stop offset="50%" stopColor="hsl(var(--accent))" />
+                              <stop offset="100%" stopColor="hsl(var(--primary) / 0.4)" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        <div
+                          className="text-center z-10 backdrop-blur-xl w-4/5 h-4/5 rounded-full flex flex-col items-center justify-center shadow-lg border border-border/60"
+                          style={{ backgroundImage: "var(--gradient-card)" }}
+                        >
+                          <span className="text-5xl font-bold bg-gradient-to-br from-primary to-accent bg-clip-text text-transparent">
+                            {destaque.duracao_min_default}
                           </span>
-                        )}
+                          <span className="text-xs text-muted-foreground uppercase tracking-widest mt-1">
+                            minutos
+                          </span>
+                          {destaque.ideal_para && (
+                            <span className="text-xs text-muted-foreground mt-3 px-4 text-center">
+                              {destaque.ideal_para}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6 flex items-center gap-6">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Inspirar
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="w-2.5 h-2.5 rounded-full bg-accent" /> Expirar
                       </div>
                     </div>
                   </div>
-                  <div className="mt-6 flex items-center gap-6">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Inspirar
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="w-2.5 h-2.5 rounded-full bg-primary/40" /> Expirar
-                    </div>
-                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </section>
         )}
 
@@ -239,16 +295,24 @@ const PraticasIndex = () => {
             const items = praticasPorGrupo[grupo.id] ?? [];
             if (items.length === 0) return null;
             return (
-              <div key={grupo.id}>
-                <div className="mb-6 max-w-2xl">
-                  <h2 className="font-serif text-3xl md:text-4xl text-primary mb-2">
-                    {grupo.nome}
-                  </h2>
+              <div key={grupo.id} className="relative">
+                <div
+                  aria-hidden
+                  className="absolute -left-8 top-0 h-24 w-2/3 rounded-full blur-3xl opacity-50 -z-0"
+                  style={{ backgroundImage: "var(--gradient-soft)" }}
+                />
+                <div className="mb-6 max-w-2xl relative">
+                  <div className="inline-block">
+                    <h2 className="font-serif text-3xl md:text-4xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+                      {grupo.nome}
+                    </h2>
+                    <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+                  </div>
                   {grupo.descricao && (
-                    <p className="text-muted-foreground">{grupo.descricao}</p>
+                    <p className="text-muted-foreground mt-3">{grupo.descricao}</p>
                   )}
                 </div>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-4 relative">
                   {items.map((p) => (
                     <PraticaCard key={p.id} pratica={p} basePath={basePath} />
                   ))}
@@ -278,8 +342,11 @@ const PraticasIndex = () => {
                   to={`${basePath}/praticas/${p.slug}`}
                   className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl"
                 >
-                  <Card className="h-full rounded-3xl p-8 bg-card/70 backdrop-blur-md border-border/60 hover:shadow-lg hover:-translate-y-0.5 transition-all flex flex-col gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                  <Card
+                    className="h-full rounded-3xl p-8 backdrop-blur-xl border border-border/60 hover:border-primary/30 hover:shadow-[var(--shadow-glow)] hover:-translate-y-1 transition-all flex flex-col gap-5"
+                    style={{ backgroundImage: "var(--gradient-card)" }}
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 text-primary flex items-center justify-center shadow-sm">
                       {p.icone ? (
                         <IconePratica name={p.icone} className="h-6 w-6" />
                       ) : (
@@ -307,35 +374,48 @@ const PraticasIndex = () => {
 
         {/* CTA */}
         <section className="relative container mx-auto px-4 py-20 max-w-4xl">
-          <Card className="p-10 md:p-14 text-center bg-primary text-primary-foreground border-0 rounded-[32px]">
-            <h2 className="font-serif text-3xl md:text-4xl mb-4">
-              Você não precisa lidar com tudo sozinha
-            </h2>
-            <p className="text-primary-foreground/90 mb-8 max-w-xl mx-auto">
-              Às vezes, a maior prática é reconhecer quando precisamos de um apoio extra. Estamos
-              aqui para cada passo do seu caminho.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Button size="lg" variant="secondary" asChild>
-                <Link to={`${basePath}/profissionais`}>
-                  Buscar apoio
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="bg-transparent border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground hover:text-primary"
-                asChild
-              >
-                <Link to={`${basePath}/sobre`}>Entender caminhos de cuidado</Link>
-              </Button>
+          <Card
+            className="relative overflow-hidden p-10 md:p-14 text-center text-primary-foreground border-0 rounded-[32px] shadow-[var(--shadow-glow)]"
+            style={{ backgroundImage: "var(--gradient-cta)" }}
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -top-24 -right-24 w-[320px] h-[320px] rounded-full blur-3xl opacity-40 bg-white"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-32 -left-24 w-[360px] h-[360px] rounded-full blur-3xl opacity-30 bg-white"
+            />
+            <div className="relative">
+              <h2 className="font-serif text-3xl md:text-4xl mb-4">
+                Você não precisa lidar com tudo sozinha
+              </h2>
+              <p className="text-primary-foreground/90 mb-8 max-w-xl mx-auto">
+                Às vezes, a maior prática é reconhecer quando precisamos de um apoio extra. Estamos
+                aqui para cada passo do seu caminho.
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Button size="lg" variant="secondary" asChild className="shadow-lg">
+                  <Link to={`${basePath}/profissionais`}>
+                    Buscar apoio
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-transparent border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground hover:text-primary backdrop-blur-sm"
+                  asChild
+                >
+                  <Link to={`${basePath}/sobre`}>Entender caminhos de cuidado</Link>
+                </Button>
+              </div>
             </div>
           </Card>
         </section>
 
         {/* SELOS DE SEGURANÇA */}
-        <section className="relative bg-muted/40 py-14 border-t border-border/60">
+        <section className="relative py-14 border-t border-border/60 bg-gradient-to-b from-muted/40 via-background to-background">
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
               <div className="max-w-md">

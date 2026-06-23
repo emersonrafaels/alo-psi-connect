@@ -1,70 +1,68 @@
-## Objetivo
+# Modernizar página /praticas com gradientes
 
-Refazer `src/pages/praticas/PraticasIndex.tsx` com a estrutura visual dos 3 mockups Stitch, **substituindo o fundo dark/shader e o "white-on-glass"** por uma versão clara, alinhada à identidade Rede Bem-Estar (`primary` teal + acento `wellness-pink`, tipografia serif para títulos, alto contraste WCAG AA). Os dados continuam vindo de `usePraticas` e `usePraticasAtalhos` — nenhuma seção hardcoded substitui grupos reais.
+Refinar visualmente `src/pages/praticas/PraticasIndex.tsx` adicionando uma camada de gradientes modernos sobre a estrutura atual (hero, atalhos, destaque, grupos, áudios, CTA, selos). Sem mexer em hooks, dados ou rotas.
 
-## Princípios de adaptação visual
+## Princípios
 
-- **Fundo:** trocar shader fullscreen por um gradiente sutil `from-primary/5 via-background to-background` + blobs decorativos suaves (`bg-primary/10 blur-3xl`), aplicados em camadas com `pointer-events-none`.
-- **Glass cards:** usar `bg-card/70 backdrop-blur-md border border-border/60 shadow-sm` (claro), nunca `bg-white/10` sobre dark.
-- **Tipografia:** títulos em `font-serif` (atual), corpo em `text-foreground`/`text-muted-foreground`. Nada em `text-white`.
-- **Cores de acento:** `primary` substitui `energy-teal`; `secondary` ou `wellness-pink` (já existir? se não, usar `accent`/`primary/70`) para o segundo acento. Verificar `tailwind.config.ts` antes — se faltar token, reutilizar tokens existentes.
-- **Ícones:** continuar com `IconePratica` (lucide), não Material Symbols.
+- Gradientes sutis usando tokens semânticos (`--primary`, `--accent`, `--wellness-pink` se existir) — nunca cores hardcoded.
+- Manter contraste AA: gradientes vivos só em superfícies decorativas e CTAs; texto principal continua sobre `bg-card`/`bg-background`.
+- Coerência com agrupamentos: cada grupo recebe um gradiente de acento sutil (mesma família, intensidade variando), sem destoar do resto do site.
+- Respeitar `prefers-reduced-motion` nos elementos animados.
 
-## Estrutura nova da página (ordem)
+## Mudanças visuais
 
-1. **Hero**
-   - Badge "Práticas guiadas" + título serif grande + subtítulo + microcopy "De 2 a 10 minutos · áudio, texto e orientação visual".
-   - Dois CTAs: "Encontrar uma prática" (rola pra `#grupos`) e "Explorar todas" (rola pro grid final).
-   - Decoração: anel pulsante sutil atrás do título usando `primary/20`.
+### 1. Tokens novos em `index.css`
+Adicionar variáveis reutilizáveis (sem alterar tokens existentes):
+- `--gradient-hero`: linear suave primary → accent → background
+- `--gradient-soft`: radial primary/10 → transparent (blobs)
+- `--gradient-cta`: linear primary → primary-glow (para CTA final)
+- `--gradient-card`: linear card → card/60 (glass)
+- `--gradient-mesh`: mesh sutil para o fundo da página
+- `--shadow-glow`: sombra colorida primary/20 para hover de cards de destaque
 
-2. **Seletor "O que você precisa agora?"** (pill bar) — **reaproveita `atalhos`** do hook. Cada atalho vira pill clicável que rola/filtra. Sem mock.
+### 2. Hero
+- Fundo com `bg-[image:var(--gradient-hero)]` + blobs com `bg-[image:var(--gradient-soft)]` e `mix-blend-multiply`.
+- H1 com `bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent` na parte "precisa agora".
+- Badge com leve gradient border (via `before:` pseudo).
+- CTA primário ganha `bg-gradient-to-r from-primary to-primary/80` + `shadow-glow` no hover.
 
-3. **Prática em destaque** (painel glass + visual circular) — usa a **primeira prática do primeiro grupo** (ou um destaque marcado se houver `categoria_badge === "destaque"`; senão fallback para 1ª).
-   - Texto à esquerda + círculo de duração com gradiente `primary → primary/60` à direita.
-   - CTA "Começar prática" → link `${basePath}/praticas/${slug}`.
+### 3. Pill bar de atalhos
+- Container com `bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-xl`.
+- Pills com gradient sutil `from-primary/5 to-accent/10` no hover.
 
-4. **Grupos dinâmicos** (`grupos.map`) — para cada grupo, render:
-   - Título serif + descrição.
-   - Grid de `PraticaCard` (componente atual permanece, só revisitamos hover/borda para ficar coerente).
-   - **Mantém 1 seção por grupo ativo**, na ordem definida no banco. Nenhuma seção fixa "Para recuperar o foco" sobrepõe um grupo real.
+### 4. Destaque
+- Card com gradient border (wrapper `p-[1px] bg-gradient-to-br from-primary/30 via-accent/20 to-transparent rounded-[40px]`).
+- Interior mantém `bg-card/80 backdrop-blur-xl`.
+- Círculo do timer: SVG já usa gradient — intensificar com 2º gradient overlay e glow externo.
 
-5. **"Prefere apenas ouvir?"** — filtra `praticas` cujo `formato` inclua áudio (se o campo existir; caso contrário, omitir a seção). Grid de 3 cards glass claros.
+### 5. Grupos dinâmicos
+- Cada grupo recebe um "halo" gradient sutil atrás do título (`bg-gradient-to-r from-primary/10 to-transparent` em uma faixa decorativa).
+- `PraticaCard` ganha variante visual: borda com `bg-gradient-to-br from-border to-primary/20` e hover com `shadow-glow`. Editar `PraticaCard.tsx` apenas para suportar a borda gradient via classes (sem mudar API).
 
-6. **CTA final** (mantém o atual): card primary "Você não precisa lidar com tudo sozinha" com links para profissionais/sobre.
+### 6. Práticas em áudio
+- Cards com `bg-gradient-to-br from-card/80 via-card/70 to-primary/5 backdrop-blur-xl`.
+- Ícone com bolha `bg-gradient-to-br from-primary/20 to-accent/20`.
 
-7. **Curadoria/segurança** (linha inferior, condensada): 4 selos check_circle ("Orientações simples", "Ritmo adaptável", "Áudio opcional", "Sem cobrança") + nota "não substitui acompanhamento profissional".
+### 7. CTA "Buscar apoio"
+- Trocar `bg-primary` por `bg-[image:var(--gradient-cta)]` com `shadow-glow`.
+- Adicionar blob radial decorativo dentro do card.
 
-## Implementação técnica
+### 8. Selos de segurança
+- Faixa com `bg-gradient-to-b from-muted/40 to-background` em vez de `bg-muted/40` puro.
 
-- Editar **somente** `src/pages/praticas/PraticasIndex.tsx`. Sem mudanças em hooks, rotas ou banco.
-- Reutilizar `PraticaCard`, `Card`, `Button`, `Badge`, `Skeleton` do design system.
-- Animação do círculo: `animate-pulse-ring` — adicionar keyframe em `tailwind.config.ts`/`index.css` se ainda não existir (`@keyframes pulse-ring { 0%{transform:scale(.95);opacity:.6} 100%{transform:scale(1.15);opacity:0} }`).
-- Scroll suave entre seções com `scrollIntoView({behavior:"smooth"})`.
-- Manter `window.scrollTo(0,0)` no mount e `document.title`.
+## Detalhes técnicos
+
+- Arquivos alterados:
+  - `src/index.css` — adicionar as 6 novas CSS variables na `:root` (e equivalentes no `.dark` quando aplicável).
+  - `src/pages/praticas/PraticasIndex.tsx` — aplicar classes/gradientes nas 8 seções.
+  - `src/components/praticas/PraticaCard.tsx` — adicionar wrapper de borda gradient e `hover:shadow-[var(--shadow-glow)]`.
+- Sem mudanças em `usePraticas`, rotas, ou lógica.
+- Verificar tokens existentes (`primary-glow`, `accent`, `wellness-pink`) em `tailwind.config.ts` e `index.css` antes de referenciar; criar `--primary-glow` se não existir (lighter HSL do primary).
+- Dark mode: cada novo gradiente recebe versão `.dark` com luminosidade reduzida.
 
 ## Fora de escopo
 
-- Sem alterar Header/Footer.
-- Sem criar tabela "destaque" — usa a primeira prática como fallback.
-- Sem integrar Buddy/AI ou estatísticas de continuidade (mockups exibem "12 práticas concluídas"; ignoramos porque exige nova tabela).
-- Sem agenda de "Práticas em grupo" (vive em outro módulo de Sessões em Grupo).
-
-```
-HERO
- └─ badge + h1 serif + sub + 2 CTAs
-
-PILL BAR (atalhos do banco)
-
-DESTAQUE (primeira prática)
- ├─ texto + CTA
- └─ círculo com duração
-
-GRUPOS DINÂMICOS (map)
- └─ por grupo: título + cards
-
-PRÁTICAS EM ÁUDIO (se houver)
-
-CTA "Buscar apoio"
-
-SELOS DE SEGURANÇA
-```
+- Header/Footer
+- Página de detalhe/sessão da prática
+- Conteúdo textual e estrutura de seções
+- Dados, hooks, queries
