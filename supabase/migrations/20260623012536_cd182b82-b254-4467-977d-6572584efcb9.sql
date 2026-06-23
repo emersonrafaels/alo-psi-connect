@@ -1,0 +1,1 @@
+ALTER TABLE public.praticas ADD COLUMN IF NOT EXISTS opcoes_extra JSONB NOT NULL DEFAULT '{}'::jsonb;
