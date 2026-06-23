@@ -30,6 +30,7 @@ const PraticaDetalhe = () => {
   const [presetId, setPresetId] = useState<string>("padrao");
   const [trackId, setTrackId] = useState<string>("auto");
   const [temaId, setTemaId] = useState<string>("aurora");
+  const [extras, setExtras] = useState<Record<string, string>>({});
 
   const [previewingId, setPreviewingId] = useState<string | null>(null);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -165,6 +166,15 @@ const PraticaDetalhe = () => {
       setTrackId("auto");
       const stored = typeof window !== "undefined" ? window.localStorage.getItem("praticas:tema") : null;
       setTemaId(stored ?? "aurora");
+      // Defaults dos opcoes_extra (sempre pré-seleciona o recomendado).
+      const opcoes = pratica.opcoes_extra ?? {};
+      const defaults: Record<string, string> = {};
+      for (const [key, cfg] of Object.entries(opcoes)) {
+        if (cfg && typeof cfg === "object" && "default" in cfg) {
+          defaults[key] = (cfg as { default: string }).default;
+        }
+      }
+      setExtras(defaults);
     }
   }, [pratica]);
 
@@ -204,6 +214,9 @@ const PraticaDetalhe = () => {
     if (presetId && presetId !== "padrao") params.set("preset", presetId);
     if (trackId && trackId !== "auto") params.set("t", trackId);
     if (temaId && temaId !== "aurora") params.set("tema", temaId);
+    for (const [k, v] of Object.entries(extras)) {
+      if (v) params.set(`x_${k}`, v);
+    }
     if (typeof window !== "undefined") window.localStorage.setItem("praticas:tema", temaId);
     navigate(`${basePath}/praticas/${pratica.slug}/sessao?${params.toString()}`);
   };
@@ -283,6 +296,41 @@ const PraticaDetalhe = () => {
                 ))}
               </div>
             </div>
+
+            {/* Opções específicas da prática (opcoes_extra) */}
+            {pratica.opcoes_extra && Object.keys(pratica.opcoes_extra).length > 0 && (
+              <div className="mb-6 space-y-4">
+                {Object.entries(pratica.opcoes_extra).map(([key, cfg]) => {
+                  if (!cfg || typeof cfg !== "object" || !("options" in cfg)) return null;
+                  const c = cfg as { label: string; options: string[] };
+                  const sel = extras[key];
+                  return (
+                    <div key={key}>
+                      <p className="text-sm font-medium mb-2">{c.label}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {c.options.map((opt) => {
+                          const active = sel === opt;
+                          return (
+                            <button
+                              key={opt}
+                              onClick={() => setExtras((e) => ({ ...e, [key]: opt }))}
+                              className={`px-3 py-1.5 rounded-full text-sm transition-all border ${
+                                active
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-card border-border hover:border-primary/50"
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
 
             {/* Padrão de respiração */}
             <div className="mb-6">

@@ -13,21 +13,17 @@ export const PRATICAS_AUDIO_TRACKS = {
 
 // Por grupo (slug do grupo) — fallback temático
 export const AUDIO_POR_GRUPO: Record<string, string> = {
-  "regular-agora": PRATICAS_AUDIO_TRACKS.meditationImpromptu1,
-  "soltar-o-corpo": PRATICAS_AUDIO_TRACKS.healing,
-  "acolher-desacelerar": PRATICAS_AUDIO_TRACKS.heartwarming,
+  "regular-desacelerar-agora": PRATICAS_AUDIO_TRACKS.meditationImpromptu1,
 };
 
 // Por slug específico — sobrepõe o grupo
 export const AUDIO_POR_SLUG: Record<string, string> = {
-  "respiracao-abdominal": PRATICAS_AUDIO_TRACKS.meditationImpromptu1,
-  "respiracao-lenta-ritmada": PRATICAS_AUDIO_TRACKS.meditationImpromptu2,
-  "voltar-ao-presente": PRATICAS_AUDIO_TRACKS.meditationImpromptu1,
-  "quick-coherence": PRATICAS_AUDIO_TRACKS.meditationImpromptu2,
-  "soltar-tensao-corpo": PRATICAS_AUDIO_TRACKS.healing,
-  "criar-espaco-interno": PRATICAS_AUDIO_TRACKS.healing,
-  "pausa-autocompaixao": PRATICAS_AUDIO_TRACKS.heartwarming,
-  "desaceleracao-profunda": PRATICAS_AUDIO_TRACKS.heartwarming,
+  "suspiro-de-alivio": PRATICAS_AUDIO_TRACKS.healing,
+  "pausa-tres-minutos": PRATICAS_AUDIO_TRACKS.heartwarming,
+  "grounding-54321": PRATICAS_AUDIO_TRACKS.meditationImpromptu2,
+  "respiracao-lenta-ritmada": PRATICAS_AUDIO_TRACKS.meditationImpromptu1,
+  "respiracao-quatro-etapas": PRATICAS_AUDIO_TRACKS.meditationImpromptu2,
+  "respiracao-478": PRATICAS_AUDIO_TRACKS.heartwarming,
 };
 
 export const AUDIO_DEFAULT = PRATICAS_AUDIO_TRACKS.meditationImpromptu1;

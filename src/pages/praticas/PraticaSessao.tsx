@@ -18,7 +18,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { usePratica } from "@/hooks/usePraticas";
-import { BreathingCircle } from "@/components/praticas/BreathingCircle";
+import { BreathingCircle, type BreathingPhase } from "@/components/praticas/BreathingCircle";
+import { PausaTresMinutosSessao } from "@/components/praticas/PausaTresMinutosSessao";
+import { GroundingSessao } from "@/components/praticas/GroundingSessao";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 import { resolveTrackForPratica } from "@/data/praticasAudios";
 import { getPresetById, getThemeById } from "@/data/praticasPresets";
@@ -68,11 +70,15 @@ const PraticaSessao = () => {
 
   // Padrão de respiração — preset sobrepõe o padrão do banco
   const presetCustom = useMemo(() => getPresetById(presetParam), [presetParam]);
-  const padraoBase = pratica?.padrao_respiracao ?? { inspirar: 4, segurar: 0, expirar: 6 };
+  const padraoBase = (pratica?.padrao_respiracao ?? { inspirar: 4, segurar: 0, expirar: 6 }) as
+    { inspirar: number; segurar: number; expirar: number; segurar_pos_expirar?: number; inspirar_curta?: number };
   const padrao = presetCustom && presetCustom.id !== "padrao"
-    ? { inspirar: presetCustom.inspirar, segurar: presetCustom.segurar, expirar: presetCustom.expirar }
+    ? { inspirar: presetCustom.inspirar, segurar: presetCustom.segurar, expirar: presetCustom.expirar, segurar_pos_expirar: 0, inspirar_curta: 0 }
     : padraoBase;
-  const cicloSegundos = Math.max(1, (padrao.inspirar || 0) + (padrao.segurar || 0) + (padrao.expirar || 0));
+  const cicloSegundos = Math.max(
+    1,
+    (padrao.inspirar || 0) + (padrao.segurar || 0) + (padrao.expirar || 0) + (padrao.segurar_pos_expirar || 0) + (padrao.inspirar_curta || 0),
+  );
 
   // Trilha — escolha do usuário sobrepõe o fallback automático (slug/grupo)
   const resolvedTrack = resolveTrackForPratica(
@@ -353,9 +359,14 @@ const PraticaSessao = () => {
   }, []);
 
   const onPhaseChange = useCallback(
-    (next: "inspirar" | "segurar" | "expirar") => {
+    (next: BreathingPhase) => {
       if (sino) {
-        const freq = next === "inspirar" ? 528 : next === "segurar" ? 440 : 396;
+        const freq =
+          next === "inspirar" || next === "inspirar_curta"
+            ? 528
+            : next === "segurar" || next === "segurar_pos_expirar"
+              ? 440
+              : 396;
         playGong(freq);
         if (typeof navigator !== "undefined" && "vibrate" in navigator) {
           try {
@@ -520,15 +531,30 @@ const PraticaSessao = () => {
           {pratica?.subtitulo ?? "Acalme sua mente agora"}
         </p>
 
-        <BreathingCircle
-          inspirar={padrao.inspirar}
-          segurar={padrao.segurar}
-          expirar={padrao.expirar}
-          paused={paused}
-          onPhaseChange={onPhaseChange}
-          reducedMotion={reducedMotion}
-          largeLabels={largeLabels}
-        />
+        {slug === "pausa-tres-minutos" ? (
+          <PausaTresMinutosSessao
+            paused={paused}
+            largeLabels={largeLabels}
+            onEtapaChange={(i) => { if (sino && i > 0) playGong(440); }}
+          />
+        ) : slug === "grounding-54321" ? (
+          <GroundingSessao
+            largeLabels={largeLabels}
+            onConcluir={() => navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`)}
+          />
+        ) : (
+          <BreathingCircle
+            inspirar={padrao.inspirar}
+            segurar={padrao.segurar}
+            expirar={padrao.expirar}
+            segurarPosExpirar={padrao.segurar_pos_expirar ?? 0}
+            inspirarCurta={padrao.inspirar_curta ?? 0}
+            paused={paused}
+            onPhaseChange={onPhaseChange}
+            reducedMotion={reducedMotion}
+            largeLabels={largeLabels}
+          />
+        )}
 
         <div className="mt-4 sm:mt-6 w-full max-w-md">
           <div className="h-2 rounded-full bg-white/15 overflow-hidden">

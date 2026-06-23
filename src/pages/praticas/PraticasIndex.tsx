@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { getTenantSlugFromPath, getBasePath } from "@/utils/tenantHelpers";
 
 const PraticasIndex = () => {
   const location = useLocation();
-  const navigate = useNavigate();
+  
   const tenantSlug = getTenantSlugFromPath(location.pathname);
   const basePath = getBasePath(tenantSlug);
   const { data, isLoading } = usePraticas();
@@ -35,10 +35,6 @@ const PraticasIndex = () => {
     return map;
   }, [praticas]);
 
-  const goTo = (slug: string | null) => {
-    if (!slug) return;
-    navigate(`${basePath}/praticas/${slug}`);
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -85,7 +81,7 @@ const PraticasIndex = () => {
           </div>
         </section>
 
-        {/* ATALHOS */}
+        {/* ATALHOS — exibidos como tags informativas/clicáveis */}
         {atalhos && atalhos.length > 0 && (
           <section id="atalhos" className="container mx-auto px-4 py-12 max-w-5xl">
             <div className="text-center mb-8">
@@ -96,16 +92,28 @@ const PraticasIndex = () => {
                 Sinta a pausa. Respire.
               </h2>
             </div>
-            <div className="flex flex-wrap justify-center gap-3">
-              {atalhos.map((a) => (
-                <button
-                  key={a.id}
-                  onClick={() => goTo(a.pratica_slug)}
-                  className="px-5 py-3 rounded-full border border-border bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all text-sm font-medium"
-                >
-                  {a.texto}
-                </button>
-              ))}
+            <div className="flex flex-wrap justify-center gap-2">
+              {atalhos.map((a) => {
+                const content = (
+                  <>
+                    <span className="text-primary/70 mr-1">#</span>
+                    {a.texto}
+                  </>
+                );
+                const className =
+                  "inline-flex items-center px-3 py-1.5 rounded-full bg-primary/5 border border-primary/15 text-primary/90 text-xs font-medium tracking-wide";
+                return a.pratica_slug ? (
+                  <Link
+                    key={a.id}
+                    to={`${basePath}/praticas/${a.pratica_slug}`}
+                    className={`${className} hover:bg-primary/10 transition-colors`}
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <span key={a.id} className={className}>{content}</span>
+                );
+              })}
             </div>
           </section>
         )}

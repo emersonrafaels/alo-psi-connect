@@ -1,58 +1,90 @@
 import { useEffect, useRef, useState } from "react";
 
+export type BreathingPhase =
+  | "inspirar"
+  | "inspirar_curta"
+  | "segurar"
+  | "expirar"
+  | "segurar_pos_expirar";
+
 interface BreathingCircleProps {
   inspirar: number;
   segurar: number;
   expirar: number;
+  /** Pausa após expirar (box breathing). 0 = ignorada. */
+  segurarPosExpirar?: number;
+  /** Segunda inspiração curta (suspiro fisiológico). 0 = ignorada. */
+  inspirarCurta?: number;
   paused?: boolean;
-  onPhaseChange?: (phase: "inspirar" | "segurar" | "expirar") => void;
-  /** Use a static visual (no scale transition / spinning ring) for users that prefer reduced motion. */
+  onPhaseChange?: (phase: BreathingPhase) => void;
   reducedMotion?: boolean;
-  /** Bigger and bolder phase label / counter for accessibility ("legendas grandes"). */
   largeLabels?: boolean;
 }
 
-const PHASES = ["inspirar", "segurar", "expirar"] as const;
-type Phase = (typeof PHASES)[number];
+const ALL_PHASES: BreathingPhase[] = [
+  "inspirar",
+  "inspirar_curta",
+  "segurar",
+  "expirar",
+  "segurar_pos_expirar",
+];
+
+const LABEL: Record<BreathingPhase, string> = {
+  inspirar: "Inspire",
+  inspirar_curta: "Inspire +",
+  segurar: "Segure",
+  expirar: "Expire",
+  segurar_pos_expirar: "Pause",
+};
+
+// Escala visual por fase. Inspirar(es) expandem; expirar contrai; segurar mantém.
+const PHASE_SCALE: Record<BreathingPhase, number> = {
+  inspirar: 1,
+  inspirar_curta: 1.05,
+  segurar: 1,
+  expirar: 0.55,
+  segurar_pos_expirar: 0.55,
+};
 
 export const BreathingCircle = ({
   inspirar,
   segurar,
   expirar,
+  segurarPosExpirar = 0,
+  inspirarCurta = 0,
   paused = false,
   onPhaseChange,
   reducedMotion = false,
   largeLabels = false,
 }: BreathingCircleProps) => {
-  const [phase, setPhase] = useState<Phase>("inspirar");
-  const [secondsLeft, setSecondsLeft] = useState(inspirar);
-  const phaseRef = useRef<Phase>("inspirar");
-  const remainingRef = useRef<number>(inspirar);
+  const durations: Record<BreathingPhase, number> = {
+    inspirar,
+    inspirar_curta: inspirarCurta,
+    segurar,
+    expirar,
+    segurar_pos_expirar: segurarPosExpirar,
+  };
+  const activePhases = ALL_PHASES.filter((p) => (durations[p] ?? 0) > 0);
+  const initialPhase: BreathingPhase = activePhases[0] ?? "inspirar";
+
+  const [phase, setPhase] = useState<BreathingPhase>(initialPhase);
+  const [secondsLeft, setSecondsLeft] = useState(durations[initialPhase] || 1);
+  const phaseRef = useRef<BreathingPhase>(initialPhase);
+  const remainingRef = useRef<number>(durations[initialPhase] || 1);
   const firstPhaseFiredRef = useRef(false);
 
-  // Dispara sino/feedback para a primeira fase ("Inspire") logo na montagem,
-  // já que o loop principal só notifica em transições subsequentes.
   useEffect(() => {
     if (paused) return;
-    // Dispara feedback de "Inspire" no primeiro start (loop só notifica em transições).
     if (!firstPhaseFiredRef.current) {
       firstPhaseFiredRef.current = true;
-      const initT = setTimeout(() => onPhaseChange?.("inspirar"), 200);
-      // não retorna o clear deste — queremos que dispare mesmo se o efeito reciclar em StrictMode
+      setTimeout(() => onPhaseChange?.(initialPhase), 200);
     }
     const tick = setInterval(() => {
       remainingRef.current -= 0.1;
       if (remainingRef.current <= 0) {
-        const idx = PHASES.indexOf(phaseRef.current);
-        let next: Phase = PHASES[(idx + 1) % PHASES.length];
-        let dur = next === "inspirar" ? inspirar : next === "segurar" ? segurar : expirar;
-        let safety = 0;
-        while (dur <= 0 && safety < 3) {
-          const i2 = PHASES.indexOf(next);
-          next = PHASES[(i2 + 1) % PHASES.length];
-          dur = next === "inspirar" ? inspirar : next === "segurar" ? segurar : expirar;
-          safety++;
-        }
+        const idx = activePhases.indexOf(phaseRef.current);
+        const next = activePhases[(idx + 1) % activePhases.length];
+        const dur = durations[next] || 1;
         phaseRef.current = next;
         remainingRef.current = dur;
         setPhase(next);
@@ -61,18 +93,17 @@ export const BreathingCircle = ({
       setSecondsLeft(Math.max(0, Math.ceil(remainingRef.current)));
     }, 100);
     return () => clearInterval(tick);
-  }, [paused, inspirar, segurar, expirar, onPhaseChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused, inspirar, segurar, expirar, segurarPosExpirar, inspirarCurta, onPhaseChange]);
 
-  const dynamicScale = phase === "inspirar" ? 1 : phase === "segurar" ? 1 : 0.55;
+  const dynamicScale = PHASE_SCALE[phase] ?? 1;
   const scale = reducedMotion ? 0.85 : dynamicScale;
-  const transitionDuration =
-    phase === "inspirar" ? inspirar : phase === "segurar" ? segurar : expirar;
+  const transitionDuration = durations[phase] || 1;
   const transition = reducedMotion
     ? "none"
     : `transform ${transitionDuration}s ease-in-out`;
 
-  const label =
-    phase === "inspirar" ? "Inspire" : phase === "segurar" ? "Segure" : "Expire";
+  const label = LABEL[phase];
 
   const labelClass = largeLabels
     ? "font-serif text-5xl sm:text-7xl tracking-wide font-semibold drop-shadow-[0_2px_14px_rgba(0,0,0,0.55)]"
@@ -95,25 +126,10 @@ export const BreathingCircle = ({
         viewBox="0 0 200 200"
         fill="none"
       >
-        <circle
-          cx="100"
-          cy="100"
-          r="92"
-          stroke="hsl(var(--primary-foreground) / 0.35)"
-          strokeWidth="0.6"
-          strokeDasharray="2 6"
-        />
-        <circle
-          cx="100"
-          cy="100"
-          r="78"
-          stroke="hsl(var(--primary-foreground) / 0.25)"
-          strokeWidth="0.4"
-          strokeDasharray="1 4"
-        />
+        <circle cx="100" cy="100" r="92" stroke="hsl(var(--primary-foreground) / 0.35)" strokeWidth="0.6" strokeDasharray="2 6" />
+        <circle cx="100" cy="100" r="78" stroke="hsl(var(--primary-foreground) / 0.25)" strokeWidth="0.4" strokeDasharray="1 4" />
       </svg>
 
-      {/* Soft outer glow */}
       <div
         aria-hidden
         className="absolute inset-0 rounded-full bg-primary-foreground/20 blur-3xl pratica-halo mix-blend-screen"
