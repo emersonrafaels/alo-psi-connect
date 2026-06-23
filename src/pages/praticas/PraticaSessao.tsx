@@ -18,7 +18,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { usePratica } from "@/hooks/usePraticas";
-import { BreathingCircle } from "@/components/praticas/BreathingCircle";
+import { BreathingCircle, type BreathingPhase } from "@/components/praticas/BreathingCircle";
+import { PausaTresMinutosSessao } from "@/components/praticas/PausaTresMinutosSessao";
+import { GroundingSessao } from "@/components/praticas/GroundingSessao";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 import { resolveTrackForPratica } from "@/data/praticasAudios";
 import { getPresetById, getThemeById } from "@/data/praticasPresets";
