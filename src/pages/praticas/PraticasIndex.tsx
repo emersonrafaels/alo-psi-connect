@@ -374,35 +374,48 @@ const PraticasIndex = () => {
 
         {/* CTA */}
         <section className="relative container mx-auto px-4 py-20 max-w-4xl">
-          <Card className="p-10 md:p-14 text-center bg-primary text-primary-foreground border-0 rounded-[32px]">
-            <h2 className="font-serif text-3xl md:text-4xl mb-4">
-              Você não precisa lidar com tudo sozinha
-            </h2>
-            <p className="text-primary-foreground/90 mb-8 max-w-xl mx-auto">
-              Às vezes, a maior prática é reconhecer quando precisamos de um apoio extra. Estamos
-              aqui para cada passo do seu caminho.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Button size="lg" variant="secondary" asChild>
-                <Link to={`${basePath}/profissionais`}>
-                  Buscar apoio
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="bg-transparent border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground hover:text-primary"
-                asChild
-              >
-                <Link to={`${basePath}/sobre`}>Entender caminhos de cuidado</Link>
-              </Button>
+          <Card
+            className="relative overflow-hidden p-10 md:p-14 text-center text-primary-foreground border-0 rounded-[32px] shadow-[var(--shadow-glow)]"
+            style={{ backgroundImage: "var(--gradient-cta)" }}
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -top-24 -right-24 w-[320px] h-[320px] rounded-full blur-3xl opacity-40 bg-white"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-32 -left-24 w-[360px] h-[360px] rounded-full blur-3xl opacity-30 bg-white"
+            />
+            <div className="relative">
+              <h2 className="font-serif text-3xl md:text-4xl mb-4">
+                Você não precisa lidar com tudo sozinha
+              </h2>
+              <p className="text-primary-foreground/90 mb-8 max-w-xl mx-auto">
+                Às vezes, a maior prática é reconhecer quando precisamos de um apoio extra. Estamos
+                aqui para cada passo do seu caminho.
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Button size="lg" variant="secondary" asChild className="shadow-lg">
+                  <Link to={`${basePath}/profissionais`}>
+                    Buscar apoio
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-transparent border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground hover:text-primary backdrop-blur-sm"
+                  asChild
+                >
+                  <Link to={`${basePath}/sobre`}>Entender caminhos de cuidado</Link>
+                </Button>
+              </div>
             </div>
           </Card>
         </section>
 
         {/* SELOS DE SEGURANÇA */}
-        <section className="relative bg-muted/40 py-14 border-t border-border/60">
+        <section className="relative py-14 border-t border-border/60 bg-gradient-to-b from-muted/40 via-background to-background">
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
               <div className="max-w-md">
