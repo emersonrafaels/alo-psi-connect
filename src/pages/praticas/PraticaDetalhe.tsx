@@ -166,6 +166,15 @@ const PraticaDetalhe = () => {
       setTrackId("auto");
       const stored = typeof window !== "undefined" ? window.localStorage.getItem("praticas:tema") : null;
       setTemaId(stored ?? "aurora");
+      // Defaults dos opcoes_extra (sempre pré-seleciona o recomendado).
+      const opcoes = pratica.opcoes_extra ?? {};
+      const defaults: Record<string, string> = {};
+      for (const [key, cfg] of Object.entries(opcoes)) {
+        if (cfg && typeof cfg === "object" && "default" in cfg) {
+          defaults[key] = (cfg as { default: string }).default;
+        }
+      }
+      setExtras(defaults);
     }
   }, [pratica]);
 
