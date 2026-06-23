@@ -214,6 +214,9 @@ const PraticaDetalhe = () => {
     if (presetId && presetId !== "padrao") params.set("preset", presetId);
     if (trackId && trackId !== "auto") params.set("t", trackId);
     if (temaId && temaId !== "aurora") params.set("tema", temaId);
+    for (const [k, v] of Object.entries(extras)) {
+      if (v) params.set(`x_${k}`, v);
+    }
     if (typeof window !== "undefined") window.localStorage.setItem("praticas:tema", temaId);
     navigate(`${basePath}/praticas/${pratica.slug}/sessao?${params.toString()}`);
   };
