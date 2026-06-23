@@ -70,11 +70,15 @@ const PraticaSessao = () => {
 
   // Padrão de respiração — preset sobrepõe o padrão do banco
   const presetCustom = useMemo(() => getPresetById(presetParam), [presetParam]);
-  const padraoBase = pratica?.padrao_respiracao ?? { inspirar: 4, segurar: 0, expirar: 6 };
+  const padraoBase = (pratica?.padrao_respiracao ?? { inspirar: 4, segurar: 0, expirar: 6 }) as
+    { inspirar: number; segurar: number; expirar: number; segurar_pos_expirar?: number; inspirar_curta?: number };
   const padrao = presetCustom && presetCustom.id !== "padrao"
-    ? { inspirar: presetCustom.inspirar, segurar: presetCustom.segurar, expirar: presetCustom.expirar }
+    ? { inspirar: presetCustom.inspirar, segurar: presetCustom.segurar, expirar: presetCustom.expirar, segurar_pos_expirar: 0, inspirar_curta: 0 }
     : padraoBase;
-  const cicloSegundos = Math.max(1, (padrao.inspirar || 0) + (padrao.segurar || 0) + (padrao.expirar || 0));
+  const cicloSegundos = Math.max(
+    1,
+    (padrao.inspirar || 0) + (padrao.segurar || 0) + (padrao.expirar || 0) + (padrao.segurar_pos_expirar || 0) + (padrao.inspirar_curta || 0),
+  );
 
   // Trilha — escolha do usuário sobrepõe o fallback automático (slug/grupo)
   const resolvedTrack = resolveTrackForPratica(
