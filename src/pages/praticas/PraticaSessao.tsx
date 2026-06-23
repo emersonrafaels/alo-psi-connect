@@ -359,9 +359,14 @@ const PraticaSessao = () => {
   }, []);
 
   const onPhaseChange = useCallback(
-    (next: "inspirar" | "segurar" | "expirar") => {
+    (next: BreathingPhase) => {
       if (sino) {
-        const freq = next === "inspirar" ? 528 : next === "segurar" ? 440 : 396;
+        const freq =
+          next === "inspirar" || next === "inspirar_curta"
+            ? 528
+            : next === "segurar" || next === "segurar_pos_expirar"
+              ? 440
+              : 396;
         playGong(freq);
         if (typeof navigator !== "undefined" && "vibrate" in navigator) {
           try {
