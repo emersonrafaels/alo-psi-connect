@@ -211,7 +211,7 @@ const PraticaDetalhe = () => {
     const params = new URLSearchParams();
     if (duracao) params.set("d", String(duracao));
     params.set("som", comSom ? "1" : "0");
-    if (presetId && presetId !== "padrao") params.set("preset", presetId);
+    
     if (trackId && trackId !== "auto") params.set("t", trackId);
     if (temaId && temaId !== "aurora") params.set("tema", temaId);
     for (const [k, v] of Object.entries(extras)) {
