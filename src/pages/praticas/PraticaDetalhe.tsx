@@ -162,7 +162,7 @@ const PraticaDetalhe = () => {
       document.title = `${pratica.titulo} | Práticas | Rede Bem-Estar`;
       setDuracao(pratica.duracao_min_default);
       setComSom(true);
-      setPresetId("padrao");
+      
       setTrackId("auto");
       const stored = typeof window !== "undefined" ? window.localStorage.getItem("praticas:tema") : null;
       setTemaId(stored ?? "aurora");
