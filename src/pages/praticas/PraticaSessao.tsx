@@ -283,6 +283,11 @@ const PraticaSessao = () => {
     setDimmed(false);
     // Aproveita o gesto do usuário para destravar autoplay do sino
     try { gongCtxRef.current?.resume?.(); } catch {}
+    // Sino de abertura: toca uma única vez na primeira interação do usuário na sessão.
+    if (sino && !startBellFiredRef.current) {
+      startBellFiredRef.current = true;
+      try { playGong(396); } catch {}
+    }
     if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     idleTimerRef.current = window.setTimeout(() => setChromeVisible(false), 4000);
     if (dimTimerRef.current) window.clearTimeout(dimTimerRef.current);
