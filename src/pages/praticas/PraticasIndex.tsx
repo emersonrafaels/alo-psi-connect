@@ -62,25 +62,44 @@ const PraticasIndex = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 relative">
-        {/* Decorative background blobs */}
+        {/* Decorative mesh background */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-0"
+          style={{ backgroundImage: "var(--gradient-mesh)" }}
+        />
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden -z-0">
-          <div className="absolute -top-32 -left-24 w-[420px] h-[420px] rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute top-[40vh] -right-24 w-[480px] h-[480px] rounded-full bg-accent/20 blur-3xl" />
-          <div className="absolute top-[100vh] left-1/3 w-[360px] h-[360px] rounded-full bg-primary/5 blur-3xl" />
+          <div
+            className="absolute -top-32 -left-24 w-[460px] h-[460px] rounded-full blur-3xl opacity-80 motion-safe:animate-pulse"
+            style={{ backgroundImage: "var(--gradient-soft)", animationDuration: "8s" }}
+          />
+          <div
+            className="absolute top-[35vh] -right-24 w-[520px] h-[520px] rounded-full blur-3xl opacity-70 motion-safe:animate-pulse"
+            style={{ backgroundImage: "var(--gradient-soft-accent)", animationDuration: "10s" }}
+          />
+          <div
+            className="absolute top-[110vh] left-1/3 w-[380px] h-[380px] rounded-full blur-3xl opacity-60"
+            style={{ backgroundImage: "var(--gradient-soft)" }}
+          />
         </div>
 
         {/* HERO */}
-        <section className="relative">
+        <section
+          className="relative"
+          style={{ backgroundImage: "var(--gradient-hero)" }}
+        >
           <div className="container relative mx-auto px-4 py-20 md:py-28 max-w-5xl text-center">
             <Badge
               variant="secondary"
-              className="mb-6 uppercase tracking-wider bg-primary/10 text-primary border border-primary/20"
+              className="mb-6 uppercase tracking-wider bg-gradient-to-r from-primary/15 to-accent/15 text-primary border border-primary/20 backdrop-blur-sm"
             >
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
               Práticas de autorregulação
             </Badge>
-            <h1 className="font-serif text-5xl md:text-7xl text-primary leading-[1.05] tracking-tight mb-6">
-              Encontre uma prática para o que você{" "}
+            <h1 className="font-serif text-5xl md:text-7xl leading-[1.05] tracking-tight mb-6">
+              <span className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+                Encontre uma prática para o que você
+              </span>{" "}
               <span className="text-foreground">precisa agora</span>.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4">
@@ -91,11 +110,20 @@ const PraticasIndex = () => {
               De 2 a 10 minutos · Áudio, texto e orientação visual
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              <Button size="lg" onClick={() => scrollToId("destaque")} className="group">
+              <Button
+                size="lg"
+                onClick={() => scrollToId("destaque")}
+                className="group bg-gradient-to-r from-primary to-primary/85 hover:from-primary hover:to-accent transition-all hover:shadow-[var(--shadow-glow)]"
+              >
                 Encontrar uma prática
                 <Search className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-0.5" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => scrollToId("grupos")}>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => scrollToId("grupos")}
+                className="backdrop-blur-sm bg-card/50 hover:bg-card"
+              >
                 Explorar todas
               </Button>
             </div>
