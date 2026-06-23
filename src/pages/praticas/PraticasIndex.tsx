@@ -133,7 +133,10 @@ const PraticasIndex = () => {
         {/* PILL BAR — atalhos do banco */}
         {atalhos && atalhos.length > 0 && (
           <section id="atalhos" className="relative container mx-auto px-4 pb-8 max-w-6xl">
-            <div className="rounded-full bg-card/70 backdrop-blur-md border border-border/60 shadow-sm p-2 flex items-center gap-2 overflow-x-auto">
+            <div
+              className="rounded-full backdrop-blur-md border border-border/60 shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.2)] p-2 flex items-center gap-2 overflow-x-auto"
+              style={{ backgroundImage: "var(--gradient-card)" }}
+            >
               <div className="hidden md:flex items-center gap-2 px-4 border-r border-border/60 shrink-0">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium text-foreground whitespace-nowrap">
@@ -146,7 +149,7 @@ const PraticasIndex = () => {
                     <Link
                       key={a.id}
                       to={`${basePath}/praticas/${a.pratica_slug}`}
-                      className="px-4 py-2 rounded-full bg-primary/5 hover:bg-primary/10 text-primary text-sm font-medium whitespace-nowrap transition-colors border border-primary/15"
+                      className="px-4 py-2 rounded-full bg-gradient-to-r from-primary/5 to-accent/5 hover:from-primary/15 hover:to-accent/15 text-primary text-sm font-medium whitespace-nowrap transition-all border border-primary/15 hover:border-primary/30 hover:shadow-sm"
                     >
                       {a.texto}
                     </Link>
