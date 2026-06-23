@@ -55,6 +55,8 @@ const PraticaSessao = () => {
   const tenantSlug = getTenantSlugFromPath(location.pathname);
   const basePath = getBasePath(tenantSlug);
   const { data: pratica } = usePratica(slug);
+  const { tenant } = useTenant();
+  const tenantLogo = tenant?.logo_url_dark || tenant?.logo_url;
 
   const duracaoMin = Number(params.get("d") || pratica?.duracao_min_default || 5);
   const somPref = params.get("som") === "1";
