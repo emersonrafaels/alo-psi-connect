@@ -25,6 +25,7 @@ import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 import { resolveTrackForPratica } from "@/data/praticasAudios";
 import { getThemeById } from "@/data/praticasPresets";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { useTenant } from "@/hooks/useTenant";
 
 const fmt = (s: number) => {
   const m = Math.floor(s / 60);
