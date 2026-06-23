@@ -549,11 +549,12 @@ const PraticaSessao = () => {
           <PausaTresMinutosSessao
             paused={paused}
             largeLabels={largeLabels}
-            onEtapaChange={(i) => { if (sino && i > 0) playGong(440); }}
+            onEtapaChange={onPausaEtapaChange}
           />
         ) : slug === "grounding-54321" ? (
           <GroundingSessao
             largeLabels={largeLabels}
+            onAvancar={onGroundingAvancar}
             onConcluir={() => navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`)}
           />
         ) : (
