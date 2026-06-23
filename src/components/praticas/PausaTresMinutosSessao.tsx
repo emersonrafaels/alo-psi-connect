@@ -37,8 +37,12 @@ export const PausaTresMinutosSessao = ({ paused = false, largeLabels = false, on
   const restanteEtapa = DURACAO_ETAPA - (elapsed % DURACAO_ETAPA);
   const etapa = ETAPAS[etapaIdx];
 
+  const prevEtapaIdxRef = useRef<number>(etapaIdx);
   useEffect(() => {
-    onEtapaChange?.(etapaIdx);
+    if (prevEtapaIdxRef.current !== etapaIdx) {
+      prevEtapaIdxRef.current = etapaIdx;
+      onEtapaChange?.(etapaIdx);
+    }
   }, [etapaIdx, onEtapaChange]);
 
   const titleClass = largeLabels
