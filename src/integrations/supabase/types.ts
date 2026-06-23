@@ -2622,6 +2622,7 @@ export type Database = {
           icone: string | null
           id: string
           ideal_para: string | null
+          opcoes_extra: Json
           ordem: number
           padrao_respiracao: Json
           slug: string
@@ -2644,6 +2645,7 @@ export type Database = {
           icone?: string | null
           id?: string
           ideal_para?: string | null
+          opcoes_extra?: Json
           ordem?: number
           padrao_respiracao?: Json
           slug: string
@@ -2666,6 +2668,7 @@ export type Database = {
           icone?: string | null
           id?: string
           ideal_para?: string | null
+          opcoes_extra?: Json
           ordem?: number
           padrao_respiracao?: Json
           slug?: string
