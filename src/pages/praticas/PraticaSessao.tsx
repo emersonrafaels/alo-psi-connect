@@ -23,7 +23,7 @@ import { PausaTresMinutosSessao } from "@/components/praticas/PausaTresMinutosSe
 import { GroundingSessao } from "@/components/praticas/GroundingSessao";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 import { resolveTrackForPratica } from "@/data/praticasAudios";
-import { getPresetById, getThemeById } from "@/data/praticasPresets";
+import { getThemeById } from "@/data/praticasPresets";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 const fmt = (s: number) => {
