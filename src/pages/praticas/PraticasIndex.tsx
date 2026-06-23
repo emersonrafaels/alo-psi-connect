@@ -205,9 +205,10 @@ const PraticasIndex = () => {
                         size="lg"
                         className="group bg-gradient-to-r from-primary to-primary/85 hover:from-primary hover:to-accent transition-all hover:shadow-[var(--shadow-glow)]"
                       >
-                        <Link to={`${basePath}/praticas/${destaque.slug}`}>
+                        <Link to={`${basePath}/praticas/${destaque.slug}/sessao`}>
                           <Play className="h-4 w-4 mr-2" />
-                          Começar prática de {destaque.duracao_min_default} minutos
+                          Começar prática de {destaque.duracao_min_default}{" "}
+                          {destaque.duracao_min_default === 1 ? "minuto" : "minutos"}
                         </Link>
                       </Button>
                       <Button asChild size="lg" variant="outline" className="backdrop-blur-sm bg-card/50">
