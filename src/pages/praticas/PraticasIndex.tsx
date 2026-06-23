@@ -295,16 +295,24 @@ const PraticasIndex = () => {
             const items = praticasPorGrupo[grupo.id] ?? [];
             if (items.length === 0) return null;
             return (
-              <div key={grupo.id}>
-                <div className="mb-6 max-w-2xl">
-                  <h2 className="font-serif text-3xl md:text-4xl text-primary mb-2">
-                    {grupo.nome}
-                  </h2>
+              <div key={grupo.id} className="relative">
+                <div
+                  aria-hidden
+                  className="absolute -left-8 top-0 h-24 w-2/3 rounded-full blur-3xl opacity-50 -z-0"
+                  style={{ backgroundImage: "var(--gradient-soft)" }}
+                />
+                <div className="mb-6 max-w-2xl relative">
+                  <div className="inline-block">
+                    <h2 className="font-serif text-3xl md:text-4xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+                      {grupo.nome}
+                    </h2>
+                    <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
+                  </div>
                   {grupo.descricao && (
-                    <p className="text-muted-foreground">{grupo.descricao}</p>
+                    <p className="text-muted-foreground mt-3">{grupo.descricao}</p>
                   )}
                 </div>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-4 relative">
                   {items.map((p) => (
                     <PraticaCard key={p.id} pratica={p} basePath={basePath} />
                   ))}
