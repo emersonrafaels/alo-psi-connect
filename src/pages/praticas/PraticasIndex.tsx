@@ -13,7 +13,7 @@ import { getTenantSlugFromPath, getBasePath } from "@/utils/tenantHelpers";
 
 const PraticasIndex = () => {
   const location = useLocation();
-  const navigate = useNavigate();
+  
   const tenantSlug = getTenantSlugFromPath(location.pathname);
   const basePath = getBasePath(tenantSlug);
   const { data, isLoading } = usePraticas();
