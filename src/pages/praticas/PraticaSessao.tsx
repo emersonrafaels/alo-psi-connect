@@ -358,17 +358,12 @@ const PraticaSessao = () => {
 
   const onPhaseChange = useCallback(
     (next: BreathingPhase) => {
-      if (sino) {
-        const freq =
-          next === "inspirar" || next === "inspirar_curta"
-            ? 528
-            : next === "segurar" || next === "segurar_pos_expirar"
-              ? 440
-              : 396;
-        playGong(freq);
+      // Apenas o início de um novo ciclo (inspiração) toca o sino — evita 3-4 sinos por ciclo.
+      if (sino && next === "inspirar") {
+        playGong(528);
         if (typeof navigator !== "undefined" && "vibrate" in navigator) {
           try {
-            (navigator as Navigator).vibrate?.(next === "inspirar" ? [40] : [25]);
+            (navigator as Navigator).vibrate?.([40]);
           } catch {}
         }
       }
@@ -376,6 +371,19 @@ const PraticaSessao = () => {
     },
     [sino, playGong]
   );
+
+  // Callback estável para a Pausa de 3 minutos — sino apenas em transição real de etapa.
+  const onPausaEtapaChange = useCallback(
+    (i: number) => {
+      if (sino && i > 0) playGong(440);
+    },
+    [sino, playGong]
+  );
+
+  // Callback estável para o Grounding — sino suave ao avançar de passo.
+  const onGroundingAvancar = useCallback(() => {
+    if (sino) playGong(528);
+  }, [sino, playGong]);
 
   // Fullscreen with iOS fallback
   const [isFullscreen, setIsFullscreen] = useState(false);
