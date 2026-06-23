@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Clock, Brain, Play, ShieldCheck, Volume2, VolumeX, Wind, Palette, Music, Pause, Waves } from "lucide-react";
+import { ArrowLeft, Clock, Brain, Play, ShieldCheck, Volume2, VolumeX, Palette, Music, Pause, Waves } from "lucide-react";
 import { usePratica } from "@/hooks/usePraticas";
 import { IconePratica } from "@/components/praticas/IconePratica";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
-import { BREATHING_PRESETS, SCENE_THEMES } from "@/data/praticasPresets";
+import { SCENE_THEMES } from "@/data/praticasPresets";
 import { TRACK_CATALOG, resolveTrackForPratica } from "@/data/praticasAudios";
 
 const PREVIEW_VOLUME = 0.5;
@@ -27,7 +27,7 @@ const PraticaDetalhe = () => {
 
   const [duracao, setDuracao] = useState<number | null>(null);
   const [comSom, setComSom] = useState(true);
-  const [presetId, setPresetId] = useState<string>("padrao");
+  
   const [trackId, setTrackId] = useState<string>("auto");
   const [temaId, setTemaId] = useState<string>("aurora");
   const [extras, setExtras] = useState<Record<string, string>>({});
@@ -162,7 +162,7 @@ const PraticaDetalhe = () => {
       document.title = `${pratica.titulo} | Práticas | Rede Bem-Estar`;
       setDuracao(pratica.duracao_min_default);
       setComSom(true);
-      setPresetId("padrao");
+      
       setTrackId("auto");
       const stored = typeof window !== "undefined" ? window.localStorage.getItem("praticas:tema") : null;
       setTemaId(stored ?? "aurora");
@@ -211,7 +211,7 @@ const PraticaDetalhe = () => {
     const params = new URLSearchParams();
     if (duracao) params.set("d", String(duracao));
     params.set("som", comSom ? "1" : "0");
-    if (presetId && presetId !== "padrao") params.set("preset", presetId);
+    
     if (trackId && trackId !== "auto") params.set("t", trackId);
     if (temaId && temaId !== "aurora") params.set("tema", temaId);
     for (const [k, v] of Object.entries(extras)) {
@@ -332,33 +332,8 @@ const PraticaDetalhe = () => {
             )}
 
 
-            {/* Padrão de respiração */}
-            <div className="mb-6">
-              <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                <Wind className="h-4 w-4 text-primary" /> Padrão de respiração
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {BREATHING_PRESETS.map((p) => {
-                  const active = presetId === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => setPresetId(p.id)}
-                      className={`text-left px-4 py-3 rounded-xl border transition-all ${
-                        active
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-card border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <div className="text-sm font-medium">{p.label}</div>
-                      <div className={`text-xs mt-0.5 ${active ? "opacity-90" : "text-muted-foreground"}`}>
-                        {p.description}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+
+
 
             {/* Tema da cena */}
             <div className="mb-6">
