@@ -1,16 +1,13 @@
-## Remover seletor de "Padrão de respiração" da página de detalhe
+## Objetivo
+No header da sessão de prática (`PraticaSessao.tsx`, linha 502), substituir o texto fixo "Rede Bem-Estar" pelo logo do tenant atual.
 
-O padrão de respiração é uma característica intrínseca de cada prática (definida em `padrao_respiracao` no banco), não uma escolha do usuário.
+## Mudanças
 
-### Alterações
+**`src/pages/praticas/PraticaSessao.tsx`**
+- Importar `useTenant` de `@/hooks/useTenant`.
+- Obter `tenant` no componente.
+- Trocar `<p className="font-serif text-base sm:text-lg opacity-90">Rede Bem-Estar</p>` por:
+  - Se `tenant.logo_url_dark` ou `tenant.logo_url` existir: `<img src={tenant.logo_url_dark || tenant.logo_url} alt={tenant.name} className="h-8 sm:h-10 w-auto object-contain opacity-90" />` (preferindo a versão dark, já que o fundo da sessão é escuro/colorido).
+  - Fallback: manter o texto atual com `tenant?.name || "Rede Bem-Estar"`.
 
-**`src/pages/praticas/PraticaDetalhe.tsx`**
-- Remover o bloco UI "Padrão de respiração" (cards com `BREATHING_PRESETS`).
-- Remover o state `presetId` e seu reset no `useEffect`.
-- Remover o parâmetro `preset` da URL gerada em `iniciar()`.
-- Remover imports não usados: `Wind`, `BREATHING_PRESETS`.
-
-**`src/pages/praticas/PraticaSessao.tsx`** (verificação)
-- Garantir que a sessão use sempre o `padrao_respiracao` da prática carregada do banco, ignorando qualquer `?preset=` legado na URL. Se hoje há fallback que lê `preset`, remover.
-
-Nada muda no banco nem em outras práticas/áudios/temas.
+Nenhuma outra alteração — escopo puramente visual no header da sessão.
