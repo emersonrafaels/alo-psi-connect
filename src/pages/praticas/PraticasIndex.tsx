@@ -170,86 +170,111 @@ const PraticasIndex = () => {
         {/* DESTAQUE */}
         {destaque && (
           <section id="destaque" className="relative container mx-auto px-4 py-12 max-w-6xl">
-            <Card className="relative overflow-hidden rounded-[40px] p-8 md:p-14 bg-card/70 backdrop-blur-md border-border/60 shadow-sm">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div className="space-y-6">
-                  <Badge
-                    variant="secondary"
-                    className="bg-accent/30 text-accent-foreground border border-accent"
-                  >
-                    Uma sugestão para agora
-                  </Badge>
-                  <h2 className="font-serif text-3xl md:text-5xl text-primary leading-tight">
-                    {destaque.titulo}
-                  </h2>
-                  {destaque.descricao_curta && (
-                    <p className="text-base md:text-lg text-muted-foreground">
-                      {destaque.descricao_curta}
-                    </p>
-                  )}
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <Button asChild size="lg" className="group">
-                      <Link to={`${basePath}/praticas/${destaque.slug}`}>
-                        <Play className="h-4 w-4 mr-2" />
-                        Começar prática de {destaque.duracao_min_default} minutos
-                      </Link>
-                    </Button>
-                    <Button asChild size="lg" variant="outline">
-                      <Link to={`${basePath}/praticas/${destaque.slug}`}>Ver orientações</Link>
-                    </Button>
+            <div
+              className="rounded-[40px] p-[1.5px] shadow-[var(--shadow-glow)]"
+              style={{ backgroundImage: "var(--gradient-border)" }}
+            >
+              <Card
+                className="relative overflow-hidden rounded-[39px] p-8 md:p-14 backdrop-blur-xl border-0"
+                style={{ backgroundImage: "var(--gradient-card)" }}
+              >
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -top-24 -right-24 w-[360px] h-[360px] rounded-full blur-3xl opacity-60"
+                  style={{ backgroundImage: "var(--gradient-soft-accent)" }}
+                />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative">
+                  <div className="space-y-6">
+                    <Badge
+                      variant="secondary"
+                      className="bg-gradient-to-r from-accent/30 to-primary/20 text-accent-foreground border border-accent/40 backdrop-blur-sm"
+                    >
+                      Uma sugestão para agora
+                    </Badge>
+                    <h2 className="font-serif text-3xl md:text-5xl leading-tight bg-gradient-to-br from-primary via-primary to-accent bg-clip-text text-transparent">
+                      {destaque.titulo}
+                    </h2>
+                    {destaque.descricao_curta && (
+                      <p className="text-base md:text-lg text-muted-foreground">
+                        {destaque.descricao_curta}
+                      </p>
+                    )}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <Button
+                        asChild
+                        size="lg"
+                        className="group bg-gradient-to-r from-primary to-primary/85 hover:from-primary hover:to-accent transition-all hover:shadow-[var(--shadow-glow)]"
+                      >
+                        <Link to={`${basePath}/praticas/${destaque.slug}`}>
+                          <Play className="h-4 w-4 mr-2" />
+                          Começar prática de {destaque.duracao_min_default} minutos
+                        </Link>
+                      </Button>
+                      <Button asChild size="lg" variant="outline" className="backdrop-blur-sm bg-card/50">
+                        <Link to={`${basePath}/praticas/${destaque.slug}`}>Ver orientações</Link>
+                      </Button>
+                    </div>
                   </div>
-                </div>
 
-                {/* Circular visual */}
-                <div className="flex flex-col items-center justify-center">
-                  <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
-                    <span className="absolute inset-0 rounded-full border border-primary/30 animate-ping opacity-40" />
-                    <span className="absolute inset-6 rounded-full border border-accent/40" />
-                    <div className="w-full h-full rounded-full border-2 border-dashed border-primary/20 flex items-center justify-center relative">
-                      <svg className="absolute inset-0 w-full h-full -rotate-90" aria-hidden>
-                        <circle
-                          cx="50%"
-                          cy="50%"
-                          r="48%"
-                          fill="transparent"
-                          stroke="url(#destaque-gradient)"
-                          strokeWidth={8}
-                          strokeLinecap="round"
-                          strokeDasharray="100 100"
-                        />
-                        <defs>
-                          <linearGradient id="destaque-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="hsl(var(--primary))" />
-                            <stop offset="100%" stopColor="hsl(var(--primary) / 0.4)" />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                      <div className="text-center z-10 bg-card/80 backdrop-blur-xl w-4/5 h-4/5 rounded-full flex flex-col items-center justify-center shadow-lg border border-border/60">
-                        <span className="text-5xl font-bold text-primary">
-                          {destaque.duracao_min_default}
-                        </span>
-                        <span className="text-xs text-muted-foreground uppercase tracking-widest mt-1">
-                          minutos
-                        </span>
-                        {destaque.ideal_para && (
-                          <span className="text-xs text-muted-foreground mt-3 px-4 text-center">
-                            {destaque.ideal_para}
+                  {/* Circular visual */}
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
+                      <span
+                        className="absolute -inset-4 rounded-full blur-2xl opacity-70"
+                        style={{ backgroundImage: "var(--gradient-soft)" }}
+                      />
+                      <span className="absolute inset-0 rounded-full border border-primary/30 animate-ping opacity-40" />
+                      <span className="absolute inset-6 rounded-full border border-accent/40" />
+                      <div className="w-full h-full rounded-full border-2 border-dashed border-primary/20 flex items-center justify-center relative">
+                        <svg className="absolute inset-0 w-full h-full -rotate-90" aria-hidden>
+                          <circle
+                            cx="50%"
+                            cy="50%"
+                            r="48%"
+                            fill="transparent"
+                            stroke="url(#destaque-gradient)"
+                            strokeWidth={8}
+                            strokeLinecap="round"
+                            strokeDasharray="100 100"
+                          />
+                          <defs>
+                            <linearGradient id="destaque-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="hsl(var(--primary))" />
+                              <stop offset="50%" stopColor="hsl(var(--accent))" />
+                              <stop offset="100%" stopColor="hsl(var(--primary) / 0.4)" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        <div
+                          className="text-center z-10 backdrop-blur-xl w-4/5 h-4/5 rounded-full flex flex-col items-center justify-center shadow-lg border border-border/60"
+                          style={{ backgroundImage: "var(--gradient-card)" }}
+                        >
+                          <span className="text-5xl font-bold bg-gradient-to-br from-primary to-accent bg-clip-text text-transparent">
+                            {destaque.duracao_min_default}
                           </span>
-                        )}
+                          <span className="text-xs text-muted-foreground uppercase tracking-widest mt-1">
+                            minutos
+                          </span>
+                          {destaque.ideal_para && (
+                            <span className="text-xs text-muted-foreground mt-3 px-4 text-center">
+                              {destaque.ideal_para}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6 flex items-center gap-6">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Inspirar
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="w-2.5 h-2.5 rounded-full bg-accent" /> Expirar
                       </div>
                     </div>
                   </div>
-                  <div className="mt-6 flex items-center gap-6">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Inspirar
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="w-2.5 h-2.5 rounded-full bg-primary/40" /> Expirar
-                    </div>
-                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </section>
         )}
 
