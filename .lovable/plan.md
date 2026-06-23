@@ -1,36 +1,70 @@
-## Problemas atuais do sino
+## Objetivo
 
-1. **Práticas de respiração** (`BreathingCircle`): o sino toca em **toda mudança de fase** (inspirar, segurar, expirar, pausa, suspiro curto). Numa 4-7-8 ou box, isso são 3-4 sinos por ciclo — vira distração em vez de marcação.
-2. **Pausa de 3 minutos**: bug — `onEtapaChange` é uma arrow inline em `PraticaSessao`, recriada a cada render. O `useEffect([etapaIdx, onEtapaChange])` em `PausaTresMinutosSessao` dispara o sino a cada segundo enquanto `etapaIdx > 0`.
-3. **Grounding 5-4-3-2-1**: não toca sino nenhum.
-4. **Início e fim da sessão**: nenhum sino marca abertura ou encerramento.
+Refazer `src/pages/praticas/PraticasIndex.tsx` com a estrutura visual dos 3 mockups Stitch, **substituindo o fundo dark/shader e o "white-on-glass"** por uma versão clara, alinhada à identidade Rede Bem-Estar (`primary` teal + acento `wellness-pink`, tipografia serif para títulos, alto contraste WCAG AA). Os dados continuam vindo de `usePraticas` e `usePraticasAtalhos` — nenhuma seção hardcoded substitui grupos reais.
 
-## Comportamento desejado (por prática)
+## Princípios de adaptação visual
 
-| Prática | Quando o sino toca |
-|---|---|
-| Início de qualquer sessão | 1 sino grave (396 Hz) ao iniciar |
-| Fim de qualquer sessão | 1 sino grave (396 Hz) antes de ir ao checkout |
-| Suspiro de alívio | 1 sino agudo (528 Hz) no início de cada novo ciclo (segunda inspiração curta marca o pico, expiração longa marca o fim) — apenas **1 sino por ciclo** |
-| Respiração lenta e ritmada | 1 sino agudo no início de cada inspiração (1 por ciclo) |
-| Respiração em 4 etapas (box) | 1 sino no início de cada inspiração (1 por ciclo) |
-| Respiração 4-7-8 | 1 sino no início de cada inspiração (1 por ciclo) |
-| Pausa de 3 minutos | 1 sino na transição entre etapas (em 1:00 e 2:00). Sem repetição. |
-| Grounding 5-4-3-2-1 | 1 sino suave ao avançar para o próximo passo |
+- **Fundo:** trocar shader fullscreen por um gradiente sutil `from-primary/5 via-background to-background` + blobs decorativos suaves (`bg-primary/10 blur-3xl`), aplicados em camadas com `pointer-events-none`.
+- **Glass cards:** usar `bg-card/70 backdrop-blur-md border border-border/60 shadow-sm` (claro), nunca `bg-white/10` sobre dark.
+- **Tipografia:** títulos em `font-serif` (atual), corpo em `text-foreground`/`text-muted-foreground`. Nada em `text-white`.
+- **Cores de acento:** `primary` substitui `energy-teal`; `secondary` ou `wellness-pink` (já existir? se não, usar `accent`/`primary/70`) para o segundo acento. Verificar `tailwind.config.ts` antes — se faltar token, reutilizar tokens existentes.
+- **Ícones:** continuar com `IconePratica` (lucide), não Material Symbols.
 
-## Mudanças técnicas
+## Estrutura nova da página (ordem)
 
-**`src/pages/praticas/PraticaSessao.tsx`**
-- Tocar sino de **abertura** uma única vez quando a sessão monta e o áudio está destravado (no primeiro tick após `wakeChrome`/play).
-- Tocar sino de **encerramento** antes do `navigate(...)` para o checkout (timer chegou ao fim ou usuário clicou `encerrar`).
-- Em `onPhaseChange`, tocar o sino **apenas** quando `next === "inspirar"` (início do ciclo). Demais fases continuam disparando vibração leve (se preferir), mas sem áudio.
-- Memoizar o callback passado a `PausaTresMinutosSessao` com `useCallback([sino, playGong])` para corrigir o bug de re-disparo.
-- Adicionar callback `onAvancarPasso` em `GroundingSessao` e tocar sino quando o usuário avança.
+1. **Hero**
+   - Badge "Práticas guiadas" + título serif grande + subtítulo + microcopy "De 2 a 10 minutos · áudio, texto e orientação visual".
+   - Dois CTAs: "Encontrar uma prática" (rola pra `#grupos`) e "Explorar todas" (rola pro grid final).
+   - Decoração: anel pulsante sutil atrás do título usando `primary/20`.
 
-**`src/components/praticas/PausaTresMinutosSessao.tsx`**
-- Usar `useRef` para rastrear o `etapaIdx` anterior e só chamar `onEtapaChange` quando ele realmente mudar (efeito robusto independente da identidade do callback).
+2. **Seletor "O que você precisa agora?"** (pill bar) — **reaproveita `atalhos`** do hook. Cada atalho vira pill clicável que rola/filtra. Sem mock.
 
-**`src/components/praticas/GroundingSessao.tsx`**
-- Aceitar prop `onAvancar?: () => void` e chamá-la em `proximo()` antes de avançar/concluir.
+3. **Prática em destaque** (painel glass + visual circular) — usa a **primeira prática do primeiro grupo** (ou um destaque marcado se houver `categoria_badge === "destaque"`; senão fallback para 1ª).
+   - Texto à esquerda + círculo de duração com gradiente `primary → primary/60` à direita.
+   - CTA "Começar prática" → link `${basePath}/praticas/${slug}`.
 
-Sem mudanças em banco, áudio ambient, trilha ou UI do botão do sino.
+4. **Grupos dinâmicos** (`grupos.map`) — para cada grupo, render:
+   - Título serif + descrição.
+   - Grid de `PraticaCard` (componente atual permanece, só revisitamos hover/borda para ficar coerente).
+   - **Mantém 1 seção por grupo ativo**, na ordem definida no banco. Nenhuma seção fixa "Para recuperar o foco" sobrepõe um grupo real.
+
+5. **"Prefere apenas ouvir?"** — filtra `praticas` cujo `formato` inclua áudio (se o campo existir; caso contrário, omitir a seção). Grid de 3 cards glass claros.
+
+6. **CTA final** (mantém o atual): card primary "Você não precisa lidar com tudo sozinha" com links para profissionais/sobre.
+
+7. **Curadoria/segurança** (linha inferior, condensada): 4 selos check_circle ("Orientações simples", "Ritmo adaptável", "Áudio opcional", "Sem cobrança") + nota "não substitui acompanhamento profissional".
+
+## Implementação técnica
+
+- Editar **somente** `src/pages/praticas/PraticasIndex.tsx`. Sem mudanças em hooks, rotas ou banco.
+- Reutilizar `PraticaCard`, `Card`, `Button`, `Badge`, `Skeleton` do design system.
+- Animação do círculo: `animate-pulse-ring` — adicionar keyframe em `tailwind.config.ts`/`index.css` se ainda não existir (`@keyframes pulse-ring { 0%{transform:scale(.95);opacity:.6} 100%{transform:scale(1.15);opacity:0} }`).
+- Scroll suave entre seções com `scrollIntoView({behavior:"smooth"})`.
+- Manter `window.scrollTo(0,0)` no mount e `document.title`.
+
+## Fora de escopo
+
+- Sem alterar Header/Footer.
+- Sem criar tabela "destaque" — usa a primeira prática como fallback.
+- Sem integrar Buddy/AI ou estatísticas de continuidade (mockups exibem "12 práticas concluídas"; ignoramos porque exige nova tabela).
+- Sem agenda de "Práticas em grupo" (vive em outro módulo de Sessões em Grupo).
+
+```
+HERO
+ └─ badge + h1 serif + sub + 2 CTAs
+
+PILL BAR (atalhos do banco)
+
+DESTAQUE (primeira prática)
+ ├─ texto + CTA
+ └─ círculo com duração
+
+GRUPOS DINÂMICOS (map)
+ └─ por grupo: título + cards
+
+PRÁTICAS EM ÁUDIO (se houver)
+
+CTA "Buscar apoio"
+
+SELOS DE SEGURANÇA
+```
