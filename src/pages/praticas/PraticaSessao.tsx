@@ -531,15 +531,30 @@ const PraticaSessao = () => {
           {pratica?.subtitulo ?? "Acalme sua mente agora"}
         </p>
 
-        <BreathingCircle
-          inspirar={padrao.inspirar}
-          segurar={padrao.segurar}
-          expirar={padrao.expirar}
-          paused={paused}
-          onPhaseChange={onPhaseChange}
-          reducedMotion={reducedMotion}
-          largeLabels={largeLabels}
-        />
+        {slug === "pausa-tres-minutos" ? (
+          <PausaTresMinutosSessao
+            paused={paused}
+            largeLabels={largeLabels}
+            onEtapaChange={(i) => { if (sino && i > 0) playGong(440); }}
+          />
+        ) : slug === "grounding-54321" ? (
+          <GroundingSessao
+            largeLabels={largeLabels}
+            onConcluir={() => navigate(`${basePath}/praticas/${slug}/checkout?dur=${elapsed}`)}
+          />
+        ) : (
+          <BreathingCircle
+            inspirar={padrao.inspirar}
+            segurar={padrao.segurar}
+            expirar={padrao.expirar}
+            segurarPosExpirar={padrao.segurar_pos_expirar ?? 0}
+            inspirarCurta={padrao.inspirar_curta ?? 0}
+            paused={paused}
+            onPhaseChange={onPhaseChange}
+            reducedMotion={reducedMotion}
+            largeLabels={largeLabels}
+          />
+        )}
 
         <div className="mt-4 sm:mt-6 w-full max-w-md">
           <div className="h-2 rounded-full bg-white/15 overflow-hidden">
