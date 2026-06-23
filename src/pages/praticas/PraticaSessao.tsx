@@ -502,7 +502,15 @@ const PraticaSessao = () => {
           chromeVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"
         }`}
       >
-        <p className="font-serif text-base sm:text-lg opacity-90">Rede Bem-Estar</p>
+        {tenantLogo ? (
+          <img
+            src={tenantLogo}
+            alt={tenant?.name || "Logo"}
+            className="h-8 sm:h-10 w-auto object-contain opacity-90"
+          />
+        ) : (
+          <p className="font-serif text-base sm:text-lg opacity-90">{tenant?.name || "Rede Bem-Estar"}</p>
+        )}
         <button
           onClick={encerrar}
           className="p-2 rounded-full hover:bg-white/10 transition"
