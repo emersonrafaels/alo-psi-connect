@@ -127,6 +127,8 @@ const PraticaSessao = () => {
   const ambientNodesRef = useRef<{ stop: () => void } | null>(null);
   const gongPulseTimerRef = useRef<number | null>(null);
   const [gongPulse, setGongPulse] = useState(false);
+  const startBellFiredRef = useRef(false);
+  const endBellFiredRef = useRef(false);
 
   useEffect(() => {
     if (paused) return;
@@ -136,9 +138,17 @@ const PraticaSessao = () => {
 
   useEffect(() => {
     if (elapsed >= totalSeg && totalSeg > 0) {
+      if (sino && !endBellFiredRef.current) {
+        endBellFiredRef.current = true;
+        try { playGong(396); } catch {}
+        const navTimer = window.setTimeout(() => {
+          navigate(`${basePath}/praticas/${slug}/checkout?dur=${totalSeg}`);
+        }, 700);
+        return () => window.clearTimeout(navTimer);
+      }
       navigate(`${basePath}/praticas/${slug}/checkout?dur=${totalSeg}`);
     }
-  }, [elapsed, totalSeg, basePath, slug, navigate]);
+  }, [elapsed, totalSeg, basePath, slug, navigate, sino]);
 
   // Voice/trilha audio
   useEffect(() => {
