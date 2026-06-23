@@ -332,33 +332,8 @@ const PraticaDetalhe = () => {
             )}
 
 
-            {/* Padrão de respiração */}
-            <div className="mb-6">
-              <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                <Wind className="h-4 w-4 text-primary" /> Padrão de respiração
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {BREATHING_PRESETS.map((p) => {
-                  const active = presetId === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => setPresetId(p.id)}
-                      className={`text-left px-4 py-3 rounded-xl border transition-all ${
-                        active
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-card border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <div className="text-sm font-medium">{p.label}</div>
-                      <div className={`text-xs mt-0.5 ${active ? "opacity-90" : "text-muted-foreground"}`}>
-                        {p.description}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+
+
 
             {/* Tema da cena */}
             <div className="mb-6">
