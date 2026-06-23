@@ -57,7 +57,6 @@ const PraticaSessao = () => {
 
   const duracaoMin = Number(params.get("d") || pratica?.duracao_min_default || 5);
   const somPref = params.get("som") === "1";
-  const presetParam = params.get("preset");
   const trackParam = params.get("t");
   const temaParam = params.get("tema");
 
@@ -68,13 +67,9 @@ const PraticaSessao = () => {
   // Tema da cena
   const tema = useMemo(() => getThemeById(temaParam), [temaParam]);
 
-  // Padrão de respiração — preset sobrepõe o padrão do banco
-  const presetCustom = useMemo(() => getPresetById(presetParam), [presetParam]);
-  const padraoBase = (pratica?.padrao_respiracao ?? { inspirar: 4, segurar: 0, expirar: 6 }) as
+  // Padrão de respiração — sempre vem da prática (não é configurável pelo usuário)
+  const padrao = (pratica?.padrao_respiracao ?? { inspirar: 4, segurar: 0, expirar: 6 }) as
     { inspirar: number; segurar: number; expirar: number; segurar_pos_expirar?: number; inspirar_curta?: number };
-  const padrao = presetCustom && presetCustom.id !== "padrao"
-    ? { inspirar: presetCustom.inspirar, segurar: presetCustom.segurar, expirar: presetCustom.expirar, segurar_pos_expirar: 0, inspirar_curta: 0 }
-    : padraoBase;
   const cicloSegundos = Math.max(
     1,
     (padrao.inspirar || 0) + (padrao.segurar || 0) + (padrao.expirar || 0) + (padrao.segurar_pos_expirar || 0) + (padrao.inspirar_curta || 0),
