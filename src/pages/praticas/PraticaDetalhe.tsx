@@ -27,7 +27,7 @@ const PraticaDetalhe = () => {
 
   const [duracao, setDuracao] = useState<number | null>(null);
   const [comSom, setComSom] = useState(true);
-  const [presetId, setPresetId] = useState<string>("padrao");
+  
   const [trackId, setTrackId] = useState<string>("auto");
   const [temaId, setTemaId] = useState<string>("aurora");
   const [extras, setExtras] = useState<Record<string, string>>({});
