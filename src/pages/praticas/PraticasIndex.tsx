@@ -342,8 +342,11 @@ const PraticasIndex = () => {
                   to={`${basePath}/praticas/${p.slug}`}
                   className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl"
                 >
-                  <Card className="h-full rounded-3xl p-8 bg-card/70 backdrop-blur-md border-border/60 hover:shadow-lg hover:-translate-y-0.5 transition-all flex flex-col gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                  <Card
+                    className="h-full rounded-3xl p-8 backdrop-blur-xl border border-border/60 hover:border-primary/30 hover:shadow-[var(--shadow-glow)] hover:-translate-y-1 transition-all flex flex-col gap-5"
+                    style={{ backgroundImage: "var(--gradient-card)" }}
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 text-primary flex items-center justify-center shadow-sm">
                       {p.icone ? (
                         <IconePratica name={p.icone} className="h-6 w-6" />
                       ) : (
