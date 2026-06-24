@@ -51,14 +51,10 @@ const ScaleResponse = () => {
   const { data: history } = useUserScaleResponses(scaleCode);
   const submit = useSubmitScaleResponse();
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [result, setResult] = useState<Awaited<ReturnType<typeof submit.mutateAsync>> | null>(null);
+  const [result, setResult] = useState<Awaited<ReturnType<typeof submit.mutateAsync>> | LocalScaleResult | null>(null);
   const [explainerOpen, setExplainerOpen] = useState(false);
 
-
-  if (!authLoading && !user) {
-    navigate(buildTenantPath(slug, "/auth"));
-    return null;
-  }
+  const isGuest = !authLoading && !user;
 
   const items = data?.items ?? [];
   const scale = data?.scale;
@@ -71,8 +67,14 @@ const ScaleResponse = () => {
 
   const handleSubmit = async () => {
     if (!scale || !allAnswered) return;
+    const payload = items.map((it) => answers[it.position]);
+    if (isGuest) {
+      const local = computeScaleResult(scale, items, payload);
+      setResult(local);
+      window.scrollTo(0, 0);
+      return;
+    }
     try {
-      const payload = items.map((it) => answers[it.position]);
       const res = await submit.mutateAsync({ scale_code: scale.code, answers: payload });
       setResult(res);
       window.scrollTo(0, 0);
