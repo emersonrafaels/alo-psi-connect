@@ -33,10 +33,7 @@ const EmotionalScales = () => {
   const { data: latestMap } = useLatestResponseByScale();
   const { data: missingScales } = useMissingIseuScales();
 
-  if (!authLoading && !user) {
-    navigate(buildTenantPath(slug, "/auth"));
-    return null;
-  }
+  const isGuest = !authLoading && !user;
 
   const getAvailability = (frequencyDays: number, lastTakenAt?: string) => {
     if (!lastTakenAt) return { available: true, label: "Disponível" };
@@ -156,14 +153,16 @@ const EmotionalScales = () => {
             Suas respostas ficam registradas no seu histórico para que você acompanhe sua evolução.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(buildTenantPath(slug, "/minhas-emocoes"))}
-            >
-              <History className="h-4 w-4 mr-2" />
-              Ver meu histórico
-            </Button>
+            {!isGuest && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(buildTenantPath(slug, "/minhas-emocoes"))}
+              >
+                <History className="h-4 w-4 mr-2" />
+                Ver meu histórico
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -174,7 +173,26 @@ const EmotionalScales = () => {
             </Button>
           </div>
 
-          {missingScales && missingScales.length > 0 && (
+          {isGuest && (
+            <div className="mt-6 rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-primary/5 p-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-medium">Você está explorando como visitante</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Responda livremente. Para salvar histórico e calcular seu ISEU-RBE, entre ou crie uma conta.
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => navigate(buildTenantPath(slug, "/cadastro/tipo-usuario"))}>
+                  Cadastrar
+                </Button>
+                <Button size="sm" onClick={() => navigate(buildTenantPath(slug, "/auth"))}>
+                  Entrar
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {!isGuest && missingScales && missingScales.length > 0 && (
             <div className="mt-6 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4">
               <div className="text-sm font-medium">
                 Faltam {missingScales.length} escala{missingScales.length === 1 ? "" : "s"} para calcular seu ISEU-RBE
@@ -185,6 +203,7 @@ const EmotionalScales = () => {
             </div>
           )}
         </div>
+
 
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2">
