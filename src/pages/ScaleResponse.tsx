@@ -236,15 +236,41 @@ const ScaleResponse = () => {
                 </div>
               )}
 
-              {result.iseu ? (
+              {isGuest ? (
+                <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-primary/5 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-2xl bg-primary/15 text-primary grid place-items-center shrink-0">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium">Quer acompanhar sua evolução?</div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Crie sua conta para salvar este resultado no seu histórico, comparar com aplicações
+                        futuras e calcular seu <span className="font-medium">ISEU-RBE</span> — o índice
+                        unificado de saúde emocional.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <Button onClick={() => navigate(buildTenantPath(slug, "/cadastro/tipo-usuario"))}>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Criar conta
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate(buildTenantPath(slug, "/auth"))}>
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Entrar
+                    </Button>
+                  </div>
+                </div>
+              ) : (result as any).iseu ? (
                 <div className="rounded-xl border p-4">
                   <div className="text-xs text-muted-foreground">ISEU-RBE atualizado</div>
                   <div className="flex items-center justify-between mt-1">
-                    <div className="text-2xl font-semibold">{result.iseu.score}</div>
-                    <Badge variant="outline" className="capitalize">{result.iseu.band}</Badge>
+                    <div className="text-2xl font-semibold">{(result as any).iseu.score}</div>
+                    <Badge variant="outline" className="capitalize">{(result as any).iseu.band}</Badge>
                   </div>
                   <div className="text-xs text-muted-foreground mt-2">
-                    Composto a partir de {result.iseu.scales_used} escala(s) do pack essencial.
+                    Composto a partir de {(result as any).iseu.scales_used} escala(s) do pack essencial.
                   </div>
                 </div>
               ) : (result as any).missing_scales && (result as any).missing_scales.length > 0 ? (
@@ -259,13 +285,16 @@ const ScaleResponse = () => {
               ) : null}
 
               <div className="flex gap-3">
-                <Button onClick={() => navigate(buildTenantPath(slug, "/minhas-emocoes"))}>
-                  Ver meu histórico
-                </Button>
+                {!isGuest && (
+                  <Button onClick={() => navigate(buildTenantPath(slug, "/minhas-emocoes"))}>
+                    Ver meu histórico
+                  </Button>
+                )}
                 <Button variant="outline" onClick={() => navigate(buildTenantPath(slug, "/escalas"))}>
                   Voltar às escalas
                 </Button>
               </div>
+
             </CardContent>
           </Card>
         </main>
