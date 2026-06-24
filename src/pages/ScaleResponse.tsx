@@ -15,13 +15,14 @@ import Footer from "@/components/ui/footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle2, Info } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Info, LogIn, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from "recharts";
 import { ScaleExplainerDialog } from "@/components/scales/ScaleExplainerDialog";
 import { SCALE_EXPLAINERS } from "@/data/scaleExplainers";
+import { computeScaleResult, type LocalScaleResult } from "@/utils/scaleScoring";
 
 const MHCSF_INTERPRETATION: Record<string, { title: string; text: string }> = {
   florescimento: {
