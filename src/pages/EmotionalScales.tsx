@@ -33,10 +33,7 @@ const EmotionalScales = () => {
   const { data: latestMap } = useLatestResponseByScale();
   const { data: missingScales } = useMissingIseuScales();
 
-  if (!authLoading && !user) {
-    navigate(buildTenantPath(slug, "/auth"));
-    return null;
-  }
+  const isGuest = !authLoading && !user;
 
   const getAvailability = (frequencyDays: number, lastTakenAt?: string) => {
     if (!lastTakenAt) return { available: true, label: "Disponível" };
