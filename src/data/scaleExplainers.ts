@@ -15,4 +15,4 @@ export const SCALE_EXPLAINERS: Record<string, string> = {
 };
 
 export const ISEU_EXPLAINER =
-  "https://alopsi-website.s3.us-east-1.amazonaws.com/rede_bem_estar/imagens/escalas/RBE+-+Escalas+-+Explica%C3%A7%C3%A3o+-+ISEU-RBE_v2.jpeg";
+  "https://alopsi-website.s3.us-east-1.amazonaws.com/rede_bem_estar/imagens/escalas/RBE+-+Escalas+-+Explica%C3%A7%C3%A3o+-+ISEU-RBE_v3.jpeg";
