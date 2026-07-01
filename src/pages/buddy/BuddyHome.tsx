@@ -154,9 +154,9 @@ export default function BuddyHome() {
                     <Button
                       size="sm"
                       variant="default"
-                      onClick={() => feedback.mutate({ recommendationId: rec.id, action: "done" })}
+                      onClick={() => handleRecommendationAction(rec)}
                     >
-                      <Check className="h-4 w-4 mr-1" /> {rec.cta ?? "Fazer agora"}
+                      <Check className="h-4 w-4 mr-1" /> {rec.cta ?? CATEGORY_LABELS[(rec.category || "").toLowerCase()] ?? "Abrir"}
                     </Button>
                     <Button
                       size="sm"
@@ -167,6 +167,22 @@ export default function BuddyHome() {
                     </Button>
                   </div>
                 </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="border-dashed">
+            <CardContent className="p-8 text-center text-muted-foreground">
+              Assim que você preencher seu retrato e registrar algumas emoções, o Buddy passa a sugerir práticas, encontros e ajustes de rotina aqui.
+            </CardContent>
+          </Card>
+        )}
+      </section>
+
+      <AIAssistantModal open={chatOpen} onOpenChange={setChatOpen} />
+    </BuddyLayout>
+  );
+}
               </Card>
             ))}
           </div>
