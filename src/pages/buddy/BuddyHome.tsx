@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBuddyPortrait, useLatestBuddyInsight, useRecommendationFeedback } from "@/hooks/useBuddy";
 import { Sparkles, RefreshCw, Heart, ArrowRight, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +30,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default function BuddyHome() {
   const { user } = useAuth();
+  const { profile } = useUserProfile();
   const navigate = useNavigate();
   const { data: portrait, isLoading: portraitLoading } = useBuddyPortrait();
   const { data: insight, isLoading, regenerate } = useLatestBuddyInsight(30);
@@ -47,7 +49,7 @@ export default function BuddyHome() {
     navigate(route);
   };
 
-  const firstName = user?.user_metadata?.nome?.split(" ")[0] || user?.email?.split("@")[0] || "amigo(a)";
+  const firstName = profile?.nome || user?.user_metadata?.nome?.split(" ")[0] || user?.email?.split("@")[0] || "amigo(a)";
 
   const handleRegenerate = async () => {
     try {
