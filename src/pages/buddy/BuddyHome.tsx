@@ -142,9 +142,18 @@ export default function BuddyHome() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-40" />)}
           </div>
-        ) : insight?.recommendations?.length ? (
+        ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {insight.recommendations.map((rec) => (
+            {[
+              ...(insight?.recommendations ?? []),
+              {
+                id: "static-encontros",
+                category: "encontro",
+                title: "Participe de um encontro em grupo",
+                description: "Conecte-se com outras pessoas em encontros ao vivo mediados por facilitadores da Rede Bem-Estar.",
+                cta: "Ver encontros",
+              },
+            ].map((rec) => (
               <Card key={rec.id} className="border-primary/10 hover:border-primary/30 transition-colors">
                 <CardContent className="p-5 space-y-3">
                   <Badge variant="secondary" className="capitalize">{rec.category}</Badge>
@@ -158,25 +167,22 @@ export default function BuddyHome() {
                     >
                       <Check className="h-4 w-4 mr-1" /> {rec.cta ?? CATEGORY_LABELS[(rec.category || "").toLowerCase()] ?? "Abrir"}
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => feedback.mutate({ recommendationId: rec.id, action: "dismissed" })}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    {rec.id !== "static-encontros" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => feedback.mutate({ recommendationId: rec.id, action: "dismissed" })}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
-        ) : (
-          <Card className="border-dashed">
-            <CardContent className="p-8 text-center text-muted-foreground">
-              Assim que você preencher seu retrato e registrar algumas emoções, o Buddy passa a sugerir práticas, encontros e ajustes de rotina aqui.
-            </CardContent>
-          </Card>
         )}
+
       </section>
 
       <AIAssistantModal open={chatOpen} onOpenChange={setChatOpen} />
