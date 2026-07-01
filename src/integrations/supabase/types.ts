@@ -738,18 +738,33 @@ export type Database = {
       buddy_portraits: {
         Row: {
           anxiety: number | null
+          ask_help_ease: number | null
+          audio_answers: Json | null
           audio_url: string | null
+          avoid_situations: string[] | null
+          biggest_challenge: string | null
           calms_me: string | null
           created_at: string
           current_mood: string | null
           dreams: string | null
+          energy_level: number | null
+          hobbies: string[] | null
           id: string
           message_to_buddy: string | null
           mind_on: string | null
           motivation: number | null
+          next_3_months: string | null
           patient_id: string
+          preferred_tone: string | null
           privacy: string
+          reminder_time: string | null
           sadness: number | null
+          self_care_rituals: string[] | null
+          sleep_quality: number | null
+          strengths_self: string[] | null
+          stress_level: number | null
+          support_people: string | null
+          three_words: string[] | null
           triggers: string[] | null
           updated_at: string
           values_list: string[] | null
@@ -757,18 +772,33 @@ export type Database = {
         }
         Insert: {
           anxiety?: number | null
+          ask_help_ease?: number | null
+          audio_answers?: Json | null
           audio_url?: string | null
+          avoid_situations?: string[] | null
+          biggest_challenge?: string | null
           calms_me?: string | null
           created_at?: string
           current_mood?: string | null
           dreams?: string | null
+          energy_level?: number | null
+          hobbies?: string[] | null
           id?: string
           message_to_buddy?: string | null
           mind_on?: string | null
           motivation?: number | null
+          next_3_months?: string | null
           patient_id: string
+          preferred_tone?: string | null
           privacy?: string
+          reminder_time?: string | null
           sadness?: number | null
+          self_care_rituals?: string[] | null
+          sleep_quality?: number | null
+          strengths_self?: string[] | null
+          stress_level?: number | null
+          support_people?: string | null
+          three_words?: string[] | null
           triggers?: string[] | null
           updated_at?: string
           values_list?: string[] | null
@@ -776,18 +806,33 @@ export type Database = {
         }
         Update: {
           anxiety?: number | null
+          ask_help_ease?: number | null
+          audio_answers?: Json | null
           audio_url?: string | null
+          avoid_situations?: string[] | null
+          biggest_challenge?: string | null
           calms_me?: string | null
           created_at?: string
           current_mood?: string | null
           dreams?: string | null
+          energy_level?: number | null
+          hobbies?: string[] | null
           id?: string
           message_to_buddy?: string | null
           mind_on?: string | null
           motivation?: number | null
+          next_3_months?: string | null
           patient_id?: string
+          preferred_tone?: string | null
           privacy?: string
+          reminder_time?: string | null
           sadness?: number | null
+          self_care_rituals?: string[] | null
+          sleep_quality?: number | null
+          strengths_self?: string[] | null
+          stress_level?: number | null
+          support_people?: string | null
+          three_words?: string[] | null
           triggers?: string[] | null
           updated_at?: string
           values_list?: string[] | null
