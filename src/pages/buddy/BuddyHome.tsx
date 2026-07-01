@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBuddyPortrait, useLatestBuddyInsight, useRecommendationFeedback } from "@/hooks/useBuddy";
 import { Sparkles, RefreshCw, Heart, ArrowRight, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
