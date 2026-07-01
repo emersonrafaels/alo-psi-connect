@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { BuddyLayout } from "@/components/buddy/BuddyLayout";
 import { BuddyMascot } from "@/components/buddy/BuddyMascot";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,13 +10,42 @@ import { useAuth } from "@/hooks/useAuth";
 import { useBuddyPortrait, useLatestBuddyInsight, useRecommendationFeedback } from "@/hooks/useBuddy";
 import { Sparkles, RefreshCw, Heart, ArrowRight, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { AIAssistantModal } from "@/components/AIAssistantModal";
+
+const CATEGORY_ROUTES: Record<string, string> = {
+  rotina: "/diario-emocional/nova-entrada",
+  pratica: "/praticas",
+  encontro: "/encontros",
+  conteudo: "/escalas",
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  rotina: "Fazer check-in",
+  pratica: "Iniciar prática",
+  encontro: "Ver encontros",
+  conteudo: "Ver ferramentas",
+  apoio: "Abrir chat",
+};
 
 export default function BuddyHome() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: portrait, isLoading: portraitLoading } = useBuddyPortrait();
   const { data: insight, isLoading, regenerate } = useLatestBuddyInsight(30);
   const feedback = useRecommendationFeedback();
   const { toast } = useToast();
+  const [chatOpen, setChatOpen] = useState(false);
+
+  const handleRecommendationAction = (rec: { id: string; category: string }) => {
+    feedback.mutate({ recommendationId: rec.id, action: "done" });
+    const cat = (rec.category || "").toLowerCase();
+    if (cat === "apoio") {
+      setChatOpen(true);
+      return;
+    }
+    const route = CATEGORY_ROUTES[cat] ?? "/buddy/como-te-conhece";
+    navigate(route);
+  };
 
   const firstName = user?.user_metadata?.nome?.split(" ")[0] || user?.email?.split("@")[0] || "amigo(a)";
 
@@ -125,9 +154,9 @@ export default function BuddyHome() {
                     <Button
                       size="sm"
                       variant="default"
-                      onClick={() => feedback.mutate({ recommendationId: rec.id, action: "done" })}
+                      onClick={() => handleRecommendationAction(rec)}
                     >
-                      <Check className="h-4 w-4 mr-1" /> {rec.cta ?? "Fazer agora"}
+                      <Check className="h-4 w-4 mr-1" /> {rec.cta ?? CATEGORY_LABELS[(rec.category || "").toLowerCase()] ?? "Abrir"}
                     </Button>
                     <Button
                       size="sm"
@@ -149,9 +178,13 @@ export default function BuddyHome() {
           </Card>
         )}
       </section>
+
+      <AIAssistantModal open={chatOpen} onOpenChange={setChatOpen} />
     </BuddyLayout>
   );
 }
+
+
 
 function countFilled(p: any) {
   const fields = ["mind_on", "calms_me", "dreams", "message_to_buddy"];
