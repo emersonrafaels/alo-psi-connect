@@ -102,6 +102,7 @@ const HomeRedeBemEstar = () => {
   return (
     <div className="rbe-home-page min-h-screen overflow-x-hidden">
       <Header />
+      <BuddyDailyBrief />
 
       {/* ═════════ HERO ═════════ */}
       <header className="relative pt-16 sm:pt-24 pb-16 sm:pb-24 lg:pt-32 lg:pb-32 overflow-hidden">
