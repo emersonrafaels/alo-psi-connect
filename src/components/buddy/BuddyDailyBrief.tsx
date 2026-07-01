@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -6,8 +6,10 @@ import { useLatestBuddyInsight } from "@/hooks/useBuddy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, ArrowRight, Heart, Zap } from "lucide-react";
+import { Sparkles, ArrowRight, Heart, Zap, X } from "lucide-react";
 import buddyImg from "@/assets/buddy-main.png";
+
+const STORAGE_KEY = "buddy-daily-brief-closed";
 
 /**
  * Card diário do Buddy exibido no topo da Home para usuários autenticados.
