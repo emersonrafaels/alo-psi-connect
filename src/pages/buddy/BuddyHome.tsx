@@ -183,20 +183,8 @@ export default function BuddyHome() {
     </BuddyLayout>
   );
 }
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card className="border-dashed">
-            <CardContent className="p-8 text-center text-muted-foreground">
-              Assim que você preencher seu retrato e registrar algumas emoções, o Buddy passa a sugerir práticas, encontros e ajustes de rotina aqui.
-            </CardContent>
-          </Card>
-        )}
-      </section>
-    </BuddyLayout>
-  );
-}
+
+
 
 function countFilled(p: any) {
   const fields = ["mind_on", "calms_me", "dreams", "message_to_buddy"];
