@@ -1,81 +1,71 @@
-## Meu Buddy — Fase 1
+## Objetivo
+Transformar `/buddy/me-conhecer` numa experiência moderna, com gravação de áudio transcrita por IA e um questionário muito mais rico e acolhedor.
 
-Nova área "Meu Buddy" que centraliza tudo o que a Rede Bem Estar sabe sobre o paciente, conectando diário, escalas, práticas e encontros com narrativa gerada por IA (Lovable AI / Gemini).
+## 1. Gravação de áudio com transcrição por IA
 
-### Rotas (novas, usando `BrowserRouter` já existente)
+- Novo componente `BuddyAudioAnswer` que aparece em cada pergunta aberta (texto longo):
+  - Botão "Gravar resposta" usando `MediaRecorder` (reaproveitando o padrão de `useAudioRecorder`).
+  - Waveform animada durante a gravação + timer + botão pausar/parar.
+  - Ao parar: envia o áudio para uma nova edge function `buddy-transcribe-audio`, que chama Lovable AI (`openai/gpt-4o-mini-transcribe`) e devolve o texto.
+  - O texto transcrito é inserido/anexado no campo `Textarea` correspondente, com destaque "Transcrito pelo Buddy" e opção de editar.
+  - Player para reouvir + botão descartar.
+- Áudio é salvo opcionalmente no Storage (`buddy-audio` bucket privado por paciente) e a URL vai no campo `audio_url` já existente em `buddy_portraits`. Um áudio por resposta longa (usar novos campos `audio_urls jsonb` por pergunta).
 
-- `/buddy` — Home do Buddy (**O que o Buddy está priorizando para você**): saudação, ações sugeridas, resumo do momento, próximas sessões, metas da semana.
-- `/buddy/me-conhecer` — **Meu retrato**: formulário guiado (medos, calmantes, o que quer melhorar, sonhos, gatilhos, valores, sentimento atual, escala rápida ansiedade/tristeza/motivação). Áudio opcional (usa `useAudioRecorder` já existente + Supabase Storage).
-- `/buddy/como-te-conhece` — **Como o Buddy te conhece**: mapa de conhecimento (SVG radial), cards de fortalezas e pontos de atenção, fontes das percepções (contagens de diário/escalas/práticas), última conversa.
-- `/buddy/padroes` — **Padrões que o Buddy percebeu**: dashboards (bem-estar geral, estabilidade emocional, sono, consistência) usando `recharts`. Períodos: 7/15/30 dias.
-- `/buddy/jornada` — **Minha jornada**: timeline unificada de diário + escalas + práticas + encontros + metas, com gráfico de evolução geral.
-- `/buddy/pontos-de-forca` — **Seus pontos de força**: fortalezas, rede de apoio (SVG concêntrico), canais de ajuda 24h e contatos de emergência já cadastrados no perfil.
+### Edge function `buddy-transcribe-audio`
+- Recebe `multipart/form-data` com o blob.
+- Valida usuário (auth), tamanho (<20MB) e mime.
+- Faz POST para `https://ai.gateway.lovable.dev/v1/audio/transcriptions` com `model=openai/gpt-4o-mini-transcribe`, `language=pt`.
+- Retorna `{ text }`. Trata 429/402 com mensagens amigáveis.
 
-Todas dentro de `<ProtectedRoute>` (paciente logado).
+## 2. Novas perguntas úteis (retrato ampliado)
 
-### Personagem Buddy
+Reorganizar em seções com progresso visual ("2 de 6 · 45% completo"):
 
-Reaproveitar `src/components/hero/BuddyCharacter.tsx` e `src/assets/buddy.svg`. Novo componente `<BuddyMascot size mood message />` que envolve o SVG com balão de fala e animação sutil (Motion). Layout roxo/lavanda inspirado nas mockups, usando tokens do design system (`--primary`, `--accent`), sem hardcode de cor.
+1. **Sobre mim agora** — mente, humor do dia, escalas ansiedade/tristeza/motivação, energia, qualidade do sono (novo), nível de estresse (novo).
+2. **Minha essência** — valores, forças pessoais (novo), o que me define em 3 palavras (novo).
+3. **Meu momento de vida** — o que ocupa minha mente, sonhos, o que quero mudar nos próximos 3 meses (novo), maior desafio atual (novo).
+4. **O que me sustenta** — o que me acalma, pessoas de referência (novo), rituais de autocuidado (novo com chips), hobbies (novo).
+5. **Meus limites** — gatilhos, situações que evito (novo), quando peço ajuda (novo com escala).
+6. **Mensagem ao Buddy** — como quer ser tratado (tom: acolhedor / direto / bem-humorado — novo), horário preferido para lembretes (novo), mensagem livre.
 
-### Navegação / integração no site
+Todas as perguntas abertas ganham o botão de áudio + transcrição. Chips ganham busca/adicionar personalizado.
 
-- Novo item **"Meu Buddy"** no header/sidebar do paciente (`src/components/ui/header.tsx`) e cards de entrada nas telas de Diário, Escalas, Práticas e Encontros ("Ver o que o Buddy percebeu").
+## 3. Design moderno
 
-### Backend (Lovable Cloud / Supabase)
+- Layout em "cards flutuantes" com bordas suaves, gradientes sutis usando tokens (`--primary`, `--accent`), sombra `shadow-elegant`.
+- Header sticky com barra de progresso animada e navegação por seções (stepper horizontal com ícones).
+- Buddy mascote com balão dinâmico que muda de dica conforme a seção ativa.
+- Micro-animações (Framer Motion já disponível? — se não, `tailwindcss-animate` já existe) em entradas de cards e chips selecionados.
+- Autosave silencioso a cada 3s (indicador "Salvo há X segundos" no rodapé sticky) + botão "Concluir retrato".
+- Tema respeita dark mode; nada de cores fixas.
+- Mobile: seções viram accordion vertical.
 
-Novas tabelas em `public` com RLS + GRANTs (paciente vê o próprio; profissional vinculado só com consentimento; agregados via views):
+## 4. Banco de dados (mínimo)
 
-- `buddy_portraits` — 1 linha por paciente. Colunas: `id`, `patient_id` (FK pacientes, unique), `mind_on`, `calms_me`, `wants_to_improve` (text[]), `dreams`, `message_to_buddy`, `triggers` (text[]), `values` (text[]), `current_mood`, `anxiety`, `sadness`, `motivation`, `audio_url`, `privacy` (`only_me`|`with_professionals`), `updated_at`.
-- `buddy_insights` — snapshots gerados pela IA. Colunas: `id`, `patient_id`, `period_start`, `period_end`, `wellbeing_score` numeric, `emotional_stability`, `sleep_quality`, `habit_consistency`, `strengths` jsonb, `attention_points` jsonb, `map_topics` jsonb (nós do mapa), `sources` jsonb (contagens por fonte), `narrative` text (texto empático), `recommendations` jsonb, `created_at`, `model` text.
-- `buddy_recommendations_feedback` — `id`, `patient_id`, `recommendation_id`, `action` (`accepted`|`dismissed`|`done`), `created_at`.
-- `buddy_professional_consent` — `id`, `patient_id`, `professional_id`, `scope` (`portrait`|`insights`|`both`), `granted_at`, `revoked_at`. Fase 1 só cria a tabela + tela para o paciente ligar/desligar consentimento; UI para profissional consumir fica só como leitura de "resumo do paciente" no drawer que já existe (`PatientFullViewDrawer`).
+Migração adicionando colunas nullable a `buddy_portraits`:
 
-Todas com `GRANT SELECT,INSERT,UPDATE,DELETE ... TO authenticated`, `GRANT ALL ... TO service_role`; sem grant para `anon`. RLS: `patient_id in (select id from pacientes where profile_id in (select id from profiles where user_id = auth.uid()))`.
+- `sleep_quality int`, `stress_level int`, `energy_level int`
+- `three_words text[]`, `strengths_self text[]`
+- `next_3_months text`, `biggest_challenge text`
+- `support_people text`, `self_care_rituals text[]`, `hobbies text[]`
+- `avoid_situations text[]`, `ask_help_ease int`
+- `preferred_tone text`, `reminder_time text`
+- `audio_answers jsonb` (map `{ mind_on: url, calms_me: url, ... }`)
 
-Storage: reutilizar bucket existente ou criar `buddy-audios` privado com policy por paciente.
+Bucket privado `buddy-audio` com policies (paciente só acessa seus arquivos).
 
-Agregado institucional: view `institution_buddy_aggregates` (avg wellbeing/estabilidade por instituição) exposta ao dashboard institucional já existente — sem dados individuais.
+## 5. Frontend técnico
 
-### Edge Functions
+- `src/pages/buddy/BuddyPortrait.tsx` reescrito em seções (`SectionShell`), com `useReducer` para o form + autosave (`useAutoSave` já existe).
+- Novos componentes em `src/components/buddy/`:
+  - `BuddyAudioAnswer.tsx`
+  - `BuddySectionStepper.tsx`
+  - `BuddyProgressHeader.tsx`
+  - `BuddyChipInput.tsx` (chips com adicionar custom)
+- Hook `useBuddyTranscribe` chamando a edge function.
+- Atualizar `useBuddyPortrait` para os novos campos.
 
-- `buddy-generate-insights` (POST, JWT verificado em código):
-  1. Recebe `{ periodDays }`.
-  2. Coleta últimos N dias do usuário: `mood_entries` + `mood_entry_analyses`, `emotional_scale_responses` + `iseu_scores`, `praticas_checkouts`, `agendamentos`/encontros, `buddy_portraits`.
-  3. Calcula métricas determinísticas (bem-estar geral 1-10 já existente em `useMoodEntries`; consistência = dias com check-in / período; sono/ansiedade via configs de emoção).
-  4. Chama Lovable AI (`google/gemini-3-flash-preview`) via `ai.gateway.lovable.dev/v1` com `Lovable-API-Key` e `Output.object` (Zod) para gerar: `narrative`, `strengths[]`, `attention_points[]`, `map_topics[]`, `recommendations[]`.
-  5. Persiste em `buddy_insights` e retorna para o cliente.
-  6. Trata 429 (rate limit) e 402 (créditos) com mensagens claras no UI.
-- `buddy-portrait-audio-transcribe` (opcional Fase 1): transcreve áudios do retrato via `openai/gpt-4o-mini-transcribe` para popular campos de texto.
-
-Segredo `LOVABLE_API_KEY` provisionado via `ai_gateway--create`.
-
-### Hooks / componentes React
-
-- `useBuddyPortrait` — load/save do retrato (upsert por `patient_id`).
-- `useBuddyInsights({ periodDays })` — busca último snapshot; se ausente ou > 24h, chama edge function.
-- `useBuddyRecommendations` — deriva de `insights.recommendations` + feedback.
-- Componentes: `<BuddyKnowledgeMap>`, `<BuddyPatternsCharts>`, `<BuddyJourneyTimeline>`, `<BuddyStrengthsWeb>`, `<BuddyRecommendationsGrid>`, `<PortraitFormStep>`, `<BuddyPrivacyBanner>`, `<BuddyMascot>`.
-
-Reuso: `useMoodEntries`, `useEmotionalScales`, `useGroupSessions`, `usePraticas`, `useAIInsights` (já existe — para não conflitar, o Buddy usa seu próprio pipeline em `buddy_insights`).
-
-### Detalhes técnicos
-
-- Cache: React Query com `staleTime: 5min` para retrato; `staleTime: 30min` para insights.
-- Privacidade: banner LGPD reforçando anonimização, mesma redação do diário emocional.
-- SEO: `<title>` "Meu Buddy — Rede Bem Estar" e meta description específica em cada rota.
-- Acessibilidade: mascote com `role="img"` + `aria-label`; sliders com labels; contraste WCAG AA.
-- Sem hardcode de cor — usa `hsl(var(--primary))` etc.
-
-### Fora de escopo (fases futuras)
-
-Chat conversacional em tempo real com o Buddy, integração WhatsApp, notificações push, gamificação, plano semanal detalhado, visão completa para profissional.
-
-### Ordem de implementação
-
-1. Migrations (tabelas + policies + grants + view agregada) e `ai_gateway--create`.
-2. Edge function `buddy-generate-insights` + tipos Zod.
-3. Hooks e componentes base + `<BuddyMascot>`.
-4. Página `/buddy/me-conhecer` (retrato) — desbloqueia dados para IA.
-5. Página `/buddy` (home) + `/buddy/como-te-conhece`.
-6. `/buddy/padroes`, `/buddy/jornada`, `/buddy/pontos-de-forca`.
-7. Item no header + cards de entrada nos módulos existentes.
+## 6. Verificação
+- Testar gravar → transcrever → salvar → recarregar página.
+- Verificar RLS do bucket + limites de tamanho.
+- Checar dark mode e mobile.
