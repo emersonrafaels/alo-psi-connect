@@ -166,6 +166,14 @@ const AppWithShortcuts = () => {
       <Route path="/auth" element={<Auth />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/auth-callback" element={<AuthCallback />} />
+
+      {/* Meu Buddy */}
+      <Route path="/buddy" element={<ProtectedRoute><BuddyHome /></ProtectedRoute>} />
+      <Route path="/buddy/me-conhecer" element={<ProtectedRoute><BuddyPortrait /></ProtectedRoute>} />
+      <Route path="/buddy/como-te-conhece" element={<ProtectedRoute><BuddyKnows /></ProtectedRoute>} />
+      <Route path="/buddy/padroes" element={<ProtectedRoute><BuddyPatterns /></ProtectedRoute>} />
+      <Route path="/buddy/jornada" element={<ProtectedRoute><BuddyJourney /></ProtectedRoute>} />
+      <Route path="/buddy/pontos-de-forca" element={<ProtectedRoute><BuddyStrengths /></ProtectedRoute>} />
       <Route path="/google-calendar-callback" element={<GoogleCalendarCallback />} />
       
       {/* Redirect old routes to new cadastro routes */}
