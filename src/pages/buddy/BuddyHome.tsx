@@ -18,6 +18,7 @@ const CATEGORY_ROUTES: Record<string, string> = {
   pratica: "/praticas",
   encontro: "/encontros",
   conteudo: "/escalas",
+  profissional: "/profissionais",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -26,6 +27,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   encontro: "Ver encontros",
   conteudo: "Ver ferramentas",
   apoio: "Abrir chat",
+  profissional: "Ver profissionais",
 };
 
 export default function BuddyHome() {
@@ -147,7 +149,17 @@ export default function BuddyHome() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[
-              ...(insight?.recommendations ?? []),
+              ...((insight?.recommendations ?? []).filter((r: any) => {
+                const text = `${r?.title ?? ""} ${r?.description ?? ""}`.toLowerCase();
+                return !text.includes("sono");
+              })),
+              {
+                id: "static-profissionais",
+                category: "profissional",
+                title: "Conheça nossos profissionais",
+                description: "Encontre psicólogos e terapeutas da Rede Bem-Estar prontos para te acompanhar.",
+                cta: "Ver profissionais",
+              },
               {
                 id: "static-encontros",
                 category: "encontro",
