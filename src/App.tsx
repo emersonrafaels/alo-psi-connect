@@ -51,6 +51,12 @@ import ProfessionalProfile from "./pages/ProfessionalProfile";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
+import BuddyHome from "./pages/buddy/BuddyHome";
+import BuddyPortrait from "./pages/buddy/BuddyPortrait";
+import BuddyKnows from "./pages/buddy/BuddyKnows";
+import BuddyPatterns from "./pages/buddy/BuddyPatterns";
+import BuddyJourney from "./pages/buddy/BuddyJourney";
+import BuddyStrengths from "./pages/buddy/BuddyStrengths";
 
 // Appointment management pages
 import MyAppointments from "./pages/MyAppointments";
