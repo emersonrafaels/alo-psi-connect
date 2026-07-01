@@ -23,8 +23,25 @@ export function BuddyDailyBrief() {
   const { profile } = useUserProfile();
   const { data: insight, isLoading } = useLatestBuddyInsight(30);
   const navigate = useNavigate();
+  const [isClosed, setIsClosed] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const closedDate = raw;
+      const today = new Date().toISOString().slice(0, 10);
+      return closedDate === today;
+    } catch {
+      return false;
+    }
+  });
 
-  if (!user) return null;
+  useEffect(() => {
+    if (isClosed) {
+      localStorage.setItem(STORAGE_KEY, new Date().toISOString().slice(0, 10));
+    }
+  }, [isClosed]);
+
+  if (!user || isClosed) return null;
 
   const firstName =
     profile?.nome?.split(" ")[0] ||
