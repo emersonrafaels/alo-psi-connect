@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -6,8 +6,10 @@ import { useLatestBuddyInsight } from "@/hooks/useBuddy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, ArrowRight, Heart, Zap } from "lucide-react";
+import { Sparkles, ArrowRight, Heart, Zap, X } from "lucide-react";
 import buddyImg from "@/assets/buddy-main.png";
+
+const STORAGE_KEY = "buddy-daily-brief-closed";
 
 /**
  * Card diário do Buddy exibido no topo da Home para usuários autenticados.
@@ -21,8 +23,25 @@ export function BuddyDailyBrief() {
   const { profile } = useUserProfile();
   const { data: insight, isLoading } = useLatestBuddyInsight(30);
   const navigate = useNavigate();
+  const [isClosed, setIsClosed] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const closedDate = raw;
+      const today = new Date().toISOString().slice(0, 10);
+      return closedDate === today;
+    } catch {
+      return false;
+    }
+  });
 
-  if (!user) return null;
+  useEffect(() => {
+    if (isClosed) {
+      localStorage.setItem(STORAGE_KEY, new Date().toISOString().slice(0, 10));
+    }
+  }, [isClosed]);
+
+  if (!user || isClosed) return null;
 
   const firstName =
     profile?.nome?.split(" ")[0] ||
@@ -54,6 +73,14 @@ export function BuddyDailyBrief() {
   return (
     <section className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
       <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 via-card to-accent/10 shadow-xl">
+        {/* Botão fechar */}
+        <button
+          onClick={() => setIsClosed(true)}
+          className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-background/70 hover:bg-background text-muted-foreground hover:text-foreground transition-colors backdrop-blur-sm"
+          aria-label="Fechar momento com o Buddy"
+        >
+          <X className="h-4 w-4" />
+        </button>
         {/* Halo decorativo */}
         <div
           className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full opacity-30 blur-3xl"
