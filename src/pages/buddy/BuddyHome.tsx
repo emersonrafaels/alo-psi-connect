@@ -49,7 +49,7 @@ export default function BuddyHome() {
     navigate(route);
   };
 
-  const firstName = user?.user_metadata?.nome?.split(" ")[0] || user?.email?.split("@")[0] || "amigo(a)";
+  const firstName = profile?.nome || user?.user_metadata?.nome?.split(" ")[0] || user?.email?.split("@")[0] || "amigo(a)";
 
   const handleRegenerate = async () => {
     try {
