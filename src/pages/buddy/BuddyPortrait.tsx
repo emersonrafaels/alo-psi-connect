@@ -1,21 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { BuddyLayout } from "@/components/buddy/BuddyLayout";
 import { BuddyMascot } from "@/components/buddy/BuddyMascot";
+import { BuddyAudioAnswer } from "@/components/buddy/BuddyAudioAnswer";
+import { BuddyChipInput } from "@/components/buddy/BuddyChipInput";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { useBuddyPortrait, type BuddyPortrait } from "@/hooks/useBuddy";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Lock, Save } from "lucide-react";
+import {
+  Loader2, Lock, Save, Heart, Sparkles, Compass, Anchor, Shield, MessageCircle,
+  Check, ChevronRight, ChevronLeft,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const IMPROVE_SUGGESTIONS = ["Autoconfiança", "Organização", "Relacionamentos", "Foco", "Ansiedade", "Procrastinação", "Autoestima", "Sono"];
-const TRIGGER_SUGGESTIONS = ["Críticas", "Discussões", "Pressão", "Solidão", "Mudanças", "Injustiças", "Cobranças", "Perder alguém"];
-const VALUE_SUGGESTIONS = ["Honestidade", "Empatia", "Respeito", "Família", "Amizade", "Liberdade", "Gratidão", "Criatividade"];
+const IMPROVE = ["Autoconfiança", "Organização", "Relacionamentos", "Foco", "Ansiedade", "Procrastinação", "Autoestima", "Sono"];
+const TRIGGERS = ["Críticas", "Discussões", "Pressão", "Solidão", "Mudanças", "Injustiças", "Cobranças", "Perder alguém"];
+const VALUES = ["Honestidade", "Empatia", "Respeito", "Família", "Amizade", "Liberdade", "Gratidão", "Criatividade"];
+const STRENGTHS = ["Escuta", "Resiliência", "Empatia", "Curiosidade", "Coragem", "Paciência", "Humor", "Disciplina"];
+const SELFCARE = ["Meditar", "Caminhar", "Ler", "Banho quente", "Diário", "Respiração", "Música", "Yoga"];
+const HOBBIES = ["Ler", "Cozinhar", "Correr", "Games", "Desenhar", "Cantar", "Dançar", "Jardinagem"];
+const AVOID = ["Multidões", "Conflitos", "Redes sociais", "Notícias", "Discussões políticas", "Silêncio total"];
 const MOODS = [
   { key: "muito_bem", label: "Muito bem", emoji: "😄" },
   { key: "bem", label: "Bem", emoji: "🙂" },
@@ -23,116 +32,127 @@ const MOODS = [
   { key: "mal", label: "Mal", emoji: "🙁" },
   { key: "muito_mal", label: "Muito mal", emoji: "😢" },
 ];
+const TONES = [
+  { key: "acolhedor", label: "Acolhedor", emoji: "🤗" },
+  { key: "direto", label: "Direto", emoji: "🎯" },
+  { key: "bem_humorado", label: "Bem-humorado", emoji: "😄" },
+  { key: "motivador", label: "Motivador", emoji: "🔥" },
+];
+
+const SECTIONS = [
+  { id: "agora", label: "Agora", icon: Heart, tip: "Não precisa ser perfeito. Só honesto." },
+  { id: "essencia", label: "Essência", icon: Sparkles, tip: "O que te define quando ninguém está olhando?" },
+  { id: "momento", label: "Momento", icon: Compass, tip: "Contar o que ocupa a mente já é meio caminho." },
+  { id: "sustenta", label: "Sustenta", icon: Anchor, tip: "Reconheça o que te mantém de pé." },
+  { id: "limites", label: "Limites", icon: Shield, tip: "Saber o que evita é uma forma de cuidado." },
+  { id: "buddy", label: "Buddy", icon: MessageCircle, tip: "Me diga como quer ser cuidada(o)." },
+] as const;
+
+type SectionId = typeof SECTIONS[number]["id"];
 
 export default function BuddyPortraitPage() {
   const { data, isLoading, save, patientId } = useBuddyPortrait();
   const { toast } = useToast();
   const [form, setForm] = useState<Partial<BuddyPortrait>>({});
+  const [section, setSection] = useState<SectionId>("agora");
 
-  useEffect(() => {
-    if (data) setForm(data);
-  }, [data]);
+  useEffect(() => { if (data) setForm(data); }, [data]);
 
-  const set = (k: keyof BuddyPortrait, v: any) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof BuddyPortrait>(k: K, v: BuddyPortrait[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
-  const toggleTag = (k: "wants_to_improve" | "triggers" | "values_list", tag: string) => {
-    const cur = (form[k] as string[] | undefined) ?? [];
-    set(k, cur.includes(tag) ? cur.filter((t) => t !== tag) : [...cur, tag]);
+  const appendText = (k: keyof BuddyPortrait, text: string) => {
+    const cur = (form[k] as string | undefined) ?? "";
+    const merged = cur ? `${cur}\n\n${text}` : text;
+    setForm((f) => ({ ...f, [k]: merged as any }));
   };
+  const setAudio = (k: string, url: string | null) => {
+    const cur = (form.audio_answers as Record<string, string> | undefined) ?? {};
+    const next = { ...cur };
+    if (url) next[k] = url; else delete next[k];
+    setForm((f) => ({ ...f, audio_answers: next as any }));
+  };
+
+  const progress = useMemo(() => computeProgress(form), [form]);
 
   const onSave = async () => {
     if (!patientId) {
-      toast({ title: "Cadastro incompleto", description: "Complete seu perfil de paciente para continuar.", variant: "destructive" });
+      toast({ title: "Cadastro incompleto", description: "Complete seu perfil para continuar.", variant: "destructive" });
       return;
     }
     try {
       await save.mutateAsync(form);
-      toast({ title: "Retrato salvo", description: "Suas respostas ficaram guardadas com segurança." });
+      toast({ title: "Retrato salvo 💜", description: "Ficou guardado com segurança." });
     } catch (e: any) {
       toast({ title: "Não conseguimos salvar", description: e?.message ?? "Tente novamente.", variant: "destructive" });
     }
   };
 
+  const currentIdx = SECTIONS.findIndex((s) => s.id === section);
+  const next = () => setSection(SECTIONS[Math.min(currentIdx + 1, SECTIONS.length - 1)].id);
+  const prev = () => setSection(SECTIONS[Math.max(currentIdx - 1, 0)].id);
+
   return (
     <BuddyLayout
-      title="Ajude o Buddy a te conhecer melhor"
-      description="Quanto mais você compartilha, mais o Buddy consegue te apoiar. Não precisa ter pressa — você pode voltar quando quiser."
+      title="Seu retrato para o Buddy"
+      description="Quanto mais eu te conheço, melhor eu cuido. Responda digitando ou falando — no seu ritmo."
     >
-      <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
-        <div className="space-y-5">
-          <PrivacyCard privacy={form.privacy ?? "only_me"} onChange={(v) => set("privacy", v)} />
+      <ProgressHeader progress={progress} />
 
-          <div className="grid gap-5 md:grid-cols-2">
-            <Field title="O que tem ocupado sua mente?" hint="Escreva livremente o que está pensando ou sentindo.">
-              <Textarea value={form.mind_on ?? ""} onChange={(e) => set("mind_on", e.target.value)} maxLength={500} rows={4} />
-            </Field>
-            <Field title="O que te acalma?" hint="Atividades, lugares ou pessoas que te fazem bem.">
-              <Textarea value={form.calms_me ?? ""} onChange={(e) => set("calms_me", e.target.value)} maxLength={500} rows={4} />
-            </Field>
-            <Field title="Quais são seus sonhos?" hint="Conte sobre seus sonhos e objetivos.">
-              <Textarea value={form.dreams ?? ""} onChange={(e) => set("dreams", e.target.value)} maxLength={500} rows={4} />
-            </Field>
-            <Field title="O que você quer que o Buddy entenda sobre você?" hint="Algo importante para eu te apoiar melhor.">
-              <Textarea value={form.message_to_buddy ?? ""} onChange={(e) => set("message_to_buddy", e.target.value)} maxLength={500} rows={4} />
-            </Field>
+      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+        <div className="space-y-5">
+          <PrivacyCard privacy={form.privacy ?? "only_me"} onChange={(v) => set("privacy", v as any)} />
+          <SectionStepper current={section} onChange={setSection} progress={progress} />
+
+          <div key={section} className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-5">
+            {section === "agora" && (
+              <SectionAgora form={form} set={set} appendText={appendText} setAudio={setAudio} />
+            )}
+            {section === "essencia" && (
+              <SectionEssencia form={form} set={set} />
+            )}
+            {section === "momento" && (
+              <SectionMomento form={form} set={set} appendText={appendText} setAudio={setAudio} />
+            )}
+            {section === "sustenta" && (
+              <SectionSustenta form={form} set={set} appendText={appendText} setAudio={setAudio} />
+            )}
+            {section === "limites" && (
+              <SectionLimites form={form} set={set} />
+            )}
+            {section === "buddy" && (
+              <SectionBuddy form={form} set={set} appendText={appendText} setAudio={setAudio} />
+            )}
           </div>
 
-          <Field title="O que você gostaria de melhorar?">
-            <TagPicker options={IMPROVE_SUGGESTIONS} value={form.wants_to_improve ?? []} onToggle={(t) => toggleTag("wants_to_improve", t)} />
-          </Field>
-
-          <Field title="Gatilhos emocionais" hint="O que costuma te deixar mal?">
-            <TagPicker options={TRIGGER_SUGGESTIONS} value={form.triggers ?? []} onToggle={(t) => toggleTag("triggers", t)} />
-          </Field>
-
-          <Field title="Valores que guiam você" hint="Selecione até 5 valores importantes.">
-            <TagPicker options={VALUE_SUGGESTIONS} value={form.values_list ?? []} onToggle={(t) => toggleTag("values_list", t)} />
-          </Field>
-
-          <Card>
-            <CardHeader><CardTitle>Como você está se sentindo hoje?</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {MOODS.map((m) => (
-                  <button
-                    type="button"
-                    key={m.key}
-                    onClick={() => set("current_mood", m.key)}
-                    className={`px-3 py-2 rounded-xl border text-sm flex items-center gap-2 transition ${
-                      form.current_mood === m.key ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:bg-muted border-border"
-                    }`}
-                  >
-                    <span aria-hidden>{m.emoji}</span> {m.label}
-                  </button>
-                ))}
-              </div>
-              <ScaleRow label="Ansiedade" value={form.anxiety ?? 0} onChange={(v) => set("anxiety", v)} />
-              <ScaleRow label="Tristeza" value={form.sadness ?? 0} onChange={(v) => set("sadness", v)} />
-              <ScaleRow label="Motivação" value={form.motivation ?? 5} onChange={(v) => set("motivation", v)} />
-            </CardContent>
-          </Card>
-
-          <div className="flex items-center justify-between rounded-2xl bg-primary/5 border border-primary/20 p-4">
-            <p className="text-sm text-muted-foreground max-w-md">
-              Você está construindo um retrato único que ajuda o Buddy a cuidar de você do seu jeito.
-            </p>
-            <Button onClick={onSave} disabled={save.isPending || isLoading} size="lg">
+          <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-2xl bg-card/95 backdrop-blur border border-border/70 shadow-lg p-3">
+            <Button type="button" variant="ghost" size="sm" onClick={prev} disabled={currentIdx === 0}>
+              <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
+            </Button>
+            <Button onClick={onSave} disabled={save.isPending || isLoading} size="lg" className="rounded-full shadow-md">
               {save.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-              Salvar no meu perfil
+              Salvar retrato
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={next} disabled={currentIdx === SECTIONS.length - 1}>
+              Próximo <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
         </div>
 
         <aside className="lg:sticky lg:top-24 self-start space-y-4">
-          <Card className="border-primary/20">
+          <Card className="border-primary/20 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10">
             <CardContent className="p-4">
-              <BuddyMascot size="lg" message="Estou aqui para te escutar sem julgamentos e te apoiar no que precisar." />
+              <BuddyMascot size="lg" message={SECTIONS[currentIdx].tip} />
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 space-y-3 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">Dica do Buddy</p>
-              <p>Seja sincera(o) consigo. Não existe resposta certa ou errada aqui.</p>
+            <CardContent className="p-4 space-y-2 text-sm">
+              <p className="font-medium text-foreground flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" /> Fale em vez de digitar
+              </p>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                Toque no botão do microfone em qualquer pergunta longa. Eu transcrevo pra você e você pode editar depois.
+              </p>
             </CardContent>
           </Card>
         </aside>
@@ -141,47 +161,190 @@ export default function BuddyPortraitPage() {
   );
 }
 
-function Field({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+/* ---------- Sections ---------- */
+
+function SectionAgora({ form, set, appendText, setAudio }: any) {
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">{title}</CardTitle>
-        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
+    <>
+      <SectionHeader title="Como você está agora?" subtitle="Um retrato do seu momento presente." />
+      <Card>
+        <CardHeader><CardTitle className="text-base">Humor de hoje</CardTitle></CardHeader>
+        <CardContent className="space-y-5">
+          <div className="flex flex-wrap gap-2">
+            {MOODS.map((m) => (
+              <MoodChip key={m.key} active={form.current_mood === m.key} onClick={() => set("current_mood", m.key)} emoji={m.emoji} label={m.label} />
+            ))}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ScaleRow label="Ansiedade" value={form.anxiety ?? 0} onChange={(v) => set("anxiety", v)} colorClass="from-orange-400 to-red-500" />
+            <ScaleRow label="Tristeza" value={form.sadness ?? 0} onChange={(v) => set("sadness", v)} colorClass="from-blue-400 to-indigo-500" />
+            <ScaleRow label="Motivação" value={form.motivation ?? 5} onChange={(v) => set("motivation", v)} colorClass="from-green-400 to-emerald-500" />
+            <ScaleRow label="Energia" value={form.energy_level ?? 5} onChange={(v) => set("energy_level", v)} colorClass="from-amber-400 to-yellow-500" />
+            <ScaleRow label="Qualidade do sono" value={form.sleep_quality ?? 5} onChange={(v) => set("sleep_quality", v)} colorClass="from-purple-400 to-indigo-500" />
+            <ScaleRow label="Nível de estresse" value={form.stress_level ?? 5} onChange={(v) => set("stress_level", v)} colorClass="from-rose-400 to-pink-500" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <QuestionCard title="O que tem ocupado sua mente?" hint="Solte o que está pensando — sem filtros.">
+        <Textarea value={form.mind_on ?? ""} onChange={(e) => set("mind_on", e.target.value)} rows={4} maxLength={800} />
+        <BuddyAudioAnswer fieldKey="mind_on" onTranscribed={(t) => appendText("mind_on", t)} onAudioUrl={(u) => setAudio("mind_on", u)} />
+      </QuestionCard>
+    </>
   );
 }
 
-function TagPicker({ options, value, onToggle }: { options: string[]; value: string[]; onToggle: (t: string) => void }) {
+function SectionEssencia({ form, set }: any) {
   return (
-    <div className="flex flex-wrap gap-2">
-      {options.map((opt) => {
-        const active = value.includes(opt);
-        return (
-          <button
-            key={opt}
-            type="button"
-            onClick={() => onToggle(opt)}
-            className={`px-3 py-1.5 rounded-full text-sm border transition ${
-              active ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:bg-primary/10 border-border"
-            }`}
-          >
-            {opt}
-          </button>
-        );
-      })}
+    <>
+      <SectionHeader title="Sua essência" subtitle="O que te constitui como pessoa." />
+      <QuestionCard title="Valores que guiam você" hint="Selecione ou adicione — até 6.">
+        <BuddyChipInput suggestions={VALUES} value={form.values_list ?? []} onChange={(v) => set("values_list", v)} max={6} placeholder="Ex: coragem" />
+      </QuestionCard>
+      <QuestionCard title="Suas forças pessoais" hint="No que você é bom(a)?">
+        <BuddyChipInput suggestions={STRENGTHS} value={form.strengths_self ?? []} onChange={(v) => set("strengths_self", v)} max={8} placeholder="Ex: escutar" />
+      </QuestionCard>
+      <QuestionCard title="Três palavras que te definem" hint="Só três. Escolha com carinho.">
+        <BuddyChipInput value={form.three_words ?? []} onChange={(v) => set("three_words", v)} max={3} placeholder="Ex: leal" />
+      </QuestionCard>
+      <QuestionCard title="O que você gostaria de melhorar?">
+        <BuddyChipInput suggestions={IMPROVE} value={form.wants_to_improve ?? []} onChange={(v) => set("wants_to_improve", v)} placeholder="Adicionar outro..." />
+      </QuestionCard>
+    </>
+  );
+}
+
+function SectionMomento({ form, set, appendText, setAudio }: any) {
+  return (
+    <>
+      <SectionHeader title="Seu momento de vida" subtitle="O que está acontecendo agora." />
+      <QuestionCard title="Quais são seus sonhos?" hint="Grandes, pequenos, quaisquer.">
+        <Textarea value={form.dreams ?? ""} onChange={(e) => set("dreams", e.target.value)} rows={4} maxLength={800} />
+        <BuddyAudioAnswer fieldKey="dreams" onTranscribed={(t) => appendText("dreams", t)} onAudioUrl={(u) => setAudio("dreams", u)} />
+      </QuestionCard>
+      <QuestionCard title="O que você quer mudar nos próximos 3 meses?">
+        <Textarea value={form.next_3_months ?? ""} onChange={(e) => set("next_3_months", e.target.value)} rows={3} maxLength={500} />
+        <BuddyAudioAnswer fieldKey="next_3_months" onTranscribed={(t) => appendText("next_3_months", t)} onAudioUrl={(u) => setAudio("next_3_months", u)} />
+      </QuestionCard>
+      <QuestionCard title="Qual é o seu maior desafio agora?">
+        <Textarea value={form.biggest_challenge ?? ""} onChange={(e) => set("biggest_challenge", e.target.value)} rows={3} maxLength={500} />
+        <BuddyAudioAnswer fieldKey="biggest_challenge" onTranscribed={(t) => appendText("biggest_challenge", t)} onAudioUrl={(u) => setAudio("biggest_challenge", u)} />
+      </QuestionCard>
+    </>
+  );
+}
+
+function SectionSustenta({ form, set, appendText, setAudio }: any) {
+  return (
+    <>
+      <SectionHeader title="O que te sustenta" subtitle="Pessoas, hábitos e prazeres que te apoiam." />
+      <QuestionCard title="O que te acalma?" hint="Atividades, lugares, situações...">
+        <Textarea value={form.calms_me ?? ""} onChange={(e) => set("calms_me", e.target.value)} rows={3} maxLength={600} />
+        <BuddyAudioAnswer fieldKey="calms_me" onTranscribed={(t) => appendText("calms_me", t)} onAudioUrl={(u) => setAudio("calms_me", u)} />
+      </QuestionCard>
+      <QuestionCard title="Quem são suas pessoas de referência?" hint="Quem você procura em momentos difíceis.">
+        <Textarea value={form.support_people ?? ""} onChange={(e) => set("support_people", e.target.value)} rows={3} maxLength={500} />
+        <BuddyAudioAnswer fieldKey="support_people" onTranscribed={(t) => appendText("support_people", t)} onAudioUrl={(u) => setAudio("support_people", u)} />
+      </QuestionCard>
+      <QuestionCard title="Rituais de autocuidado" hint="Pequenas práticas que você já faz (ou quer começar).">
+        <BuddyChipInput suggestions={SELFCARE} value={form.self_care_rituals ?? []} onChange={(v) => set("self_care_rituals", v)} placeholder="Adicionar outro..." />
+      </QuestionCard>
+      <QuestionCard title="Hobbies e paixões">
+        <BuddyChipInput suggestions={HOBBIES} value={form.hobbies ?? []} onChange={(v) => set("hobbies", v)} placeholder="Adicionar outro..." />
+      </QuestionCard>
+    </>
+  );
+}
+
+function SectionLimites({ form, set }: any) {
+  return (
+    <>
+      <SectionHeader title="Seus limites" subtitle="O que respeita o seu espaço." />
+      <QuestionCard title="Gatilhos emocionais" hint="O que costuma te deixar mal.">
+        <BuddyChipInput suggestions={TRIGGERS} value={form.triggers ?? []} onChange={(v) => set("triggers", v)} placeholder="Adicionar outro..." />
+      </QuestionCard>
+      <QuestionCard title="Situações que você prefere evitar">
+        <BuddyChipInput suggestions={AVOID} value={form.avoid_situations ?? []} onChange={(v) => set("avoid_situations", v)} placeholder="Adicionar outra..." />
+      </QuestionCard>
+      <QuestionCard title="Facilidade em pedir ajuda" hint="0 = muito difícil, 10 = super natural">
+        <ScaleRow label="" value={form.ask_help_ease ?? 5} onChange={(v) => set("ask_help_ease", v)} colorClass="from-teal-400 to-emerald-500" />
+      </QuestionCard>
+    </>
+  );
+}
+
+function SectionBuddy({ form, set, appendText, setAudio }: any) {
+  return (
+    <>
+      <SectionHeader title="Como quer ser cuidada(o) pelo Buddy?" subtitle="Personalize como eu falo com você." />
+      <Card>
+        <CardHeader><CardTitle className="text-base">Tom preferido</CardTitle></CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {TONES.map((t) => (
+              <MoodChip key={t.key} active={form.preferred_tone === t.key} onClick={() => set("preferred_tone", t.key)} emoji={t.emoji} label={t.label} />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      <QuestionCard title="Melhor horário para lembretes" hint="Quando você tem calma para se ouvir.">
+        <Input type="time" value={form.reminder_time ?? ""} onChange={(e) => set("reminder_time", e.target.value)} className="max-w-[160px]" />
+      </QuestionCard>
+      <QuestionCard title="O que você quer que o Buddy entenda sobre você?" hint="Algo importante para eu te apoiar melhor.">
+        <Textarea value={form.message_to_buddy ?? ""} onChange={(e) => set("message_to_buddy", e.target.value)} rows={5} maxLength={800} />
+        <BuddyAudioAnswer fieldKey="message_to_buddy" onTranscribed={(t) => appendText("message_to_buddy", t)} onAudioUrl={(u) => setAudio("message_to_buddy", u)} />
+      </QuestionCard>
+    </>
+  );
+}
+
+/* ---------- Building blocks ---------- */
+
+function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div className="px-1">
+      <h2 className="text-xl font-semibold text-foreground">{title}</h2>
+      <p className="text-sm text-muted-foreground">{subtitle}</p>
     </div>
   );
 }
 
-function ScaleRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+function QuestionCard({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <Card className="border-border/70 shadow-sm hover:shadow-md transition-shadow">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">{title}</CardTitle>
+        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      </CardHeader>
+      <CardContent className="space-y-2">{children}</CardContent>
+    </Card>
+  );
+}
+
+function MoodChip({ active, onClick, emoji, label }: { active: boolean; onClick: () => void; emoji: string; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "px-3 py-2 rounded-2xl border text-sm flex items-center gap-2 transition-all",
+        active ? "bg-primary text-primary-foreground border-primary shadow-md scale-105" : "bg-card hover:bg-primary/10 border-border/70"
+      )}
+    >
+      <span aria-hidden className="text-base">{emoji}</span> {label}
+    </button>
+  );
+}
+
+function ScaleRow({ label, value, onChange, colorClass }: { label: string; value: number; onChange: (v: number) => void; colorClass?: string }) {
   return (
     <div className="space-y-2">
-      <div className="flex justify-between text-sm">
-        <Label>{label}</Label>
-        <span className="font-medium text-primary">{value}/10</span>
-      </div>
+      {label && (
+        <div className="flex justify-between text-sm">
+          <Label>{label}</Label>
+          <span className={cn("font-semibold bg-clip-text text-transparent bg-gradient-to-r", colorClass ?? "from-primary to-primary")}>{value}/10</span>
+        </div>
+      )}
       <Slider min={0} max={10} step={1} value={[value]} onValueChange={(v) => onChange(v[0])} />
     </div>
   );
@@ -189,12 +352,12 @@ function ScaleRow({ label, value, onChange }: { label: string; value: number; on
 
 function PrivacyCard({ privacy, onChange }: { privacy: string; onChange: (v: "only_me" | "with_professionals") => void }) {
   return (
-    <Card className="border-primary/20 bg-primary/5">
+    <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-background to-accent/5">
       <CardContent className="p-4 flex items-center justify-between gap-3">
         <div className="flex items-start gap-3">
-          <Lock className="h-5 w-5 text-primary mt-0.5" />
+          <div className="rounded-full bg-primary/15 p-2"><Lock className="h-4 w-4 text-primary" /></div>
           <div>
-            <p className="text-sm font-medium">Privacidade das suas respostas</p>
+            <p className="text-sm font-medium">Privacidade das respostas</p>
             <p className="text-xs text-muted-foreground">
               {privacy === "with_professionals"
                 ? "Profissionais autorizados por você poderão ler."
@@ -203,13 +366,88 @@ function PrivacyCard({ privacy, onChange }: { privacy: string; onChange: (v: "on
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Compartilhar com profissionais</span>
-          <Switch
-            checked={privacy === "with_professionals"}
-            onCheckedChange={(v) => onChange(v ? "with_professionals" : "only_me")}
-          />
+          <span className="hidden sm:inline text-xs text-muted-foreground">Compartilhar</span>
+          <Switch checked={privacy === "with_professionals"} onCheckedChange={(v) => onChange(v ? "with_professionals" : "only_me")} />
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function ProgressHeader({ progress }: { progress: number }) {
+  return (
+    <div className="mb-4 rounded-2xl bg-card border border-border/70 p-4">
+      <div className="flex items-center justify-between text-sm mb-2">
+        <span className="text-muted-foreground">Retrato completo</span>
+        <span className="font-semibold text-primary">{progress}%</span>
+      </div>
+      <div className="h-2 rounded-full bg-muted overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-primary via-accent to-primary transition-all duration-500"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SectionStepper({ current, onChange, progress }: { current: SectionId; onChange: (s: SectionId) => void; progress: number }) {
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+      {SECTIONS.map((s) => {
+        const active = s.id === current;
+        const Icon = s.icon;
+        return (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => onChange(s.id)}
+            className={cn(
+              "shrink-0 flex items-center gap-2 rounded-full px-4 py-2 text-sm border transition-all",
+              active
+                ? "bg-primary text-primary-foreground border-primary shadow-md"
+                : "bg-card hover:bg-primary/10 border-border/70 text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Icon className="h-4 w-4" />
+            {s.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------- Progress ---------- */
+
+function computeProgress(f: Partial<BuddyPortrait>): number {
+  const checks: boolean[] = [
+    !!f.current_mood,
+    (f.anxiety ?? null) !== null,
+    (f.sadness ?? null) !== null,
+    (f.motivation ?? null) !== null,
+    (f.energy_level ?? null) !== null,
+    (f.sleep_quality ?? null) !== null,
+    (f.stress_level ?? null) !== null,
+    !!f.mind_on,
+    (f.values_list ?? []).length > 0,
+    (f.strengths_self ?? []).length > 0,
+    (f.three_words ?? []).length > 0,
+    (f.wants_to_improve ?? []).length > 0,
+    !!f.dreams,
+    !!f.next_3_months,
+    !!f.biggest_challenge,
+    !!f.calms_me,
+    !!f.support_people,
+    (f.self_care_rituals ?? []).length > 0,
+    (f.hobbies ?? []).length > 0,
+    (f.triggers ?? []).length > 0,
+    (f.avoid_situations ?? []).length > 0,
+    (f.ask_help_ease ?? null) !== null,
+    !!f.preferred_tone,
+    !!f.reminder_time,
+    !!f.message_to_buddy,
+  ];
+  const done = checks.filter(Boolean).length;
+  return Math.round((done / checks.length) * 100);
 }

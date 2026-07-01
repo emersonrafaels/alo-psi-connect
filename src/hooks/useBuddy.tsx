@@ -19,6 +19,22 @@ export type BuddyPortrait = {
   audio_url: string | null;
   privacy: "only_me" | "with_professionals";
   updated_at: string;
+  // Ampliação
+  sleep_quality: number | null;
+  stress_level: number | null;
+  energy_level: number | null;
+  three_words: string[] | null;
+  strengths_self: string[] | null;
+  next_3_months: string | null;
+  biggest_challenge: string | null;
+  support_people: string | null;
+  self_care_rituals: string[] | null;
+  hobbies: string[] | null;
+  avoid_situations: string[] | null;
+  ask_help_ease: number | null;
+  preferred_tone: string | null;
+  reminder_time: string | null;
+  audio_answers: Record<string, string> | null;
 };
 
 export type BuddyInsight = {
