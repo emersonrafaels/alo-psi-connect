@@ -181,7 +181,7 @@ export default function BuddyHome() {
                     >
                       <Check className="h-4 w-4 mr-1" /> {rec.cta ?? CATEGORY_LABELS[(rec.category || "").toLowerCase()] ?? "Abrir"}
                     </Button>
-                    {rec.id !== "static-encontros" && (
+                    {!rec.id.startsWith("static-") && (
                       <Button
                         size="sm"
                         variant="ghost"
