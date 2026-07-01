@@ -73,6 +73,14 @@ export function BuddyDailyBrief() {
   return (
     <section className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
       <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 via-card to-accent/10 shadow-xl">
+        {/* Botão fechar */}
+        <button
+          onClick={() => setIsClosed(true)}
+          className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-background/70 hover:bg-background text-muted-foreground hover:text-foreground transition-colors backdrop-blur-sm"
+          aria-label="Fechar momento com o Buddy"
+        >
+          <X className="h-4 w-4" />
+        </button>
         {/* Halo decorativo */}
         <div
           className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full opacity-30 blur-3xl"
