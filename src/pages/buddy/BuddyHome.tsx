@@ -30,6 +30,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default function BuddyHome() {
   const { user } = useAuth();
+  const { profile } = useUserProfile();
   const navigate = useNavigate();
   const { data: portrait, isLoading: portraitLoading } = useBuddyPortrait();
   const { data: insight, isLoading, regenerate } = useLatestBuddyInsight(30);
