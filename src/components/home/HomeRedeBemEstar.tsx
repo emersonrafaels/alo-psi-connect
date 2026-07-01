@@ -7,6 +7,7 @@ import { buildTenantPath } from "@/utils/tenantHelpers";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
 import BuddyCharacter from "@/components/hero/BuddyCharacter";
+import { BuddyDailyBrief } from "@/components/buddy/BuddyDailyBrief";
 import {
   Heart, Clock, Users, Brain, EyeOff, Bot, BookOpen, Sparkles,
   ClipboardCheck, LineChart, LayoutDashboard, FileText, Stethoscope,
