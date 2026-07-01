@@ -229,31 +229,53 @@ const Profile = () => {
   };
 
   const saveEmergencyContacts = async () => {
-    if (!patientData?.id) return;
+    if (!patientData?.id) {
+      toast({
+        title: "Não foi possível salvar",
+        description: "Não foi possível identificar seu cadastro de paciente. Recarregue a página e tente novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const validContacts = emergencyContacts.filter(c => c.nome && c.relacao && c.telefone);
+    if (validContacts.length === 0) {
+      toast({
+        title: "Preencha os campos obrigatórios",
+        description: "Informe nome, relação e telefone de pelo menos um contato.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSavingContacts(true);
-    
+
     try {
-      // Delete existing
-      await supabase.from('patient_emergency_contacts').delete().eq('patient_id', patientData.id);
-      
-      // Insert new ones (only non-empty)
-      const validContacts = emergencyContacts.filter(c => c.nome && c.relacao && c.telefone);
-      if (validContacts.length > 0) {
-        const { error } = await supabase.from('patient_emergency_contacts').insert(
-          validContacts.map(c => ({
-            patient_id: patientData.id,
-            nome: c.nome,
-            relacao: c.relacao,
-            telefone: c.telefone || null,
-            email: c.email || null
-          }))
-        );
-        if (error) throw error;
-      }
-      
+      const { error: deleteError } = await supabase
+        .from('patient_emergency_contacts')
+        .delete()
+        .eq('patient_id', patientData.id);
+      if (deleteError) throw deleteError;
+
+      const { error } = await supabase.from('patient_emergency_contacts').insert(
+        validContacts.map(c => ({
+          patient_id: patientData.id,
+          nome: c.nome,
+          relacao: c.relacao,
+          telefone: c.telefone || null,
+          email: c.email || null
+        }))
+      );
+      if (error) throw error;
+
       toast({ title: "Contatos salvos", description: "Contatos de emergência atualizados com sucesso." });
     } catch (error: any) {
-      toast({ title: "Erro", description: "Erro ao salvar contatos de emergência.", variant: "destructive" });
+      console.error('[Profile] Erro ao salvar contatos de emergência:', error);
+      toast({
+        title: "Erro ao salvar contatos",
+        description: error?.message || "Tente novamente em instantes.",
+        variant: "destructive",
+      });
     } finally {
       setSavingContacts(false);
     }
