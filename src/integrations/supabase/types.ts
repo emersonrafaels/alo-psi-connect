@@ -670,6 +670,213 @@ export type Database = {
         }
         Relationships: []
       }
+      buddy_insights: {
+        Row: {
+          attention_points: Json
+          created_at: string
+          emotional_stability: number | null
+          habit_consistency: number | null
+          id: string
+          map_topics: Json
+          model: string | null
+          narrative: string | null
+          patient_id: string
+          period_end: string
+          period_start: string
+          recommendations: Json
+          sleep_quality: number | null
+          sources: Json
+          strengths: Json
+          wellbeing_score: number | null
+        }
+        Insert: {
+          attention_points?: Json
+          created_at?: string
+          emotional_stability?: number | null
+          habit_consistency?: number | null
+          id?: string
+          map_topics?: Json
+          model?: string | null
+          narrative?: string | null
+          patient_id: string
+          period_end: string
+          period_start: string
+          recommendations?: Json
+          sleep_quality?: number | null
+          sources?: Json
+          strengths?: Json
+          wellbeing_score?: number | null
+        }
+        Update: {
+          attention_points?: Json
+          created_at?: string
+          emotional_stability?: number | null
+          habit_consistency?: number | null
+          id?: string
+          map_topics?: Json
+          model?: string | null
+          narrative?: string | null
+          patient_id?: string
+          period_end?: string
+          period_start?: string
+          recommendations?: Json
+          sleep_quality?: number | null
+          sources?: Json
+          strengths?: Json
+          wellbeing_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buddy_insights_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buddy_portraits: {
+        Row: {
+          anxiety: number | null
+          audio_url: string | null
+          calms_me: string | null
+          created_at: string
+          current_mood: string | null
+          dreams: string | null
+          id: string
+          message_to_buddy: string | null
+          mind_on: string | null
+          motivation: number | null
+          patient_id: string
+          privacy: string
+          sadness: number | null
+          triggers: string[] | null
+          updated_at: string
+          values_list: string[] | null
+          wants_to_improve: string[] | null
+        }
+        Insert: {
+          anxiety?: number | null
+          audio_url?: string | null
+          calms_me?: string | null
+          created_at?: string
+          current_mood?: string | null
+          dreams?: string | null
+          id?: string
+          message_to_buddy?: string | null
+          mind_on?: string | null
+          motivation?: number | null
+          patient_id: string
+          privacy?: string
+          sadness?: number | null
+          triggers?: string[] | null
+          updated_at?: string
+          values_list?: string[] | null
+          wants_to_improve?: string[] | null
+        }
+        Update: {
+          anxiety?: number | null
+          audio_url?: string | null
+          calms_me?: string | null
+          created_at?: string
+          current_mood?: string | null
+          dreams?: string | null
+          id?: string
+          message_to_buddy?: string | null
+          mind_on?: string | null
+          motivation?: number | null
+          patient_id?: string
+          privacy?: string
+          sadness?: number | null
+          triggers?: string[] | null
+          updated_at?: string
+          values_list?: string[] | null
+          wants_to_improve?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buddy_portraits_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buddy_professional_consent: {
+        Row: {
+          granted_at: string
+          id: string
+          patient_id: string
+          professional_id: number
+          revoked_at: string | null
+          scope: string
+        }
+        Insert: {
+          granted_at?: string
+          id?: string
+          patient_id: string
+          professional_id: number
+          revoked_at?: string | null
+          scope?: string
+        }
+        Update: {
+          granted_at?: string
+          id?: string
+          patient_id?: string
+          professional_id?: number
+          revoked_at?: string | null
+          scope?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buddy_professional_consent_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buddy_professional_consent_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buddy_recommendations_feedback: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          patient_id: string
+          recommendation_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          patient_id: string
+          recommendation_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          patient_id?: string
+          recommendation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buddy_recommendations_feedback_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comment_likes: {
         Row: {
           comment_id: string
@@ -4243,6 +4450,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      current_patient_id: { Args: never; Returns: string }
       get_current_tenant_id: { Args: never; Returns: string }
       get_institution_alerts: {
         Args: { p_institution_id: string }
@@ -4433,6 +4641,10 @@ export type Database = {
           role: string
           tenant_id: string
         }[]
+      }
+      has_buddy_consent: {
+        Args: { _patient_id: string; _scope: string }
+        Returns: boolean
       }
       has_institution_permission: {
         Args: {
