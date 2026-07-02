@@ -256,6 +256,7 @@ export default function BuddyPrivacy() {
                             const p = prefs[row.key] ?? { psicologo: false, psiquiatra: false };
                             const isPrivate = !p.psicologo && !p.psiquiatra;
                             const filled = isFilled(row.portraitField);
+                            const canRemove = filled && !row.isModule;
                             return (
                               <tr key={row.key} className="align-middle">
                                 <td className="py-3 pr-4">
