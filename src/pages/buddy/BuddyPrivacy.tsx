@@ -321,10 +321,10 @@ export default function BuddyPrivacy() {
                                     <button
                                       type="button"
                                       onClick={() => setConfirmDelete(row)}
-                                      disabled={!filled}
+                                      disabled={!canRemove}
                                       className={cn(
                                         "h-9 w-9 rounded-full flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors",
-                                        !filled && "opacity-40 cursor-not-allowed hover:bg-transparent"
+                                        !canRemove && "opacity-40 cursor-not-allowed hover:bg-transparent"
                                       )}
                                       aria-label="Remover conteúdo"
                                     >
