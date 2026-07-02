@@ -23,10 +23,10 @@ const getDiscountText = (coupon: any) => {
 
 const getAudienceBadge = (targetAudience: string, institutionName: string) => {
   const labels: Record<string, string> = {
-    'all': 'Todos os Pacientes',
+    'all': 'Todos os Estudantes',
     'institution_students': `Alunos da ${institutionName}`,
-    'other_patients': 'Pacientes Externos',
-    'specific_users': 'Pacientes Selecionados',
+    'other_patients': 'Estudantes Externos',
+    'specific_users': 'Estudantes Selecionados',
   };
   return labels[targetAudience] || targetAudience;
 };

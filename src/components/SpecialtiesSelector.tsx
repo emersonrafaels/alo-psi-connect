@@ -85,7 +85,7 @@ export const SpecialtiesSelector: React.FC<SpecialtiesSelectorProps> = ({ value,
           Especialidades <span className="text-red-500">*</span>
         </Label>
         <p className="text-sm text-muted-foreground mb-4">
-          Selecione suas áreas de especialização. Isso ajudará os pacientes a encontrar o profissional ideal.
+          Selecione suas áreas de especialização. Isso ajudará os estudantes a encontrar o profissional ideal.
         </p>
 
         {/* Especialidades selecionadas */}
