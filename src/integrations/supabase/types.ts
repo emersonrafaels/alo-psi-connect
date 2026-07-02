@@ -848,6 +848,33 @@ export type Database = {
           },
         ]
       }
+      buddy_privacy_preferences: {
+        Row: {
+          consent_registered_at: string | null
+          created_at: string
+          id: string
+          preferences: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consent_registered_at?: string | null
+          created_at?: string
+          id?: string
+          preferences?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          consent_registered_at?: string | null
+          created_at?: string
+          id?: string
+          preferences?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       buddy_professional_consent: {
         Row: {
           granted_at: string
