@@ -251,7 +251,7 @@ export default function BuddyPrivacy() {
                                   </div>
                                   {!filled && (
                                     <p className="text-xs text-muted-foreground mt-1">
-                                      Sem conteúdo preenchido ainda
+                                      Sem conteúdo ainda — preferência será aplicada quando você preencher
                                     </p>
                                   )}
                                 </td>
@@ -259,7 +259,6 @@ export default function BuddyPrivacy() {
                                   <Switch
                                     checked={p.psicologo}
                                     onCheckedChange={() => toggle(row.key, "psicologo")}
-                                    disabled={!filled}
                                     aria-label="Compartilhar com meu psicólogo"
                                   />
                                 </td>
@@ -267,7 +266,6 @@ export default function BuddyPrivacy() {
                                   <Switch
                                     checked={p.psiquiatra}
                                     onCheckedChange={() => toggle(row.key, "psiquiatra")}
-                                    disabled={!filled}
                                     aria-label="Compartilhar com meu psiquiatra"
                                   />
                                 </td>
@@ -276,13 +274,11 @@ export default function BuddyPrivacy() {
                                     <button
                                       type="button"
                                       onClick={() => toggle(row.key, "only_me")}
-                                      disabled={!filled}
                                       className={cn(
                                         "h-9 w-9 rounded-full flex items-center justify-center border transition-colors",
                                         isPrivate
                                           ? "bg-primary/10 border-primary text-primary"
-                                          : "bg-transparent border-border text-muted-foreground hover:text-foreground",
-                                        !filled && "opacity-40 cursor-not-allowed"
+                                          : "bg-transparent border-border text-muted-foreground hover:text-foreground"
                                       )}
                                       aria-label="Guardar só para mim"
                                       aria-pressed={isPrivate}
@@ -291,6 +287,7 @@ export default function BuddyPrivacy() {
                                     </button>
                                   </div>
                                 </td>
+
                                 <td className="py-3 pl-2">
                                   <div className="flex justify-center">
                                     <button
