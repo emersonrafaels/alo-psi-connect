@@ -158,7 +158,7 @@ export default function PatientsTriageView({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Paciente</TableHead>
+              <TableHead>Estudante</TableHead>
               <TableHead>Idade/Gênero</TableHead>
               <TableHead>Instituições</TableHead>
               <TableHead>Criado</TableHead>
@@ -177,7 +177,7 @@ export default function PatientsTriageView({
               </TableCell></TableRow>
             ) : filteredRows.length === 0 ? (
               <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                Nenhum paciente encontrado.
+                Nenhum estudante encontrado.
               </TableCell></TableRow>
             ) : (
               filteredRows.map((r) => (

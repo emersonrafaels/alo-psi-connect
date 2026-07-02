@@ -70,7 +70,7 @@ export const GoogleCalendarWelcomeModal: React.FC<GoogleCalendarWelcomeModalProp
                   <Users className="h-5 w-5 text-purple-600 mt-0.5" />
                   <div>
                     <h4 className="font-medium text-purple-900">Melhor experiência</h4>
-                    <p className="text-sm text-purple-700">Pacientes veem apenas horários realmente disponíveis.</p>
+                    <p className="text-sm text-purple-700">Estudantes veem apenas horários realmente disponíveis.</p>
                   </div>
                 </div>
               </CardContent>

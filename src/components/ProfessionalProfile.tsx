@@ -534,7 +534,7 @@ export const ProfessionalProfile: React.FC = () => {
                 <div>
                   <h3 className="font-medium">Link do seu perfil</h3>
                   <p className="text-sm text-muted-foreground">
-                    Compartilhe este link para que pacientes vejam seu perfil
+                    Compartilhe este link para que estudantes vejam seu perfil
                   </p>
                 </div>
                 <Button 
