@@ -116,7 +116,7 @@ export const useUncataloguedInstitutions = () => {
       queryClient.invalidateQueries({ queryKey: ['educational-institutions'] });
       toast({
         title: 'Instituição catalogada',
-        description: `${result.updated_count} paciente(s) atualizado(s) com sucesso.`,
+        description: `${result.updated_count} estudante(s) atualizado(s) com sucesso.`,
       });
     },
     onError: (error: any) => {
@@ -147,7 +147,7 @@ export const useUncataloguedInstitutions = () => {
       queryClient.invalidateQueries({ queryKey: ['educational-institutions'] });
       toast({
         title: 'Instituição vinculada',
-        description: `${result.updated_count} paciente(s) atualizado(s) com sucesso.`,
+        description: `${result.updated_count} estudante(s) atualizado(s) com sucesso.`,
       });
     },
     onError: (error: any) => {
