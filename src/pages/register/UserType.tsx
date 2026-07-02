@@ -91,7 +91,7 @@ const UserType = () => {
               </CardHeader>
               <CardContent className="pt-2">
                 <Button className="w-full group-hover:shadow-md transition-shadow" variant="default">
-                  Continuar como Paciente
+                  Continuar como Estudante
                 </Button>
               </CardContent>
             </Card>
