@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import Header from "@/components/ui/header";
-import { Heart, Sparkles, Compass, LineChart, TrendingUp, Shield } from "lucide-react";
+import { Heart, Sparkles, Compass, LineChart, TrendingUp, Shield, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -11,6 +11,7 @@ const nav = [
   { to: "/buddy/padroes", label: "Padrões", icon: LineChart },
   { to: "/buddy/jornada", label: "Minha jornada", icon: TrendingUp },
   { to: "/buddy/pontos-de-forca", label: "Pontos de força", icon: Shield },
+  { to: "/buddy/privacidade", label: "Privacidade", icon: Lock },
 ];
 
 export function BuddyLayout({ children, title, description }: { children: React.ReactNode; title: string; description?: string }) {

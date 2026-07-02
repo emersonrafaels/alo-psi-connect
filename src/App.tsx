@@ -57,6 +57,7 @@ import BuddyKnows from "./pages/buddy/BuddyKnows";
 import BuddyPatterns from "./pages/buddy/BuddyPatterns";
 import BuddyJourney from "./pages/buddy/BuddyJourney";
 import BuddyStrengths from "./pages/buddy/BuddyStrengths";
+import BuddyPrivacy from "./pages/buddy/BuddyPrivacy";
 
 // Appointment management pages
 import MyAppointments from "./pages/MyAppointments";
@@ -174,6 +175,7 @@ const AppWithShortcuts = () => {
       <Route path="/buddy/padroes" element={<ProtectedRoute><BuddyPatterns /></ProtectedRoute>} />
       <Route path="/buddy/jornada" element={<ProtectedRoute><BuddyJourney /></ProtectedRoute>} />
       <Route path="/buddy/pontos-de-forca" element={<ProtectedRoute><BuddyStrengths /></ProtectedRoute>} />
+      <Route path="/buddy/privacidade" element={<ProtectedRoute><BuddyPrivacy /></ProtectedRoute>} />
       <Route path="/google-calendar-callback" element={<GoogleCalendarCallback />} />
       
       {/* Redirect old routes to new cadastro routes */}
