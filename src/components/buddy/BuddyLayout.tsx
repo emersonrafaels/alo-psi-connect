@@ -11,7 +11,7 @@ const nav = [
   { to: "/buddy/padroes", label: "Padrões", icon: LineChart },
   { to: "/buddy/jornada", label: "Minha jornada", icon: TrendingUp },
   { to: "/buddy/pontos-de-forca", label: "Pontos de força", icon: Shield },
-  { to: "/buddy/privacidade", label: "Privacidade", icon: Shield },
+  { to: "/buddy/privacidade", label: "Privacidade", icon: Lock },
 ];
 
 export function BuddyLayout({ children, title, description }: { children: React.ReactNode; title: string; description?: string }) {
