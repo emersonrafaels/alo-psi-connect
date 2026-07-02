@@ -79,7 +79,6 @@ export default function BuddyHome() {
           <CardContent className="grid gap-4">
             <div className="flex flex-wrap gap-2 text-xs">
               <Badge variant="secondary">Últimos 30 dias</Badge>
-              {insight?.model && <Badge variant="outline">IA: Gemini</Badge>}
             </div>
             {isLoading ? (
               <Skeleton className="h-24" />
