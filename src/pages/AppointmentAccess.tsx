@@ -317,7 +317,7 @@ const AppointmentAccess = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Paciente</p>
+                      <p className="text-sm font-medium text-muted-foreground">Estudante</p>
                       <p className="text-lg font-semibold">{appointment.nome_paciente}</p>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Mail className="h-4 w-4" />
