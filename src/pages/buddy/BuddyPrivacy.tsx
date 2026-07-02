@@ -32,7 +32,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Row = { key: string; label: string; description: string; portraitField: string };
+type Row = {
+  key: string;
+  label: string;
+  description: string;
+  portraitField: string;
+  isModule?: boolean;
+};
 
 const ROWS: Row[] = [
   {
@@ -76,6 +82,27 @@ const ROWS: Row[] = [
     label: "Mensagem livre para o Buddy",
     description: "Texto aberto que você escreveu para o Buddy.",
     portraitField: "message_to_buddy",
+  },
+  {
+    key: "encontros",
+    label: "Encontros",
+    description: "Presença e participação em encontros e grupos.",
+    portraitField: "encontros",
+    isModule: true,
+  },
+  {
+    key: "diario_emocional",
+    label: "Diário emocional",
+    description: "Registros diários de humor, emoções e anotações.",
+    portraitField: "diario_emocional",
+    isModule: true,
+  },
+  {
+    key: "escalas",
+    label: "Escalas emocionais",
+    description: "Respostas às escalas clínicas (WHO-5, PHQ-9, GAD-7 etc.) e seu ISEU-RBE.",
+    portraitField: "escalas",
+    isModule: true,
   },
 ];
 
