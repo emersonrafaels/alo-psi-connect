@@ -1,72 +1,86 @@
+
 ## Objetivo
 
-Substituir todas as ocorrências visuais do termo **"paciente"** por **"estudante"** nos principais pontos de contato do frontend, em toda a plataforma. O termo técnico interno (`tipo_usuario: 'paciente'`, variáveis, rotas, tabelas) permanece inalterado.
+Adicionar no Buddy uma aba "Privacidade" onde o estudante decide, tema por tema, o que compartilha com os profissionais que o atendem — seguindo o layout de referência (tabela com toggles + timestamp de consentimento + aviso LGPD + ações de confirmar/revisar).
 
-## Escopo: textos visíveis ao usuário
+## Onde entra
 
-### 1. Header e navegação principal
-- **Arquivo:** `src/components/ui/header.tsx`
-- **Mudança:** Badge no dropdown do usuário: `"Paciente"` → `"Estudante"` (linha ~151)
+- Novo item no menu lateral do `BuddyLayout` (`src/components/buddy/BuddyLayout.tsx`): "Privacidade" (ícone `Shield`), rota `/buddy/privacidade`.
+- Nova página `src/pages/buddy/BuddyPrivacy.tsx` registrada em `src/App.tsx` dentro de `ProtectedRoute`.
 
-### 2. Cadastro — seleção de tipo de usuário
-- **Arquivo:** `src/pages/register/UserType.tsx`
-- **Mudanças:**
-  - Botão do card: `"Continuar como Paciente"` → `"Continuar como Estudante"` (linha ~94)
-  - Descrição do card: ajustar "Sou um médico ou estudante de medicina" se necessário
+## Layout da página (baseado na imagem)
 
-### 3. Cadastro — formulário do paciente
-- **Arquivo:** `src/pages/register/PatientForm.tsx`
-- **Mudança:** Subtítulo do cabeçalho: `"Cadastro de Paciente"` → `"Cadastro de Estudante"` (linha ~924)
+Cabeçalho:
+- Título: "Compartilhamento e privacidade"
+- Subtítulo: "Aqui você vê exatamente o que está permitindo que seus profissionais vejam. Você decide o que compartilhar."
 
-### 4. Área administrativa — gestão de usuários
-- **Arquivo:** `src/pages/admin/Users.tsx`
-- **Mudanças:**
-  - Card de métricas: `"Pacientes"` → `"Estudantes"` (linha ~340)
-  - Badge na listagem: `"Paciente"` → `"Estudante"` (linha ~415)
-  - Texto de deleção: `"Perfil de paciente será deletado"` → `"Perfil de estudante será deletado"` (linha ~626)
+Card principal — tabela "Resumo do que será compartilhado":
 
-### 5. Área administrativa — triagem (listagem completa)
-- **Arquivo:** `src/components/triagem/PatientsTriageView.tsx`
-- **Mudanças:**
-  - Título padrão: `"Listagem Completa de Pacientes"` → `"Listagem Completa de Estudantes"`
-  - Subtítulo: `"Visão consolidada de todos os pacientes da plataforma"` → `"Visão consolidada de todos os estudantes da plataforma"`
-  - Nome do arquivo CSV: `"pacientes-"` → `"estudantes-"`
-  - Coluna da tabela: `"Paciente"` → `"Estudante"`
-  - Estado vazio: `"Nenhum paciente encontrado"` → `"Nenhum estudante encontrado"`
+Colunas: Tema | Compartilhar com meu psicólogo | Compartilhar com meu psiquiatra | Guardar só para mim | Remover
 
-### 6. Perfil profissional e agenda
-- **Arquivos:**
-  - `src/components/ProfessionalProfile.tsx`: `"Compartilhe este link para que pacientes vejam seu perfil"` → `"Compartilhe este link para que estudantes vejam seu perfil"`
-  - `src/components/GoogleCalendarWelcomeModal.tsx`: `"Pacientes veem apenas horários realmente disponíveis"` → `"Estudantes veem apenas horários realmente disponíveis"`
-  - `src/components/GoogleCalendarIntegration.tsx`: `"Pacientes só veem horários realmente disponíveis"` e `"Melhora a experiência do paciente"` → `"Estudantes só veem horários realmente disponíveis"` e `"Melhora a experiência do estudante"`
-  - `src/components/SpecialtiesSelector.tsx`: `"Isso ajudará os pacientes a encontrar o profissional ideal"` → `"Isso ajudará os estudantes a encontrar o profissional ideal"`
+Linhas (usando a nomenclatura real do Retrato do Buddy hoje):
+- O que ocupa minha mente (`mind_on`)
+- O que me acalma (`calms_me`)
+- Meus sonhos e planos (`dreams`)
+- Meus valores (`values_list`)
+- Meus gatilhos (`triggers`)
+- O que quero melhorar (`wants_to_improve`)
+- Mensagem livre para o Buddy (`message_to_buddy`)
 
-### 7. Cupons e vouchers
-- **Arquivo:** `src/components/PatientCouponsCard.tsx`
-- **Mudanças:**
-  - `"Todos os Pacientes"` → `"Todos os Estudantes"`
-  - `"Pacientes Externos"` → `"Estudantes Externos"`
-  - `"Pacientes Selecionados"` → `"Estudantes Selecionados"`
+Regras de UI:
+- "Guardar só para mim" e as duas colunas de compartilhamento são mutuamente exclusivas por linha (radio-like via Switches controlados).
+- "Remover" apaga o conteúdo daquele campo no `buddy_portraits` (confirmação via `AlertDialog`).
+- Ícone `Info` por tema com tooltip explicando o que é compartilhado.
 
-- **Arquivo:** `src/components/admin/coupons/EditCouponModal.tsx`
-- **Mudanças:**
-  - Tooltip: `"Código que os pacientes usarão"` → `"Código que os estudantes usarão"`
-  - Opções de visibilidade: `"Todos os pacientes"` / `"Apenas pacientes não-alunos"` → `"Todos os estudantes"` / `"Apenas estudantes não-alunos"`
+Rodapé do card:
+- Bloco "Consentimento registrado em: {data/hora}" com nome do estudante (do `profiles.nome`).
+- Bloco "Seus dados estão protegidos pela LGPD. Compartilhamos apenas o que você autorizar. Você pode mudar suas escolhas quando quiser."
 
-### 8. Instituições e vínculos
-- **Arquivo:** `src/components/InstitutionLinkRequestCard.tsx`
-- **Mudanças:** Textos condicionais visíveis no card quando `userType === 'paciente'` (ex.: rótulos e status)
+Ações:
+- Botão secundário "Revisar respostas" → navega para `/buddy/me-conhecer`.
+- Botão primário "Confirmar compartilhamento" → salva o snapshot atual e atualiza `consent_registered_at`.
 
-- **Hooks com toasts/mensagens visíveis:**
-  - `src/hooks/useInstitutionPatients.tsx`: toasts `"Paciente vinculado"`, `"Erro ao vincular paciente"` → `"Estudante vinculado"`, `"Erro ao vincular estudante"`
-  - `src/hooks/useInstitutionAudit.tsx`: rótulos de audit `"Paciente"`, `"Vinculação de Paciente"`, `"Desvinculação de Paciente"` → `"Estudante"`, `"Vinculação de Estudante"`, `"Desvinculação de Estudante"`
+Sidebar direita (fora do card, seguindo a arte):
+- Mascote `BuddyMascot` + card com "Você pode mudar isso a qualquer momento. Seu bem-estar é prioridade. Você está no controle."
 
-### 9. Fora do escopo (mantido como está)
-- Variáveis, funções, tipos e interfaces no código (`tipo_usuario`, `isPatient`, `pacientes`, etc.)
-- Nomes de rotas e paths de URL (`/cadastro/paciente`, `/admin/pacientes-completo`)
-- Nomes de tabelas e colunas no Supabase (`pacientes`, `nome_paciente`)
-- Mensagens de erro técnicas ou logs internos
-- Comentários no código-fonte
+## Backend
 
-## Validação
-Após as alterações, executar `rg -i "paciente" -g '*.tsx' src/components src/pages` para confirmar que não restaram textos visuais de "paciente" nos componentes e páginas de frontend. O build (`bun run build`) deve passar sem erros.
+Nova tabela `buddy_privacy_preferences` (uma linha por estudante, JSON por tema):
+
+```
+buddy_privacy_preferences
+  id uuid pk
+  user_id uuid unique fk profiles.user_id (auth.uid())
+  preferences jsonb   -- { mind_on: {psicologo:bool, psiquiatra:bool, private:bool}, ... }
+  consent_registered_at timestamptz
+  created_at, updated_at timestamptz
+```
+
+- RLS: dono (auth.uid()) faz SELECT/INSERT/UPDATE/DELETE. Profissionais leem via política que confere se existe agendamento aceito entre `profissionais.profile_id → profiles.user_id` desse estudante (`user_is_professional` + join em `agendamentos`).
+- GRANT `SELECT, INSERT, UPDATE, DELETE` para `authenticated`; `ALL` para `service_role`.
+- Trigger `update_updated_at_column` para `updated_at`.
+
+A tabela existente `buddy_professional_consent` (scope genérico) fica intocada; a nova cobre o modelo por tema.
+
+## Novos hooks
+
+`src/hooks/useBuddyPrivacy.tsx`:
+- `useBuddyPrivacy()` — lê `buddy_privacy_preferences` do usuário logado.
+- `useUpdateBuddyPrivacy()` — upsert do jsonb.
+- `useConfirmBuddyPrivacy()` — upsert com `consent_registered_at = now()`.
+- `useRemoveBuddyPortraitField(field)` — `UPDATE buddy_portraits SET <field> = null` para o `patient_id` do usuário (já resolvido pelo hook existente `useBuddyPortrait`).
+
+## Fora do escopo
+
+- Escolher profissional específico (mantém as duas categorias fixas: psicólogo e psiquiatra, como na imagem).
+- Auditoria histórica dos consentimentos (só guarda o snapshot atual + timestamp).
+- Alterar `buddy_professional_consent` existente.
+
+## Passos
+
+1. Migration: criar `buddy_privacy_preferences` com GRANTs, RLS, policies e trigger de `updated_at`.
+2. Criar hook `useBuddyPrivacy.tsx`.
+3. Criar página `src/pages/buddy/BuddyPrivacy.tsx` com a tabela, ações e mascote.
+4. Adicionar item "Privacidade" no `BuddyLayout` (ícone `Shield`, já importado).
+5. Registrar rota `/buddy/privacidade` em `src/App.tsx`.
+6. Validar build.
