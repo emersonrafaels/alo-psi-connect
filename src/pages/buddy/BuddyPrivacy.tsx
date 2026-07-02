@@ -277,7 +277,7 @@ export default function BuddyPrivacy() {
                                       </TooltipContent>
                                     </Tooltip>
                                   </div>
-                                  {!filled && (
+                                  {!filled && !row.isModule && (
                                     <p className="text-xs text-muted-foreground mt-1">
                                       Sem conteúdo ainda — preferência será aplicada quando você preencher
                                     </p>
