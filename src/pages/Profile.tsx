@@ -232,7 +232,7 @@ const Profile = () => {
     if (!patientData?.id) {
       toast({
         title: "Não foi possível salvar",
-        description: "Não foi possível identificar seu cadastro de paciente. Recarregue a página e tente novamente.",
+        description: "Não foi possível identificar seu cadastro de estudante. Recarregue a página e tente novamente.",
         variant: "destructive",
       });
       return;

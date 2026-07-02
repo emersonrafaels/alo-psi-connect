@@ -278,7 +278,7 @@ const PaymentSuccess = () => {
                     </div>
                     
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Paciente</p>
+                      <p className="text-sm font-medium text-muted-foreground">Estudante</p>
                       <p className="text-lg font-semibold">{appointment.nome_paciente}</p>
                       <p className="text-sm text-muted-foreground">{appointment.email_paciente}</p>
                     </div>

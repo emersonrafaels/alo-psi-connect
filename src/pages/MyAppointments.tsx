@@ -531,14 +531,14 @@ const MyAppointments = () => {
                             <div className="space-y-4">
                               <h4 className="font-semibold text-foreground flex items-center gap-2">
                                 <User className="h-4 w-4 text-primary" />
-                                {isProfessional ? 'Dados do Paciente' : 'Profissional'}
+                                {isProfessional ? 'Dados do Estudante' : 'Profissional'}
                               </h4>
                               
                               <div className="space-y-3">
                                 {isProfessional ? (
                                   <>
                                     <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nome do Paciente</p>
+                                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nome do Estudante</p>
                                       <p className="font-semibold text-foreground">{appointment.nome_paciente}</p>
                                     </div>
                                     <div className="bg-muted/50 rounded-lg p-4 space-y-2">
