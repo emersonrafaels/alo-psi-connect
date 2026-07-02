@@ -57,6 +57,7 @@ import BuddyKnows from "./pages/buddy/BuddyKnows";
 import BuddyPatterns from "./pages/buddy/BuddyPatterns";
 import BuddyJourney from "./pages/buddy/BuddyJourney";
 import BuddyStrengths from "./pages/buddy/BuddyStrengths";
+import BuddyPrivacy from "./pages/buddy/BuddyPrivacy";
 
 // Appointment management pages
 import MyAppointments from "./pages/MyAppointments";
