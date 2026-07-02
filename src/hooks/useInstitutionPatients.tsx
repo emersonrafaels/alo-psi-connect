@@ -88,7 +88,7 @@ export const useInstitutionPatients = (institutionId?: string) => {
     },
     onError: (error: any) => {
       toast({
-        title: 'Erro ao vincular paciente',
+        title: 'Erro ao vincular estudante',
         description: error.message,
         variant: 'destructive',
       });
