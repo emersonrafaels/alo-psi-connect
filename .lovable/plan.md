@@ -1,10 +1,8 @@
-## Alteração
+## Alteração: cor do mascote Buddy
 
-Em `src/pages/buddy/BuddyPrivacy.tsx`, remover a dependência de `filled` para habilitar os controles de privacidade — o usuário poderá pré-configurar suas preferências antes mesmo de ter conteúdo no retrato.
+O SVG `src/assets/buddy/placeholder-buddy.svg` renderiza o Buddy com `fill="#000000"` (preto). A mudança consiste em trocar esse fill para a cor roxa `#5E35B1`, que já consta no gradiente do próprio SVG.
 
-1. **Switches "Compartilhar com psicólogo/psiquiatra"**: remover `disabled={!filled}`.
-2. **Botão "Guardar só para mim"**: remover `disabled` e a classe `opacity-40 cursor-not-allowed`.
-3. **Botão "Remover"**: manter desabilitado quando `!filled` (não faz sentido remover algo que não existe).
-4. **Legenda "Sem conteúdo preenchido ainda"**: trocar por "Sem conteúdo ainda — preferência será aplicada quando você preencher" para deixar claro que a escolha ficará pré-configurada.
+- Arquivo a editar: `src/assets/buddy/placeholder-buddy.svg`
+- Alteração: linha `fill="#000000"` → `fill="#5E35B1"`
 
-Preferências continuam sendo persistidas em `buddy_privacy_preferences` normalmente.
+Nenhuma outra dependência ou arquivo precisa ser modificado; o componente `BuddyCharacter` apenas referencia o SVG via import estático.
