@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import Header from "@/components/ui/header";
-import { Heart, Sparkles, Compass, LineChart, TrendingUp, Shield } from "lucide-react";
+import { Heart, Sparkles, Compass, LineChart, TrendingUp, Shield, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
