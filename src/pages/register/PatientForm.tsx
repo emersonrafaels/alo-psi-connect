@@ -921,7 +921,7 @@ const PatientForm = () => {
           <div className="text-center mb-8">
             <div className="mb-6">
               <div className="w-16 h-1 bg-primary mx-auto mb-4"></div>
-              <span className="text-sm font-medium text-primary uppercase tracking-wider">Cadastro de Paciente</span>
+              <span className="text-sm font-medium text-primary uppercase tracking-wider">Cadastro de Estudante</span>
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">
               Quero ser atendido

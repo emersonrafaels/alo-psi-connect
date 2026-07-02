@@ -13,8 +13,8 @@ export interface EmailType {
 export const EMAIL_TYPES: EmailType[] = [
   {
     value: 'confirmation_patient',
-    label: 'Confirmação de Cadastro - Paciente',
-    description: 'Email enviado após cadastro de novo paciente',
+    label: 'Confirmação de Cadastro - Estudante',
+    description: 'Email enviado após cadastro de novo estudante',
     requiredVariables: ['recipientName', 'confirmationUrl']
   },
   {

@@ -243,8 +243,8 @@ export const getActionLabel = (action: string): string => {
     unlink_admin: 'Remoção de Administrador',
     create_admin: 'Criação de Administrador',
     reactivate_admin: 'Reativação de Administrador',
-    link_patient: 'Vinculação de Paciente',
-    unlink_patient: 'Desvinculação de Paciente',
+    link_patient: 'Vinculação de Estudante',
+    unlink_patient: 'Desvinculação de Estudante',
   };
   return labels[action] || action;
 };
@@ -256,7 +256,7 @@ export const getEntityLabel = (entity: string): string => {
     professional: 'Profissional',
     coupon: 'Cupom',
     admin_user: 'Administrador',
-    patient: 'Paciente',
+    patient: 'Estudante',
   };
   return labels[entity] || entity;
 };
@@ -301,8 +301,8 @@ export const getActionDescription = (
     unlink_admin: `${performerName} removeu ${affectedUser} como administrador da instituição ${institutionName}`,
     create_admin: `${performerName} criou e vinculou ${affectedUser} como administrador na instituição ${institutionName}`,
     reactivate_admin: `${performerName} reativou ${affectedUser} como administrador na instituição ${institutionName}`,
-    link_patient: `${performerName} vinculou o paciente ${affectedUser} à instituição ${institutionName}`,
-    unlink_patient: `${performerName} desvinculou o paciente ${affectedUser} da instituição ${institutionName}`,
+    link_patient: `${performerName} vinculou o estudante ${affectedUser} à instituição ${institutionName}`,
+    unlink_patient: `${performerName} desvinculou o estudante ${affectedUser} da instituição ${institutionName}`,
     add_professional: `${performerName} adicionou o profissional ${affectedUser} à instituição ${institutionName}`,
     remove_professional: `${performerName} removeu o profissional ${affectedUser} da instituição ${institutionName}`,
     create_coupon: `${performerName} criou o cupom "${metadata?.coupon_code || 'cupom'}" para a instituição ${institutionName}`,

@@ -67,8 +67,8 @@ interface Props {
 }
 
 export default function PatientsTriageView({
-  title = 'Listagem Completa de Pacientes',
-  subtitle = 'Visão consolidada de todos os pacientes da plataforma.',
+  title = 'Listagem Completa de Estudantes',
+  subtitle = 'Visão consolidada de todos os estudantes da plataforma.',
   redirectOnDenied = '/admin',
 }: Props) {
   const navigate = useNavigate();
@@ -118,7 +118,7 @@ export default function PatientsTriageView({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `pacientes-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `estudantes-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -158,7 +158,7 @@ export default function PatientsTriageView({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Paciente</TableHead>
+              <TableHead>Estudante</TableHead>
               <TableHead>Idade/Gênero</TableHead>
               <TableHead>Instituições</TableHead>
               <TableHead>Criado</TableHead>
@@ -177,7 +177,7 @@ export default function PatientsTriageView({
               </TableCell></TableRow>
             ) : filteredRows.length === 0 ? (
               <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                Nenhum paciente encontrado.
+                Nenhum estudante encontrado.
               </TableCell></TableRow>
             ) : (
               filteredRows.map((r) => (

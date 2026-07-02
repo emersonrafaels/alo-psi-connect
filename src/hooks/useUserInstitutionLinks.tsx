@@ -197,7 +197,7 @@ export const useUserInstitutionLinks = ({
           .eq('profile_id', profileId)
           .single();
         
-        if (patientError) throw new Error('Perfil de paciente não encontrado');
+        if (patientError) throw new Error('Perfil de estudante não encontrado');
 
         const { error } = await supabase
           .from('patient_institutions')

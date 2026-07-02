@@ -82,7 +82,7 @@ const PrivacyPolicy = () => {
                 </div>
                 <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                   <li>Facilitar o agendamento e gerenciamento de consultas</li>
-                  <li>Conectar pacientes aos profissionais adequados</li>
+                  <li>Conectar estudantes aos profissionais adequados</li>
                   <li>Processar pagamentos de forma segura</li>
                   <li>Sincronizar com sua agenda do Google Calendar (com sua permissão)</li>
                   <li>Enviar notificações sobre consultas e lembretes</li>

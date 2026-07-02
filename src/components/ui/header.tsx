@@ -148,7 +148,7 @@ const Header = () => {
                       ) : profile?.tipo_usuario === 'paciente' ? (
                         <Badge variant="secondary" className="flex items-center gap-1 shrink-0">
                           <Heart className="h-3 w-3" />
-                          <span className="text-xs">Paciente</span>
+                          <span className="text-xs">Estudante</span>
                         </Badge>
                       ) : null}
                     </div>

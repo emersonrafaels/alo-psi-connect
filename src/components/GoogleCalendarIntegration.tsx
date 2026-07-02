@@ -449,7 +449,7 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
                 <h4 className="text-sm font-medium">Como funciona:</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• Seus eventos ocupados são sincronizados automaticamente</li>
-                  <li>• Pacientes só veem horários realmente disponíveis</li>
+                  <li>• Estudantes só veem horários realmente disponíveis</li>
                   <li>• A sincronização ocorre a cada hora</li>
                   {calendarScope.scope === 'calendar.freebusy' ? (
                     <li>• <strong>Modo básico:</strong> Apenas períodos ocupados (sem detalhes dos eventos)</li>
@@ -482,7 +482,7 @@ export const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps>
                     <li>• Evita agendamentos em conflito</li>
                     <li>• Atualização automática da disponibilidade</li>
                     <li>• Reduz cancelamentos de última hora</li>
-                    <li>• Melhora a experiência do paciente</li>
+                    <li>• Melhora a experiência do estudante</li>
                   </ul>
                 </div>
               </div>

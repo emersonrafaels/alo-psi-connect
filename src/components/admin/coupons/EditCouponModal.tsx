@@ -137,7 +137,7 @@ export const EditCouponModal = ({ coupon, institutionId, tenantId, isOpen, onClo
               {/* Código */}
               <FieldWithTooltip 
                 label="Código *" 
-                tooltip="Código que os pacientes usarão"
+                tooltip="Código que os estudantes usarão"
               >
                 <Input
                   id="code"
@@ -324,9 +324,9 @@ export const EditCouponModal = ({ coupon, institutionId, tenantId, isOpen, onClo
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os pacientes</SelectItem>
+                  <SelectItem value="all">Todos os estudantes</SelectItem>
                   <SelectItem value="institution_students">Apenas alunos da instituição</SelectItem>
-                  <SelectItem value="other_patients">Apenas pacientes não-alunos</SelectItem>
+                  <SelectItem value="other_patients">Apenas estudantes não-alunos</SelectItem>
                 </SelectContent>
               </Select>
             </div>

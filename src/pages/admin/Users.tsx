@@ -337,7 +337,7 @@ export default function AdminUsers() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pacientes</CardTitle>
+            <CardTitle className="text-sm font-medium">Estudantes</CardTitle>
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -412,7 +412,7 @@ export default function AdminUsers() {
                         {user.tipo_usuario === 'paciente' && (
                           <Badge variant="secondary" className="flex items-center gap-1 text-xs">
                             <Heart className="h-3 w-3" />
-                            Paciente
+                            Estudante
                           </Badge>
                         )}
                         {user.tipo_usuario === 'profissional' && (
@@ -623,7 +623,7 @@ export default function AdminUsers() {
                                       <p className="font-semibold">Perfil Associado:</p>
                                       <p>
                                         {deletionInfo.isProfessional && 'Perfil de profissional será deletado.'}
-                                        {deletionInfo.isPatient && 'Perfil de paciente será deletado.'}
+                                        {deletionInfo.isPatient && 'Perfil de estudante será deletado.'}
                                       </p>
                                     </div>
                                   </div>

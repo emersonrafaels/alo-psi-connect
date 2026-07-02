@@ -86,7 +86,7 @@ export const useToggleTriageAccess = () => {
             key: KEY,
             value: JSON.stringify(newList),
             tenant_id: null,
-            description: 'Usuários autorizados a acessar a página de listagem completa de pacientes',
+            description: 'Usuários autorizados a acessar a página de listagem completa de estudantes',
           });
         if (error) throw error;
       }

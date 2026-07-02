@@ -62,7 +62,7 @@ export const useInstitutionPatients = (institutionId?: string) => {
     enabled: !!institutionId,
     retry: 1,
     meta: {
-      errorMessage: 'Erro ao carregar pacientes vinculados'
+      errorMessage: 'Erro ao carregar estudantes vinculados'
     }
   });
 
@@ -82,13 +82,13 @@ export const useInstitutionPatients = (institutionId?: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-institutions'] });
       toast({
-        title: 'Paciente vinculado',
-        description: 'O paciente foi vinculado à instituição com sucesso.',
+        title: 'Estudante vinculado',
+        description: 'O estudante foi vinculado à instituição com sucesso.',
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Erro ao vincular paciente',
+        title: 'Erro ao vincular estudante',
         description: error.message,
         variant: 'destructive',
       });
