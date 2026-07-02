@@ -94,7 +94,7 @@ export function useBuddyPortrait() {
 
   const save = useMutation({
     mutationFn: async (portrait: Partial<BuddyPortrait>) => {
-      if (!patientId) throw new Error("Paciente não identificado");
+      if (!patientId) throw new Error("Estudante não identificado");
       const payload: any = { ...portrait, patient_id: patientId };
       const { data, error } = await supabase
         .from("buddy_portraits" as any)
