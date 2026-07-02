@@ -32,7 +32,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Row = { key: string; label: string; description: string; portraitField: string };
+type Row = {
+  key: string;
+  label: string;
+  description: string;
+  portraitField: string;
+  isModule?: boolean;
+};
 
 const ROWS: Row[] = [
   {
@@ -76,6 +82,27 @@ const ROWS: Row[] = [
     label: "Mensagem livre para o Buddy",
     description: "Texto aberto que você escreveu para o Buddy.",
     portraitField: "message_to_buddy",
+  },
+  {
+    key: "encontros",
+    label: "Encontros",
+    description: "Presença e participação em encontros e grupos.",
+    portraitField: "encontros",
+    isModule: true,
+  },
+  {
+    key: "diario_emocional",
+    label: "Diário emocional",
+    description: "Registros diários de humor, emoções e anotações.",
+    portraitField: "diario_emocional",
+    isModule: true,
+  },
+  {
+    key: "escalas",
+    label: "Escalas emocionais",
+    description: "Respostas às escalas clínicas (WHO-5, PHQ-9, GAD-7 etc.) e seu ISEU-RBE.",
+    portraitField: "escalas",
+    isModule: true,
   },
 ];
 
@@ -229,6 +256,7 @@ export default function BuddyPrivacy() {
                             const p = prefs[row.key] ?? { psicologo: false, psiquiatra: false };
                             const isPrivate = !p.psicologo && !p.psiquiatra;
                             const filled = isFilled(row.portraitField);
+                            const canRemove = filled && !row.isModule;
                             return (
                               <tr key={row.key} className="align-middle">
                                 <td className="py-3 pr-4">
@@ -249,7 +277,7 @@ export default function BuddyPrivacy() {
                                       </TooltipContent>
                                     </Tooltip>
                                   </div>
-                                  {!filled && (
+                                  {!filled && !row.isModule && (
                                     <p className="text-xs text-muted-foreground mt-1">
                                       Sem conteúdo ainda — preferência será aplicada quando você preencher
                                     </p>
@@ -293,10 +321,10 @@ export default function BuddyPrivacy() {
                                     <button
                                       type="button"
                                       onClick={() => setConfirmDelete(row)}
-                                      disabled={!filled}
+                                      disabled={!canRemove}
                                       className={cn(
                                         "h-9 w-9 rounded-full flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors",
-                                        !filled && "opacity-40 cursor-not-allowed hover:bg-transparent"
+                                        !canRemove && "opacity-40 cursor-not-allowed hover:bg-transparent"
                                       )}
                                       aria-label="Remover conteúdo"
                                     >
