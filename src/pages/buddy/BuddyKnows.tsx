@@ -83,13 +83,13 @@ export default function BuddyKnows() {
         })}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2 border-primary/20 overflow-hidden bg-gradient-to-br from-card via-card to-primary/5">
-          <CardHeader className="flex-row items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                Seu mapa de conhecimento
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="min-w-0">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Sparkles className="h-5 w-5 text-primary shrink-0" />
+                <span className="truncate">Seu mapa de conhecimento</span>
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-1">
                 Os temas que mais aparecem em suas interações.
@@ -100,7 +100,7 @@ export default function BuddyKnows() {
               variant="outline"
               onClick={handleRegen}
               disabled={regenerate.isPending}
-              className="rounded-full"
+              className="rounded-full self-start sm:self-auto"
             >
               <RefreshCw
                 className={`h-4 w-4 mr-2 ${regenerate.isPending ? "animate-spin" : ""}`}
