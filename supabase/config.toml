@@ -176,3 +176,6 @@ verify_jwt = false
 [functions.redeem-appointment-token]
 verify_jwt = false
 
+
+[functions.mcp]
+verify_jwt = false
