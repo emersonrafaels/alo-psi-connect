@@ -11,13 +11,15 @@ interface BuddyMascotProps {
 
 export function BuddyMascot({ size = "md", message, className, bubbleClassName }: BuddyMascotProps) {
   return (
-    <div className={cn("flex items-start gap-3", className)}>
-      <BuddyCharacter size={size} animated />
+    <div className={cn("flex items-start gap-3 min-w-0", className)}>
+      <div className="shrink-0">
+        <BuddyCharacter size={size} animated />
+      </div>
       {message && (
         <div
           role="status"
           className={cn(
-            "relative rounded-2xl bg-primary/10 border border-primary/20 px-4 py-3 text-sm text-foreground max-w-xs leading-relaxed",
+            "relative rounded-2xl bg-primary/10 border border-primary/20 px-4 py-3 text-sm text-foreground leading-relaxed flex-1 min-w-0 break-words",
             bubbleClassName
           )}
         >
