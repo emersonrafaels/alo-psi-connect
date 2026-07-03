@@ -22,20 +22,19 @@
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "query": {
-              "description": "Optional keyword matched against display name or profession.",
-              "type": "string"
+              "type": "string",
+              "description": "Optional keyword matched against display name or profession."
             },
             "limit": {
-              "description": "Max results to return (default 10, hard cap 25).",
               "type": "integer",
-              "minimum": -9007199254740991,
-              "maximum": 9007199254740991
+              "description": "Max results to return (default 10, hard cap 25)."
             }
-          }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
       },
@@ -49,16 +48,15 @@
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "limit": {
-              "description": "Max sessions to return (default 10, hard cap 50).",
               "type": "integer",
-              "minimum": -9007199254740991,
-              "maximum": 9007199254740991
+              "description": "Max sessions to return (default 10, hard cap 50)."
             }
-          }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
       }
