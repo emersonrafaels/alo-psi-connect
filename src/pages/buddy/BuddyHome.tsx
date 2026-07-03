@@ -71,30 +71,30 @@ export default function BuddyHome() {
       title={`Olá, ${firstName}. Que bom te ver.`}
       description="Aqui o Buddy conecta tudo o que você compartilha na Rede Bem-Estar para te apoiar de forma cada vez mais personalizada."
     >
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2 border-primary/20 overflow-hidden">
-          <CardHeader className="flex flex-row items-start gap-4">
+          <CardHeader className="flex flex-row items-start gap-3 sm:gap-4 p-4 sm:p-6">
             <BuddyMascot size="md" message={insight?.narrative?.split("\n")[0] ?? "Estou aprendendo sobre você a cada conversa. Me conte um pouco mais quando quiser."} />
           </CardHeader>
-          <CardContent className="grid gap-4">
+          <CardContent className="grid gap-4 p-4 sm:p-6 pt-0 sm:pt-0">
             <div className="flex flex-wrap gap-2 text-xs">
               <Badge variant="secondary">Últimos 30 dias</Badge>
             </div>
             {isLoading ? (
               <Skeleton className="h-24" />
             ) : insight?.narrative ? (
-              <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">{insight.narrative}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line break-words">{insight.narrative}</p>
             ) : (
               <div className="rounded-xl bg-muted/40 p-4 text-sm text-muted-foreground">
                 Ainda não gerei um resumo. Preencha seu retrato e clique em "Atualizar percepções" para eu começar.
               </div>
             )}
             <div className="flex flex-wrap gap-2">
-              <Button onClick={handleRegenerate} disabled={regenerate.isPending}>
+              <Button onClick={handleRegenerate} disabled={regenerate.isPending} className="w-full sm:w-auto">
                 <RefreshCw className={`h-4 w-4 mr-2 ${regenerate.isPending ? "animate-spin" : ""}`} />
                 Atualizar percepções
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="w-full sm:w-auto">
                 <Link to="/buddy/como-te-conhece">
                   Ver o que o Buddy percebeu <ArrowRight className="h-4 w-4 ml-2" />
                 </Link>
@@ -102,6 +102,7 @@ export default function BuddyHome() {
             </div>
           </CardContent>
         </Card>
+
 
         <Card className="border-primary/20">
           <CardHeader>
@@ -146,7 +147,7 @@ export default function BuddyHome() {
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-40" />)}
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ...((insight?.recommendations ?? []).filter((r: any) => {
                 const text = `${r?.title ?? ""} ${r?.description ?? ""}`.toLowerCase();
@@ -168,15 +169,16 @@ export default function BuddyHome() {
               },
             ].map((rec) => (
               <Card key={rec.id} className="border-primary/10 hover:border-primary/30 transition-colors">
-                <CardContent className="p-5 space-y-3">
+                <CardContent className="p-4 sm:p-5 space-y-3">
                   <Badge variant="secondary" className="capitalize">{rec.category}</Badge>
-                  <h3 className="font-semibold text-foreground">{rec.title}</h3>
-                  <p className="text-sm text-muted-foreground">{rec.description}</p>
-                  <div className="flex gap-2 pt-2">
+                  <h3 className="font-semibold text-foreground break-words">{rec.title}</h3>
+                  <p className="text-sm text-muted-foreground break-words">{rec.description}</p>
+                  <div className="flex flex-wrap gap-2 pt-2">
                     <Button
                       size="sm"
                       variant="default"
                       onClick={() => handleRecommendationAction(rec)}
+                      className="flex-1 sm:flex-none"
                     >
                       <Check className="h-4 w-4 mr-1" /> {rec.cta ?? CATEGORY_LABELS[(rec.category || "").toLowerCase()] ?? "Abrir"}
                     </Button>
