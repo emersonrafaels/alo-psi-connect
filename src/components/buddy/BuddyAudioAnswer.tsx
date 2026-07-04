@@ -128,28 +128,28 @@ export function BuddyAudioAnswer({ fieldKey, onTranscribed, onAudioUrl, existing
   const mmss = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-2">
+    <div className="mt-2 flex min-w-0 max-w-full flex-wrap items-center gap-2">
       {!recording && !localUrl && (
-        <Button type="button" size="sm" variant="outline" onClick={start} disabled={busy} className="rounded-full">
+        <Button type="button" size="sm" variant="outline" onClick={start} disabled={busy} className="w-full min-[420px]:w-auto rounded-full min-h-9 !h-auto !whitespace-normal text-center">
           {busy ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" /> : <Mic className="h-3.5 w-3.5 mr-2" />}
           {busy ? "Transcrevendo…" : "Falar em vez de digitar"}
         </Button>
       )}
       {recording && (
-        <div className="flex items-center gap-3 rounded-full bg-destructive/10 border border-destructive/30 px-3 py-1.5">
+        <div className="flex max-w-full flex-wrap items-center gap-2 rounded-2xl bg-destructive/10 border border-destructive/30 px-3 py-1.5">
           <span className="relative flex h-2.5 w-2.5">
             <span className="absolute inline-flex h-full w-full rounded-full bg-destructive/60 animate-ping" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive" />
           </span>
           <Waveform />
           <span className="text-xs font-mono text-destructive">{mmss}</span>
-          <Button type="button" size="sm" variant="destructive" onClick={stop} className="h-7 rounded-full">
+          <Button type="button" size="sm" variant="destructive" onClick={stop} className="h-7 rounded-full px-2">
             <Square className="h-3.5 w-3.5 mr-1" /> Parar
           </Button>
         </div>
       )}
       {localUrl && !recording && (
-        <div className="flex items-center gap-2 rounded-full bg-primary/10 border border-primary/30 px-2 py-1">
+        <div className="flex max-w-full flex-wrap items-center gap-2 rounded-2xl bg-primary/10 border border-primary/30 px-2 py-1">
           <audio ref={audioRef} src={localUrl} onEnded={() => setPlaying(false)} />
           <Button type="button" size="sm" variant="ghost" onClick={togglePlay} className="h-7 w-7 p-0 rounded-full">
             {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
