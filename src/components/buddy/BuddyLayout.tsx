@@ -1,8 +1,93 @@
-import React from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { NavLink } from "react-router-dom";
 import Header from "@/components/ui/header";
 import { Heart, Sparkles, Compass, LineChart, TrendingUp, Shield, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+function DragScrollNav({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLElement | null>(null);
+  const state = useRef({ down: false, moved: false, startX: 0, startScroll: 0 });
+  const [dragging, setDragging] = useState(false);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const updateEdges = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 2);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    updateEdges();
+    const el = ref.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateEdges, { passive: true });
+    window.addEventListener("resize", updateEdges);
+    return () => {
+      el.removeEventListener("scroll", updateEdges);
+      window.removeEventListener("resize", updateEdges);
+    };
+  }, [updateEdges]);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLElement>) => {
+    if (e.pointerType === "touch") return; // native touch scroll
+    const el = ref.current;
+    if (!el) return;
+    state.current = { down: true, moved: false, startX: e.clientX, startScroll: el.scrollLeft };
+    el.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLElement>) => {
+    if (!state.current.down) return;
+    const el = ref.current;
+    if (!el) return;
+    const dx = e.clientX - state.current.startX;
+    if (Math.abs(dx) > 4) {
+      state.current.moved = true;
+      setDragging(true);
+    }
+    el.scrollLeft = state.current.startScroll - dx;
+  };
+  const endDrag = (e: React.PointerEvent<HTMLElement>) => {
+    const el = ref.current;
+    if (el && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    state.current.down = false;
+    setTimeout(() => setDragging(false), 0);
+  };
+  const onClickCapture = (e: React.MouseEvent) => {
+    if (state.current.moved) {
+      e.preventDefault();
+      e.stopPropagation();
+      state.current.moved = false;
+    }
+  };
+
+  return (
+    <>
+      <nav
+        ref={ref as any}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClickCapture={onClickCapture}
+        className={cn(
+          "flex w-full max-w-full min-w-0 gap-1.5 overflow-x-auto overscroll-x-contain px-2 min-[380px]:px-3 py-1 scroll-smooth touch-pan-x [scrollbar-width:thin]",
+          dragging ? "cursor-grabbing" : "cursor-grab"
+        )}
+      >
+        {children}
+      </nav>
+      {(canLeft || canRight) && (
+        <div className="mt-1 px-3 flex items-center justify-center gap-1" aria-hidden>
+          <span className={cn("h-1 w-6 rounded-full transition-colors", canLeft ? "bg-primary/40" : "bg-border/60")} />
+          <span className={cn("h-1 w-6 rounded-full transition-colors", canRight ? "bg-primary/40" : "bg-border/60")} />
+        </div>
+      )}
+    </>
+  );
+}
+
 
 const nav = [
   { to: "/buddy", label: "Início", shortLabel: "Início", icon: Heart, end: true },
