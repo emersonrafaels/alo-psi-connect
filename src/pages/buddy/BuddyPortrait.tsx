@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { useBuddyPortrait, type BuddyPortrait } from "@/hooks/useBuddy";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Loader2, Lock, Save, Heart, Sparkles, Compass, Anchor, Shield, MessageCircle,
+  Loader2, Save, Heart, Sparkles, Compass, Anchor, Shield, MessageCircle,
   Check, ChevronRight, ChevronLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
