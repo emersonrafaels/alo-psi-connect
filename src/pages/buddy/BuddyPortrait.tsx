@@ -142,7 +142,7 @@ export default function BuddyPortraitPage() {
         <aside className="min-w-0 lg:sticky lg:top-24 self-start space-y-4">
           <Card className="min-w-0 border-primary/20 overflow-visible sm:overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10">
             <CardContent className="p-3 sm:p-4">
-              <BuddyMascot size="lg" message={SECTIONS[currentIdx].tip} />
+              <BuddyMascot size="lg" message={SECTIONS[currentIdx].tip} stack />
             </CardContent>
           </Card>
           <Card className="min-w-0">
