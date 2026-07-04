@@ -101,7 +101,7 @@ export default function BuddyPortraitPage() {
 
       <div className="grid min-w-0 max-w-full gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0 space-y-5">
-          <PrivacyCard privacy={form.privacy ?? "only_me"} onChange={(v) => set("privacy", v as any)} />
+          
           <SectionStepper current={section} onChange={setSection} progress={progress} />
 
           <div key={section} className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-5">
