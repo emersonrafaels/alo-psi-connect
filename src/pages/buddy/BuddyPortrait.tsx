@@ -8,12 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+
 import { Input } from "@/components/ui/input";
 import { useBuddyPortrait, type BuddyPortrait } from "@/hooks/useBuddy";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Loader2, Lock, Save, Heart, Sparkles, Compass, Anchor, Shield, MessageCircle,
+  Loader2, Save, Heart, Sparkles, Compass, Anchor, Shield, MessageCircle,
   Check, ChevronRight, ChevronLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -101,7 +101,7 @@ export default function BuddyPortraitPage() {
 
       <div className="grid min-w-0 max-w-full gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0 space-y-5">
-          <PrivacyCard privacy={form.privacy ?? "only_me"} onChange={(v) => set("privacy", v as any)} />
+          
           <SectionStepper current={section} onChange={setSection} progress={progress} />
 
           <div key={section} className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-5">
@@ -350,29 +350,6 @@ function ScaleRow({ label, value, onChange, colorClass }: { label: string; value
   );
 }
 
-function PrivacyCard({ privacy, onChange }: { privacy: string; onChange: (v: "only_me" | "with_professionals") => void }) {
-  return (
-    <Card className="min-w-0 border-primary/20 bg-gradient-to-r from-primary/5 via-background to-accent/5">
-      <CardContent className="p-4 flex flex-col min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between gap-3 min-w-0">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="rounded-full bg-primary/15 p-2"><Lock className="h-4 w-4 text-primary" /></div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium [overflow-wrap:anywhere]">Privacidade das respostas</p>
-            <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">
-              {privacy === "with_professionals"
-                ? "Profissionais autorizados por você poderão ler."
-                : "Apenas você e o Buddy veem estas respostas."}
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 self-end min-[420px]:self-auto">
-          <span className="hidden sm:inline text-xs text-muted-foreground">Compartilhar</span>
-          <Switch checked={privacy === "with_professionals"} onCheckedChange={(v) => onChange(v ? "with_professionals" : "only_me")} />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function ProgressHeader({ progress }: { progress: number }) {
   return (
