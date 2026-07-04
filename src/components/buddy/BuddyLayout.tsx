@@ -1,8 +1,93 @@
-import React from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { NavLink } from "react-router-dom";
 import Header from "@/components/ui/header";
 import { Heart, Sparkles, Compass, LineChart, TrendingUp, Shield, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+function DragScrollNav({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLElement | null>(null);
+  const state = useRef({ down: false, moved: false, startX: 0, startScroll: 0 });
+  const [dragging, setDragging] = useState(false);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const updateEdges = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 2);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    updateEdges();
+    const el = ref.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateEdges, { passive: true });
+    window.addEventListener("resize", updateEdges);
+    return () => {
+      el.removeEventListener("scroll", updateEdges);
+      window.removeEventListener("resize", updateEdges);
+    };
+  }, [updateEdges]);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLElement>) => {
+    if (e.pointerType === "touch") return; // native touch scroll
+    const el = ref.current;
+    if (!el) return;
+    state.current = { down: true, moved: false, startX: e.clientX, startScroll: el.scrollLeft };
+    el.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLElement>) => {
+    if (!state.current.down) return;
+    const el = ref.current;
+    if (!el) return;
+    const dx = e.clientX - state.current.startX;
+    if (Math.abs(dx) > 4) {
+      state.current.moved = true;
+      setDragging(true);
+    }
+    el.scrollLeft = state.current.startScroll - dx;
+  };
+  const endDrag = (e: React.PointerEvent<HTMLElement>) => {
+    const el = ref.current;
+    if (el && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    state.current.down = false;
+    setTimeout(() => setDragging(false), 0);
+  };
+  const onClickCapture = (e: React.MouseEvent) => {
+    if (state.current.moved) {
+      e.preventDefault();
+      e.stopPropagation();
+      state.current.moved = false;
+    }
+  };
+
+  return (
+    <>
+      <nav
+        ref={ref as any}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClickCapture={onClickCapture}
+        className={cn(
+          "flex w-full max-w-full min-w-0 gap-1.5 overflow-x-auto overscroll-x-contain px-2 min-[380px]:px-3 py-1 scroll-smooth touch-pan-x [scrollbar-width:thin]",
+          dragging ? "cursor-grabbing" : "cursor-grab"
+        )}
+      >
+        {children}
+      </nav>
+      {(canLeft || canRight) && (
+        <div className="mt-1 px-3 flex items-center justify-center gap-1" aria-hidden>
+          <span className={cn("h-1 w-6 rounded-full transition-colors", canLeft ? "bg-primary/40" : "bg-border/60")} />
+          <span className={cn("h-1 w-6 rounded-full transition-colors", canRight ? "bg-primary/40" : "bg-border/60")} />
+        </div>
+      )}
+    </>
+  );
+}
+
 
 const nav = [
   { to: "/buddy", label: "Início", shortLabel: "Início", icon: Heart, end: true },
@@ -20,7 +105,7 @@ export function BuddyLayout({ children, title, description }: { children: React.
       <Header />
       <div className="w-full max-w-7xl min-w-0 mx-auto px-2 min-[380px]:px-3 sm:px-4 lg:px-6 py-3 sm:py-6 lg:py-8 grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="min-w-0 max-w-full lg:sticky lg:top-24 self-start -mx-2 min-[380px]:-mx-3 sm:mx-0">
-          {/* Mobile: horizontal scroll with edge fade */}
+          {/* Mobile/Tablet: horizontal scroll with drag support and visible scrollbar */}
           <div className="relative lg:hidden">
             <div
               className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent z-10"
@@ -30,9 +115,7 @@ export function BuddyLayout({ children, title, description }: { children: React.
               className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent z-10"
               aria-hidden
             />
-            <nav
-              className="flex w-full max-w-full min-w-0 gap-1.5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory px-2 min-[380px]:px-3 py-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-            >
+            <DragScrollNav>
               {nav.map((item) => (
                 <NavLink
                   key={item.to}
@@ -40,7 +123,7 @@ export function BuddyLayout({ children, title, description }: { children: React.
                   end={item.end}
                   className={({ isActive }) =>
                     cn(
-                      "snap-start shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors border",
+                      "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors border select-none",
                       isActive
                         ? "bg-primary text-primary-foreground border-primary shadow-sm"
                         : "bg-card text-muted-foreground border-border/60 hover:bg-primary/10 hover:text-foreground"
@@ -48,10 +131,10 @@ export function BuddyLayout({ children, title, description }: { children: React.
                   }
                 >
                   <item.icon className="h-3.5 w-3.5 shrink-0" />
-                  <span>{item.shortLabel}</span>
+                  <span>{item.label}</span>
                 </NavLink>
               ))}
-            </nav>
+            </DragScrollNav>
           </div>
 
           {/* Desktop: sticky vertical sidebar */}
