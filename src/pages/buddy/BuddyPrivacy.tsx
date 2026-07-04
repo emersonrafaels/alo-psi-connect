@@ -216,14 +216,14 @@ export default function BuddyPrivacy() {
       title="Compartilhamento e privacidade"
       description="Aqui você vê exatamente o que está permitindo que seus profissionais vejam. Você decide o que compartilhar."
     >
-      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-        <div className="space-y-6">
-          <Card className="border-primary/20 overflow-hidden">
+      <div className="grid min-w-0 max-w-full gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="min-w-0 space-y-6">
+          <Card className="border-primary/20 min-w-0 overflow-hidden">
             <CardContent className="p-0">
-              <div className="p-5 md:p-6">
-                <div className="mb-4 flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-primary" />
-                  <h2 className="font-semibold text-foreground">
+              <div className="p-4 sm:p-5 md:p-6 min-w-0">
+                <div className="mb-4 flex min-w-0 items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
+                  <h2 className="font-semibold text-foreground leading-tight [overflow-wrap:anywhere]">
                     Resumo do que será compartilhado
                   </h2>
                 </div>
@@ -232,11 +232,11 @@ export default function BuddyPrivacy() {
                   <Skeleton className="h-64" />
                 ) : (
                   <TooltipProvider delayDuration={150}>
-                    <div className="overflow-x-auto">
+                    <div className="hidden sm:block max-w-full overflow-x-auto overscroll-x-contain">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="text-xs text-muted-foreground">
-                            <th className="text-left font-medium py-3 pr-4">Tema</th>
+                            <th className="text-left font-medium py-3 pr-4 min-w-[180px]">Tema</th>
                             <th className="text-center font-medium py-3 px-2 min-w-[140px]">
                               Compartilhar com<br />meu psicólogo
                             </th>
@@ -260,8 +260,8 @@ export default function BuddyPrivacy() {
                             return (
                               <tr key={row.key} className="align-middle">
                                 <td className="py-3 pr-4">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium text-foreground">{row.label}</span>
+                                  <div className="flex min-w-0 items-center gap-2">
+                                    <span className="font-medium text-foreground [overflow-wrap:anywhere]">{row.label}</span>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <button
@@ -278,7 +278,7 @@ export default function BuddyPrivacy() {
                                     </Tooltip>
                                   </div>
                                   {!filled && !row.isModule && (
-                                    <p className="text-xs text-muted-foreground mt-1">
+                                    <p className="text-xs text-muted-foreground mt-1 [overflow-wrap:anywhere]">
                                       Sem conteúdo ainda — preferência será aplicada quando você preencher
                                     </p>
                                   )}
@@ -338,32 +338,116 @@ export default function BuddyPrivacy() {
                         </tbody>
                       </table>
                     </div>
+                    <div className="grid gap-3 sm:hidden">
+                      {rows.map((row) => {
+                        const p = prefs[row.key] ?? { psicologo: false, psiquiatra: false };
+                        const isPrivate = !p.psicologo && !p.psiquiatra;
+                        const filled = isFilled(row.portraitField);
+                        const canRemove = filled && !row.isModule;
+                        return (
+                          <div key={row.key} className="rounded-2xl border border-border/70 bg-card p-3 min-w-0">
+                            <div className="flex min-w-0 items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="flex min-w-0 items-center gap-2">
+                                  <p className="font-medium text-sm text-foreground leading-tight [overflow-wrap:anywhere]">{row.label}</p>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        type="button"
+                                        className="shrink-0 text-muted-foreground hover:text-foreground"
+                                        aria-label={`Sobre ${row.label}`}
+                                      >
+                                        <Info className="h-3.5 w-3.5" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">
+                                      {row.description}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
+                                {!filled && !row.isModule && (
+                                  <p className="text-xs text-muted-foreground mt-1 [overflow-wrap:anywhere]">
+                                    Sem conteúdo ainda — preferência será aplicada quando você preencher
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDelete(row)}
+                                disabled={!canRemove}
+                                className={cn(
+                                  "h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors",
+                                  !canRemove && "opacity-40 cursor-not-allowed hover:bg-transparent"
+                                )}
+                                aria-label="Remover conteúdo"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+
+                            <div className="mt-3 grid gap-2">
+                              <label className="flex min-h-11 items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 py-2 text-sm">
+                                <span className="min-w-0 [overflow-wrap:anywhere]">Compartilhar com meu psicólogo</span>
+                                <Switch
+                                  checked={p.psicologo}
+                                  onCheckedChange={() => toggle(row.key, "psicologo")}
+                                  aria-label="Compartilhar com meu psicólogo"
+                                />
+                              </label>
+                              <label className="flex min-h-11 items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 py-2 text-sm">
+                                <span className="min-w-0 [overflow-wrap:anywhere]">Compartilhar com meu psiquiatra</span>
+                                <Switch
+                                  checked={p.psiquiatra}
+                                  onCheckedChange={() => toggle(row.key, "psiquiatra")}
+                                  aria-label="Compartilhar com meu psiquiatra"
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => toggle(row.key, "only_me")}
+                                className={cn(
+                                  "flex min-h-11 items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left text-sm transition-colors",
+                                  isPrivate
+                                    ? "bg-primary/10 border-primary text-primary"
+                                    : "bg-transparent border-border text-muted-foreground hover:text-foreground"
+                                )}
+                                aria-label="Guardar só para mim"
+                                aria-pressed={isPrivate}
+                              >
+                                <span className="min-w-0 [overflow-wrap:anywhere]">Guardar só para mim</span>
+                                <Lock className="h-4 w-4 shrink-0" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </TooltipProvider>
                 )}
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 border-t border-border/60 bg-muted/30 p-5 md:p-6">
-                <div className="flex items-start gap-3">
+              <div className="grid min-w-0 gap-4 md:grid-cols-2 border-t border-border/60 bg-muted/30 p-4 sm:p-5 md:p-6">
+                <div className="flex min-w-0 items-start gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <ShieldCheck className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="text-sm">
+                  <div className="text-sm min-w-0">
                     <p className="text-muted-foreground">Consentimento registrado em:</p>
-                    <p className="font-semibold text-foreground">{consentText}</p>
+                    <p className="font-semibold text-foreground [overflow-wrap:anywhere]">{consentText}</p>
                     {profile?.nome && (
-                      <p className="text-xs text-muted-foreground mt-0.5">Por: {profile.nome}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 [overflow-wrap:anywhere]">Por: {profile.nome}</p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
+                <div className="flex min-w-0 items-start gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <Lock className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="text-sm">
-                    <p className="font-semibold text-foreground">
+                  <div className="text-sm min-w-0">
+                    <p className="font-semibold text-foreground [overflow-wrap:anywhere]">
                       Seus dados estão protegidos pela LGPD.
                     </p>
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground [overflow-wrap:anywhere]">
                       Compartilhamos apenas o que você autorizar. Você pode mudar suas escolhas quando quiser.
                     </p>
                   </div>
@@ -372,38 +456,38 @@ export default function BuddyPrivacy() {
             </CardContent>
           </Card>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:justify-between">
+          <div className="flex min-w-0 flex-col sm:flex-row gap-3 sm:justify-between">
             <Button
               variant="outline"
               onClick={() => navigate("/buddy/me-conhecer")}
-              className="sm:min-w-[220px]"
+              className="w-full sm:w-auto sm:min-w-[220px] min-h-10 !h-auto !whitespace-normal px-3 text-center"
             >
-              Revisar respostas <ArrowRight className="h-4 w-4 ml-2" />
+              Revisar respostas <ArrowRight className="h-4 w-4 ml-2 shrink-0" />
             </Button>
             <Button
               onClick={handleConfirm}
               disabled={save.isPending}
-              className="sm:min-w-[260px]"
+              className="w-full sm:w-auto sm:min-w-[260px] min-h-10 !h-auto !whitespace-normal px-3 text-center"
             >
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-              Confirmar compartilhamento
+              <CheckCircle2 className="h-4 w-4 mr-2 shrink-0" />
+              <span className="min-w-0 [overflow-wrap:anywhere]">Confirmar compartilhamento</span>
             </Button>
           </div>
         </div>
 
-        <aside className="space-y-4">
+        <aside className="min-w-0 space-y-4">
           <div className="flex justify-center">
             <BuddyMascot size="md" />
           </div>
-          <Card className="border-primary/20 bg-primary/5">
+          <Card className="border-primary/20 bg-primary/5 min-w-0">
             <CardContent className="p-5 text-center space-y-2">
               <div className="mx-auto h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <Leaf className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="font-semibold text-foreground">
+              <h3 className="font-semibold text-foreground [overflow-wrap:anywhere]">
                 Você pode mudar isso a qualquer momento.
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground [overflow-wrap:anywhere]">
                 Seu bem-estar é prioridade. Você está no controle.
               </p>
             </CardContent>
