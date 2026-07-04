@@ -350,29 +350,6 @@ function ScaleRow({ label, value, onChange, colorClass }: { label: string; value
   );
 }
 
-function PrivacyCard({ privacy, onChange }: { privacy: string; onChange: (v: "only_me" | "with_professionals") => void }) {
-  return (
-    <Card className="min-w-0 border-primary/20 bg-gradient-to-r from-primary/5 via-background to-accent/5">
-      <CardContent className="p-4 flex flex-col min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between gap-3 min-w-0">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="rounded-full bg-primary/15 p-2"><Lock className="h-4 w-4 text-primary" /></div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium [overflow-wrap:anywhere]">Privacidade das respostas</p>
-            <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">
-              {privacy === "with_professionals"
-                ? "Profissionais autorizados por você poderão ler."
-                : "Apenas você e o Buddy veem estas respostas."}
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 self-end min-[420px]:self-auto">
-          <span className="hidden sm:inline text-xs text-muted-foreground">Compartilhar</span>
-          <Switch checked={privacy === "with_professionals"} onCheckedChange={(v) => onChange(v ? "with_professionals" : "only_me")} />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function ProgressHeader({ progress }: { progress: number }) {
   return (
