@@ -99,8 +99,8 @@ export default function BuddyPortraitPage() {
     >
       <ProgressHeader progress={progress} />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-        <div className="space-y-5">
+      <div className="grid min-w-0 max-w-full gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="min-w-0 space-y-5">
           <PrivacyCard privacy={form.privacy ?? "only_me"} onChange={(v) => set("privacy", v as any)} />
           <SectionStepper current={section} onChange={setSection} progress={progress} />
 
@@ -125,32 +125,32 @@ export default function BuddyPortraitPage() {
             )}
           </div>
 
-          <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-2xl bg-card/95 backdrop-blur border border-border/70 shadow-lg p-3">
-            <Button type="button" variant="ghost" size="sm" onClick={prev} disabled={currentIdx === 0}>
+          <div className="sticky bottom-3 sm:bottom-4 z-10 grid grid-cols-[1fr_auto_1fr] items-center gap-1.5 sm:gap-3 rounded-2xl bg-card/95 backdrop-blur border border-border/70 shadow-lg p-2 sm:p-3 min-w-0">
+            <Button type="button" variant="ghost" size="sm" onClick={prev} disabled={currentIdx === 0} className="min-h-9 !h-auto px-2 sm:px-3 text-xs sm:text-sm !whitespace-normal">
               <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
             </Button>
-            <Button onClick={onSave} disabled={save.isPending || isLoading} size="lg" className="rounded-full shadow-md">
+            <Button onClick={onSave} disabled={save.isPending || isLoading} size="sm" className="min-h-10 !h-auto rounded-full shadow-md px-3 sm:px-5 text-xs sm:text-sm !whitespace-normal">
               {save.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-              Salvar retrato
+              <span className="hidden min-[360px]:inline">Salvar </span>retrato
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={next} disabled={currentIdx === SECTIONS.length - 1}>
+            <Button type="button" variant="ghost" size="sm" onClick={next} disabled={currentIdx === SECTIONS.length - 1} className="min-h-9 !h-auto px-2 sm:px-3 text-xs sm:text-sm !whitespace-normal">
               Próximo <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
         </div>
 
-        <aside className="lg:sticky lg:top-24 self-start space-y-4">
-          <Card className="border-primary/20 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10">
-            <CardContent className="p-4">
+        <aside className="min-w-0 lg:sticky lg:top-24 self-start space-y-4">
+          <Card className="min-w-0 border-primary/20 overflow-visible sm:overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10">
+            <CardContent className="p-3 sm:p-4">
               <BuddyMascot size="lg" message={SECTIONS[currentIdx].tip} />
             </CardContent>
           </Card>
-          <Card>
+          <Card className="min-w-0">
             <CardContent className="p-4 space-y-2 text-sm">
-              <p className="font-medium text-foreground flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" /> Fale em vez de digitar
+              <p className="font-medium text-foreground flex items-center gap-2 [overflow-wrap:anywhere]">
+                <Sparkles className="h-4 w-4 text-primary shrink-0" /> Fale em vez de digitar
               </p>
-              <p className="text-muted-foreground text-xs leading-relaxed">
+              <p className="text-muted-foreground text-xs leading-relaxed [overflow-wrap:anywhere]">
                 Toque no botão do microfone em qualquer pergunta longa. Eu transcrevo pra você e você pode editar depois.
               </p>
             </CardContent>
@@ -288,7 +288,7 @@ function SectionBuddy({ form, set, appendText, setAudio }: any) {
         </CardContent>
       </Card>
       <QuestionCard title="Melhor horário para lembretes" hint="Quando você tem calma para se ouvir.">
-        <Input type="time" value={form.reminder_time ?? ""} onChange={(e) => set("reminder_time", e.target.value)} className="max-w-[160px]" />
+        <Input type="time" value={form.reminder_time ?? ""} onChange={(e) => set("reminder_time", e.target.value)} className="w-full max-w-[160px]" />
       </QuestionCard>
       <QuestionCard title="O que você quer que o Buddy entenda sobre você?" hint="Algo importante para eu te apoiar melhor.">
         <Textarea value={form.message_to_buddy ?? ""} onChange={(e) => set("message_to_buddy", e.target.value)} rows={5} maxLength={800} />
@@ -302,7 +302,7 @@ function SectionBuddy({ form, set, appendText, setAudio }: any) {
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <div className="px-1">
+    <div className="px-1 min-w-0 max-w-full">
       <h2 className="text-lg sm:text-xl font-semibold text-foreground leading-tight [overflow-wrap:anywhere]">{title}</h2>
       <p className="text-xs sm:text-sm text-muted-foreground [overflow-wrap:anywhere]">{subtitle}</p>
     </div>
@@ -311,12 +311,12 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle: string })
 
 function QuestionCard({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <Card className="border-border/70 shadow-sm hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">{title}</CardTitle>
-        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    <Card className="min-w-0 max-w-full border-border/70 shadow-sm hover:shadow-md transition-shadow">
+      <CardHeader className="pb-3 p-4 sm:p-6">
+        <CardTitle className="text-base leading-tight flex items-center gap-2 [overflow-wrap:anywhere]">{title}</CardTitle>
+        {hint && <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">{hint}</p>}
       </CardHeader>
-      <CardContent className="space-y-2">{children}</CardContent>
+      <CardContent className="space-y-2 p-4 sm:p-6 pt-0 sm:pt-0 min-w-0">{children}</CardContent>
     </Card>
   );
 }
@@ -327,21 +327,21 @@ function MoodChip({ active, onClick, emoji, label }: { active: boolean; onClick:
       type="button"
       onClick={onClick}
       className={cn(
-        "px-3 py-2 rounded-2xl border text-sm flex items-center gap-2 transition-all",
+        "max-w-full min-h-10 px-3 py-2 rounded-2xl border text-sm flex items-center gap-2 transition-all whitespace-normal text-left [overflow-wrap:anywhere]",
         active ? "bg-primary text-primary-foreground border-primary shadow-md scale-105" : "bg-card hover:bg-primary/10 border-border/70"
       )}
     >
-      <span aria-hidden className="text-base">{emoji}</span> {label}
+      <span aria-hidden className="text-base shrink-0">{emoji}</span> <span className="min-w-0 [overflow-wrap:anywhere]">{label}</span>
     </button>
   );
 }
 
 function ScaleRow({ label, value, onChange, colorClass }: { label: string; value: number; onChange: (v: number) => void; colorClass?: string }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 min-w-0 max-w-full">
       {label && (
-        <div className="flex justify-between text-sm">
-          <Label>{label}</Label>
+        <div className="flex min-w-0 justify-between gap-3 text-sm">
+          <Label className="min-w-0 [overflow-wrap:anywhere]">{label}</Label>
           <span className={cn("font-semibold bg-clip-text text-transparent bg-gradient-to-r", colorClass ?? "from-primary to-primary")}>{value}/10</span>
         </div>
       )}
@@ -352,20 +352,20 @@ function ScaleRow({ label, value, onChange, colorClass }: { label: string; value
 
 function PrivacyCard({ privacy, onChange }: { privacy: string; onChange: (v: "only_me" | "with_professionals") => void }) {
   return (
-    <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-background to-accent/5">
-      <CardContent className="p-4 flex items-center justify-between gap-3">
-        <div className="flex items-start gap-3">
+    <Card className="min-w-0 border-primary/20 bg-gradient-to-r from-primary/5 via-background to-accent/5">
+      <CardContent className="p-4 flex flex-col min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between gap-3 min-w-0">
+        <div className="flex min-w-0 items-start gap-3">
           <div className="rounded-full bg-primary/15 p-2"><Lock className="h-4 w-4 text-primary" /></div>
-          <div>
-            <p className="text-sm font-medium">Privacidade das respostas</p>
-            <p className="text-xs text-muted-foreground">
+          <div className="min-w-0">
+            <p className="text-sm font-medium [overflow-wrap:anywhere]">Privacidade das respostas</p>
+            <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">
               {privacy === "with_professionals"
                 ? "Profissionais autorizados por você poderão ler."
                 : "Apenas você e o Buddy veem estas respostas."}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2 self-end min-[420px]:self-auto">
           <span className="hidden sm:inline text-xs text-muted-foreground">Compartilhar</span>
           <Switch checked={privacy === "with_professionals"} onCheckedChange={(v) => onChange(v ? "with_professionals" : "only_me")} />
         </div>
@@ -376,8 +376,8 @@ function PrivacyCard({ privacy, onChange }: { privacy: string; onChange: (v: "on
 
 function ProgressHeader({ progress }: { progress: number }) {
   return (
-    <div className="mb-4 rounded-2xl bg-card border border-border/70 p-4">
-      <div className="flex items-center justify-between text-sm mb-2">
+    <div className="mb-4 rounded-2xl bg-card border border-border/70 p-3 sm:p-4 min-w-0">
+      <div className="flex min-w-0 items-center justify-between gap-3 text-sm mb-2">
         <span className="text-muted-foreground">Retrato completo</span>
         <span className="font-semibold text-primary">{progress}%</span>
       </div>
@@ -393,7 +393,7 @@ function ProgressHeader({ progress }: { progress: number }) {
 
 function SectionStepper({ current, onChange, progress }: { current: SectionId; onChange: (s: SectionId) => void; progress: number }) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex max-w-full min-w-0 gap-2 overflow-x-auto overscroll-x-contain pb-1 -mx-1 px-1 snap-x scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       {SECTIONS.map((s) => {
         const active = s.id === current;
         const Icon = s.icon;
