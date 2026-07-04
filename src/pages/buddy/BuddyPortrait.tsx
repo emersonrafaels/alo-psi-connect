@@ -303,8 +303,8 @@ function SectionBuddy({ form, set, appendText, setAudio }: any) {
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="px-1">
-      <h2 className="text-xl font-semibold text-foreground">{title}</h2>
-      <p className="text-sm text-muted-foreground">{subtitle}</p>
+      <h2 className="text-lg sm:text-xl font-semibold text-foreground leading-tight [overflow-wrap:anywhere]">{title}</h2>
+      <p className="text-xs sm:text-sm text-muted-foreground [overflow-wrap:anywhere]">{subtitle}</p>
     </div>
   );
 }
