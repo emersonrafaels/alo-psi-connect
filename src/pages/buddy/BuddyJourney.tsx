@@ -51,26 +51,26 @@ export default function BuddyJourney() {
       title="Como sua jornada vem evoluindo"
       description="Acompanhe seus passos e conquistas ao longo do tempo."
     >
-      <Card>
-        <CardHeader><CardTitle>Últimos 60 dias</CardTitle></CardHeader>
-        <CardContent>
+      <Card className="min-w-0 max-w-full">
+        <CardHeader className="p-4 sm:p-6"><CardTitle className="text-lg sm:text-2xl leading-tight [overflow-wrap:anywhere]">Últimos 60 dias</CardTitle></CardHeader>
+        <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 min-w-0">
           {isLoading ? (
             <div className="space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
           ) : items.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">Ainda não há registros. Comece pelo diário emocional ou por uma prática.</p>
+            <p className="text-muted-foreground text-center py-8 [overflow-wrap:anywhere]">Ainda não há registros. Comece pelo diário emocional ou por uma prática.</p>
           ) : (
-            <ol className="relative border-l border-border/60 ml-3 space-y-6">
+            <ol className="relative border-l border-border/60 ml-3 space-y-6 min-w-0">
               {items.map((it, i) => (
-                <li key={i} className="ml-6">
+                <li key={i} className="ml-4 min-[380px]:ml-6 min-w-0">
                   <span className={`absolute -left-3 flex h-6 w-6 items-center justify-center rounded-full ${it.color}`}>
                     <it.icon className="h-3 w-3" />
                   </span>
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 mb-1">
                     <Badge variant="secondary">{it.type}</Badge>
                     <time className="text-xs text-muted-foreground">{new Date(it.date).toLocaleDateString("pt-BR")}</time>
                   </div>
-                  <p className="font-medium">{it.title}</p>
-                  {it.description && <p className="text-xs text-muted-foreground">{it.description}</p>}
+                  <p className="font-medium [overflow-wrap:anywhere]">{it.title}</p>
+                  {it.description && <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">{it.description}</p>}
                 </li>
               ))}
             </ol>
