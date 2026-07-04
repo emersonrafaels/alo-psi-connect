@@ -393,7 +393,7 @@ function ProgressHeader({ progress }: { progress: number }) {
 
 function SectionStepper({ current, onChange, progress }: { current: SectionId; onChange: (s: SectionId) => void; progress: number }) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+    <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       {SECTIONS.map((s) => {
         const active = s.id === current;
         const Icon = s.icon;
