@@ -78,8 +78,8 @@ export function BuddyLayout({ children, title, description }: { children: React.
         </aside>
         <main className="min-w-0 max-w-full">
           <header className="mb-4 sm:mb-6">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground [overflow-wrap:anywhere]">{title}</h1>
-            {description && <p className="mt-2 text-sm sm:text-base text-muted-foreground max-w-2xl [overflow-wrap:anywhere]">{description}</p>}
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground leading-tight [overflow-wrap:anywhere] hyphens-auto">{title}</h1>
+            {description && <p className="mt-2 text-xs sm:text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed [overflow-wrap:anywhere]">{description}</p>}
           </header>
           {children}
         </main>

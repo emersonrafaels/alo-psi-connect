@@ -42,15 +42,15 @@ export default function BuddyPatterns() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {metrics.map((m) => (
           <Card key={m.label} className="border-primary/20">
-            <CardContent className="p-5">
-              <p className="text-xs text-muted-foreground mb-1">{m.label}</p>
-              {isLoading ? <Skeleton className="h-10 w-24" /> : (
-                <p className="text-3xl font-bold text-primary">
+            <CardContent className="p-3 sm:p-5">
+              <p className="text-[11px] sm:text-xs text-muted-foreground mb-1 leading-tight [overflow-wrap:anywhere]">{m.label}</p>
+              {isLoading ? <Skeleton className="h-8 sm:h-10 w-20 sm:w-24" /> : (
+                <p className="text-2xl sm:text-3xl font-bold text-primary leading-none">
                   {m.value !== null && m.value !== undefined ? Number(m.value).toFixed(1) : "—"}
-                  <span className="text-base text-muted-foreground ml-1">{m.unit}</span>
+                  <span className="text-sm sm:text-base text-muted-foreground ml-1">{m.unit}</span>
                 </p>
               )}
             </CardContent>

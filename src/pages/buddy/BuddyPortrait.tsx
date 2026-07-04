@@ -303,8 +303,8 @@ function SectionBuddy({ form, set, appendText, setAudio }: any) {
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="px-1">
-      <h2 className="text-xl font-semibold text-foreground">{title}</h2>
-      <p className="text-sm text-muted-foreground">{subtitle}</p>
+      <h2 className="text-lg sm:text-xl font-semibold text-foreground leading-tight [overflow-wrap:anywhere]">{title}</h2>
+      <p className="text-xs sm:text-sm text-muted-foreground [overflow-wrap:anywhere]">{subtitle}</p>
     </div>
   );
 }
@@ -393,7 +393,7 @@ function ProgressHeader({ progress }: { progress: number }) {
 
 function SectionStepper({ current, onChange, progress }: { current: SectionId; onChange: (s: SectionId) => void; progress: number }) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+    <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       {SECTIONS.map((s) => {
         const active = s.id === current;
         const Icon = s.icon;
@@ -403,13 +403,13 @@ function SectionStepper({ current, onChange, progress }: { current: SectionId; o
             type="button"
             onClick={() => onChange(s.id)}
             className={cn(
-              "shrink-0 flex items-center gap-2 rounded-full px-4 py-2 text-sm border transition-all",
+              "shrink-0 snap-start flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm border transition-all whitespace-nowrap",
               active
                 ? "bg-primary text-primary-foreground border-primary shadow-md"
                 : "bg-card hover:bg-primary/10 border-border/70 text-muted-foreground hover:text-foreground"
             )}
           >
-            <Icon className="h-4 w-4" />
+            <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
             {s.label}
           </button>
         );

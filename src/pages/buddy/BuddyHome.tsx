@@ -138,7 +138,7 @@ export default function BuddyHome() {
 
       <section className="mt-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
+          <h2 className="text-base sm:text-lg md:text-xl font-semibold flex items-start gap-2 [overflow-wrap:anywhere]">
             <Heart className="h-5 w-5 text-primary" /> O que o Buddy está priorizando para você
           </h2>
         </div>
