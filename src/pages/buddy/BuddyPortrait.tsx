@@ -403,13 +403,13 @@ function SectionStepper({ current, onChange, progress }: { current: SectionId; o
             type="button"
             onClick={() => onChange(s.id)}
             className={cn(
-              "shrink-0 flex items-center gap-2 rounded-full px-4 py-2 text-sm border transition-all",
+              "shrink-0 snap-start flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm border transition-all whitespace-nowrap",
               active
                 ? "bg-primary text-primary-foreground border-primary shadow-md"
                 : "bg-card hover:bg-primary/10 border-border/70 text-muted-foreground hover:text-foreground"
             )}
           >
-            <Icon className="h-4 w-4" />
+            <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
             {s.label}
           </button>
         );
