@@ -20,7 +20,7 @@ const WhatsAppFloat = () => {
       onClick={handleWhatsAppClick}
       className={cn(
         "fixed right-6 z-50 w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center p-0",
-        isBuddyRoute ? "bottom-24 sm:bottom-6" : "bottom-6"
+        isBuddyRoute ? "hidden sm:flex bottom-6" : "bottom-6"
       )}
       aria-label="Entrar em contato via WhatsApp"
     >
