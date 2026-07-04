@@ -20,7 +20,7 @@ export function BuddyLayout({ children, title, description }: { children: React.
       <Header />
       <div className="w-full max-w-7xl min-w-0 mx-auto px-2 min-[380px]:px-3 sm:px-4 lg:px-6 py-3 sm:py-6 lg:py-8 grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="min-w-0 max-w-full lg:sticky lg:top-24 self-start -mx-2 min-[380px]:-mx-3 sm:mx-0">
-          {/* Mobile: horizontal scroll with edge fade */}
+          {/* Mobile/Tablet: horizontal scroll with drag support and visible scrollbar */}
           <div className="relative lg:hidden">
             <div
               className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent z-10"
@@ -30,9 +30,7 @@ export function BuddyLayout({ children, title, description }: { children: React.
               className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent z-10"
               aria-hidden
             />
-            <nav
-              className="flex w-full max-w-full min-w-0 gap-1.5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory px-2 min-[380px]:px-3 py-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-            >
+            <DragScrollNav>
               {nav.map((item) => (
                 <NavLink
                   key={item.to}
@@ -40,7 +38,7 @@ export function BuddyLayout({ children, title, description }: { children: React.
                   end={item.end}
                   className={({ isActive }) =>
                     cn(
-                      "snap-start shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors border",
+                      "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors border select-none",
                       isActive
                         ? "bg-primary text-primary-foreground border-primary shadow-sm"
                         : "bg-card text-muted-foreground border-border/60 hover:bg-primary/10 hover:text-foreground"
@@ -48,10 +46,10 @@ export function BuddyLayout({ children, title, description }: { children: React.
                   }
                 >
                   <item.icon className="h-3.5 w-3.5 shrink-0" />
-                  <span>{item.shortLabel}</span>
+                  <span>{item.label}</span>
                 </NavLink>
               ))}
-            </nav>
+            </DragScrollNav>
           </div>
 
           {/* Desktop: sticky vertical sidebar */}
