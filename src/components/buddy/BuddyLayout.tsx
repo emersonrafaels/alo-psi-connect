@@ -16,7 +16,7 @@ const nav = [
 
 export function BuddyLayout({ children, title, description }: { children: React.ReactNode; title: string; description?: string }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10">
+    <div className="min-h-screen overflow-x-clip bg-gradient-to-br from-background via-primary/5 to-accent/10">
       <Header />
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-[220px_1fr]">
         <aside className="lg:sticky lg:top-24 self-start -mx-3 sm:mx-0">
@@ -76,10 +76,10 @@ export function BuddyLayout({ children, title, description }: { children: React.
             ))}
           </nav>
         </aside>
-        <main className="min-w-0">
+        <main className="min-w-0 max-w-full">
           <header className="mb-4 sm:mb-6">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground break-words">{title}</h1>
-            {description && <p className="mt-2 text-sm sm:text-base text-muted-foreground max-w-2xl">{description}</p>}
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground [overflow-wrap:anywhere]">{title}</h1>
+            {description && <p className="mt-2 text-sm sm:text-base text-muted-foreground max-w-2xl [overflow-wrap:anywhere]">{description}</p>}
           </header>
           {children}
         </main>

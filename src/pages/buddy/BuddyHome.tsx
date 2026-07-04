@@ -72,8 +72,8 @@ export default function BuddyHome() {
       description="Aqui o Buddy conecta tudo o que você compartilha na Rede Bem-Estar para te apoiar de forma cada vez mais personalizada."
     >
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2 border-primary/20 overflow-hidden">
-          <CardHeader className="flex flex-row items-start gap-3 sm:gap-4 p-4 sm:p-6">
+        <Card className="lg:col-span-2 border-primary/20 overflow-hidden min-w-0">
+          <CardHeader className="p-4 sm:p-6">
             <BuddyMascot size="md" message={insight?.narrative?.split("\n")[0] ?? "Estou aprendendo sobre você a cada conversa. Me conte um pouco mais quando quiser."} />
           </CardHeader>
           <CardContent className="grid gap-4 p-4 sm:p-6 pt-0 sm:pt-0">
