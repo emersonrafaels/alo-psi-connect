@@ -1,53 +1,44 @@
 ## Objetivo
+Corrigir o Buddy para que o conteúdo não seja cortado em mobile/tablet, sem depender de esconder overflow horizontal. A solução deve fazer o layout encolher e quebrar texto corretamente em vez de simplesmente ocultar o que passa da tela.
 
-Fazer a área do Buddy (`/buddy` e sub-rotas) funcionar bem em celulares e tablets, corrigindo overflow, navegação e densidade dos cards.
+## Plano de ajuste
 
-## Problemas observados
+1. **Remover o mascaramento que esconde o problema**
+   - Trocar `overflow-x-clip` no layout do Buddy por uma estratégia segura de largura (`w-full`, `max-w-full`, `min-w-0`) nos containers reais.
+   - Isso evita que textos, botões e cards sejam cortados sem possibilidade de rolagem.
 
-Na captura em 390px:
-- Título "Olá, {nome}" quebra fora da tela (não tem `break-words`).
-- Nav lateral vira barra horizontal com scroll — labels ficam cortadas ("Como te conh…").
-- Balão de fala do mascote transborda (max-w fixo).
-- Cards de recomendação e retrato ficam com padding grande demais em mobile.
-- `BuddyPortrait` usa grid `lg:grid-cols-[1fr_280px]` ok, mas o stepper de seções e sliders precisam de checagem em mobile.
-- Botões (Atualizar / Ver o que percebeu) empilham mal (ok com flex-wrap, mas ícones podem estourar).
+2. **Reorganizar o layout mobile do topo do Buddy**
+   - Reduzir paddings laterais no menor breakpoint.
+   - Garantir que o título tenha largura real disponível e quebre em múltiplas linhas.
+   - Aplicar `min-w-0`, `max-w-full`, `whitespace-normal`, `break-words`/`overflow-wrap:anywhere` nos blocos de título, descrição e conteúdo dinâmico.
 
-## Mudanças
+3. **Corrigir o card principal da tela `/buddy`**
+   - Ajustar o card do resumo para nunca ultrapassar a largura da viewport.
+   - No mobile, transformar a fala do Buddy em layout vertical ou mais compacto quando a largura for pequena, em vez de manter mascote + balão lado a lado ocupando espaço demais.
+   - Ajustar o balão para ocupar `max-w-full`, sem `overflow-hidden` cortando texto.
 
-### 1. `src/components/buddy/BuddyLayout.tsx`
-- Trocar nav lateral por um padrão responsivo:
-  - **Mobile (<lg)**: barra horizontal com scroll suave, `snap-x`, ícones + label curta, com fade nas bordas.
-  - **Desktop (lg+)**: sidebar sticky como hoje.
-- Adicionar `min-w-0` no `<main>` e `break-words` no `<h1>`.
-- Reduzir tamanho do título em mobile (`text-2xl` → `md:text-3xl` → `lg:text-4xl`).
-- Reduzir padding do container em mobile (`px-4 py-6 sm:py-8`).
+4. **Ajustar botões e CTAs longos**
+   - Fazer botões em mobile quebrarem texto internamente ou ficarem em linhas separadas com largura total.
+   - Remover qualquer combinação de ícone + texto que force largura maior que o card.
+   - Garantir altura/tamanho de toque adequado sem estourar horizontalmente.
 
-### 2. `src/components/buddy/BuddyMascot.tsx`
-- Trocar `max-w-xs` do balão por `max-w-none flex-1 min-w-0` para adaptar à coluna.
-- Permitir empilhar mascote+balão em mobile (`flex-col sm:flex-row`) opcionalmente, mas manter horizontal com balão fluido.
+5. **Revisar navegação horizontal do Buddy**
+   - Manter a navegação em scroll horizontal no mobile, mas deixar claro que ela rola e impedir que os fades/containers escondam conteúdo principal.
+   - Garantir que o nav não aumente a largura do layout pai.
 
-### 3. `src/pages/buddy/BuddyHome.tsx`
-- No `CardHeader` do mascote: usar `flex-col sm:flex-row` e `min-w-0` para o balão respirar.
-- Botões: manter `flex-wrap gap-2` e adicionar `w-full sm:w-auto` para CTAs principais em mobile.
-- Grid de recomendações: já é `md:grid-cols-2 lg:grid-cols-3` — reduzir padding interno em mobile (`p-4 sm:p-5`).
-- Truncar/`break-words` em títulos longos das recomendações.
+6. **Aplicar a mesma base responsiva nas subtelas do Buddy**
+   - `/buddy/me-conhecer`: revisar stepper, barra inferior sticky e cards de perguntas.
+   - `/buddy/como-te-conhece`: revisar cabeçalhos, botões e textos gerados.
+   - `/buddy/padroes`: revisar métricas, seletor de período e cards de listas.
+   - `/buddy/privacidade`, `/buddy/jornada`, `/buddy/pontos-de-forca`: aplicar a mesma proteção de largura e quebra de texto onde houver conteúdo dinâmico.
 
-### 4. `src/pages/buddy/BuddyPortrait.tsx`
-- Garantir `min-w-0` na coluna principal e revisar `ProgressHeader`/`SectionStepper` para scroll horizontal com snap em mobile.
-- Textareas com `min-h` menor em mobile.
-- Grid `lg:grid-cols-[1fr_280px]` já é responsivo; aside vira topo em mobile (revisar ordem: manter dicas abaixo em mobile via `order-last lg:order-none`).
+7. **Validação visual obrigatória**
+   - Testar com Playwright em 360px, 390px, 768px e desktop.
+   - Verificar `document.documentElement.scrollWidth <= window.innerWidth` em cada rota.
+   - Capturar screenshots das telas principais para confirmar que nada está cortado, especialmente com nome longo como “Carta Consulta - Paciente”.
 
-### 5. Demais páginas Buddy (`BuddyKnows`, `BuddyPatterns`, `BuddyJourney`, `BuddyStrengths`, `BuddyPrivacy`)
-- Revisão rápida: adicionar `min-w-0`, `break-words` em títulos, `flex-wrap` em barras de ação, e cards com `p-4 sm:p-6`.
-- Gráficos (Padrões/Jornada): garantir `w-full` no container e altura fixa responsiva.
-
-### 6. `BuddyDailyBrief.tsx` (home geral)
-- Já responsivo, mas o grid `md:grid-cols-[auto_1fr_auto]` empilha ok. Ajustar apenas ordem do CTA para ficar abaixo do texto em mobile e ocupar largura total.
-
-## Escopo fora
-- Sem mudanças de dados, hooks ou backend.
-- Sem mudança de cores/tema (já roxo).
-- Sem novas features — apenas responsividade e layout.
-
-## Validação
-- Rodar Playwright em 375×812 (mobile), 768×1024 (tablet), 1280×900 (desktop) capturando `/buddy`, `/buddy/me-conhecer`, `/buddy/padroes`, `/buddy/jornada` e conferir ausência de overflow horizontal e labels cortadas.
+## Detalhes técnicos
+- Priorizar correção de causa raiz: `min-w-0`, `max-w-full`, grids seguros e quebra real de texto.
+- Evitar `overflow-x-hidden/clip` como solução principal.
+- Usar classes responsivas existentes do Tailwind e tokens semânticos do design system.
+- Não alterar lógica do Buddy, dados, Supabase ou geração de insights; apenas layout, tipografia e responsividade.

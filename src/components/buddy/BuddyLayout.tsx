@@ -16,10 +16,10 @@ const nav = [
 
 export function BuddyLayout({ children, title, description }: { children: React.ReactNode; title: string; description?: string }) {
   return (
-    <div className="min-h-screen overflow-x-clip bg-gradient-to-br from-background via-primary/5 to-accent/10">
+    <div className="min-h-screen w-full max-w-full bg-gradient-to-br from-background via-primary/5 to-accent/10">
       <Header />
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-[220px_1fr]">
-        <aside className="lg:sticky lg:top-24 self-start -mx-3 sm:mx-0">
+      <div className="w-full max-w-7xl min-w-0 mx-auto px-2 min-[380px]:px-3 sm:px-4 lg:px-6 py-3 sm:py-6 lg:py-8 grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+        <aside className="min-w-0 max-w-full lg:sticky lg:top-24 self-start -mx-2 min-[380px]:-mx-3 sm:mx-0">
           {/* Mobile: horizontal scroll with edge fade */}
           <div className="relative lg:hidden">
             <div
@@ -31,7 +31,7 @@ export function BuddyLayout({ children, title, description }: { children: React.
               aria-hidden
             />
             <nav
-              className="flex gap-1.5 overflow-x-auto snap-x snap-mandatory px-3 py-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              className="flex w-full max-w-full min-w-0 gap-1.5 overflow-x-auto overscroll-x-contain snap-x snap-mandatory px-2 min-[380px]:px-3 py-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
               {nav.map((item) => (
                 <NavLink
@@ -76,10 +76,10 @@ export function BuddyLayout({ children, title, description }: { children: React.
             ))}
           </nav>
         </aside>
-        <main className="min-w-0 max-w-full">
-          <header className="mb-4 sm:mb-6">
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground leading-tight [overflow-wrap:anywhere] hyphens-auto">{title}</h1>
-            {description && <p className="mt-2 text-xs sm:text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed [overflow-wrap:anywhere]">{description}</p>}
+        <main className="min-w-0 max-w-full w-full pb-20 sm:pb-0">
+          <header className="mb-4 sm:mb-6 min-w-0 max-w-full">
+            <h1 className="max-w-full whitespace-normal text-lg min-[380px]:text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground leading-tight [overflow-wrap:anywhere] hyphens-auto">{title}</h1>
+            {description && <p className="mt-2 max-w-full sm:max-w-2xl text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed [overflow-wrap:anywhere]">{description}</p>}
           </header>
           {children}
         </main>

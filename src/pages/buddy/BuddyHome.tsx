@@ -71,32 +71,32 @@ export default function BuddyHome() {
       title={`Olá, ${firstName}. Que bom te ver.`}
       description="Aqui o Buddy conecta tudo o que você compartilha na Rede Bem-Estar para te apoiar de forma cada vez mais personalizada."
     >
-      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2 border-primary/20 overflow-hidden min-w-0">
-          <CardHeader className="p-4 sm:p-6">
+      <div className="grid min-w-0 max-w-full gap-4 sm:gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <Card className="border-primary/20 min-w-0 max-w-full overflow-visible sm:overflow-hidden">
+          <CardHeader className="p-3 min-[380px]:p-4 sm:p-6 min-w-0">
             <BuddyMascot size="md" message={insight?.narrative?.split("\n")[0] ?? "Estou aprendendo sobre você a cada conversa. Me conte um pouco mais quando quiser."} />
           </CardHeader>
-          <CardContent className="grid gap-4 p-4 sm:p-6 pt-0 sm:pt-0">
+          <CardContent className="grid min-w-0 gap-4 p-3 min-[380px]:p-4 sm:p-6 pt-0 min-[380px]:pt-0 sm:pt-0">
             <div className="flex flex-wrap gap-2 text-xs">
               <Badge variant="secondary">Últimos 30 dias</Badge>
             </div>
             {isLoading ? (
               <Skeleton className="h-24" />
             ) : insight?.narrative ? (
-              <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line break-words">{insight.narrative}</p>
+              <p className="max-w-full text-sm leading-relaxed text-muted-foreground whitespace-pre-line [overflow-wrap:anywhere]">{insight.narrative}</p>
             ) : (
               <div className="rounded-xl bg-muted/40 p-4 text-sm text-muted-foreground">
                 Ainda não gerei um resumo. Preencha seu retrato e clique em "Atualizar percepções" para eu começar.
               </div>
             )}
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={handleRegenerate} disabled={regenerate.isPending} className="w-full sm:w-auto">
+            <div className="flex min-w-0 flex-col sm:flex-row sm:flex-wrap gap-2">
+              <Button onClick={handleRegenerate} disabled={regenerate.isPending} className="w-full sm:w-auto min-h-10 !h-auto !whitespace-normal px-3 text-center">
                 <RefreshCw className={`h-4 w-4 mr-2 ${regenerate.isPending ? "animate-spin" : ""}`} />
                 Atualizar percepções
               </Button>
-              <Button variant="outline" asChild className="w-full sm:w-auto">
-                <Link to="/buddy/como-te-conhece">
-                  Ver o que o Buddy percebeu <ArrowRight className="h-4 w-4 ml-2" />
+              <Button variant="outline" asChild className="w-full sm:w-auto min-h-10 !h-auto !whitespace-normal px-3 text-center">
+                <Link to="/buddy/como-te-conhece" className="min-w-0">
+                  <span className="min-w-0 [overflow-wrap:anywhere]">Ver o que o Buddy percebeu</span> <ArrowRight className="h-4 w-4 ml-2 shrink-0" />
                 </Link>
               </Button>
             </div>
@@ -104,13 +104,13 @@ export default function BuddyHome() {
         </Card>
 
 
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
+        <Card className="border-primary/20 min-w-0 max-w-full">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex min-w-0 items-center gap-2 text-base sm:text-lg leading-tight [overflow-wrap:anywhere]">
               <Sparkles className="h-5 w-5 text-primary" /> Seu retrato
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm">
+          <CardContent className="space-y-3 text-sm p-4 sm:p-6 pt-0 sm:pt-0 min-w-0 [overflow-wrap:anywhere]">
             {portraitLoading ? (
               <Skeleton className="h-24" />
             ) : portrait ? (
@@ -118,7 +118,7 @@ export default function BuddyHome() {
                 <p className="text-muted-foreground">
                   Você já compartilhou {countFilled(portrait)} temas comigo.
                 </p>
-                <Button asChild variant="outline" size="sm">
+                <Button asChild variant="outline" size="sm" className="w-full sm:w-auto min-h-9 !h-auto !whitespace-normal text-center">
                   <Link to="/buddy/me-conhecer">Atualizar meu retrato</Link>
                 </Button>
               </>
@@ -127,7 +127,7 @@ export default function BuddyHome() {
                 <p className="text-muted-foreground">
                   Vamos começar? Me conte o que tem passado pela sua cabeça, o que te acalma e o que sonha.
                 </p>
-                <Button asChild size="sm">
+                <Button asChild size="sm" className="w-full sm:w-auto min-h-9 !h-auto !whitespace-normal text-center">
                   <Link to="/buddy/me-conhecer">Preencher agora</Link>
                 </Button>
               </>
@@ -137,9 +137,9 @@ export default function BuddyHome() {
       </div>
 
       <section className="mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base sm:text-lg md:text-xl font-semibold flex items-start gap-2 [overflow-wrap:anywhere]">
-            <Heart className="h-5 w-5 text-primary" /> O que o Buddy está priorizando para você
+        <div className="flex min-w-0 items-center justify-between mb-4">
+          <h2 className="min-w-0 text-base sm:text-lg md:text-xl font-semibold flex items-start gap-2 leading-tight [overflow-wrap:anywhere]">
+            <Heart className="h-5 w-5 text-primary shrink-0" /> <span>O que o Buddy está priorizando para você</span>
           </h2>
         </div>
         {isLoading ? (
@@ -168,19 +168,19 @@ export default function BuddyHome() {
                 cta: "Ver encontros",
               },
             ].map((rec) => (
-              <Card key={rec.id} className="border-primary/10 hover:border-primary/30 transition-colors">
-                <CardContent className="p-4 sm:p-5 space-y-3">
+              <Card key={rec.id} className="min-w-0 max-w-full border-primary/10 hover:border-primary/30 transition-colors">
+                <CardContent className="p-4 sm:p-5 space-y-3 min-w-0">
                   <Badge variant="secondary" className="capitalize">{rec.category}</Badge>
-                  <h3 className="font-semibold text-foreground break-words">{rec.title}</h3>
-                  <p className="text-sm text-muted-foreground break-words">{rec.description}</p>
-                  <div className="flex flex-wrap gap-2 pt-2">
+                  <h3 className="font-semibold text-foreground [overflow-wrap:anywhere]">{rec.title}</h3>
+                  <p className="text-sm text-muted-foreground [overflow-wrap:anywhere]">{rec.description}</p>
+                  <div className="flex flex-col min-[420px]:flex-row min-[420px]:flex-wrap gap-2 pt-2">
                     <Button
                       size="sm"
                       variant="default"
                       onClick={() => handleRecommendationAction(rec)}
-                      className="flex-1 sm:flex-none"
+                      className="w-full min-[420px]:w-auto min-[420px]:flex-1 sm:flex-none min-h-9 !h-auto !whitespace-normal text-center px-3"
                     >
-                      <Check className="h-4 w-4 mr-1" /> {rec.cta ?? CATEGORY_LABELS[(rec.category || "").toLowerCase()] ?? "Abrir"}
+                      <Check className="h-4 w-4 mr-1 shrink-0" /> <span className="min-w-0 [overflow-wrap:anywhere]">{rec.cta ?? CATEGORY_LABELS[(rec.category || "").toLowerCase()] ?? "Abrir"}</span>
                     </Button>
                     {!rec.id.startsWith("static-") && (
                       <Button

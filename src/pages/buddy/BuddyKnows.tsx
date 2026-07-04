@@ -48,17 +48,17 @@ export default function BuddyKnows() {
       description="Aqui você vê o mapa do que o Buddy entende sobre você — construído a partir de tudo que compartilha na Rede Bem-Estar."
     >
       {/* Métricas rápidas */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid min-w-0 grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {metrics.map((m) => {
           const val = typeof m.value === "number" ? Math.round(m.value) : null;
           return (
             <Card
               key={m.label}
-              className="relative overflow-hidden border-primary/10 bg-gradient-to-br from-card to-primary/5"
+              className="relative min-w-0 overflow-hidden border-primary/10 bg-gradient-to-br from-card to-primary/5"
             >
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <CardContent className="p-3 sm:p-4 min-w-0">
+                <div className="flex min-w-0 items-center justify-between gap-2 mb-2">
+                  <span className="min-w-0 text-[10px] min-[380px]:text-xs font-medium text-muted-foreground uppercase tracking-wide [overflow-wrap:anywhere]">
                     {m.label}
                   </span>
                   <m.icon className="h-4 w-4 text-primary" />
@@ -83,15 +83,15 @@ export default function BuddyKnows() {
         })}
       </div>
 
-      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2 border-primary/20 overflow-hidden bg-gradient-to-br from-card via-card to-primary/5">
-          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="grid min-w-0 gap-4 sm:gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <Card className="border-primary/20 min-w-0 overflow-hidden bg-gradient-to-br from-card via-card to-primary/5">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 sm:p-6 min-w-0">
             <div className="min-w-0">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <CardTitle className="flex min-w-0 items-center gap-2 text-base sm:text-lg leading-tight">
                 <Sparkles className="h-5 w-5 text-primary shrink-0" />
-                <span className="truncate">Seu mapa de conhecimento</span>
+                <span className="min-w-0 whitespace-normal [overflow-wrap:anywhere]">Seu mapa de conhecimento</span>
               </CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1 [overflow-wrap:anywhere]">
                 Os temas que mais aparecem em suas interações.
               </p>
             </div>
@@ -100,7 +100,7 @@ export default function BuddyKnows() {
               variant="outline"
               onClick={handleRegen}
               disabled={regenerate.isPending}
-              className="rounded-full self-start sm:self-auto"
+              className="rounded-full self-start sm:self-auto min-h-9 !h-auto !whitespace-normal"
             >
               <RefreshCw
                 className={`h-4 w-4 mr-2 ${regenerate.isPending ? "animate-spin" : ""}`}
@@ -108,13 +108,13 @@ export default function BuddyKnows() {
               Atualizar
             </Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 min-w-0">
             {isLoading ? (
               <Skeleton className="h-80" />
             ) : topics.length ? (
               <KnowledgeMap topics={topics} />
             ) : (
-              <div className="text-center text-muted-foreground py-16">
+              <div className="text-center text-muted-foreground py-16 [overflow-wrap:anywhere]">
                 Ainda não tenho dados suficientes. Registre algumas emoções ou preencha
                 seu retrato para eu começar.
               </div>
@@ -122,36 +122,36 @@ export default function BuddyKnows() {
           </CardContent>
         </Card>
 
-        <Card className="border-primary/20 bg-gradient-to-br from-card to-accent/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card className="border-primary/20 min-w-0 bg-gradient-to-br from-card to-accent/5">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex min-w-0 items-center gap-2 text-lg sm:text-2xl leading-tight [overflow-wrap:anywhere]">
               <BookHeart className="h-5 w-5 text-primary" />
               Fontes das percepções
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 min-w-0">
             <SourcesList sources={insight?.sources ?? null} />
           </CardContent>
         </Card>
       </div>
 
-      <div className="mt-6 grid gap-6 md:grid-cols-2">
-        <Card className="relative overflow-hidden border-l-4 border-l-emerald-500">
-          <CardHeader className="flex-row items-center gap-2">
+      <div className="mt-6 grid min-w-0 gap-4 sm:gap-6 md:grid-cols-2">
+        <Card className="relative min-w-0 overflow-hidden border-l-4 border-l-emerald-500">
+          <CardHeader className="flex-row items-center gap-2 p-4 sm:p-6">
             <div className="rounded-full bg-emerald-500/10 p-2">
               <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <CardTitle>Fortalezas</CardTitle>
+            <CardTitle className="text-lg sm:text-2xl leading-tight [overflow-wrap:anywhere]">Fortalezas</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 p-4 sm:p-6 pt-0 sm:pt-0 min-w-0">
             {insight?.strengths?.length ? (
               insight.strengths.map((s, i) => (
                 <div
                   key={i}
-                  className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-3 hover:bg-emerald-500/10 transition-colors"
+                  className="min-w-0 rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-3 hover:bg-emerald-500/10 transition-colors"
                 >
-                  <p className="font-medium text-sm text-foreground">{s.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{s.description}</p>
+                  <p className="font-medium text-sm text-foreground [overflow-wrap:anywhere]">{s.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1 [overflow-wrap:anywhere]">{s.description}</p>
                 </div>
               ))
             ) : (
@@ -160,26 +160,26 @@ export default function BuddyKnows() {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-l-4 border-l-amber-500">
-          <CardHeader className="flex-row items-center gap-2">
+        <Card className="relative min-w-0 overflow-hidden border-l-4 border-l-amber-500">
+          <CardHeader className="flex-row items-center gap-2 p-4 sm:p-6">
             <div className="rounded-full bg-amber-500/10 p-2">
               <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
-            <CardTitle>Pontos de atenção</CardTitle>
+            <CardTitle className="text-lg sm:text-2xl leading-tight [overflow-wrap:anywhere]">Pontos de atenção</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 p-4 sm:p-6 pt-0 sm:pt-0 min-w-0">
             {insight?.attention_points?.length ? (
               insight.attention_points.map((a, i) => (
                 <div
                   key={i}
-                  className="rounded-xl bg-amber-500/5 border border-amber-500/10 p-3 flex items-start justify-between gap-3 hover:bg-amber-500/10 transition-colors"
+                  className="min-w-0 rounded-xl bg-amber-500/5 border border-amber-500/10 p-3 flex flex-col min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between gap-3 hover:bg-amber-500/10 transition-colors"
                 >
-                  <div>
-                    <p className="font-medium text-sm text-foreground">{a.title}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{a.description}</p>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm text-foreground [overflow-wrap:anywhere]">{a.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1 [overflow-wrap:anywhere]">{a.description}</p>
                   </div>
                   {a.severity && (
-                    <Badge variant={severityVariant(a.severity)} className="shrink-0">
+                    <Badge variant={severityVariant(a.severity)} className="shrink-0 self-start">
                       {labelSeverity(a.severity)}
                     </Badge>
                   )}
@@ -193,8 +193,8 @@ export default function BuddyKnows() {
       </div>
 
       <div className="mt-6">
-        <Card className="border-primary/20 overflow-hidden bg-gradient-to-br from-primary/5 via-card to-accent/10">
-          <CardContent className="p-6 relative">
+        <Card className="border-primary/20 min-w-0 overflow-visible sm:overflow-hidden bg-gradient-to-br from-primary/5 via-card to-accent/10">
+          <CardContent className="p-4 sm:p-6 relative min-w-0">
             <Quote className="absolute top-4 right-4 h-16 w-16 text-primary/10" />
             <BuddyMascot
               message={
@@ -261,17 +261,17 @@ function SourcesList({ sources }: { sources: Record<string, number> | null }) {
   const entries = Object.entries(sources);
   const total = entries.reduce((sum, [, v]) => sum + (Number(v) || 0), 0) || 1;
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 min-w-0 max-w-full">
       {entries.map(([k, v]) => {
         const Icon = sourceIcon(k);
         const val = Number(v) || 0;
         const pct = Math.round((val / total) * 100);
         return (
           <div key={k}>
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-start justify-between gap-3 mb-1.5">
+              <div className="flex min-w-0 items-center gap-2">
                 <Icon className="h-3.5 w-3.5 text-primary" />
-                <span className="text-sm text-foreground">{labelSource(k)}</span>
+                <span className="min-w-0 text-sm text-foreground [overflow-wrap:anywhere]">{labelSource(k)}</span>
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-sm font-semibold text-foreground">{val}</span>
@@ -300,12 +300,22 @@ function KnowledgeMap({ topics }: { topics: { id: string; label: string; weight:
   const visible = topics.slice(0, 8);
 
   return (
-    <div className="flex justify-center py-4">
+    <div className="min-w-0 max-w-full py-2 sm:py-4">
+      <div className="grid gap-2 sm:hidden">
+        {topics.slice(0, 8).map((topic) => (
+          <div key={topic.id} className="rounded-xl border border-primary/15 bg-primary/5 p-3">
+            <p className="text-sm font-medium text-foreground [overflow-wrap:anywhere]">{topic.label}</p>
+            <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+              <div className="h-full bg-primary" style={{ width: `${Math.max(12, Math.min(100, (topic.weight || 0.5) * 100))}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
       <svg
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        className="max-w-full h-auto"
+        className="hidden sm:block mx-auto max-w-full h-auto"
       >
         <defs>
           <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">

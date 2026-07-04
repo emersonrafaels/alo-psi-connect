@@ -88,7 +88,7 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6 flex-grow justify-center">
+          <nav className="hidden lg:flex items-center space-x-6 flex-grow justify-center">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -107,7 +107,7 @@ const Header = () => {
           </nav>
 
           {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center space-x-4 flex-shrink-0">
+          <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
 
             
             <ThemeToggle />
@@ -240,7 +240,7 @@ const Header = () => {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden ml-auto p-2.5 rounded-lg hover:bg-accent/10 transition-colors"
+            className="lg:hidden ml-auto p-2.5 rounded-lg hover:bg-accent/10 transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
           >
@@ -250,7 +250,7 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden pb-6 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="lg:hidden pb-6 animate-in fade-in slide-in-from-top-2 duration-200">
             {/* Seção: Navegação */}
             <div className="py-4">
               <p className="text-xs font-medium uppercase tracking-wider opacity-60 mb-3 px-1">
