@@ -6,11 +6,11 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import { TenantProvider } from "@/contexts/TenantContext";
+import { TenantProvider, TenantContext } from "@/contexts/TenantContext";
 import { TenantGuard } from "@/components/TenantGuard";
 import { useTenant } from "@/hooks/useTenant";
 import { useGlobalCacheShortcut } from "@/hooks/useGlobalCacheShortcut";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import WhatsAppFloat from "@/components/ui/whatsapp-float";
 import ScrollToTopButton from "@/components/ui/scroll-to-top-button";
 import { FirstLoginWelcome } from "@/components/FirstLoginWelcome";
@@ -123,7 +123,8 @@ const queryClient = new QueryClient({
 
 // Componente separado para ThemeProvider com tenant
 const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
-  const { tenant } = useTenant();
+  const tenantCtx = useContext(TenantContext);
+  const tenant = tenantCtx?.tenant;
   const [storageKey, setStorageKey] = useState("alopsi-theme");
 
   useEffect(() => {
