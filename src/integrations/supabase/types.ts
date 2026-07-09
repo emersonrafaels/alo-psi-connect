@@ -3763,6 +3763,8 @@ export type Database = {
           cross_tenant_navigation_warning_title: string | null
           cta_primary_text: string | null
           cta_secondary_text: string | null
+          diary_whatsapp_message: string | null
+          diary_whatsapp_number: string | null
           domain_redirect_enabled: boolean | null
           domain_redirect_from: string[] | null
           domain_redirect_to: string | null
@@ -3854,6 +3856,8 @@ export type Database = {
           cross_tenant_navigation_warning_title?: string | null
           cta_primary_text?: string | null
           cta_secondary_text?: string | null
+          diary_whatsapp_message?: string | null
+          diary_whatsapp_number?: string | null
           domain_redirect_enabled?: boolean | null
           domain_redirect_from?: string[] | null
           domain_redirect_to?: string | null
@@ -3945,6 +3949,8 @@ export type Database = {
           cross_tenant_navigation_warning_title?: string | null
           cta_primary_text?: string | null
           cta_secondary_text?: string | null
+          diary_whatsapp_message?: string | null
+          diary_whatsapp_number?: string | null
           domain_redirect_enabled?: boolean | null
           domain_redirect_from?: string[] | null
           domain_redirect_to?: string | null
