@@ -213,6 +213,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         // Contact information
         contact_phone: tenant.contact_phone || "",
         contact_whatsapp: tenant.contact_whatsapp || "",
+        diary_whatsapp_number: (tenant as any).diary_whatsapp_number || "",
+        diary_whatsapp_message: (tenant as any).diary_whatsapp_message || "Olá, quero registrar meu diário emocional",
         contact_email: tenant.contact_email || "",
         contact_address: tenant.contact_address || "",
         cnpj: tenant.cnpj || "",
