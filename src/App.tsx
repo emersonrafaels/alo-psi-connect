@@ -123,7 +123,8 @@ const queryClient = new QueryClient({
 
 // Componente separado para ThemeProvider com tenant
 const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
-  const { tenant } = useTenant();
+  const tenantCtx = useContext(TenantContext);
+  const tenant = tenantCtx?.tenant;
   const [storageKey, setStorageKey] = useState("alopsi-theme");
 
   useEffect(() => {
