@@ -497,6 +497,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         // Contact information
         contact_phone: formData.contact_phone || null,
         contact_whatsapp: formData.contact_whatsapp || null,
+        diary_whatsapp_number: formData.diary_whatsapp_number || null,
+        diary_whatsapp_message: formData.diary_whatsapp_message || null,
         contact_email: formData.contact_email || null,
         contact_address: formData.contact_address || null,
         cnpj: formData.cnpj || null,
