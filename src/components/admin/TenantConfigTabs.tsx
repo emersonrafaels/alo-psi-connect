@@ -57,6 +57,42 @@ export const ContactConfigTab = ({ formData, setFormData }: TenantConfigTabsProp
       </div>
       </div>
 
+      <Card className="p-4 space-y-4 bg-muted/30">
+        <div>
+          <h4 className="font-medium text-sm">Diário Emocional — WhatsApp</h4>
+          <p className="text-xs text-muted-foreground mt-1">
+            Configure o bot que recebe registros do diário emocional via WhatsApp.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <LabelWithTooltip
+            htmlFor="diary_whatsapp_number"
+            label="Número do bot do diário"
+            tooltip="Número de WhatsApp que recebe as mensagens do diário emocional. Formato: 5511999999999 (código país + DDD + número). Se vazio, usa o WhatsApp de contato acima."
+          />
+          <Input
+            id="diary_whatsapp_number"
+            value={formData.diary_whatsapp_number || ""}
+            onChange={(e) => setFormData({ ...formData, diary_whatsapp_number: e.target.value })}
+            placeholder="5511999999999"
+          />
+        </div>
+        <div className="space-y-2">
+          <LabelWithTooltip
+            htmlFor="diary_whatsapp_message"
+            label="Mensagem inicial"
+            tooltip='Texto pré-preenchido quando o usuário clica em "Registrar pelo WhatsApp".'
+          />
+          <Textarea
+            id="diary_whatsapp_message"
+            value={formData.diary_whatsapp_message || ""}
+            onChange={(e) => setFormData({ ...formData, diary_whatsapp_message: e.target.value })}
+            placeholder="Olá, quero registrar meu diário emocional"
+            rows={2}
+          />
+        </div>
+      </Card>
+
       <div className="space-y-2">
         <LabelWithTooltip 
           htmlFor="contact_email" 
