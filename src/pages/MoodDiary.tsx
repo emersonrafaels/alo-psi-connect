@@ -398,7 +398,11 @@ const MoodDiary = () => {
                     Meu Padrão Emocional
                   </Button>
                   <Button 
-                    onClick={() => window.open('https://wa.me/5511947994163?text=Ol%C3%A1%2C%20quero%20registrar%20meu%20diario%20emocional', '_blank')}
+                    onClick={() => {
+                      const number = tenant?.diary_whatsapp_number || tenant?.contact_whatsapp || '5511947994163';
+                      const message = tenant?.diary_whatsapp_message || 'Olá, quero registrar meu diário emocional';
+                      window.open(`https://wa.me/${number.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
+                    }}
                     className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
                   >
                     <MessageCircle className="h-4 w-4" />
