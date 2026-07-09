@@ -61,6 +61,8 @@ interface Tenant {
   // Contact information
   contact_phone?: string;
   contact_whatsapp?: string;
+  diary_whatsapp_number?: string;
+  diary_whatsapp_message?: string;
   contact_email?: string;
   contact_address?: string;
   cnpj?: string;
