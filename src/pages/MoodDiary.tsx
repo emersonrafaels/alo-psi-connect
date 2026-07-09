@@ -399,7 +399,7 @@ const MoodDiary = () => {
                   </Button>
                   <Button 
                     onClick={() => {
-                      const number = tenant?.diary_whatsapp_number || tenant?.contact_whatsapp || '5511947994163';
+                      const number = tenant?.diary_whatsapp_number || tenant?.contact_whatsapp || '5511937074332';
                       const message = tenant?.diary_whatsapp_message || 'Olá, quero registrar meu diário emocional';
                       window.open(`https://wa.me/${number.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
                     }}
