@@ -1,104 +1,19 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+// Transcribe audio + gerar reflexão empática usando Lovable AI (Gemini)
+// Contrato mantido: entrada { audio: base64, tenant_id?: string }
+// Saída: { transcription: string, reflection: string }
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
-// Process base64 in chunks to prevent memory issues
-function processBase64Chunks(base64String: string, chunkSize = 32768) {
-  const chunks: Uint8Array[] = [];
-  let position = 0;
-  
-  while (position < base64String.length) {
-    const chunk = base64String.slice(position, position + chunkSize);
-    const binaryChunk = atob(chunk);
-    const bytes = new Uint8Array(binaryChunk.length);
-    
-    for (let i = 0; i < binaryChunk.length; i++) {
-      bytes[i] = binaryChunk.charCodeAt(i);
-    }
-    
-    chunks.push(bytes);
-    position += chunkSize;
-  }
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const DEFAULT_MODEL = "google/gemini-2.5-flash";
 
-  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  return result;
-}
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
-  try {
-    const { audio, tenant_id } = await req.json()
-    
-    if (!audio) {
-      throw new Error('No audio data provided')
-    }
-
-    console.log('Starting transcription with Alô, Psi...', { tenant_id })
-
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-    // Helper function to fetch config with tenant prioritization
-    const getConfig = async (key: string, defaultValue: any) => {
-      // Try tenant-specific config first
-      if (tenant_id) {
-        const { data: tenantConfig } = await supabase
-          .from('system_configurations')
-          .select('value')
-          .eq('category', 'audio_transcription')
-          .eq('key', key)
-          .eq('tenant_id', tenant_id)
-          .maybeSingle()
-        
-        if (tenantConfig?.value) {
-          try {
-            return JSON.parse(tenantConfig.value)
-          } catch {
-            return tenantConfig.value
-          }
-        }
-      }
-      
-      // Fallback to global config
-      const { data: globalConfig } = await supabase
-        .from('system_configurations')
-        .select('value')
-        .eq('category', 'audio_transcription')
-        .eq('key', key)
-        .is('tenant_id', null)
-        .maybeSingle()
-      
-      if (globalConfig?.value) {
-        try {
-          return JSON.parse(globalConfig.value)
-        } catch {
-          return globalConfig.value
-        }
-      }
-      
-      return defaultValue
-    }
-
-    const systemPrompt = await getConfig('system_prompt',
-      `Você é Alô, Psi - um assistente de inteligência artificial especializado em saúde emocional e bem-estar emocional.
+const DEFAULT_SYSTEM_PROMPT = `Você é Alô, Psi - um assistente de inteligência artificial especializado em saúde emocional e bem-estar emocional.
 
 Sua tarefa é processar a transcrição de um áudio gravado por um usuário em seu diário emocional.
 
@@ -118,97 +33,156 @@ TRANSCRIÇÃO ORIGINAL:
 ---
 
 INSIGHTS E REFLEXÕES:
-[análise empática e organizada, como se fosse uma reflexão do próprio usuário mas melhor estruturada]`)
+[análise empática e organizada, como se fosse uma reflexão do próprio usuário mas melhor estruturada]`;
 
-    const model = await getConfig('model', 'gpt-4o-mini')
-    const maxTokens = await getConfig('max_tokens', 600)
-    const temperature = await getConfig('temperature', 0.7)
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
-    console.log('[Transcribe Audio] Configurations loaded:', { 
-      tenant_id, 
-      model, 
-      maxTokens, 
-      temperature,
-      promptLength: systemPrompt.length 
-    })
-
-    // Process audio in chunks
-    const binaryAudio = processBase64Chunks(audio)
-    
-    // Prepare form data
-    const formData = new FormData()
-    const blob = new Blob([binaryAudio], { type: 'audio/webm' })
-    formData.append('file', blob, 'audio.webm')
-    formData.append('model', 'whisper-1')
-    formData.append('language', 'pt')
-
-    // Send to OpenAI
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-      },
-      body: formData,
-    })
-
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${await response.text()}`)
-    }
-
-    const result = await response.json()
-    console.log('Transcription completed:', result.text)
-
-    // Process the transcription with Alô, Psi using dynamic configurations
-    const reflectionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: `Por favor, processe esta transcrição de áudio do diário emocional:
-
-"${result.text}"`
-          }
-        ],
-        temperature: temperature,
-        max_tokens: maxTokens
-      }),
-    })
-
-    if (!reflectionResponse.ok) {
-      throw new Error(`OpenAI reflection error: ${await reflectionResponse.text()}`)
-    }
-
-    const reflectionResult = await reflectionResponse.json()
-    const reflection = reflectionResult.choices[0].message.content
-
-    console.log('Reflection generated by Alô, Psi with dynamic configuration')
-
-    return new Response(
-      JSON.stringify({ 
-        transcription: result.text,
-        reflection: reflection
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-
-  } catch (error) {
-    console.error('Transcription error:', error)
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
+async function callGateway(body: unknown) {
+  const res = await fetch(GATEWAY_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (res.status === 429) {
+    throw new Response(
+      JSON.stringify({ error: "rate_limited", message: "Muitas requisições, tente novamente em instantes." }),
+      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
-})
+  if (res.status === 402) {
+    throw new Response(
+      JSON.stringify({ error: "credits_exhausted", message: "Créditos de IA esgotados." }),
+      { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    console.error("[transcribe-audio] gateway error", res.status, t);
+    throw new Response(
+      JSON.stringify({ error: "ai_error", message: t.slice(0, 500) || `status ${res.status}` }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+  return res.json();
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  try {
+    if (!LOVABLE_API_KEY) return jsonResponse({ error: "LOVABLE_API_KEY não configurada" }, 500);
+
+    const { audio, tenant_id, audio_format } = await req.json();
+    if (!audio || typeof audio !== "string") {
+      return jsonResponse({ error: "No audio data provided" }, 400);
+    }
+
+    // Container do áudio (browser MediaRecorder → webm; Safari → mp4)
+    const format = (audio_format === "mp4" || audio_format === "wav" || audio_format === "mp3")
+      ? audio_format
+      : "webm";
+
+    // Carrega config de reflexão (system prompt / temperatura / max_tokens) do banco
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const getConfig = async <T,>(key: string, defaultValue: T): Promise<T> => {
+      const load = async (tid: string | null) => {
+        const query = supabase
+          .from("system_configurations")
+          .select("value")
+          .eq("category", "audio_transcription")
+          .eq("key", key);
+        const { data } = await (tid ? query.eq("tenant_id", tid) : query.is("tenant_id", null)).maybeSingle();
+        if (!data?.value) return null;
+        try { return JSON.parse(data.value as string); } catch { return data.value; }
+      };
+      if (tenant_id) {
+        const v = await load(tenant_id);
+        if (v !== null && v !== undefined) return v as T;
+      }
+      const g = await load(null);
+      if (g !== null && g !== undefined) return g as T;
+      return defaultValue;
+    };
+
+    const systemPrompt = await getConfig<string>("system_prompt", DEFAULT_SYSTEM_PROMPT);
+    let reflectionModel = await getConfig<string>("model", DEFAULT_MODEL);
+    // Se o admin configurou um modelo OpenAI antigo (ex.: gpt-4o-mini), usar Gemini padrão
+    if (!reflectionModel.startsWith("google/") && !reflectionModel.startsWith("openai/")) {
+      console.warn("[transcribe-audio] modelo configurado sem prefixo vendor, usando default", reflectionModel);
+      reflectionModel = DEFAULT_MODEL;
+    }
+    if (reflectionModel.startsWith("openai/")) {
+      // Padronização Gemini para diário emocional
+      console.warn("[transcribe-audio] convertendo modelo OpenAI para Gemini padrão");
+      reflectionModel = DEFAULT_MODEL;
+    }
+    const maxTokens = await getConfig<number>("max_tokens", 800);
+    const temperature = await getConfig<number>("temperature", 0.7);
+
+    console.log("[transcribe-audio] iniciando", { tenant_id, reflectionModel, format });
+
+    // 1) Transcrição com Gemini multimodal (input_audio)
+    const transcriptionResp = await callGateway({
+      model: DEFAULT_MODEL,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Você é um transcritor de áudio em português brasileiro. Transcreva LITERALMENTE o áudio, sem adicionar comentários, sem resumir e sem traduzir. Devolva apenas o texto transcrito.",
+        },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Transcreva este áudio em português brasileiro, literalmente." },
+            { type: "input_audio", input_audio: { data: audio, format } },
+          ],
+        },
+      ],
+      temperature: 0,
+    });
+
+    const transcription: string = transcriptionResp?.choices?.[0]?.message?.content?.trim() ?? "";
+    if (!transcription) {
+      console.error("[transcribe-audio] transcrição vazia", JSON.stringify(transcriptionResp).slice(0, 500));
+      return jsonResponse({ error: "empty_transcription", message: "Não foi possível transcrever o áudio." }, 500);
+    }
+    console.log("[transcribe-audio] transcrição ok, len=", transcription.length);
+
+    // 2) Reflexão empática
+    const reflectionResp = await callGateway({
+      model: reflectionModel,
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: `Por favor, processe esta transcrição de áudio do diário emocional:\n\n"${transcription}"`,
+        },
+      ],
+      temperature,
+      max_tokens: maxTokens,
+    });
+
+    const reflection: string = reflectionResp?.choices?.[0]?.message?.content?.trim() ?? "";
+    console.log("[transcribe-audio] reflexão ok, len=", reflection.length);
+
+    return jsonResponse({ transcription, reflection });
+  } catch (err) {
+    if (err instanceof Response) return err;
+    console.error("[transcribe-audio] fatal", err);
+    return jsonResponse(
+      { error: "internal", message: err instanceof Error ? err.message : "Unknown error" },
+      500,
+    );
+  }
+});
