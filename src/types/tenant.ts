@@ -55,6 +55,8 @@ export interface Tenant {
   contact_email?: string;
   contact_address?: string;
   contact_whatsapp?: string;
+  diary_whatsapp_number?: string;
+  diary_whatsapp_message?: string;
   social_instagram?: string;
   social_facebook?: string;
   social_linkedin?: string;

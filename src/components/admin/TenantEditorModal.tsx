@@ -61,6 +61,8 @@ interface Tenant {
   // Contact information
   contact_phone?: string;
   contact_whatsapp?: string;
+  diary_whatsapp_number?: string;
+  diary_whatsapp_message?: string;
   contact_email?: string;
   contact_address?: string;
   cnpj?: string;
@@ -133,6 +135,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
     // Contact information
     contact_phone: "",
     contact_whatsapp: "",
+    diary_whatsapp_number: "",
+    diary_whatsapp_message: "Olá, quero registrar meu diário emocional",
     contact_email: "",
     contact_address: "",
     cnpj: "",
@@ -209,6 +213,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         // Contact information
         contact_phone: tenant.contact_phone || "",
         contact_whatsapp: tenant.contact_whatsapp || "",
+        diary_whatsapp_number: (tenant as any).diary_whatsapp_number || "",
+        diary_whatsapp_message: (tenant as any).diary_whatsapp_message || "Olá, quero registrar meu diário emocional",
         contact_email: tenant.contact_email || "",
         contact_address: tenant.contact_address || "",
         cnpj: tenant.cnpj || "",
@@ -281,6 +287,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         // Contact information
         contact_phone: "",
         contact_whatsapp: "",
+        diary_whatsapp_number: "",
+        diary_whatsapp_message: "Olá, quero registrar meu diário emocional",
         contact_email: "",
         contact_address: "",
         cnpj: "",
@@ -489,6 +497,8 @@ export const TenantEditorModal = ({ tenant, open, onOpenChange, onSuccess }: Ten
         // Contact information
         contact_phone: formData.contact_phone || null,
         contact_whatsapp: formData.contact_whatsapp || null,
+        diary_whatsapp_number: formData.diary_whatsapp_number || null,
+        diary_whatsapp_message: formData.diary_whatsapp_message || null,
         contact_email: formData.contact_email || null,
         contact_address: formData.contact_address || null,
         cnpj: formData.cnpj || null,
