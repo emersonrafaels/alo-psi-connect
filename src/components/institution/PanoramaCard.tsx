@@ -55,7 +55,9 @@ export const PanoramaCard = ({
   onNavigateToTriage,
   onExportReport,
 }: PanoramaCardProps) => {
-  const { data: students = [], isLoading } = useStudentTriageData(institutionId, periodDays);
+  const [riskPeriodDays] = useTriagePeriod();
+  const { data: students = [], isLoading } = useStudentTriageData(institutionId, riskPeriodDays);
+
 
   const counts = useMemo(() => {
     const c = { critical: 0, alert: 0, attention: 0, healthy: 0, no_data: 0 };
