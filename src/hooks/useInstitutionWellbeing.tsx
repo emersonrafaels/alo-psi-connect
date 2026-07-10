@@ -285,15 +285,15 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         insights.push({
           type: 'warning',
           icon: '⚠️',
-          title: 'Ansiedade elevada',
-          description: `A média de ansiedade está em ${avgAnxiety.toFixed(1)}/5. Considere ações preventivas.`,
+          title: 'Ansiedade acima do saudável',
+          description: `Média de ${avgAnxiety.toFixed(1)}/5 no período. Sugestão: prática guiada de respiração e revisão da carga acadêmica da semana.`,
         });
       } else if (avgAnxiety !== null && avgAnxiety <= 2.0) {
         insights.push({
           type: 'positive',
           icon: '🧘',
           title: 'Ansiedade controlada',
-          description: `A média de ansiedade está baixa (${avgAnxiety.toFixed(1)}/5), indicando bom equilíbrio emocional.`,
+          description: `Média baixa (${avgAnxiety.toFixed(1)}/5) — bom equilíbrio emocional coletivo.`,
         });
       }
 
