@@ -128,15 +128,18 @@ const confidenceLabel: Record<string, string> = {
 };
 
 function scrollToTab(target?: string | null) {
-  if (!target) return;
-  const map: Record<string, string> = {
-    triagem: '[data-tab-triagem]', notas: '[data-tab-notas]',
-    diario: '[data-tab-diario]', metricas: '[data-tab-metricas]',
+  const validTargets = ['triagem', 'notas', 'diario', 'metricas'];
+  const tab = target && validTargets.includes(target) ? target : 'triagem';
+  const labels: Record<string, string> = {
+    triagem: 'Abrindo Triagem…',
+    notas: 'Abrindo Notas…',
+    diario: 'Abrindo Diário Emocional…',
+    metricas: 'Abrindo Métricas…',
   };
-  const el = document.querySelector(map[target] || '');
-  if (el instanceof HTMLElement) { el.click(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  else document.getElementById('institution-tabs')?.scrollIntoView({ behavior: 'smooth' });
+  toast.info(labels[tab]);
+  window.dispatchEvent(new CustomEvent('institution:navigate-tab', { detail: { tab } }));
 }
+
 
 export function BuddyInstitutionPanel({ institutionId }: Props) {
   const [enabled, setEnabled] = useState(false);
