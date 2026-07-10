@@ -358,7 +358,7 @@ function FollowUpIndicator({ date }: {date: string;}) {
 }
 
 export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
-  const [analysisPeriod, setAnalysisPeriod] = useState<number>(15);
+  const [analysisPeriod, setAnalysisPeriod] = useTriagePeriod();
   const [compareEnabled, setCompareEnabled] = useState(false);
   const [comparePeriod, setComparePeriod] = useState<number>(15);
   const { data: students = [], isLoading } = useStudentTriageData(
