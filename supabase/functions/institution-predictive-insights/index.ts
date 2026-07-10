@@ -68,20 +68,41 @@ Deno.serve(async (req) => {
     ]);
 
     const triages = triageRes.data || [];
+    const STATUS_PT: Record<string, string> = {
+      open: "em aberto",
+      triaged: "triadas",
+      in_progress: "em acompanhamento",
+      resolved: "resolvidas",
+      pending: "aguardando análise",
+    };
+    const RISK_PT: Record<string, string> = {
+      high: "alto risco",
+      medium: "risco moderado",
+      low: "baixo risco",
+      critical: "crítico",
+      alert: "alerta",
+      attention: "atenção",
+      healthy: "saudável",
+      no_data: "sem registros no período",
+    };
+    const humanizeKeys = (obj: Record<string, number>, dict: Record<string, string>) =>
+      Object.fromEntries(Object.entries(obj).map(([k, v]) => [dict[k] || k, v]));
+    const byStatusRaw = triages.reduce((acc: any, t: any) => { acc[t.status] = (acc[t.status] || 0) + 1; return acc; }, {});
+    const byRiskRaw = triages.reduce((acc: any, t: any) => {
+      const k = String(t.risk_level).toLowerCase(); acc[k] = (acc[k] || 0) + 1; return acc;
+    }, {});
     const context = {
       period: { start, end },
       total_students: studentsRes.data?.length || 0,
       mood_aggregates: aggRes.data,
       triage_summary: {
         total: triages.length,
-        by_status: triages.reduce((acc: any, t: any) => { acc[t.status] = (acc[t.status] || 0) + 1; return acc; }, {}),
-        by_risk: triages.reduce((acc: any, t: any) => {
-          const k = String(t.risk_level).toLowerCase();
-          acc[k] = (acc[k] || 0) + 1; return acc;
-        }, {}),
+        by_status: humanizeKeys(byStatusRaw, STATUS_PT),
+        by_risk: humanizeKeys(byRiskRaw, RISK_PT),
         resolved: triages.filter((t: any) => t.status === "resolved").length,
       },
     };
+
 
     const systemPrompt = `Você é um consultor sênior de bem-estar estudantil falando com a reitoria/coordenação de uma instituição de ensino.
 Traduza dados agregados anônimos em decisões que a gestão toma segunda de manhã. Nada de jargão clínico. Nada de "recomendo procurar um profissional". Fale como um estrategista que entende de educação, retenção, evasão, clima acadêmico e reputação institucional.
