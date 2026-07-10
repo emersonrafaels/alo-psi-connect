@@ -84,16 +84,27 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
       ['alto', 'critico', 'crítico', 'high', 'critical'].includes(String(t.risk_level).toLowerCase())
   ).length;
 
+  const RISK_PT: Record<string, string> = {
+    high: 'alto', critical: 'crítico', medium: 'moderado', low: 'baixo',
+    alto: 'alto', critico: 'crítico', 'crítico': 'crítico', moderado: 'moderado', baixo: 'baixo',
+  };
+  const PRIORITY_PT: Record<string, string> = {
+    high: 'Alta', critical: 'Crítica', medium: 'Média', low: 'Baixa',
+    alta: 'Alta', 'crítica': 'Crítica', critica: 'Crítica', media: 'Média', 'média': 'Média', baixa: 'Baixa',
+  };
+  const humanizeRisk = (r?: string | null) => RISK_PT[String(r || '').toLowerCase()] || 'não informado';
+  const humanizePriority = (p?: string | null) => PRIORITY_PT[String(p || '').toLowerCase()] || 'não definida';
+
   const alerts: AlertItem[] = [];
   (triages || []).slice(0, 5).forEach((t: any) => {
     if (t.status !== 'resolved') {
       alerts.push({
         id: `tri-${t.id}`,
         type: 'triage',
-        title: `Triagem em aberto (risco ${t.risk_level || 'n/a'})`,
-        subtitle: `Prioridade: ${t.priority || 'n/a'}`,
+        title: `Triagem em aberto — risco ${humanizeRisk(t.risk_level)}`,
+        subtitle: `Prioridade: ${humanizePriority(t.priority)}`,
         timestamp: t.created_at,
-        severity: ['alto', 'critico', 'high', 'critical'].includes(String(t.risk_level).toLowerCase())
+        severity: ['alto', 'critico', 'crítico', 'high', 'critical'].includes(String(t.risk_level).toLowerCase())
           ? 'high'
           : 'medium',
       });
