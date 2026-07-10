@@ -372,7 +372,8 @@ export default function InstitutionPortal() {
           <TabsContent value="wellbeing">
             {userInstitutions[0]?.institution_id ? (
               <InstitutionWellbeingDashboard 
-                institutionId={userInstitutions[0].institution_id} 
+                institutionId={userInstitutions[0].institution_id}
+                onNavigateToTriage={() => setActiveTab('triage')}
               />
             ) : (
               <Card>
