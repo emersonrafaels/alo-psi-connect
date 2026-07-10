@@ -471,11 +471,13 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
     data: brief,
     isFetching: briefLoading,
     refetch: refetchBrief,
+    error: briefError,
   } = useQuery({
     queryKey: ['institution-weekly-brief', institutionId],
     queryFn: () => fetchBrief(institutionId),
     enabled: briefEnabled && !!institutionId,
     staleTime: 60 * 60 * 1000,
+    retry: false,
   });
 
   if (isLoading || !summary) {
