@@ -175,8 +175,13 @@ export const PanoramaCard = ({
 
         {/* Distribuição por risco */}
         <div className="p-5 space-y-3">
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Como estão distribuídos hoje
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Como estão distribuídos hoje
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              Baseado nos últimos <strong className="text-foreground">{riskPeriodDays} dias</strong> (mesmo período da Triagem)
+            </div>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             {rows.map((r) => (
