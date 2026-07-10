@@ -360,7 +360,9 @@ async function seedTriageRecords(supabase: any, instId: string, students: any[],
       const daysAgo = rand(3, 30);
       const createdAt = new Date(Date.now() - daysAgo * 86400000);
       const status = pickStatus();
-      const resolvedAt = status === "resolved" ? new Date(createdAt.getTime() + rand(1, 7) * 86400000) : null;
+      const resolvedAt = status === "resolved"
+        ? new Date(Math.min(createdAt.getTime() + rand(1, Math.max(1, Math.min(7, daysAgo - 1))) * 86400000, Date.now()))
+        : null;
       const followUpDate = status !== "resolved" ? new Date(Date.now() + rand(1, 14) * 86400000) : null;
 
       await supabase.from("student_triage").insert({
