@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useInstitutionExecutiveSummary, type ExecutiveSummary } from '@/hooks/useInstitutionExecutiveSummary';
-import { Sparkles, Users, AlertTriangle, CheckCircle2, Activity, RefreshCw, ArrowRight, ArrowUp, ArrowDown, ArrowRight as ArrowRightIcon, CheckCircle } from 'lucide-react';
+import { Sparkles, Users, AlertTriangle, CheckCircle2, Activity, RefreshCw, ArrowRight, ArrowUp, ArrowDown, CheckCircle } from 'lucide-react';
 
 interface Props {
   institutionId: string;
