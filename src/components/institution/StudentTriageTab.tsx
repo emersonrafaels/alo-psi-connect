@@ -1443,7 +1443,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                               size="sm"
                               variant="default"
                               className="text-xs h-8"
-                              onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'resolved', resolvedAt: new Date().toISOString() })}>
+                              onClick={() => setResolveDialogTriage(t)}>
 
                                 <CheckCircle2 className="h-3 w-3 mr-1" />
                                 Resolver
