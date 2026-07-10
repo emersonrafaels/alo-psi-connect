@@ -100,7 +100,33 @@ function normalize(p: Payload | undefined): Payload {
     : (p.suggested_actions || []).map((x: any) => ({
         title: x.title, why: x.description, cta_label: x.cta_label, owner: 'Coordenação', timeframe: '15 dias',
       }));
-  return { ...p, insights, priority_actions: actions };
+  // Aplicar humanização defensiva em todos os textos livres
+  const hInsights = insights.map((ins) => ({
+    ...ins,
+    title: humanize(ins.title),
+    situation: humanize(ins.situation),
+    impact: humanize(ins.impact),
+    recommendation: humanize(ins.recommendation),
+    narrative: humanize(ins.narrative),
+    cohort: humanize(ins.cohort),
+    evidence: humanize(ins.evidence),
+  }));
+  const hActions = actions.map((a) => ({
+    ...a,
+    title: humanize(a.title),
+    why: humanize(a.why),
+    how: Array.isArray(a.how) ? a.how.map(humanize) : humanize(a.how as string),
+    cta_label: humanize(a.cta_label),
+  }));
+  return {
+    ...p,
+    headline: humanize(p.headline),
+    tldr: humanize(p.tldr),
+    wow_metric: p.wow_metric ? { ...p.wow_metric, label: humanize(p.wow_metric.label), context: humanize(p.wow_metric.context) } : null,
+    celebrate: (p.celebrate || []).map(humanize),
+    insights: hInsights,
+    priority_actions: hActions,
+  };
 }
 
 const dimensionIcon = (d?: string) => {
