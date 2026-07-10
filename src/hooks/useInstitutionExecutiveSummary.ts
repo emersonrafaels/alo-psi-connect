@@ -32,18 +32,30 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
     .select('patient_id')
     .eq('institution_id', institutionId);
 
-  const patientIds = (linked || []).map((l: any) => l.patient_id);
+  const pacienteIds = (linked || []).map((l: any) => l.patient_id);
+
+  // Map pacientes.id -> profiles.id, since mood_entries.profile_id references profiles.id
+  const { data: pacientes } = pacienteIds.length
+    ? await supabase.from('pacientes').select('id, profile_id').in('id', pacienteIds)
+    : { data: [] as any[] };
+
+  const profileIds = (pacientes || [])
+    .map((p: any) => p.profile_id)
+    .filter(Boolean);
+
+  const safeProfileIds = profileIds.length ? profileIds : ['00000000-0000-0000-0000-000000000000'];
+  const totalStudents = pacienteIds.length;
 
   const [{ data: entriesWeek }, { data: entriesPrev }, { data: triages }] = await Promise.all([
     supabase
       .from('mood_entries')
       .select('id,profile_id,date')
-      .in('profile_id', patientIds.length ? patientIds : ['00000000-0000-0000-0000-000000000000'])
+      .in('profile_id', safeProfileIds)
       .gte('date', weekAgo.toISOString().slice(0, 10)),
     supabase
       .from('mood_entries')
       .select('id,profile_id,date')
-      .in('profile_id', patientIds.length ? patientIds : ['00000000-0000-0000-0000-000000000000'])
+      .in('profile_id', safeProfileIds)
       .gte('date', twoWeekAgo.toISOString().slice(0, 10))
       .lt('date', weekAgo.toISOString().slice(0, 10)),
     supabase
@@ -105,7 +117,7 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
     activeStudentsWeek: activeSet.size,
     activeStudentsPrevWeek: prevSet.size,
     sparkline,
-    engagementRate: patientIds.length > 0 ? activeSet.size / patientIds.length : 0,
+    engagementRate: totalStudents > 0 ? activeSet.size / totalStudents : 0,
     criticalOpen,
     resolutionRate: totalTriage > 0 ? resolvedTriage / totalTriage : 0,
     totalTriage,
