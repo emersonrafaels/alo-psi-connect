@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!iu) return json({ error: "Sem acesso a esta instituição" }, 403);
 
-    // Cache 24h
+    // Cache 24h (só se estiver no shape novo — brief como objeto)
     if (!force) {
       const { data: cached } = await admin
         .from("buddy_insights")
@@ -60,7 +60,9 @@ Deno.serve(async (req) => {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (cached && Date.now() - new Date(cached.created_at).getTime() < 24 * 3600_000) {
+      const cachedBrief = (cached?.payload as any)?.brief;
+      const isNewShape = cachedBrief && typeof cachedBrief === "object" && !Array.isArray(cachedBrief);
+      if (cached && isNewShape && Date.now() - new Date(cached.created_at).getTime() < 24 * 3600_000) {
         return json({ cached: true, ...(cached.payload as any) });
       }
     }
@@ -98,7 +100,16 @@ Deno.serve(async (req) => {
       high_risk_open: highRiskOpen,
     };
 
-    const prompt = `Você é o Buddy, um analista de bem-estar de uma instituição de ensino. Gere um resumo semanal executivo em português brasileiro (máx 220 palavras), tom acolhedor e prático, para gestores. Use os dados agregados anônimos abaixo. Estruture em: (1) Panorama da semana, (2) Sinais de atenção, (3) O que celebrar, (4) Sugestão de próximo passo. Nunca cite alunos individualmente.\n\nDADOS: ${JSON.stringify(summary)}`;
+    const prompt = `Você é o Buddy, analista executivo de bem-estar de uma instituição de ensino. Gere um resumo semanal para gestores em português brasileiro, tom acolhedor e prático. Nunca cite alunos individualmente.
+
+Responda APENAS com JSON válido no shape:
+{
+  "headline": "frase curta (máx 15 palavras) resumindo a semana em linguagem de gestão",
+  "highlights": ["4 a 6 bullets curtos (máx 20 palavras cada), cobrindo: panorama, sinais de atenção, o que celebrar, comparação com semana anterior"],
+  "focus": "1 frase (máx 30 palavras) com a próxima ação recomendada, específica e acionável para a coordenação"
+}
+
+DADOS AGREGADOS: ${JSON.stringify(summary)}`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -109,6 +120,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: MODEL,
         messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
       }),
     });
 
@@ -119,7 +131,19 @@ Deno.serve(async (req) => {
     }
 
     const aiJson = await aiResp.json();
-    const brief = aiJson?.choices?.[0]?.message?.content ?? "";
+    const raw = aiJson?.choices?.[0]?.message?.content ?? "";
+
+    let brief: { headline: string; highlights: string[]; focus: string };
+    try {
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+      brief = {
+        headline: String(parsed?.headline ?? "Resumo da semana"),
+        highlights: Array.isArray(parsed?.highlights) ? parsed.highlights.map((h: any) => String(h)) : [],
+        focus: String(parsed?.focus ?? ""),
+      };
+    } catch (_e) {
+      brief = { headline: "Resumo da semana", highlights: [String(raw)].filter(Boolean), focus: "" };
+    }
 
     const payload = {
       brief,
@@ -127,6 +151,7 @@ Deno.serve(async (req) => {
       generated_at: new Date().toISOString(),
       model: MODEL,
     };
+
 
     await admin.from("buddy_insights").insert({
       institution_id: institutionId,

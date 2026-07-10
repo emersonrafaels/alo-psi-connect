@@ -105,7 +105,18 @@ async function fetchBrief(institutionId: string): Promise<Brief | null> {
     body: { institutionId },
   });
   if (error) throw error;
-  return data?.brief || null;
+  const b = data?.brief;
+  if (!b) return null;
+  // Payload novo: objeto estruturado
+  if (typeof b === 'object' && !Array.isArray(b)) {
+    return {
+      headline: String(b.headline ?? 'Resumo da semana'),
+      highlights: Array.isArray(b.highlights) ? b.highlights.map((h: any) => String(h)) : [],
+      focus: String(b.focus ?? ''),
+    };
+  }
+  // Fallback: payload legado em texto corrido
+  return { headline: 'Resumo da semana', highlights: [String(b)], focus: '' };
 }
 
 function dayLabels(): { dow: string; date: string; isToday: boolean }[] {
@@ -460,11 +471,13 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
     data: brief,
     isFetching: briefLoading,
     refetch: refetchBrief,
+    error: briefError,
   } = useQuery({
     queryKey: ['institution-weekly-brief', institutionId],
     queryFn: () => fetchBrief(institutionId),
     enabled: briefEnabled && !!institutionId,
     staleTime: 60 * 60 * 1000,
+    retry: false,
   });
 
   if (isLoading || !summary) {
@@ -570,6 +583,14 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
                     <p className="text-sm text-muted-foreground">{brief.focus}</p>
                   </div>
                 )}
+              </div>
+            ) : briefError ? (
+              <div className="space-y-2">
+                <p className="text-sm text-destructive">Não foi possível gerar o resumo agora.</p>
+                <p className="text-xs text-muted-foreground">{(briefError as Error)?.message || 'Tente novamente em instantes.'}</p>
+                <Button size="sm" variant="outline" onClick={() => refetchBrief()}>
+                  <RefreshCw className="h-3.5 w-3.5 mr-2" /> Tentar novamente
+                </Button>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
