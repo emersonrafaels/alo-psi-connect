@@ -130,7 +130,7 @@ export default function InstitutionPortal() {
 
         {/* Card de Boas-vindas */}
         <div className="mb-6">
-          <WelcomeCard institutionName={currentInstitution?.name} />
+          <WelcomeCard institutionName={currentInstitution?.name} greetingName="Professor" />
         </div>
 
         {/* Header com Logo e Nome */}
