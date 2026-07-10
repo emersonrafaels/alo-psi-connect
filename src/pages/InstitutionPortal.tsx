@@ -437,6 +437,22 @@ export default function InstitutionPortal() {
               </Card>
             )}
           </TabsContent>
+
+          {/* Tab do Buddy Institucional */}
+          <TabsContent value="buddy">
+            {userInstitutions[0]?.institution_id ? (
+              <BuddyInstitutionPanel institutionId={userInstitutions[0].institution_id} />
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Brain className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    Nenhuma instituição vinculada para exibir insights do Buddy.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
       
