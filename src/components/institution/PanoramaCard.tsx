@@ -132,7 +132,7 @@ export const PanoramaCard = ({
   const headline =
     openCases === 0
       ? `Todos os ${totalStudentsLinked} alunos estão em faixa saudável`
-      : `${openCases} aluno${openCases > 1 ? 's' : ''} ${openCases > 1 ? 'precisam' : 'precisa'} da sua atenção esta semana`;
+      : `${openCases} aluno${openCases > 1 ? 's' : ''} ${openCases > 1 ? 'precisam' : 'precisa'} da sua atenção nos últimos ${riskPeriodDays} dias`;
 
   if (isLoading) {
     return <Skeleton className="h-64 w-full" />;
