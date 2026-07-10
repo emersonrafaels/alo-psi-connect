@@ -72,16 +72,11 @@ Deno.serve(async (req) => {
 
     const [studentsRes, moodRes, moodPrevRes, triageRes] = await Promise.all([
       admin.from("patient_institutions").select("patient_id").eq("institution_id", institutionId),
-      admin.rpc("get_institution_mood_aggregates", {
-        p_institution_id: institutionId,
-        p_start_date: sinceDate,
-        p_end_date: new Date().toISOString().slice(0, 10),
-      }).then((r: any) => r).catch(() => ({ data: null })),
-      admin.rpc("get_institution_mood_aggregates", {
-        p_institution_id: institutionId,
-        p_start_date: prevSince,
-        p_end_date: sinceDate,
-      }).then((r: any) => r).catch(() => ({ data: null })),
+      admin.rpc("get_institution_mood_aggregates", { p_institution_id: institutionId, p_period_days: 7 })
+        .then((r: any) => r).catch(() => ({ data: null })),
+      admin.rpc("get_institution_mood_aggregates", { p_institution_id: institutionId, p_period_days: 14 })
+        .then((r: any) => r).catch(() => ({ data: null })),
+
       admin.from("student_triage").select("status,risk_level,created_at,resolved_at")
         .eq("institution_id", institutionId).gte("created_at", since),
     ]);
