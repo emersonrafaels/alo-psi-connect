@@ -1511,7 +1511,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                         size="sm"
                         variant="ghost"
                         className="text-xs h-7"
-                        onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'triaged' })}>
+                        onClick={() => setReopenDialogTriage(t)}>
 
                             <RotateCcw className="h-3 w-3 mr-1" />
                             Reabrir
