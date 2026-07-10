@@ -171,16 +171,24 @@ Regras: 4 insights, 3 a 4 ações prioritárias, 3 conquistas. Se dados forem es
     let parsed: any = {};
     try { parsed = JSON.parse(raw); } catch { parsed = {}; }
 
+    const validTargets = new Set(["triagem", "notas", "diario", "metricas"]);
+    const priority_actions = (Array.isArray(parsed.priority_actions) ? parsed.priority_actions : []).map((a: any) => ({
+      ...a,
+      cta_target: validTargets.has(a?.cta_target) ? a.cta_target : "triagem",
+      cta_label: a?.cta_label || "Abrir triagem",
+    }));
+
     const payload = {
       headline: parsed.headline || "",
       tldr: parsed.tldr || "",
       wow_metric: parsed.wow_metric || null,
       celebrate: Array.isArray(parsed.celebrate) ? parsed.celebrate : [],
       insights: Array.isArray(parsed.insights) ? parsed.insights : [],
-      priority_actions: Array.isArray(parsed.priority_actions) ? parsed.priority_actions : [],
+      priority_actions,
       generated_at: new Date().toISOString(),
       model: MODEL,
     };
+
 
     await admin.from("buddy_insights").insert({
       institution_id: institutionId,
