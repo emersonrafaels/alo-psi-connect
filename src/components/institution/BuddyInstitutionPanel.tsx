@@ -8,9 +8,29 @@ import { supabase } from '@/integrations/supabase/client';
 import BuddyCharacter from '@/components/hero/BuddyCharacter';
 import {
   Sparkles, RefreshCw, Lightbulb, Target, TrendingUp, BookOpen,
-  Heart, Users, AlertTriangle, PartyPopper, ArrowRight, Clock, UserCog,
+  Heart, Users, AlertTriangle, PartyPopper, ArrowRight, Clock, UserCog, HelpCircle,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+
+// Traduz jargão técnico do banco para linguagem humana (camada defensiva do frontend)
+const HUMANIZE_MAP: Array<[RegExp, string]> = [
+  [/\btriaged\b/gi, 'triadas'],
+  [/\bin[_\s]progress\b/gi, 'em acompanhamento'],
+  [/\bresolved\b/gi, 'resolvidas'],
+  [/\bpending\b/gi, 'aguardando análise'],
+  [/\bopen\b/gi, 'em aberto'],
+  [/\bno[_\s]data\b/gi, 'sem registros no período'],
+  [/\bhigh[_\s]risk\b/gi, 'alto risco'],
+  [/\bmedium[_\s]risk\b/gi, 'risco moderado'],
+  [/\blow[_\s]risk\b/gi, 'baixo risco'],
+  [/'(triadas|em acompanhamento|resolvidas|aguardando análise|em aberto)'/gi, '$1'],
+];
+function humanize(s?: string): string {
+  if (!s) return '';
+  return HUMANIZE_MAP.reduce((acc, [re, rep]) => acc.replace(re, rep), s);
+}
 
 interface Props {
   institutionId: string;
@@ -80,7 +100,33 @@ function normalize(p: Payload | undefined): Payload {
     : (p.suggested_actions || []).map((x: any) => ({
         title: x.title, why: x.description, cta_label: x.cta_label, owner: 'Coordenação', timeframe: '15 dias',
       }));
-  return { ...p, insights, priority_actions: actions };
+  // Aplicar humanização defensiva em todos os textos livres
+  const hInsights = insights.map((ins) => ({
+    ...ins,
+    title: humanize(ins.title),
+    situation: humanize(ins.situation),
+    impact: humanize(ins.impact),
+    recommendation: humanize(ins.recommendation),
+    narrative: humanize(ins.narrative),
+    cohort: humanize(ins.cohort),
+    evidence: humanize(ins.evidence),
+  }));
+  const hActions = actions.map((a) => ({
+    ...a,
+    title: humanize(a.title),
+    why: humanize(a.why),
+    how: Array.isArray(a.how) ? a.how.map(humanize) : humanize(a.how as string),
+    cta_label: humanize(a.cta_label),
+  }));
+  return {
+    ...p,
+    headline: humanize(p.headline),
+    tldr: humanize(p.tldr),
+    wow_metric: p.wow_metric ? { ...p.wow_metric, label: humanize(p.wow_metric.label), context: humanize(p.wow_metric.context) } : null,
+    celebrate: (p.celebrate || []).map(humanize),
+    insights: hInsights,
+    priority_actions: hActions,
+  };
 }
 
 const dimensionIcon = (d?: string) => {
@@ -108,15 +154,18 @@ const confidenceLabel: Record<string, string> = {
 };
 
 function scrollToTab(target?: string | null) {
-  if (!target) return;
-  const map: Record<string, string> = {
-    triagem: '[data-tab-triagem]', notas: '[data-tab-notas]',
-    diario: '[data-tab-diario]', metricas: '[data-tab-metricas]',
+  const validTargets = ['triagem', 'notas', 'diario', 'metricas'];
+  const tab = target && validTargets.includes(target) ? target : 'triagem';
+  const labels: Record<string, string> = {
+    triagem: 'Abrindo Triagem…',
+    notas: 'Abrindo Notas…',
+    diario: 'Abrindo Diário Emocional…',
+    metricas: 'Abrindo Métricas…',
   };
-  const el = document.querySelector(map[target] || '');
-  if (el instanceof HTMLElement) { el.click(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  else document.getElementById('institution-tabs')?.scrollIntoView({ behavior: 'smooth' });
+  toast.info(labels[tab]);
+  window.dispatchEvent(new CustomEvent('institution:navigate-tab', { detail: { tab } }));
 }
+
 
 export function BuddyInstitutionPanel({ institutionId }: Props) {
   const [enabled, setEnabled] = useState(false);
@@ -302,8 +351,24 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Target className="h-4 w-4 text-primary" /> Ações prioritárias para os próximos 15 dias
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
+                          <HelpCircle className="h-3.5 w-3.5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        Plano tático sugerido pelo Buddy para as próximas duas semanas. Cada ação traz o responsável, o prazo e um atalho para começar agora.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">
+                  O que o Buddy sugere priorizar nos próximos 15 dias. Clique no botão de cada ação para ir direto à aba onde ela acontece.
+                </p>
               </CardHeader>
+
               <CardContent>
                 <ol className="space-y-4">
                   {data.priority_actions.map((a, i) => {
@@ -344,13 +409,12 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
                               ))}
                             </ul>
                           )}
-                          {a.cta_label && (
-                            <div className="pt-1">
-                              <Button size="sm" variant="outline" onClick={() => scrollToTab(a.cta_target)}>
-                                {a.cta_label} <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                              </Button>
-                            </div>
-                          )}
+                          <div className="pt-1">
+                            <Button size="sm" variant="outline" onClick={() => scrollToTab(a.cta_target)}>
+                              {a.cta_label || 'Abrir aba relacionada'} <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                            </Button>
+                          </div>
+
                         </div>
                       </li>
                     );

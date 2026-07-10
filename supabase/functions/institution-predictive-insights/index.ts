@@ -68,27 +68,51 @@ Deno.serve(async (req) => {
     ]);
 
     const triages = triageRes.data || [];
+    const STATUS_PT: Record<string, string> = {
+      open: "em aberto",
+      triaged: "triadas",
+      in_progress: "em acompanhamento",
+      resolved: "resolvidas",
+      pending: "aguardando análise",
+    };
+    const RISK_PT: Record<string, string> = {
+      high: "alto risco",
+      medium: "risco moderado",
+      low: "baixo risco",
+      critical: "crítico",
+      alert: "alerta",
+      attention: "atenção",
+      healthy: "saudável",
+      no_data: "sem registros no período",
+    };
+    const humanizeKeys = (obj: Record<string, number>, dict: Record<string, string>) =>
+      Object.fromEntries(Object.entries(obj).map(([k, v]) => [dict[k] || k, v]));
+    const byStatusRaw = triages.reduce((acc: any, t: any) => { acc[t.status] = (acc[t.status] || 0) + 1; return acc; }, {});
+    const byRiskRaw = triages.reduce((acc: any, t: any) => {
+      const k = String(t.risk_level).toLowerCase(); acc[k] = (acc[k] || 0) + 1; return acc;
+    }, {});
     const context = {
       period: { start, end },
       total_students: studentsRes.data?.length || 0,
       mood_aggregates: aggRes.data,
       triage_summary: {
         total: triages.length,
-        by_status: triages.reduce((acc: any, t: any) => { acc[t.status] = (acc[t.status] || 0) + 1; return acc; }, {}),
-        by_risk: triages.reduce((acc: any, t: any) => {
-          const k = String(t.risk_level).toLowerCase();
-          acc[k] = (acc[k] || 0) + 1; return acc;
-        }, {}),
+        by_status: humanizeKeys(byStatusRaw, STATUS_PT),
+        by_risk: humanizeKeys(byRiskRaw, RISK_PT),
         resolved: triages.filter((t: any) => t.status === "resolved").length,
       },
     };
 
+
     const systemPrompt = `Você é um consultor sênior de bem-estar estudantil falando com a reitoria/coordenação de uma instituição de ensino.
 Traduza dados agregados anônimos em decisões que a gestão toma segunda de manhã. Nada de jargão clínico. Nada de "recomendo procurar um profissional". Fale como um estrategista que entende de educação, retenção, evasão, clima acadêmico e reputação institucional.
+
+REGRA DE LINGUAGEM (obrigatória): escreva 100% em português humanizado. NUNCA use termos técnicos do sistema como "triaged", "in_progress", "resolved", "open", "pending", "no_data", "high_risk", "medium_risk", "low_risk". Use sempre: "triadas", "em acompanhamento", "resolvidas", "em aberto", "aguardando análise", "sem registros no período", "alto risco", "risco moderado", "baixo risco". Nunca envolva status em aspas simples como se fosse código.
 
 Cada insight deve responder: (1) o que está acontecendo agora, (2) por que isso importa para a INSTITUIÇÃO (retenção, engajamento, clima, reputação, desempenho), (3) o que fazer nos próximos 15 dias, (4) quem executa.
 
 Produza um "efeito uau": comece por um headline forte, uma métrica de destaque que o gestor vai lembrar, e conquistas para celebrar. Nunca cite alunos individualmente.
+
 
 Devolva APENAS JSON válido (sem markdown) no formato:
 {
@@ -147,16 +171,24 @@ Regras: 4 insights, 3 a 4 ações prioritárias, 3 conquistas. Se dados forem es
     let parsed: any = {};
     try { parsed = JSON.parse(raw); } catch { parsed = {}; }
 
+    const validTargets = new Set(["triagem", "notas", "diario", "metricas"]);
+    const priority_actions = (Array.isArray(parsed.priority_actions) ? parsed.priority_actions : []).map((a: any) => ({
+      ...a,
+      cta_target: validTargets.has(a?.cta_target) ? a.cta_target : "triagem",
+      cta_label: a?.cta_label || "Abrir triagem",
+    }));
+
     const payload = {
       headline: parsed.headline || "",
       tldr: parsed.tldr || "",
       wow_metric: parsed.wow_metric || null,
       celebrate: Array.isArray(parsed.celebrate) ? parsed.celebrate : [],
       insights: Array.isArray(parsed.insights) ? parsed.insights : [],
-      priority_actions: Array.isArray(parsed.priority_actions) ? parsed.priority_actions : [],
+      priority_actions,
       generated_at: new Date().toISOString(),
       model: MODEL,
     };
+
 
     await admin.from("buddy_insights").insert({
       institution_id: institutionId,
