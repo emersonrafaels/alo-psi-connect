@@ -1,37 +1,67 @@
-# Redesign dos dialogs de detalhe dos KPIs
+## Objetivo
 
-O dialog atual (ex: "Alunos ativos nos últimos 7 dias") está apertado, com números empilhados nas barras, sem hierarquia visual e sem contexto. Vou reformatar os 4 dialogs do `InstitutionExecutiveHeader.tsx` para ficarem legíveis e informativos.
+Transformar as métricas do Portal Institucional em uma narrativa clara para gestores de ensino. Hoje o alerta principal diz apenas "33 alunos reportaram humor abaixo de 3" e não conversa com os números reais da triagem (6 crítico + 11 alerta + 5 atenção = 22 casos abertos). Vamos alinhar os dados e escrever cada bloco em três camadas: **Situação → Impacto → Ação sugerida**.
 
-## Mudanças por dialog
+## Escopo (apenas texto/UI, sem mudança de negócio)
 
-### 1. Alunos ativos (7d)
-- Header do dialog com KPI grande à esquerda (valor + label) e delta vs. semana anterior à direita, com seta ↑/↓/→ colorida.
-- Substituir o `BarChart` compacto por gráfico maior (altura 180px), barras mais largas com gradiente, valor no topo com pill de fundo (evita colisão), rótulo do dia embaixo em 2 linhas (dia da semana + data curta ex "Qui 03/07"), destaque visual para "hoje".
-- Linha média pontilhada horizontal com label "média: X".
-- Rodapé com 2 cards: "Últimos 7 dias" e "Semana anterior" + micro texto explicativo.
+### 1. Novo bloco "Panorama do período" (`InstitutionWellbeingDashboard.tsx`)
 
-### 2. Engajamento
-- Donut maior (160px) centralizado com valor + label.
-- 3 mini-stats abaixo em linha: ativos, vinculados, meta (40%).
-- Barra de progresso com marcadores de referência (20% baixo / 40% saudável / 60% excelente) e badge colorido do status atual.
+Substitui o alerta laranja atual. É o primeiro parágrafo que o gestor lê:
 
-### 3. Alertas críticos abertos
-- Se 0: estado vazio ilustrado (ícone check verde + mensagem tranquilizadora).
-- Se >0: cards de triagem mais espaçados, com badge de severidade, título em 2 linhas máx, subtitle em muted, e botão "Abrir" por item além do CTA principal.
+> Nos últimos **90 dias**, **28 de 33 alunos (85%)** registraram no diário emocional — **414 check-ins** no total.
+> Humor médio: **3,2/5** (↑ 8% vs. período anterior). Ansiedade: **2,9/5** (estável).
+>
+> **Como estão distribuídos hoje:**
+> • 🟢 18 alunos saudáveis
+> • 🟡 5 em atenção
+> • 🟠 11 em alerta
+> • 🔴 6 em nível crítico *(prioridade da semana)*
+>
+> **Sugestões:** iniciar triagem dos 6 críticos · agendar acolhimento em grupo para alertas · celebrar avanços nos saudáveis.
 
-### 4. Taxa de resolução
-- Donut maior + legenda lateral (Resolvidas verde / Em aberto âmbar) com pontos coloridos, em vez de dois cards genéricos.
-- Barra horizontal segmentada mostrando proporção resolvidas/abertas.
-- Texto interpretativo: "Meta saudável ≥ 70%".
+CTAs: **"Ver 6 críticos"**, **"Ver 22 casos abertos"**, **"Exportar relatório da semana"**.
 
-## Padrões visuais compartilhados
-- `DialogContent` com `max-w-xl` (era `max-w-lg`) e padding interno maior.
-- Seções separadas por `border-t border-border/50` com espaçamento `space-y-5`.
-- Tipografia: título 18px, números principais 32-36px, rótulos 11px uppercase tracking-wide muted.
-- Cores por tom via tokens semânticos existentes (primary, emerald, amber, rose) — sem hardcode.
-- Componentes internos extraídos: `MiniStat`, `TrendPill`, `LegendDot` no próprio arquivo para reuso entre os 4 dialogs.
+- Os números da distribuição vêm do mesmo hook `useStudentTriage` já usado em `StudentTriageTab.tsx`, garantindo consistência entre abas.
+- Se não houver casos abertos, mostra a versão verde com contexto ("Todos os 33 alunos estão em faixa saudável há X dias — mantenha o ritmo de check-ins").
+
+### 2. Reescrever os insights de `useInstitutionWellbeing.tsx`
+
+Cada card de insight passa a seguir o padrão narrativo:
+
+| Antes | Depois |
+|---|---|
+| "Bem-estar bom — Média de humor: 3,5/5 com 414 registros de 28 alunos." | "Humor coletivo bom (3,5/5). 85% da turma engajada nos últimos 90 dias — acima da média institucional (72%)." |
+| "Ansiedade elevada — A média de ansiedade está em 3,4/5. Considere ações preventivas." | "Ansiedade acima do saudável (3,4/5). Pico ocorreu na semana de {data}. Sugestão: prática guiada de respiração e revisão de carga acadêmica." |
+| "Atenção requerida — 8 alunos (28%) apresentaram humor abaixo no período." | "8 alunos (28%) mantiveram humor abaixo de 3. Destes, 6 já estão em triagem crítica e 2 ainda não foram avaliados — [Priorizar avaliação]." |
+
+Cada insight ganha um campo opcional `action: { label, target }` para virar CTA clicável (roteia para triagem/relatório).
+
+### 3. Banner de topo da triagem (`StudentTriageTab.tsx`, linha ~865)
+
+Hoje: "6 alunos em nível crítico aguardando triagem." Passa a mostrar a pilha completa e o que fazer com cada faixa:
+
+> **22 alunos precisam da sua atenção esta semana**
+> 🔴 6 críticos — ação imediata (contato hoje)
+> 🟠 11 em alerta — acolhimento em até 7 dias
+> 🟡 5 em atenção — monitorar próximo check-in
+>
+> [Começar pelos críticos] [Ver todos]
+
+### 4. Consistência de linguagem
+
+- Padronizar "aluno" (não "paciente"), concordância verbal ("apresentaram" no plural).
+- "Melhor dia" e demais datas sempre com data completa `dd/mm` além do dia da semana.
+- Remover jargão ("humor abaixo de 3" → "humor abaixo do saudável (nota < 3)").
 
 ## Arquivos afetados
-- `src/components/institution/InstitutionExecutiveHeader.tsx` — reescrever `BarChart`, `Donut` e `KpiDetailDialog` (e adicionar helpers `MiniStat`, `TrendPill`, `LegendDot`, `ProgressWithMarkers`).
 
-Nenhuma mudança em hooks, dados ou navegação — apenas apresentação.
+- `src/components/institution/InstitutionWellbeingDashboard.tsx` — novo bloco Panorama, consumindo `useStudentTriage`.
+- `src/hooks/useInstitutionWellbeing.tsx` — reescrita dos insights + novo campo `action`.
+- `src/components/institution/WellbeingInsights.tsx` — renderizar CTA quando `action` existir.
+- `src/components/institution/StudentTriageTab.tsx` — banner topo estratificado.
+- (opcional) novo `src/components/institution/PanoramaCard.tsx` para isolar o bloco narrativo.
+
+## Fora de escopo
+
+- Nenhuma mudança em Edge Functions, schema Supabase, ou lógica de risco.
+- Sem novos gráficos — só melhoria de texto, hierarquia e reutilização de dados já existentes.
