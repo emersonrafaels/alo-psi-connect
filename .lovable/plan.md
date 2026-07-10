@@ -1,67 +1,37 @@
+# Unificar contagem de alunos em atenção (Panorama × Triagem)
+
+## Problema
+No Portal Institucional, dois blocos mostram "X alunos precisam da sua atenção esta semana" com números diferentes (24 no Panorama do Diário, 22 na aba Triagem). A causa é que cada bloco usa um **período de análise** distinto:
+
+- `PanoramaCard` recebe o `periodDays` do dashboard (ex.: 90 dias).
+- `StudentTriageTab` tem seu **próprio seletor** (padrão 15 dias).
+
+Como a classificação de risco depende do período, o mesmo hook (`useStudentTriageData`) devolve contagens diferentes.
+
 ## Objetivo
+Deixar claro para o gestor que os dois blocos falam da mesma coisa e, quando os números divergirem, explicar por quê.
 
-Transformar as métricas do Portal Institucional em uma narrativa clara para gestores de ensino. Hoje o alerta principal diz apenas "33 alunos reportaram humor abaixo de 3" e não conversa com os números reais da triagem (6 crítico + 11 alerta + 5 atenção = 22 casos abertos). Vamos alinhar os dados e escrever cada bloco em três camadas: **Situação → Impacto → Ação sugerida**.
+## Mudanças
 
-## Escopo (apenas texto/UI, sem mudança de negócio)
+### 1. Alinhar período por padrão
+- No `PanoramaCard`, deixar de usar o `periodDays` do dashboard para o cálculo de risco e passar a usar o **mesmo período da triagem** (default 15 dias — memória `triage-workflow-and-averages`).
+- Manter o `periodDays` original apenas para o texto de engajamento ("nos últimos 90 dias, X de Y alunos registraram...").
 
-### 1. Novo bloco "Panorama do período" (`InstitutionWellbeingDashboard.tsx`)
+### 2. Rótulo do período no Panorama
+- Adicionar sob o headline: `Distribuição de risco baseada nos últimos 15 dias` (com o número real usado).
+- Assim o gestor entende que "24" e "22" podem divergir se ele mudar o seletor da triagem depois.
 
-Substitui o alerta laranja atual. É o primeiro parágrafo que o gestor lê:
+### 3. Sincronização (opcional, mesmo turno)
+- Persistir o período da triagem em contexto/URL (`?triagePeriod=15`) e ler no `PanoramaCard`, para que ao trocar o seletor na aba Triagem o Panorama acompanhe automaticamente.
 
-> Nos últimos **90 dias**, **28 de 33 alunos (85%)** registraram no diário emocional — **414 check-ins** no total.
-> Humor médio: **3,2/5** (↑ 8% vs. período anterior). Ansiedade: **2,9/5** (estável).
->
-> **Como estão distribuídos hoje:**
-> • 🟢 18 alunos saudáveis
-> • 🟡 5 em atenção
-> • 🟠 11 em alerta
-> • 🔴 6 em nível crítico *(prioridade da semana)*
->
-> **Sugestões:** iniciar triagem dos 6 críticos · agendar acolhimento em grupo para alertas · celebrar avanços nos saudáveis.
-
-CTAs: **"Ver 6 críticos"**, **"Ver 22 casos abertos"**, **"Exportar relatório da semana"**.
-
-- Os números da distribuição vêm do mesmo hook `useStudentTriage` já usado em `StudentTriageTab.tsx`, garantindo consistência entre abas.
-- Se não houver casos abertos, mostra a versão verde com contexto ("Todos os 33 alunos estão em faixa saudável há X dias — mantenha o ritmo de check-ins").
-
-### 2. Reescrever os insights de `useInstitutionWellbeing.tsx`
-
-Cada card de insight passa a seguir o padrão narrativo:
-
-| Antes | Depois |
-|---|---|
-| "Bem-estar bom — Média de humor: 3,5/5 com 414 registros de 28 alunos." | "Humor coletivo bom (3,5/5). 85% da turma engajada nos últimos 90 dias — acima da média institucional (72%)." |
-| "Ansiedade elevada — A média de ansiedade está em 3,4/5. Considere ações preventivas." | "Ansiedade acima do saudável (3,4/5). Pico ocorreu na semana de {data}. Sugestão: prática guiada de respiração e revisão de carga acadêmica." |
-| "Atenção requerida — 8 alunos (28%) apresentaram humor abaixo no período." | "8 alunos (28%) mantiveram humor abaixo de 3. Destes, 6 já estão em triagem crítica e 2 ainda não foram avaliados — [Priorizar avaliação]." |
-
-Cada insight ganha um campo opcional `action: { label, target }` para virar CTA clicável (roteia para triagem/relatório).
-
-### 3. Banner de topo da triagem (`StudentTriageTab.tsx`, linha ~865)
-
-Hoje: "6 alunos em nível crítico aguardando triagem." Passa a mostrar a pilha completa e o que fazer com cada faixa:
-
-> **22 alunos precisam da sua atenção esta semana**
-> 🔴 6 críticos — ação imediata (contato hoje)
-> 🟠 11 em alerta — acolhimento em até 7 dias
-> 🟡 5 em atenção — monitorar próximo check-in
->
-> [Começar pelos críticos] [Ver todos]
-
-### 4. Consistência de linguagem
-
-- Padronizar "aluno" (não "paciente"), concordância verbal ("apresentaram" no plural).
-- "Melhor dia" e demais datas sempre com data completa `dd/mm` além do dia da semana.
-- Remover jargão ("humor abaixo de 3" → "humor abaixo do saudável (nota < 3)").
+### 4. Copy do banner da Triagem
+- Trocar "esta semana" por `nos últimos {N} dias` no banner de `StudentTriageTab.tsx`, refletindo o seletor real. Mesmo ajuste no headline do `PanoramaCard`.
 
 ## Arquivos afetados
-
-- `src/components/institution/InstitutionWellbeingDashboard.tsx` — novo bloco Panorama, consumindo `useStudentTriage`.
-- `src/hooks/useInstitutionWellbeing.tsx` — reescrita dos insights + novo campo `action`.
-- `src/components/institution/WellbeingInsights.tsx` — renderizar CTA quando `action` existir.
-- `src/components/institution/StudentTriageTab.tsx` — banner topo estratificado.
-- (opcional) novo `src/components/institution/PanoramaCard.tsx` para isolar o bloco narrativo.
+- `src/components/institution/PanoramaCard.tsx`
+- `src/components/institution/StudentTriageTab.tsx`
+- `src/components/institution/InstitutionWellbeingDashboard.tsx` (passar período da triagem para o Panorama)
 
 ## Fora de escopo
-
-- Nenhuma mudança em Edge Functions, schema Supabase, ou lógica de risco.
-- Sem novos gráficos — só melhoria de texto, hierarquia e reutilização de dados já existentes.
+- Alterar a lógica de classificação de risco em `useStudentTriage`.
+- Mudar o período padrão do dashboard de diário.
