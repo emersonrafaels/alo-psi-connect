@@ -317,15 +317,15 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         }
       }
 
-      // Insight: Alunos com humor baixo (limiar reduzido de 30% para 20%)
+      // Insight: Alunos com humor baixo
       if (lowMoodStudents > 0 && uniqueStudents > 0) {
         const percentage = (lowMoodStudents / uniqueStudents) * 100;
         if (percentage > 20) {
           insights.push({
             type: 'warning',
             icon: '🚨',
-            title: 'Atenção requerida',
-            description: `${lowMoodStudents} aluno${lowMoodStudents > 1 ? 's' : ''} (${percentage.toFixed(0)}%) ${lowMoodStudents > 1 ? 'apresentaram' : 'apresentou'} humor abaixo no período.`,
+            title: 'Grupo com humor abaixo do saudável',
+            description: `${lowMoodStudents} de ${uniqueStudents} alunos engajados (${percentage.toFixed(0)}%) mantiveram humor abaixo de 3. Priorize a aba de Triagem para avaliar cada caso.`,
           });
         }
       }
