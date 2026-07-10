@@ -446,9 +446,9 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
             </Card>
           )}
 
-          {data.generated_at && (
+          {generatedAt && (
             <p className="text-xs text-muted-foreground text-center">
-              Gerado em {new Date(data.generated_at).toLocaleString('pt-BR')} · atualizado a cada 24h
+              Última atualização: {new Date(generatedAt).toLocaleString('pt-BR')} · o diagnóstico permanece salvo até você clicar em <span className="font-medium">Atualizar</span>.
             </p>
           )}
         </>
