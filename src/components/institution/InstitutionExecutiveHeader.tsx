@@ -105,7 +105,18 @@ async function fetchBrief(institutionId: string): Promise<Brief | null> {
     body: { institutionId },
   });
   if (error) throw error;
-  return data?.brief || null;
+  const b = data?.brief;
+  if (!b) return null;
+  // Payload novo: objeto estruturado
+  if (typeof b === 'object' && !Array.isArray(b)) {
+    return {
+      headline: String(b.headline ?? 'Resumo da semana'),
+      highlights: Array.isArray(b.highlights) ? b.highlights.map((h: any) => String(h)) : [],
+      focus: String(b.focus ?? ''),
+    };
+  }
+  // Fallback: payload legado em texto corrido
+  return { headline: 'Resumo da semana', highlights: [String(b)], focus: '' };
 }
 
 function dayLabels(): { dow: string; date: string; isToday: boolean }[] {
