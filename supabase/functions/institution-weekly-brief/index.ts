@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!iu) return json({ error: "Sem acesso a esta instituição" }, 403);
 
-    // Cache 24h
+    // Cache 24h (só se estiver no shape novo — brief como objeto)
     if (!force) {
       const { data: cached } = await admin
         .from("buddy_insights")
@@ -60,7 +60,9 @@ Deno.serve(async (req) => {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (cached && Date.now() - new Date(cached.created_at).getTime() < 24 * 3600_000) {
+      const cachedBrief = (cached?.payload as any)?.brief;
+      const isNewShape = cachedBrief && typeof cachedBrief === "object" && !Array.isArray(cachedBrief);
+      if (cached && isNewShape && Date.now() - new Date(cached.created_at).getTime() < 24 * 3600_000) {
         return json({ cached: true, ...(cached.payload as any) });
       }
     }
