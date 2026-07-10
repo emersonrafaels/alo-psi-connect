@@ -1,29 +1,51 @@
-## Objetivo
-Ajustar dois pontos de UX no Portal Institucional:
-1. Deixar a data/hora da "Última atualização" do diagnóstico do Buddy mais visível, posicionada no topo do painel, próxima ao botão "Atualizar".
-2. Trocar o cumprimento do `WelcomeCard` no contexto institucional para "Boa tarde, Professor. Que bom te ver.".
+## Ajustes de Resolução/Reabertura de Triagem
 
-## Alterações
+### 1. Data futura na resolução (bug)
+- **Seed demo** (`supabase/functions/seed-demo-data/index.ts`): fixar `resolvedAt = min(createdAt + rand(1..min(7, daysAgo)), now())` para nunca cair no futuro.
+- **Correção retroativa**: rodar `UPDATE public.student_triage SET resolved_at = now(), updated_at = now() WHERE resolved_at > now()` para os 44 registros demo da UNIFAGOC (via `supabase--insert`).
+- **Garantia futura** no hook `useStudentTriage` (`updateTriageStatus`): quando `status = 'resolved'`, sempre gravar `resolved_at = now()` no cliente (já faz), e no seed nunca gerar futuro.
 
-### 1. `src/components/institution/BuddyInstitutionPanel.tsx`
-- Remover o bloco de rodapé atual (linhas ~449-453) que exibe "Última atualização" em texto pequeno e discreto.
-- Adicionar um elemento visível no topo do card hero de diagnóstico, ao lado do botão "Atualizar", contendo:
-  - Ícone `Clock`.
-  - Label "Última atualização".
-  - Data/hora formatada em `pt-BR`.
-  - Indicativo de que o diagnóstico permanece salvo até clicar em "Atualizar".
-- Estilizar como badge/chip com fundo de destaque sutil (`bg-background/80`, borda `border-primary/20`, texto legível) para garantir contraste sem competir com o headline.
-- Preservar a lógica de `generatedAt` e o estado de loading.
+### 2. Modal ao clicar "Resolver" (aba Em Andamento)
+Novo componente `TriageResolutionDialog.tsx` (reutilizável):
+- Campo **Tipo de resolução** (obrigatório, `Select`):
+  - `encaminhado_profissional` — "Encaminhado a profissional"
+  - `acompanhamento_interno` — "Acompanhamento interno realizado"
+  - `contato_familia` — "Contato com família/responsável"
+  - `melhora_espontanea` — "Melhora espontânea observada"
+  - `sem_necessidade` — "Sem necessidade de intervenção"
+  - `outro` — "Outro"
+- Campo **Descrição** (`Textarea`, opcional, até 500 chars).
+- Botões: Cancelar / Confirmar resolução.
+- Ao confirmar: chama `updateTriageStatus.mutate({ triageId, status: 'resolved', resolvedAt: new Date().toISOString(), resolutionType, resolutionNotes })`.
 
-### 2. `src/components/institution/WelcomeCard.tsx`
-- Adicionar prop opcional `greetingName?: string`.
-- Se `greetingName` for fornecido, usá-lo no cumprimento.
-- Se não for fornecido, manter a lógica atual (primeiro nome do perfil ou prefixo do email ou "Administrador").
+### 3. Modal ao clicar "Reabrir" (aba Concluídos)
+Novo componente `TriageReopenDialog.tsx` (mesmo padrão):
+- Campo **Motivo da reabertura** (obrigatório, `Select`):
+  - `nova_ocorrencia` — "Nova ocorrência identificada"
+  - `piora_quadro` — "Piora do quadro do aluno"
+  - `resolucao_incompleta` — "Resolução anterior incompleta"
+  - `solicitacao_familia` — "Solicitação da família/aluno"
+  - `outro` — "Outro"
+- Campo **Descrição** (opcional, até 500 chars).
+- Ao confirmar: `updateTriageStatus.mutate({ triageId, status: 'triaged', reopenReason, reopenNotes })` e limpa `resolved_at`.
 
-### 3. `src/pages/InstitutionPortal.tsx`
-- Ao renderizar `<WelcomeCard institutionName={...} />`, adicionar a prop `greetingName="Professor"`.
+### 4. Persistência (migração)
+Adicionar colunas em `public.student_triage`:
+- `resolution_type text`
+- `resolution_notes text`
+- `reopen_reason text`
+- `reopen_notes text`
+- `reopened_at timestamp with time zone`
 
-## Critérios de aceitação
-- A data/hora da última atualização aparece no topo do painel do Buddy, alinhada ao botão "Atualizar", com destaque visual.
-- O cumprimento no Portal Institucional exibe "Boa tarde, Professor. Que bom te ver." (adaptando bom dia/tarde/noite conforme horário).
-- Nenhum outro uso do `WelcomeCard` é impactado.
+E, no evento de reabertura, definir `resolved_at = NULL`, `reopened_at = now()`.
+
+### 5. Atualizações no hook e UI
+- `useStudentTriage.updateTriageStatus`: aceitar os novos campos e persistir; ao reabrir, `resolved_at = null`, `reopened_at = now()`.
+- `StudentTriageTab.tsx`: substituir os `onClick` diretos de "Resolver" (linha 1442) e "Reabrir" (linha 1510) pela abertura dos respectivos modais; guardar `selectedTriage` em estado local.
+- Mostrar o `resolution_type` (badge) e `resolution_notes` (texto italic) no card da aba Concluídos, quando existirem.
+
+### Detalhes técnicos
+- Modais em `src/components/institution/` usando `Dialog` + `Select` + `Textarea` do shadcn.
+- Validação com `zod` no submit (tipo obrigatório).
+- Toasts via `sonner`/`use-toast` seguindo padrão do projeto.
+- Sem mudanças em outras telas.
