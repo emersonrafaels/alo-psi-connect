@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useLatestBuddyInsight } from "@/hooks/useBuddy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ const STORAGE_KEY = "buddy-daily-brief-closed";
 export function BuddyDailyBrief() {
   const { user } = useAuth();
   const { profile } = useUserProfile();
+  const { hasRole: isInstitutionAdmin } = useUserRole("institution_admin");
   const { data: insight, isLoading } = useLatestBuddyInsight(30);
   const navigate = useNavigate();
   const [isClosed, setIsClosed] = useState(() => {
@@ -43,16 +45,18 @@ export function BuddyDailyBrief() {
 
   if (!user || isClosed) return null;
 
-  const firstName =
-    profile?.nome?.split(" ")[0] ||
-    user?.user_metadata?.nome?.split(" ")[0] ||
-    user?.email?.split("@")[0] ||
-    "amigo(a)";
+  const firstName = isInstitutionAdmin
+    ? "Professor"
+    : profile?.nome?.split(" ")[0] ||
+      user?.user_metadata?.nome?.split(" ")[0] ||
+      user?.email?.split("@")[0] ||
+      "amigo(a)";
 
   const greeting = getGreeting();
-  const discovery =
-    insight?.narrative?.split(/(?<=[.!?])\s+/)[0] ||
-    "Estou aprendendo sobre você. Cada registro me ajuda a te apoiar melhor.";
+  const discovery = isInstitutionAdmin
+    ? "Estou aprendendo sobre você. Cada registro me ajuda a te apoiar melhor."
+    : insight?.narrative?.split(/(?<=[.!?])\s+/)[0] ||
+      "Estou aprendendo sobre você. Cada registro me ajuda a te apoiar melhor.";
   const nextRec = insight?.recommendations?.[0];
   const ctaLabel = nextRec?.cta || "Fazer meu check-in";
   const ctaAction = () => {
