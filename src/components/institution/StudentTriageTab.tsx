@@ -473,6 +473,14 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
     return students.filter((s) => s.riskLevel === 'critical' && (!s.lastTriageStatus || s.lastTriageStatus === 'pending')).length;
   }, [students]);
 
+  const riskCounts = useMemo(() => {
+    return {
+      critical: students.filter((s) => s.riskLevel === 'critical').length,
+      alert: students.filter((s) => s.riskLevel === 'alert').length,
+      attention: students.filter((s) => s.riskLevel === 'attention').length,
+    };
+  }, [students]);
+
   const overdueFollowUpCount = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
