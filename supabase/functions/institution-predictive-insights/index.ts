@@ -1,4 +1,4 @@
-// Gera insights preditivos e sugestões de ação para instituições (cache 24h)
+// Gera insights executivos e "efeito uau" para gestão institucional (cache 24h)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -59,39 +59,69 @@ Deno.serve(async (req) => {
 
     const start = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
     const end = new Date().toISOString().slice(0, 10);
-    const [aggRes, triageRes] = await Promise.all([
+    const [aggRes, triageRes, studentsRes] = await Promise.all([
       admin.rpc("get_institution_mood_aggregates", { p_institution_id: institutionId, p_period_days: 60 })
         .then((r: any) => r).catch(() => ({ data: null })),
-
       admin.from("student_triage").select("status,risk_level,priority,created_at,resolved_at,recommended_action")
         .eq("institution_id", institutionId).gte("created_at", new Date(Date.now() - 60 * 86400_000).toISOString()),
+      admin.from("patient_institutions").select("patient_id").eq("institution_id", institutionId),
     ]);
 
+    const triages = triageRes.data || [];
     const context = {
       period: { start, end },
+      total_students: studentsRes.data?.length || 0,
       mood_aggregates: aggRes.data,
       triage_summary: {
-        total: (triageRes.data || []).length,
-        by_status: (triageRes.data || []).reduce((acc: any, t: any) => {
-          acc[t.status] = (acc[t.status] || 0) + 1; return acc;
-        }, {}),
-        by_risk: (triageRes.data || []).reduce((acc: any, t: any) => {
+        total: triages.length,
+        by_status: triages.reduce((acc: any, t: any) => { acc[t.status] = (acc[t.status] || 0) + 1; return acc; }, {}),
+        by_risk: triages.reduce((acc: any, t: any) => {
           const k = String(t.risk_level).toLowerCase();
           acc[k] = (acc[k] || 0) + 1; return acc;
         }, {}),
+        resolved: triages.filter((t: any) => t.status === "resolved").length,
       },
     };
 
-    const systemPrompt = `Você é o Buddy institucional. Analise dados agregados anônimos e devolva APENAS JSON válido (sem markdown, sem comentários) no formato:
+    const systemPrompt = `Você é um consultor sênior de bem-estar estudantil falando com a reitoria/coordenação de uma instituição de ensino.
+Traduza dados agregados anônimos em decisões que a gestão toma segunda de manhã. Nada de jargão clínico. Nada de "recomendo procurar um profissional". Fale como um estrategista que entende de educação, retenção, evasão, clima acadêmico e reputação institucional.
+
+Cada insight deve responder: (1) o que está acontecendo agora, (2) por que isso importa para a INSTITUIÇÃO (retenção, engajamento, clima, reputação, desempenho), (3) o que fazer nos próximos 15 dias, (4) quem executa.
+
+Produza um "efeito uau": comece por um headline forte, uma métrica de destaque que o gestor vai lembrar, e conquistas para celebrar. Nunca cite alunos individualmente.
+
+Devolva APENAS JSON válido (sem markdown) no formato:
 {
-  "predictive_insights": [
-    { "title": string, "description": string, "affected_cohort": string, "time_window": string, "confidence": "baixa"|"media"|"alta", "evidence": string }
+  "headline": "Frase única de impacto, máx 90 caracteres, tom de manchete executiva",
+  "tldr": "Resumo executivo em 2 a 3 frases — leitura de 10 segundos",
+  "wow_metric": { "label": "curto", "value": "número/percentual formatado", "context": "o que isso significa em 1 frase" },
+  "celebrate": ["conquista 1", "conquista 2", "conquista 3"],
+  "insights": [
+    {
+      "title": "Título curto e específico",
+      "situation": "O que os dados mostram (1-2 frases, com números)",
+      "impact": "Por que a instituição deve se importar (retenção/engajamento/clima)",
+      "recommendation": "Ação concreta em 1-2 frases",
+      "cohort": "Grupo afetado (ex: 'alunos com humor <3 nos últimos 15 dias')",
+      "dimension": "academico" | "socioemocional" | "engajamento" | "risco",
+      "severity": "positivo" | "atencao" | "alerta" | "critico",
+      "confidence": "baixa" | "media" | "alta",
+      "evidence": "Referência numérica curta que sustenta"
+    }
   ],
-  "suggested_actions": [
-    { "title": string, "description": string, "category": "grupo"|"pratica"|"campanha"|"triagem"|"conteudo", "cta_label": string }
+  "priority_actions": [
+    {
+      "title": "Ação clara",
+      "why": "Motivo em 1 frase (foco em resultado institucional)",
+      "how": ["passo 1", "passo 2", "passo 3"],
+      "owner": "Coordenação" | "Psicologia" | "Professores" | "Gestão" | "Comunicação",
+      "timeframe": "esta semana" | "15 dias" | "30 dias",
+      "cta_label": "Rótulo do botão",
+      "cta_target": "triagem" | "notas" | "diario" | "metricas" | null
+    }
   ]
 }
-Regras: 3 a 5 insights preditivos; 3 a 5 sugestões acionáveis; foco em próximos 15 dias; nunca cite alunos individualmente; use português brasileiro; seja específico e prático.`;
+Regras: 4 insights, 3 a 4 ações prioritárias, 3 conquistas. Se dados forem escassos, ainda assim gere insights úteis com confidence="baixa".`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -100,7 +130,7 @@ Regras: 3 a 5 insights preditivos; 3 a 5 sugestões acionáveis; foco em próxim
         model: MODEL,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Dados agregados: ${JSON.stringify(context)}` },
+          { role: "user", content: `Dados agregados da instituição:\n${JSON.stringify(context, null, 2)}` },
         ],
         response_format: { type: "json_object" },
       }),
@@ -108,17 +138,22 @@ Regras: 3 a 5 insights preditivos; 3 a 5 sugestões acionáveis; foco em próxim
 
     if (!aiResp.ok) {
       const errText = await aiResp.text();
+      console.error("AI error", aiResp.status, errText);
       return json({ error: "Falha ao gerar insights", details: errText }, aiResp.status);
     }
 
     const aiJson = await aiResp.json();
     const raw = aiJson?.choices?.[0]?.message?.content ?? "{}";
     let parsed: any = {};
-    try { parsed = JSON.parse(raw); } catch { parsed = { predictive_insights: [], suggested_actions: [] }; }
+    try { parsed = JSON.parse(raw); } catch { parsed = {}; }
 
     const payload = {
-      predictive_insights: Array.isArray(parsed.predictive_insights) ? parsed.predictive_insights : [],
-      suggested_actions: Array.isArray(parsed.suggested_actions) ? parsed.suggested_actions : [],
+      headline: parsed.headline || "",
+      tldr: parsed.tldr || "",
+      wow_metric: parsed.wow_metric || null,
+      celebrate: Array.isArray(parsed.celebrate) ? parsed.celebrate : [],
+      insights: Array.isArray(parsed.insights) ? parsed.insights : [],
+      priority_actions: Array.isArray(parsed.priority_actions) ? parsed.priority_actions : [],
       generated_at: new Date().toISOString(),
       model: MODEL,
     };

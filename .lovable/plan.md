@@ -1,37 +1,69 @@
-# Unificar contagem de alunos em atenção (Panorama × Triagem)
+# Buddy Institucional — geração funcional + storytelling "uau"
 
-## Problema
-No Portal Institucional, dois blocos mostram "X alunos precisam da sua atenção esta semana" com números diferentes (24 no Panorama do Diário, 22 na aba Triagem). A causa é que cada bloco usa um **período de análise** distinto:
+## Diagnóstico
+A tela mostra "Ainda não há dados suficientes" mesmo com 33 alunos e 990 check-ins. Causa: o painel (`BuddyInstitutionPanel.tsx`) lê `data.insights`, mas a edge function `institution-predictive-insights` devolve `predictive_insights` + `suggested_actions`. O array `insights` sempre chega vazio, então cai no estado de "sem dados". Nada a ver com volume — é um bug de contrato.
 
-- `PanoramaCard` recebe o `periodDays` do dashboard (ex.: 90 dias).
-- `StudentTriageTab` tem seu **próprio seletor** (padrão 15 dias).
+## O que vai mudar
 
-Como a classificação de risco depende do período, o mesmo hook (`useStudentTriageData`) devolve contagens diferentes.
+### 1. Edge Function `institution-predictive-insights`
+Reescrever o prompt para falar a língua que um gestor de instituição de ensino quer ouvir: panorama, impacto acadêmico/socioemocional, coorte afetada, evidência nos dados, próximo passo concreto.
 
-## Objetivo
-Deixar claro para o gestor que os dois blocos falam da mesma coisa e, quando os números divergirem, explicar por quê.
+Novo payload de resposta:
+```json
+{
+  "headline": "Frase curta de impacto (1 linha)",
+  "tldr": "Resumo executivo em 2-3 frases para leitura de 10s",
+  "wow_metric": { "label": "...", "value": "...", "context": "..." },
+  "insights": [
+    {
+      "title": "...",
+      "narrative": "situação → o que significa para a instituição → recomendação",
+      "cohort": "grupo afetado (ex: alunos com humor <3 nos últimos 15d)",
+      "impact": "academico" | "socioemocional" | "engajamento" | "risco",
+      "severity": "atencao" | "alerta" | "critico" | "positivo",
+      "confidence": "baixa" | "media" | "alta",
+      "evidence": "referência aos números que sustentam"
+    }
+  ],
+  "priority_actions": [
+    { "title": "...", "why": "...", "how": "passos práticos", "owner": "Coordenação|Psicologia|Professores|Gestão", "timeframe": "esta semana|15 dias|mês", "cta_label": "..." }
+  ],
+  "celebrate": ["conquistas/pontos positivos para reforçar"]
+}
+```
 
-## Mudanças
+Prompt novo (resumo): "Você é um consultor sênior em bem-estar estudantil. Traduza dados agregados em decisões que uma coordenação/reitoria toma segunda de manhã. Evite jargão clínico. Cada insight precisa responder: o que está acontecendo, por que a instituição deve se importar, o que fazer nos próximos 15 dias, quem executa. Nunca cite alunos individualmente."
 
-### 1. Alinhar período por padrão
-- No `PanoramaCard`, deixar de usar o `periodDays` do dashboard para o cálculo de risco e passar a usar o **mesmo período da triagem** (default 15 dias — memória `triage-workflow-and-averages`).
-- Manter o `periodDays` original apenas para o texto de engajamento ("nos últimos 90 dias, X de Y alunos registraram...").
+Manter cache 24h, mas gravar o novo `payload`.
 
-### 2. Rótulo do período no Panorama
-- Adicionar sob o headline: `Distribuição de risco baseada nos últimos 15 dias` (com o número real usado).
-- Assim o gestor entende que "24" e "22" podem divergir se ele mudar o seletor da triagem depois.
+### 2. Painel `BuddyInstitutionPanel.tsx` — redesenho "uau"
+Remover totalmente o card "Benchmark com a rede" e o bloco de fallback "Ainda não há dados suficientes" antigo.
 
-### 3. Sincronização (opcional, mesmo turno)
-- Persistir o período da triagem em contexto/URL (`?triagePeriod=15`) e ler no `PanoramaCard`, para que ao trocar o seletor na aba Triagem o Panorama acompanhe automaticamente.
+Nova estrutura visual:
+- **Hero de storytelling**: fundo gradiente sutil, mascote Buddy (roxo) ao lado, `headline` grande, `tldr` embaixo.
+- **Cartão de métrica-uau**: destaque em número grande (`wow_metric.value`), rótulo e contexto — o "efeito uau" para o gestor.
+- **Bloco Celebrar** (verde, ícone Sparkles): lista curta do que está indo bem — abre a conversa positiva.
+- **Insights (2 col em md+)**: cards com:
+  - Ícone por `impact` (livro=academico, coração=socioemocional, users=engajamento, alerta=risco)
+  - Badge de `severity` em PT-BR com cor coerente (Atenção âmbar / Alerta laranja / Crítico rose / Positivo esmeralda)
+  - `narrative` em 3 linhas com quebra por marcadores "Situação · Impacto · Recomendação"
+  - Rodapé com coorte + confiança + evidência (menor, muted)
+- **Ações prioritárias**: lista numerada estilo checklist executivo, cada item com título, "Por quê" (1 linha), "Como" (2-3 bullets), badge de `owner` e `timeframe`, botão CTA que rola para a aba correspondente (Triagem/Notas) quando aplicável.
+- **Rodapé**: "Gerado em <data> · atualizado a cada 24h" + botão "Atualizar" que força regeneração.
 
-### 4. Copy do banner da Triagem
-- Trocar "esta semana" por `nos últimos {N} dias` no banner de `StudentTriageTab.tsx`, refletindo o seletor real. Mesmo ajuste no headline do `PanoramaCard`.
+Estado inicial (antes do clique "Gerar insights"): manter card convite, mas com preview do que virá (3 pílulas: "Diagnóstico executivo", "Coortes em risco", "Plano de 15 dias").
 
-## Arquivos afetados
-- `src/components/institution/PanoramaCard.tsx`
-- `src/components/institution/StudentTriageTab.tsx`
-- `src/components/institution/InstitutionWellbeingDashboard.tsx` (passar período da triagem para o Panorama)
+Estado sem insights suficientes: mostrar mensagem apenas se `insights.length === 0` **após** geração bem-sucedida, com CTA para revisar quando houver mais dados.
 
-## Fora de escopo
-- Alterar a lógica de classificação de risco em `useStudentTriage`.
-- Mudar o período padrão do dashboard de diário.
+### 3. Compatibilidade
+Adicionar leitura tolerante: se o payload vier no formato antigo (`predictive_insights`), mapear para o novo shape no cliente antes de renderizar — evita quebrar caches de 24h já gravados.
+
+## Arquivos alterados
+- `supabase/functions/institution-predictive-insights/index.ts` — novo prompt + novo shape de payload
+- `src/components/institution/BuddyInstitutionPanel.tsx` — remove benchmark, novo layout de storytelling, mapper de compatibilidade
+- (nenhuma migração, nenhuma alteração em outras abas)
+
+## Validação
+- Clicar em "Gerar insights" na UNIFAGOC deve retornar `headline`, `tldr`, `wow_metric`, ≥3 insights e ≥3 ações.
+- Card benchmark não aparece mais.
+- Layout responsivo (grid 1 col em mobile, 2 em md).
