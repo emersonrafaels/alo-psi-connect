@@ -60,9 +60,9 @@ Deno.serve(async (req) => {
     const start = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
     const end = new Date().toISOString().slice(0, 10);
     const [aggRes, triageRes] = await Promise.all([
-      admin.rpc("get_institution_mood_aggregates", {
-        p_institution_id: institutionId, p_start_date: start, p_end_date: end,
-      }).then((r: any) => r).catch(() => ({ data: null })),
+      admin.rpc("get_institution_mood_aggregates", { p_institution_id: institutionId, p_period_days: 60 })
+        .then((r: any) => r).catch(() => ({ data: null })),
+
       admin.from("student_triage").select("status,risk_level,priority,created_at,resolved_at,recommended_action")
         .eq("institution_id", institutionId).gte("created_at", new Date(Date.now() - 60 * 86400_000).toISOString()),
     ]);
