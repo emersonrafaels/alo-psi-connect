@@ -325,7 +325,7 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
             type: 'warning',
             icon: '🚨',
             title: 'Atenção requerida',
-            description: `${lowMoodStudents} aluno${lowMoodStudents > 1 ? 's' : ''} (${percentage.toFixed(0)}%) apresentou humor baixo no período.`,
+            description: `${lowMoodStudents} aluno${lowMoodStudents > 1 ? 's' : ''} (${percentage.toFixed(0)}%) ${lowMoodStudents > 1 ? 'apresentaram' : 'apresentou'} humor abaixo no período.`,
           });
         }
       }
