@@ -54,10 +54,10 @@ export function InstitutionMoodAggregates({ institutionId }: InstitutionMoodAggr
         <div>
           <CardTitle className="flex items-center gap-2 text-base">
             <Heart className="h-4 w-4" />
-            Bem-estar do diário emocional
+            Panorama emocional dos alunos
           </CardTitle>
           <CardDescription>
-            Dados agregados e anonimizados (mínimo de 5 alunos por período).
+            Dados agregados protegidos por privacidade (mínimo de 5 alunos por período).
           </CardDescription>
         </div>
         <Tabs value={period} onValueChange={(v) => setPeriod(v as any)}>
