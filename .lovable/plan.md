@@ -1,42 +1,38 @@
-## Diagnóstico
+## Ajustes no Dashboard de Bem-Estar Institucional
 
-O card **"Bem-estar do diário emocional"** mostra `Atualmente: 0` mesmo com 33 alunos e 990 registros porque a função RPC `get_institution_mood_aggregates` faz o join errado.
+### 1) Concordância verbal no insight "Atenção requerida"
 
-Confirmei no banco (UNIFAGOC, id `7e77a2…f602e4`):
+Arquivo: `src/hooks/useInstitutionWellbeing.tsx` (linha 328).
 
-| Verificação | Resultado |
-|---|---|
-| Alunos vinculados à instituição | **33** |
-| Alunos com `profiles.user_id` preenchido | **0** |
-| Registros de humor casados via `profile_id` | **990** (33 alunos distintos) |
-| Registros de humor casados via `user_id` (lógica atual) | **0** |
+- Trocar `apresentou humor baixo no período` por **`apresentaram humor abaixo no período`** quando há mais de 1 aluno; manter singular `apresentou humor abaixo` para 1 aluno.
+- Resultado: *"33 alunos (100%) apresentaram humor abaixo no período."*
 
-A RPC atual liga `mood_entries.user_id → profiles.user_id`. Os alunos demo (e qualquer aluno criado sem conta auth) têm `profiles.user_id = NULL`, então o join zera. As entradas de humor sempre têm `profile_id`, e a tabela `mood_entries` tem coluna `profile_id`.
+### 2) Clareza no insight "Melhor dia"
 
-Também é o mesmo motivo pelo qual o card fica vazio para alunos importados via bulk sem convite de auth.
+Arquivo: `src/hooks/useInstitutionWellbeing.tsx` (linhas 351-367).
 
-## Correção
+Hoje a descrição imprime só o nome do dia da semana (`Quinta-feira`), o que sugere padrão semanal, mas na verdade é **a data específica com a maior média** dentro do período.
 
-Migration para recriar `public.get_institution_mood_aggregates` com o join via `profile_id`:
+- Passar a formatar como: `Quinta, 03/07 teve a melhor média de humor no período: 3.5/5.`
+- Formato do dia: `weekday: 'short'` + `dd/MM` via `toLocaleDateString('pt-BR')`, para deixar explícito que é uma data única.
+- Título passa a ser **"Melhor dia do período"**.
 
-- Substituir a subquery `patient_institutions … profiles.user_id = me.user_id` por join direto:
-  `mood_entries me` → `profiles p ON p.id = me.profile_id` → `pacientes pa ON pa.profile_id = p.id` → `patient_institutions pi ON pi.patient_id = pa.id AND pi.institution_id = p_institution_id`.
-- Contagem `unique_users` passa a ser `COUNT(DISTINCT me.profile_id)` (mantém a k-anonimidade ≥ 5, agora considerando o aluno e não a conta auth).
-- Mesma reescrita no bloco `risk_distribution` (join `mood_entry_analyses → mood_entries → profiles → pacientes → patient_institutions`).
-- Mantém `SECURITY DEFINER`, o check de permissão (super_admin ou admin da instituição) e o retorno JSONB atual — nenhuma mudança de contrato para o frontend.
+### 3) Cards da "Visão Geral" clicáveis com detalhes
 
-## Verificação
+Arquivo: `src/components/institution/InstitutionWellbeingDashboard.tsx` (linhas 289-331).
 
-Após a migration, rodar:
+Tornar os 4 cards (Participantes, Registros, Tendência, Alertas) clicáveis, abrindo um `Dialog` com detalhes contextuais. Adicionar `role="button"`, `cursor-pointer`, hover state e foco de teclado.
 
-```sql
-SELECT get_institution_mood_aggregates(
-  '7e77a230-bc9b-4b82-924d-8dfae908c0a6', 90);
-```
+Conteúdo de cada modal (usa dados já disponíveis em `metrics`):
 
-Esperado: `available: true`, `unique_users: 33`, `total_entries: 990`, médias e `risk_distribution` preenchidos. Depois recarregar `/portal-institucional` → aba **Diário Emocional** e confirmar visualmente os cards.
+- **Participantes** (`students_with_entries`): total, taxa de participação (`students_with_entries / students.length`), lista dos primeiros nomes anonimizados quando a instituição tiver anonimização ligada, e comparativo com período anterior se existir.
+- **Registros** (`total_entries`): total, média por aluno (`total_entries / students_with_entries`), média por dia, e mini-tabela dos 5 dias com mais registros usando `metrics.daily_entries`.
+- **Tendência** (`mood_trend` + `period_comparison`): média atual vs. média anterior, variação em % e explicação em texto do que "em melhora / em queda / estável" significa.
+- **Alertas** (`students_with_low_mood`): explicação do critério (humor médio &lt; 3), quantidade absoluta e percentual, e CTA "Ver triagem" que já existe no portal (link para a aba Triagem — usa `onNavigateToTriage` opcional via prop; se não vier, apenas orienta em texto).
 
-## Escopo
+Componente novo enxuto: `src/components/institution/WellbeingMetricDialog.tsx` — recebe `type: 'participants' | 'entries' | 'trend' | 'alerts'`, `open`, `onOpenChange`, e `metrics`. Renderiza o conteúdo específico usando `Dialog` do shadcn.
 
-- Apenas a função SQL. Nada muda no frontend, em RLS, ou em outras RPCs.
-- Card **"Visão Geral"** logo abaixo já usa outro caminho (por isso mostra 33/990 corretamente) e não é tocado.
+### Escopo
+
+- Só as mudanças acima. Sem alterar RPC, RLS, ou os gráficos.
+- Sem trocar strings em outras telas.
