@@ -42,6 +42,9 @@ import { InstitutionTour } from '@/components/institution/InstitutionTour';
 import { KeyboardShortcutsPopover } from '@/components/institution/KeyboardShortcutsPopover';
 import { InstitutionWellbeingDashboard } from '@/components/institution/InstitutionWellbeingDashboard';
 import { StudentTriageTab } from '@/components/institution/StudentTriageTab';
+import { InstitutionExecutiveHeader } from '@/components/institution/InstitutionExecutiveHeader';
+import { BuddyInstitutionPanel } from '@/components/institution/BuddyInstitutionPanel';
+import { Brain } from 'lucide-react';
 
 export default function InstitutionPortal() {
   const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
