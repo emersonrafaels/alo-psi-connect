@@ -64,6 +64,29 @@ export default function InstitutionPortal() {
   // Atalhos de teclado
   useInstitutionKeyboardShortcuts({ setActiveTab });
 
+  // Navegação entre abas via CustomEvent (usado pelo Buddy Institucional, KPIs etc.)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { tab?: string } | undefined;
+      const map: Record<string, string> = {
+        triagem: 'triage',
+        notas: 'notes',
+        diario: 'overview',
+        metricas: 'metrics',
+      };
+      const target = detail?.tab ? (map[detail.tab] || detail.tab) : null;
+      if (target) {
+        setActiveTab(target);
+        setTimeout(() => {
+          document.getElementById('institution-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+      }
+    };
+    window.addEventListener('institution:navigate-tab', handler);
+    return () => window.removeEventListener('institution:navigate-tab', handler);
+  }, []);
+
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
