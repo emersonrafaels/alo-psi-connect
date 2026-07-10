@@ -59,6 +59,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
   const [periodDays, setPeriodDays] = useState(90);
   const [insightsOpen, setInsightsOpen] = useState(true);
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('mood');
+  const [openMetric, setOpenMetric] = useState<WellbeingMetricType | null>(null);
   const { data: metrics, isLoading } = useInstitutionWellbeing(institutionId, periodDays);
   
   const activeNotes = metrics?.activeNotes || [];
