@@ -1733,6 +1733,43 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             </Table>
           </div>
         </DetailModal>
+
+        <TriageResolutionDialog
+          open={!!resolveDialogTriage}
+          onOpenChange={(open) => { if (!open) setResolveDialogTriage(null); }}
+          studentLabel={resolveDialogTriage ? (patientNameMap.get(resolveDialogTriage.patient_id) || 'Aluno') : undefined}
+          isSubmitting={updateTriageStatus.isPending}
+          onConfirm={async ({ resolutionType, resolutionNotes }) => {
+            if (!resolveDialogTriage) return;
+            await updateTriageStatus.mutateAsync({
+              triageId: resolveDialogTriage.id,
+              status: 'resolved',
+              resolvedAt: new Date().toISOString(),
+              resolutionType,
+              resolutionNotes,
+              studentName: patientNameMap.get(resolveDialogTriage.patient_id) || '',
+            });
+            setResolveDialogTriage(null);
+          }}
+        />
+
+        <TriageReopenDialog
+          open={!!reopenDialogTriage}
+          onOpenChange={(open) => { if (!open) setReopenDialogTriage(null); }}
+          studentLabel={reopenDialogTriage ? (patientNameMap.get(reopenDialogTriage.patient_id) || 'Aluno') : undefined}
+          isSubmitting={updateTriageStatus.isPending}
+          onConfirm={async ({ reopenReason, reopenNotes }) => {
+            if (!reopenDialogTriage) return;
+            await updateTriageStatus.mutateAsync({
+              triageId: reopenDialogTriage.id,
+              status: 'triaged',
+              reopenReason,
+              reopenNotes,
+              studentName: patientNameMap.get(reopenDialogTriage.patient_id) || '',
+            });
+            setReopenDialogTriage(null);
+          }}
+        />
       </div>
     </TooltipProvider>);
 
