@@ -37,6 +37,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const institutionId = body?.institutionId as string | undefined;
     const force = !!body?.force;
+    const cachedOnly = !!body?.cachedOnly;
     if (!institutionId) return json({ error: "institutionId obrigatório" }, 400);
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -52,8 +53,11 @@ Deno.serve(async (req) => {
         .eq("institution_id", institutionId)
         .eq("insight_type", "institution_predictive")
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
-      if (cached && Date.now() - new Date(cached.created_at).getTime() < 24 * 3600_000) {
-        return json({ cached: true, ...(cached.payload as any) });
+      if (cached) {
+        return json({ cached: true, generated_at: cached.created_at, ...(cached.payload as any) });
+      }
+      if (cachedOnly) {
+        return json({ cached: false, empty: true });
       }
     }
 

@@ -72,12 +72,15 @@ interface Payload {
   suggested_actions?: any[];
 }
 
-async function fetchInsights(institutionId: string, force = false): Promise<Payload> {
+async function fetchInsights(
+  institutionId: string,
+  opts: { force?: boolean; cachedOnly?: boolean } = {}
+): Promise<Payload & { empty?: boolean; generated_at?: string }> {
   const { data, error } = await supabase.functions.invoke('institution-predictive-insights', {
-    body: { institutionId, force },
+    body: { institutionId, force: !!opts.force, cachedOnly: !!opts.cachedOnly },
   });
   if (error) throw error;
-  return data as Payload;
+  return data as Payload & { empty?: boolean };
 }
 
 // Compatibiliza payload antigo com o novo shape
@@ -168,22 +171,41 @@ function scrollToTab(target?: string | null) {
 
 
 export function BuddyInstitutionPanel({ institutionId }: Props) {
-  const [enabled, setEnabled] = useState(false);
   const [forceKey, setForceKey] = useState(0);
 
-  const { data: raw, isFetching, refetch } = useQuery({
-    queryKey: ['institution-predictive', institutionId, forceKey],
-    queryFn: () => fetchInsights(institutionId, forceKey > 0),
-    enabled: enabled && !!institutionId,
-    staleTime: 60 * 60 * 1000,
+  // Carga inicial: apenas cache (sem gerar automaticamente)
+  const cachedQuery = useQuery({
+    queryKey: ['institution-predictive-cached', institutionId],
+    queryFn: () => fetchInsights(institutionId, { cachedOnly: true }),
+    enabled: !!institutionId,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
 
-  const data = useMemo(() => normalize(raw), [raw]);
+  const hasCached = !!cachedQuery.data && !cachedQuery.data.empty;
+
+  // Regeneração forçada quando o usuário clica em Gerar/Atualizar
+  const forceQuery = useQuery({
+    queryKey: ['institution-predictive-force', institutionId, forceKey],
+    queryFn: () => fetchInsights(institutionId, { force: true }),
+    enabled: forceKey > 0 && !!institutionId,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+
+  const raw = forceQuery.data || (hasCached ? cachedQuery.data : undefined);
+  const isFetching = cachedQuery.isFetching || forceQuery.isFetching;
+  const showInvite = !hasCached && !forceQuery.data && !cachedQuery.isLoading;
+
+  const data = useMemo(() => normalize(raw as Payload | undefined), [raw]);
+  const generatedAt = (raw as any)?.generated_at || data.generated_at;
+
+  const handleGenerate = () => setForceKey((k) => k + 1);
 
   return (
     <div className="space-y-6">
       {/* Convite inicial */}
-      {!enabled && (
+      {showInvite && (
         <Card className="border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent overflow-hidden">
           <CardContent className="p-6 sm:p-8">
             <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
@@ -204,7 +226,7 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
                   <Badge variant="outline" className="border-primary/30">🎉 O que celebrar</Badge>
                 </div>
                 <div className="pt-2">
-                  <Button size="lg" onClick={() => setEnabled(true)}>
+                  <Button size="lg" onClick={handleGenerate}>
                     <Sparkles className="h-4 w-4 mr-2" /> Gerar diagnóstico do Buddy
                   </Button>
                 </div>
@@ -214,7 +236,7 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
         </Card>
       )}
 
-      {enabled && isFetching && (
+      {(forceQuery.isFetching || (cachedQuery.isLoading && !showInvite)) && !raw && (
         <div className="space-y-4">
           <Skeleton className="h-40 rounded-xl" />
           <div className="grid gap-4 md:grid-cols-2">
@@ -223,7 +245,7 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
         </div>
       )}
 
-      {enabled && !isFetching && raw && (
+      {raw && !(raw as any).empty && (
         <>
           {/* Hero de storytelling */}
           <Card className="border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent overflow-hidden">
@@ -235,7 +257,7 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
                     <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary font-semibold">
                       <Sparkles className="h-3.5 w-3.5" /> Diagnóstico do Buddy
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => { setForceKey(k => k + 1); refetch(); }} disabled={isFetching}>
+                    <Button variant="ghost" size="sm" onClick={handleGenerate} disabled={isFetching}>
                       <RefreshCw className={cn('h-4 w-4 mr-2', isFetching && 'animate-spin')} /> Atualizar
                     </Button>
                   </div>
@@ -424,9 +446,9 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
             </Card>
           )}
 
-          {data.generated_at && (
+          {generatedAt && (
             <p className="text-xs text-muted-foreground text-center">
-              Gerado em {new Date(data.generated_at).toLocaleString('pt-BR')} · atualizado a cada 24h
+              Última atualização: {new Date(generatedAt).toLocaleString('pt-BR')} · o diagnóstico permanece salvo até você clicar em <span className="font-medium">Atualizar</span>.
             </p>
           )}
         </>
