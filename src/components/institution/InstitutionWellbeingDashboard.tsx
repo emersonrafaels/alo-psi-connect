@@ -166,6 +166,22 @@ export const InstitutionWellbeingDashboard = ({ institutionId, onNavigateToTriag
   return (
     <TooltipProvider delayDuration={200}>
       <div className="space-y-6">
+        {/* LGPD colapsável no topo */}
+        <Collapsible open={lgpdOpen} onOpenChange={setLgpdOpen}>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="w-full flex items-center justify-between px-4 py-2 rounded-md border border-dashed text-xs text-muted-foreground hover:bg-muted/40 transition-colors"
+            >
+              <span>Como protegemos a privacidade dos alunos</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${lgpdOpen ? 'rotate-180' : ''}`} />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-3">
+            <LGPDNotice />
+          </CollapsibleContent>
+        </Collapsible>
+
         {/* 1. HEADER — período apenas */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -455,22 +471,6 @@ export const InstitutionWellbeingDashboard = ({ institutionId, onNavigateToTriag
             </Tabs>
           </CardContent>
         </Card>
-
-        {/* 9. LGPD colapsável no rodapé */}
-        <Collapsible open={lgpdOpen} onOpenChange={setLgpdOpen}>
-          <CollapsibleTrigger asChild>
-            <button
-              type="button"
-              className="w-full flex items-center justify-between px-4 py-2 rounded-md border border-dashed text-xs text-muted-foreground hover:bg-muted/40 transition-colors"
-            >
-              <span>Como protegemos a privacidade dos alunos</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${lgpdOpen ? 'rotate-180' : ''}`} />
-            </button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3">
-            <LGPDNotice />
-          </CollapsibleContent>
-        </Collapsible>
 
         <WellbeingMetricDialog
           type={openMetric}
