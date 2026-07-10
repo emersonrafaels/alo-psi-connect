@@ -255,7 +255,7 @@ export default function InstitutionPortal() {
           className="space-y-6"
           data-tour="tabs"
         >
-          <TabsList className="grid w-full max-w-4xl grid-cols-2 md:grid-cols-6 h-auto">
+          <TabsList className="grid w-full max-w-5xl grid-cols-2 md:grid-cols-7 h-auto">
             <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
               Visão Geral
             </TabsTrigger>
@@ -267,8 +267,8 @@ export default function InstitutionPortal() {
               <BarChart3 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               Métricas
             </TabsTrigger>
-            <TabsTrigger 
-              value="wellbeing" 
+            <TabsTrigger
+              value="wellbeing"
               className="text-xs md:text-sm py-2"
               data-tour="wellbeing-tab"
             >
@@ -282,6 +282,10 @@ export default function InstitutionPortal() {
             <TabsTrigger value="notes" className="text-xs md:text-sm py-2">
               <StickyNote className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               Notas
+            </TabsTrigger>
+            <TabsTrigger value="buddy" className="text-xs md:text-sm py-2">
+              <Brain className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              Buddy
             </TabsTrigger>
           </TabsList>
 
