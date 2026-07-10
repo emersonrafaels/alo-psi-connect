@@ -869,15 +869,58 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           </div>
         )}
 
-        {/* Critical alert banner */}
-        {criticalPendingCount > 0 && (
-          <Alert className="border-red-300 bg-red-50 dark:bg-red-950/30 dark:border-red-800">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-sm text-red-800 dark:text-red-300">
-              <span className="font-semibold">{criticalPendingCount} aluno{criticalPendingCount > 1 ? 's' : ''} em nível crítico</span> aguardando triagem. Ação imediata recomendada.
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* Stratified attention banner */}
+        {(riskCounts.critical + riskCounts.alert + riskCounts.attention) > 0 && (() => {
+          const openTotal = riskCounts.critical + riskCounts.alert + riskCounts.attention;
+          return (
+            <Alert className="border-red-300 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/20 dark:border-red-800">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-sm text-foreground">
+                <div className="space-y-2">
+                  <div className="font-semibold text-red-800 dark:text-red-300">
+                    {openTotal} aluno{openTotal > 1 ? 's' : ''} {openTotal > 1 ? 'precisam' : 'precisa'} da sua atenção esta semana
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
+                    {riskCounts.critical > 0 && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-red-500" />
+                        <strong className="text-red-700 dark:text-red-300">{riskCounts.critical} crítico{riskCounts.critical > 1 ? 's' : ''}</strong>
+                        <span className="text-muted-foreground">— ação imediata (contato hoje)</span>
+                      </span>
+                    )}
+                    {riskCounts.alert > 0 && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-orange-500" />
+                        <strong className="text-orange-700 dark:text-orange-300">{riskCounts.alert} em alerta</strong>
+                        <span className="text-muted-foreground">— acolhimento em até 7 dias</span>
+                      </span>
+                    )}
+                    {riskCounts.attention > 0 && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-yellow-500" />
+                        <strong className="text-yellow-700 dark:text-yellow-400">{riskCounts.attention} em atenção</strong>
+                        <span className="text-muted-foreground">— monitorar próximo check-in</span>
+                      </span>
+                    )}
+                  </div>
+                  {criticalPendingCount > 0 && (
+                    <div className="pt-1">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="h-7 text-xs"
+                        onClick={() => { setRiskFilter('critical'); setActiveTab('para_triar'); }}
+                      >
+                        Começar pelos críticos
+                        <ChevronRight className="h-3 w-3 ml-1" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </AlertDescription>
+            </Alert>
+          );
+        })()}
 
         {/* Overdue follow-up banner */}
         {overdueFollowUpCount > 0 && (
