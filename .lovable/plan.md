@@ -1,91 +1,116 @@
-# Redesign — Aba Diário Emocional (Portal Institucional)
+Escopo aprovado: **Parte 1 + Parte 2 A + Parte 2 C + Parte 2 I**.
 
-Arquivo principal: `src/components/institution/InstitutionWellbeingDashboard.tsx`
-Componente auxiliar: `src/components/institutional/InstitutionMoodAggregates.tsx`
+---
 
-## Problemas atuais
+## Parte 1 — Dados demo com 90% de resolução
 
-1. **Ordem confusa** — ao clicar em "Diário Emocional", o card de dados agregados anônimos existe mas fica competindo com status badge, alertas, LGPD e notas antes do usuário absorver o resumo.
-2. **Duplicação de métricas** — Humor, Ansiedade, Energia e Sono aparecem em dois lugares:
-   - `InstitutionMoodAggregates` (bloco anonimizado)
-   - Seção "Métricas de Bem-Estar" (cards com Progress)
-   Mesmos números, visualizações diferentes, sem valor incremental.
-3. **Falta narrativa institucional** — uma coordenação de curso quer responder: *"Como está o clima emocional agora? Onde acender o farol? O que mudou? Vale intervir?"* — hoje precisa varrer 6 blocos parecidos para juntar a resposta.
-4. **Alerta e status badge redundantes** — o `Badge` de status ("Alerta / Bem-estar Saudável") e o `Alert` colorido logo abaixo dizem a mesma coisa.
+### 1.1 Atualizar triagens existentes da UNIFAGOC
+`supabase--insert` com UPDATE em `student_triage`:
+- Filtro: `institution_id` da UNIFAGOC.
+- Selecionar ~90% das linhas aleatoriamente (via `ctid` + `random()`), setar:
+  - `status = 'resolved'`
+  - `resolved_at = created_at + interval aleatório 1–7 dias`
+  - `follow_up_date = null`
+  - `updated_at = resolved_at`
+- Restante (~10%) fica dividido entre `triaged` e `in_progress`.
 
-## Nova estrutura (top → bottom)
+### 1.2 Ajustar `supabase/functions/seed-demo-data/index.ts`
+Trocar a escolha uniforme (linhas ~344–370) por distribuição ponderada:
+- 90% `resolved`, 7% `in_progress`, 3% `triaged`.
+- Manter a mesma lógica de `resolved_at` / `follow_up_date`.
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│ 1. HEADER COMPACTO                                       │
-│    Período + Badge de status (sem Alert duplicado)      │
-├─────────────────────────────────────────────────────────┤
-│ 2. RESUMO ANONIMIZADO (InstitutionMoodAggregates)       │
-│    "O que a instituição pode ver com privacidade"       │
-│    → participantes • registros • 5 médias • risco       │
-├─────────────────────────────────────────────────────────┤
-│ 3. ALERTA ACIONÁVEL (só se houver)                       │
-│    N alunos abaixo de 3 → CTA "Ir para Triagem"         │
-├─────────────────────────────────────────────────────────┤
-│ 4. CONTEXTO INSTITUCIONAL                                │
-│    Chips de notas ativas (provas, semana de calouros…)  │
-├─────────────────────────────────────────────────────────┤
-│ 5. ENGAJAMENTO DO PERÍODO                                │
-│    2 cards: Participantes + Registros                   │
-│    + mini bar chart "Registros por dia"                 │
-├─────────────────────────────────────────────────────────┤
-│ 6. EVOLUÇÃO EMOCIONAL                                    │
-│    Seletor (Humor/Ansiedade/Energia/Sono) + gráfico     │
-│    + delta % vs período anterior + tendência            │
-├─────────────────────────────────────────────────────────┤
-│ 7. INSIGHTS INTELIGENTES (colapsável, já existe)        │
-├─────────────────────────────────────────────────────────┤
-│ 8. ANÁLISE VISUAL (abas Evolução/Multi-Camadas/IA)      │
-├─────────────────────────────────────────────────────────┤
-│ 9. LGPD (rodapé, colapsável)                             │
-└─────────────────────────────────────────────────────────┘
-```
+---
 
-## Mudanças concretas
+## Parte 2A — Visão executiva no topo do Portal
 
-### 1. Reordenar o JSX de `InstitutionWellbeingDashboard.tsx`
-- Mover `InstitutionMoodAggregates` para logo abaixo do header de período (é a peça mais informativa e ancora a leitura).
-- Mover `LGPDNotice` para o rodapé, versão colapsada por padrão.
-- Remover o `Badge` de status do header — manter só o `Alert` colorido (mais visível, com CTA).
+Novo componente `src/components/institution/InstitutionExecutiveHeader.tsx` renderizado no topo de `InstitutionPortal.tsx`, acima das abas.
 
-### 2. Eliminar duplicação
-- **Remover completamente a seção "Métricas de Bem-Estar"** (linhas 392-481). As mesmas 4 médias já vivem em `InstitutionMoodAggregates` de forma anonimizada. Manter só uma fonte de verdade.
-- A tendência (%) e o Progress que hoje ficam nesses cards migram para o card "Evolução Emocional" (item 6), onde fazem sentido junto do gráfico.
+Conteúdo:
+1. **4 KPI cards** (grid responsivo):
+   - Alunos ativos na semana (com sparkline 7d e delta vs. semana anterior).
+   - % de engajamento no diário (registros / alunos ativos).
+   - Alertas críticos abertos (triagens `triaged` + `in_progress` com risco alto/crítico).
+   - Taxa de resolução de triagem (resolved / total no período).
+   Cada card usa `Card` shadcn, ícone lucide, número grande, delta colorido (verde/vermelho) e mini sparkline (recharts `<LineChart>` compacto).
 
-### 3. Consolidar "Visão Geral"
-- Reduzir de 4 para 2 cards (Participantes, Registros). Tendência e Alertas viram parte visual do gráfico de evolução e do bloco de alerta acionável — não são "métricas" a repetir aqui.
-- Manter os cards clicáveis abrindo o `WellbeingMetricDialog`.
+2. **Resumo semanal do Buddy** — card destacado abaixo dos KPIs:
+   - Texto gerado por nova edge function `institution-weekly-brief` (Gemini via Lovable AI Gateway, cache 24h em `buddy_insights` com `insight_type='institution_weekly_brief'` e `institution_id`).
+   - Botão "Atualizar" e "Exportar PDF" (usando `window.print()` com estilos dedicados nesta rodada — export PDF completo fica para depois).
 
-### 4. Alerta acionável com CTA
-- No `Alert` de "Atenção Necessária", adicionar botão **"Ver triagem"** que troca `activeTab` na página pai. Prop nova opcional `onNavigateToTriage?: () => void` no dashboard; no `InstitutionPortal.tsx` passamos `() => setActiveTab('triage')`.
+3. **Feed de alertas prioritários** — lista compacta (últimos 10) unindo:
+   - Triagens novas (`created_at` recente).
+   - Quedas súbitas de humor (variação ≥ 2 pontos em 3 dias) — reusar heurística de `useInstitutionWellbeing`.
+   - Ausência prolongada no diário (>14 dias sem registro para alunos previamente engajados).
+   Cada item com ícone, título, timestamp relativo e CTA "Abrir".
 
-### 5. Card "Evolução Emocional" (novo container)
-- Consolida: seletor de métrica + gráfico diário (já existente nas linhas 353-386) + delta vs período anterior + label de tendência. Ao invés de um mini gráfico de "Registros por dia" e outro de métrica lado a lado, uma linha do tempo mais generosa (altura 240px) com o delta em destaque no topo.
-- "Registros por dia" desce para o card "Engajamento" (item 5), próximo do card de Registros.
+Hook `useInstitutionExecutiveSummary.ts` consolidando as queries (respeitando k-anonimato ≥ 5 quando aplicável).
 
-### 6. Copy institucional
-- Título do card anonimizado: "Panorama emocional dos alunos".
-- Subtítulo: "Dados agregados protegidos por privacidade (mínimo 5 alunos por período)".
-- Cada bloco ganha uma pergunta-âncora no subtítulo, no tom da coordenação:
-  - Engajamento → "Quantos alunos estão usando o diário?"
-  - Evolução → "O clima está melhorando ou piorando?"
-  - Insights → "O que o sistema já percebeu por você?"
+---
 
-## Escopo fora do plano
+## Parte 2C — Aba Triagem evoluída
 
-- Não mexer na RPC `get_institution_mood_aggregates`, RLS, tipos de dados nem no `useInstitutionWellbeing`.
-- Não alterar os componentes de gráfico (`WellbeingTimelineCharts`, `WellbeingLayeredChart`, `PredictiveInsightsPanel`).
-- Não alterar as abas do Portal (Visão Geral, Cupons, Métricas etc.) — só o conteúdo interno da aba Diário Emocional.
-- Sem novas dependências.
+Editar `StudentTriageTab.tsx` e componentes associados.
 
-## Detalhes técnicos
+1. **Kanban de acompanhamento**
+   - Novo componente `TriageKanban.tsx` com 3 colunas: Triado → Em andamento → Resolvido.
+   - Drag-and-drop via `@dnd-kit/core` (adicionar dependência).
+   - Cada card mostra nome do aluno (respeitando anonimização), risco (badge colorido), dias desde criação, SLA visual (borda amarela após 3 dias, vermelha após 7).
+   - Toggle no topo da aba: "Lista" (visão atual) | "Kanban".
 
-- `InstitutionPortal.tsx` (linha 372-386): passar `onNavigateToTriage={() => setActiveTab('triage')}` para `InstitutionWellbeingDashboard`.
-- `InstitutionWellbeingDashboard.tsx`: adicionar prop opcional; usar no `Alert` de atenção como `<Button variant="outline" size="sm" onClick={onNavigateToTriage}>Ver triagem</Button>`.
-- Remover imports não usados após a limpeza (`Progress`, `Brain`, `Moon`, `Zap`, `getMoodColor`, `getMoodLabel` se ficarem órfãos).
-- Manter `TooltipProvider` e o `WellbeingMetricDialog` já existente.
+2. **Timeline por aluno**
+   - Novo componente `StudentTriageTimeline.tsx` aberto em `Dialog` ao clicar no aluno.
+   - Une eventos: triagens, notas (`institution_notes`), registros de humor recentes, agendamentos (`agendamentos`).
+   - Layout vertical com ícones e cores por tipo de evento.
+
+3. **Impacto pós-intervenção expandido**
+   - Reforçar `PredictiveInsightsPanel` / criar `TriageImpactChart.tsx`: gráfico "antes × depois" por aluno triado (média de humor/ansiedade 14d antes vs. 14d após `resolved_at`).
+   - Exibir dentro da timeline e como card agregado na aba.
+
+4. **Templates de nota por risco**
+   - Em `QuickNotePopover.tsx`, dropdown "Usar template" com opções por nível de risco (baixo/moderado/alto/crítico). Templates ficam em constante em `src/lib/triageNoteTemplates.ts`.
+
+---
+
+## Parte 2I — Buddy institucional (inteligência)
+
+Nova aba "Buddy institucional" no `InstitutionPortal.tsx` (ou seção dentro da visão executiva — implementarei como aba dedicada para dar espaço).
+
+1. **Insights preditivos por coorte**
+   - Edge function `institution-predictive-insights` (Gemini via Lovable AI Gateway).
+   - Input: séries agregadas anônimas dos últimos 60 dias por coorte (curso/semestre quando disponível, fallback: instituição inteira).
+   - Output estruturado (JSON) com: risco emergente, coorte afetada, evidência, janela de tempo (próx. 15 dias), confiança.
+   - Cache em `buddy_insights` com `insight_type='institution_predictive'` e TTL 24h.
+   - UI: cards com badge de confiança e link para detalhamento.
+
+2. **Sugestões de ação contextuais**
+   - Mesma edge function retorna array `suggested_actions` com título, descrição, categoria (grupo, prática, campanha, triagem) e CTA sugerido.
+   - UI: lista de sugestões com botões que navegam para a área correspondente (`/encontros/novo`, `/praticas`, aba Alunos com filtro pré-aplicado, etc.).
+
+3. **Benchmark anônimo com a rede (opt-in)**
+   - Toggle na aba salvando preferência em `educational_institutions` (nova coluna `benchmark_opt_in boolean default false` — requer migração).
+   - Quando ativo, mostrar cards comparando métricas-chave (humor médio, ansiedade média, taxa de engajamento, taxa de resolução) da instituição vs. média da rede (agregando outras instituições com opt-in, mínimo 3 instituições para exibir).
+   - RPC `get_network_benchmark_aggregates` (SECURITY DEFINER) retornando apenas médias, nunca linhas individuais.
+
+Componentes: `BuddyInstitutionPanel.tsx`, `PredictiveInsightCard.tsx`, `SuggestedActionCard.tsx`, `NetworkBenchmarkCard.tsx`.
+
+---
+
+## Migrações necessárias
+1. `educational_institutions.benchmark_opt_in boolean not null default false`.
+2. RPC `get_network_benchmark_aggregates(period_days int)` com SECURITY DEFINER e k-anon ≥ 3 instituições.
+3. (Opcional) índice em `buddy_insights(institution_id, insight_type, created_at desc)` para acelerar cache.
+
+## Edge functions novas
+- `institution-weekly-brief` (Gemini, cache 24h).
+- `institution-predictive-insights` (Gemini, cache 24h, saída JSON estruturada).
+
+## Dependências
+- `@dnd-kit/core` + `@dnd-kit/sortable` para o Kanban.
+
+## Ordem de execução
+1. Parte 1 (UPDATE + seed).
+2. Migração `benchmark_opt_in` + RPC benchmark.
+3. Edge functions (weekly brief + predictive).
+4. Parte 2A (header executivo + resumo + feed).
+5. Parte 2C (kanban, timeline, impacto, templates).
+6. Parte 2I (painel Buddy institucional + benchmark).
