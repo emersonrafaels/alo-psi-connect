@@ -252,8 +252,9 @@ export default function InstitutionPortal() {
         <Tabs 
           value={activeTab} 
           onValueChange={setActiveTab} 
-          className="space-y-6"
+          className="space-y-6 scroll-mt-24"
           data-tour="tabs"
+          id="institution-tabs"
         >
           <TabsList className="grid w-full max-w-5xl grid-cols-2 md:grid-cols-7 h-auto">
             <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
