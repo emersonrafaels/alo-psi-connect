@@ -257,7 +257,7 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
                     <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary font-semibold">
                       <Sparkles className="h-3.5 w-3.5" /> Diagnóstico do Buddy
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => { setForceKey(k => k + 1); refetch(); }} disabled={isFetching}>
+                    <Button variant="ghost" size="sm" onClick={handleGenerate} disabled={isFetching}>
                       <RefreshCw className={cn('h-4 w-4 mr-2', isFetching && 'animate-spin')} /> Atualizar
                     </Button>
                   </div>
