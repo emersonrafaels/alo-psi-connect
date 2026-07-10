@@ -72,12 +72,15 @@ interface Payload {
   suggested_actions?: any[];
 }
 
-async function fetchInsights(institutionId: string, force = false): Promise<Payload> {
+async function fetchInsights(
+  institutionId: string,
+  opts: { force?: boolean; cachedOnly?: boolean } = {}
+): Promise<Payload & { empty?: boolean; generated_at?: string }> {
   const { data, error } = await supabase.functions.invoke('institution-predictive-insights', {
-    body: { institutionId, force },
+    body: { institutionId, force: !!opts.force, cachedOnly: !!opts.cachedOnly },
   });
   if (error) throw error;
-  return data as Payload;
+  return data as Payload & { empty?: boolean };
 }
 
 // Compatibiliza payload antigo com o novo shape
