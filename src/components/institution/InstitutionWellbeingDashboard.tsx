@@ -289,7 +289,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+            <button type="button" onClick={() => setOpenMetric('participants')} className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-left focus:outline-none focus:ring-2 focus:ring-ring">
               <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
                 <Users className="h-5 w-5 text-blue-500" />
               </div>
@@ -297,9 +297,9 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
                 <p className="text-2xl font-bold">{metrics.students_with_entries}</p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">Participantes <MetricTooltip text="Quantidade de alunos que registraram pelo menos um diário emocional no período selecionado." /></p>
               </div>
-            </div>
+            </button>
 
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+            <button type="button" onClick={() => setOpenMetric('entries')} className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-left focus:outline-none focus:ring-2 focus:ring-ring">
               <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900/30">
                 <FileText className="h-5 w-5 text-purple-500" />
               </div>
@@ -307,9 +307,9 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
                 <p className="text-2xl font-bold">{metrics.total_entries}</p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">Registros <MetricTooltip text="Total de diários emocionais preenchidos por todos os alunos no período. Quanto mais registros, mais confiável a análise." /></p>
               </div>
-            </div>
+            </button>
 
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+            <button type="button" onClick={() => setOpenMetric('trend')} className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-left focus:outline-none focus:ring-2 focus:ring-ring">
               <div className={`p-3 rounded-full ${metrics.mood_trend === 'up' ? 'bg-green-100 dark:bg-green-900/30' : metrics.mood_trend === 'down' ? 'bg-red-100 dark:bg-red-900/30' : 'bg-muted'}`}>
                 {getTrendIcon(metrics.mood_trend)}
               </div>
@@ -319,9 +319,9 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
                 </p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">Tendência <MetricTooltip text="Compara a média de humor da primeira metade do período com a segunda metade. 'Em melhora' significa que o humor médio subiu, 'Em queda' que diminuiu." /></p>
               </div>
-            </div>
+            </button>
 
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+            <button type="button" onClick={() => setOpenMetric('alerts')} className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-left focus:outline-none focus:ring-2 focus:ring-ring">
               <div className={`p-3 rounded-full ${metrics.students_with_low_mood > 0 ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-green-100 dark:bg-green-900/30'}`}>
                 <AlertTriangle className={`h-5 w-5 ${metrics.students_with_low_mood > 0 ? 'text-orange-500' : 'text-green-500'}`} />
               </div>
@@ -329,7 +329,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
                 <p className="text-2xl font-bold">{metrics.students_with_low_mood}</p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">Alertas <MetricTooltip text="Número de alunos com humor médio abaixo de 3 (em uma escala de 1 a 5). Esses alunos podem precisar de acolhimento." /></p>
               </div>
-            </div>
+            </button>
           </div>
 
           {/* Gráficos inline */}
