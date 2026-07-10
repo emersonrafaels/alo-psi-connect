@@ -355,12 +355,15 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
           const bestDay = daysWithMood.sort((a, b) => (b.avg_mood || 0) - (a.avg_mood || 0))[0];
           
           if (bestDay && bestDay.avg_mood !== null) {
-            const dayName = new Date(bestDay.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long' });
+            const d = new Date(bestDay.date + 'T12:00:00');
+            const weekday = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+            const dayMonth = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+            const label = `${weekday.charAt(0).toUpperCase() + weekday.slice(1)}, ${dayMonth}`;
             insights.push({
               type: 'info',
               icon: '⭐',
-              title: 'Melhor dia',
-              description: `${dayName.charAt(0).toUpperCase() + dayName.slice(1)} teve a melhor média de humor: ${bestDay.avg_mood.toFixed(1)}/5.`,
+              title: 'Melhor dia do período',
+              description: `${label} teve a melhor média de humor no período: ${bestDay.avg_mood.toFixed(1)}/5.`,
             });
           }
         }
