@@ -584,6 +584,14 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
                   </div>
                 )}
               </div>
+            ) : briefError ? (
+              <div className="space-y-2">
+                <p className="text-sm text-destructive">Não foi possível gerar o resumo agora.</p>
+                <p className="text-xs text-muted-foreground">{(briefError as Error)?.message || 'Tente novamente em instantes.'}</p>
+                <Button size="sm" variant="outline" onClick={() => refetchBrief()}>
+                  <RefreshCw className="h-3.5 w-3.5 mr-2" /> Tentar novamente
+                </Button>
+              </div>
             ) : (
               <p className="text-sm text-muted-foreground">
                 Ainda não há dados suficientes para gerar um resumo.
