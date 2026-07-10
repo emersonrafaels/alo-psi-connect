@@ -1506,6 +1506,18 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                               {t.triaged_by_name && <span>por {t.triaged_by_name}</span>}
                             </div>
                             {t.notes && <p className="text-xs text-muted-foreground italic truncate">"{t.notes}"</p>}
+                            {(t as any).resolution_type && (
+                              <div className="flex flex-wrap items-center gap-2 pt-1">
+                                <Badge variant="outline" className="text-[10px] h-5">
+                                  {RESOLUTION_TYPE_LABEL[(t as any).resolution_type] || (t as any).resolution_type}
+                                </Badge>
+                                {(t as any).resolution_notes && (
+                                  <span className="text-xs text-muted-foreground italic truncate">
+                                    {(t as any).resolution_notes}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                           <Button
                         size="sm"
