@@ -209,41 +209,18 @@ export const InstitutionWellbeingDashboard = ({ institutionId, onNavigateToTriag
         {/* 2. RESUMO ANONIMIZADO */}
         <InstitutionMoodAggregates institutionId={institutionId} />
 
-        {/* 3. ALERTA ACIONÁVEL */}
-        {metrics.students_with_low_mood > 0 ? (
-          <Alert variant="destructive" className="border-orange-500/30 bg-orange-50/50 dark:bg-orange-950/20">
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
-            <AlertTitle className="text-orange-700 dark:text-orange-400">Atenção Necessária</AlertTitle>
-            <AlertDescription className="text-orange-600/80 dark:text-orange-300/80">
-              <div className="space-y-3">
-                <div>
-                  <strong>{metrics.students_with_low_mood}</strong> aluno{metrics.students_with_low_mood > 1 ? 's' : ''} reportaram humor abaixo de 3 nos últimos {periodDays} dias.
-                  <br />
-                  <span className="text-sm">Considere ações de acolhimento e suporte emocional.</span>
-                </div>
-                {onNavigateToTriage && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-orange-500/40 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-950/40"
-                    onClick={onNavigateToTriage}
-                  >
-                    <ClipboardList className="h-4 w-4 mr-2" />
-                    Ver triagem
-                  </Button>
-                )}
-              </div>
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <Alert className="border-green-500/30 bg-green-50/50 dark:bg-green-950/20">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <AlertTitle className="text-green-700 dark:text-green-400">Tudo bem por aqui</AlertTitle>
-            <AlertDescription className="text-green-600/80 dark:text-green-300/80">
-              Nenhum alerta identificado. Os indicadores de bem-estar estão dentro dos parâmetros saudáveis.
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* 3. PANORAMA NARRATIVO (unifica diário + triagem) */}
+        <PanoramaCard
+          institutionId={institutionId}
+          periodDays={periodDays}
+          totalStudentsLinked={metrics.totalStudentsLinked}
+          studentsWithEntries={metrics.students_with_entries}
+          totalEntries={metrics.total_entries}
+          avgMood={metrics.avg_mood_score}
+          avgAnxiety={metrics.avg_anxiety_level}
+          changePercent={metrics.period_comparison.change_percent}
+          onNavigateToTriage={onNavigateToTriage}
+        />
 
         {/* 4. CONTEXTO INSTITUCIONAL */}
         {activeNotes.length > 0 && (
