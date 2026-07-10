@@ -108,32 +108,89 @@ async function fetchBrief(institutionId: string): Promise<Brief | null> {
   return data?.brief || null;
 }
 
+function dayLabels(): { dow: string; date: string; isToday: boolean }[] {
+  const out: { dow: string; date: string; isToday: boolean }[] = [];
+  const dows = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+  const now = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 86400000);
+    out.push({
+      dow: dows[d.getDay()],
+      date: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`,
+      isToday: i === 0,
+    });
+  }
+  return out;
+}
+
 function BarChart({ data }: { data: number[] }) {
   const max = Math.max(...data, 1);
-  const labels = ['-6d', '-5d', '-4d', '-3d', '-2d', 'ontem', 'hoje'];
+  const avg = data.reduce((a, b) => a + b, 0) / (data.length || 1);
+  const labels = dayLabels();
+  const chartH = 180;
+  const avgY = chartH - (avg / max) * chartH;
   return (
-    <div className="flex items-end gap-2 h-32">
-      {data.map((v, i) => (
-        <div key={i} className="flex-1 flex flex-col items-center gap-1">
-          <div className="text-[10px] text-muted-foreground">{v}</div>
-          <div
-            className="w-full rounded-t bg-gradient-to-t from-primary/60 to-primary transition-all"
-            style={{ height: `${(v / max) * 100}%`, minHeight: v > 0 ? 4 : 2 }}
-          />
-          <div className="text-[10px] text-muted-foreground">{labels[i] || ''}</div>
+    <div className="space-y-2">
+      <div className="relative" style={{ height: chartH }}>
+        {/* linha média */}
+        {avg > 0 && (
+          <>
+            <div
+              className="absolute left-0 right-0 border-t border-dashed border-muted-foreground/40 pointer-events-none"
+              style={{ top: avgY }}
+            />
+            <span
+              className="absolute right-0 -translate-y-1/2 text-[10px] px-1.5 py-0.5 rounded bg-background border text-muted-foreground"
+              style={{ top: avgY }}
+            >
+              média {Math.round(avg)}
+            </span>
+          </>
+        )}
+        <div className="absolute inset-0 flex items-end gap-2">
+          {data.map((v, i) => {
+            const h = (v / max) * chartH;
+            const today = labels[i]?.isToday;
+            return (
+              <div key={i} className="flex-1 flex flex-col items-center justify-end h-full relative">
+                {v > 0 && (
+                  <span className="text-[11px] font-semibold text-foreground mb-1">{v}</span>
+                )}
+                <div
+                  className={`w-full rounded-t-md transition-all ${
+                    today
+                      ? 'bg-gradient-to-t from-primary to-primary/70 ring-2 ring-primary/30'
+                      : 'bg-gradient-to-t from-primary/70 to-primary/40'
+                  }`}
+                  style={{ height: Math.max(h, v > 0 ? 6 : 2) }}
+                />
+              </div>
+            );
+          })}
         </div>
-      ))}
+      </div>
+      <div className="flex gap-2">
+        {labels.map((l, i) => (
+          <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+            <span className={`text-[10px] font-medium ${l.isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+              {l.isToday ? 'hoje' : l.dow}
+            </span>
+            <span className="text-[10px] text-muted-foreground/70">{l.date}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-function Donut({ value, total }: { value: number; total: number }) {
+function Donut({ value, total, size = 160, tone = 'primary' }: { value: number; total: number; size?: number; tone?: 'primary' | 'emerald' }) {
   const pct = total > 0 ? value / total : 0;
   const r = 42;
   const c = 2 * Math.PI * r;
   const dash = c * pct;
+  const stroke = tone === 'emerald' ? 'hsl(160 84% 39%)' : 'hsl(var(--primary))';
   return (
-    <div className="relative w-32 h-32">
+    <div className="relative" style={{ width: size, height: size }}>
       <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
         <circle cx="50" cy="50" r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="10" />
         <circle
@@ -141,16 +198,57 @@ function Donut({ value, total }: { value: number; total: number }) {
           cy="50"
           r={r}
           fill="none"
-          stroke="hsl(var(--primary))"
+          stroke={stroke}
           strokeWidth="10"
           strokeDasharray={`${dash} ${c - dash}`}
           strokeLinecap="round"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-2xl font-bold">{Math.round(pct * 100)}%</div>
-        <div className="text-[10px] text-muted-foreground">{value}/{total}</div>
+        <div className="text-3xl font-bold tracking-tight">{Math.round(pct * 100)}%</div>
+        <div className="text-[11px] text-muted-foreground mt-0.5">{value} de {total}</div>
       </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, tone }: { label: string; value: string | number; tone?: 'emerald' | 'amber' | 'default' }) {
+  const color =
+    tone === 'emerald'
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : tone === 'amber'
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-foreground';
+  return (
+    <div className="rounded-lg border bg-card/50 p-3">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className={`text-2xl font-bold mt-1 ${color}`}>{value}</p>
+    </div>
+  );
+}
+
+function TrendPill({ delta }: { delta: number }) {
+  const Icon = delta > 0 ? ArrowUp : delta < 0 ? ArrowDown : ArrowRightIcon;
+  const tone =
+    delta > 0
+      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+      : delta < 0
+        ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+        : 'bg-muted text-muted-foreground border-border';
+  const label = delta === 0 ? 'estável' : `${delta > 0 ? '+' : ''}${delta}`;
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full border ${tone}`}>
+      <Icon className="h-3 w-3" /> {label} vs. semana anterior
+    </span>
+  );
+}
+
+function LegendDot({ color, label, value }: { color: string; label: string; value: number }) {
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-semibold ml-auto">{value}</span>
     </div>
   );
 }
@@ -170,65 +268,123 @@ function KpiDetailDialog({
 }) {
   if (!kpi) return null;
   const criticalTriages = summary.alerts.filter((a) => a.type === 'triage');
+  const delta = summary.activeStudentsWeek - summary.activeStudentsPrevWeek;
+  const engagementPct = Math.round(summary.engagementRate * 100);
+  const engagementTotal =
+    summary.engagementRate > 0
+      ? Math.max(summary.activeStudentsWeek, Math.round(summary.activeStudentsWeek / summary.engagementRate))
+      : summary.activeStudentsWeek;
+  const engagementStatus =
+    engagementPct >= 60
+      ? { label: 'Excelente', tone: 'emerald' as const }
+      : engagementPct >= 40
+        ? { label: 'Saudável', tone: 'emerald' as const }
+        : engagementPct >= 20
+          ? { label: 'Atenção', tone: 'amber' as const }
+          : { label: 'Baixo', tone: 'amber' as const };
+  const openTriage = summary.totalTriage - summary.resolvedTriage;
+  const resolvedPct = summary.totalTriage > 0 ? Math.round((summary.resolvedTriage / summary.totalTriage) * 100) : 0;
 
   const content = {
     active: {
       title: 'Alunos ativos nos últimos 7 dias',
-      description: 'Distribuição diária de alunos únicos com registro no diário emocional.',
+      description: 'Alunos únicos que registraram algo no diário emocional em cada dia da semana.',
       body: (
-        <div className="space-y-4">
+        <div className="space-y-6">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Ativos esta semana</p>
+              <p className="text-4xl font-bold leading-none mt-1">{summary.activeStudentsWeek}</p>
+            </div>
+            <TrendPill delta={delta} />
+          </div>
           <BarChart data={summary.sparkline} />
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Últimos 7 dias</p>
-              <p className="text-xl font-bold">{summary.activeStudentsWeek}</p>
-            </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Semana anterior</p>
-              <p className="text-xl font-bold">{summary.activeStudentsPrevWeek}</p>
-            </div>
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t">
+            <MiniStat label="Últimos 7 dias" value={summary.activeStudentsWeek} />
+            <MiniStat label="Semana anterior" value={summary.activeStudentsPrevWeek} />
           </div>
         </div>
       ),
     },
     engagement: {
       title: 'Engajamento no diário emocional',
-      description: 'Proporção de alunos vinculados que registraram humor nos últimos 7 dias.',
+      description: 'Proporção de alunos vinculados que fizeram ao menos um registro nos últimos 7 dias.',
       body: (
-        <div className="space-y-4">
-          <div className="flex items-center justify-center py-2">
-            <Donut value={summary.activeStudentsWeek} total={Math.max(summary.activeStudentsWeek, Math.round(summary.activeStudentsWeek / (summary.engagementRate || 1)))} />
+        <div className="space-y-6">
+          <div className="flex items-center justify-center pt-2">
+            <Donut value={summary.activeStudentsWeek} total={engagementTotal} tone="emerald" />
           </div>
-          <p className="text-sm text-muted-foreground text-center">
-            Uma taxa acima de 40% indica cultura consistente de auto-observação. Abaixo disso, considere ações de reengajamento.
-          </p>
+          <div className="flex items-center justify-center">
+            <Badge
+              variant="outline"
+              className={
+                engagementStatus.tone === 'emerald'
+                  ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
+                  : 'border-amber-500/40 text-amber-600 dark:text-amber-400'
+              }
+            >
+              {engagementStatus.label}
+            </Badge>
+          </div>
+          <div className="space-y-2">
+            <div className="relative h-2 rounded-full bg-muted overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary/60 to-primary rounded-full"
+                style={{ width: `${Math.min(100, engagementPct)}%` }}
+              />
+              {[20, 40, 60].map((m) => (
+                <div key={m} className="absolute inset-y-0 w-px bg-background/80" style={{ left: `${m}%` }} />
+              ))}
+            </div>
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span>0%</span>
+              <span>20% baixo</span>
+              <span>40% saudável</span>
+              <span>60% excelente</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 pt-4 border-t">
+            <MiniStat label="Ativos" value={summary.activeStudentsWeek} tone="emerald" />
+            <MiniStat label="Vinculados" value={engagementTotal} />
+            <MiniStat label="Meta" value="40%" />
+          </div>
         </div>
       ),
     },
     critical: {
       title: 'Alertas críticos abertos',
-      description: 'Triagens de alto ou crítico risco que ainda não foram resolvidas.',
+      description: 'Triagens de risco alto ou crítico que ainda não foram resolvidas.',
       body: (
-        <div className="space-y-3">
+        <div className="space-y-5">
           {criticalTriages.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma triagem crítica em aberto no momento.</p>
+            <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
+              <div className="p-3 rounded-full bg-emerald-500/10">
+                <CheckCircle className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-base font-semibold">Tudo tranquilo por aqui</p>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  Nenhuma triagem crítica em aberto no momento. Continue acompanhando os indicadores.
+                </p>
+              </div>
+            </div>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               {criticalTriages.map((a) => (
-                <li key={a.id} className="flex items-start gap-2 p-3 rounded-lg border">
+                <li key={a.id} className="flex items-start gap-3 p-3.5 rounded-lg border bg-card/50">
                   <Badge
                     variant="outline"
                     className={
                       a.severity === 'high'
-                        ? 'border-rose-500/40 text-rose-600 dark:text-rose-400'
-                        : 'border-amber-500/40 text-amber-600 dark:text-amber-400'
+                        ? 'border-rose-500/40 text-rose-600 dark:text-rose-400 shrink-0'
+                        : 'border-amber-500/40 text-amber-600 dark:text-amber-400 shrink-0'
                     }
                   >
                     {a.severity === 'high' ? 'Alto' : 'Médio'}
                   </Badge>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{a.title}</p>
-                    <p className="text-xs text-muted-foreground">{a.subtitle}</p>
+                    <p className="text-sm font-medium leading-snug">{a.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{a.subtitle}</p>
                   </div>
                 </li>
               ))}
@@ -244,19 +400,26 @@ function KpiDetailDialog({
       title: 'Taxa de resolução de triagens',
       description: 'Percentual de triagens já resolvidas sobre o total registrado.',
       body: (
-        <div className="space-y-4">
-          <div className="flex items-center justify-center py-2">
-            <Donut value={summary.resolvedTriage} total={summary.totalTriage} />
+        <div className="space-y-6">
+          <div className="flex items-center gap-6">
+            <Donut value={summary.resolvedTriage} total={summary.totalTriage} tone="emerald" />
+            <div className="flex-1 space-y-2.5">
+              <LegendDot color="hsl(160 84% 39%)" label="Resolvidas" value={summary.resolvedTriage} />
+              <LegendDot color="hsl(38 92% 50%)" label="Em aberto" value={openTriage} />
+              <div className="pt-2 border-t">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Total</p>
+                <p className="text-xl font-bold">{summary.totalTriage}</p>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Resolvidas</p>
-              <p className="text-xl font-bold text-emerald-600">{summary.resolvedTriage}</p>
+          {summary.totalTriage > 0 && (
+            <div className="flex h-3 rounded-full overflow-hidden bg-muted">
+              <div className="bg-emerald-500" style={{ width: `${resolvedPct}%` }} />
+              <div className="bg-amber-500" style={{ width: `${100 - resolvedPct}%` }} />
             </div>
-            <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Em aberto</p>
-              <p className="text-xl font-bold text-amber-600">{summary.totalTriage - summary.resolvedTriage}</p>
-            </div>
+          )}
+          <div className="rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
+            <strong className="text-foreground">Meta saudável:</strong> resolução ≥ 70%. Abaixo disso, priorize acompanhamento das triagens em aberto.
           </div>
           <Button variant="outline" className="w-full" onClick={onGoTriage}>
             Ver detalhes na triagem <ArrowRight className="ml-2 h-4 w-4" />
@@ -268,16 +431,17 @@ function KpiDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>{content.title}</DialogTitle>
+          <DialogTitle className="text-lg">{content.title}</DialogTitle>
           <DialogDescription>{content.description}</DialogDescription>
         </DialogHeader>
-        {content.body}
+        <div className="pt-2">{content.body}</div>
       </DialogContent>
     </Dialog>
   );
 }
+
 
 export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }: Props) {
   const { data: summary, isLoading } = useInstitutionExecutiveSummary(institutionId);
