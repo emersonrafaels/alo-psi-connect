@@ -255,11 +255,12 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
       if (totalEntries > 0 && avgMood !== null) {
         const moodStatus = avgMood >= 4 ? 'excelente' : avgMood >= 3.5 ? 'bom' : avgMood >= 2.5 ? 'moderado' : 'baixo';
         const moodType = avgMood >= 3.5 ? 'positive' : avgMood >= 2.5 ? 'info' : 'warning';
+        const engagement = students.length > 0 ? Math.round((uniqueStudents / students.length) * 100) : 0;
         insights.push({
           type: moodType,
           icon: avgMood >= 4 ? '😊' : avgMood >= 3.5 ? '🙂' : avgMood >= 2.5 ? '😐' : '😟',
-          title: `Bem-estar ${moodStatus}`,
-          description: `Média de humor: ${avgMood.toFixed(1)}/5 com ${totalEntries} registros de ${uniqueStudents} aluno${uniqueStudents > 1 ? 's' : ''}.`,
+          title: `Humor coletivo ${moodStatus}`,
+          description: `Média ${avgMood.toFixed(1)}/5 com ${engagement}% da turma engajada (${uniqueStudents} de ${students.length} alunos, ${totalEntries} check-ins).`,
         });
       }
 
@@ -285,15 +286,15 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         insights.push({
           type: 'warning',
           icon: '⚠️',
-          title: 'Ansiedade elevada',
-          description: `A média de ansiedade está em ${avgAnxiety.toFixed(1)}/5. Considere ações preventivas.`,
+          title: 'Ansiedade acima do saudável',
+          description: `Média de ${avgAnxiety.toFixed(1)}/5 no período. Sugestão: prática guiada de respiração e revisão da carga acadêmica da semana.`,
         });
       } else if (avgAnxiety !== null && avgAnxiety <= 2.0) {
         insights.push({
           type: 'positive',
           icon: '🧘',
           title: 'Ansiedade controlada',
-          description: `A média de ansiedade está baixa (${avgAnxiety.toFixed(1)}/5), indicando bom equilíbrio emocional.`,
+          description: `Média baixa (${avgAnxiety.toFixed(1)}/5) — bom equilíbrio emocional coletivo.`,
         });
       }
 
@@ -317,15 +318,15 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         }
       }
 
-      // Insight: Alunos com humor baixo (limiar reduzido de 30% para 20%)
+      // Insight: Alunos com humor baixo
       if (lowMoodStudents > 0 && uniqueStudents > 0) {
         const percentage = (lowMoodStudents / uniqueStudents) * 100;
         if (percentage > 20) {
           insights.push({
             type: 'warning',
             icon: '🚨',
-            title: 'Atenção requerida',
-            description: `${lowMoodStudents} aluno${lowMoodStudents > 1 ? 's' : ''} (${percentage.toFixed(0)}%) ${lowMoodStudents > 1 ? 'apresentaram' : 'apresentou'} humor abaixo no período.`,
+            title: 'Grupo com humor abaixo do saudável',
+            description: `${lowMoodStudents} de ${uniqueStudents} alunos engajados (${percentage.toFixed(0)}%) mantiveram humor abaixo de 3. Priorize a aba de Triagem para avaliar cada caso.`,
           });
         }
       }
