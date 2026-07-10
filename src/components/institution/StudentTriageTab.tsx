@@ -698,9 +698,9 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
       }));
       const triagesData = triageRecords.map(t => ({
         'Aluno': patientNameMap.get(t.patient_id) || 'Aluno',
-        'Status': t.status,
-        'Prioridade': t.priority,
-        'Ação': t.recommended_action || '',
+        'Status': t.status === 'resolved' ? 'Resolvido' : t.status === 'in_progress' ? 'Em andamento' : 'Triado',
+        'Prioridade': priorityLabels[t.priority] || t.priority,
+        'Ação': actionLabels[t.recommended_action || ''] || t.recommended_action || '',
         'Notas': t.notes || '',
         'Data': format(new Date(t.created_at), 'dd/MM/yyyy'),
       }));
