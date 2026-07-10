@@ -255,11 +255,12 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
       if (totalEntries > 0 && avgMood !== null) {
         const moodStatus = avgMood >= 4 ? 'excelente' : avgMood >= 3.5 ? 'bom' : avgMood >= 2.5 ? 'moderado' : 'baixo';
         const moodType = avgMood >= 3.5 ? 'positive' : avgMood >= 2.5 ? 'info' : 'warning';
+        const engagement = students.length > 0 ? Math.round((uniqueStudents / students.length) * 100) : 0;
         insights.push({
           type: moodType,
           icon: avgMood >= 4 ? '😊' : avgMood >= 3.5 ? '🙂' : avgMood >= 2.5 ? '😐' : '😟',
-          title: `Bem-estar ${moodStatus}`,
-          description: `Média de humor: ${avgMood.toFixed(1)}/5 com ${totalEntries} registros de ${uniqueStudents} aluno${uniqueStudents > 1 ? 's' : ''}.`,
+          title: `Humor coletivo ${moodStatus}`,
+          description: `Média ${avgMood.toFixed(1)}/5 com ${engagement}% da turma engajada (${uniqueStudents} de ${students.length} alunos, ${totalEntries} check-ins).`,
         });
       }
 
