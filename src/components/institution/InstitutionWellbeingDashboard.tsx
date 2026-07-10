@@ -40,6 +40,7 @@ import { WellbeingTimelineCharts } from './WellbeingTimelineCharts';
 import { WellbeingInsights } from './WellbeingInsights';
 import { WellbeingLayeredChart } from './WellbeingLayeredChart';
 import { PredictiveInsightsPanel } from './PredictiveInsightsPanel';
+import { WellbeingMetricDialog, type WellbeingMetricType } from './WellbeingMetricDialog';
 
 interface InstitutionWellbeingDashboardProps {
   institutionId: string;
