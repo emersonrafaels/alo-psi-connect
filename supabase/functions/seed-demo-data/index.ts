@@ -359,7 +359,7 @@ async function seedTriageRecords(supabase: any, instId: string, students: any[],
     for (let r = 0; r < recordCount; r++) {
       const daysAgo = rand(3, 30);
       const createdAt = new Date(Date.now() - daysAgo * 86400000);
-      const status = statuses[rand(0, 2)];
+      const status = pickStatus();
       const resolvedAt = status === "resolved" ? new Date(createdAt.getTime() + rand(1, 7) * 86400000) : null;
       const followUpDate = status !== "resolved" ? new Date(Date.now() + rand(1, 14) * 86400000) : null;
 
