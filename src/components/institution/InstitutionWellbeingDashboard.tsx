@@ -567,6 +567,13 @@ export const InstitutionWellbeingDashboard = ({ institutionId }: InstitutionWell
         </CardContent>
       </Card>
     </div>
+    <WellbeingMetricDialog
+      type={openMetric}
+      open={!!openMetric}
+      onOpenChange={(o) => !o && setOpenMetric(null)}
+      metrics={metrics}
+      periodDays={periodDays}
+    />
     </TooltipProvider>
   );
 };
