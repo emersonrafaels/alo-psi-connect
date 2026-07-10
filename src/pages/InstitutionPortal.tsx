@@ -162,7 +162,15 @@ export default function InstitutionPortal() {
                 </Badge>
               )}
             </div>
-          </div>
+        </div>
+
+        {/* Header executivo com KPIs, resumo do Buddy e alertas */}
+        {userInstitutions[0]?.institution_id && (
+          <InstitutionExecutiveHeader
+            institutionId={userInstitutions[0].institution_id}
+            onNavigateToTriage={() => setActiveTab('triage')}
+          />
+        )}
           <p className="text-muted-foreground text-lg">
             Gerencie profissionais, alunos e métricas da sua instituição
           </p>
