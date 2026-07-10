@@ -19,6 +19,8 @@ import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, Trend
 import { subDays } from 'date-fns';
 import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
+import TriageResolutionDialog, { RESOLUTION_TYPE_LABEL } from './TriageResolutionDialog';
+import TriageReopenDialog, { REOPEN_REASON_LABEL } from './TriageReopenDialog';
 import { StudentActivityModal } from './StudentActivityModal';
 import { BatchTriageDialog } from './BatchTriageDialog';
 import { TriageMetricsDashboard } from './TriageMetricsDashboard';
