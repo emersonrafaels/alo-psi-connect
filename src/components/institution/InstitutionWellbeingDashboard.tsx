@@ -39,6 +39,7 @@ import { WellbeingInsights } from './WellbeingInsights';
 import { WellbeingLayeredChart } from './WellbeingLayeredChart';
 import { PredictiveInsightsPanel } from './PredictiveInsightsPanel';
 import { WellbeingMetricDialog, type WellbeingMetricType } from './WellbeingMetricDialog';
+import { PanoramaCard } from './PanoramaCard';
 
 interface InstitutionWellbeingDashboardProps {
   institutionId: string;
