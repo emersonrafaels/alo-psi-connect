@@ -8,9 +8,29 @@ import { supabase } from '@/integrations/supabase/client';
 import BuddyCharacter from '@/components/hero/BuddyCharacter';
 import {
   Sparkles, RefreshCw, Lightbulb, Target, TrendingUp, BookOpen,
-  Heart, Users, AlertTriangle, PartyPopper, ArrowRight, Clock, UserCog,
+  Heart, Users, AlertTriangle, PartyPopper, ArrowRight, Clock, UserCog, HelpCircle,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+
+// Traduz jargão técnico do banco para linguagem humana (camada defensiva do frontend)
+const HUMANIZE_MAP: Array<[RegExp, string]> = [
+  [/\btriaged\b/gi, 'triadas'],
+  [/\bin[_\s]progress\b/gi, 'em acompanhamento'],
+  [/\bresolved\b/gi, 'resolvidas'],
+  [/\bpending\b/gi, 'aguardando análise'],
+  [/\bopen\b/gi, 'em aberto'],
+  [/\bno[_\s]data\b/gi, 'sem registros no período'],
+  [/\bhigh[_\s]risk\b/gi, 'alto risco'],
+  [/\bmedium[_\s]risk\b/gi, 'risco moderado'],
+  [/\blow[_\s]risk\b/gi, 'baixo risco'],
+  [/'(triadas|em acompanhamento|resolvidas|aguardando análise|em aberto)'/gi, '$1'],
+];
+function humanize(s?: string): string {
+  if (!s) return '';
+  return HUMANIZE_MAP.reduce((acc, [re, rep]) => acc.replace(re, rep), s);
+}
 
 interface Props {
   institutionId: string;
