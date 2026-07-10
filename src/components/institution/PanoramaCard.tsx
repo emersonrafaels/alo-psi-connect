@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useStudentTriageData } from '@/hooks/useStudentTriage';
+import { useTriagePeriod } from '@/hooks/useTriagePeriod';
 import { cn } from '@/lib/utils';
 
 interface PanoramaCardProps {
@@ -54,7 +55,9 @@ export const PanoramaCard = ({
   onNavigateToTriage,
   onExportReport,
 }: PanoramaCardProps) => {
-  const { data: students = [], isLoading } = useStudentTriageData(institutionId, periodDays);
+  const [riskPeriodDays] = useTriagePeriod();
+  const { data: students = [], isLoading } = useStudentTriageData(institutionId, riskPeriodDays);
+
 
   const counts = useMemo(() => {
     const c = { critical: 0, alert: 0, attention: 0, healthy: 0, no_data: 0 };
@@ -129,7 +132,7 @@ export const PanoramaCard = ({
   const headline =
     openCases === 0
       ? `Todos os ${totalStudentsLinked} alunos estão em faixa saudável`
-      : `${openCases} aluno${openCases > 1 ? 's' : ''} ${openCases > 1 ? 'precisam' : 'precisa'} da sua atenção esta semana`;
+      : `${openCases} aluno${openCases > 1 ? 's' : ''} ${openCases > 1 ? 'precisam' : 'precisa'} da sua atenção nos últimos ${riskPeriodDays} dias`;
 
   if (isLoading) {
     return <Skeleton className="h-64 w-full" />;
@@ -172,8 +175,13 @@ export const PanoramaCard = ({
 
         {/* Distribuição por risco */}
         <div className="p-5 space-y-3">
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Como estão distribuídos hoje
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Como estão distribuídos hoje
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              Baseado nos últimos <strong className="text-foreground">{riskPeriodDays} dias</strong> (mesmo período da Triagem)
+            </div>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             {rows.map((r) => (
