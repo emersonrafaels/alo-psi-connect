@@ -351,8 +351,24 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Target className="h-4 w-4 text-primary" /> Ações prioritárias para os próximos 15 dias
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
+                          <HelpCircle className="h-3.5 w-3.5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        Plano tático sugerido pelo Buddy para as próximas duas semanas. Cada ação traz o responsável, o prazo e um atalho para começar agora.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">
+                  O que o Buddy sugere priorizar nos próximos 15 dias. Clique no botão de cada ação para ir direto à aba onde ela acontece.
+                </p>
               </CardHeader>
+
               <CardContent>
                 <ol className="space-y-4">
                   {data.priority_actions.map((a, i) => {
