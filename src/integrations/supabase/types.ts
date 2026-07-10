@@ -677,10 +677,13 @@ export type Database = {
           emotional_stability: number | null
           habit_consistency: number | null
           id: string
+          insight_type: string | null
+          institution_id: string | null
           map_topics: Json
           model: string | null
           narrative: string | null
-          patient_id: string
+          patient_id: string | null
+          payload: Json | null
           period_end: string
           period_start: string
           recommendations: Json
@@ -695,10 +698,13 @@ export type Database = {
           emotional_stability?: number | null
           habit_consistency?: number | null
           id?: string
+          insight_type?: string | null
+          institution_id?: string | null
           map_topics?: Json
           model?: string | null
           narrative?: string | null
-          patient_id: string
+          patient_id?: string | null
+          payload?: Json | null
           period_end: string
           period_start: string
           recommendations?: Json
@@ -713,10 +719,13 @@ export type Database = {
           emotional_stability?: number | null
           habit_consistency?: number | null
           id?: string
+          insight_type?: string | null
+          institution_id?: string | null
           map_topics?: Json
           model?: string | null
           narrative?: string | null
-          patient_id?: string
+          patient_id?: string | null
+          payload?: Json | null
           period_end?: string
           period_start?: string
           recommendations?: Json
@@ -726,6 +735,20 @@ export type Database = {
           wellbeing_score?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "buddy_insights_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buddy_insights_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "buddy_insights_patient_id_fkey"
             columns: ["patient_id"]
@@ -1166,6 +1189,7 @@ export type Database = {
       educational_institutions: {
         Row: {
           anonymize_students: boolean | null
+          benchmark_opt_in: boolean
           can_manage_coupons: boolean
           can_manage_professionals: boolean
           can_manage_users: boolean
@@ -1180,6 +1204,7 @@ export type Database = {
         }
         Insert: {
           anonymize_students?: boolean | null
+          benchmark_opt_in?: boolean
           can_manage_coupons?: boolean
           can_manage_professionals?: boolean
           can_manage_users?: boolean
@@ -1194,6 +1219,7 @@ export type Database = {
         }
         Update: {
           anonymize_students?: boolean | null
+          benchmark_opt_in?: boolean
           can_manage_coupons?: boolean
           can_manage_professionals?: boolean
           can_manage_users?: boolean
@@ -4582,6 +4608,18 @@ export type Database = {
         Args: { _user_id: string }
         Returns: {
           profile_id: string
+        }[]
+      }
+      get_network_benchmark_aggregates: {
+        Args: { period_days?: number }
+        Returns: {
+          avg_anxiety: number
+          avg_energy: number
+          avg_mood: number
+          avg_sleep: number
+          engagement_rate: number
+          institutions_count: number
+          resolution_rate: number
         }[]
       }
       get_patient_institutions_for_institution_admin: {
