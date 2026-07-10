@@ -31,6 +31,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useDebounce } from '@/hooks/useDebounce';
 import * as XLSX from 'xlsx';
+import { useTriagePeriod } from '@/hooks/useTriagePeriod';
 
 interface StudentTriageTabProps {
   institutionId: string;
