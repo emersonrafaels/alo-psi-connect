@@ -879,7 +879,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
               <AlertDescription className="text-sm text-foreground">
                 <div className="space-y-2">
                   <div className="font-semibold text-red-800 dark:text-red-300">
-                    {openTotal} aluno{openTotal > 1 ? 's' : ''} {openTotal > 1 ? 'precisam' : 'precisa'} da sua atenção esta semana
+                    {openTotal} aluno{openTotal > 1 ? 's' : ''} {openTotal > 1 ? 'precisam' : 'precisa'} da sua atenção nos últimos {analysisPeriod} dias
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
                     {riskCounts.critical > 0 && (
