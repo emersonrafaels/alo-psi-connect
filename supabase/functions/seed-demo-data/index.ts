@@ -341,7 +341,14 @@ async function seedTriageRecords(supabase: any, instId: string, students: any[],
 
   console.log(`[seed] Creating triage records for ${students.length} students`);
   let total = 0;
-  const statuses = ["triaged", "in_progress", "resolved"];
+  // Distribuição ponderada: 90% resolved, 7% in_progress, 3% triaged
+  const pickStatus = () => {
+    const r = Math.random();
+    if (r < 0.9) return "resolved";
+    if (r < 0.97) return "in_progress";
+    return "triaged";
+  };
+
 
   for (let si = 0; si < students.length; si++) {
     const s = students[si];
