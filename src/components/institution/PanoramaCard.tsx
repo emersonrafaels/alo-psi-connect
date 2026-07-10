@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useStudentTriageData } from '@/hooks/useStudentTriage';
+import { useTriagePeriod } from '@/hooks/useTriagePeriod';
 import { cn } from '@/lib/utils';
 
 interface PanoramaCardProps {
