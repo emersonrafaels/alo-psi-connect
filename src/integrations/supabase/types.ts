@@ -3656,6 +3656,11 @@ export type Database = {
           patient_id: string
           priority: string
           recommended_action: string | null
+          reopen_notes: string | null
+          reopen_reason: string | null
+          reopened_at: string | null
+          resolution_notes: string | null
+          resolution_type: string | null
           resolved_at: string | null
           risk_level: string
           status: string
@@ -3671,6 +3676,11 @@ export type Database = {
           patient_id: string
           priority?: string
           recommended_action?: string | null
+          reopen_notes?: string | null
+          reopen_reason?: string | null
+          reopened_at?: string | null
+          resolution_notes?: string | null
+          resolution_type?: string | null
           resolved_at?: string | null
           risk_level: string
           status?: string
@@ -3686,6 +3696,11 @@ export type Database = {
           patient_id?: string
           priority?: string
           recommended_action?: string | null
+          reopen_notes?: string | null
+          reopen_reason?: string | null
+          reopened_at?: string | null
+          resolution_notes?: string | null
+          resolution_type?: string | null
           resolved_at?: string | null
           risk_level?: string
           status?: string
