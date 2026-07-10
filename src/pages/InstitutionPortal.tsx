@@ -42,6 +42,9 @@ import { InstitutionTour } from '@/components/institution/InstitutionTour';
 import { KeyboardShortcutsPopover } from '@/components/institution/KeyboardShortcutsPopover';
 import { InstitutionWellbeingDashboard } from '@/components/institution/InstitutionWellbeingDashboard';
 import { StudentTriageTab } from '@/components/institution/StudentTriageTab';
+import { InstitutionExecutiveHeader } from '@/components/institution/InstitutionExecutiveHeader';
+import { BuddyInstitutionPanel } from '@/components/institution/BuddyInstitutionPanel';
+import { Brain } from 'lucide-react';
 
 export default function InstitutionPortal() {
   const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
@@ -159,7 +162,15 @@ export default function InstitutionPortal() {
                 </Badge>
               )}
             </div>
-          </div>
+        </div>
+
+        {/* Header executivo com KPIs, resumo do Buddy e alertas */}
+        {userInstitutions[0]?.institution_id && (
+          <InstitutionExecutiveHeader
+            institutionId={userInstitutions[0].institution_id}
+            onNavigateToTriage={() => setActiveTab('triage')}
+          />
+        )}
           <p className="text-muted-foreground text-lg">
             Gerencie profissionais, alunos e métricas da sua instituição
           </p>
@@ -244,7 +255,7 @@ export default function InstitutionPortal() {
           className="space-y-6"
           data-tour="tabs"
         >
-          <TabsList className="grid w-full max-w-4xl grid-cols-2 md:grid-cols-6 h-auto">
+          <TabsList className="grid w-full max-w-5xl grid-cols-2 md:grid-cols-7 h-auto">
             <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
               Visão Geral
             </TabsTrigger>
@@ -256,8 +267,8 @@ export default function InstitutionPortal() {
               <BarChart3 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               Métricas
             </TabsTrigger>
-            <TabsTrigger 
-              value="wellbeing" 
+            <TabsTrigger
+              value="wellbeing"
               className="text-xs md:text-sm py-2"
               data-tour="wellbeing-tab"
             >
@@ -271,6 +282,10 @@ export default function InstitutionPortal() {
             <TabsTrigger value="notes" className="text-xs md:text-sm py-2">
               <StickyNote className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               Notas
+            </TabsTrigger>
+            <TabsTrigger value="buddy" className="text-xs md:text-sm py-2">
+              <Brain className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              Buddy
             </TabsTrigger>
           </TabsList>
 
@@ -417,6 +432,22 @@ export default function InstitutionPortal() {
                   <StickyNote className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
                   <p className="text-muted-foreground">
                     Nenhuma instituição vinculada para exibir notas.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Tab do Buddy Institucional */}
+          <TabsContent value="buddy">
+            {userInstitutions[0]?.institution_id ? (
+              <BuddyInstitutionPanel institutionId={userInstitutions[0].institution_id} />
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Brain className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    Nenhuma instituição vinculada para exibir insights do Buddy.
                   </p>
                 </CardContent>
               </Card>
