@@ -409,13 +409,12 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
                               ))}
                             </ul>
                           )}
-                          {a.cta_label && (
-                            <div className="pt-1">
-                              <Button size="sm" variant="outline" onClick={() => scrollToTab(a.cta_target)}>
-                                {a.cta_label} <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                              </Button>
-                            </div>
-                          )}
+                          <div className="pt-1">
+                            <Button size="sm" variant="outline" onClick={() => scrollToTab(a.cta_target)}>
+                              {a.cta_label || 'Abrir aba relacionada'} <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                            </Button>
+                          </div>
+
                         </div>
                       </li>
                     );
