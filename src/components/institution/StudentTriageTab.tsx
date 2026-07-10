@@ -377,6 +377,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [selectedStudent, setSelectedStudent] = useState<StudentRiskData | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [resolveDialogTriage, setResolveDialogTriage] = useState<any | null>(null);
+  const [reopenDialogTriage, setReopenDialogTriage] = useState<any | null>(null);
   const [legendOpen, setLegendOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('para_triar');
