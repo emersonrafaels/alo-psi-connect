@@ -19,6 +19,8 @@ import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, Trend
 import { subDays } from 'date-fns';
 import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
+import TriageResolutionDialog, { RESOLUTION_TYPE_LABEL } from './TriageResolutionDialog';
+import TriageReopenDialog from './TriageReopenDialog';
 import { StudentActivityModal } from './StudentActivityModal';
 import { BatchTriageDialog } from './BatchTriageDialog';
 import { TriageMetricsDashboard } from './TriageMetricsDashboard';
@@ -375,6 +377,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [selectedStudent, setSelectedStudent] = useState<StudentRiskData | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [resolveDialogTriage, setResolveDialogTriage] = useState<any | null>(null);
+  const [reopenDialogTriage, setReopenDialogTriage] = useState<any | null>(null);
   const [legendOpen, setLegendOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('para_triar');
@@ -1439,7 +1443,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                               size="sm"
                               variant="default"
                               className="text-xs h-8"
-                              onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'resolved', resolvedAt: new Date().toISOString() })}>
+                              onClick={() => setResolveDialogTriage(t)}>
 
                                 <CheckCircle2 className="h-3 w-3 mr-1" />
                                 Resolver
@@ -1502,12 +1506,24 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                               {t.triaged_by_name && <span>por {t.triaged_by_name}</span>}
                             </div>
                             {t.notes && <p className="text-xs text-muted-foreground italic truncate">"{t.notes}"</p>}
+                            {(t as any).resolution_type && (
+                              <div className="flex flex-wrap items-center gap-2 pt-1">
+                                <Badge variant="outline" className="text-[10px] h-5">
+                                  {RESOLUTION_TYPE_LABEL[(t as any).resolution_type] || (t as any).resolution_type}
+                                </Badge>
+                                {(t as any).resolution_notes && (
+                                  <span className="text-xs text-muted-foreground italic truncate">
+                                    {(t as any).resolution_notes}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                           <Button
                         size="sm"
                         variant="ghost"
                         className="text-xs h-7"
-                        onClick={() => updateTriageStatus.mutate({ triageId: t.id, status: 'triaged' })}>
+                        onClick={() => setReopenDialogTriage(t)}>
 
                             <RotateCcw className="h-3 w-3 mr-1" />
                             Reabrir
@@ -1729,6 +1745,43 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             </Table>
           </div>
         </DetailModal>
+
+        <TriageResolutionDialog
+          open={!!resolveDialogTriage}
+          onOpenChange={(open) => { if (!open) setResolveDialogTriage(null); }}
+          studentLabel={resolveDialogTriage ? (patientNameMap.get(resolveDialogTriage.patient_id) || 'Aluno') : undefined}
+          isSubmitting={updateTriageStatus.isPending}
+          onConfirm={async ({ resolutionType, resolutionNotes }) => {
+            if (!resolveDialogTriage) return;
+            await updateTriageStatus.mutateAsync({
+              triageId: resolveDialogTriage.id,
+              status: 'resolved',
+              resolvedAt: new Date().toISOString(),
+              resolutionType,
+              resolutionNotes,
+              studentName: patientNameMap.get(resolveDialogTriage.patient_id) || '',
+            });
+            setResolveDialogTriage(null);
+          }}
+        />
+
+        <TriageReopenDialog
+          open={!!reopenDialogTriage}
+          onOpenChange={(open) => { if (!open) setReopenDialogTriage(null); }}
+          studentLabel={reopenDialogTriage ? (patientNameMap.get(reopenDialogTriage.patient_id) || 'Aluno') : undefined}
+          isSubmitting={updateTriageStatus.isPending}
+          onConfirm={async ({ reopenReason, reopenNotes }) => {
+            if (!reopenDialogTriage) return;
+            await updateTriageStatus.mutateAsync({
+              triageId: reopenDialogTriage.id,
+              status: 'triaged',
+              reopenReason,
+              reopenNotes,
+              studentName: patientNameMap.get(reopenDialogTriage.patient_id) || '',
+            });
+            setReopenDialogTriage(null);
+          }}
+        />
       </div>
     </TooltipProvider>);
 

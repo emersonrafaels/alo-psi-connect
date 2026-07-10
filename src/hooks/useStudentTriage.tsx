@@ -356,9 +356,26 @@ export function useTriageActions(institutionId: string | null) {
   });
 
   const updateTriageStatus = useMutation({
-    mutationFn: async (params: { triageId: string; status: string; resolvedAt?: string; studentName?: string }) => {
+    mutationFn: async (params: {
+      triageId: string;
+      status: string;
+      resolvedAt?: string;
+      studentName?: string;
+      resolutionType?: string;
+      resolutionNotes?: string;
+      reopenReason?: string;
+      reopenNotes?: string;
+    }) => {
       const updateData: any = { status: params.status };
-      if (params.resolvedAt) updateData.resolved_at = params.resolvedAt;
+      if (params.resolvedAt !== undefined) updateData.resolved_at = params.resolvedAt;
+      if (params.resolutionType !== undefined) updateData.resolution_type = params.resolutionType;
+      if (params.resolutionNotes !== undefined) updateData.resolution_notes = params.resolutionNotes;
+      if (params.reopenReason !== undefined) updateData.reopen_reason = params.reopenReason;
+      if (params.reopenNotes !== undefined) updateData.reopen_notes = params.reopenNotes;
+      if (params.status === 'triaged') {
+        updateData.resolved_at = null;
+        updateData.reopened_at = new Date().toISOString();
+      }
 
       const { error } = await supabase
         .from('student_triage' as any)
