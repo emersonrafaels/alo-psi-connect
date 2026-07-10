@@ -117,7 +117,7 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
     activeStudentsWeek: activeSet.size,
     activeStudentsPrevWeek: prevSet.size,
     sparkline,
-    engagementRate: patientIds.length > 0 ? activeSet.size / patientIds.length : 0,
+    engagementRate: totalStudents > 0 ? activeSet.size / totalStudents : 0,
     criticalOpen,
     resolutionRate: totalTriage > 0 ? resolvedTriage / totalTriage : 0,
     totalTriage,
