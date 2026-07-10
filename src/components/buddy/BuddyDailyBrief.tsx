@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useLatestBuddyInsight } from "@/hooks/useBuddy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
