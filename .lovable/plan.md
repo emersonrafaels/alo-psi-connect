@@ -1,51 +1,31 @@
-## Ajustes de Resolução/Reabertura de Triagem
+## Objetivo
+Substituir termos técnicos em inglês (`high`, `medium`, `low`, `critical`, etc.) por rótulos humanizados em português no portal institucional — começando pelo modal "Alertas críticos abertos" e propagando o padrão pelos demais componentes.
 
-### 1. Data futura na resolução (bug)
-- **Seed demo** (`supabase/functions/seed-demo-data/index.ts`): fixar `resolvedAt = min(createdAt + rand(1..min(7, daysAgo)), now())` para nunca cair no futuro.
-- **Correção retroativa**: rodar `UPDATE public.student_triage SET resolved_at = now(), updated_at = now() WHERE resolved_at > now()` para os 44 registros demo da UNIFAGOC (via `supabase--insert`).
-- **Garantia futura** no hook `useStudentTriage` (`updateTriageStatus`): quando `status = 'resolved'`, sempre gravar `resolved_at = now()` no cliente (já faz), e no seed nunca gerar futuro.
+## Alterações
 
-### 2. Modal ao clicar "Resolver" (aba Em Andamento)
-Novo componente `TriageResolutionDialog.tsx` (reutilizável):
-- Campo **Tipo de resolução** (obrigatório, `Select`):
-  - `encaminhado_profissional` — "Encaminhado a profissional"
-  - `acompanhamento_interno` — "Acompanhamento interno realizado"
-  - `contato_familia` — "Contato com família/responsável"
-  - `melhora_espontanea` — "Melhora espontânea observada"
-  - `sem_necessidade` — "Sem necessidade de intervenção"
-  - `outro` — "Outro"
-- Campo **Descrição** (`Textarea`, opcional, até 500 chars).
-- Botões: Cancelar / Confirmar resolução.
-- Ao confirmar: chama `updateTriageStatus.mutate({ triageId, status: 'resolved', resolvedAt: new Date().toISOString(), resolutionType, resolutionNotes })`.
+### 1. `src/hooks/useInstitutionExecutiveSummary.ts`
+Traduzir `risk_level` e `priority` ao montar os alertas:
+- `title`: `Triagem em aberto (risco high)` → `Triagem em aberto — risco alto`
+- `subtitle`: `Prioridade: high` → `Prioridade: Alta`
 
-### 3. Modal ao clicar "Reabrir" (aba Concluídos)
-Novo componente `TriageReopenDialog.tsx` (mesmo padrão):
-- Campo **Motivo da reabertura** (obrigatório, `Select`):
-  - `nova_ocorrencia` — "Nova ocorrência identificada"
-  - `piora_quadro` — "Piora do quadro do aluno"
-  - `resolucao_incompleta` — "Resolução anterior incompleta"
-  - `solicitacao_familia` — "Solicitação da família/aluno"
-  - `outro` — "Outro"
-- Campo **Descrição** (opcional, até 500 chars).
-- Ao confirmar: `updateTriageStatus.mutate({ triageId, status: 'triaged', reopenReason, reopenNotes })` e limpa `resolved_at`.
+Criar mapas locais:
+```
+RISK_PT = { high: 'alto', critical: 'crítico', medium: 'moderado', low: 'baixo', alto:'alto', critico:'crítico', crítico:'crítico', moderado:'moderado', baixo:'baixo' }
+PRIORITY_PT = { high: 'Alta', medium: 'Média', low: 'Baixa', critical: 'Crítica' }
+```
 
-### 4. Persistência (migração)
-Adicionar colunas em `public.student_triage`:
-- `resolution_type text`
-- `resolution_notes text`
-- `reopen_reason text`
-- `reopen_notes text`
-- `reopened_at timestamp with time zone`
+### 2. `src/components/institution/InstitutionExecutiveHeader.tsx`
+- Badge do alerta crítico: hoje mostra `Alto` / `Médio` só para `high`/outros. Ajustar para cobrir `critical` → `Crítico`, `medium` → `Moderado`, `low` → `Baixo`, mantendo cores.
+- Garantir que qualquer render de `a.severity` ou `risk_level` cru passe pelo mapa PT.
 
-E, no evento de reabertura, definir `resolved_at = NULL`, `reopened_at = now()`.
+### 3. `src/components/institution/StudentTriageTab.tsx`
+- Onde exporta CSV / exibe `t.priority` cru (linha 702, badges em cards linhas 1408/1409/1575/1576), usar `PRIORITY_PT` para exibição (manter valor cru para lógica/estilo).
+- Confirmar que labels de risco (`critical/alert/attention/healthy/no_data`) já usam PT em UI; onde ainda aparecer valor cru, humanizar (`crítico`, `alerta`, `atenção`, `saudável`, `sem dados`).
 
-### 5. Atualizações no hook e UI
-- `useStudentTriage.updateTriageStatus`: aceitar os novos campos e persistir; ao reabrir, `resolved_at = null`, `reopened_at = now()`.
-- `StudentTriageTab.tsx`: substituir os `onClick` diretos de "Resolver" (linha 1442) e "Reabrir" (linha 1510) pela abertura dos respectivos modais; guardar `selectedTriage` em estado local.
-- Mostrar o `resolution_type` (badge) e `resolution_notes` (texto italic) no card da aba Concluídos, quando existirem.
+### 4. Sanity check
+Buscar no diretório `src/components/institution` e `src/pages/InstitutionPortal.tsx` por strings `high|medium|low|critical` renderizadas diretamente em JSX e trocar por rótulos PT. Não alterar valores usados como chaves de lógica, filtros, estilos ou payloads.
 
-### Detalhes técnicos
-- Modais em `src/components/institution/` usando `Dialog` + `Select` + `Textarea` do shadcn.
-- Validação com `zod` no submit (tipo obrigatório).
-- Toasts via `sonner`/`use-toast` seguindo padrão do projeto.
-- Sem mudanças em outras telas.
+## Fora de escopo
+- Backend/edge functions (já retornam PT via dicionários existentes).
+- Renomear valores no banco.
+- Ajustes de layout ou novas features.
