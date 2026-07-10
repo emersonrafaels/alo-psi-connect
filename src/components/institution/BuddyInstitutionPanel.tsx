@@ -257,9 +257,19 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
                     <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary font-semibold">
                       <Sparkles className="h-3.5 w-3.5" /> Diagnóstico do Buddy
                     </div>
-                    <Button variant="ghost" size="sm" onClick={handleGenerate} disabled={isFetching}>
-                      <RefreshCw className={cn('h-4 w-4 mr-2', isFetching && 'animate-spin')} /> Atualizar
-                    </Button>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                      {generatedAt && (
+                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/80 backdrop-blur px-3 py-1.5 text-xs text-foreground shadow-sm">
+                          <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
+                          <span className="font-medium">
+                            Atualizado em {new Date(generatedAt).toLocaleString('pt-BR')}
+                          </span>
+                        </div>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={handleGenerate} disabled={isFetching}>
+                        <RefreshCw className={cn('h-4 w-4 mr-2', isFetching && 'animate-spin')} /> Atualizar
+                      </Button>
+                    </div>
                   </div>
                   {data.headline && (
                     <h2 className="text-2xl sm:text-3xl font-bold leading-tight text-foreground">
@@ -446,11 +456,6 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
             </Card>
           )}
 
-          {generatedAt && (
-            <p className="text-xs text-muted-foreground text-center">
-              Última atualização: {new Date(generatedAt).toLocaleString('pt-BR')} · o diagnóstico permanece salvo até você clicar em <span className="font-medium">Atualizar</span>.
-            </p>
-          )}
         </>
       )}
     </div>

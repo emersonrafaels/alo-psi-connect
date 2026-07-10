@@ -6,9 +6,10 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface WelcomeCardProps {
   institutionName?: string;
+  greetingName?: string;
 }
 
-export const WelcomeCard = ({ institutionName }: WelcomeCardProps) => {
+export const WelcomeCard = ({ institutionName, greetingName }: WelcomeCardProps) => {
   const { user } = useAuth();
   
   const { data: profile } = useQuery({
@@ -34,7 +35,7 @@ export const WelcomeCard = ({ institutionName }: WelcomeCardProps) => {
 
   const greeting = getGreeting();
   const GreetingIcon = greeting.icon;
-  const userName = profile?.nome?.split(' ')[0] || user?.email?.split('@')[0] || 'Administrador';
+  const userName = greetingName || profile?.nome?.split(' ')[0] || user?.email?.split('@')[0] || 'Administrador';
 
   return (
     <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20">
