@@ -8,6 +8,7 @@ import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
 import BuddyCharacter from "@/components/hero/BuddyCharacter";
 import { BuddyDailyBrief } from "@/components/buddy/BuddyDailyBrief";
+import buddyVideo from "../../videos/buddy2.mp4";
 import {
   Heart, Clock, Users, Brain, EyeOff, Bot, BookOpen, Sparkles,
   ClipboardCheck, LineChart, LayoutDashboard, FileText, Stethoscope,
@@ -345,39 +346,28 @@ const HomeRedeBemEstar = () => {
             </div>
           </div>
           <div className="relative">
-            <div className="relative p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] overflow-hidden flex items-end justify-center min-h-[320px]"
-                 style={{ background: "color-mix(in srgb, var(--rbe-tertiary-fixed) 25%, transparent)" }}>
-              <div className="absolute inset-0 opacity-40 blur-2xl pointer-events-none"
-                   style={{ background: "radial-gradient(circle at 30% 30%, var(--rbe-secondary-fixed), transparent 50%)" }} />
-              <div className="relative z-10 flex gap-2 sm:gap-4 items-end translate-y-4 sm:translate-y-8 flex-col sm:flex-row">
-                {/* Buddy character */}
-                <div className="flex justify-center">
-                  <img src={buddyImg} alt="Buddy" className="w-40 sm:w-56 h-auto object-contain" />
-                </div>
-                {/* Dashboard mock */}
-                <div className="w-44 sm:w-56 aspect-[4/3] rounded-2xl shadow-xl p-3 sm:p-4 sm:-mb-4 sm:-ml-8 relative z-20"
-                     style={{ background: "var(--rbe-surface-container-lowest)", border: "1px solid color-mix(in srgb, var(--rbe-outline-variant) 30%, transparent)" }}>
-                  <div className="flex justify-between items-center mb-3 sm:mb-4">
-                    <div className="w-12 h-2 rounded-full" style={{ background: "var(--rbe-surface-container)" }} />
-                    <div className="w-4 h-4 rounded-full" style={{ background: "color-mix(in srgb, var(--rbe-primary) 15%, transparent)" }} />
-                  </div>
-                  <div className="h-20 sm:h-24 w-full flex items-end gap-1">
-                    {[0.5, 0.65, 1, 0.75, 0.35].map((h, i) => (
-                      <div key={i} className="flex-1 rounded-t-sm"
-                           style={{
-                             height: `${h * 100}%`,
-                             background: `color-mix(in srgb, var(--rbe-primary) ${20 + i * 20}%, transparent)`,
-                           }} />
-                    ))}
-                  </div>
-                  <div className="mt-3 sm:mt-4 flex justify-between">
-                    <div className="w-10 h-2 rounded-full" style={{ background: "var(--rbe-surface-container)" }} />
-                    <div className="w-8 h-4 rounded-md" style={{ background: "color-mix(in srgb, var(--rbe-primary) 80%, transparent)" }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+  <div
+    className="relative p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] overflow-hidden min-h-[320px]"
+    style={{
+      background: "color-mix(in srgb, var(--rbe-tertiary-fixed) 25%, transparent)"
+    }}
+  >
+    {/* VIDEO COMO BACKGROUND */}
+    <video
+      src={buddyVideo}
+      autoPlay
+      muted
+      loop
+      playsInline
+      className="absolute inset-0 w-full h-full object-cover"
+    />
+
+    {/* (opcional) overlay / conteúdo por cima */}
+    <div className="relative z-10">
+      {/* se quiser colocar algo por cima */}
+    </div>
+  </div>
+</div>
         </div>
       </section>
 
