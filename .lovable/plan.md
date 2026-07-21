@@ -1,68 +1,51 @@
-# Radar Institucional — Plano
+# Radar Institucional Público
 
-Novo diagnóstico consultivo por instituição (IES), com formulário multi-etapa, cálculo de maturidade e visualizações. Preenchimento e visualização pelo Admin e pelo Portal Institucional (login existente).
+Permitir que instituições ainda não cadastradas na Rede Bem-Estar preencham o Radar Institucional sem precisar de login, mantendo o fluxo autenticado atual intacto.
 
-## Escopo
+## O que muda para o usuário
 
-**1. Formulário (baseado no HTML anexo, com UX/UI refinado no padrão RBE)**
-- Etapa 1 — Identificação: nome, cidade, estado, nº alunos, tipo, estrutura de apoio.
-- Etapa 2 — Perfil do respondente: papel + área.
-- Etapa 3 — Estruturas institucionais (7 itens: acolhimento, psicopedagógico, permanência, docência, dados, comunicação, protocolos crise) com 5 níveis de existência.
-- Etapa 4 — Principais dores (seleção de 2 a 5 entre catálogo: saúde mental, evasão, formação docente, dados, adesão, etc.).
-- Etapa 5 — Perguntas adaptativas (por dor selecionada — escala 0-100 ou segmentada Inicial→Consolidada).
-- Etapa 6 — Radar de maturidade (6 dimensões, sliders 0-100).
-- Etapa 7 — Priorização (urgência por dor: Baixa/Média/Alta/Imediata).
-- Etapa 8 — Contato + consentimento LGPD.
+- Nova rota pública: `/radar-institucional` (acessível sem login), com o mesmo formulário multi-etapa já existente.
+- Página inicial pública explica o que é o Radar, quanto tempo leva (~10 min), o que a IES recebe ao final (leitura estratégica + recomendações) e um CTA "Iniciar diagnóstico".
+- A etapa "Identificação da instituição" passa a coletar também: nome da IES, tipo (pública/privada), porte, cidade/UF, site e dados do respondente (nome, cargo, e-mail, telefone) — já existentes, mas agora obrigatórios no fluxo público.
+- Ao submeter, o respondente vê a leitura estratégica na hora e recebe um e-mail com o link permanente do resultado (token na URL).
+- No admin, esses radares públicos aparecem na mesma lista de `/admin/radar-institucional`, marcados com um badge "Pendente de vínculo". O admin pode então vincular o radar a uma `educational_institutions` existente ou catalogar uma nova (reaproveitando o fluxo de "instituições não catalogadas" que já existe).
+- Fluxo autenticado atual do Portal Institucional segue igual.
 
-**Melhorias UX/UI vs. protótipo:**
-- Design tokens RBE (roxo/mint via `hsl()` do design system), tipografia Instrument Serif + Work Sans do projeto.
-- Stepper vertical no desktop, horizontal colapsado no mobile, com progresso e auto-save por etapa (draft em `localStorage` + servidor).
-- Micro-copy humanizado em PT-BR ("Como está o clima institucional?" em vez de rótulos técnicos).
-- Componentes shadcn (Slider, Select, Card, Badge, Progress, Tooltip com "Como interpretar").
-- Radar chart com Recharts (não canvas manual), responsivo, com tooltip por dimensão.
-- Validação por etapa via zod + mensagens inline (não modal).
-- Botão "Salvar e continuar depois" em todas as etapas.
-- Página de resultado com storytelling: headline dinâmico → radar → leitura estratégica → 3 recomendações → CTA "Falar com a Rede".
+## Como funciona por trás
 
-**2. Visualização**
-- **Admin (`/admin/radar-institucional`)**: lista de todas as instituições com radar preenchido, filtros (estado, tipo, dor prioritária, score de maturidade), abrir detalhes de qualquer radar, exportar CSV/PDF, dashboard agregado (dores mais frequentes, distribuição de respondentes, oportunidades — como as barras do protótipo).
-- **Portal Institucional (nova aba "Radar" em `InstitutionPortal.tsx`)**: exibe o radar da própria instituição, permite editar/atualizar, mostra histórico de versões.
-- **Preenchimento**: admin pode criar em nome de qualquer instituição; o próprio gestor institucional pode preencher pela aba Radar do portal (mesmo formulário).
+### Banco (migração)
+Ajustes em `institution_radar_diagnostics`:
+- `institution_id` passa a ser **nullable** (hoje é obrigatório).
+- Novos campos: `submission_source` (`'authenticated' | 'public'`, default `'authenticated'`), `public_access_token` (uuid, único, gerado no insert público), `submitted_institution_name`, `submitted_institution_type`, `submitted_institution_city`, `submitted_institution_state`, `submitted_institution_website`.
+- Nova policy RLS: **INSERT público** permitido para `anon` **apenas quando** `submission_source = 'public'` e `institution_id IS NULL` (com rate-limit leve por IP via edge function, ver abaixo).
+- Nova policy RLS: **SELECT público** apenas via função `security definer` `get_radar_by_token(token uuid)` — não expõe listagem.
+- GRANTs: `INSERT` em `institution_radar_diagnostics` para `anon`; `EXECUTE` na função de token para `anon`.
+- Admins continuam com acesso total; portal institucional autenticado segue lendo pelo `institution_id`.
 
-**3. Persistência & IA**
-- Nova tabela `institution_radar_diagnostics` (institution_id, versão, respostas JSON, scores calculados por dimensão, headline/insights gerados, status draft/submitted, respondente, timestamps).
-- Edge Function `radar-institutional-analyze`: recebe respostas, calcula scores, gera headline + leitura estratégica + 3 recomendações via Lovable AI (Gemini). Persiste no registro.
-- RLS: admins veem tudo; usuários institucionais só a própria instituição (via `institution_users`).
-- Rascunhos versionados; submissão gera nova versão imutável + análise IA.
+### Edge functions
+- **Nova** `radar-public-submit`: recebe o payload do formulário público, valida campos obrigatórios, faz rate-limit por IP (via tabela leve ou cabeçalho), insere o diagnóstico com `submission_source='public'` e token, dispara `radar-institutional-analyze` e devolve `{ token, id }`. Usa `service_role` internamente para bypass de RLS controlado.
+- **Ajuste** em `radar-institutional-analyze`: aceitar diagnóstico sem `institution_id`, usando `submitted_institution_name` no prompt.
+- **Nova** `radar-public-send-email`: envia e-mail via Resend (remetente `noreply@redebemestar.com.br`, memória Core) com o link `https://redebemestar.com.br/radar-institucional/resultado/{token}`.
 
-## Arquitetura técnica
+### Frontend
+- **Nova página** `src/pages/public/PublicRadar.tsx`: landing + formulário. Reaproveita `RadarForm` com prop nova `mode: 'public' | 'authenticated'` que:
+  - Exibe etapa extra de identificação da IES no início.
+  - Chama a edge function `radar-public-submit` em vez do hook autenticado.
+  - Ao concluir, redireciona para `/radar-institucional/resultado/{token}`.
+- **Nova página** `src/pages/public/PublicRadarResult.tsx`: busca por token via RPC pública e renderiza o `RadarResult` já existente.
+- **Ajuste** em `src/components/radar/RadarForm.tsx`: suportar o modo público (identificação obrigatória, sem dependência de `institutionId`).
+- **Ajuste** em `src/pages/admin/RadarInstitutional.tsx`: badge "Pendente de vínculo" + ação "Vincular à instituição" (abre dialog com busca em `educational_institutions` ou opção "Catalogar como nova", chamando a mesma edge function `normalize-institutions` já usada em `useUncataloguedInstitutions`).
+- **Rotas** em `src/App.tsx`: `/radar-institucional` e `/radar-institucional/resultado/:token` públicas (fora de `ProtectedRoute`).
+- **Link público** discreto no rodapé/menu do site institucional (opcional — confirmar).
 
-**Rotas novas**
-- `/portal-institucional/radar` (formulário + visualização do gestor)
-- `/admin/radar-institucional` (lista + dashboard agregado)
-- `/admin/radar-institucional/:id` (detalhe de uma resposta)
+## Detalhes técnicos
 
-**Componentes principais**
-- `src/components/radar/RadarForm.tsx` (stepper multi-etapa)
-- `src/components/radar/steps/*` (um por etapa)
-- `src/components/radar/RadarChart.tsx` (Recharts RadarChart)
-- `src/components/radar/RadarResult.tsx` (headline + leitura + recomendações)
-- `src/components/admin/RadarInstitutionalDashboard.tsx` (agregados)
-- `src/pages/admin/RadarInstitutional.tsx`, `RadarInstitutionalDetail.tsx`
-- `src/pages/institution/InstitutionRadar.tsx`
-- `src/hooks/useInstitutionRadar.tsx`
+- Rate-limit: 3 submissões por IP a cada 24h na edge `radar-public-submit`, usando tabela `professional_registration_attempts` como referência de padrão (ou nova `radar_public_attempts` se preferir isolar).
+- Token: `gen_random_uuid()`, armazenado em `public_access_token`, usado como URL param. Sem expiração (memória do produto valoriza persistência).
+- SEO: `<title>` "Radar Institucional — Diagnóstico gratuito | Rede Bem-Estar" e meta description específica na página pública.
+- Ao vincular um radar público a uma `educational_institutions`, o admin atualiza `institution_id` e mantém os campos `submitted_*` como histórico da submissão.
 
-**Catálogos**
-- `src/data/radarCatalog.ts` — dores, dimensões de maturidade, estruturas, perguntas adaptativas, papéis (extraídos do HTML).
+## Fora de escopo
 
-**Migração**
-- Tabela `institution_radar_diagnostics` + GRANTs + RLS (admin_full, institution_own) + trigger `updated_at`.
-- Enum `radar_status` (draft, submitted, archived).
-
-**Edge Function**
-- `supabase/functions/radar-institutional-analyze/index.ts` usando Lovable AI Gateway (Gemini 2.5 Flash), zod para validação, CORS.
-
-## Perguntas em aberto (posso assumir defaults se preferir)
-
-1. Instituições podem submeter múltiplas versões ao longo do tempo (histórico comparativo), ou só uma "atual" editável? — **Assumindo: histórico versionado com "atual" destacada.**
-2. Convém expor o radar/resultado aos profissionais vinculados à instituição, ou apenas aos usuários institution_admin? — **Assumindo: apenas institution_admin + admin RBE.**
+- Registro automático da IES como cliente após submissão.
+- Dashboard analítico agregando radares públicos vs. autenticados (pode virar melhoria futura).
