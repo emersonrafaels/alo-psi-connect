@@ -67,8 +67,9 @@ export function RadarForm({ institutionId, institutionName: initialName, mode = 
   const step = RADAR_STEPS[stepIdx];
   const progress = Math.round(((stepIdx + 1) / RADAR_STEPS.length) * 100);
 
-  // Auto-save após mudanças (debounce simples)
+  // Auto-save após mudanças (debounce simples) — apenas no modo autenticado
   useEffect(() => {
+    if (isPublic || !institutionId) return;
     const t = setTimeout(() => {
       save.mutate(
         { id, institution_id: institutionId, answers, institution_name: institutionName },
@@ -95,7 +96,7 @@ export function RadarForm({ institutionId, institutionName: initialName, mode = 
   function validateStep(): string | null {
     switch (step.id) {
       case 'institution':
-        if (!institutionName) return 'Instituição obrigatória.';
+        if (!institutionName?.trim()) return 'Informe o nome da instituição.';
         if (!answers.institution.state) return 'Selecione o estado.';
         if (!answers.institution.type) return 'Selecione o tipo de instituição.';
         return null;
@@ -125,7 +126,21 @@ export function RadarForm({ institutionId, institutionName: initialName, mode = 
   }
 
   async function handleSubmit() {
-    // Ensure saved, then invoke IA
+    if (isPublic) {
+      const result = await publicSubmit.mutateAsync({
+        answers,
+        institution: {
+          name: institutionName,
+          type: answers.institution.type,
+          city: answers.institution.city,
+          state: answers.institution.state,
+          website: website || undefined,
+        },
+      });
+      onPublicComplete?.(result.token);
+      return;
+    }
+    if (!institutionId) return;
     const saved = await save.mutateAsync({ id, institution_id: institutionId, answers, institution_name: institutionName });
     const savedId = (saved as any).id ?? id;
     if (!savedId) return;
