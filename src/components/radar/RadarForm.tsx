@@ -433,13 +433,13 @@ export function RadarForm({ institutionId, institutionName: initialName, mode = 
           <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
         </Button>
         <div className="text-xs text-muted-foreground hidden sm:block">
-          {save.isPending ? 'Salvando…' : id ? 'Salvo' : 'Não salvo ainda'}
+          {isPublic ? '' : save.isPending ? 'Salvando…' : id ? 'Salvo' : 'Não salvo ainda'}
         </div>
-        <Button onClick={handleNext} disabled={submit.isPending}>
+        <Button onClick={handleNext} disabled={submit.isPending || publicSubmit.isPending}>
           {stepIdx === RADAR_STEPS.length - 1 ? (
             <>
               <Sparkles className="h-4 w-4 mr-2" />
-              {submit.isPending ? 'Gerando análise…' : 'Gerar diagnóstico'}
+              {(submit.isPending || publicSubmit.isPending) ? 'Gerando análise…' : 'Gerar diagnóstico'}
             </>
           ) : (
             <>Avançar <ArrowRight className="h-4 w-4 ml-2" /></>
