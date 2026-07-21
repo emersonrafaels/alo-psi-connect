@@ -139,25 +139,39 @@ export default function RadarInstitutional() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(d => (
-                  <TableRow key={d.id}>
-                    <TableCell className="font-medium">{d.educational_institutions?.name ?? d.institution_snapshot?.name ?? '—'}</TableCell>
-                    <TableCell>v{d.version}</TableCell>
-                    <TableCell>
-                      <Badge variant={d.status === 'submitted' ? 'default' : 'outline'}>
-                        {d.status === 'submitted' ? 'Submetido' : d.status === 'draft' ? 'Rascunho' : 'Arquivado'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">{d.respondent_name ?? '—'}</TableCell>
-                    <TableCell>{d.overall_score != null ? <span className="font-semibold text-primary">{Math.round(Number(d.overall_score))}</span> : '—'}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{format(new Date(d.updated_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
-                    <TableCell>
-                      <Button asChild variant="ghost" size="icon">
-                        <Link to={`/admin/radar-institucional/${d.id}`}><ExternalLink className="h-4 w-4" /></Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filtered.map(d => {
+                  const isPublic = (d as any).submission_source === 'public';
+                  const nameFallback = (d as any).submitted_institution_name;
+                  return (
+                    <TableRow key={d.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span>{d.educational_institutions?.name ?? nameFallback ?? d.institution_snapshot?.name ?? '—'}</span>
+                          {isPublic && !d.institution_id && (
+                            <Badge variant="secondary" className="text-[10px]">Pendente de vínculo</Badge>
+                          )}
+                          {isPublic && (
+                            <Badge variant="outline" className="text-[10px]">Público</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>v{d.version}</TableCell>
+                      <TableCell>
+                        <Badge variant={d.status === 'submitted' ? 'default' : 'outline'}>
+                          {d.status === 'submitted' ? 'Submetido' : d.status === 'draft' ? 'Rascunho' : 'Arquivado'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">{d.respondent_name ?? '—'}</TableCell>
+                      <TableCell>{d.overall_score != null ? <span className="font-semibold text-primary">{Math.round(Number(d.overall_score))}</span> : '—'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{format(new Date(d.updated_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
+                      <TableCell>
+                        <Button asChild variant="ghost" size="icon">
+                          <Link to={`/admin/radar-institucional/${d.id}`}><ExternalLink className="h-4 w-4" /></Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
