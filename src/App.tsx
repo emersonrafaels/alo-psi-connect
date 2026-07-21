@@ -291,6 +291,23 @@ const AppWithShortcuts = () => {
         } 
       />
       
+      <Route 
+        path="/portal-institucional/radar" 
+        element={
+          <ProtectedRoute requiredRole="institution_admin">
+            <InstitutionRadar />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/medcos/portal-institucional/radar" 
+        element={
+          <ProtectedRoute requiredRole="institution_admin">
+            <InstitutionRadar />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Rotas de autenticação e perfil Medcos */}
       <Route path="/medcos/auth" element={<Auth />} />
       <Route path="/medcos/auth/callback" element={<AuthCallback />} />
