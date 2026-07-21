@@ -1,29 +1,37 @@
 ## Objetivo
-Tornar o Radar Institucional acessível a partir dos menus de navegação principais do site, já que a ferramenta é pública e pode ser usada por gestores de instituições ainda não cadastradas.
 
-## O que será feito
-1. **Header principal (`src/components/ui/header.tsx`)**
-   - Incluir o item **"Radar Institucional"** na lista `allNavigation`, após "Sobre" e antes de "Profissionais".
-   - Aplicar a mesma regra de módulos (sem restrição de módulo, `module: null`).
-   - O link será `buildTenantPath(tenantSlug, '/radar-institucional')` para manter o contexto do tenant.
-   - O item aparecerá automaticamente na navegação desktop e no menu mobile, pois ambos consomem `navigation`.
+Ao concluir o preenchimento de um Radar Institucional (público ou vinculado), enviar um email para todos os administradores do site com um resumo do diagnóstico e link direto para visualização.
 
-2. **Footer (`src/components/ui/footer.tsx`)**
-   - Adicionar **"Radar Institucional"** em ambas as seções:
-     - "Links úteis" (com ícone `Radar` ou `Compass`).
-     - "Navegação".
-   - Link: `buildTenantPath(tenantSlug, '/radar-institucional')`.
+## O que será criado
 
-3. **Portal Institucional (`src/pages/InstitutionPortal.tsx`)**
-   - O portal já possui um card "Radar Institucional" na visão geral e uma rota `/portal-institucional/radar`. Verificar se é necessário adicionar uma aba dedicada no `TabsList` para deixar o acesso mais explícito (opcional, a ser validado na implementação).
+**Nova Edge Function `notify-radar-submitted`** (segue o padrão de `notify-institution-action`, usando Resend + `noreply@redebemestar.com.br`).
 
-## Critérios de aceitação
-- O link "Radar Institucional" aparece no header desktop e no menu mobile.
-- O link aparece no footer em "Links úteis" e "Navegação".
-- O link respeita o tenant/slug atual da URL.
-- A navegação continua responsiva e sem quebras visuais.
+Entrada: `{ diagnostic_id }`.
 
-## Arquivos envolvidos
-- `src/components/ui/header.tsx`
-- `src/components/ui/footer.tsx`
-- `src/pages/InstitutionPortal.tsx` (verificação opcional de aba)
+Fluxo:
+1. Buscar o diagnóstico em `institution_radar_diagnostics` (respondente, instituição, `overall_score`, `headline`, top 3 dores, prioridades, `submission_source`, `public_access_token`).
+2. Buscar emails dos administradores via `user_roles` (`role = 'admin'`) + join com `profiles.email`.
+3. Montar email HTML com:
+   - Instituição (nome vinculado ou `submitted_institution_name`) e badge "Pública" / "Vinculada".
+   - Respondente (nome, cargo, email, telefone).
+   - Score geral, headline da leitura estratégica.
+   - Top 3 dores e top 3 prioridades.
+   - **CTA "Ver diagnóstico completo"**:
+     - Vinculado → `https://redebemestar.com.br/admin/radar-institucional/{id}`
+     - Público → `https://redebemestar.com.br/radar-institucional/resultado/{token}` (e também o link admin acima).
+4. Enviar via Resend (loop por destinatário para evitar vazamento de emails no `to`).
+
+## Integrações (disparo)
+
+- **`supabase/functions/radar-public-submit/index.ts`**: após o `insert` bem-sucedido, invocar `notify-radar-submitted` (fire-and-forget, dentro do try/catch existente).
+- **`supabase/functions/radar-institutional-analyze/index.ts`**: ao finalizar a análise e marcar como `submitted`, invocar `notify-radar-submitted`. Assim o email leva o `headline` já gerado. (Se a análise falhar, o `radar-public-submit` também dispara como fallback com dados brutos.)
+  - Para evitar duplicidade, adicionar uma flag simples: enviar apenas se `notified_at IS NULL`, e setar `notified_at = now()` após o envio.
+
+## Alteração no banco
+
+Migration adicionando coluna `notified_at TIMESTAMPTZ` em `institution_radar_diagnostics` para deduplicação de notificações.
+
+## Fora de escopo
+
+- Configuração por-tenant de destinatários (usa admins globais do site).
+- Notificação para o próprio respondente (o fluxo público já mostra o resultado via token).
