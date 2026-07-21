@@ -109,6 +109,9 @@ import PraticaSessao from "./pages/praticas/PraticaSessao";
 import PraticaCheckout from "./pages/praticas/PraticaCheckout";
 import PraticaConcluida from "./pages/praticas/PraticaConcluida";
 import PraticasAdmin from "@/pages/admin/PraticasAdmin";
+import RadarInstitutional from "@/pages/admin/RadarInstitutional";
+import RadarInstitutionalDetail from "@/pages/admin/RadarInstitutionalDetail";
+import InstitutionRadar from "@/pages/institution/InstitutionRadar";
 
 import "./App.css";
 
