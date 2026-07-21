@@ -11,16 +11,13 @@ export default function PublicRadar() {
   const [started, setStarted] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    document.title = 'Radar Institucional — Diagnóstico gratuito | Rede Bem-Estar';
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>Radar Institucional — Diagnóstico gratuito | Rede Bem-Estar</title>
-        <meta
-          name="description"
-          content="Diagnóstico consultivo gratuito de bem-estar estudantil para IES. Em ~10 minutos, receba uma leitura estratégica e recomendações práticas."
-        />
-        <link rel="canonical" href="https://redebemestar.com.br/radar-institucional" />
-      </Helmet>
+
 
       <Header />
 
