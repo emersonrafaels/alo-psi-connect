@@ -30,21 +30,27 @@ import {
   PainId,
 } from '@/data/radarCatalog';
 import { useSaveRadarDraft, useSubmitRadar } from '@/hooks/useInstitutionRadar';
+import { useSubmitPublicRadar } from '@/hooks/usePublicRadar';
 import { cn } from '@/lib/utils';
 
 interface Props {
-  institutionId: string;
+  institutionId?: string;
   institutionName: string;
+  mode?: 'authenticated' | 'public';
   initial?: {
     id?: string;
     answers?: Partial<RadarAnswers>;
   };
   onSubmitted?: (id: string) => void;
+  onPublicComplete?: (token: string) => void;
 }
 
-export function RadarForm({ institutionId, institutionName, initial, onSubmitted }: Props) {
+export function RadarForm({ institutionId, institutionName: initialName, mode = 'authenticated', initial, onSubmitted, onPublicComplete }: Props) {
+  const isPublic = mode === 'public';
   const [stepIdx, setStepIdx] = useState(0);
   const [id, setId] = useState<string | undefined>(initial?.id);
+  const [institutionName, setInstitutionName] = useState(initialName);
+  const [website, setWebsite] = useState('');
   const [answers, setAnswers] = useState<RadarAnswers>(() => ({
     ...emptyAnswers(),
     ...(initial?.answers ?? {}),
@@ -56,6 +62,7 @@ export function RadarForm({ institutionId, institutionName, initial, onSubmitted
 
   const save = useSaveRadarDraft();
   const submit = useSubmitRadar();
+  const publicSubmit = useSubmitPublicRadar();
 
   const step = RADAR_STEPS[stepIdx];
   const progress = Math.round(((stepIdx + 1) / RADAR_STEPS.length) * 100);
