@@ -54,7 +54,11 @@ Deno.serve(async (req) => {
     const priorities = (diag.priorities ?? {}) as Record<string, string>;
     const maturity = (diag.maturity ?? {}) as Record<string, number>;
     const structures = (diag.structures ?? {}) as Record<string, string>;
-    const institutionName = (diag as any).educational_institutions?.name ?? diag.institution_snapshot?.name ?? 'sua instituição';
+    const institutionName =
+      (diag as any).educational_institutions?.name ??
+      (diag as any).submitted_institution_name ??
+      diag.institution_snapshot?.name ??
+      'sua instituição';
 
     const painsBlock = pains.map(p => `- ${PAIN_LABELS[p] ?? p} (urgência: ${priorities[p] ?? 'não definida'})`).join('\n');
     const maturityBlock = Object.entries(maturity).map(([k, v]) => `- ${MATURITY_LABELS[k] ?? k}: ${v}/100`).join('\n');
