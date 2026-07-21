@@ -159,9 +159,11 @@ export function RadarForm({ institutionId, institutionName: initialName, mode = 
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Etapa {stepIdx + 1} de {RADAR_STEPS.length}</div>
               <div className="text-lg font-semibold">{step.label}</div>
             </div>
-            <Badge variant="outline" className="gap-1">
-              <Save className="h-3 w-3" /> Rascunho salvo automaticamente
-            </Badge>
+            {!isPublic && (
+              <Badge variant="outline" className="gap-1">
+                <Save className="h-3 w-3" /> Rascunho salvo automaticamente
+              </Badge>
+            )}
           </div>
           <Progress value={progress} className="h-2" />
           <div className="hidden md:flex mt-4 gap-1 overflow-x-auto pb-1">
