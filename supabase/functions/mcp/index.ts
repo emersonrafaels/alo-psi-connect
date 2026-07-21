@@ -2,7 +2,91 @@
 // To take ownership, delete this banner line; the plugin then leaves the file alone.
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
+// src/lib/mcp/index.ts
+import { defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
+
+// src/lib/mcp/tools/search-professionals.ts
+import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { createClient } from "npm:@supabase/supabase-js@^2.57.0";
+import { z } from "npm:zod@^3.23.8";
+var search_professionals_default = defineTool({
+  name: "search_professionals",
+  title: "Search professionals",
+  description: "Search active mental-health professionals on Rede Bem-Estar by optional name or profession keyword. Returns public profile fields only.",
+  inputSchema: {
+    query: z.string().optional().describe("Optional keyword matched against display name or profession."),
+    limit: z.number().int().optional().describe("Max results to return (default 10, hard cap 25).")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ query, limit }) => {
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_PUBLISHABLE_KEY,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+    const cap = Math.min(Math.max(limit ?? 10, 1), 25);
+    let q = supabase.from("profiles").select("id, display_name, profissao, resumo, foto_perfil_url").eq("tipo_usuario", "profissional").eq("ativo", true).limit(cap);
+    if (query && query.trim()) {
+      const term = `%${query.trim()}%`;
+      q = q.or(`display_name.ilike.${term},profissao.ilike.${term}`);
+    }
+    const { data, error } = await q;
+    if (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${error.message}` }],
+        isError: true
+      };
+    }
+    return {
+      content: [{ type: "text", text: JSON.stringify(data ?? [], null, 2) }],
+      structuredContent: { professionals: data ?? [] }
+    };
+  }
+});
+
+// src/lib/mcp/tools/list-upcoming-group-sessions.ts
+import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.57.0";
+import { z as z2 } from "npm:zod@^3.23.8";
+var list_upcoming_group_sessions_default = defineTool2({
+  name: "list_upcoming_group_sessions",
+  title: "List upcoming group sessions",
+  description: "List upcoming public group sessions (encontros) on Rede Bem-Estar, ordered by start date.",
+  inputSchema: {
+    limit: z2.number().int().optional().describe("Max sessions to return (default 10, hard cap 50).")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ limit }) => {
+    const supabase = createClient2(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_PUBLISHABLE_KEY,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+    const cap = Math.min(Math.max(limit ?? 10, 1), 50);
+    const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+    const { data, error } = await supabase.from("group_sessions").select("id, title, description, start_at, duration_minutes, host_name, capacity").gte("start_at", nowIso).order("start_at", { ascending: true }).limit(cap);
+    if (error) {
+      return {
+        content: [{ type: "text", text: `Error: ${error.message}` }],
+        isError: true
+      };
+    }
+    return {
+      content: [{ type: "text", text: JSON.stringify(data ?? [], null, 2) }],
+      structuredContent: { sessions: data ?? [] }
+    };
+  }
+});
+
+// src/lib/mcp/index.ts
+var mcp_default = defineMcp({
+  name: "rede-bem-estar-mcp",
+  title: "Rede Bem-Estar MCP",
+  version: "0.1.0",
+  instructions: "Tools for the Rede Bem-Estar mental-health platform. Use `search_professionals` to find active professionals by name or profession, and `list_upcoming_group_sessions` to browse upcoming public group sessions (encontros).",
+  tools: [search_professionals_default, list_upcoming_group_sessions_default]
+});
+
 // lovable-mcp-supabase-entry.ts
-import mcp from "npm:C:\\Users\\rodri\\Documents\\Trabalho\\AloPsi\\alo-psi-connect\\src\\lib\\mcp\\index.ts";
-import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@0.20.1/stacks/supabase";
-Deno.serve(createSupabaseHandler(mcp, { functionName: "mcp" }));
+import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@0.20.0/stacks/supabase";
+Deno.serve(createSupabaseHandler(mcp_default, { functionName: "mcp" }));
