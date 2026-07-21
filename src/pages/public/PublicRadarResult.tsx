@@ -12,12 +12,13 @@ export default function PublicRadarResult() {
   const { token } = useParams<{ token: string }>();
   const { data, isLoading, error } = usePublicRadarByToken(token);
 
+  useEffect(() => {
+    document.title = 'Resultado do Radar Institucional | Rede Bem-Estar';
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>Resultado do Radar Institucional | Rede Bem-Estar</title>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
+
 
       <Header />
 
