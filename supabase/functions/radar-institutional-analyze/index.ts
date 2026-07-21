@@ -144,6 +144,15 @@ Retorne EXCLUSIVAMENTE um JSON válido (sem markdown, sem \`\`\`) com este forma
       .single();
     if (uErr) throw uErr;
 
+    // Notifica administradores (fire-and-forget)
+    try {
+      await supabase.functions.invoke('notify-radar-submitted', {
+        body: { diagnostic_id },
+      });
+    } catch (e) {
+      console.error('[radar-institutional-analyze] notify failed:', e);
+    }
+
     return new Response(JSON.stringify({ ok: true, diagnostic: updated }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

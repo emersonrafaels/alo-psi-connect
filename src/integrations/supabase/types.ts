@@ -2217,6 +2217,7 @@ export type Database = {
           institution_id: string | null
           institution_snapshot: Json
           maturity: Json
+          notified_at: string | null
           overall_score: number | null
           pains: Json
           priorities: Json
@@ -2250,6 +2251,7 @@ export type Database = {
           institution_id?: string | null
           institution_snapshot?: Json
           maturity?: Json
+          notified_at?: string | null
           overall_score?: number | null
           pains?: Json
           priorities?: Json
@@ -2283,6 +2285,7 @@ export type Database = {
           institution_id?: string | null
           institution_snapshot?: Json
           maturity?: Json
+          notified_at?: string | null
           overall_score?: number | null
           pains?: Json
           priorities?: Json
@@ -4879,6 +4882,7 @@ export type Database = {
           institution_id: string | null
           institution_snapshot: Json
           maturity: Json
+          notified_at: string | null
           overall_score: number | null
           pains: Json
           priorities: Json

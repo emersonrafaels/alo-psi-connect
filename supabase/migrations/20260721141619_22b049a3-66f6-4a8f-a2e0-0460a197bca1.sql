@@ -1,0 +1,1 @@
+ALTER TABLE public.institution_radar_diagnostics ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ;

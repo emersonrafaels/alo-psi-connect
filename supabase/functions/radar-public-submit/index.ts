@@ -98,6 +98,15 @@ Deno.serve(async (req) => {
       console.error('[radar-public-submit] analyze failed:', e);
     }
 
+    // Notifica administradores (idempotente via notified_at — não duplica se analyze já notificou)
+    try {
+      await supabase.functions.invoke('notify-radar-submitted', {
+        body: { diagnostic_id: inserted.id },
+      });
+    } catch (e) {
+      console.error('[radar-public-submit] notify failed:', e);
+    }
+
     return new Response(
       JSON.stringify({ ok: true, id: inserted.id, token: inserted.public_access_token }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
