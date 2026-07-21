@@ -2214,12 +2214,13 @@ export type Database = {
           filled_by_user_id: string | null
           headline: string | null
           id: string
-          institution_id: string
+          institution_id: string | null
           institution_snapshot: Json
           maturity: Json
           overall_score: number | null
           pains: Json
           priorities: Json
+          public_access_token: string | null
           recommendations: Json | null
           respondent_area: string | null
           respondent_email: string | null
@@ -2229,7 +2230,13 @@ export type Database = {
           status: Database["public"]["Enums"]["radar_status"]
           strategic_reading: Json | null
           structures: Json
+          submission_source: string
           submitted_at: string | null
+          submitted_institution_city: string | null
+          submitted_institution_name: string | null
+          submitted_institution_state: string | null
+          submitted_institution_type: string | null
+          submitted_institution_website: string | null
           updated_at: string
           version: number
         }
@@ -2240,12 +2247,13 @@ export type Database = {
           filled_by_user_id?: string | null
           headline?: string | null
           id?: string
-          institution_id: string
+          institution_id?: string | null
           institution_snapshot?: Json
           maturity?: Json
           overall_score?: number | null
           pains?: Json
           priorities?: Json
+          public_access_token?: string | null
           recommendations?: Json | null
           respondent_area?: string | null
           respondent_email?: string | null
@@ -2255,7 +2263,13 @@ export type Database = {
           status?: Database["public"]["Enums"]["radar_status"]
           strategic_reading?: Json | null
           structures?: Json
+          submission_source?: string
           submitted_at?: string | null
+          submitted_institution_city?: string | null
+          submitted_institution_name?: string | null
+          submitted_institution_state?: string | null
+          submitted_institution_type?: string | null
+          submitted_institution_website?: string | null
           updated_at?: string
           version?: number
         }
@@ -2266,12 +2280,13 @@ export type Database = {
           filled_by_user_id?: string | null
           headline?: string | null
           id?: string
-          institution_id?: string
+          institution_id?: string | null
           institution_snapshot?: Json
           maturity?: Json
           overall_score?: number | null
           pains?: Json
           priorities?: Json
+          public_access_token?: string | null
           recommendations?: Json | null
           respondent_area?: string | null
           respondent_email?: string | null
@@ -2281,7 +2296,13 @@ export type Database = {
           status?: Database["public"]["Enums"]["radar_status"]
           strategic_reading?: Json | null
           structures?: Json
+          submission_source?: string
           submitted_at?: string | null
+          submitted_institution_city?: string | null
+          submitted_institution_name?: string | null
+          submitted_institution_state?: string | null
+          submitted_institution_type?: string | null
+          submitted_institution_website?: string | null
           updated_at?: string
           version?: number
         }
@@ -4845,6 +4866,48 @@ export type Database = {
           tenant_info: Json
           total_slots_available: number
         }[]
+      }
+      get_radar_by_public_token: {
+        Args: { _token: string }
+        Returns: {
+          adaptive_answers: Json
+          consent_given: boolean
+          created_at: string
+          filled_by_user_id: string | null
+          headline: string | null
+          id: string
+          institution_id: string | null
+          institution_snapshot: Json
+          maturity: Json
+          overall_score: number | null
+          pains: Json
+          priorities: Json
+          public_access_token: string | null
+          recommendations: Json | null
+          respondent_area: string | null
+          respondent_email: string | null
+          respondent_name: string | null
+          respondent_phone: string | null
+          respondent_role: string | null
+          status: Database["public"]["Enums"]["radar_status"]
+          strategic_reading: Json | null
+          structures: Json
+          submission_source: string
+          submitted_at: string | null
+          submitted_institution_city: string | null
+          submitted_institution_name: string | null
+          submitted_institution_state: string | null
+          submitted_institution_type: string | null
+          submitted_institution_website: string | null
+          updated_at: string
+          version: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "institution_radar_diagnostics"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_student_profile_ids_for_institution_admin: {
         Args: { _user_id: string }

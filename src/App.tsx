@@ -112,6 +112,8 @@ import PraticasAdmin from "@/pages/admin/PraticasAdmin";
 import RadarInstitutional from "@/pages/admin/RadarInstitutional";
 import RadarInstitutionalDetail from "@/pages/admin/RadarInstitutionalDetail";
 import InstitutionRadar from "@/pages/institution/InstitutionRadar";
+import PublicRadar from "@/pages/public/PublicRadar";
+import PublicRadarResult from "@/pages/public/PublicRadarResult";
 
 import "./App.css";
 
@@ -165,6 +167,8 @@ const AppWithShortcuts = () => {
       <Route path="/contato" element={<ModuleGuard module="contact"><Contact /></ModuleGuard>} />
       <Route path="/trabalhe-conosco" element={<WorkWithUs />} />
       <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
+      <Route path="/radar-institucional" element={<PublicRadar />} />
+      <Route path="/radar-institucional/resultado/:token" element={<PublicRadarResult />} />
       <Route path="/termos-servico" element={<TermsOfService />} />
       <Route path="/perfil" element={<Profile />} />
       <Route path="/professional-profile" element={<ProfessionalProfile />} />

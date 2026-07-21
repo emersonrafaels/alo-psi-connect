@@ -30,21 +30,27 @@ import {
   PainId,
 } from '@/data/radarCatalog';
 import { useSaveRadarDraft, useSubmitRadar } from '@/hooks/useInstitutionRadar';
+import { useSubmitPublicRadar } from '@/hooks/usePublicRadar';
 import { cn } from '@/lib/utils';
 
 interface Props {
-  institutionId: string;
+  institutionId?: string;
   institutionName: string;
+  mode?: 'authenticated' | 'public';
   initial?: {
     id?: string;
     answers?: Partial<RadarAnswers>;
   };
   onSubmitted?: (id: string) => void;
+  onPublicComplete?: (token: string) => void;
 }
 
-export function RadarForm({ institutionId, institutionName, initial, onSubmitted }: Props) {
+export function RadarForm({ institutionId, institutionName: initialName, mode = 'authenticated', initial, onSubmitted, onPublicComplete }: Props) {
+  const isPublic = mode === 'public';
   const [stepIdx, setStepIdx] = useState(0);
   const [id, setId] = useState<string | undefined>(initial?.id);
+  const [institutionName, setInstitutionName] = useState(initialName);
+  const [website, setWebsite] = useState('');
   const [answers, setAnswers] = useState<RadarAnswers>(() => ({
     ...emptyAnswers(),
     ...(initial?.answers ?? {}),
@@ -56,12 +62,14 @@ export function RadarForm({ institutionId, institutionName, initial, onSubmitted
 
   const save = useSaveRadarDraft();
   const submit = useSubmitRadar();
+  const publicSubmit = useSubmitPublicRadar();
 
   const step = RADAR_STEPS[stepIdx];
   const progress = Math.round(((stepIdx + 1) / RADAR_STEPS.length) * 100);
 
-  // Auto-save após mudanças (debounce simples)
+  // Auto-save após mudanças (debounce simples) — apenas no modo autenticado
   useEffect(() => {
+    if (isPublic || !institutionId) return;
     const t = setTimeout(() => {
       save.mutate(
         { id, institution_id: institutionId, answers, institution_name: institutionName },
@@ -88,7 +96,7 @@ export function RadarForm({ institutionId, institutionName, initial, onSubmitted
   function validateStep(): string | null {
     switch (step.id) {
       case 'institution':
-        if (!institutionName) return 'Instituição obrigatória.';
+        if (!institutionName?.trim()) return 'Informe o nome da instituição.';
         if (!answers.institution.state) return 'Selecione o estado.';
         if (!answers.institution.type) return 'Selecione o tipo de instituição.';
         return null;
@@ -118,7 +126,21 @@ export function RadarForm({ institutionId, institutionName, initial, onSubmitted
   }
 
   async function handleSubmit() {
-    // Ensure saved, then invoke IA
+    if (isPublic) {
+      const result = await publicSubmit.mutateAsync({
+        answers,
+        institution: {
+          name: institutionName,
+          type: answers.institution.type,
+          city: answers.institution.city,
+          state: answers.institution.state,
+          website: website || undefined,
+        },
+      });
+      onPublicComplete?.(result.token);
+      return;
+    }
+    if (!institutionId) return;
     const saved = await save.mutateAsync({ id, institution_id: institutionId, answers, institution_name: institutionName });
     const savedId = (saved as any).id ?? id;
     if (!savedId) return;
@@ -137,9 +159,11 @@ export function RadarForm({ institutionId, institutionName, initial, onSubmitted
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Etapa {stepIdx + 1} de {RADAR_STEPS.length}</div>
               <div className="text-lg font-semibold">{step.label}</div>
             </div>
-            <Badge variant="outline" className="gap-1">
-              <Save className="h-3 w-3" /> Rascunho salvo automaticamente
-            </Badge>
+            {!isPublic && (
+              <Badge variant="outline" className="gap-1">
+                <Save className="h-3 w-3" /> Rascunho salvo automaticamente
+              </Badge>
+            )}
           </div>
           <Progress value={progress} className="h-2" />
           <div className="hidden md:flex mt-4 gap-1 overflow-x-auto pb-1">
@@ -168,9 +192,20 @@ export function RadarForm({ institutionId, institutionName, initial, onSubmitted
           {step.id === 'institution' && (
             <div className="grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                <Label>Instituição</Label>
-                <Input value={institutionName} disabled />
+                <Label>Nome da instituição</Label>
+                <Input
+                  value={institutionName}
+                  disabled={!isPublic}
+                  onChange={e => setInstitutionName(e.target.value)}
+                  placeholder={isPublic ? 'Ex.: Universidade Modelo' : undefined}
+                />
               </div>
+              {isPublic && (
+                <div className="md:col-span-2">
+                  <Label>Site institucional <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+                  <Input value={website} onChange={e => setWebsite(e.target.value)} placeholder="https://" />
+                </div>
+              )}
               <div>
                 <Label>Cidade</Label>
                 <Input value={answers.institution.city ?? ''} onChange={e => update('institution', { ...answers.institution, city: e.target.value })} />
@@ -398,13 +433,13 @@ export function RadarForm({ institutionId, institutionName, initial, onSubmitted
           <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
         </Button>
         <div className="text-xs text-muted-foreground hidden sm:block">
-          {save.isPending ? 'Salvando…' : id ? 'Salvo' : 'Não salvo ainda'}
+          {isPublic ? '' : save.isPending ? 'Salvando…' : id ? 'Salvo' : 'Não salvo ainda'}
         </div>
-        <Button onClick={handleNext} disabled={submit.isPending}>
+        <Button onClick={handleNext} disabled={submit.isPending || publicSubmit.isPending}>
           {stepIdx === RADAR_STEPS.length - 1 ? (
             <>
               <Sparkles className="h-4 w-4 mr-2" />
-              {submit.isPending ? 'Gerando análise…' : 'Gerar diagnóstico'}
+              {(submit.isPending || publicSubmit.isPending) ? 'Gerando análise…' : 'Gerar diagnóstico'}
             </>
           ) : (
             <>Avançar <ArrowRight className="h-4 w-4 ml-2" /></>
