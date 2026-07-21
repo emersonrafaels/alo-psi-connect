@@ -192,9 +192,20 @@ export function RadarForm({ institutionId, institutionName: initialName, mode = 
           {step.id === 'institution' && (
             <div className="grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                <Label>Instituição</Label>
-                <Input value={institutionName} disabled />
+                <Label>Nome da instituição</Label>
+                <Input
+                  value={institutionName}
+                  disabled={!isPublic}
+                  onChange={e => setInstitutionName(e.target.value)}
+                  placeholder={isPublic ? 'Ex.: Universidade Modelo' : undefined}
+                />
               </div>
+              {isPublic && (
+                <div className="md:col-span-2">
+                  <Label>Site institucional <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+                  <Input value={website} onChange={e => setWebsite(e.target.value)} placeholder="https://" />
+                </div>
+              )}
               <div>
                 <Label>Cidade</Label>
                 <Input value={answers.institution.city ?? ''} onChange={e => update('institution', { ...answers.institution, city: e.target.value })} />
