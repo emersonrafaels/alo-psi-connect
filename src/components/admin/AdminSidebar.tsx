@@ -82,6 +82,12 @@ const adminMenuGroups = [
         requiredRole: 'admin' as const
       },
       {
+        title: 'Radar Institucional',
+        url: '/admin/radar-institucional',
+        icon: Sparkles,
+        requiredRole: 'admin' as const
+      },
+      {
         title: 'Importação em Massa',
         url: '/admin/bulk-import',
         icon: FileSpreadsheet,

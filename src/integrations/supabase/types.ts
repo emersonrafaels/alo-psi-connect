@@ -2206,6 +2206,102 @@ export type Database = {
           },
         ]
       }
+      institution_radar_diagnostics: {
+        Row: {
+          adaptive_answers: Json
+          consent_given: boolean
+          created_at: string
+          filled_by_user_id: string | null
+          headline: string | null
+          id: string
+          institution_id: string
+          institution_snapshot: Json
+          maturity: Json
+          overall_score: number | null
+          pains: Json
+          priorities: Json
+          recommendations: Json | null
+          respondent_area: string | null
+          respondent_email: string | null
+          respondent_name: string | null
+          respondent_phone: string | null
+          respondent_role: string | null
+          status: Database["public"]["Enums"]["radar_status"]
+          strategic_reading: Json | null
+          structures: Json
+          submitted_at: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          adaptive_answers?: Json
+          consent_given?: boolean
+          created_at?: string
+          filled_by_user_id?: string | null
+          headline?: string | null
+          id?: string
+          institution_id: string
+          institution_snapshot?: Json
+          maturity?: Json
+          overall_score?: number | null
+          pains?: Json
+          priorities?: Json
+          recommendations?: Json | null
+          respondent_area?: string | null
+          respondent_email?: string | null
+          respondent_name?: string | null
+          respondent_phone?: string | null
+          respondent_role?: string | null
+          status?: Database["public"]["Enums"]["radar_status"]
+          strategic_reading?: Json | null
+          structures?: Json
+          submitted_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          adaptive_answers?: Json
+          consent_given?: boolean
+          created_at?: string
+          filled_by_user_id?: string | null
+          headline?: string | null
+          id?: string
+          institution_id?: string
+          institution_snapshot?: Json
+          maturity?: Json
+          overall_score?: number | null
+          pains?: Json
+          priorities?: Json
+          recommendations?: Json | null
+          respondent_area?: string | null
+          respondent_email?: string | null
+          respondent_name?: string | null
+          respondent_phone?: string | null
+          respondent_role?: string | null
+          status?: Database["public"]["Enums"]["radar_status"]
+          strategic_reading?: Json | null
+          structures?: Json
+          submitted_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_radar_diagnostics_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_radar_diagnostics_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_user_permissions: {
         Row: {
           granted_at: string | null
@@ -4903,6 +4999,7 @@ export type Database = {
         | "view_audit_log"
       mood_analysis_risk_level: "healthy" | "attention" | "alert" | "critical"
       payment_status: "pending_payment" | "paid" | "failed"
+      radar_status: "draft" | "submitted" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5066,6 +5163,7 @@ export const Constants = {
       ],
       mood_analysis_risk_level: ["healthy", "attention", "alert", "critical"],
       payment_status: ["pending_payment", "paid", "failed"],
+      radar_status: ["draft", "submitted", "archived"],
     },
   },
 } as const

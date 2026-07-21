@@ -109,6 +109,9 @@ import PraticaSessao from "./pages/praticas/PraticaSessao";
 import PraticaCheckout from "./pages/praticas/PraticaCheckout";
 import PraticaConcluida from "./pages/praticas/PraticaConcluida";
 import PraticasAdmin from "@/pages/admin/PraticasAdmin";
+import RadarInstitutional from "@/pages/admin/RadarInstitutional";
+import RadarInstitutionalDetail from "@/pages/admin/RadarInstitutionalDetail";
+import InstitutionRadar from "@/pages/institution/InstitutionRadar";
 
 import "./App.css";
 
@@ -288,6 +291,23 @@ const AppWithShortcuts = () => {
         } 
       />
       
+      <Route 
+        path="/portal-institucional/radar" 
+        element={
+          <ProtectedRoute requiredRole="institution_admin">
+            <InstitutionRadar />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/medcos/portal-institucional/radar" 
+        element={
+          <ProtectedRoute requiredRole="institution_admin">
+            <InstitutionRadar />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Rotas de autenticação e perfil Medcos */}
       <Route path="/medcos/auth" element={<Auth />} />
       <Route path="/medcos/auth/callback" element={<AuthCallback />} />
@@ -344,6 +364,8 @@ const AppWithShortcuts = () => {
       <Route path="/admin/tenants" element={<AdminLayout><AdminTenants /></AdminLayout>} />
       <Route path="/admin/instituicoes" element={<AdminLayout><AdminInstitutions /></AdminLayout>} />
       <Route path="/admin/portal-institucional" element={<AdminLayout><AdminInstitutionPortal /></AdminLayout>} />
+      <Route path="/admin/radar-institucional" element={<AdminLayout><RadarInstitutional /></AdminLayout>} />
+      <Route path="/admin/radar-institucional/:id" element={<AdminLayout><RadarInstitutionalDetail /></AdminLayout>} />
       <Route path="/admin/bulk-import" element={<AdminLayout><BulkImport /></AdminLayout>} />
       <Route path="/admin/system" element={<AdminLayout><AdminSystemMaintenance /></AdminLayout>} />
       <Route path="/admin/encontros" element={<AdminLayout><GroupSessionsAdmin /></AdminLayout>} />
