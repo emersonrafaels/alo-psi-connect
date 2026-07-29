@@ -174,7 +174,7 @@ const HomeRedeBemEstar = () => {
                   <p className="text-xs sm:text-sm font-medium italic leading-snug"
                      style={{ color: "var(--rbe-on-surface)" }}>
                     "Hoje minha saúde mental melhorou muito com a Rede Bem-Estar."
-                  </p>
+                    </p>
                 </div>
               </div>
             </div>
@@ -627,65 +627,197 @@ const HomeRedeBemEstar = () => {
               </div>
             ))}
           </div>
+{/* Sub-seção Metodologia AME */}
+<div
+  className="
+    mt-20 sm:mt-24
+    pt-16 sm:pt-24
+    grid lg:grid-cols-12
+    gap-10 lg:gap-12
+    items-center
+  "
+  style={{
+    borderTop:
+      "1px solid color-mix(in srgb, var(--rbe-outline-variant) 20%, transparent)",
+  }}
+>
+  {/* Vídeo */}
+  <div className="lg:col-span-5 flex justify-center">
+    <div className="relative w-full max-w-xs sm:max-w-sm aspect-square">
+      <div
+        className="
+          absolute -inset-4
+          rounded-[2.5rem]
+          opacity-30
+          blur-3xl
+          animate-pulse
+        "
+        style={{
+          background: "var(--rbe-tertiary-fixed)",
+        }}
+      />
 
-          {/* Sub-seção Metodologia AME */}
-          <div className="mt-20 sm:mt-24 pt-16 sm:pt-24 grid lg:grid-cols-12 gap-10 lg:gap-12 items-center"
-               style={{ borderTop: "1px solid color-mix(in srgb, var(--rbe-outline-variant) 20%, transparent)" }}>
-            <div className="lg:col-span-5 flex justify-center">
-              <div className="relative w-full max-w-xs sm:max-w-sm aspect-square">
-                <div className="absolute inset-0 rounded-full opacity-30 blur-3xl animate-pulse"
-                     style={{ background: "var(--rbe-tertiary-fixed)" }} />
-                <div className="relative w-full h-full rounded-full overflow-hidden shadow-2xl"
-                     style={{ border: "8px solid var(--rbe-surface-container-lowest)" }}>
-                                            {/* VIDEO COMO BACKGROUND */}
-                  <video
-                    src={buddyAME}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover"
-                    width={896}
-                    height={896}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="lg:col-span-7 text-left">
-              <span className="font-black text-[10px] sm:text-xs uppercase tracking-[0.3em] mb-3 sm:mb-4 block"
-                    style={{ color: "var(--rbe-brand-pink)" }}>
-                Metodologia
-              </span>
-              <h3 className="text-4xl sm:text-5xl font-black mb-5 sm:mb-6" style={{ color: "var(--rbe-primary)" }}>
-                AME.
-              </h3>
-              <p className="text-base sm:text-lg mb-10 sm:mb-12 max-w-xl" style={{ color: "var(--rbe-on-surface-variant)" }}>
-                <span className="font-bold" style={{ color: "var(--rbe-primary)" }}>
-                  Acolhimento, Mapeamento e Encaminhamento:
-                </span>{" "}
-                uma lógica de cuidado que identifica necessidades, organiza sinais e
-                conecta cada pessoa ao suporte mais adequado.
-              </p>
-              <div className="grid grid-cols-3 gap-3 sm:gap-4 items-start relative">
-                <div className="absolute top-6 left-1/4 right-1/4 h-px border-t border-dashed hidden md:block"
-                     style={{ borderColor: "color-mix(in srgb, var(--rbe-outline-variant) 40%, transparent)" }} />
-                {[
-                  { Icon: UserSearch, label: "1. Acolhimento", desc: "Escuta ativa e olhar humano.", bg: "color-mix(in srgb, var(--rbe-brand-pink) 12%, transparent)", color: "var(--rbe-brand-pink)" },
-                  { Icon: LineChart, label: "2. Mapeamento", desc: "Identifica necessidades e organiza sinais.", bg: "color-mix(in srgb, var(--rbe-brand-mint) 30%, transparent)", color: "var(--rbe-primary)" },
-                  { Icon: ArrowRight, label: "3. Encaminhamento", desc: "Conecta cada pessoa ao suporte mais adequado.", bg: "var(--rbe-brand-purple)", color: "#fff" },
-                ].map(s => (
-                  <div key={s.label} className="text-center">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 relative z-10"
-                         style={{ background: s.bg, color: s.color, outline: "4px solid var(--rbe-surface-container-lowest)" }}>
-                      <s.Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                    <h5 className="text-[10px] sm:text-xs font-black uppercase mb-1 sm:mb-2" style={{ color: "var(--rbe-primary)" }}>{s.label}</h5>
-                    <p className="text-[10px] sm:text-[0.65rem] px-1 sm:px-2 leading-relaxed" style={{ color: "var(--rbe-on-surface-variant)" }}>{s.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+      <div
+        className="
+          relative
+          w-full h-full
+          overflow-hidden
+          rounded-[2rem]
+          shadow-2xl
+        "
+        style={{
+          border: "8px solid var(--rbe-surface-container-lowest)",
+          background: "var(--rbe-surface-container-low)",
+        }}
+      >
+        <video
+          src={buddyAME}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      </div>
+    </div>
+  </div>
+
+  {/* Texto */}
+  <div className="lg:col-span-7 text-left">
+    <span
+      className="
+        block
+        mb-3 sm:mb-4
+        text-[10px] sm:text-xs
+        font-black
+        uppercase
+        tracking-[0.3em]
+      "
+      style={{
+        color: "var(--rbe-brand-pink)",
+      }}
+    >
+      Metodologia
+    </span>
+
+    <h3
+      className="mb-5 sm:mb-6 text-4xl sm:text-5xl font-black"
+      style={{
+        color: "var(--rbe-primary)",
+      }}
+    >
+      AME.
+    </h3>
+
+    <p
+      className="mb-10 sm:mb-12 max-w-xl text-base sm:text-lg"
+      style={{
+        color: "var(--rbe-on-surface-variant)",
+      }}
+    >
+      <span
+        className="font-bold"
+        style={{
+          color: "var(--rbe-primary)",
+        }}
+      >
+        Acolhimento, Mapeamento e Encaminhamento:
+      </span>{" "}
+      uma lógica de cuidado que identifica necessidades, organiza sinais e
+      conecta cada pessoa ao suporte mais adequado.
+    </p>
+
+    <div className="relative grid grid-cols-3 gap-3 sm:gap-4 items-start">
+      <div
+        className="
+          absolute
+          top-6
+          left-1/4 right-1/4
+          hidden md:block
+          h-px
+          border-t border-dashed
+        "
+        style={{
+          borderColor:
+            "color-mix(in srgb, var(--rbe-outline-variant) 40%, transparent)",
+        }}
+      />
+
+      {[
+        {
+          Icon: UserSearch,
+          label: "1. Acolhimento",
+          desc: "Escuta ativa e olhar humano.",
+          bg: "color-mix(in srgb, var(--rbe-brand-pink) 12%, transparent)",
+          color: "var(--rbe-brand-pink)",
+        },
+        {
+          Icon: LineChart,
+          label: "2. Mapeamento",
+          desc: "Identifica necessidades e organiza sinais.",
+          bg: "color-mix(in srgb, var(--rbe-brand-mint) 30%, transparent)",
+          color: "var(--rbe-primary)",
+        },
+        {
+          Icon: ArrowRight,
+          label: "3. Encaminhamento",
+          desc: "Conecta cada pessoa ao suporte mais adequado.",
+          bg: "var(--rbe-brand-purple)",
+          color: "#fff",
+        },
+      ].map((step) => (
+        <div key={step.label} className="text-center">
+          <div
+            className="
+              relative z-10
+              mx-auto
+              mb-3 sm:mb-4
+              flex
+              w-10 h-10
+              sm:w-12 sm:h-12
+              items-center justify-center
+              rounded-full
+            "
+            style={{
+              background: step.bg,
+              color: step.color,
+              outline: "4px solid var(--rbe-surface-container-lowest)",
+            }}
+          >
+            <step.Icon className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
+
+          <h5
+            className="
+              mb-1 sm:mb-2
+              text-[10px] sm:text-xs
+              font-black
+              uppercase
+            "
+            style={{
+              color: "var(--rbe-primary)",
+            }}
+          >
+            {step.label}
+          </h5>
+
+          <p
+            className="
+              px-1 sm:px-2
+              text-[10px] sm:text-[0.65rem]
+              leading-relaxed
+            "
+            style={{
+              color: "var(--rbe-on-surface-variant)",
+            }}
+          >
+            {step.desc}
+          </p>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
 
           {/* AME impact strip */}
           <div className="mt-16 sm:mt-20 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
