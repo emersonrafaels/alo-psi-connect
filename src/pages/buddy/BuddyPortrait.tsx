@@ -371,14 +371,6 @@ function SectionStepper({ current, onChange, progress }: { current: SectionId; o
 
 function computeProgress(f: Partial<BuddyPortrait>): number {
   const checks: boolean[] = [
-    !!f.current_mood,
-    (f.anxiety ?? null) !== null,
-    (f.sadness ?? null) !== null,
-    (f.motivation ?? null) !== null,
-    (f.energy_level ?? null) !== null,
-    (f.sleep_quality ?? null) !== null,
-    (f.stress_level ?? null) !== null,
-    !!f.mind_on,
     (f.values_list ?? []).length > 0,
     (f.strengths_self ?? []).length > 0,
     (f.three_words ?? []).length > 0,
