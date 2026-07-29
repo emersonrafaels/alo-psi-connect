@@ -371,6 +371,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/instituicoes" element={<AdminLayout><AdminInstitutions /></AdminLayout>} />
       <Route path="/admin/portal-institucional" element={<AdminLayout><AdminInstitutionPortal /></AdminLayout>} />
       <Route path="/admin/radar-institucional" element={<AdminLayout><RadarInstitutional /></AdminLayout>} />
+      <Route path="/admin/acesso-radar" element={<AdminLayout><RadarAccess /></AdminLayout>} />
       <Route path="/admin/radar-institucional/:id" element={<AdminLayout><RadarInstitutionalDetail /></AdminLayout>} />
       <Route path="/admin/bulk-import" element={<AdminLayout><BulkImport /></AdminLayout>} />
       <Route path="/admin/system" element={<AdminLayout><AdminSystemMaintenance /></AdminLayout>} />
