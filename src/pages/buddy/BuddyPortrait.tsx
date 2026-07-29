@@ -25,13 +25,6 @@ const STRENGTHS = ["Escuta", "Resiliência", "Empatia", "Curiosidade", "Coragem"
 const SELFCARE = ["Meditar", "Caminhar", "Ler", "Banho quente", "Diário", "Respiração", "Música", "Yoga"];
 const HOBBIES = ["Ler", "Cozinhar", "Correr", "Games", "Desenhar", "Cantar", "Dançar", "Jardinagem"];
 const AVOID = ["Multidões", "Conflitos", "Redes sociais", "Notícias", "Discussões políticas", "Silêncio total"];
-const MOODS = [
-  { key: "muito_bem", label: "Muito bem", emoji: "😄" },
-  { key: "bem", label: "Bem", emoji: "🙂" },
-  { key: "medio", label: "Mais ou menos", emoji: "😐" },
-  { key: "mal", label: "Mal", emoji: "🙁" },
-  { key: "muito_mal", label: "Muito mal", emoji: "😢" },
-];
 const TONES = [
   { key: "acolhedor", label: "Acolhedor", emoji: "🤗" },
   { key: "direto", label: "Direto", emoji: "🎯" },
