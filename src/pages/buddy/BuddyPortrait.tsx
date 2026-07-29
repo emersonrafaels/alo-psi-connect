@@ -47,7 +47,7 @@ export default function BuddyPortraitPage() {
   const { data, isLoading, save, patientId } = useBuddyPortrait();
   const { toast } = useToast();
   const [form, setForm] = useState<Partial<BuddyPortrait>>({});
-  const [section, setSection] = useState<SectionId>("agora");
+  const [section, setSection] = useState<SectionId>("essencia");
 
   useEffect(() => { if (data) setForm(data); }, [data]);
 
