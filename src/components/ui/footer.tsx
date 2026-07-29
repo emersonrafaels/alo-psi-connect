@@ -42,11 +42,6 @@ const Footer = () => {
     icon: Users,
     enabled: true
   }, {
-    name: "Radar Institucional",
-    href: buildTenantPath(tenantSlug, "/radar-institucional"),
-    icon: Radar,
-    enabled: true
-  }, {
     name: "Nossos Profissionais",
     href: buildTenantPath(tenantSlug, "/profissionais"),
     icon: Heart,
@@ -65,10 +60,6 @@ const Footer = () => {
   const navigationLinks = [{
     name: "Home",
     href: buildTenantPath(tenantSlug, "/"),
-    enabled: true
-  }, {
-    name: "Radar Institucional",
-    href: buildTenantPath(tenantSlug, "/radar-institucional"),
     enabled: true
   }, {
     name: "Profissionais",
