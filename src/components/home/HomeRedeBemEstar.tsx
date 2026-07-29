@@ -172,8 +172,8 @@ const HomeRedeBemEstar = () => {
                   </p>
                   <p className="text-xs sm:text-sm font-medium italic leading-snug"
                      style={{ color: "var(--rbe-on-surface)" }}>
-                    "Senti um acolhimento imediato. A tecnologia aqui tem alma."
-                  </p>
+                    "Hoje minha saúde mental melhorou muito com a Rede Bem-Estar."
+                   </p>
                 </div>
               </div>
             </div>
