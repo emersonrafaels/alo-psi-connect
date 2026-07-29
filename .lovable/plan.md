@@ -1,13 +1,21 @@
 ## Objetivo
-Remover a etapa "Agora" do retrato do Buddy e direcionar o usuário ao Diário Emocional para registrar humor e escalas.
 
-## Mudanças (src/pages/buddy/BuddyPortrait.tsx)
-1. Remover `"agora"` da lista `SECTIONS` — o stepper passa a começar em "Essência".
-2. Remover o componente `SectionAgora` e sua renderização condicional.
-3. Remover as constantes `MOODS` e o helper `MoodChip` para humor (mantendo o uso em "Buddy" para o tom preferido).
-4. Ajustar `computeProgress` para não contar mais: `current_mood`, `anxiety`, `sadness`, `motivation`, `energy_level`, `sleep_quality`, `stress_level`, `mind_on` — assim o percentual reflete só o que ainda é pedido.
-5. Adicionar, no topo do retrato, um aviso curto: "Humor, sono e energia vêm do seu Diário Emocional" com link para `/diario-emocional` (rota confirmada antes da edição).
+No card "Seus contatos de emergência" (Meu Buddy → Pontos de força), adicionar um botão que abre um modal com o mesmo formulário de contatos de emergência que já existe em Meu Perfil, permitindo cadastrar/editar sem sair da página.
 
-## Notas técnicas
-- Nenhuma mudança de banco: as colunas continuam existindo em `buddy_portraits` e os valores já salvos permanecem intactos e disponíveis para a IA.
-- O `ScaleRow` continua em uso na seção "Limites" (facilidade em pedir ajuda), então permanece.
+## O que será feito
+
+1. **Extrair o formulário para um componente reutilizável**
+   - Novo componente `EmergencyContactsEditor` a partir da lógica já existente em `src/pages/Profile.tsx` (aba "Saúde & Emergência"): carregar contatos do estudante, adicionar/remover (até 3), campos nome, relação, telefone, e-mail, e salvar na tabela `patient_emergency_contacts`.
+   - `src/pages/Profile.tsx` passa a usar esse componente, mantendo o comportamento atual.
+
+2. **Modal no card do Buddy**
+   - Em `src/pages/buddy/BuddyStrengths.tsx`, adicionar botão:
+     - "Adicionar contatos" quando a lista está vazia (substituindo o texto atual por texto + botão);
+     - "Gerenciar contatos" quando já existem contatos.
+   - O botão abre um `Dialog` contendo o `EmergencyContactsEditor`.
+   - Ao salvar, o modal fecha e a lista do card é atualizada (invalidação da query `["buddy","emergency"]`).
+   - O card também mostra um link secundário para "Meu perfil" como alternativa.
+
+3. **Detalhes técnicos**
+   - Sem mudanças de banco de dados; reutiliza a mesma tabela e regras já usadas pelo perfil.
+   - O card do Buddy hoje lê `nome, telefone, parentesco`; o editor grava os mesmos campos usados pelo perfil, então será garantido o alinhamento de nomes de coluna ao integrar.
