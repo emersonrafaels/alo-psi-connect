@@ -17,6 +17,7 @@ import { useTenant } from "@/hooks/useTenant"
 import { useUserRole } from "@/hooks/useUserRole"
 import { useCanCreateSessions } from "@/hooks/useCanCreateSessions"
 import { usePatientFullViewAccess } from "@/hooks/usePatientFullViewAccess"
+import { useRadarAccess } from "@/hooks/useRadarAccess"
 import { TenantBranding } from "@/components/TenantBranding"
 import { buildTenantPath, getTenantSlugFromPath } from "@/utils/tenantHelpers"
 
