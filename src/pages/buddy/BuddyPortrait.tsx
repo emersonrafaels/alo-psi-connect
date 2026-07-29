@@ -156,36 +156,6 @@ export default function BuddyPortraitPage() {
 
 /* ---------- Sections ---------- */
 
-function SectionAgora({ form, set, appendText, setAudio }: any) {
-  return (
-    <>
-      <SectionHeader title="Como você está agora?" subtitle="Um retrato do seu momento presente." />
-      <Card>
-        <CardHeader><CardTitle className="text-base">Humor de hoje</CardTitle></CardHeader>
-        <CardContent className="space-y-5">
-          <div className="flex flex-wrap gap-2">
-            {MOODS.map((m) => (
-              <MoodChip key={m.key} active={form.current_mood === m.key} onClick={() => set("current_mood", m.key)} emoji={m.emoji} label={m.label} />
-            ))}
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <ScaleRow label="Ansiedade" value={form.anxiety ?? 0} onChange={(v) => set("anxiety", v)} colorClass="from-orange-400 to-red-500" />
-            <ScaleRow label="Tristeza" value={form.sadness ?? 0} onChange={(v) => set("sadness", v)} colorClass="from-blue-400 to-indigo-500" />
-            <ScaleRow label="Motivação" value={form.motivation ?? 5} onChange={(v) => set("motivation", v)} colorClass="from-green-400 to-emerald-500" />
-            <ScaleRow label="Energia" value={form.energy_level ?? 5} onChange={(v) => set("energy_level", v)} colorClass="from-amber-400 to-yellow-500" />
-            <ScaleRow label="Qualidade do sono" value={form.sleep_quality ?? 5} onChange={(v) => set("sleep_quality", v)} colorClass="from-purple-400 to-indigo-500" />
-            <ScaleRow label="Nível de estresse" value={form.stress_level ?? 5} onChange={(v) => set("stress_level", v)} colorClass="from-rose-400 to-pink-500" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <QuestionCard title="O que tem ocupado sua mente?" hint="Solte o que está pensando — sem filtros.">
-        <Textarea value={form.mind_on ?? ""} onChange={(e) => set("mind_on", e.target.value)} rows={4} maxLength={800} />
-        <BuddyAudioAnswer fieldKey="mind_on" onTranscribed={(t) => appendText("mind_on", t)} onAudioUrl={(u) => setAudio("mind_on", u)} />
-      </QuestionCard>
-    </>
-  );
-}
 
 function SectionEssencia({ form, set }: any) {
   return (
