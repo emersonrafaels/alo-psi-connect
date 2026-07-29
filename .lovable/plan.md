@@ -1,28 +1,40 @@
 ## Objetivo
 
-O item "Radar Institucional" deixa de ser exibido para visitantes e pacientes. Ele passa a aparecer no menu apenas para usuários institucionais, e também dentro do Portal Institucional. A página em si continua acessível por link direto (para prospecção de instituições ainda não cadastradas).
+Além das instituições, permitir que administradores e usuários específicos escolhidos no painel admin vejam e acessem o Radar Institucional.
 
-## O que muda
+## Regras de acesso
 
-**1. Header (`src/components/ui/header.tsx`)**
-- O item "Radar Institucional" passa a ser inserido condicionalmente na lista de navegação, apenas quando o usuário tem papel institucional (`institution_admin` ou `facilitator`) — ambos já são carregados no componente via `useUserRole`.
-- Enquanto os papéis estiverem carregando, o item não é exibido (evita "piscar" para visitantes).
-- Mesma condição aplicada ao menu mobile, que reutiliza a mesma lista `navigation`.
-- Para usuários institucionais, o link aponta para o radar dentro do portal (`/portal-institucional/radar`), que é a versão autenticada e vinculada à instituição.
+Um usuário vê o item "Radar Institucional" no menu e pode abrir a página quando:
+1. É admin da instituição ou facilitador (comportamento atual), OU
+2. Tem papel `admin` / `super_admin`, OU
+3. Está na nova lista de acesso liberada manualmente no admin.
 
-**2. Rodapé (`src/components/ui/footer.tsx`)**
-- Remover as duas entradas de "Radar Institucional" ("Links úteis" e "Navegação"), já que o rodapé é visto por todos os visitantes.
+## Banco de dados
 
-**3. Portal Institucional (`src/pages/InstitutionPortal.tsx`)**
-- Reforçar o acesso: além do card já existente, incluir um ponto de entrada visível e consistente para o Radar (botão/atalho no topo do portal, ao lado das demais ações), levando a `/portal-institucional/radar`.
+Nova tabela `radar_access_grants`:
+- usuário liberado, quem liberou, observação opcional, data de criação.
+- Grants para `authenticated` e `service_role`.
+- RLS: o próprio usuário pode ver seu registro; apenas admin/super_admin podem ver todos, criar e remover.
 
-## O que NÃO muda
+Nova função de segurança `has_radar_access(_user_id)` que retorna verdadeiro para admin, super_admin, admin de instituição, facilitador ou usuário presente na lista — usada tanto no front quanto em políticas futuras.
 
-- A rota pública `/radar-institucional` e `/radar-institucional/resultado/:token` continuam funcionando por link direto, sem login — apenas deixam de ser divulgadas na navegação.
-- Nenhuma alteração de banco de dados, RLS ou edge functions.
+## Interface admin
+
+Nova aba/página "Acesso ao Radar" dentro do admin (ao lado do Radar Institucional):
+- Busca de usuário por nome/e-mail (a partir de `profiles`).
+- Botão para liberar acesso, com campo opcional de observação.
+- Tabela com os usuários liberados, quem liberou, data e ação de remover.
+- Estados de carregamento, vazio e confirmação de remoção.
+
+## Front-end
+
+- Novo hook `useRadarAccess()` que consulta a função `has_radar_access` e retorna `{ hasAccess, loading }`.
+- `src/components/ui/header.tsx`: trocar a condição atual `isInstitutionAdmin || isFacilitator` por `hasAccess` do novo hook (desktop e mobile).
+- Destino do link: portal institucional do radar para usuários institucionais; para admins/usuários liberados sem instituição, a página admin do radar (lista de diagnósticos).
+- Proteger a rota do radar com o mesmo hook, redirecionando quem não tem acesso.
 
 ## Detalhes técnicos
 
-- `useUserRole('institution_admin')` e `useUserRole('facilitator')` já estão instanciados no `Header`; basta usar `isInstitutionAdmin || isFacilitator` e os respectivos `loading`.
-- Links continuam construídos com `buildTenantPath(tenantSlug, ...)` para preservar o contexto multi-tenant (`/medcos/...`).
-- Verificação final com Playwright: header como visitante (sem o item), e header autenticado como usuário institucional (com o item apontando para o portal).
+- A função `has_radar_access` é `security definer` com `search_path = public`, evitando recursão de RLS.
+- Papéis continuam em `user_roles`; a nova tabela apenas complementa com exceções pontuais, sem armazenar papéis.
+- A página pública `/radar-institucional` permanece inalterada.
