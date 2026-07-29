@@ -300,17 +300,17 @@ const AppWithShortcuts = () => {
       <Route 
         path="/portal-institucional/radar" 
         element={
-          <ProtectedRoute requiredRole="institution_admin">
+          <RadarProtectedRoute>
             <InstitutionRadar />
-          </ProtectedRoute>
+          </RadarProtectedRoute>
         } 
       />
       <Route 
         path="/medcos/portal-institucional/radar" 
         element={
-          <ProtectedRoute requiredRole="institution_admin">
+          <RadarProtectedRoute>
             <InstitutionRadar />
-          </ProtectedRoute>
+          </RadarProtectedRoute>
         } 
       />
       
