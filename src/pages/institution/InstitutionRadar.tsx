@@ -37,6 +37,35 @@ export default function InstitutionRadar() {
     );
   }
 
+  if (!institutionId) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto py-10 px-4">
+          <Card className="border-dashed max-w-2xl mx-auto">
+            <CardContent className="py-16 text-center space-y-3">
+              <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                <RadarIcon className="h-8 w-8" />
+              </div>
+              <h3 className="text-xl font-semibold">Sua conta ainda não está vinculada a uma instituição</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Você tem acesso ao Radar Institucional, mas o diagnóstico precisa estar ligado a uma instituição.
+                Você pode preencher o radar aberto enquanto o vínculo é criado.
+              </p>
+              <Button asChild size="lg" className="mt-2">
+                <Link to="/radar-institucional">
+                  <PlusCircle className="h-4 w-4 mr-2" /> Preencher o Radar
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
