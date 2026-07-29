@@ -19,7 +19,8 @@ import {
   Video,
   Database,
   Brain,
-  Sparkles
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react';
 import {
   Sidebar,
