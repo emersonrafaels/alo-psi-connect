@@ -13,9 +13,10 @@ import { Input } from "@/components/ui/input";
 import { useBuddyPortrait, type BuddyPortrait } from "@/hooks/useBuddy";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Loader2, Save, Heart, Sparkles, Compass, Anchor, Shield, MessageCircle,
-  Check, ChevronRight, ChevronLeft,
+  Loader2, Save, Sparkles, Compass, Anchor, Shield, MessageCircle,
+  Check, ChevronRight, ChevronLeft, NotebookPen,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const IMPROVE = ["Autoconfiança", "Organização", "Relacionamentos", "Foco", "Ansiedade", "Procrastinação", "Autoestima", "Sono"];
@@ -25,13 +26,6 @@ const STRENGTHS = ["Escuta", "Resiliência", "Empatia", "Curiosidade", "Coragem"
 const SELFCARE = ["Meditar", "Caminhar", "Ler", "Banho quente", "Diário", "Respiração", "Música", "Yoga"];
 const HOBBIES = ["Ler", "Cozinhar", "Correr", "Games", "Desenhar", "Cantar", "Dançar", "Jardinagem"];
 const AVOID = ["Multidões", "Conflitos", "Redes sociais", "Notícias", "Discussões políticas", "Silêncio total"];
-const MOODS = [
-  { key: "muito_bem", label: "Muito bem", emoji: "😄" },
-  { key: "bem", label: "Bem", emoji: "🙂" },
-  { key: "medio", label: "Mais ou menos", emoji: "😐" },
-  { key: "mal", label: "Mal", emoji: "🙁" },
-  { key: "muito_mal", label: "Muito mal", emoji: "😢" },
-];
 const TONES = [
   { key: "acolhedor", label: "Acolhedor", emoji: "🤗" },
   { key: "direto", label: "Direto", emoji: "🎯" },
@@ -40,7 +34,7 @@ const TONES = [
 ];
 
 const SECTIONS = [
-  { id: "agora", label: "Agora", icon: Heart, tip: "Não precisa ser perfeito. Só honesto." },
+  
   { id: "essencia", label: "Essência", icon: Sparkles, tip: "O que te define quando ninguém está olhando?" },
   { id: "momento", label: "Momento", icon: Compass, tip: "Contar o que ocupa a mente já é meio caminho." },
   { id: "sustenta", label: "Sustenta", icon: Anchor, tip: "Reconheça o que te mantém de pé." },
@@ -54,7 +48,7 @@ export default function BuddyPortraitPage() {
   const { data, isLoading, save, patientId } = useBuddyPortrait();
   const { toast } = useToast();
   const [form, setForm] = useState<Partial<BuddyPortrait>>({});
-  const [section, setSection] = useState<SectionId>("agora");
+  const [section, setSection] = useState<SectionId>("essencia");
 
   useEffect(() => { if (data) setForm(data); }, [data]);
 
@@ -97,6 +91,17 @@ export default function BuddyPortraitPage() {
       title="Seu retrato para o Buddy"
       description="Quanto mais eu te conheço, melhor eu cuido. Responda digitando ou falando — no seu ritmo."
     >
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-3 sm:p-4">
+        <p className="text-xs sm:text-sm text-muted-foreground [overflow-wrap:anywhere]">
+          Humor, sono e energia vêm do seu Diário Emocional.
+        </p>
+        <Button asChild variant="outline" size="sm" className="rounded-full">
+          <Link to="/diario-emocional">
+            <NotebookPen className="h-4 w-4 mr-2" /> Ir para o diário
+          </Link>
+        </Button>
+      </div>
+
       <ProgressHeader progress={progress} />
 
       <div className="grid min-w-0 max-w-full gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
@@ -105,9 +110,6 @@ export default function BuddyPortraitPage() {
           <SectionStepper current={section} onChange={setSection} progress={progress} />
 
           <div key={section} className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-5">
-            {section === "agora" && (
-              <SectionAgora form={form} set={set} appendText={appendText} setAudio={setAudio} />
-            )}
             {section === "essencia" && (
               <SectionEssencia form={form} set={set} />
             )}
@@ -163,36 +165,6 @@ export default function BuddyPortraitPage() {
 
 /* ---------- Sections ---------- */
 
-function SectionAgora({ form, set, appendText, setAudio }: any) {
-  return (
-    <>
-      <SectionHeader title="Como você está agora?" subtitle="Um retrato do seu momento presente." />
-      <Card>
-        <CardHeader><CardTitle className="text-base">Humor de hoje</CardTitle></CardHeader>
-        <CardContent className="space-y-5">
-          <div className="flex flex-wrap gap-2">
-            {MOODS.map((m) => (
-              <MoodChip key={m.key} active={form.current_mood === m.key} onClick={() => set("current_mood", m.key)} emoji={m.emoji} label={m.label} />
-            ))}
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <ScaleRow label="Ansiedade" value={form.anxiety ?? 0} onChange={(v) => set("anxiety", v)} colorClass="from-orange-400 to-red-500" />
-            <ScaleRow label="Tristeza" value={form.sadness ?? 0} onChange={(v) => set("sadness", v)} colorClass="from-blue-400 to-indigo-500" />
-            <ScaleRow label="Motivação" value={form.motivation ?? 5} onChange={(v) => set("motivation", v)} colorClass="from-green-400 to-emerald-500" />
-            <ScaleRow label="Energia" value={form.energy_level ?? 5} onChange={(v) => set("energy_level", v)} colorClass="from-amber-400 to-yellow-500" />
-            <ScaleRow label="Qualidade do sono" value={form.sleep_quality ?? 5} onChange={(v) => set("sleep_quality", v)} colorClass="from-purple-400 to-indigo-500" />
-            <ScaleRow label="Nível de estresse" value={form.stress_level ?? 5} onChange={(v) => set("stress_level", v)} colorClass="from-rose-400 to-pink-500" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <QuestionCard title="O que tem ocupado sua mente?" hint="Solte o que está pensando — sem filtros.">
-        <Textarea value={form.mind_on ?? ""} onChange={(e) => set("mind_on", e.target.value)} rows={4} maxLength={800} />
-        <BuddyAudioAnswer fieldKey="mind_on" onTranscribed={(t) => appendText("mind_on", t)} onAudioUrl={(u) => setAudio("mind_on", u)} />
-      </QuestionCard>
-    </>
-  );
-}
 
 function SectionEssencia({ form, set }: any) {
   return (
@@ -399,14 +371,6 @@ function SectionStepper({ current, onChange, progress }: { current: SectionId; o
 
 function computeProgress(f: Partial<BuddyPortrait>): number {
   const checks: boolean[] = [
-    !!f.current_mood,
-    (f.anxiety ?? null) !== null,
-    (f.sadness ?? null) !== null,
-    (f.motivation ?? null) !== null,
-    (f.energy_level ?? null) !== null,
-    (f.sleep_quality ?? null) !== null,
-    (f.stress_level ?? null) !== null,
-    !!f.mind_on,
     (f.values_list ?? []).length > 0,
     (f.strengths_self ?? []).length > 0,
     (f.three_words ?? []).length > 0,

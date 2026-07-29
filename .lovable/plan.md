@@ -1,12 +1,13 @@
 ## Objetivo
-Tirar "Radar Institucional" da barra de navegação e colocá-lo no menu suspenso que abre ao clicar no nome do usuário.
+Remover a etapa "Agora" do retrato do Buddy e direcionar o usuário ao Diário Emocional para registrar humor e escalas.
 
-## Mudanças (apenas `src/components/ui/header.tsx`)
-1. Remover o item condicional `Radar Institucional` da lista de navegação (usada tanto no desktop quanto no menu mobile), mantendo o cálculo de `radarHref` e o hook `useRadarAccess`.
-2. Adicionar no `DropdownMenuContent` do usuário, para quem tem `hasRadarAccess`, um `DropdownMenuItem` "Radar Institucional" com ícone de radar, navegando para o mesmo `radarHref` (admin → `/admin/radar-institucional`; demais → portal institucional).
-   - Posicionar logo após "Portal Institucional" para agrupar itens institucionais.
-3. No menu mobile (usuário logado), garantir que o mesmo item apareça na seção de conta, já que ele sai da lista de navegação.
+## Mudanças (src/pages/buddy/BuddyPortrait.tsx)
+1. Remover `"agora"` da lista `SECTIONS` — o stepper passa a começar em "Essência".
+2. Remover o componente `SectionAgora` e sua renderização condicional.
+3. Remover as constantes `MOODS` e o helper `MoodChip` para humor (mantendo o uso em "Buddy" para o tom preferido).
+4. Ajustar `computeProgress` para não contar mais: `current_mood`, `anxiety`, `sadness`, `motivation`, `energy_level`, `sleep_quality`, `stress_level`, `mind_on` — assim o percentual reflete só o que ainda é pedido.
+5. Adicionar, no topo do retrato, um aviso curto: "Humor, sono e energia vêm do seu Diário Emocional" com link para `/diario-emocional` (rota confirmada antes da edição).
 
-## Observações
-- Regras de acesso permanecem inalteradas (`useRadarAccess` / `has_radar_access`).
-- A página pública `/radar-institucional` continua acessível por link direto.
+## Notas técnicas
+- Nenhuma mudança de banco: as colunas continuam existindo em `buddy_portraits` e os valores já salvos permanecem intactos e disponíveis para a IA.
+- O `ScaleRow` continua em uso na seção "Limites" (facilidade em pedir ajuda), então permanece.
