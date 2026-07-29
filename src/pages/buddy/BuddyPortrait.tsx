@@ -13,9 +13,10 @@ import { Input } from "@/components/ui/input";
 import { useBuddyPortrait, type BuddyPortrait } from "@/hooks/useBuddy";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Loader2, Save, Heart, Sparkles, Compass, Anchor, Shield, MessageCircle,
-  Check, ChevronRight, ChevronLeft,
+  Loader2, Save, Sparkles, Compass, Anchor, Shield, MessageCircle,
+  Check, ChevronRight, ChevronLeft, NotebookPen,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const IMPROVE = ["Autoconfiança", "Organização", "Relacionamentos", "Foco", "Ansiedade", "Procrastinação", "Autoestima", "Sono"];
