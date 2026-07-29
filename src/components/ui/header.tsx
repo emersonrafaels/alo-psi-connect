@@ -178,6 +178,12 @@ const Header = () => {
                     Meus Agendamentos
                   </DropdownMenuItem>
                 )}
+                  {hasRadarAccess && (
+                    <DropdownMenuItem onClick={() => navigate(radarHref)}>
+                      <Radar className="h-4 w-4 mr-2" />
+                      Radar Institucional
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/meus-encontros'))}>
                     <Users className="h-4 w-4 mr-2" />
                     {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
