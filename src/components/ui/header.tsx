@@ -316,6 +316,16 @@ const Header = () => {
                       Meus Agendamentos
                     </Link>
                   )}
+                  {hasRadarAccess && (
+                    <Link
+                      to={radarHref}
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Radar className="h-5 w-5 opacity-70" />
+                      Radar Institucional
+                    </Link>
+                  )}
                   <Link
                     to={buildTenantPath(tenantSlug, '/meus-encontros')}
                     className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
