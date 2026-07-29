@@ -111,7 +111,9 @@ import PraticaConcluida from "./pages/praticas/PraticaConcluida";
 import PraticasAdmin from "@/pages/admin/PraticasAdmin";
 import RadarInstitutional from "@/pages/admin/RadarInstitutional";
 import RadarInstitutionalDetail from "@/pages/admin/RadarInstitutionalDetail";
+import RadarAccess from "@/pages/admin/RadarAccess";
 import InstitutionRadar from "@/pages/institution/InstitutionRadar";
+import { RadarProtectedRoute } from "@/components/RadarProtectedRoute";
 import PublicRadar from "@/pages/public/PublicRadar";
 import PublicRadarResult from "@/pages/public/PublicRadarResult";
 
