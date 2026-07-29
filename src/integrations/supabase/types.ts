@@ -3680,6 +3680,33 @@ export type Database = {
           },
         ]
       }
+      radar_access_grants: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          note: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_filters: {
         Row: {
           created_at: string | null
@@ -4952,6 +4979,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      has_radar_access: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

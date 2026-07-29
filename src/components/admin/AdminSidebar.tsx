@@ -19,7 +19,8 @@ import {
   Video,
   Database,
   Brain,
-  Sparkles
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react';
 import {
   Sidebar,
@@ -85,6 +86,12 @@ const adminMenuGroups = [
         title: 'Radar Institucional',
         url: '/admin/radar-institucional',
         icon: Sparkles,
+        requiredRole: 'admin' as const
+      },
+      {
+        title: 'Acesso ao Radar',
+        url: '/admin/acesso-radar',
+        icon: ShieldCheck,
         requiredRole: 'admin' as const
       },
       {
