@@ -42,15 +42,18 @@ const Header = () => {
 
   const modulesEnabled = tenant?.modules_enabled;
 
-  // Radar Institucional: visível apenas para usuários institucionais
+  // Radar Institucional: instituições, administradores do site e usuários liberados via admin
   const isInstitutionalUser =
     !institutionAdminLoading && !facilitatorLoading && (!!isInstitutionAdmin || !!isFacilitator);
+  const radarHref = isInstitutionalUser
+    ? buildTenantPath(tenantSlug, '/portal-institucional/radar')
+    : '/admin/radar-institucional';
 
   const allNavigation = [
     { name: "Home", href: buildTenantPath(tenantSlug, '/'), module: null },
     { name: "Sobre", href: buildTenantPath(tenantSlug, '/sobre'), module: 'about' as const },
-    ...(isInstitutionalUser
-      ? [{ name: "Radar Institucional", href: buildTenantPath(tenantSlug, '/portal-institucional/radar'), module: null }]
+    ...(hasRadarAccess
+      ? [{ name: "Radar Institucional", href: radarHref, module: null }]
       : []),
     { name: "Profissionais", href: buildTenantPath(tenantSlug, '/profissionais'), module: 'professionals' as const },
     { name: "Práticas", href: buildTenantPath(tenantSlug, '/praticas'), module: null },
