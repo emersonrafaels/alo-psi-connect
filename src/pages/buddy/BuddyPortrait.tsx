@@ -33,7 +33,7 @@ const TONES = [
 ];
 
 const SECTIONS = [
-  { id: "agora", label: "Agora", icon: Heart, tip: "Não precisa ser perfeito. Só honesto." },
+  
   { id: "essencia", label: "Essência", icon: Sparkles, tip: "O que te define quando ninguém está olhando?" },
   { id: "momento", label: "Momento", icon: Compass, tip: "Contar o que ocupa a mente já é meio caminho." },
   { id: "sustenta", label: "Sustenta", icon: Anchor, tip: "Reconheça o que te mantém de pé." },
