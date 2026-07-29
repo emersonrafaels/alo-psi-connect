@@ -90,6 +90,17 @@ export default function BuddyPortraitPage() {
       title="Seu retrato para o Buddy"
       description="Quanto mais eu te conheço, melhor eu cuido. Responda digitando ou falando — no seu ritmo."
     >
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-3 sm:p-4">
+        <p className="text-xs sm:text-sm text-muted-foreground [overflow-wrap:anywhere]">
+          Humor, sono e energia vêm do seu Diário Emocional.
+        </p>
+        <Button asChild variant="outline" size="sm" className="rounded-full">
+          <Link to="/diario-emocional">
+            <NotebookPen className="h-4 w-4 mr-2" /> Ir para o diário
+          </Link>
+        </Button>
+      </div>
+
       <ProgressHeader progress={progress} />
 
       <div className="grid min-w-0 max-w-full gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
