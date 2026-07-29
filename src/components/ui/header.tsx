@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList, HeartPulse } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList, HeartPulse, Radar } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -56,9 +56,6 @@ const Header = () => {
   const allNavigation = [
     { name: "Home", href: buildTenantPath(tenantSlug, '/'), module: null },
     { name: "Sobre", href: buildTenantPath(tenantSlug, '/sobre'), module: 'about' as const },
-    ...(hasRadarAccess
-      ? [{ name: "Radar Institucional", href: radarHref, module: null }]
-      : []),
     { name: "Profissionais", href: buildTenantPath(tenantSlug, '/profissionais'), module: 'professionals' as const },
     { name: "Práticas", href: buildTenantPath(tenantSlug, '/praticas'), module: null },
     { name: "Encontros", href: buildTenantPath(tenantSlug, '/encontros'), module: 'group_sessions' as const },
@@ -181,6 +178,12 @@ const Header = () => {
                     Meus Agendamentos
                   </DropdownMenuItem>
                 )}
+                  {hasRadarAccess && (
+                    <DropdownMenuItem onClick={() => navigate(radarHref)}>
+                      <Radar className="h-4 w-4 mr-2" />
+                      Radar Institucional
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/meus-encontros'))}>
                     <Users className="h-4 w-4 mr-2" />
                     {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
@@ -311,6 +314,16 @@ const Header = () => {
                     >
                       <Calendar className="h-5 w-5 opacity-70" />
                       Meus Agendamentos
+                    </Link>
+                  )}
+                  {hasRadarAccess && (
+                    <Link
+                      to={radarHref}
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Radar className="h-5 w-5 opacity-70" />
+                      Radar Institucional
                     </Link>
                   )}
                   <Link
