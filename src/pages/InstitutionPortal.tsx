@@ -164,6 +164,12 @@ export default function InstitutionPortal() {
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-3xl md:text-4xl font-bold">Portal Institucional</h1>
                 <div className="flex items-center gap-2">
+                  <Button asChild size="sm" variant="outline" className="gap-2">
+                    <Link to={buildTenantPath(tenant?.slug, '/portal-institucional/radar')}>
+                      <RadarIcon className="h-4 w-4" />
+                      Radar Institucional
+                    </Link>
+                  </Button>
                   <KeyboardShortcutsPopover />
                   <Button
                     variant="ghost"
