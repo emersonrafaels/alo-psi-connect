@@ -9,6 +9,7 @@ import Footer from "@/components/ui/footer";
 import BuddyCharacter from "@/components/hero/BuddyCharacter";
 import { BuddyDailyBrief } from "@/components/buddy/BuddyDailyBrief";
 import buddyVideo from "../../videos/buddy2.mp4";
+import buddyAME from "../../videos/buddyAME.mp4";
 import {
   Heart, Clock, Users, Brain, EyeOff, Bot, BookOpen, Sparkles,
   ClipboardCheck, LineChart, LayoutDashboard, FileText, Stethoscope,
@@ -173,7 +174,7 @@ const HomeRedeBemEstar = () => {
                   <p className="text-xs sm:text-sm font-medium italic leading-snug"
                      style={{ color: "var(--rbe-on-surface)" }}>
                     "Hoje minha saúde mental melhorou muito com a Rede Bem-Estar."
-                   </p>
+                  </p>
                 </div>
               </div>
             </div>
@@ -636,7 +637,17 @@ const HomeRedeBemEstar = () => {
                      style={{ background: "var(--rbe-tertiary-fixed)" }} />
                 <div className="relative w-full h-full rounded-full overflow-hidden shadow-2xl"
                      style={{ border: "8px solid var(--rbe-surface-container-lowest)" }}>
-                  <img src={ameImg} alt="Metodologia AME — Cuidado humano" className="w-full h-full object-cover" loading="lazy" width={896} height={896} />
+                                            {/* VIDEO COMO BACKGROUND */}
+                  <video
+                    src={buddyAME}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover"
+                    width={896}
+                    height={896}
+                  />
                 </div>
               </div>
             </div>
