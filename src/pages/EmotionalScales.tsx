@@ -49,7 +49,6 @@ const EmotionalScales = () => {
   const renderScaleCard = (scale: EmotionalScale) => {
     const last = latestMap?.[scale.code];
     const avail = getAvailability(scale.frequency_days, last?.taken_at);
-    const isNew = scale.code === "MHCSF";
     const band = last ? severityBand(scale.code, last.severity) : null;
 
     return (
@@ -59,11 +58,6 @@ const EmotionalScales = () => {
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <CardTitle className="text-lg">{scale.name}</CardTitle>
-                {isNew && (
-                  <Badge className="bg-primary/15 text-primary border-0 text-[10px] uppercase tracking-wide">
-                    Novo
-                  </Badge>
-                )}
               </div>
               <CardDescription>{scale.short_description}</CardDescription>
             </div>
