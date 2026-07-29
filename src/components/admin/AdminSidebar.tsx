@@ -88,6 +88,12 @@ const adminMenuGroups = [
         requiredRole: 'admin' as const
       },
       {
+        title: 'Acesso ao Radar',
+        url: '/admin/acesso-radar',
+        icon: ShieldCheck,
+        requiredRole: 'admin' as const
+      },
+      {
         title: 'Importação em Massa',
         url: '/admin/bulk-import',
         icon: FileSpreadsheet,
