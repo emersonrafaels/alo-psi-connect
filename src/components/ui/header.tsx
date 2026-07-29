@@ -49,7 +49,9 @@ const Header = () => {
     !institutionAdminLoading && !facilitatorLoading && (!!isInstitutionAdmin || !!isFacilitator);
   const radarHref = isInstitutionalUser
     ? buildTenantPath(tenantSlug, '/portal-institucional/radar')
-    : '/admin/radar-institucional';
+    : isAdmin
+      ? '/admin/radar-institucional'
+      : buildTenantPath(tenantSlug, '/portal-institucional/radar');
 
   const allNavigation = [
     { name: "Home", href: buildTenantPath(tenantSlug, '/'), module: null },
