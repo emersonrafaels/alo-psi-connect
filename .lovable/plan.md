@@ -1,37 +1,28 @@
 ## Objetivo
 
-Ao concluir o preenchimento de um Radar Institucional (público ou vinculado), enviar um email para todos os administradores do site com um resumo do diagnóstico e link direto para visualização.
+O item "Radar Institucional" deixa de ser exibido para visitantes e pacientes. Ele passa a aparecer no menu apenas para usuários institucionais, e também dentro do Portal Institucional. A página em si continua acessível por link direto (para prospecção de instituições ainda não cadastradas).
 
-## O que será criado
+## O que muda
 
-**Nova Edge Function `notify-radar-submitted`** (segue o padrão de `notify-institution-action`, usando Resend + `noreply@redebemestar.com.br`).
+**1. Header (`src/components/ui/header.tsx`)**
+- O item "Radar Institucional" passa a ser inserido condicionalmente na lista de navegação, apenas quando o usuário tem papel institucional (`institution_admin` ou `facilitator`) — ambos já são carregados no componente via `useUserRole`.
+- Enquanto os papéis estiverem carregando, o item não é exibido (evita "piscar" para visitantes).
+- Mesma condição aplicada ao menu mobile, que reutiliza a mesma lista `navigation`.
+- Para usuários institucionais, o link aponta para o radar dentro do portal (`/portal-institucional/radar`), que é a versão autenticada e vinculada à instituição.
 
-Entrada: `{ diagnostic_id }`.
+**2. Rodapé (`src/components/ui/footer.tsx`)**
+- Remover as duas entradas de "Radar Institucional" ("Links úteis" e "Navegação"), já que o rodapé é visto por todos os visitantes.
 
-Fluxo:
-1. Buscar o diagnóstico em `institution_radar_diagnostics` (respondente, instituição, `overall_score`, `headline`, top 3 dores, prioridades, `submission_source`, `public_access_token`).
-2. Buscar emails dos administradores via `user_roles` (`role = 'admin'`) + join com `profiles.email`.
-3. Montar email HTML com:
-   - Instituição (nome vinculado ou `submitted_institution_name`) e badge "Pública" / "Vinculada".
-   - Respondente (nome, cargo, email, telefone).
-   - Score geral, headline da leitura estratégica.
-   - Top 3 dores e top 3 prioridades.
-   - **CTA "Ver diagnóstico completo"**:
-     - Vinculado → `https://redebemestar.com.br/admin/radar-institucional/{id}`
-     - Público → `https://redebemestar.com.br/radar-institucional/resultado/{token}` (e também o link admin acima).
-4. Enviar via Resend (loop por destinatário para evitar vazamento de emails no `to`).
+**3. Portal Institucional (`src/pages/InstitutionPortal.tsx`)**
+- Reforçar o acesso: além do card já existente, incluir um ponto de entrada visível e consistente para o Radar (botão/atalho no topo do portal, ao lado das demais ações), levando a `/portal-institucional/radar`.
 
-## Integrações (disparo)
+## O que NÃO muda
 
-- **`supabase/functions/radar-public-submit/index.ts`**: após o `insert` bem-sucedido, invocar `notify-radar-submitted` (fire-and-forget, dentro do try/catch existente).
-- **`supabase/functions/radar-institutional-analyze/index.ts`**: ao finalizar a análise e marcar como `submitted`, invocar `notify-radar-submitted`. Assim o email leva o `headline` já gerado. (Se a análise falhar, o `radar-public-submit` também dispara como fallback com dados brutos.)
-  - Para evitar duplicidade, adicionar uma flag simples: enviar apenas se `notified_at IS NULL`, e setar `notified_at = now()` após o envio.
+- A rota pública `/radar-institucional` e `/radar-institucional/resultado/:token` continuam funcionando por link direto, sem login — apenas deixam de ser divulgadas na navegação.
+- Nenhuma alteração de banco de dados, RLS ou edge functions.
 
-## Alteração no banco
+## Detalhes técnicos
 
-Migration adicionando coluna `notified_at TIMESTAMPTZ` em `institution_radar_diagnostics` para deduplicação de notificações.
-
-## Fora de escopo
-
-- Configuração por-tenant de destinatários (usa admins globais do site).
-- Notificação para o próprio respondente (o fluxo público já mostra o resultado via token).
+- `useUserRole('institution_admin')` e `useUserRole('facilitator')` já estão instanciados no `Header`; basta usar `isInstitutionAdmin || isFacilitator` e os respectivos `loading`.
+- Links continuam construídos com `buildTenantPath(tenantSlug, ...)` para preservar o contexto multi-tenant (`/medcos/...`).
+- Verificação final com Playwright: header como visitante (sem o item), e header autenticado como usuário institucional (com o item apontando para o portal).
