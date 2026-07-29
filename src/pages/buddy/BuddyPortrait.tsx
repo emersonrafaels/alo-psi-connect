@@ -98,9 +98,6 @@ export default function BuddyPortraitPage() {
           <SectionStepper current={section} onChange={setSection} progress={progress} />
 
           <div key={section} className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-5">
-            {section === "agora" && (
-              <SectionAgora form={form} set={set} appendText={appendText} setAudio={setAudio} />
-            )}
             {section === "essencia" && (
               <SectionEssencia form={form} set={set} />
             )}
