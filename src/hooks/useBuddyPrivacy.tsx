@@ -51,7 +51,7 @@ export function useBuddyPrivacy() {
       if (error) throw error;
       return data as any as BuddyPrivacyPreferences;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["buddy", "privacy", user?.id] }),
+    onSuccess: () => invalidateBuddyData(qc),
   });
 
   return { ...query, save };
