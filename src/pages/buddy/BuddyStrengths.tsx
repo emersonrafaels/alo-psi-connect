@@ -77,7 +77,7 @@ export default function BuddyStrengths() {
               <div key={i} className="flex min-w-0 flex-col min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between gap-2 border-b border-border/50 pb-2 last:border-none">
                 <div className="min-w-0">
                   <p className="font-medium text-sm [overflow-wrap:anywhere]">{c.nome}</p>
-                  <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">{c.parentesco}</p>
+                  <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">{relationLabel(c.relacao)}</p>
                 </div>
                 <a href={`tel:${c.telefone}`} className="text-primary text-sm flex min-w-0 items-center gap-1 [overflow-wrap:anywhere]">
                   <Phone className="h-4 w-4 shrink-0" /> <span className="min-w-0">{c.telefone}</span>
@@ -85,11 +85,42 @@ export default function BuddyStrengths() {
               </div>
             )) : (
               <p className="text-sm text-muted-foreground [overflow-wrap:anywhere]">
-                Você ainda não cadastrou contatos de emergência. Adicione no seu perfil.
+                Você ainda não cadastrou contatos de emergência. Cadastre agora para que possamos acionar alguém de confiança se você precisar.
               </p>
             )}
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant={contacts.length ? "outline" : "default"} disabled={!patientId}>
+                    {contacts.length ? <Pencil className="h-4 w-4 mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
+                    {contacts.length ? "Gerenciar contatos" : "Adicionar contatos"}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Contatos de emergência</DialogTitle>
+                    <DialogDescription>
+                      Cadastre até 3 pessoas de confiança. Esses dados ficam no seu perfil.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <EmergencyContactsEditor
+                    patientId={patientId}
+                    onSaved={() => {
+                      qc.invalidateQueries({ queryKey: ["buddy", "emergency", patientId] });
+                      setOpen(false);
+                    }}
+                  />
+                </DialogContent>
+              </Dialog>
+
+              <Link to="/perfil" className="text-xs text-muted-foreground underline hover:text-primary">
+                Editar no meu perfil
+              </Link>
+            </div>
           </CardContent>
         </Card>
+
 
         <Card className="min-w-0">
           <CardHeader className="p-4 sm:p-6"><CardTitle className="text-lg sm:text-2xl leading-tight [overflow-wrap:anywhere]">Canais de ajuda 24h</CardTitle></CardHeader>
