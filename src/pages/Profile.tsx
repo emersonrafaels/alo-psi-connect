@@ -569,72 +569,13 @@ const Profile = () => {
                 {/* Contatos de Emergência */}
                 <Card>
                   <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2"><Phone className="h-5 w-5" />Contatos de Emergência</CardTitle>
-                      {emergencyContacts.length < 3 && (
-                        <Button variant="outline" size="sm" onClick={addContact} className="flex items-center gap-1">
-                          <Plus className="h-4 w-4" />Adicionar
-                        </Button>
-                      )}
-                    </div>
+                    <CardTitle className="flex items-center gap-2"><Phone className="h-5 w-5" />Contatos de Emergência</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {emergencyContacts.length === 0 ? (
-                      <div className="text-center py-6 text-muted-foreground">
-                        <Phone className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">Nenhum contato de emergência cadastrado</p>
-                        <Button variant="outline" size="sm" onClick={addContact} className="mt-3">
-                          <Plus className="h-4 w-4 mr-1" />Adicionar contato
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {emergencyContacts.map((contact, index) => (
-                          <div key={index} className="border border-border rounded-lg p-4 space-y-3">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-muted-foreground">Contato {index + 1}</span>
-                              <Button variant="ghost" size="sm" onClick={() => removeContact(index)} className="text-destructive hover:text-destructive h-8 w-8 p-0">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            
-                            <div className="grid gap-3">
-                              <div>
-                                <Label className="text-xs">Nome *</Label>
-                                <Input value={contact.nome} onChange={(e) => updateContact(index, 'nome', e.target.value)} placeholder="Nome do contato" />
-                              </div>
-                              <div>
-                                <Label className="text-xs">Relação *</Label>
-                                <Select value={contact.relacao} onValueChange={(v) => updateContact(index, 'relacao', v)}>
-                                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                                  <SelectContent>
-                                    {relationOptions.map(opt => (
-                                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <Label className="text-xs">Telefone *</Label>
-                                <Input value={contact.telefone} onChange={(e) => updateContact(index, 'telefone', e.target.value)} placeholder="(00) 00000-0000" />
-                              </div>
-                              <div>
-                                <Label className="text-xs">Email</Label>
-                                <Input type="email" value={contact.email} onChange={(e) => updateContact(index, 'email', e.target.value)} placeholder="email@exemplo.com" />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-
-                        <div className="flex justify-end pt-2">
-                          <Button onClick={saveEmergencyContacts} disabled={savingContacts} className="w-full sm:w-auto">
-                            {savingContacts ? 'Salvando...' : 'Salvar Contatos'}
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+                    <EmergencyContactsEditor patientId={patientData?.id} saveLabel="Salvar Contatos" />
                   </CardContent>
                 </Card>
+
               </TabsContent>
 
               <TabsContent value="institution" className="space-y-6 mt-0">
