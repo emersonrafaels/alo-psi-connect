@@ -146,6 +146,7 @@ export const useGroupSessionRegistration = (sessionId?: string) => {
       setLastRegisteredSessionId(sessionId);
       queryClient.invalidateQueries({ queryKey: ['group-session-registration'] });
       queryClient.invalidateQueries({ queryKey: ['user-registrations'] });
+      invalidateBuddyData(queryClient);
       toast({
         title: 'Inscrição confirmada!',
         description: 'Você receberá um email com os detalhes da sessão.',
