@@ -1,6 +1,38 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+
+/** Namespace único de cache do Buddy — tudo abaixo de ["buddy", ...]. */
+export const BUDDY_QUERY_NAMESPACE = "buddy" as const;
+
+export const buddyKeys = {
+  all: [BUDDY_QUERY_NAMESPACE] as const,
+  patientId: (userId?: string | null) => [BUDDY_QUERY_NAMESPACE, "patient-id", userId] as const,
+  portrait: (patientId?: string | null) => [BUDDY_QUERY_NAMESPACE, "portrait", patientId] as const,
+  insight: (patientId?: string | null, periodDays?: number) =>
+    [BUDDY_QUERY_NAMESPACE, "insight", patientId, periodDays] as const,
+  emergency: (patientId?: string | null) => [BUDDY_QUERY_NAMESPACE, "emergency", patientId] as const,
+  journey: (userId?: string | null) => [BUDDY_QUERY_NAMESPACE, "journey", userId] as const,
+  privacy: (userId?: string | null) => [BUDDY_QUERY_NAMESPACE, "privacy", userId] as const,
+};
+
+/** Opções padrão para dados do Buddy que podem mudar fora das telas do Buddy. */
+export const buddyFreshQueryOptions = {
+  staleTime: 0,
+  refetchOnMount: "always",
+} as const;
+
+/** Invalida todo o cache do Buddy — usar após qualquer escrita que afete seus dados. */
+export function invalidateBuddyData(queryClient: QueryClient) {
+  return queryClient.invalidateQueries({ queryKey: buddyKeys.all });
+}
+
+/** Hook utilitário para atualizar manualmente os dados do Buddy. */
+export function useBuddyRefresh() {
+  const qc = useQueryClient();
+  return useCallback(() => invalidateBuddyData(qc), [qc]);
+}
 
 export type BuddyPortrait = {
   id: string;
@@ -61,7 +93,7 @@ export type BuddyInsight = {
 export function useCurrentPatientId() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["buddy", "patient-id", user?.id],
+    queryKey: buddyKeys.patientId(user?.id),
     enabled: !!user?.id,
     queryFn: async () => {
       const { data: profile } = await supabase
@@ -71,7 +103,7 @@ export function useCurrentPatientId() {
         .from("pacientes").select("id").eq("profile_id", profile.id).maybeSingle();
       return pac?.id ?? null;
     },
-    staleTime: 5 * 60 * 1000,
+    ...buddyFreshQueryOptions,
   });
 }
 
@@ -80,7 +112,7 @@ export function useBuddyPortrait() {
   const qc = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["buddy", "portrait", patientId],
+    queryKey: buddyKeys.portrait(patientId),
     enabled: !!patientId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -89,7 +121,7 @@ export function useBuddyPortrait() {
       if (error && error.code !== "PGRST116") throw error;
       return (data as any as BuddyPortrait) ?? null;
     },
-    staleTime: 5 * 60 * 1000,
+    ...buddyFreshQueryOptions,
   });
 
   const save = useMutation({
@@ -103,7 +135,7 @@ export function useBuddyPortrait() {
       if (error) throw error;
       return data as any as BuddyPortrait;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["buddy", "portrait", patientId] }),
+    onSuccess: () => invalidateBuddyData(qc),
   });
 
   return { ...query, save, patientId };
@@ -114,7 +146,7 @@ export function useLatestBuddyInsight(periodDays = 30) {
   const qc = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["buddy", "insight", patientId, periodDays],
+    queryKey: buddyKeys.insight(patientId, periodDays),
     enabled: !!patientId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -124,7 +156,7 @@ export function useLatestBuddyInsight(periodDays = 30) {
       if (error && error.code !== "PGRST116") throw error;
       return (data as any as BuddyInsight) ?? null;
     },
-    staleTime: 30 * 60 * 1000,
+    ...buddyFreshQueryOptions,
   });
 
   const regenerate = useMutation({
@@ -135,7 +167,7 @@ export function useLatestBuddyInsight(periodDays = 30) {
       if (error) throw error;
       return data?.insight as BuddyInsight;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["buddy", "insight", patientId] }),
+    onSuccess: () => invalidateBuddyData(qc),
   });
 
   return { ...query, regenerate };

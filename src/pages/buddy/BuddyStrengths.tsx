@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { EmergencyContactsEditor, relationOptions } from "@/components/profile/EmergencyContactsEditor";
-import { useLatestBuddyInsight, useCurrentPatientId } from "@/hooks/useBuddy";
+import { useLatestBuddyInsight, useCurrentPatientId, buddyFreshQueryOptions, buddyKeys, invalidateBuddyData } from "@/hooks/useBuddy";
 import { supabase } from "@/integrations/supabase/client";
 import { Phone, Plus, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -28,7 +28,7 @@ export default function BuddyStrengths() {
   const [open, setOpen] = React.useState(false);
 
   const { data: contacts = [] } = useQuery({
-    queryKey: ["buddy", "emergency", patientId],
+    queryKey: buddyKeys.emergency(patientId),
     enabled: !!patientId,
     queryFn: async () => {
       const { data } = await supabase
@@ -38,6 +38,7 @@ export default function BuddyStrengths() {
         .order("created_at");
       return data ?? [];
     },
+    ...buddyFreshQueryOptions,
   });
 
 
@@ -107,7 +108,7 @@ export default function BuddyStrengths() {
                   <EmergencyContactsEditor
                     patientId={patientId}
                     onSaved={() => {
-                      qc.invalidateQueries({ queryKey: ["buddy", "emergency", patientId] });
+                      invalidateBuddyData(qc);
                       setOpen(false);
                     }}
                   />

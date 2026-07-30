@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { invalidateBuddyData } from '@/hooks/useBuddy';
 import { Phone, Plus, Trash2 } from 'lucide-react';
 
 export interface EmergencyContact {
@@ -42,6 +44,7 @@ interface Props {
 
 export const EmergencyContactsEditor = ({ patientId, onSaved, saveLabel = 'Salvar contatos' }: Props) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -122,6 +125,8 @@ export const EmergencyContactsEditor = ({ patientId, onSaved, saveLabel = 'Salva
 
       toast({ title: 'Contatos salvos', description: 'Contatos de emergência atualizados com sucesso.' });
       await load();
+      // Mantém o Buddy sincronizado mesmo quando o formulário é usado no perfil
+      await invalidateBuddyData(queryClient);
       onSaved?.();
     } catch (error: any) {
       console.error('[EmergencyContactsEditor] Erro ao salvar contatos:', error);

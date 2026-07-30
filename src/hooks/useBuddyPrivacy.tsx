@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { buddyFreshQueryOptions, buddyKeys, invalidateBuddyData } from "@/hooks/useBuddy";
 
 export type SharingChoice = "psicologo" | "psiquiatra" | "ambos" | "only_me";
 
@@ -17,7 +18,7 @@ export function useBuddyPrivacy() {
   const qc = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["buddy", "privacy", user?.id],
+    queryKey: buddyKeys.privacy(user?.id),
     enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -28,7 +29,7 @@ export function useBuddyPrivacy() {
       if (error && error.code !== "PGRST116") throw error;
       return (data as any as BuddyPrivacyPreferences) ?? null;
     },
-    staleTime: 60 * 1000,
+    ...buddyFreshQueryOptions,
   });
 
   const save = useMutation({
@@ -50,7 +51,7 @@ export function useBuddyPrivacy() {
       if (error) throw error;
       return data as any as BuddyPrivacyPreferences;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["buddy", "privacy", user?.id] }),
+    onSuccess: () => invalidateBuddyData(qc),
   });
 
   return { ...query, save };
@@ -66,8 +67,8 @@ export function useRemoveBuddyPortraitField() {
         .eq("patient_id", patientId);
       if (error) throw error;
     },
-    onSuccess: (_r, vars) => {
-      qc.invalidateQueries({ queryKey: ["buddy", "portrait", vars.patientId] });
+    onSuccess: () => {
+      invalidateBuddyData(qc);
     },
   });
 }

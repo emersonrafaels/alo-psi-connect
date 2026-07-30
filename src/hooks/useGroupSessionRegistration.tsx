@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { invalidateBuddyData } from '@/hooks/useBuddy';
 
 export interface GroupSessionRegistration {
   id: string;
@@ -145,6 +146,7 @@ export const useGroupSessionRegistration = (sessionId?: string) => {
       setLastRegisteredSessionId(sessionId);
       queryClient.invalidateQueries({ queryKey: ['group-session-registration'] });
       queryClient.invalidateQueries({ queryKey: ['user-registrations'] });
+      invalidateBuddyData(queryClient);
       toast({
         title: 'Inscrição confirmada!',
         description: 'Você receberá um email com os detalhes da sessão.',
@@ -235,6 +237,7 @@ export const useGroupSessionRegistration = (sessionId?: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['group-session-registration'] });
       queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
+      invalidateBuddyData(queryClient);
       toast({
         title: 'Inscrição cancelada',
         description: 'Sua inscrição foi cancelada com sucesso.',

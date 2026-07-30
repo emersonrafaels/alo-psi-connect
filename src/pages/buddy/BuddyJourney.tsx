@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { buddyFreshQueryOptions, buddyKeys } from "@/hooks/useBuddy";
 import { BookOpen, ClipboardList, Sparkles, Users } from "lucide-react";
 
 type TimelineItem = { date: string; type: string; title: string; description?: string };
@@ -14,7 +15,7 @@ export default function BuddyJourney() {
   const { user } = useAuth();
 
   const { data: items = [], isLoading } = useQuery({
-    queryKey: ["buddy", "journey", user?.id],
+    queryKey: buddyKeys.journey(user?.id),
     enabled: !!user?.id,
     queryFn: async () => {
       const since = new Date(Date.now() - 60 * 86400_000).toISOString();
@@ -44,6 +45,7 @@ export default function BuddyJourney() {
       }));
       return list.sort((a, b) => b.date.localeCompare(a.date));
     },
+    ...buddyFreshQueryOptions,
   });
 
   return (
