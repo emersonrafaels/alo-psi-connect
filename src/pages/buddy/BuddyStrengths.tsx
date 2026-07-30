@@ -1,11 +1,15 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BuddyLayout } from "@/components/buddy/BuddyLayout";
 import { BuddyMascot } from "@/components/buddy/BuddyMascot";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { EmergencyContactsEditor, relationOptions } from "@/components/profile/EmergencyContactsEditor";
 import { useLatestBuddyInsight, useCurrentPatientId } from "@/hooks/useBuddy";
 import { supabase } from "@/integrations/supabase/client";
-import { Phone } from "lucide-react";
+import { Phone, Plus, Pencil } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const RESOURCES = [
   { title: "CVV — Centro de Valorização da Vida", desc: "Apoio emocional 24h por telefone, chat e e-mail.", contact: "188" },
@@ -14,9 +18,14 @@ const RESOURCES = [
   { title: "Rede Bem-Estar", desc: "Agende com um profissional aqui na plataforma.", link: "/profissionais" },
 ];
 
+const relationLabel = (value?: string | null) =>
+  relationOptions.find((o) => o.value === value || o.label === value)?.label ?? value ?? "";
+
 export default function BuddyStrengths() {
   const { data: insight } = useLatestBuddyInsight(30);
   const { data: patientId } = useCurrentPatientId();
+  const qc = useQueryClient();
+  const [open, setOpen] = React.useState(false);
 
   const { data: contacts = [] } = useQuery({
     queryKey: ["buddy", "emergency", patientId],
@@ -24,11 +33,13 @@ export default function BuddyStrengths() {
     queryFn: async () => {
       const { data } = await supabase
         .from("patient_emergency_contacts")
-        .select("nome, telefone, parentesco")
-        .eq("patient_id", patientId!);
+        .select("nome, telefone, relacao")
+        .eq("patient_id", patientId!)
+        .order("created_at");
       return data ?? [];
     },
   });
+
 
   return (
     <BuddyLayout
