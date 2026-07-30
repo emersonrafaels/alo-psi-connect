@@ -14,7 +14,7 @@ export default function BuddyJourney() {
   const { user } = useAuth();
 
   const { data: items = [], isLoading } = useQuery({
-    queryKey: ["buddy", "journey", user?.id],
+    queryKey: buddyKeys.journey(user?.id),
     enabled: !!user?.id,
     queryFn: async () => {
       const since = new Date(Date.now() - 60 * 86400_000).toISOString();
