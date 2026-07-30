@@ -237,6 +237,7 @@ export const useGroupSessionRegistration = (sessionId?: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['group-session-registration'] });
       queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
+      invalidateBuddyData(queryClient);
       toast({
         title: 'Inscrição cancelada',
         description: 'Sua inscrição foi cancelada com sucesso.',
