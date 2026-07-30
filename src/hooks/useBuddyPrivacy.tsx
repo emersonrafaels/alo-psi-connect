@@ -18,7 +18,7 @@ export function useBuddyPrivacy() {
   const qc = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["buddy", "privacy", user?.id],
+    queryKey: buddyKeys.privacy(user?.id),
     enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,7 +29,7 @@ export function useBuddyPrivacy() {
       if (error && error.code !== "PGRST116") throw error;
       return (data as any as BuddyPrivacyPreferences) ?? null;
     },
-    staleTime: 60 * 1000,
+    ...buddyFreshQueryOptions,
   });
 
   const save = useMutation({
