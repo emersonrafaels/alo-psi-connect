@@ -1,8 +1,10 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { NavLink } from "react-router-dom";
 import Header from "@/components/ui/header";
-import { Heart, Sparkles, Compass, LineChart, TrendingUp, Shield, Lock } from "lucide-react";
+import { Heart, Sparkles, Compass, LineChart, TrendingUp, Shield, Lock, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useBuddyRefresh } from "@/hooks/useBuddy";
 
 function DragScrollNav({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLElement | null>(null);
