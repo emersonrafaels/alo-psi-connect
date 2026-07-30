@@ -44,6 +44,7 @@ interface Props {
 
 export const EmergencyContactsEditor = ({ patientId, onSaved, saveLabel = 'Salvar contatos' }: Props) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
