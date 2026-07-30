@@ -167,7 +167,7 @@ export function useLatestBuddyInsight(periodDays = 30) {
       if (error) throw error;
       return data?.insight as BuddyInsight;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["buddy", "insight", patientId] }),
+    onSuccess: () => invalidateBuddyData(qc),
   });
 
   return { ...query, regenerate };
