@@ -93,7 +93,7 @@ export type BuddyInsight = {
 export function useCurrentPatientId() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["buddy", "patient-id", user?.id],
+    queryKey: buddyKeys.patientId(user?.id),
     enabled: !!user?.id,
     queryFn: async () => {
       const { data: profile } = await supabase
@@ -103,7 +103,7 @@ export function useCurrentPatientId() {
         .from("pacientes").select("id").eq("profile_id", profile.id).maybeSingle();
       return pac?.id ?? null;
     },
-    staleTime: 5 * 60 * 1000,
+    ...buddyFreshQueryOptions,
   });
 }
 
