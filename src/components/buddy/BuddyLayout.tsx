@@ -174,9 +174,21 @@ export function BuddyLayout({ children, title, description }: { children: React.
           </nav>
         </aside>
         <main className="min-w-0 max-w-full w-full pb-20 sm:pb-0">
-          <header className="mb-4 sm:mb-6 min-w-0 max-w-full">
-            <h1 className="max-w-full whitespace-normal text-lg min-[380px]:text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground leading-tight [overflow-wrap:anywhere] hyphens-auto">{title}</h1>
-            {description && <p className="mt-2 max-w-full sm:max-w-2xl text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed [overflow-wrap:anywhere]">{description}</p>}
+          <header className="mb-4 sm:mb-6 min-w-0 max-w-full flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="max-w-full whitespace-normal text-lg min-[380px]:text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground leading-tight [overflow-wrap:anywhere] hyphens-auto">{title}</h1>
+              {description && <p className="mt-2 max-w-full sm:max-w-2xl text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed [overflow-wrap:anywhere]">{description}</p>}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="shrink-0 self-start"
+            >
+              <RefreshCw className={cn("h-4 w-4 mr-1.5", refreshing && "animate-spin")} />
+              Atualizar
+            </Button>
           </header>
           {children}
         </main>
