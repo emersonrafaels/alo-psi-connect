@@ -102,6 +102,18 @@ const nav = [
 ];
 
 export function BuddyLayout({ children, title, description }: { children: React.ReactNode; title: string; description?: string }) {
+  const refreshBuddy = useBuddyRefresh();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshBuddy();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshBuddy]);
+
   return (
     <div className="min-h-screen w-full max-w-full bg-gradient-to-br from-background via-primary/5 to-accent/10">
       <Header />
