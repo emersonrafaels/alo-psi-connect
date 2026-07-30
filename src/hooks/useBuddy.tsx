@@ -135,7 +135,7 @@ export function useBuddyPortrait() {
       if (error) throw error;
       return data as any as BuddyPortrait;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["buddy", "portrait", patientId] }),
+    onSuccess: () => invalidateBuddyData(qc),
   });
 
   return { ...query, save, patientId };
