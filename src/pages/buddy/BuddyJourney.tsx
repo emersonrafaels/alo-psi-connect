@@ -44,6 +44,7 @@ export default function BuddyJourney() {
       }));
       return list.sort((a, b) => b.date.localeCompare(a.date));
     },
+    ...buddyFreshQueryOptions,
   });
 
   return (
