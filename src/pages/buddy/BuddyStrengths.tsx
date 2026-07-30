@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { EmergencyContactsEditor, relationOptions } from "@/components/profile/EmergencyContactsEditor";
-import { useLatestBuddyInsight, useCurrentPatientId } from "@/hooks/useBuddy";
+import { useLatestBuddyInsight, useCurrentPatientId, buddyFreshQueryOptions, buddyKeys, invalidateBuddyData } from "@/hooks/useBuddy";
 import { supabase } from "@/integrations/supabase/client";
 import { Phone, Plus, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
