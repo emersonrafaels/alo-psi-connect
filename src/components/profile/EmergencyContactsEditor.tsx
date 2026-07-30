@@ -125,6 +125,8 @@ export const EmergencyContactsEditor = ({ patientId, onSaved, saveLabel = 'Salva
 
       toast({ title: 'Contatos salvos', description: 'Contatos de emergência atualizados com sucesso.' });
       await load();
+      // Mantém o Buddy sincronizado mesmo quando o formulário é usado no perfil
+      await invalidateBuddyData(queryClient);
       onSaved?.();
     } catch (error: any) {
       console.error('[EmergencyContactsEditor] Erro ao salvar contatos:', error);
