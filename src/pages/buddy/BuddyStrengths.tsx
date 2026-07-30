@@ -108,7 +108,7 @@ export default function BuddyStrengths() {
                   <EmergencyContactsEditor
                     patientId={patientId}
                     onSaved={() => {
-                      qc.invalidateQueries({ queryKey: ["buddy", "emergency", patientId] });
+                      invalidateBuddyData(qc);
                       setOpen(false);
                     }}
                   />
