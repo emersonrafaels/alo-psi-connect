@@ -112,7 +112,7 @@ export function useBuddyPortrait() {
   const qc = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["buddy", "portrait", patientId],
+    queryKey: buddyKeys.portrait(patientId),
     enabled: !!patientId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -121,7 +121,7 @@ export function useBuddyPortrait() {
       if (error && error.code !== "PGRST116") throw error;
       return (data as any as BuddyPortrait) ?? null;
     },
-    staleTime: 5 * 60 * 1000,
+    ...buddyFreshQueryOptions,
   });
 
   const save = useMutation({
