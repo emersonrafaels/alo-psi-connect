@@ -146,7 +146,7 @@ export function useLatestBuddyInsight(periodDays = 30) {
   const qc = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["buddy", "insight", patientId, periodDays],
+    queryKey: buddyKeys.insight(patientId, periodDays),
     enabled: !!patientId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -156,7 +156,7 @@ export function useLatestBuddyInsight(periodDays = 30) {
       if (error && error.code !== "PGRST116") throw error;
       return (data as any as BuddyInsight) ?? null;
     },
-    staleTime: 30 * 60 * 1000,
+    ...buddyFreshQueryOptions,
   });
 
   const regenerate = useMutation({
