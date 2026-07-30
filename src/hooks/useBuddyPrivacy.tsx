@@ -67,8 +67,8 @@ export function useRemoveBuddyPortraitField() {
         .eq("patient_id", patientId);
       if (error) throw error;
     },
-    onSuccess: (_r, vars) => {
-      qc.invalidateQueries({ queryKey: ["buddy", "portrait", vars.patientId] });
+    onSuccess: () => {
+      invalidateBuddyData(qc);
     },
   });
 }
