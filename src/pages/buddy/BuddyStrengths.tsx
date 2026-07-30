@@ -28,7 +28,7 @@ export default function BuddyStrengths() {
   const [open, setOpen] = React.useState(false);
 
   const { data: contacts = [] } = useQuery({
-    queryKey: ["buddy", "emergency", patientId],
+    queryKey: buddyKeys.emergency(patientId),
     enabled: !!patientId,
     queryFn: async () => {
       const { data } = await supabase
@@ -38,6 +38,7 @@ export default function BuddyStrengths() {
         .order("created_at");
       return data ?? [];
     },
+    ...buddyFreshQueryOptions,
   });
 
 
