@@ -31,6 +31,8 @@ import { AdminInstitutionsCard } from '@/components/AdminInstitutionsCard';
 import { PatientCouponsCard } from '@/components/PatientCouponsCard';
 import { InstitutionLinkRequestCard } from '@/components/InstitutionLinkRequestCard';
 import { Combobox } from '@/components/ui/combobox';
+import { EmergencyContactsEditor } from '@/components/profile/EmergencyContactsEditor';
+
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Camera, Check, User, GraduationCap, Briefcase, Shield, Heart, Plus, Trash2, Phone, Mail } from 'lucide-react';
 
