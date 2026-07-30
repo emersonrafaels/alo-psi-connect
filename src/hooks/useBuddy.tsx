@@ -1,6 +1,38 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+
+/** Namespace único de cache do Buddy — tudo abaixo de ["buddy", ...]. */
+export const BUDDY_QUERY_NAMESPACE = "buddy" as const;
+
+export const buddyKeys = {
+  all: [BUDDY_QUERY_NAMESPACE] as const,
+  patientId: (userId?: string | null) => [BUDDY_QUERY_NAMESPACE, "patient-id", userId] as const,
+  portrait: (patientId?: string | null) => [BUDDY_QUERY_NAMESPACE, "portrait", patientId] as const,
+  insight: (patientId?: string | null, periodDays?: number) =>
+    [BUDDY_QUERY_NAMESPACE, "insight", patientId, periodDays] as const,
+  emergency: (patientId?: string | null) => [BUDDY_QUERY_NAMESPACE, "emergency", patientId] as const,
+  journey: (userId?: string | null) => [BUDDY_QUERY_NAMESPACE, "journey", userId] as const,
+  privacy: (userId?: string | null) => [BUDDY_QUERY_NAMESPACE, "privacy", userId] as const,
+};
+
+/** Opções padrão para dados do Buddy que podem mudar fora das telas do Buddy. */
+export const buddyFreshQueryOptions = {
+  staleTime: 0,
+  refetchOnMount: "always",
+} as const;
+
+/** Invalida todo o cache do Buddy — usar após qualquer escrita que afete seus dados. */
+export function invalidateBuddyData(queryClient: QueryClient) {
+  return queryClient.invalidateQueries({ queryKey: buddyKeys.all });
+}
+
+/** Hook utilitário para atualizar manualmente os dados do Buddy. */
+export function useBuddyRefresh() {
+  const qc = useQueryClient();
+  return useCallback(() => invalidateBuddyData(qc), [qc]);
+}
 
 export type BuddyPortrait = {
   id: string;
