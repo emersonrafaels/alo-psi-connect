@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { buddyFreshQueryOptions, buddyKeys } from "@/hooks/useBuddy";
 import { BookOpen, ClipboardList, Sparkles, Users } from "lucide-react";
 
 type TimelineItem = { date: string; type: string; title: string; description?: string };
