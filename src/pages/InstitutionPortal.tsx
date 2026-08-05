@@ -521,6 +521,13 @@ export default function InstitutionPortal() {
               </Card>
             )}
           </TabsContent>
+
+          {/* Tab do Buddy dos Alunos (acesso liberado via admin) */}
+          {canViewStudentBuddy && userInstitutions[0]?.institution_id && (
+            <TabsContent value="student-buddy">
+              <StudentBuddyPanel institutionId={userInstitutions[0].institution_id} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
       
