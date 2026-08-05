@@ -1940,6 +1940,97 @@ export type Database = {
           },
         ]
       }
+      institution_buddy_students: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          institution_id: string
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          institution_id: string
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          institution_id?: string
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_buddy_students_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_buddy_students_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_buddy_students_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_buddy_viewers: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          institution_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          institution_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          institution_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_buddy_viewers_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_buddy_viewers_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_coupons: {
         Row: {
           code: string
@@ -4689,6 +4780,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_view_student_buddy: {
+        Args: { _patient_id: string; _user_id: string }
+        Returns: boolean
+      }
       check_user_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
