@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Users, GraduationCap, Building2, TrendingUp, BarChart3, Briefcase, UserCircle, Ticket, Heart, ClipboardList, StickyNote } from 'lucide-react';
+import { Users, GraduationCap, Building2, TrendingUp, BarChart3, Briefcase, UserCircle, Ticket, Heart, ClipboardList, StickyNote, Brain } from 'lucide-react';
 import { useAdminInstitutionPortal } from '@/hooks/useAdminInstitutionPortal';
 import { InstitutionAnalyticsDashboard } from '@/components/admin/InstitutionAnalyticsDashboard';
 import { InstitutionCouponsTab } from '@/components/admin/InstitutionCouponsTab';
