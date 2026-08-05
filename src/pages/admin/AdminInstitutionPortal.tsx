@@ -10,6 +10,7 @@ import { InstitutionCouponsTab } from '@/components/admin/InstitutionCouponsTab'
 import { InstitutionWellbeingDashboard } from '@/components/institution/InstitutionWellbeingDashboard';
 import { StudentTriageTab } from '@/components/institution/StudentTriageTab';
 import { InstitutionNotesTab } from '@/components/admin/InstitutionNotesTab';
+import { InstitutionBuddyAccessTab } from '@/components/admin/InstitutionBuddyAccessTab';
 
 export default function AdminInstitutionPortal() {
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
