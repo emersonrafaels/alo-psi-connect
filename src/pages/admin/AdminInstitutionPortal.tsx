@@ -124,7 +124,7 @@ export default function AdminInstitutionPortal() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full max-w-4xl grid-cols-6 h-auto">
+            <TabsList className="grid w-full max-w-5xl grid-cols-4 md:grid-cols-7 h-auto">
               <TabsTrigger value="overview" className="text-xs md:text-sm py-2">Visão Geral</TabsTrigger>
               <TabsTrigger value="triage" className="text-xs md:text-sm py-2">
                 <ClipboardList className="h-3 w-3 mr-1" /> Triagem
@@ -140,6 +140,9 @@ export default function AdminInstitutionPortal() {
               </TabsTrigger>
               <TabsTrigger value="wellbeing" className="text-xs md:text-sm py-2">
                 <Heart className="h-3 w-3 mr-1" /> Bem-Estar
+              </TabsTrigger>
+              <TabsTrigger value="buddy-access" className="text-xs md:text-sm py-2">
+                <Brain className="h-3 w-3 mr-1" /> Acesso ao Buddy
               </TabsTrigger>
             </TabsList>
 
