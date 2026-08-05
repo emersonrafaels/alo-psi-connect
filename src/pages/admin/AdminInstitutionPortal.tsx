@@ -3,13 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Users, GraduationCap, Building2, TrendingUp, BarChart3, Briefcase, UserCircle, Ticket, Heart, ClipboardList, StickyNote } from 'lucide-react';
+import { Users, GraduationCap, Building2, TrendingUp, BarChart3, Briefcase, UserCircle, Ticket, Heart, ClipboardList, StickyNote, Brain } from 'lucide-react';
 import { useAdminInstitutionPortal } from '@/hooks/useAdminInstitutionPortal';
 import { InstitutionAnalyticsDashboard } from '@/components/admin/InstitutionAnalyticsDashboard';
 import { InstitutionCouponsTab } from '@/components/admin/InstitutionCouponsTab';
 import { InstitutionWellbeingDashboard } from '@/components/institution/InstitutionWellbeingDashboard';
 import { StudentTriageTab } from '@/components/institution/StudentTriageTab';
 import { InstitutionNotesTab } from '@/components/admin/InstitutionNotesTab';
+import { InstitutionBuddyAccessTab } from '@/components/admin/InstitutionBuddyAccessTab';
 
 export default function AdminInstitutionPortal() {
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
@@ -124,7 +125,7 @@ export default function AdminInstitutionPortal() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full max-w-4xl grid-cols-6 h-auto">
+            <TabsList className="grid w-full max-w-5xl grid-cols-4 md:grid-cols-7 h-auto">
               <TabsTrigger value="overview" className="text-xs md:text-sm py-2">Visão Geral</TabsTrigger>
               <TabsTrigger value="triage" className="text-xs md:text-sm py-2">
                 <ClipboardList className="h-3 w-3 mr-1" /> Triagem
@@ -140,6 +141,9 @@ export default function AdminInstitutionPortal() {
               </TabsTrigger>
               <TabsTrigger value="wellbeing" className="text-xs md:text-sm py-2">
                 <Heart className="h-3 w-3 mr-1" /> Bem-Estar
+              </TabsTrigger>
+              <TabsTrigger value="buddy-access" className="text-xs md:text-sm py-2">
+                <Brain className="h-3 w-3 mr-1" /> Acesso ao Buddy
               </TabsTrigger>
             </TabsList>
 
@@ -243,6 +247,10 @@ export default function AdminInstitutionPortal() {
 
             <TabsContent value="wellbeing">
               <InstitutionWellbeingDashboard institutionId={selectedInstitutionId} />
+            </TabsContent>
+
+            <TabsContent value="buddy-access">
+              <InstitutionBuddyAccessTab institutionId={selectedInstitutionId} />
             </TabsContent>
           </Tabs>
         </>

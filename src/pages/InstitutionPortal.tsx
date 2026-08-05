@@ -45,12 +45,17 @@ import { InstitutionWellbeingDashboard } from '@/components/institution/Institut
 import { StudentTriageTab } from '@/components/institution/StudentTriageTab';
 import { InstitutionExecutiveHeader } from '@/components/institution/InstitutionExecutiveHeader';
 import { BuddyInstitutionPanel } from '@/components/institution/BuddyInstitutionPanel';
+import { StudentBuddyPanel } from '@/components/institution/StudentBuddyPanel';
+import { useAllowedBuddyStudents } from '@/hooks/useInstitutionBuddyAccess';
 import { Brain } from 'lucide-react';
 
 export default function InstitutionPortal() {
   const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
   const { tenant } = useTenant();
   const [activeTab, setActiveTab] = useState('overview');
+  const { canView: canViewStudentBuddy } = useAllowedBuddyStudents(
+    userInstitutions[0]?.institution_id ?? null
+  );
   const { 
     showTour, 
     currentStep, 
@@ -286,7 +291,7 @@ export default function InstitutionPortal() {
           data-tour="tabs"
           id="institution-tabs"
         >
-          <TabsList className="grid w-full max-w-5xl grid-cols-2 md:grid-cols-7 h-auto">
+          <TabsList className={`grid w-full max-w-5xl grid-cols-2 h-auto ${canViewStudentBuddy ? 'md:grid-cols-8' : 'md:grid-cols-7'}`}>
             <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
               Visão Geral
             </TabsTrigger>
@@ -318,6 +323,12 @@ export default function InstitutionPortal() {
               <Brain className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               Buddy
             </TabsTrigger>
+            {canViewStudentBuddy && (
+              <TabsTrigger value="student-buddy" className="text-xs md:text-sm py-2">
+                <Brain className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                Buddy dos Alunos
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -510,6 +521,13 @@ export default function InstitutionPortal() {
               </Card>
             )}
           </TabsContent>
+
+          {/* Tab do Buddy dos Alunos (acesso liberado via admin) */}
+          {canViewStudentBuddy && userInstitutions[0]?.institution_id && (
+            <TabsContent value="student-buddy">
+              <StudentBuddyPanel institutionId={userInstitutions[0].institution_id} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
       
