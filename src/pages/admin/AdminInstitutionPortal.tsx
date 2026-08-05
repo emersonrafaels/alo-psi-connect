@@ -247,6 +247,10 @@ export default function AdminInstitutionPortal() {
             <TabsContent value="wellbeing">
               <InstitutionWellbeingDashboard institutionId={selectedInstitutionId} />
             </TabsContent>
+
+            <TabsContent value="buddy-access">
+              <InstitutionBuddyAccessTab institutionId={selectedInstitutionId} />
+            </TabsContent>
           </Tabs>
         </>
       )}
