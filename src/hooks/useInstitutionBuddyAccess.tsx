@@ -180,14 +180,39 @@ export const useSaveInstitutionBuddyAccess = (institutionId: string | null) => {
   });
 };
 
+export type BuddyAttentionLevel = 'alto' | 'moderado' | 'baixo' | 'sem-dados';
+
 export interface AllowedBuddyStudent {
   patient_id: string;
   nome: string | null;
+  attention: BuddyAttentionLevel;
+  last_insight_at: string | null;
+  granted_at: string | null;
+  is_stale: boolean;
 }
+
+const attentionFromInsight = (insight: any): BuddyAttentionLevel => {
+  if (!insight) return 'sem-dados';
+  const points: any[] = Array.isArray(insight.attention_points) ? insight.attention_points : [];
+  const severities = points.map((p) => String(p?.severity ?? '').toLowerCase());
+  if (severities.some((s) => s === 'high' || s === 'alto')) return 'alto';
+  if (severities.some((s) => s === 'medium' || s === 'medio' || s === 'médio')) return 'moderado';
+  return 'baixo';
+};
+
+const attentionRank: Record<BuddyAttentionLevel, number> = {
+  alto: 0,
+  moderado: 1,
+  baixo: 2,
+  'sem-dados': 3,
+};
+
+const STALE_DAYS = 15;
 
 /**
  * Portal institucional: o usuário logado pode ver o Buddy dos alunos?
- * Retorna a lista de alunos liberados (vazia quando não há acesso).
+ * Retorna a lista de alunos liberados (vazia quando não há acesso),
+ * já com nível de atenção e frescor dos dados.
  */
 export const useAllowedBuddyStudents = (institutionId: string | null) => {
   const { user } = useAuth();
@@ -207,16 +232,49 @@ export const useAllowedBuddyStudents = (institutionId: string | null) => {
 
       const { data, error } = await supabase
         .from('institution_buddy_students' as any)
-        .select('patient_id, pacientes!inner(id, profiles!inner(nome))')
+        .select('patient_id, created_at, pacientes!inner(id, profiles!inner(nome))')
         .eq('institution_id', institutionId!);
       if (error) throw error;
 
-      return ((data as any[]) ?? [])
-        .map((r) => ({
-          patient_id: r.patient_id as string,
-          nome: r.pacientes?.profiles?.nome ?? null,
-        }))
-        .sort((a, b) => (a.nome ?? '').localeCompare(b.nome ?? ''));
+      const rows = (data as any[]) ?? [];
+      const ids = rows.map((r) => r.patient_id as string);
+
+      const latestByPatient = new Map<string, any>();
+      if (ids.length > 0) {
+        const { data: insights } = await supabase
+          .from('buddy_insights' as any)
+          .select('patient_id, attention_points, created_at, period_end')
+          .in('patient_id', ids)
+          .order('created_at', { ascending: false });
+        for (const i of ((insights as any[]) ?? [])) {
+          if (!latestByPatient.has(i.patient_id)) latestByPatient.set(i.patient_id, i);
+        }
+      }
+
+      const now = Date.now();
+
+      return rows
+        .map((r) => {
+          const insight = latestByPatient.get(r.patient_id) ?? null;
+          const lastAt = insight?.created_at ?? null;
+          const ageDays = lastAt ? (now - new Date(lastAt).getTime()) / 86400000 : Infinity;
+          return {
+            patient_id: r.patient_id as string,
+            nome: r.pacientes?.profiles?.nome ?? null,
+            attention: attentionFromInsight(insight),
+            last_insight_at: lastAt,
+            granted_at: (r.created_at as string) ?? null,
+            is_stale: !lastAt || ageDays > STALE_DAYS,
+          };
+        })
+        .sort((a, b) => {
+          const diff = attentionRank[a.attention] - attentionRank[b.attention];
+          if (diff !== 0) return diff;
+          const at = a.last_insight_at ? new Date(a.last_insight_at).getTime() : 0;
+          const bt = b.last_insight_at ? new Date(b.last_insight_at).getTime() : 0;
+          if (bt !== at) return bt - at;
+          return (a.nome ?? '').localeCompare(b.nome ?? '');
+        });
     },
   });
 
@@ -226,6 +284,7 @@ export const useAllowedBuddyStudents = (institutionId: string | null) => {
     isLoading: query.isLoading,
   };
 };
+
 
 /** Portal institucional: retrato + último insight de um aluno liberado. */
 export const useStudentBuddyData = (patientId: string | null) => {
