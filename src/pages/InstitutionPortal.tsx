@@ -45,6 +45,8 @@ import { InstitutionWellbeingDashboard } from '@/components/institution/Institut
 import { StudentTriageTab } from '@/components/institution/StudentTriageTab';
 import { InstitutionExecutiveHeader } from '@/components/institution/InstitutionExecutiveHeader';
 import { BuddyInstitutionPanel } from '@/components/institution/BuddyInstitutionPanel';
+import { StudentBuddyPanel } from '@/components/institution/StudentBuddyPanel';
+import { useAllowedBuddyStudents } from '@/hooks/useInstitutionBuddyAccess';
 import { Brain } from 'lucide-react';
 
 export default function InstitutionPortal() {
