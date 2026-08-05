@@ -325,7 +325,7 @@ export default function InstitutionPortal() {
             </TabsTrigger>
             {canViewStudentBuddy && (
               <TabsTrigger value="student-buddy" className="text-xs md:text-sm py-2">
-                <Brain className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                <span className="mr-1" aria-hidden="true">🧠</span>
                 Buddy dos Alunos
               </TabsTrigger>
             )}

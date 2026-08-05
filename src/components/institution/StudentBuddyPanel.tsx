@@ -1,12 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Brain, Info, Lightbulb, ShieldCheck, Sparkles, TriangleAlert } from 'lucide-react';
-import { useAllowedBuddyStudents, useStudentBuddyData } from '@/hooks/useInstitutionBuddyAccess';
+import {
+  Brain,
+  ClipboardList,
+  Clock,
+  Info,
+  Lightbulb,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  StickyNote,
+  TriangleAlert,
+} from 'lucide-react';
+import {
+  useAllowedBuddyStudents,
+  useStudentBuddyData,
+  type AllowedBuddyStudent,
+  type BuddyAttentionLevel,
+} from '@/hooks/useInstitutionBuddyAccess';
 import { useAnonymizationConfig, anonymizeStudentName } from '@/hooks/useAnonymizationConfig';
 
 interface Props {
@@ -27,6 +44,17 @@ const severityLabel = (s?: string) => {
   }
 };
 
+const attentionMeta: Record<BuddyAttentionLevel, { label: string; dot: string }> = {
+  alto: { label: 'Alta atenção', dot: 'bg-destructive' },
+  moderado: { label: 'Atenção moderada', dot: 'bg-amber-500' },
+  baixo: { label: 'Estável', dot: 'bg-emerald-500' },
+  'sem-dados': { label: 'Sem dados', dot: 'bg-muted-foreground/40' },
+};
+
+const goToTab = (tab: string) => {
+  window.dispatchEvent(new CustomEvent('institution:navigate-tab', { detail: { tab } }));
+};
+
 function ScoreBar({ label, value }: { label: string; value: number | null }) {
   return (
     <div className="space-y-1.5">
@@ -43,6 +71,7 @@ export function StudentBuddyPanel({ institutionId }: Props) {
   const { students, canView, isLoading } = useAllowedBuddyStudents(institutionId);
   const { isAnonymized } = useAnonymizationConfig(institutionId);
   const [selected, setSelected] = useState<string | null>(null);
+  const [term, setTerm] = useState('');
 
   useEffect(() => {
     if (!selected && students.length > 0) setSelected(students[0].patient_id);
@@ -55,6 +84,20 @@ export function StudentBuddyPanel({ institutionId }: Props) {
     const student = students[idx];
     return isAnonymized ? anonymizeStudentName(Math.max(idx, 0)) : student?.nome ?? 'Aluno';
   };
+
+  const filtered = useMemo(() => {
+    const t = term.trim().toLowerCase();
+    if (!t) return students;
+    return students.filter((s, idx) => {
+      const name = isAnonymized ? anonymizeStudentName(idx) : s.nome ?? '';
+      return name.toLowerCase().includes(t);
+    });
+  }, [students, term, isAnonymized]);
+
+  const attentionCount = students.filter((s) => s.attention === 'alto').length;
+  const selectedStudent: AllowedBuddyStudent | undefined = students.find(
+    (s) => s.patient_id === selected
+  );
 
   if (isLoading) {
     return (
@@ -83,6 +126,9 @@ export function StudentBuddyPanel({ institutionId }: Props) {
 
   const insight = data?.insight;
   const portrait = data?.portrait;
+  const attentionPoints: any[] = (insight?.attention_points as any[]) ?? [];
+  const recommendations: any[] = (insight?.recommendations as any[]) ?? [];
+  const nextActions = [...attentionPoints.slice(0, 2), ...recommendations.slice(0, 2)].slice(0, 3);
 
   return (
     <div className="space-y-6">
@@ -94,168 +140,291 @@ export function StudentBuddyPanel({ institutionId }: Props) {
         </AlertDescription>
       </Alert>
 
-      <div className="flex items-center gap-3 flex-wrap">
-        <Brain className="h-5 w-5 text-primary shrink-0" />
-        <Select value={selected ?? ''} onValueChange={setSelected}>
-          <SelectTrigger className="max-w-sm">
-            <SelectValue placeholder="Selecione um aluno..." />
-          </SelectTrigger>
-          <SelectContent>
-            {students.map((s) => (
-              <SelectItem key={s.patient_id} value={s.patient_id}>
-                {displayName(s.patient_id)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Badge variant="secondary">{students.length} aluno(s) liberado(s)</Badge>
-      </div>
-
-      {loadingData ? (
-        <Skeleton className="h-64 w-full" />
-      ) : !insight && !portrait ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Sparkles className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground">
-              Este aluno ainda não possui dados do Buddy gerados.
-            </p>
+      <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+        {/* Lista de alunos */}
+        <Card className="h-fit">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Brain className="h-4 w-4 text-primary" />
+              Alunos liberados
+            </CardTitle>
+            <CardDescription>
+              {students.length} aluno(s) · {attentionCount} em alta atenção
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar aluno..."
+                value={term}
+                onChange={(e) => setTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            {filtered.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                Nenhum aluno encontrado.
+              </p>
+            ) : (
+              <div className="space-y-1 max-h-[26rem] overflow-y-auto pr-1">
+                {filtered.map((s) => {
+                  const meta = attentionMeta[s.attention];
+                  const isActive = s.patient_id === selected;
+                  return (
+                    <button
+                      key={s.patient_id}
+                      type="button"
+                      onClick={() => setSelected(s.patient_id)}
+                      className={`w-full text-left p-2.5 rounded-md transition-colors ${
+                        isActive ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/60'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`h-2 w-2 rounded-full shrink-0 ${meta.dot}`} />
+                        <span className="text-sm font-medium truncate flex-1">
+                          {displayName(s.patient_id)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1 pl-4 flex-wrap">
+                        <span className="text-[11px] text-muted-foreground">{meta.label}</span>
+                        {s.is_stale && (
+                          <Badge variant="outline" className="text-[10px] gap-1">
+                            <Clock className="h-2.5 w-2.5" />
+                            Sem dados recentes
+                          </Badge>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                Como o Buddy entende {selected ? displayName(selected) : 'este aluno'}
-              </CardTitle>
-              {insight?.period_start && insight?.period_end && (
-                <CardDescription>
-                  Período analisado: {new Date(insight.period_start).toLocaleDateString('pt-BR')} a{' '}
-                  {new Date(insight.period_end).toLocaleDateString('pt-BR')}
-                </CardDescription>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {insight?.narrative && (
-                <p className="text-sm leading-relaxed text-muted-foreground">{insight.narrative}</p>
-              )}
 
-              {(insight?.strengths ?? []).length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold">Forças percebidas</h4>
-                  {(insight!.strengths as any[]).map((s, i) => (
-                    <div key={i} className="p-3 rounded-md bg-muted/50">
-                      <p className="text-sm font-medium">{s.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{s.description}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {(insight?.attention_points ?? []).length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold flex items-center gap-2">
-                    <TriangleAlert className="h-4 w-4 text-amber-500" />
-                    Pontos de atenção
-                  </h4>
-                  {(insight!.attention_points as any[]).map((p, i) => {
-                    const sev = severityLabel(p.severity);
-                    return (
-                      <div key={i} className="p-3 rounded-md border">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm font-medium">{p.title}</p>
-                          <Badge variant={sev.variant} className="text-[10px] shrink-0">
-                            {sev.label}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{p.description}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {(insight?.recommendations ?? []).length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold flex items-center gap-2">
-                    <Lightbulb className="h-4 w-4 text-primary" />
-                    O que o Buddy está priorizando
-                  </h4>
-                  {(insight!.recommendations as any[]).map((r, i) => (
-                    <div key={i} className="p-3 rounded-md bg-primary/5">
-                      <p className="text-sm font-medium">{r.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{r.description}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6">
+        <div className="space-y-6">
+          {loadingData ? (
+            <Skeleton className="h-64 w-full" />
+          ) : !insight && !portrait ? (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Indicadores do período</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ScoreBar label="Bem-estar geral" value={insight?.wellbeing_score ?? null} />
-                <ScoreBar label="Estabilidade emocional" value={insight?.emotional_stability ?? null} />
-                <ScoreBar label="Qualidade do sono" value={insight?.sleep_quality ?? null} />
-                <ScoreBar label="Consistência de hábitos" value={insight?.habit_consistency ?? null} />
+              <CardContent className="py-12 text-center space-y-2">
+                <Sparkles className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
+                <p className="text-muted-foreground">
+                  Este aluno ainda não possui dados do Buddy gerados.
+                </p>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  O Buddy é construído a partir dos registros do próprio aluno: diário emocional,
+                  escalas, práticas e participação em encontros. Assim que houver registros
+                  suficientes, o retrato e os insights aparecem aqui.
+                </p>
               </CardContent>
             </Card>
-
-            {portrait && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Retrato do aluno</CardTitle>
-                  <CardDescription>Informações compartilhadas pelo próprio aluno.</CardDescription>
+          ) : (
+            <>
+              {/* Ações acionáveis */}
+              <Card className="border-primary/30">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4 text-primary" />
+                    O que fazer agora
+                  </CardTitle>
+                  <CardDescription>
+                    Sugestões de acolhimento com base no que o Buddy observou.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  {portrait.biggest_challenge && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">Maior desafio atual</p>
-                      <p>{portrait.biggest_challenge}</p>
-                    </div>
+                <CardContent className="space-y-3">
+                  {nextActions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      Nenhum ponto crítico no período. Mantenha o acompanhamento de rotina.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {nextActions.map((a, i) => (
+                        <li key={i} className="flex gap-2 text-sm">
+                          <span className="text-primary font-semibold shrink-0">{i + 1}.</span>
+                          <span>
+                            <span className="font-medium">{a.title}</span>
+                            {a.description && (
+                              <span className="text-muted-foreground"> — {a.description}</span>
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   )}
-                  {portrait.support_people && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">Rede de apoio</p>
-                      <p>{portrait.support_people}</p>
-                    </div>
-                  )}
-                  {(portrait.self_care_rituals ?? []).length > 0 && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Rituais de autocuidado</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {portrait.self_care_rituals.map((r: string) => (
-                          <Badge key={r} variant="outline" className="text-[10px]">
-                            {r}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {(portrait.hobbies ?? []).length > 0 && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Interesses</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {portrait.hobbies.map((h: string) => (
-                          <Badge key={h} variant="secondary" className="text-[10px]">
-                            {h}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Button size="sm" variant="outline" onClick={() => goToTab('notes')}>
+                      <StickyNote className="h-3.5 w-3.5 mr-1.5" />
+                      Registrar nota de acompanhamento
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => goToTab('triage')}>
+                      <ClipboardList className="h-3.5 w-3.5 mr-1.5" />
+                      Abrir triagem
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
-            )}
-          </div>
+
+              <div className="grid gap-6 lg:grid-cols-3">
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      Como o Buddy entende {selected ? displayName(selected) : 'este aluno'}
+                    </CardTitle>
+                    <CardDescription className="space-y-0.5">
+                      {insight?.period_start && insight?.period_end && (
+                        <span className="block">
+                          Período analisado:{' '}
+                          {new Date(insight.period_start).toLocaleDateString('pt-BR')} a{' '}
+                          {new Date(insight.period_end).toLocaleDateString('pt-BR')}
+                        </span>
+                      )}
+                      {selectedStudent?.last_insight_at && (
+                        <span className="block">
+                          Última atualização do Buddy:{' '}
+                          {new Date(selectedStudent.last_insight_at).toLocaleDateString('pt-BR')}
+                        </span>
+                      )}
+                      {selectedStudent?.granted_at && (
+                        <span className="block">
+                          Acesso liberado em{' '}
+                          {new Date(selectedStudent.granted_at).toLocaleDateString('pt-BR')}
+                        </span>
+                      )}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    {insight?.narrative && (
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {insight.narrative}
+                      </p>
+                    )}
+
+                    {(insight?.strengths ?? []).length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold">Forças percebidas</h4>
+                        {(insight!.strengths as any[]).map((s, i) => (
+                          <div key={i} className="p-3 rounded-md bg-muted/50">
+                            <p className="text-sm font-medium">{s.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{s.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {attentionPoints.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold flex items-center gap-2">
+                          <TriangleAlert className="h-4 w-4 text-amber-500" />
+                          Pontos de atenção
+                        </h4>
+                        {attentionPoints.map((p, i) => {
+                          const sev = severityLabel(p.severity);
+                          return (
+                            <div key={i} className="p-3 rounded-md border">
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="text-sm font-medium">{p.title}</p>
+                                <Badge variant={sev.variant} className="text-[10px] shrink-0">
+                                  {sev.label}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">{p.description}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {recommendations.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold flex items-center gap-2">
+                          <Lightbulb className="h-4 w-4 text-primary" />
+                          O que o Buddy está priorizando
+                        </h4>
+                        {recommendations.map((r, i) => (
+                          <div key={i} className="p-3 rounded-md bg-primary/5">
+                            <p className="text-sm font-medium">{r.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{r.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Indicadores do período</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <ScoreBar label="Bem-estar geral" value={insight?.wellbeing_score ?? null} />
+                      <ScoreBar
+                        label="Estabilidade emocional"
+                        value={insight?.emotional_stability ?? null}
+                      />
+                      <ScoreBar label="Qualidade do sono" value={insight?.sleep_quality ?? null} />
+                      <ScoreBar
+                        label="Consistência de hábitos"
+                        value={insight?.habit_consistency ?? null}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {portrait && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Retrato do aluno</CardTitle>
+                        <CardDescription>Informações compartilhadas pelo próprio aluno.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3 text-sm">
+                        {portrait.biggest_challenge && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Maior desafio atual</p>
+                            <p>{portrait.biggest_challenge}</p>
+                          </div>
+                        )}
+                        {portrait.support_people && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Rede de apoio</p>
+                            <p>{portrait.support_people}</p>
+                          </div>
+                        )}
+                        {(portrait.self_care_rituals ?? []).length > 0 && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Rituais de autocuidado</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {portrait.self_care_rituals.map((r: string) => (
+                                <Badge key={r} variant="outline" className="text-[10px]">
+                                  {r}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {(portrait.hobbies ?? []).length > 0 && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Interesses</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {portrait.hobbies.map((h: string) => (
+                                <Badge key={h} variant="secondary" className="text-[10px]">
+                                  {h}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
