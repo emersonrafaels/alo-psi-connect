@@ -286,7 +286,7 @@ export default function InstitutionPortal() {
           data-tour="tabs"
           id="institution-tabs"
         >
-          <TabsList className="grid w-full max-w-5xl grid-cols-2 md:grid-cols-7 h-auto">
+          <TabsList className={`grid w-full max-w-5xl grid-cols-2 h-auto ${canViewStudentBuddy ? 'md:grid-cols-8' : 'md:grid-cols-7'}`}>
             <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
               Visão Geral
             </TabsTrigger>
