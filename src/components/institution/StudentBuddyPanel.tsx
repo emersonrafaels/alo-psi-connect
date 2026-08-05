@@ -102,7 +102,7 @@ export function StudentBuddyPanel({ institutionId }: Props) {
           </SelectTrigger>
           <SelectContent>
             {students.map((s) => (
-              <SelectItem key={s.patient_id} value={s.patient_id} keywords={[s.nome ?? '']}>
+              <SelectItem key={s.patient_id} value={s.patient_id}>
                 {displayName(s.patient_id)}
               </SelectItem>
             ))}
