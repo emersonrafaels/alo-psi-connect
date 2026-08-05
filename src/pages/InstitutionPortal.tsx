@@ -51,6 +51,9 @@ export default function InstitutionPortal() {
   const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
   const { tenant } = useTenant();
   const [activeTab, setActiveTab] = useState('overview');
+  const { canView: canViewStudentBuddy } = useAllowedBuddyStudents(
+    userInstitutions[0]?.institution_id ?? null
+  );
   const { 
     showTour, 
     currentStep, 
