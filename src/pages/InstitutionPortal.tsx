@@ -291,41 +291,41 @@ export default function InstitutionPortal() {
           data-tour="tabs"
           id="institution-tabs"
         >
-          <TabsList className={`grid w-full max-w-5xl grid-cols-2 h-auto ${canViewStudentBuddy ? 'md:grid-cols-8' : 'md:grid-cols-7'}`}>
-            <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
+          <TabsList className="grid w-full max-w-5xl grid-cols-2 h-auto md:inline-flex md:flex-nowrap md:overflow-x-auto md:justify-start">
+            <TabsTrigger value="overview" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
               Visão Geral
             </TabsTrigger>
-            <TabsTrigger value="coupons" className="text-xs md:text-sm py-2">
-              <Ticket className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+            <TabsTrigger value="coupons" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
+              <Ticket className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Cupons
             </TabsTrigger>
-            <TabsTrigger value="metrics" className="text-xs md:text-sm py-2">
-              <BarChart3 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+            <TabsTrigger value="metrics" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
+              <BarChart3 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Métricas
             </TabsTrigger>
             <TabsTrigger
               value="wellbeing"
-              className="text-xs md:text-sm py-2"
+              className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0"
               data-tour="wellbeing-tab"
             >
-              <Heart className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <Heart className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Diário Emocional
             </TabsTrigger>
-            <TabsTrigger value="triage" className="text-xs md:text-sm py-2">
-              <ClipboardList className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+            <TabsTrigger value="triage" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
+              <ClipboardList className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Triagem
             </TabsTrigger>
-            <TabsTrigger value="notes" className="text-xs md:text-sm py-2">
-              <StickyNote className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+            <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
+              <StickyNote className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Notas
             </TabsTrigger>
-            <TabsTrigger value="buddy" className="text-xs md:text-sm py-2">
-              <Brain className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+            <TabsTrigger value="buddy" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
+              <Brain className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Buddy
             </TabsTrigger>
             {canViewStudentBuddy && (
-              <TabsTrigger value="student-buddy" className="text-xs md:text-sm py-2">
-                <span className="mr-1" aria-hidden="true">🧠</span>
+              <TabsTrigger value="student-buddy" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
+                <span className="mr-1 md:mr-2" aria-hidden="true">🧠</span>
                 Buddy dos Alunos
               </TabsTrigger>
             )}

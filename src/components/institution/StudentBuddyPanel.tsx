@@ -140,7 +140,7 @@ export function StudentBuddyPanel({ institutionId }: Props) {
         </AlertDescription>
       </Alert>
 
-      <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         {/* Lista de alunos */}
         <Card className="h-fit">
           <CardHeader className="pb-3">
@@ -152,14 +152,14 @@ export function StudentBuddyPanel({ institutionId }: Props) {
               {students.length} aluno(s) · {attentionCount} em alta atenção
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar aluno..."
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
-                className="pl-8"
+                className="pl-9 h-10"
               />
             </div>
             {filtered.length === 0 ? (
@@ -167,26 +167,29 @@ export function StudentBuddyPanel({ institutionId }: Props) {
                 Nenhum aluno encontrado.
               </p>
             ) : (
-              <div className="space-y-1 max-h-[26rem] overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-[26rem] overflow-y-auto pr-1">
                 {filtered.map((s) => {
                   const meta = attentionMeta[s.attention];
                   const isActive = s.patient_id === selected;
+                  const name = displayName(s.patient_id);
                   return (
                     <button
                       key={s.patient_id}
                       type="button"
                       onClick={() => setSelected(s.patient_id)}
-                      className={`w-full text-left p-2.5 rounded-md transition-colors ${
-                        isActive ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/60'
+                      className={`w-full text-left p-3 rounded-lg transition-colors ${
+                        isActive
+                          ? 'bg-primary/10 border border-primary/30 shadow-sm'
+                          : 'hover:bg-muted/60'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className={`h-2 w-2 rounded-full shrink-0 ${meta.dot}`} />
-                        <span className="text-sm font-medium truncate flex-1">
-                          {displayName(s.patient_id)}
+                      <div className="flex items-center gap-2.5">
+                        <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${meta.dot}`} />
+                        <span className="text-sm font-medium truncate flex-1" title={name}>
+                          {name}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 mt-1 pl-4 flex-wrap">
+                      <div className="flex items-center gap-1.5 mt-1.5 pl-5 flex-wrap">
                         <span className="text-[11px] text-muted-foreground">{meta.label}</span>
                         {s.is_stale && (
                           <Badge variant="outline" className="text-[10px] gap-1">
@@ -253,10 +256,10 @@ export function StudentBuddyPanel({ institutionId }: Props) {
                       ))}
                     </ul>
                   )}
-                  <div className="flex flex-wrap gap-2 pt-1">
+                  <div className="flex flex-wrap gap-2 pt-2">
                     <Button size="sm" variant="outline" onClick={() => goToTab('notes')}>
                       <StickyNote className="h-3.5 w-3.5 mr-1.5" />
-                      Registrar nota de acompanhamento
+                      Registrar nota
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => goToTab('triage')}>
                       <ClipboardList className="h-3.5 w-3.5 mr-1.5" />
