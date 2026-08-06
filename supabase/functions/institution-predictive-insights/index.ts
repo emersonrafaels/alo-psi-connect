@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
     const context = {
       period: { start, end },
       total_students: studentsRes.data?.length || 0,
-      mood_aggregates: aggRes.data,
+      mood_aggregates: moodAggregates,
       triage_summary: {
         total: triages.length,
         by_status: humanizeKeys(byStatusRaw, STATUS_PT),
