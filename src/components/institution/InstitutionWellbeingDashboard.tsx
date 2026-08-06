@@ -215,7 +215,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId, onNavigateToTriag
           </div>
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
-            <Select value={periodDays.toString()} onValueChange={(v) => setPeriodDays(Number(v))}>
+            <Select value={periodDays.toString()} onValueChange={(v) => handlePeriodChange(Number(v))}>
               <SelectTrigger className="w-44">
                 <SelectValue placeholder="Período" />
               </SelectTrigger>
