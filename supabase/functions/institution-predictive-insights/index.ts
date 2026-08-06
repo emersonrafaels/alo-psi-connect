@@ -63,13 +63,49 @@ Deno.serve(async (req) => {
 
     const start = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
     const end = new Date().toISOString().slice(0, 10);
+    // A RPC valida acesso via auth.uid(); usar o client do usuário (service role -> "access denied")
     const [aggRes, triageRes, studentsRes] = await Promise.all([
-      admin.rpc("get_institution_mood_aggregates", { p_institution_id: institutionId, p_period_days: 60 })
+      supabaseUser.rpc("get_institution_mood_aggregates", { p_institution_id: institutionId, p_period_days: 60 })
         .then((r: any) => r).catch(() => ({ data: null })),
       admin.from("student_triage").select("status,risk_level,priority,created_at,resolved_at,recommended_action")
         .eq("institution_id", institutionId).gte("created_at", new Date(Date.now() - 60 * 86400_000).toISOString()),
       admin.from("patient_institutions").select("patient_id").eq("institution_id", institutionId),
     ]);
+    if (aggRes?.error) console.error("mood aggregates error", aggRes.error);
+
+    // Fallback agregado (mantém o mínimo de 5 alunos por privacidade)
+    let moodAggregates: any = aggRes?.data ?? null;
+    if (!moodAggregates || moodAggregates?.available === false) {
+      const { data: rows } = await admin
+        .from("patient_institutions").select("patient_id").eq("institution_id", institutionId);
+      const patientIds = (rows || []).map((r: any) => r.patient_id);
+      if (patientIds.length) {
+        const { data: pacientes } = await admin.from("pacientes").select("profile_id").in("id", patientIds);
+        const profileIds = (pacientes || []).map((p: any) => p.profile_id).filter(Boolean);
+        if (profileIds.length) {
+          const since = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
+          const { data: entries } = await admin
+            .from("mood_entries")
+            .select("profile_id, mood_score, energy_level, anxiety_level, sleep_hours, sleep_quality, date")
+            .in("profile_id", profileIds).gte("date", since);
+          const list = entries || [];
+          const uniqueUsers = new Set(list.map((e: any) => e.profile_id)).size;
+          const avg = (k: string) => {
+            const vals = list.map((e: any) => e[k]).filter((v: any) => typeof v === "number");
+            return vals.length ? Math.round((vals.reduce((a: number, b: number) => a + b, 0) / vals.length) * 100) / 100 : null;
+          };
+          moodAggregates = uniqueUsers >= 5
+            ? {
+                available: true, period_days: 60, unique_users: uniqueUsers, total_entries: list.length,
+                avg_mood: avg("mood_score"), avg_energy: avg("energy_level"), avg_anxiety: avg("anxiety_level"),
+                avg_sleep_hours: avg("sleep_hours"), avg_sleep_quality: avg("sleep_quality"),
+                students_with_mood: uniqueUsers, total_students: patientIds.length,
+              }
+            : { available: false, reason: "insufficient_users", min_required: 5, current: uniqueUsers };
+        }
+      }
+    }
+
 
     const triages = triageRes.data || [];
     const STATUS_PT: Record<string, string> = {
@@ -98,7 +134,7 @@ Deno.serve(async (req) => {
     const context = {
       period: { start, end },
       total_students: studentsRes.data?.length || 0,
-      mood_aggregates: aggRes.data,
+      mood_aggregates: moodAggregates,
       triage_summary: {
         total: triages.length,
         by_status: humanizeKeys(byStatusRaw, STATUS_PT),
