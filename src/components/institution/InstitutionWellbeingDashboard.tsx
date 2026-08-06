@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { InstitutionMoodAggregates } from '@/components/institutional/InstitutionMoodAggregates';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -63,7 +63,31 @@ export const InstitutionWellbeingDashboard = ({ institutionId, onNavigateToTriag
   const [openMetric, setOpenMetric] = useState<WellbeingMetricType | null>(null);
   const { data: metrics, isLoading } = useInstitutionWellbeing(institutionId, periodDays);
 
+  // Período padrão inteligente: se não houver registros no período atual mas existirem
+  // dados em outro intervalo, expande automaticamente uma única vez.
+  const autoAdjustedRef = useRef(false);
+  const userChangedRef = useRef(false);
+  useEffect(() => {
+    if (autoAdjustedRef.current || userChangedRef.current) return;
+    if (isLoading || !metrics) return;
+    if (metrics.total_entries > 0) return;
+    const range = metrics.availableDataRange;
+    if (!range?.oldest) return;
+    const days = Math.ceil(
+      (Date.now() - new Date(range.oldest + 'T12:00:00').getTime()) / 86400000
+    ) + 1;
+    if (days <= periodDays) return;
+    autoAdjustedRef.current = true;
+    setPeriodDays(days);
+  }, [metrics, isLoading, periodDays]);
+
+  const handlePeriodChange = (value: number) => {
+    userChangedRef.current = true;
+    setPeriodDays(value);
+  };
+
   const activeNotes = metrics?.activeNotes || [];
+
 
   const {
     predictions,
@@ -114,7 +138,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId, onNavigateToTriag
                   </span>
                 </p>
                 <button
-                  onClick={() => setPeriodDays(9999)}
+                  onClick={() => handlePeriodChange(9999)}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   <Calendar className="h-4 w-4" />
@@ -191,7 +215,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId, onNavigateToTriag
           </div>
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
-            <Select value={periodDays.toString()} onValueChange={(v) => setPeriodDays(Number(v))}>
+            <Select value={periodDays.toString()} onValueChange={(v) => handlePeriodChange(Number(v))}>
               <SelectTrigger className="w-44">
                 <SelectValue placeholder="Período" />
               </SelectTrigger>
