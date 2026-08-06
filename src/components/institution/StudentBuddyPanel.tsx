@@ -256,10 +256,10 @@ export function StudentBuddyPanel({ institutionId }: Props) {
                       ))}
                     </ul>
                   )}
-                  <div className="flex flex-wrap gap-2 pt-1">
+                  <div className="flex flex-wrap gap-2 pt-2">
                     <Button size="sm" variant="outline" onClick={() => goToTab('notes')}>
                       <StickyNote className="h-3.5 w-3.5 mr-1.5" />
-                      Registrar nota de acompanhamento
+                      Registrar nota
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => goToTab('triage')}>
                       <ClipboardList className="h-3.5 w-3.5 mr-1.5" />
