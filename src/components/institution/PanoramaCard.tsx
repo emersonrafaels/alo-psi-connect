@@ -75,7 +75,7 @@ export const PanoramaCard = ({
     {
       key: 'critical',
       label: 'Crítico',
-      suffix: 'ação imediata (contato hoje)',
+      suffix: 'ação imediata (contato urgente)',
       count: counts.critical,
       dot: 'bg-red-500',
       text: 'text-red-700 dark:text-red-300',

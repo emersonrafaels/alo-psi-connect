@@ -890,7 +890,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                       <span className="inline-flex items-center gap-1.5">
                         <span className="h-2 w-2 rounded-full bg-red-500" />
                         <strong className="text-red-700 dark:text-red-300">{riskCounts.critical} crítico{riskCounts.critical > 1 ? 's' : ''}</strong>
-                        <span className="text-muted-foreground">— ação imediata (contato hoje)</span>
+                        <span className="text-muted-foreground">— ação imediata (contato urgente)</span>
                       </span>
                     )}
                     {riskCounts.alert > 0 && (
