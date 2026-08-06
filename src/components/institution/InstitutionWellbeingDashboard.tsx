@@ -138,7 +138,7 @@ export const InstitutionWellbeingDashboard = ({ institutionId, onNavigateToTriag
                   </span>
                 </p>
                 <button
-                  onClick={() => setPeriodDays(9999)}
+                  onClick={() => handlePeriodChange(9999)}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   <Calendar className="h-4 w-4" />
