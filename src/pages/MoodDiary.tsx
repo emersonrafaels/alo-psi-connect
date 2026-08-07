@@ -147,10 +147,9 @@ const MoodDiary = () => {
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-6xl mx-auto space-y-6">
             <Skeleton className="h-12 w-64" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Skeleton className="h-28" />
+              <Skeleton className="h-28" />
             </div>
             <Skeleton className="h-64" />
           </div>
@@ -228,8 +227,8 @@ const MoodDiary = () => {
           </Collapsible>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="border-primary/20">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="border-primary/20 p-4">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="flex-1 min-w-0">
                   <Select value={selectedStatEmotion} onValueChange={setSelectedStatEmotion}>
@@ -247,8 +246,8 @@ const MoodDiary = () => {
                 </div>
                 <Heart className="h-4 w-4 text-primary flex-shrink-0" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
+              <CardContent className="pt-0">
+                <div className="text-xl font-semibold">
                   {recentEntries.length > 0 ? `${Math.round(avgSelected)}/${selectedScaleMax}` : 'Sem dados'}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -257,26 +256,26 @@ const MoodDiary = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-secondary/20">
+            <Card className="border-secondary/20 p-4">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total de Entradas</CardTitle>
                 <Calendar className="h-4 w-4 text-secondary" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{entries.length}</div>
+              <CardContent className="pt-0">
+                <div className="text-xl font-semibold">{entries.length}</div>
                 <p className="text-xs text-muted-foreground">
                   Entradas registradas no total
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-accent/20">
+            <Card className="border-accent/20 p-4 md:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Esta Semana</CardTitle>
                 <TrendingUp className="h-4 w-4 text-accent" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{recentEntries.length}</div>
+              <CardContent className="pt-0">
+                <div className="text-xl font-semibold">{recentEntries.length}</div>
                 <p className="text-xs text-muted-foreground">
                   Entradas nos últimos 7 dias
                 </p>

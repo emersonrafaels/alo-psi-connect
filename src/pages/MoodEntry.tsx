@@ -21,7 +21,7 @@ import { SleepSlider } from '@/components/ui/sleep-slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Save, Heart, Edit, AlertCircle, Download, Share, Clock, CheckCircle, XCircle, Settings2 } from 'lucide-react';
+import { ArrowLeft, Save, Heart, Edit, Download, Share, Clock, CheckCircle, XCircle, Settings2, Sparkles, CalendarDays, NotebookPen, Brain } from 'lucide-react';
 import { AudioRecorder } from '@/components/ui/audio-recorder';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -58,6 +58,11 @@ const MoodEntry = () => {
   const [checkingExisting, setCheckingExisting] = useState(false);
   const [currentEntry, setCurrentEntry] = useState<MoodEntry | null>(null);
   const [initialized, setInitialized] = useState(false);
+
+  const emotionCount = Object.keys(formData.emotion_values).length;
+  const hasJournal = Boolean(formData.journal_text.trim());
+  const moodValue = formData.emotion_values.mood ?? 3;
+  const moodLabel = moodValue >= 4 ? 'Mais leve' : moodValue >= 3 ? 'Equilibrado' : 'Mais desafiador';
 
   // Persistência local DESABILITADA - comportamento estático
   const [localDraft, setLocalDraft, clearLocalDraft] = [null, () => {}, () => {}];
@@ -454,45 +459,99 @@ const MoodEntry = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(167,139,250,0.16),_transparent_32%),radial-gradient(circle_at_top_right,_rgba(244,114,182,0.14),_transparent_26%),linear-gradient(180deg,_hsl(var(--background))_0%,_hsl(var(--muted))_100%)]">
       <Header />
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex items-center gap-4">
+      <main className="container mx-auto px-4 py-8 lg:py-10">
+        <div className="mx-auto flex max-w-4xl flex-col gap-6">
+          <section className="overflow-hidden rounded-[28px] border border-primary/10 bg-gradient-to-br from-primary/10 via-background/90 to-accent/10 p-6 shadow-[0_20px_60px_-24px_hsl(var(--primary)/0.35)] backdrop-blur">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/80 px-3 py-1 text-sm font-medium text-primary shadow-sm">
+                  <Sparkles className="h-4 w-4" />
+                  Diário emocional moderno
+                </div>
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                    {isEditMode ? 'Editar entrada' : 'Registrar seu estado do dia'}
+                  </h1>
+                  <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
+                    {isEditMode
+                      ? `Atualize sua entrada de ${new Date(formData.date).toLocaleDateString('pt-BR')} com mais clareza e carinho.`
+                      : 'Capture seus sentimentos com uma experiência mais leve, visual e inspirada em uma rotina de autocuidado.'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary" className="rounded-full border border-primary/10 bg-background/70 px-3 py-1.5">
+                    <CalendarDays className="mr-2 h-3.5 w-3.5" />
+                    {new Date(formData.date).toLocaleDateString('pt-BR')}
+                  </Badge>
+                  <Badge variant="secondary" className="rounded-full border border-primary/10 bg-background/70 px-3 py-1.5">
+                    <Brain className="mr-2 h-3.5 w-3.5" />
+                    {emotionCount} emoções registradas
+                  </Badge>
+                  <Badge variant="secondary" className="rounded-full border border-primary/10 bg-background/70 px-3 py-1.5">
+                    <NotebookPen className="mr-2 h-3.5 w-3.5" />
+                    {hasJournal ? 'Reflexões prontas' : 'Sem reflexões ainda'}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-primary/10 bg-background/80 p-4 shadow-sm backdrop-blur">
+                <p className="text-sm font-medium text-muted-foreground">Resumo da sua entrada</p>
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <Heart className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-semibold text-foreground">{moodLabel}</p>
+                    <p className="text-sm text-muted-foreground">Nível atual: {moodValue}/5</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="ghost"
               onClick={() => navigate(buildTenantPath(tenant?.slug, '/diario-emocional'))}
-              className="flex items-center gap-2"
+              className="flex w-fit items-center gap-2 rounded-full border border-border/60 bg-background/70 px-4 py-2 transition-all hover:-translate-y-0.5 hover:bg-accent/10"
             >
               <ArrowLeft className="h-4 w-4" />
               Voltar
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold">
-                {isEditMode ? 'Editar Entrada' : 'Nova Entrada do Diário'}
-              </h1>
-              <p className="text-muted-foreground">
-                {isEditMode 
-                  ? `Editando entrada de ${new Date(formData.date).toLocaleDateString('pt-BR')}`
-                  : 'Registre como você está se sentindo na data selecionada'
-                }
-              </p>
-            </div>
+
+            {initialized && (
+              <div className="flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-2 text-sm text-muted-foreground shadow-sm">
+                {saveStatus === 'saving' || isAutoSaving ? (
+                  <>
+                    <Clock className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-primary">Salvando automaticamente...</span>
+                  </>
+                ) : saveStatus === 'saved' ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-green-600">Rascunho salvo automaticamente</span>
+                  </>
+                ) : saveStatus === 'error' ? (
+                  <>
+                    <XCircle className="h-4 w-4 text-red-500" />
+                    <span className="text-red-600">Erro no auto-save. Dados salvos localmente.</span>
+                  </>
+                ) : null}
+              </div>
+            )}
           </div>
 
-              {/* Status Alerts */}
           {isEditMode && (
-            <Alert>
+            <Alert className="rounded-2xl border-primary/20 bg-primary/5">
               <Edit className="h-4 w-4" />
               <AlertDescription>
-                Você está editando uma entrada existente para {new Date(formData.date).toLocaleDateString('pt-BR')}. 
-                Suas alterações irão sobrescrever os dados anteriores.
+                Você está editando uma entrada existente para {new Date(formData.date).toLocaleDateString('pt-BR')}. Suas alterações irão sobrescrever os dados anteriores.
               </AlertDescription>
             </Alert>
           )}
 
-          {/* Comparação com registro anterior */}
           {currentEntry && (() => {
             const previous = allEntries
               .filter((e) => e.date < currentEntry.date)
@@ -501,126 +560,99 @@ const MoodEntry = () => {
             return <EntryComparisonCard current={currentEntry as any} previous={previous as any} />;
           })()}
 
-          {/* Auto-save Status */}
-          {initialized && (
-            <div className="flex items-center gap-2 text-sm">
-              {saveStatus === 'saving' || isAutoSaving ? (
-                <>
-                  <Clock className="h-4 w-4 animate-spin text-blue-500" />
-                  <span className="text-blue-600">Salvando automaticamente...</span>
-                </>
-              ) : saveStatus === 'saved' ? (
-                <>
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-green-600">Rascunho salvo automaticamente</span>
-                </>
-              ) : saveStatus === 'error' ? (
-                <>
-                  <XCircle className="h-4 w-4 text-red-500" />
-                  <span className="text-red-600">Erro no auto-save. Dados salvos localmente.</span>
-                </>
-              ) : null}
+          <Card className="overflow-hidden border-0 shadow-[0_24px_70px_-30px_hsl(var(--primary)/0.35)]">
+            <div className="border-b bg-gradient-to-r from-primary/10 via-background to-accent/10 p-6 lg:p-8">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Heart className="h-5 w-5 text-primary" />
+                    {isEditMode ? 'Editando seus sentimentos' : 'Como você está se sentindo?'}
+                  </CardTitle>
+                  <CardDescription className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                    {isEditMode
+                      ? 'Atualize os campos abaixo para modificar seu registro emocional e manter o seu histórico mais completo.'
+                      : 'Preencha os campos abaixo para registrar como você se sente na data selecionada com uma experiência mais acolhedora.'}
+                  </CardDescription>
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-background/80 px-3 py-1.5 text-sm font-medium text-primary">
+                  <Sparkles className="h-4 w-4" />
+                  {isEditMode ? 'Modo edição' : 'Modo novo registro'}
+                </div>
+              </div>
             </div>
-          )}
-
-          {/* Auto-save Status */}
-          {initialized && (
-            <div className="flex items-center gap-2 text-sm">
-              {saveStatus === 'saving' || isAutoSaving ? (
-                <>
-                  <Clock className="h-4 w-4 animate-spin text-blue-500" />
-                  <span className="text-blue-600">Salvando automaticamente...</span>
-                </>
-              ) : saveStatus === 'saved' ? (
-                <>
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-green-600">Rascunho salvo automaticamente</span>
-                </>
-              ) : saveStatus === 'error' ? (
-                <>
-                  <XCircle className="h-4 w-4 text-red-500" />
-                  <span className="text-red-600">Erro no auto-save. Dados salvos localmente.</span>
-                </>
-              ) : null}
-            </div>
-          )}
-
-          {/* Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Heart className="h-5 w-5" />
-                {isEditMode ? 'Editando seus sentimentos' : 'Como você está se sentindo?'}
-              </CardTitle>
-              <CardDescription>
-                {isEditMode 
-                  ? 'Atualize os campos abaixo para modificar seu registro emocional'
-                  : 'Preencha os campos abaixo para registrar como você se sente na data selecionada'
-                }
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Date */}
-              <div className="space-y-2">
-                <Label htmlFor="date">Data dos Sentimentos</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  max={getTodayLocalDateString()}
-                  disabled={checkingExisting}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Selecione a data em que você estava se sentindo desta forma
-                </p>
-                {checkingExisting && (
-                  <p className="text-sm text-blue-600">Verificando entrada existente...</p>
-                )}
+            <CardContent className="space-y-6 p-6 lg:p-8">
+              <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-background to-muted/40 p-4 sm:p-5">
+                <div className="space-y-2">
+                  <Label htmlFor="date" className="text-sm font-semibold text-foreground">
+                    Data dos Sentimentos
+                  </Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => handleDateChange(e.target.value)}
+                    max={getTodayLocalDateString()}
+                    disabled={checkingExisting}
+                    className="h-11 rounded-2xl border-border/70 bg-background/90"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Selecione a data em que você estava se sentindo desta forma.
+                  </p>
+                  {checkingExisting && (
+                    <p className="text-sm font-medium text-primary">Verificando entrada existente...</p>
+                  )}
+                </div>
               </div>
 
-              {/* Dynamic Emotions */}
               {activeConfigs.length === 0 ? (
-                <div className="p-6 border border-dashed rounded-lg text-center">
-                  <p className="text-muted-foreground mb-4">
+                <div className="rounded-3xl border border-dashed border-primary/20 bg-primary/5 p-6 text-center">
+                  <p className="mb-4 text-muted-foreground">
                     Você ainda não configurou nenhuma emoção para acompanhar.
                   </p>
                   <Button
                     variant="outline"
                     onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/configurar'))}
+                    className="rounded-full"
                   >
-                    <Settings2 className="h-4 w-4 mr-2" />
+                    <Settings2 className="mr-2 h-4 w-4" />
                     Configurar Emoções
                   </Button>
                 </div>
               ) : (
-                activeConfigs.map((config) => {
-                  const currentValue = formData.emotion_values[config.emotion_type] ?? Math.floor((config.scale_min + config.scale_max) / 2);
-                  return (
-                    <div key={config.emotion_type} className="space-y-2">
-                      <Label>{config.display_name}</Label>
-                      <DynamicEmotionSlider
-                        emotionConfig={config}
-                        value={[currentValue]}
-                        onValueChange={(value: number[]) =>
-                          setFormData(prev => ({
-                            ...prev,
-                            emotion_values: {
-                              ...prev.emotion_values,
-                              [config.emotion_type]: value[0],
-                            },
-                          }))
-                        }
-                      />
-                    </div>
-                  );
-                })
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {activeConfigs.map((config) => {
+                    const currentValue = formData.emotion_values[config.emotion_type] ?? Math.floor((config.scale_min + config.scale_max) / 2);
+                    return (
+                      <div key={config.emotion_type} className="rounded-2xl border border-border/70 bg-card/70 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-4">
+                        <div className="mb-2 flex justify-end">
+                          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary sm:px-3 sm:py-1.5">
+                            {currentValue}/{config.scale_max}
+                          </span>
+                        </div>
+                        <DynamicEmotionSlider
+                          emotionConfig={config}
+                          value={[currentValue]}
+                          onValueChange={(value: number[]) =>
+                            setFormData(prev => ({
+                              ...prev,
+                              emotion_values: {
+                                ...prev.emotion_values,
+                                [config.emotion_type]: value[0],
+                              },
+                            }))
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               )}
 
-              {/* Sleep */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="sleep_hours">Horas de sono</Label>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-3xl border border-border/70 bg-card/70 p-4 shadow-sm">
+                  <Label htmlFor="sleep_hours" className="text-sm font-semibold text-foreground">
+                    Horas de sono
+                  </Label>
                   <Input
                     id="sleep_hours"
                     type="number"
@@ -630,34 +662,34 @@ const MoodEntry = () => {
                     value={formData.sleep_hours}
                     onChange={(e) => setFormData(prev => ({ ...prev, sleep_hours: e.target.value }))}
                     placeholder="Ex: 8"
+                    className="mt-2 h-11 rounded-2xl border-border/70 bg-background/90"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Qualidade do Sono</Label>
-                  <SleepSlider
-                    value={formData.sleep_quality}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, sleep_quality: value }))}
-                  />
+                <div className="rounded-3xl border border-border/70 bg-card/70 p-4 shadow-sm">
+                  <Label className="text-sm font-semibold text-foreground">Qualidade do Sono</Label>
+                  <div className="mt-4">
+                    <SleepSlider
+                      value={formData.sleep_quality}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, sleep_quality: value }))}
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Tags */}
-              <div className="space-y-4">
+              <div className="rounded-3xl border border-border/70 bg-card/70 p-5 shadow-sm">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label className="text-base font-semibold">
-                      🏷️ Etiquetas para organizar
+                    <Label className="text-base font-semibold text-foreground">
+                      Etiquetas para organizar
                     </Label>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Use etiquetas para organizar e encontrar suas entradas mais facilmente. 
-                    Marque momentos importantes como: trabalho estressante, dia em família, exercício físico, etc.
+                    Use etiquetas para organizar e encontrar suas entradas mais facilmente. Marque momentos importantes como trabalho, família, exercício ou lazer.
                   </p>
                 </div>
 
-                {/* Quick Tag Suggestions */}
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Sugestões rápidas:</p>
+                <div className="mt-4 space-y-3">
+                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Sugestões rápidas</p>
                   <div className="flex flex-wrap gap-2">
                     {['Trabalho', 'Família', 'Exercício', 'Amigos', 'Estudo', 'Lazer'].map((suggestion) => (
                       <Button
@@ -672,13 +704,13 @@ const MoodEntry = () => {
                               tags: [...prev.tags, suggestion]
                             }));
                             toast({
-                              title: "Etiqueta adicionada",
+                              title: 'Etiqueta adicionada',
                               description: `"${suggestion}" foi adicionado às suas etiquetas`,
                             });
                           }
                         }}
                         disabled={formData.tags.includes(suggestion)}
-                        className="text-xs"
+                        className="rounded-full px-3 py-1.5 text-xs"
                       >
                         {suggestion}
                       </Button>
@@ -686,34 +718,33 @@ const MoodEntry = () => {
                   </div>
                 </div>
 
-                {/* Tag Input */}
-                <div className="flex gap-2">
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                   <Input
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="Digite uma categoria personalizada (ex: terapia, meditação...)"
+                    placeholder="Digite uma categoria personalizada"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         addTag();
                       }
                     }}
+                    className="h-11 rounded-2xl border-border/70 bg-background/90"
                   />
-                  <Button type="button" onClick={addTag} variant="outline">
+                  <Button type="button" onClick={addTag} variant="outline" className="rounded-2xl px-4">
                     Adicionar
                   </Button>
                 </div>
 
-                {/* Display Tags */}
                 {formData.tags.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">Suas etiquetas (clique para remover):</p>
+                  <div className="mt-4 space-y-2">
+                    <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Suas etiquetas</p>
                     <div className="flex flex-wrap gap-2">
                       {formData.tags.map((tag) => (
-                        <Badge 
-                          key={tag} 
-                          variant="secondary" 
-                          className="cursor-pointer hover:bg-destructive/20 hover:border-destructive transition-all duration-200 animate-scale-in px-3 py-1.5" 
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="cursor-pointer rounded-full border border-primary/10 bg-background/80 px-3 py-1.5 transition-all hover:-translate-y-0.5 hover:bg-destructive/10"
                           onClick={() => removeTag(tag)}
                           title="Clique para remover esta etiqueta"
                         >
@@ -725,26 +756,25 @@ const MoodEntry = () => {
                 )}
               </div>
 
-              {/* Journal & Audio */}
-              <div className="space-y-3">
-                <Label>Reflexões do Dia (opcional)</Label>
-                <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="texto">Texto</TabsTrigger>
-                    <TabsTrigger value="audio">Áudio</TabsTrigger>
+              <div className="rounded-3xl border border-border/70 bg-card/70 p-4 shadow-sm">
+                <Label className="text-sm font-semibold text-foreground">Reflexões do Dia (opcional)</Label>
+                <Tabs value={selectedTab} onValueChange={setSelectedTab} className="mt-3 w-full">
+                  <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-muted/70 p-1">
+                    <TabsTrigger value="texto" className="rounded-xl">Texto</TabsTrigger>
+                    <TabsTrigger value="audio" className="rounded-xl">Áudio</TabsTrigger>
                   </TabsList>
-                  
-                  <TabsContent value="texto" className="space-y-2">
+
+                  <TabsContent value="texto" className="mt-3 space-y-2">
                     <Textarea
                       id="journal"
                       value={formData.journal_text}
                       onChange={(e) => setFormData(prev => ({ ...prev, journal_text: e.target.value }))}
-                      placeholder="Como foi seu dia? O que você aprendeu? Como se sentiu? Aconteceu algo especial? Use este espaço para refletir sobre seus sentimentos e experiências..."
-                      className="min-h-32"
+                      placeholder="Como foi seu dia? O que você aprendeu? Como se sentiu?"
+                      className="min-h-32 rounded-2xl border-border/70 bg-background/90"
                     />
                   </TabsContent>
-                  
-                  <TabsContent value="audio" className="space-y-2">
+
+                  <TabsContent value="audio" className="mt-3 space-y-2">
                     <AudioRecorder
                       userId={user?.id || ''}
                       entryDate={formData.date}
@@ -754,7 +784,6 @@ const MoodEntry = () => {
                       onTranscriptionComplete={(transcription, reflection) => {
                         setFormData(prev => ({ ...prev, journal_text: reflection }));
                         setSelectedTab('texto');
-                        
                         console.log('🎤 Transcription completed, text updated');
                       }}
                       className="w-full"
@@ -763,41 +792,40 @@ const MoodEntry = () => {
                 </Tabs>
               </div>
 
-              {/* Submit */}
-              <div className="flex gap-3 pt-4">
-                <Button 
-                  onClick={handleSubmit} 
+              <div className="flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row">
+                <Button
+                  onClick={handleSubmit}
                   disabled={saving || checkingExisting || isAutoSaving}
-                  className="flex-1 flex items-center gap-2"
+                  className="flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-2.5"
                 >
                   <Save className="h-4 w-4" />
                   {saving ? 'Salvando...' : isAutoSaving ? 'Auto-salvando...' : (isEditMode ? 'Atualizar Entrada' : 'Salvar Entrada')}
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional'))}
                   disabled={saving || checkingExisting}
+                  className="rounded-2xl px-4 py-2.5"
                 >
                   Cancelar
                 </Button>
               </div>
 
-              {/* Export and Share */}
               {(isEditMode || Object.keys(formData.emotion_values).length > 0 || formData.journal_text) && (
-                <div className="flex gap-3 pt-2 border-t">
-                  <Button 
-                    variant="outline" 
+                <div className="flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row">
+                  <Button
+                    variant="outline"
                     onClick={exportToPDF}
-                    className="flex items-center gap-2"
+                    className="flex items-center justify-center gap-2 rounded-2xl"
                     disabled={saving || checkingExisting}
                   >
                     <Download className="h-4 w-4" />
                     Exportar PDF
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={shareWhatsApp}
-                    className="flex items-center gap-2"
+                    className="flex items-center justify-center gap-2 rounded-2xl"
                     disabled={saving || checkingExisting}
                   >
                     <Share className="h-4 w-4" />
