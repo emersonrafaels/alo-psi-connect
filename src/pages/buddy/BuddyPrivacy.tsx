@@ -477,7 +477,7 @@ export default function BuddyPrivacy() {
 
         <aside className="min-w-0 space-y-4">
           <div className="flex justify-center">
-            <BuddyMascot size="md" />
+            <BuddyMascot size="lg" variant="lgpd"/>
           </div>
           <Card className="border-primary/20 bg-primary/5 min-w-0">
             <CardContent className="p-5 text-center space-y-2">

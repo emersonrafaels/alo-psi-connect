@@ -74,7 +74,7 @@ export default function BuddyHome() {
       <div className="grid min-w-0 max-w-full gap-4 sm:gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card className="border-primary/20 min-w-0 max-w-full overflow-visible sm:overflow-hidden">
           <CardHeader className="p-3 min-[380px]:p-4 sm:p-6 min-w-0">
-            <BuddyMascot size="md" message={insight?.narrative?.split("\n")[0] ?? "Estou aprendendo sobre você a cada conversa. Me conte um pouco mais quando quiser."} />
+            <BuddyMascot size="md" message={insight?.narrative?.split("\n")[0] ?? "Estou aprendendo sobre você a cada conversa. Me conte um pouco mais quando quiser."} variant="arms" />
           </CardHeader>
           <CardContent className="grid min-w-0 gap-4 p-3 min-[380px]:p-4 sm:p-6 pt-0 min-[380px]:pt-0 sm:pt-0">
             <div className="flex flex-wrap gap-2 text-xs">

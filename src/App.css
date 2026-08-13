@@ -39,13 +39,9 @@
   color: #888;
 }
 
-/* Buddy character subtle float animation */
-@keyframes buddyFloat {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-  100% { transform: translateY(0); }
-}
+/* Buddy character animation disabled for a static, more grounded visual */
 .buddy-animated {
-  animation: buddyFloat 3s ease-in-out infinite;
-  will-change: transform;
+  animation: none;
+  transform: none;
+  will-change: auto;
 }
