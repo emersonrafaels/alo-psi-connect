@@ -927,18 +927,6 @@ const HomeRedeBemEstar = () => {
                     );
                   })}
             </div>
-            <div className="text-center mt-10 sm:mt-12">
-              <button onClick={goToProfessionals}
-                      className="px-8 py-4 rounded-full font-bold text-sm transition-colors"
-                      style={{
-                        border: "1px solid var(--rbe-outline-variant)",
-                        color: "var(--rbe-primary)",
-                        background: "transparent",
-                      }}>
-                Ver todos os profissionais
-                <ArrowRight className="w-4 h-4 inline ml-2" />
-              </button>
-            </div>
           </div>
         </section>
       )}
