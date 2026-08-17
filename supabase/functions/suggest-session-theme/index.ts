@@ -104,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
         subject: `Sua sugestão foi recebida - ${normalizedTenantName}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            ${tenant.logo_url ? `<img src="${tenant.logo_url}" alt="${normalizedTenantName}" style="width: 150px; margin-bottom: 20px;">` : ''}
+            ${lightBgLogo ? `<img src="${lightBgLogo}" alt="${normalizedTenantName}" style="width: 150px; margin-bottom: 20px;">` : ''}
             <h1 style="color: ${tenant.primary_color || '#4338ca'};">Obrigado pela sua sugestão!</h1>
             <p>Olá${nome ? ` ${nome}` : ''},</p>
             <p>Recebemos sua sugestão de tema para um encontro em grupo:</p>
