@@ -48,7 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Fetch tenant info
     const { data: tenant, error: tenantError } = await supabase
       .from("tenants")
-      .select("name, admin_email, logo_url, primary_color, slug")
+      .select("name, admin_email, logo_url, feature_logo_url, primary_color, slug")
       .eq("id", tenantId)
       .single();
 
