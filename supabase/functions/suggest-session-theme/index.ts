@@ -48,7 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Fetch tenant info
     const { data: tenant, error: tenantError } = await supabase
       .from("tenants")
-      .select("name, admin_email, logo_url, primary_color, slug")
+      .select("name, admin_email, logo_url, feature_logo_url, primary_color, slug")
       .eq("id", tenantId)
       .single();
 
@@ -68,6 +68,9 @@ const handler = async (req: Request): Promise<Response> => {
     if (tenant.slug === 'medcos') {
       normalizedTenantName = 'MEDCOS';
     }
+
+    // Logo para fundo claro (letras escuras) — o email tem fundo branco
+    const lightBgLogo = (tenant as any).feature_logo_url || tenant.logo_url;
 
     // Save suggestion to database
     const { error: insertError } = await supabase
@@ -104,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
         subject: `Sua sugestão foi recebida - ${normalizedTenantName}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            ${tenant.logo_url ? `<img src="${tenant.logo_url}" alt="${normalizedTenantName}" style="width: 150px; margin-bottom: 20px;">` : ''}
+            ${lightBgLogo ? `<img src="${lightBgLogo}" alt="${normalizedTenantName}" style="width: 150px; margin-bottom: 20px;">` : ''}
             <h1 style="color: ${tenant.primary_color || '#4338ca'};">Obrigado pela sua sugestão!</h1>
             <p>Olá${nome ? ` ${nome}` : ''},</p>
             <p>Recebemos sua sugestão de tema para um encontro em grupo:</p>
