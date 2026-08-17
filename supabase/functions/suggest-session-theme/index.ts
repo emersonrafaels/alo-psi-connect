@@ -69,6 +69,9 @@ const handler = async (req: Request): Promise<Response> => {
       normalizedTenantName = 'MEDCOS';
     }
 
+    // Logo para fundo claro (letras escuras) — o email tem fundo branco
+    const lightBgLogo = (tenant as any).feature_logo_url || tenant.logo_url;
+
     // Save suggestion to database
     const { error: insertError } = await supabase
       .from("group_session_theme_suggestions")
