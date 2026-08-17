@@ -52,14 +52,28 @@ Deno.serve(async (req) => {
 
     // Resolve paciente
     const { data: profile } = await admin
-      .from("profiles").select("id, nome").eq("user_id", userId).maybeSingle();
+      .from("profiles").select("id, nome, tenant_id").eq("user_id", userId).maybeSingle();
     if (!profile) return json({ error: "Perfil não encontrado" }, 404);
 
-    const { data: patient } = await admin
+    let { data: patient } = await admin
       .from("pacientes").select("id").eq("profile_id", profile.id).maybeSingle();
-    if (!patient) return json({ error: "Paciente não encontrado" }, 404);
+
+    if (!patient) {
+      // Cria o registro de paciente automaticamente na primeira vez
+      const { data: created, error: createErr } = await admin
+        .from("pacientes")
+        .insert({ profile_id: profile.id, tenant_id: (profile as any).tenant_id ?? null })
+        .select("id")
+        .single();
+      if (createErr || !created) {
+        console.error("Buddy create patient error", createErr);
+        return json({ error: "db_error", message: createErr?.message ?? "Não foi possível criar o registro do estudante" }, 500);
+      }
+      patient = created;
+    }
 
     const patientId = patient.id as string;
+
     const periodEnd = new Date();
     const periodStart = new Date(periodEnd.getTime() - periodDays * 86400_000);
     const periodStartISO = periodStart.toISOString().slice(0, 10);

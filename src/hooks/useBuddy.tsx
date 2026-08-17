@@ -97,15 +97,24 @@ export function useCurrentPatientId() {
     enabled: !!user?.id,
     queryFn: async () => {
       const { data: profile } = await supabase
-        .from("profiles").select("id").eq("user_id", user!.id).maybeSingle();
+        .from("profiles").select("id, tenant_id").eq("user_id", user!.id).maybeSingle();
       if (!profile) return null;
       const { data: pac } = await supabase
         .from("pacientes").select("id").eq("profile_id", profile.id).maybeSingle();
-      return pac?.id ?? null;
+      if (pac?.id) return pac.id;
+
+      // Cria o registro do estudante na primeira visita ao Buddy
+      const { data: created } = await supabase
+        .from("pacientes")
+        .insert({ profile_id: profile.id, tenant_id: (profile as any).tenant_id ?? null })
+        .select("id")
+        .maybeSingle();
+      return created?.id ?? null;
     },
     ...buddyFreshQueryOptions,
   });
 }
+
 
 export function useBuddyPortrait() {
   const { data: patientId } = useCurrentPatientId();
@@ -164,11 +173,22 @@ export function useLatestBuddyInsight(periodDays = 30) {
       const { data, error } = await supabase.functions.invoke("buddy-generate-insights", {
         body: { periodDays },
       });
-      if (error) throw error;
+      if (error) {
+        // Tenta extrair a mensagem real retornada pela edge function
+        let message = error.message;
+        try {
+          const res = (error as any)?.context as Response | undefined;
+          const body = res ? await res.clone().json() : null;
+          if (body?.message || body?.error) message = body.message ?? body.error;
+        } catch { /* mantém mensagem original */ }
+        throw new Error(message);
+      }
+      if ((data as any)?.error) throw new Error((data as any).message ?? (data as any).error);
       return data?.insight as BuddyInsight;
     },
     onSuccess: () => invalidateBuddyData(qc),
   });
+
 
   return { ...query, regenerate };
 }
