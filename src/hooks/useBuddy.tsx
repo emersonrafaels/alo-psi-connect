@@ -97,15 +97,24 @@ export function useCurrentPatientId() {
     enabled: !!user?.id,
     queryFn: async () => {
       const { data: profile } = await supabase
-        .from("profiles").select("id").eq("user_id", user!.id).maybeSingle();
+        .from("profiles").select("id, tenant_id").eq("user_id", user!.id).maybeSingle();
       if (!profile) return null;
       const { data: pac } = await supabase
         .from("pacientes").select("id").eq("profile_id", profile.id).maybeSingle();
-      return pac?.id ?? null;
+      if (pac?.id) return pac.id;
+
+      // Cria o registro do estudante na primeira visita ao Buddy
+      const { data: created } = await supabase
+        .from("pacientes")
+        .insert({ profile_id: profile.id, tenant_id: (profile as any).tenant_id ?? null })
+        .select("id")
+        .maybeSingle();
+      return created?.id ?? null;
     },
     ...buddyFreshQueryOptions,
   });
 }
+
 
 export function useBuddyPortrait() {
   const { data: patientId } = useCurrentPatientId();
