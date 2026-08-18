@@ -155,14 +155,6 @@ const Footer = () => {
                     {tenant?.contact_email && tenant.contact_email !== 'contato@alopsi.com.br' ? tenant.contact_email : 'redebemestar1@gmail.com'}
                   </a>
                 </div>}
-              
-              {/* Trabalhe Conosco */}
-              <div className="pt-2 border-t border-primary-foreground/20">
-                <a href={buildTenantPath(tenantSlug, '/trabalhe-conosco')} className="flex items-center gap-2 hover:opacity-100 transition-opacity font-medium">
-                  <MessageCircle className="w-4 h-4" />
-                  Trabalhe Conosco
-                </a>
-              </div>
             </div>
           </div>
 
