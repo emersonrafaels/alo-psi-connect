@@ -47,11 +47,6 @@ const Footer = () => {
     icon: Heart,
     enabled: professionalsEnabled
   }, {
-    name: "Agendar Consulta",
-    href: buildTenantPath(tenantSlug, "/profissionais"),
-    icon: Calendar,
-    enabled: appointmentsEnabled
-  }, {
     name: "Blog",
     href: buildTenantPath(tenantSlug, "/blog"),
     icon: FileText,
@@ -65,10 +60,6 @@ const Footer = () => {
     name: "Profissionais",
     href: buildTenantPath(tenantSlug, "/profissionais"),
     enabled: professionalsEnabled
-  }, {
-    name: "Agendar",
-    href: buildTenantPath(tenantSlug, "/profissionais"),
-    enabled: appointmentsEnabled
   }, {
     name: "Contato",
     href: buildTenantPath(tenantSlug, "/contato"),
