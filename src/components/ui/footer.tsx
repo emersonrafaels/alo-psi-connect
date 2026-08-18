@@ -5,7 +5,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { buildTenantPath } from "@/utils/tenantHelpers";
 import { useModuleEnabled } from "@/hooks/useModuleEnabled";
 import { useTheme } from "next-themes";
-import { MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, MessageCircle, Heart, MessageCircleIcon, Mail } from "lucide-react";
+import { MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, Calendar, FileText, Heart, MessageCircleIcon, Mail } from "lucide-react";
 const Footer = () => {
   const {
     isAdmin
