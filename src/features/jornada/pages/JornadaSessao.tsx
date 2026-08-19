@@ -37,6 +37,8 @@ import { PracticePlayer } from "../components/players/PracticePlayer";
 import { PracticeCheckout } from "../components/PracticeCheckout";
 import { getEmotionNode } from "../config/emotion-taxonomy";
 import { getFamilyCopy } from "../config/family-copy";
+import { getFamilyEmoji } from "../config/family-emojis";
+
 import { getContextQuestion } from "../config/context-questions";
 import { getPractice } from "../config/practices";
 import { recommend } from "../engine/recommend";
