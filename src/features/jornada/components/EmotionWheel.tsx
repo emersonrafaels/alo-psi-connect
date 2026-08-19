@@ -59,24 +59,28 @@ const clampNum = (value: number, min: number, max: number) =>
 /**
  * Tamanho de fonte derivado do espaço real do arco (corda no raio do rótulo)
  * e da espessura do anel, em vez de contagem bruta de caracteres.
+ * Fatias estreitas leem melhor com o texto no sentido radial.
  */
 const fitFont = (
   label: string,
   radius: number,
   arcDeg: number,
-  bounds: { min: number; max: number },
-  maxWidth = Number.POSITIVE_INFINITY
+  ringWidth: number,
+  bounds: { min: number; max: number }
 ) => {
+  const radial = arcDeg < 55;
   const chord = 2 * radius * Math.sin((arcDeg * Math.PI) / 360);
-  const available = Math.min(chord * 0.92, maxWidth);
+  const available = radial ? ringWidth - 18 : Math.min(chord * 0.9, ringWidth * 1.4);
   const single = available / Math.max(label.length, 1) / 0.58;
   const lines = single < bounds.min ? wrap(label, Math.ceil(label.length / 2)) : [label];
   const longest = Math.max(...lines.map((l) => l.length));
   return {
+    radial,
     lines,
     size: Math.round(clampNum(available / Math.max(longest, 1) / 0.58, bounds.min, bounds.max)),
   };
 };
+
 
 
 export interface EmotionWheelProps {
