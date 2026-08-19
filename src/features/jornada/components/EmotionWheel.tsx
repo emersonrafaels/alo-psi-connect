@@ -229,7 +229,6 @@ export const EmotionWheel = ({
         item,
         index,
         path: sector(112, 302, start, end),
-        emoji: midPoint(246, start, end),
         label: midPoint(196, start, end),
         tone,
         ink: inkOn(tone),
@@ -257,7 +256,7 @@ export const EmotionWheel = ({
             </radialGradient>
           </defs>
           <circle cx={C} cy={C} r={318} fill="url(#wheel-halo)" />
-          {familyRing.map(({ item, index, path, label, emoji, tone, ink, font }) => (
+          {familyRing.map(({ item, index, path, label, tone, ink, font }) => (
             <g
               key={item.id}
               className={cn(!reducedMotion && "animate-scale-in")}
@@ -288,26 +287,26 @@ export const EmotionWheel = ({
                 }
               />
               <text
-                x={emoji.x}
-                y={emoji.y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize={34}
-                className="pointer-events-none select-none"
-              >
-                {getFamilyEmoji(item.id)}
-              </text>
-              <text
                 x={label.x}
                 y={label.y}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize={font.size}
-                className="pointer-events-none select-none font-bold"
+                className="pointer-events-none select-none"
                 fill={ink}
               >
-                {item.label}
+                <tspan
+                  x={label.x}
+                  dy={-font.size * 0.9}
+                  fontSize={font.size * 1.5}
+                  aria-hidden
+                >
+                  {getFamilyEmoji(item.id)}
+                </tspan>
+                <tspan x={label.x} dy={font.size * 1.6} fontSize={font.size} fontWeight={700}>
+                  {item.label}
+                </tspan>
               </text>
+
             </g>
           ))}
           <circle cx={C} cy={C} r={106} fill="hsl(var(--card))" />
