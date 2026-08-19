@@ -68,7 +68,7 @@ const StageShell = ({
 
 const JourneyFlow = () => {
   const { state, dispatch, helpers } = useJourney();
-  const [useList, setUseList] = useState(false);
+  const [note, setNote] = useState("");
   const [note, setNote] = useState("");
 
   const family = helpers.family;
