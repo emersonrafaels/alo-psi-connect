@@ -239,7 +239,10 @@ export const EmotionWheel = ({
                 y={label.y}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className="pointer-events-none select-none text-[17px] font-semibold"
+                className={cn(
+                  "pointer-events-none select-none font-semibold",
+                  node.label.length > 9 ? "text-[14px]" : "text-[17px]"
+                )}
                 fill="hsl(var(--background))"
               >
                 {lines.map((line, i) => (
