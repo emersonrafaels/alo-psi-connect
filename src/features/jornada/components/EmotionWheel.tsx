@@ -486,13 +486,21 @@ export const EmotionWheel = ({
                 d={sector(234, 306, cStart, cStart + step3)}
                 fill={fill3}
                 stroke="hsl(var(--background))"
-                strokeWidth={2}
+                strokeWidth={level3Id === child.id ? 3.5 : 2}
                 tabIndex={0}
                 role="button"
                 aria-pressed={level3Id === child.id}
                 aria-label={`${child.label}, nível 3 de ${selected.label}`}
                 className={sliceClass}
-                onClick={() => onSelectLevel3(child.id)}
+                onMouseEnter={() => setHoveredId(child.id)}
+                onMouseLeave={() => setHoveredId((prev) => (prev === child.id ? null : prev))}
+                onFocus={() => setHoveredId(child.id)}
+                onBlur={() => setHoveredId((prev) => (prev === child.id ? null : prev))}
+                onClick={() => {
+                  buzz();
+                  onSelectLevel3(child.id);
+                }}
+
                 onKeyDown={(e) =>
                   handleKeys(e, selectedChildren, childIndex, () => onSelectLevel3(child.id), {
                     up: selected.id,
