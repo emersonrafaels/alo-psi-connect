@@ -37,6 +37,8 @@ import { PracticePlayer } from "../components/players/PracticePlayer";
 import { PracticeCheckout } from "../components/PracticeCheckout";
 import { getEmotionNode } from "../config/emotion-taxonomy";
 import { getFamilyCopy } from "../config/family-copy";
+import { getFamilyEmoji } from "../config/family-emojis";
+
 import { getContextQuestion } from "../config/context-questions";
 import { getPractice } from "../config/practices";
 import { recommend } from "../engine/recommend";
@@ -295,20 +297,33 @@ const JourneyFlow = () => {
               <div className="space-y-4">
                 {family && (
                   <div
-                    className="mx-auto flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold"
+                    className="mx-auto flex w-fit flex-wrap items-center justify-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold"
                     style={{
                       borderColor: `${family.color}66`,
                       backgroundColor: `${family.color}1f`,
                     }}
                   >
-                    <span
-                      aria-hidden
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: family.color }}
-                    />
-                    Família selecionada: {family.label}
+                    <span aria-hidden>{getFamilyEmoji(family.id)}</span>
+                    <span>{family.label}</span>
+                    {level2Node && (
+                      <>
+                        <span aria-hidden className="text-muted-foreground">
+                          ›
+                        </span>
+                        <span>{level2Node.label}</span>
+                      </>
+                    )}
+                    {level3Node && (
+                      <>
+                        <span aria-hidden className="text-muted-foreground">
+                          ›
+                        </span>
+                        <span>{level3Node.label}</span>
+                      </>
+                    )}
                   </div>
                 )}
+
                 <EmotionWheel
                   className="mx-auto w-full max-w-[min(100%,560px)]"
                   familyId={state.familyId}
@@ -353,7 +368,7 @@ const JourneyFlow = () => {
                     className="text-xl font-semibold"
                     style={{ color: family?.color ?? "hsl(var(--foreground))" }}
                   >
-                    {family?.label ?? "Escolha uma família"}
+                    {family ? `${getFamilyEmoji(family.id)} ${family.label}` : "Escolha uma família"}
                   </h3>
                   <p className="text-sm leading-relaxed text-muted-foreground">
                     {family
@@ -402,7 +417,11 @@ const JourneyFlow = () => {
                   className="rounded-full text-xs"
                   style={{ backgroundColor: family.color, color: "hsl(var(--background))" }}
                 >
+                  <span aria-hidden className="mr-1">
+                    {getFamilyEmoji(family.id)}
+                  </span>
                   {family.label}
+
                 </Badge>
 
                 <EmotionLevelCards

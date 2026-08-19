@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { EMOTION_FAMILIES, getEmotionNode } from "../config/emotion-taxonomy";
+import { getFamilyEmoji } from "../config/family-emojis";
 import type { EmotionNode } from "../domain/types";
 import { inkOn, muteColor, ringTones, shade } from "../utils/wheelColors";
+
 
 const SIZE = 640;
 const C = SIZE / 2;
@@ -112,6 +114,17 @@ export const EmotionWheel = ({
   className,
 }: EmotionWheelProps) => {
   const reducedMotion = usePrefersReducedMotion();
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const buzz = useCallback(() => {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate?.(8);
+      } catch {
+        /* silencioso */
+      }
+    }
+  }, []);
+
   const family = useMemo(
     () => EMOTION_FAMILIES.find((f) => f.id === familyId) ?? null,
     [familyId]
@@ -216,42 +229,74 @@ export const EmotionWheel = ({
         item,
         index,
         path: sector(112, 302, start, end),
-        label: midPoint(212, start, end),
+        emoji: midPoint(246, start, end),
+        label: midPoint(196, start, end),
         tone,
         ink: inkOn(tone),
-        font: fitFont(item.label, 212, step, 190, { min: 16, max: 25 }),
+        font: fitFont(item.label, 196, step, 170, { min: 16, max: 24 }),
       };
     });
   }, []);
+
+  const hoveredNode = getEmotionNode(hoveredId);
+  const hoveredFamily = EMOTION_FAMILIES.find((f) => f.id === hoveredId) ?? null;
 
   if (!family) {
     return (
       <div className={cn("relative w-full", className)}>
         <svg
           viewBox={`0 0 ${SIZE} ${SIZE}`}
-          className="w-full"
+          className="w-full overflow-visible"
           role="group"
           aria-label="Roda das Emoções: escolha a família emocional mais próxima"
         >
-          {familyRing.map(({ item, index, path, label, tone, ink, font }) => (
-            <g key={item.id}>
+          <defs>
+            <radialGradient id="wheel-halo" cx="50%" cy="50%" r="50%">
+              <stop offset="55%" stopColor="hsl(var(--primary))" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <circle cx={C} cy={C} r={318} fill="url(#wheel-halo)" />
+          {familyRing.map(({ item, index, path, label, emoji, tone, ink, font }) => (
+            <g
+              key={item.id}
+              className={cn(!reducedMotion && "animate-scale-in")}
+              style={!reducedMotion ? { animationDelay: `${index * 45}ms` } : undefined}
+            >
               <path
                 ref={registerSlice(item.id)}
                 d={path}
                 fill={tone}
                 stroke="hsl(var(--background))"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 tabIndex={0}
                 role="button"
                 aria-label={`Família ${item.label}`}
                 className={sliceClass}
-                onClick={() => onSelectFamily(item.id)}
+                onMouseEnter={() => setHoveredId(item.id)}
+                onMouseLeave={() => setHoveredId((prev) => (prev === item.id ? null : prev))}
+                onFocus={() => setHoveredId(item.id)}
+                onBlur={() => setHoveredId((prev) => (prev === item.id ? null : prev))}
+                onClick={() => {
+                  buzz();
+                  onSelectFamily(item.id);
+                }}
                 onKeyDown={(e) =>
                   handleKeys(e, EMOTION_FAMILIES as EmotionNode[], index, () =>
                     onSelectFamily(item.id)
                   )
                 }
               />
+              <text
+                x={emoji.x}
+                y={emoji.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={34}
+                className="pointer-events-none select-none"
+              >
+                {getFamilyEmoji(item.id)}
+              </text>
               <text
                 x={label.x}
                 y={label.y}
@@ -269,10 +314,33 @@ export const EmotionWheel = ({
         </svg>
 
         <div className="pointer-events-none absolute left-1/2 top-1/2 w-[32%] -translate-x-1/2 -translate-y-1/2 space-y-1 text-center">
-          <p className="text-lg font-semibold leading-tight text-foreground">Como você está?</p>
-          <p className="text-xs leading-snug text-muted-foreground">
-            Toque na família mais próxima do que você sente agora
-          </p>
+          {hoveredFamily ? (
+            <div className={cn(!reducedMotion && "animate-fade-in")}>
+              <p className="text-3xl leading-none" aria-hidden>
+                {getFamilyEmoji(hoveredFamily.id)}
+              </p>
+              <p
+                className="mt-1 text-xl font-bold leading-tight"
+                style={{ color: hoveredFamily.color }}
+              >
+                {hoveredFamily.label}
+              </p>
+            </div>
+          ) : (
+            <>
+              <p
+                className={cn(
+                  "text-lg font-semibold leading-tight text-foreground",
+                  !reducedMotion && "pulse"
+                )}
+              >
+                Como você está?
+              </p>
+              <p className="text-xs leading-snug text-muted-foreground">
+                Toque na família mais próxima do que você sente agora
+              </p>
+            </>
+          )}
         </div>
 
         <p className="sr-only" aria-live="polite">
@@ -281,6 +349,7 @@ export const EmotionWheel = ({
       </div>
     );
   }
+
 
   // ---------- níveis 2 e 3 ----------
   const level2List = family.children ?? [];
@@ -314,10 +383,18 @@ export const EmotionWheel = ({
     <div className={cn("relative w-full", className)}>
       <svg
         viewBox={`0 0 ${SIZE} ${SIZE}`}
-        className="w-full"
+        className="w-full overflow-visible"
         role="group"
         aria-label={`Roda das Emoções: família ${family.label}. Escolha a palavra mais próxima.`}
       >
+        <defs>
+          <radialGradient id="wheel-halo-family" cx="50%" cy="50%" r="50%">
+            <stop offset="52%" stopColor={family.color} stopOpacity="0.22" />
+            <stop offset="100%" stopColor={family.color} stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx={C} cy={C} r={322} fill="url(#wheel-halo-family)" />
+
         {/* anel da família — clique volta para as famílias */}
         <path
           d={sector(94, 138, 0, 360)}
@@ -373,19 +450,27 @@ export const EmotionWheel = ({
               d={sector(140, 230, start, start + step2)}
               fill={fill2}
               stroke="hsl(var(--background))"
-              strokeWidth={2}
+              strokeWidth={active ? 3.5 : 2}
               tabIndex={0}
               role="button"
               aria-pressed={active}
               aria-label={`${node.label}, nível 2 de ${family.label}`}
               className={sliceClass}
-              onClick={() => onSelectLevel2(node.id)}
+              onMouseEnter={() => setHoveredId(node.id)}
+              onMouseLeave={() => setHoveredId((prev) => (prev === node.id ? null : prev))}
+              onFocus={() => setHoveredId(node.id)}
+              onBlur={() => setHoveredId((prev) => (prev === node.id ? null : prev))}
+              onClick={() => {
+                buzz();
+                onSelectLevel2(node.id);
+              }}
               onKeyDown={(e) =>
                 handleKeys(e, level2List, index, () => onSelectLevel2(node.id), {
                   down: active ? selectedChildren[0]?.id : null,
                 })
               }
             />
+
           );
         })}
 
@@ -401,13 +486,21 @@ export const EmotionWheel = ({
                 d={sector(234, 306, cStart, cStart + step3)}
                 fill={fill3}
                 stroke="hsl(var(--background))"
-                strokeWidth={2}
+                strokeWidth={level3Id === child.id ? 3.5 : 2}
                 tabIndex={0}
                 role="button"
                 aria-pressed={level3Id === child.id}
                 aria-label={`${child.label}, nível 3 de ${selected.label}`}
                 className={sliceClass}
-                onClick={() => onSelectLevel3(child.id)}
+                onMouseEnter={() => setHoveredId(child.id)}
+                onMouseLeave={() => setHoveredId((prev) => (prev === child.id ? null : prev))}
+                onFocus={() => setHoveredId(child.id)}
+                onBlur={() => setHoveredId((prev) => (prev === child.id ? null : prev))}
+                onClick={() => {
+                  buzz();
+                  onSelectLevel3(child.id);
+                }}
+
                 onKeyDown={(e) =>
                   handleKeys(e, selectedChildren, childIndex, () => onSelectLevel3(child.id), {
                     up: selected.id,
@@ -504,6 +597,9 @@ export const EmotionWheel = ({
       </svg>
 
       <div className="absolute left-1/2 top-1/2 w-[26%] -translate-x-1/2 -translate-y-1/2 space-y-1 text-center">
+        <span className="block text-2xl leading-none" aria-hidden>
+          {getFamilyEmoji(family.id)}
+        </span>
         <span
           className="mx-auto flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest"
           style={{ color: tones.level2 }}
@@ -515,10 +611,16 @@ export const EmotionWheel = ({
           />
           {family.label}
         </span>
-        <p className="text-base font-semibold leading-tight text-foreground">
-          {level2Node ? level2Node.label : "Escolha uma palavra"}
+        <p
+          key={hoveredNode?.id ?? level2Node?.id ?? "vazio"}
+          className={cn(
+            "text-base font-semibold leading-tight text-foreground",
+            !reducedMotion && "animate-fade-in"
+          )}
+        >
+          {hoveredNode?.label ?? level2Node?.label ?? "Escolha uma palavra"}
         </p>
-        {level3Node && (
+        {!hoveredNode && level3Node && (
           <p className="text-xs font-medium leading-tight text-muted-foreground">
             {level3Node.label}
           </p>
@@ -531,6 +633,7 @@ export const EmotionWheel = ({
           {level2Node ? "voltar" : "trocar família"}
         </button>
       </div>
+
 
       <p className="sr-only" aria-live="polite">
         {liveMessage}
