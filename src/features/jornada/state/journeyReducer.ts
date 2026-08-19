@@ -217,6 +217,20 @@ export const journeyReducer = (state: JourneyState, action: JourneyAction): Jour
         stage: "wheel",
       });
 
+    case "CLEAR_FAMILY":
+      return touched({
+        ...clearFromEmotion(state),
+        familyId: null,
+        level2Id: null,
+        level3Id: null,
+        selectedEmotionId: null,
+        intensity: null,
+        contextAnswerId: null,
+        stage: "wheel",
+      });
+
+
+
     case "SELECT_LEVEL2":
       return touched({
         ...clearFromEmotion(state),
