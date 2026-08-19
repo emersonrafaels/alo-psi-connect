@@ -410,13 +410,14 @@ export const EmotionWheel = ({
 
   // Tipografia uniforme por anel: usa o menor tamanho que serve a todos os rótulos.
   const ringFont2 = level2List.map((node) =>
-    fitFont(node.label, 186, step2, 90, { min: 12, max: 18 })
+    fitFont(node.label, 187, step2, 98, { min: 10, max: 18 })
   );
   const size2 = Math.min(...ringFont2.map((f) => f.size));
   const ringFont3 = selectedChildren.map((child) =>
-    fitFont(child.label, 270, step3, 78, { min: 12, max: 17 }, true)
+    fitFont(child.label, 272, step3, 72, { min: 10, max: 17 }, true)
   );
-  const size3 = selectedChildren.length ? Math.min(...ringFont3.map((f) => f.size)) : 14;
+  const size3 = selectedChildren.length ? Math.min(...ringFont3.map((f) => f.size)) : 13;
+
 
 
   return (
