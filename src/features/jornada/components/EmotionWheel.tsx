@@ -320,7 +320,3 @@ export const EmotionWheel = ({
     </div>
   );
 };
-
-    </div>
-  );
-};
