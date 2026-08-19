@@ -284,7 +284,10 @@ export const EmotionWheel = ({
                       textAnchor="middle"
                       dominantBaseline="middle"
                       transform={`rotate(${rotation} ${cLabel.x} ${cLabel.y})`}
-                      className="pointer-events-none select-none text-[14px] font-medium"
+                      className={cn(
+                        "pointer-events-none select-none font-medium",
+                        child.label.length > 10 ? "text-[11px]" : "text-[13px]"
+                      )}
                       fill="hsl(var(--background))"
                     >
                       {child.label}
