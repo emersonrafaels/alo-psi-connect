@@ -310,9 +310,11 @@ const JourneyFlow = () => {
                   </div>
                 )}
                 <EmotionWheel
-                  className="mx-auto max-w-[560px]"
+                  className="mx-auto w-full max-w-[min(100%,560px)]"
                   familyId={state.familyId}
                   level2Id={state.level2Id}
+                  level3Id={state.level3Id}
+
                   onSelectFamily={(familyId) => {
                     setRefineOpen(false);
                     dispatch({ type: "SELECT_FAMILY", familyId });
