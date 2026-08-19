@@ -11,7 +11,10 @@ export const ContextQuestionStep = ({
   onAnswer: (optionId: string) => void;
 }) => (
   <div className="space-y-4">
-    <h3 className="text-lg font-semibold text-foreground">{question.question}</h3>
+    {question.question && (
+      <h3 className="text-lg font-semibold text-foreground">{question.question}</h3>
+    )}
+
     <div className="grid gap-2 sm:grid-cols-2">
       {question.options.map((option) => {
         const selected = value === option.id;
