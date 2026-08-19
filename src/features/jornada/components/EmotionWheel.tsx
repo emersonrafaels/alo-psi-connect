@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { EMOTION_FAMILIES, getEmotionNode } from "../config/emotion-taxonomy";
 import type { EmotionNode } from "../domain/types";
 import { inkOn, muteColor, ringTones, shade } from "../utils/wheelColors";
@@ -52,9 +53,33 @@ const wrap = (label: string, maxChars: number) => {
   return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
 };
 
+const clampNum = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
+
+/**
+ * Tamanho de fonte derivado do espaço real do arco (corda no raio do rótulo),
+ * em vez de contagem bruta de caracteres.
+ */
+const fitFont = (
+  label: string,
+  radius: number,
+  arcDeg: number,
+  bounds: { min: number; max: number }
+) => {
+  const chord = 2 * radius * Math.sin((arcDeg * Math.PI) / 360);
+  const lines = wrap(label, Math.max(6, Math.round(label.length / 2) + 1));
+  const longest = Math.max(...lines.map((l) => l.length));
+  const perChar = (chord * 0.92) / Math.max(longest, 1);
+  return {
+    lines,
+    size: Math.round(clampNum(perChar / 0.58, bounds.min, bounds.max)),
+  };
+};
+
 export interface EmotionWheelProps {
   familyId: string | null;
   level2Id: string | null;
+  level3Id?: string | null;
   onSelectFamily: (familyId: string) => void;
   onSelectLevel2: (emotionId: string) => void;
   onSelectLevel3: (emotionId: string) => void;
@@ -65,64 +90,133 @@ export interface EmotionWheelProps {
 /**
  * Roda das Emoções em anéis concêntricos.
  * Sem família escolhida: um único anel com as 6 famílias.
- * Com família escolhida: núcleo da família + anel de nível 2 + anel de nível 3.
+ * Com família escolhida: núcleo da família + anel de nível 2 + anel de nível 3
+ * (este último focado apenas na fatia de nível 2 selecionada).
  */
 export const EmotionWheel = ({
   familyId,
   level2Id,
+  level3Id = null,
   onSelectFamily,
   onSelectLevel2,
   onSelectLevel3,
   onBackLevel,
   className,
 }: EmotionWheelProps) => {
+  const reducedMotion = usePrefersReducedMotion();
   const family = useMemo(
     () => EMOTION_FAMILIES.find((f) => f.id === familyId) ?? null,
     [familyId]
   );
   const level2Node = getEmotionNode(level2Id);
+  const level3Node = getEmotionNode(level3Id);
   const sliceRefs = useRef<Record<string, SVGPathElement | null>>({});
+  const keyboardNav = useRef(false);
   const prevFamily = useRef<string | null>(null);
 
-  // Ao abrir uma família, foca a primeira fatia de nível 2 (navegação por teclado).
+  const registerSlice = useCallback(
+    (id: string) => (el: SVGPathElement | null) => {
+      sliceRefs.current[id] = el;
+    },
+    []
+  );
+
+  // Foco só é movido quando a navegação veio do teclado (evita scroll-jump no clique).
   useEffect(() => {
-    if (family && prevFamily.current !== family.id) {
+    if (family && prevFamily.current !== family.id && keyboardNav.current) {
       const first = family.children?.[0];
       if (first) sliceRefs.current[first.id]?.focus?.();
     }
     prevFamily.current = family?.id ?? null;
   }, [family]);
 
+  const focusSibling = (siblings: EmotionNode[], index: number, delta: number) => {
+    const next = siblings[(index + delta + siblings.length) % siblings.length];
+    keyboardNav.current = true;
+    sliceRefs.current[next.id]?.focus?.();
+  };
+
   const handleKeys = (
     event: React.KeyboardEvent,
     siblings: EmotionNode[],
     index: number,
-    onSelect: () => void
+    onSelect: () => void,
+    neighbors?: { up?: string | null; down?: string | null }
   ) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      onSelect();
-      return;
-    }
-    if (event.key === "Escape") {
-      event.preventDefault();
-      onBackLevel();
-      return;
-    }
-    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
-      event.preventDefault();
-      const delta = event.key === "ArrowRight" ? 1 : -1;
-      const next = siblings[(index + delta + siblings.length) % siblings.length];
-      sliceRefs.current[next.id]?.focus?.();
+    const focusId = (id?: string | null) => {
+      if (!id) return;
+      keyboardNav.current = true;
+      sliceRefs.current[id]?.focus?.();
+    };
+
+    switch (event.key) {
+      case "Enter":
+      case " ":
+        event.preventDefault();
+        keyboardNav.current = true;
+        onSelect();
+        return;
+      case "Escape":
+        event.preventDefault();
+        onBackLevel();
+        return;
+      case "ArrowRight":
+        event.preventDefault();
+        focusSibling(siblings, index, 1);
+        return;
+      case "ArrowLeft":
+        event.preventDefault();
+        focusSibling(siblings, index, -1);
+        return;
+      case "ArrowUp":
+        event.preventDefault();
+        focusId(neighbors?.up);
+        return;
+      case "ArrowDown":
+        event.preventDefault();
+        focusId(neighbors?.down);
+        return;
+      case "Home":
+        event.preventDefault();
+        focusId(siblings[0]?.id);
+        return;
+      case "End":
+        event.preventDefault();
+        focusId(siblings[siblings.length - 1]?.id);
+        return;
+      default:
     }
   };
 
-  const sliceClass =
-    "cursor-pointer outline-none transition-[fill,filter] duration-300 hover:brightness-105 focus-visible:brightness-110";
+  const sliceClass = cn(
+    "cursor-pointer outline-none hover:brightness-105 focus-visible:brightness-110",
+    !reducedMotion && "transition-[fill,d,opacity] duration-300"
+  );
+
+  const liveMessage = family
+    ? [family.label, level2Node?.label, level3Node?.label].filter(Boolean).join(" · ")
+    : "Nenhuma família selecionada";
 
   // ---------- nível 1 (famílias) ----------
-  if (!family) {
+  const familyRing = useMemo(() => {
     const step = 360 / EMOTION_FAMILIES.length;
+    return EMOTION_FAMILIES.map((item, index) => {
+      const start = index * step;
+      const end = start + step;
+      const tone = shade(item.color, -4, 4);
+      return {
+        item,
+        index,
+        path: sector(112, 302, start, end),
+        label: midPoint(212, start, end),
+        tone,
+        ink: inkOn(tone),
+        font: fitFont(item.label, 212, step, { min: 16, max: 25 }),
+      };
+    });
+  }, []);
+
+  if (!family) {
     return (
       <div className={cn("relative w-full", className)}>
         <svg
@@ -131,43 +225,38 @@ export const EmotionWheel = ({
           role="group"
           aria-label="Roda das Emoções: escolha a família emocional mais próxima"
         >
-          {EMOTION_FAMILIES.map((item, index) => {
-            const start = index * step;
-            const end = start + step;
-            const label = midPoint(212, start, end);
-            const tone = shade(item.color, -4, 4);
-            return (
-              <g key={item.id}>
-                <path
-                  ref={(el) => (sliceRefs.current[item.id] = el)}
-                  d={sector(112, 302, start, end)}
-                  fill={tone}
-                  stroke="hsl(var(--background))"
-                  strokeWidth={3}
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`Família ${item.label}`}
-                  className={sliceClass}
-                  onClick={() => onSelectFamily(item.id)}
-                  onKeyDown={(e) =>
-                    handleKeys(e, EMOTION_FAMILIES as EmotionNode[], index, () =>
-                      onSelectFamily(item.id)
-                    )
-                  }
-                />
-                <text
-                  x={label.x}
-                  y={label.y}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className="pointer-events-none select-none text-[23px] font-bold"
-                  fill={inkOn(tone)}
-                >
-                  {item.label}
-                </text>
-              </g>
-            );
-          })}
+          {familyRing.map(({ item, index, path, label, tone, ink, font }) => (
+            <g key={item.id}>
+              <path
+                ref={registerSlice(item.id)}
+                d={path}
+                fill={tone}
+                stroke="hsl(var(--background))"
+                strokeWidth={2}
+                tabIndex={0}
+                role="button"
+                aria-label={`Família ${item.label}`}
+                className={sliceClass}
+                onClick={() => onSelectFamily(item.id)}
+                onKeyDown={(e) =>
+                  handleKeys(e, EMOTION_FAMILIES as EmotionNode[], index, () =>
+                    onSelectFamily(item.id)
+                  )
+                }
+              />
+              <text
+                x={label.x}
+                y={label.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={font.size}
+                className="pointer-events-none select-none font-bold"
+                fill={ink}
+              >
+                {item.label}
+              </text>
+            </g>
+          ))}
           <circle cx={C} cy={C} r={106} fill="hsl(var(--card))" />
         </svg>
 
@@ -177,15 +266,30 @@ export const EmotionWheel = ({
             Toque na família mais próxima do que você sente agora
           </p>
         </div>
+
+        <p className="sr-only" aria-live="polite">
+          {liveMessage}
+        </p>
       </div>
     );
   }
 
   // ---------- níveis 2 e 3 ----------
   const level2List = family.children ?? [];
-  const step2 = 360 / Math.max(level2List.length, 1);
   const tones = ringTones(family.color);
-  
+  const step2 = 360 / Math.max(level2List.length, 1);
+
+  const selectedIndex = level2List.findIndex((node) => node.id === level2Id);
+  const selected = selectedIndex >= 0 ? level2List[selectedIndex] : null;
+  const selectedChildren = selected?.children ?? [];
+
+  // O anel externo aparece só para a fatia escolhida, num arco largo e legível.
+  const outerArc = selected ? Math.max(step2, 120) : 0;
+  const outerStart = selected
+    ? selectedIndex * step2 + step2 / 2 - outerArc / 2
+    : 0;
+  const step3 = outerArc / Math.max(selectedChildren.length, 1);
+  const neutralOuter = muteColor(tones.level3, 72);
 
   return (
     <div className={cn("relative w-full", className)}>
@@ -212,29 +316,49 @@ export const EmotionWheel = ({
           }}
         />
 
+        {/* faixa neutra do anel externo enquanto não há palavra escolhida */}
+        {!selected && (
+          <>
+            <path
+              d={sector(234, 300, 0, 360)}
+              fill={neutralOuter}
+              className="pointer-events-none"
+            />
+            <text
+              x={C}
+              y={38}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontSize={15}
+              className="pointer-events-none select-none font-semibold uppercase tracking-widest"
+              fill={inkOn(neutralOuter)}
+            >
+              escolha uma palavra
+            </text>
+          </>
+        )}
+
         {level2List.map((node, index) => {
           const start = index * step2;
           const end = start + step2;
           const active = level2Id === node.id;
           const label = midPoint(186, start, end);
-          const lines = wrap(node.label, 11);
-          const children = node.children ?? [];
-          const step3 = (end - start) / Math.max(children.length, 1);
           const fill2 = active
             ? shade(tones.level2, -8, 6)
             : level2Id
               ? muteColor(tones.level2, 42)
               : tones.level2;
           const ink2 = inkOn(fill2);
+          const font2 = fitFont(node.label, 186, step2, { min: 12, max: 19 });
 
           return (
             <g key={node.id}>
               <path
-                ref={(el) => (sliceRefs.current[node.id] = el)}
+                ref={registerSlice(node.id)}
                 d={sector(140, 230, start, end)}
                 fill={fill2}
                 stroke="hsl(var(--background))"
-                strokeWidth={2.5}
+                strokeWidth={2}
                 tabIndex={0}
                 role="button"
                 aria-pressed={active}
@@ -242,7 +366,9 @@ export const EmotionWheel = ({
                 className={sliceClass}
                 onClick={() => onSelectLevel2(node.id)}
                 onKeyDown={(e) =>
-                  handleKeys(e, level2List, index, () => onSelectLevel2(node.id))
+                  handleKeys(e, level2List, index, () => onSelectLevel2(node.id), {
+                    down: active ? selectedChildren[0]?.id : null,
+                  })
                 }
               />
               <text
@@ -250,79 +376,81 @@ export const EmotionWheel = ({
                 y={label.y}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className={cn(
-                  "pointer-events-none select-none font-bold",
-                  lines.length > 1
-                    ? "text-[15px]"
-                    : node.label.length > 11
-                      ? "text-[13px]"
-                      : node.label.length > 8
-                        ? "text-[15px]"
-                        : "text-[18px]"
-                )}
+                fontSize={font2.size}
+                className="pointer-events-none select-none font-bold"
                 fill={ink2}
               >
-                {lines.map((line, i) => (
-                  <tspan key={line} x={label.x} dy={i === 0 ? (lines.length > 1 ? -10 : 0) : 19}>
+                {font2.lines.map((line, i) => (
+                  <tspan
+                    key={line}
+                    x={label.x}
+                    dy={i === 0 ? (font2.lines.length > 1 ? -font2.size * 0.55 : 0) : font2.size * 1.1}
+                  >
                     {line}
                   </tspan>
                 ))}
               </text>
-
-              {children.map((child, childIndex) => {
-                const cStart = start + childIndex * step3;
-                const cEnd = cStart + step3;
-                const cLabel = midPoint(272, cStart, cEnd);
-                const flip = cLabel.deg > 180;
-                const rotation = flip ? cLabel.deg + 90 : cLabel.deg - 90;
-                const fill3 = active ? tones.level3 : muteColor(tones.level3, 55);
-                const ink3 = inkOn(fill3);
-                const cLines = wrap(child.label, 12);
-                return (
-                  <g key={child.id}>
-                    <path
-                      ref={(el) => (sliceRefs.current[child.id] = el)}
-                      d={sector(234, 306, cStart, cEnd)}
-                      fill={fill3}
-                      stroke="hsl(var(--background))"
-                      strokeWidth={2}
-                      tabIndex={0}
-                      role="button"
-                      aria-label={`${child.label}, nível 3 de ${node.label}`}
-                      className={sliceClass}
-                      onClick={() => onSelectLevel3(child.id)}
-                      onKeyDown={(e) =>
-                        handleKeys(e, children, childIndex, () => onSelectLevel3(child.id))
-                      }
-                    />
-                    <text
-                      x={cLabel.x}
-                      y={cLabel.y}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      transform={`rotate(${rotation} ${cLabel.x} ${cLabel.y})`}
-                      className={cn(
-                        "pointer-events-none select-none font-semibold",
-                        child.label.length > 10 ? "text-[11px]" : "text-[13px]"
-                      )}
-                      fill={ink3}
-                    >
-                      {cLines.map((line, i) => (
-                        <tspan
-                          key={line}
-                          x={cLabel.x}
-                          dy={i === 0 ? (cLines.length > 1 ? -7 : 0) : 14}
-                        >
-                          {line}
-                        </tspan>
-                      ))}
-                    </text>
-                  </g>
-                );
-              })}
             </g>
           );
         })}
+
+        {/* anel externo focado na fatia escolhida */}
+        {selected &&
+          selectedChildren.map((child, childIndex) => {
+            const cStart = outerStart + childIndex * step3;
+            const cEnd = cStart + step3;
+            const cLabel = midPoint(268, cStart, cEnd);
+            const fill3 = level3Id === child.id ? shade(tones.level3, -12, 8) : tones.level3;
+            const ink3 = inkOn(fill3);
+            const font3 = fitFont(child.label, 268, step3, { min: 13, max: 20 });
+            return (
+              <g key={child.id}>
+                <path
+                  ref={registerSlice(child.id)}
+                  d={sector(234, 306, cStart, cEnd)}
+                  fill={fill3}
+                  stroke="hsl(var(--background))"
+                  strokeWidth={2}
+                  tabIndex={0}
+                  role="button"
+                  aria-pressed={level3Id === child.id}
+                  aria-label={`${child.label}, nível 3 de ${selected.label}`}
+                  className={sliceClass}
+                  onClick={() => onSelectLevel3(child.id)}
+                  onKeyDown={(e) =>
+                    handleKeys(e, selectedChildren, childIndex, () => onSelectLevel3(child.id), {
+                      up: selected.id,
+                    })
+                  }
+                />
+                <text
+                  x={cLabel.x}
+                  y={cLabel.y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize={font3.size}
+                  className="pointer-events-none select-none font-semibold"
+                  fill={ink3}
+                >
+                  {font3.lines.map((line, i) => (
+                    <tspan
+                      key={line}
+                      x={cLabel.x}
+                      dy={
+                        i === 0
+                          ? font3.lines.length > 1
+                            ? -font3.size * 0.55
+                            : 0
+                          : font3.size * 1.1
+                      }
+                    >
+                      {line}
+                    </tspan>
+                  ))}
+                </text>
+              </g>
+            );
+          })}
 
         <circle cx={C} cy={C} r={90} fill="hsl(var(--card))" />
       </svg>
@@ -342,6 +470,11 @@ export const EmotionWheel = ({
         <p className="text-base font-semibold leading-tight text-foreground">
           {level2Node ? level2Node.label : "Escolha uma palavra"}
         </p>
+        {level3Node && (
+          <p className="text-xs font-medium leading-tight text-muted-foreground">
+            {level3Node.label}
+          </p>
+        )}
         <button
           type="button"
           onClick={onBackLevel}
@@ -350,6 +483,10 @@ export const EmotionWheel = ({
           {level2Node ? "voltar" : "trocar família"}
         </button>
       </div>
+
+      <p className="sr-only" aria-live="polite">
+        {liveMessage}
+      </p>
     </div>
   );
 };
