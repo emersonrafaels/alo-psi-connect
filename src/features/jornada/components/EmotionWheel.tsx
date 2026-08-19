@@ -383,10 +383,18 @@ export const EmotionWheel = ({
     <div className={cn("relative w-full", className)}>
       <svg
         viewBox={`0 0 ${SIZE} ${SIZE}`}
-        className="w-full"
+        className="w-full overflow-visible"
         role="group"
         aria-label={`Roda das Emoções: família ${family.label}. Escolha a palavra mais próxima.`}
       >
+        <defs>
+          <radialGradient id="wheel-halo-family" cx="50%" cy="50%" r="50%">
+            <stop offset="52%" stopColor={family.color} stopOpacity="0.22" />
+            <stop offset="100%" stopColor={family.color} stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx={C} cy={C} r={322} fill="url(#wheel-halo-family)" />
+
         {/* anel da família — clique volta para as famílias */}
         <path
           d={sector(94, 138, 0, 360)}
