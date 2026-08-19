@@ -17,13 +17,23 @@
 - O chip acima/ao lado da roda passa a mostrar a trilha completa: `Família → Palavra (nível 2) → Palavra (nível 3)`, com o emoji da família no início e um separador discreto.
 - Quando o nível 3 ainda não foi escolhido, aparece só até o nível 2 (sem placeholder vazio).
 - O núcleo da roda continua com a hierarquia; o painel lateral e o resumo de contexto usam a mesma trilha, sem duplicar informação.
+### 4. Detalhes que fazem a experiência ser UAU
+- **Hover informativo**: ao passar o mouse (ou focar) numa fatia, o núcleo antecipa a palavra em texto grande, sem precisar clicar — leitura instantânea mesmo em fatias estreitas.
+- **Halo suave por família**: um brilho radial na cor da família atrás da roda, dando a sensação de luz própria como na referência.
+- **Núcleo vivo**: o mascote/ícone central pulsa discretamente enquanto nada foi escolhido, e vira a trilha escolhida (emoji + palavra) depois — com transição de fade/scale curta.
+- **Entrada encenada**: as fatias aparecem em cascata rápida (stagger) ao abrir a roda e ao trocar de família; o anel externo desliza a partir da fatia escolhida.
+- **Confirmação tátil**: clique dá um feedback de escala mínima na fatia e uma vibração curta em mobile (`navigator.vibrate`, quando suportado).
+- **Intensidade colorida**: a escala de intensidade herda a cor da família, de tom claro (1) a saturado (5), conectando visualmente os passos.
+- **Frase curatorial contextual**: sob a roda, a frase de `family-copy` aparece com transição ao escolher a família, no lugar da dica genérica.
+- **Progresso enxuto**: um indicador de 3 pontos (família → palavra → refinamento) mostra onde o usuário está sem poluir a tela.
+- Tudo o que anima respeita `prefers-reduced-motion` (versão estática equivalente).
 
 ## Detalhes técnicos
 - `src/features/jornada/config/family-copy.ts` (ou novo `family-emojis.ts`): mapa `familyId → emoji`, exportado como `FAMILY_EMOJI` com fallback.
-- `src/features/jornada/components/EmotionWheel.tsx`: renderizar `<text>` de emoji nas fatias de nível 1 e no anel/núcleo da família; realce da fatia ativa; ajustes de stroke.
+- `src/features/jornada/components/EmotionWheel.tsx`: emoji nas fatias de nível 1 e no núcleo; estado de hover/foco (`hoveredId`) para prévia no núcleo; halo com `radialGradient`; stagger via `animation-delay` por índice; realce da fatia ativa e ajustes de stroke.
 - `src/features/jornada/components/EmotionLevelCards.tsx`: emoji no cabeçalho da família.
-- `src/features/jornada/pages/JornadaSessao.tsx`: chip de estado ao lado da roda mostrando a trilha até o nível 3.
+- `src/features/jornada/components/IntensityScale.tsx`: cor derivada da família (props opcional `accentColor`).
+- `src/features/jornada/pages/JornadaSessao.tsx`: chip com trilha até o nível 3, frase curatorial contextual, indicador de progresso da seleção.
+- `src/index.css`: keyframes de pulso/cascata e halo, atrelados a tokens existentes.
 - Sem mudanças na taxonomia, reducer, motor de recomendação, analytics ou banco.
 
-## Observação
-Sua última frase ficou cortada ("Além diss…"). Se havia um terceiro ajuste, me diga e eu incluo antes de implementar.
