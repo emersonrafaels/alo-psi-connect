@@ -450,19 +450,27 @@ export const EmotionWheel = ({
               d={sector(140, 230, start, start + step2)}
               fill={fill2}
               stroke="hsl(var(--background))"
-              strokeWidth={2}
+              strokeWidth={active ? 3.5 : 2}
               tabIndex={0}
               role="button"
               aria-pressed={active}
               aria-label={`${node.label}, nível 2 de ${family.label}`}
               className={sliceClass}
-              onClick={() => onSelectLevel2(node.id)}
+              onMouseEnter={() => setHoveredId(node.id)}
+              onMouseLeave={() => setHoveredId((prev) => (prev === node.id ? null : prev))}
+              onFocus={() => setHoveredId(node.id)}
+              onBlur={() => setHoveredId((prev) => (prev === node.id ? null : prev))}
+              onClick={() => {
+                buzz();
+                onSelectLevel2(node.id);
+              }}
               onKeyDown={(e) =>
                 handleKeys(e, level2List, index, () => onSelectLevel2(node.id), {
                   down: active ? selectedChildren[0]?.id : null,
                 })
               }
             />
+
           );
         })}
 
