@@ -950,31 +950,9 @@ const JornadaSessao = () => {
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
       <main className="flex-1">
-        <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:py-14">
-          <div className="mb-8 space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                Protótipo
-              </Badge>
-              <Link
-                to={`${basePath}/praticas`}
-                className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-              >
-                Voltar para Práticas
-              </Link>
-            </div>
-            <h1 className="flex items-center gap-2 text-3xl font-semibold text-foreground sm:text-4xl">
-              <Sparkles className="h-7 w-7 text-primary" />
-              Jornada de Autorregulação
-            </h1>
-            <p className="max-w-2xl text-muted-foreground">
-              Nomear o que você sente, escolher uma prática adequada ao momento e perceber o que
-              mudou. Nenhuma etapa é diagnóstico e nada aqui gera alerta automático.
-            </p>
-          </div>
-
+        <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-8 sm:py-12">
           <JourneyProvider>
-            <JourneyFlow />
+            <JourneyFlow basePath={basePath} />
           </JourneyProvider>
         </div>
       </main>
