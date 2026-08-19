@@ -61,6 +61,7 @@ export type JourneyAction =
   | { type: "SELECT_MODE"; mode: JourneyMode; entryPoint: string }
   | { type: "OPEN_WHEEL" }
   | { type: "SELECT_FAMILY"; familyId: string }
+  | { type: "CLEAR_FAMILY" }
   | { type: "SELECT_LEVEL2"; emotionId: string }
   | { type: "SELECT_LEVEL3"; emotionId: string }
   | { type: "CONFIRM_EMOTION"; emotionId: string }
