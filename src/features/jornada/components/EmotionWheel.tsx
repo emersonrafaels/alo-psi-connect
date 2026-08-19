@@ -66,9 +66,10 @@ const fitFont = (
   radius: number,
   arcDeg: number,
   ringWidth: number,
-  bounds: { min: number; max: number }
+  bounds: { min: number; max: number },
+  preferRadial = false
 ) => {
-  const radial = arcDeg < 55;
+  const radial = preferRadial || arcDeg < 55;
   const chord = 2 * radius * Math.sin((arcDeg * Math.PI) / 360);
   const available = radial ? ringWidth - 18 : Math.min(chord * 0.9, ringWidth * 1.4);
   const single = available / Math.max(label.length, 1) / 0.58;
@@ -304,7 +305,7 @@ export const EmotionWheel = ({
   );
   const size2 = Math.min(...ringFont2.map((f) => f.size));
   const ringFont3 = selectedChildren.map((child) =>
-    fitFont(child.label, 270, step3, 72, { min: 12, max: 17 })
+    fitFont(child.label, 270, step3, 78, { min: 12, max: 17 }, true)
   );
   const size3 = selectedChildren.length ? Math.min(...ringFont3.map((f) => f.size)) : 14;
 
