@@ -407,6 +407,7 @@ const JourneyFlow = () => {
                   nodes={family.children}
                   selectedId={state.level2Id}
                   levelLabel="Nível 2"
+                  familyLabel={family.label}
                   color={family.color}
                   onSelect={(emotionId) => {
                     setRefineOpen(false);
