@@ -46,13 +46,29 @@ const midPoint = (r: number, start: number, end: number) => {
   return { x: C + r * Math.cos(a), y: C + r * Math.sin(a), deg: (start + end) / 2 };
 };
 
-/** Divide um texto longo em duas linhas equilibradas. */
+/** Divide um texto longo em duas linhas equilibradas (com hífen em palavra única). */
 const wrap = (label: string, maxChars: number) => {
   if (label.length <= maxChars) return [label];
   const words = label.split(" ");
-  if (words.length === 1) return [label];
-  const mid = Math.ceil(words.length / 2);
-  return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
+  if (words.length > 1) {
+    const mid = Math.ceil(words.length / 2);
+    return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
+  }
+  // palavra única: quebra próxima ao meio, num ponto após vogal
+  const target = Math.ceil(label.length / 2);
+  const vowels = "aeiouáâãàéêíóôõú";
+  let cut = target;
+  for (let offset = 0; offset <= 3; offset += 1) {
+    const candidates = [target + offset, target - offset];
+    const found = candidates.find(
+      (i) => i > 1 && i < label.length - 1 && vowels.includes(label[i - 1].toLowerCase())
+    );
+    if (found) {
+      cut = found;
+      break;
+    }
+  }
+  return [`${label.slice(0, cut)}-`, label.slice(cut)];
 };
 
 const clampNum = (value: number, min: number, max: number) =>
@@ -61,7 +77,7 @@ const clampNum = (value: number, min: number, max: number) =>
 /**
  * Tamanho de fonte derivado do espaço real do arco (corda no raio do rótulo)
  * e da espessura do anel, em vez de contagem bruta de caracteres.
- * Fatias estreitas leem melhor com o texto no sentido radial.
+ * Fatias estreitas ou rótulos longos leem melhor no sentido radial.
  */
 const fitFont = (
   label: string,
@@ -71,18 +87,21 @@ const fitFont = (
   bounds: { min: number; max: number },
   preferRadial = false
 ) => {
-  const radial = preferRadial || arcDeg < 55;
+  const radial = preferRadial || arcDeg < 55 || label.length > 10;
   const chord = 2 * radius * Math.sin((arcDeg * Math.PI) / 360);
-  const available = radial ? ringWidth - 18 : Math.min(chord * 0.9, ringWidth * 1.4);
-  const single = available / Math.max(label.length, 1) / 0.58;
-  const lines = single < bounds.min ? wrap(label, Math.ceil(label.length / 2)) : [label];
+  const available = radial ? ringWidth - 14 : Math.min(chord * 0.9, ringWidth * 1.4);
+  const charWidth = 0.58;
+  const single = available / Math.max(label.length, 1) / charWidth;
+  const lines =
+    single < bounds.min ? wrap(label, Math.ceil(label.length / 2)) : [label];
   const longest = Math.max(...lines.map((l) => l.length));
   return {
     radial,
     lines,
-    size: Math.round(clampNum(available / Math.max(longest, 1) / 0.58, bounds.min, bounds.max)),
+    size: Math.round(clampNum(available / Math.max(longest, 1) / charWidth, bounds.min, bounds.max)),
   };
 };
+
 
 
 
@@ -391,13 +410,14 @@ export const EmotionWheel = ({
 
   // Tipografia uniforme por anel: usa o menor tamanho que serve a todos os rótulos.
   const ringFont2 = level2List.map((node) =>
-    fitFont(node.label, 186, step2, 90, { min: 12, max: 18 })
+    fitFont(node.label, 187, step2, 98, { min: 10, max: 18 })
   );
   const size2 = Math.min(...ringFont2.map((f) => f.size));
   const ringFont3 = selectedChildren.map((child) =>
-    fitFont(child.label, 270, step3, 78, { min: 12, max: 17 }, true)
+    fitFont(child.label, 272, step3, 72, { min: 10, max: 17 }, true)
   );
-  const size3 = selectedChildren.length ? Math.min(...ringFont3.map((f) => f.size)) : 14;
+  const size3 = selectedChildren.length ? Math.min(...ringFont3.map((f) => f.size)) : 13;
+
 
 
   return (
@@ -437,7 +457,7 @@ export const EmotionWheel = ({
         {!selected && (
           <>
             <path
-              d={sector(234, 300, 0, 360)}
+              d={sector(240, 306, 0, 360)}
               fill={neutralOuter}
               className="pointer-events-none"
             />
@@ -468,7 +488,7 @@ export const EmotionWheel = ({
             <path
               key={node.id}
               ref={registerSlice(node.id)}
-              d={sector(140, 230, start, start + step2)}
+              d={sector(138, 236, start, start + step2)}
               fill={fill2}
               stroke="hsl(var(--background))"
               strokeWidth={active ? 3.5 : 2}
@@ -504,7 +524,7 @@ export const EmotionWheel = ({
               <path
                 key={child.id}
                 ref={registerSlice(child.id)}
-                d={sector(234, 306, cStart, cStart + step3)}
+                d={sector(240, 312, cStart, cStart + step3)}
                 fill={fill3}
                 stroke="hsl(var(--background))"
                 strokeWidth={level3Id === child.id ? 3.5 : 2}
@@ -535,7 +555,7 @@ export const EmotionWheel = ({
         {level2List.map((node, index) => {
           const start = index * step2;
           const active = level2Id === node.id;
-          const label = midPoint(186, start, start + step2);
+          const label = midPoint(187, start, start + step2);
           const fill2 = active
             ? shade(tones.level2, -8, 6)
             : level2Id
@@ -578,7 +598,7 @@ export const EmotionWheel = ({
         {selected &&
           selectedChildren.map((child, childIndex) => {
             const cStart = outerStart + childIndex * step3;
-            const cLabel = midPoint(270, cStart, cStart + step3);
+            const cLabel = midPoint(276, cStart, cStart + step3);
             const fill3 = level3Id === child.id ? shade(tones.level3, -12, 8) : tones.level3;
             const font3 = { lines: ringFont3[childIndex].lines, size: size3 };
             const mid3 = cStart + step3 / 2;
