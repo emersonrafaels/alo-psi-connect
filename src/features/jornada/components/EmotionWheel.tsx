@@ -169,11 +169,13 @@ export const EmotionWheel = ({
           <circle cx={C} cy={C} r={106} fill="hsl(var(--card))" />
         </svg>
 
-        <div className="pointer-events-none absolute left-1/2 top-1/2 w-[30%] -translate-x-1/2 -translate-y-1/2 text-center">
-          <p className="text-sm font-medium leading-snug text-muted-foreground">
-            Toque na emoção mais próxima do que você sente agora
+        <div className="pointer-events-none absolute left-1/2 top-1/2 w-[32%] -translate-x-1/2 -translate-y-1/2 space-y-1 text-center">
+          <p className="text-lg font-semibold leading-tight text-foreground">Como você está?</p>
+          <p className="text-xs leading-snug text-muted-foreground">
+            Toque na família mais próxima do que você sente agora
           </p>
         </div>
+
       </div>
     );
   }
