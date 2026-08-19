@@ -229,7 +229,6 @@ export const EmotionWheel = ({
         item,
         index,
         path: sector(112, 302, start, end),
-        emoji: midPoint(246, start, end),
         label: midPoint(196, start, end),
         tone,
         ink: inkOn(tone),
@@ -257,7 +256,7 @@ export const EmotionWheel = ({
             </radialGradient>
           </defs>
           <circle cx={C} cy={C} r={318} fill="url(#wheel-halo)" />
-          {familyRing.map(({ item, index, path, label, emoji, tone, ink, font }) => (
+          {familyRing.map(({ item, index, path, label, tone, ink, font }) => (
             <g
               key={item.id}
               className={cn(!reducedMotion && "animate-scale-in")}
