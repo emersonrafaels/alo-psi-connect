@@ -137,125 +137,95 @@ const JourneyFlow = () => {
 
   // ---------- wheel ----------
   if (state.stage === "wheel") {
-    const level2Options = family?.children ?? [];
-    const level3Options = level2Node?.children ?? [];
-
     return (
       <StageShell
         title="O que você está sentindo agora?"
-        subtitle="Comece pela família emocional. Depois você refina em palavras mais específicas."
+        subtitle="Toque na roda para chegar na palavra mais próxima — ou busque direto pelo nome."
         onBack={() => dispatch({ type: "BACK" })}
       >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <EmotionBreadcrumb
-            ids={[state.familyId, state.level2Id, state.level3Id]}
-            onSelect={(id) => {
-              const node = getEmotionNode(id);
-              if (node?.level === 1) dispatch({ type: "SELECT_FAMILY", familyId: id });
-              if (node?.level === 2) dispatch({ type: "SELECT_LEVEL2", emotionId: id });
-            }}
-          />
-          <Button variant="ghost" size="sm" onClick={() => setUseList((v) => !v)}>
-            <LayoutList className="mr-2 h-4 w-4" />
-            {useList ? "Usar a Roda" : "Ver lista completa"}
-          </Button>
-        </div>
-
-        {useList ? (
-          <EmotionListFallback
-            onSelect={(id) => {
+        <div className="mx-auto w-full max-w-3xl space-y-6">
+          <EmotionSearch
+            onPick={(id) => {
               dispatch({ type: "CONFIRM_EMOTION", emotionId: id });
-              track(JOURNEY_EVENTS.emotionSelected, { emotionId: id, source: "list" });
+              track(JOURNEY_EVENTS.emotionSelected, { emotionId: id, source: "search" });
             }}
           />
-        ) : (
-          <div className="grid gap-8 lg:grid-cols-[auto,1fr]">
-            <EmotionWheel
-              selectedFamilyId={state.familyId}
-              onSelectFamily={(familyId) => {
-                dispatch({ type: "SELECT_FAMILY", familyId });
-                track(JOURNEY_EVENTS.emotionFamilySelected, { familyId });
-              }}
-            />
 
-            <div className="space-y-6">
-              {!family && (
-                <p className="text-sm text-muted-foreground">
-                  Escolha uma família na Roda para ver as palavras disponíveis.
-                </p>
-              )}
-
-              {family && (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                    Nível 2 · {family.label}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {level2Options.map((node) => (
-                      <button
-                        key={node.id}
-                        type="button"
-                        onClick={() => dispatch({ type: "SELECT_LEVEL2", emotionId: node.id })}
-                        aria-pressed={state.level2Id === node.id}
-                        className={
-                          state.level2Id === node.id
-                            ? "rounded-full border border-transparent px-4 py-2 text-sm font-medium text-primary-foreground"
-                            : "rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40"
-                        }
-                        style={
-                          state.level2Id === node.id
-                            ? { backgroundColor: family.color }
-                            : undefined
-                        }
-                      >
-                        {node.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {level2Node && (
-                <div className="space-y-3">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                    Nível 3 · escolha a palavra mais próxima
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {level3Options.map((node) => (
-                      <button
-                        key={node.id}
-                        type="button"
-                        onClick={() => {
-                          dispatch({ type: "CONFIRM_EMOTION", emotionId: node.id });
-                          track(JOURNEY_EVENTS.emotionSelected, {
-                            emotionId: node.id,
-                            source: "wheel",
-                          });
-                        }}
-                        className="rounded-full border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-primary/40 hover:bg-accent/40"
-                      >
-                        {node.label}
-                      </button>
-                    ))}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      dispatch({ type: "CONFIRM_EMOTION", emotionId: level2Node.id });
-                      track(JOURNEY_EVENTS.emotionSelected, {
-                        emotionId: level2Node.id,
-                        source: "wheel_level2",
-                      });
-                    }}
-                  >
-                    Seguir com “{level2Node.label}”
-                  </Button>
-                </div>
-              )}
+          {(state.familyId || state.level2Id) && (
+            <div className="flex justify-center">
+              <EmotionBreadcrumb
+                ids={[state.familyId, state.level2Id]}
+                onSelect={(id) => {
+                  const node = getEmotionNode(id);
+                  if (node?.level === 1) dispatch({ type: "SELECT_FAMILY", familyId: id });
+                  if (node?.level === 2) dispatch({ type: "SELECT_LEVEL2", emotionId: id });
+                }}
+              />
             </div>
-          </div>
-        )}
+          )}
+
+          <EmotionWheel
+            className="mx-auto max-w-[640px]"
+            familyId={state.familyId}
+            level2Id={state.level2Id}
+            onSelectFamily={(familyId) => {
+              dispatch({ type: "SELECT_FAMILY", familyId });
+              track(JOURNEY_EVENTS.emotionFamilySelected, { familyId });
+            }}
+            onSelectLevel2={(emotionId) => {
+              dispatch({ type: "SELECT_LEVEL2", emotionId });
+              track(JOURNEY_EVENTS.emotionLevel2Selected, { emotionId, emotionLevel: 2 });
+            }}
+            onSelectLevel3={(emotionId) => {
+              dispatch({ type: "CONFIRM_EMOTION", emotionId });
+              track(JOURNEY_EVENTS.emotionSelected, { emotionId, source: "wheel" });
+            }}
+            onBackLevel={() => {
+              if (state.level2Id && state.familyId) {
+                dispatch({ type: "SELECT_FAMILY", familyId: state.familyId });
+              } else {
+                dispatch({ type: "CLEAR_FAMILY" });
+              }
+            }}
+          />
+
+          {level2Node && (
+            <div className="flex flex-col items-center gap-2">
+              <Button
+                onClick={() => {
+                  dispatch({ type: "CONFIRM_EMOTION", emotionId: level2Node.id });
+                  track(JOURNEY_EVENTS.emotionSelected, {
+                    emotionId: level2Node.id,
+                    source: "wheel_level2",
+                  });
+                }}
+              >
+                Seguir com “{level2Node.label}”
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Ou escolha no anel de fora uma palavra ainda mais específica.
+              </p>
+            </div>
+          )}
+
+          <Accordion type="single" collapsible className="border-t border-border/60 pt-2">
+            <AccordionItem value="lista" className="border-none">
+              <AccordionTrigger className="text-sm text-muted-foreground hover:no-underline">
+                <span className="flex items-center gap-2">
+                  <LayoutList className="h-4 w-4" /> Ver todas as palavras em lista
+                </span>
+              </AccordionTrigger>
+              <AccordionContent>
+                <EmotionListFallback
+                  onSelect={(id) => {
+                    dispatch({ type: "CONFIRM_EMOTION", emotionId: id });
+                    track(JOURNEY_EVENTS.emotionSelected, { emotionId: id, source: "list" });
+                  }}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
       </StageShell>
     );
   }
