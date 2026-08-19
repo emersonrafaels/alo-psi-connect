@@ -37,7 +37,17 @@ import { PracticePlayer } from "../components/players/PracticePlayer";
 import { PracticeCheckout } from "../components/PracticeCheckout";
 import { getEmotionNode } from "../config/emotion-taxonomy";
 import { getFamilyCopy } from "../config/family-copy";
-import { getFamilyEmoji } from "../config/family-emojis";
+import { getFamilyIcon } from "../config/family-icons";
+import { JourneyHero } from "../components/JourneyHero";
+import { FeaturedPractices } from "../components/FeaturedPractices";
+import { useCurator } from "../hooks/useCurator";
+import {
+  saveJourneySession,
+  useJourneyAggregates,
+  useJourneyHistory,
+  useMoodMomentum,
+} from "../hooks/useJourneySignals";
+import { useAuth } from "@/hooks/useAuth";
 
 import { getContextQuestion } from "../config/context-questions";
 import { getPractice } from "../config/practices";
@@ -97,13 +107,19 @@ const STEP_KEYS = [
   "concluir",
 ] as const;
 
-const JourneyFlow = () => {
+const JourneyFlow = ({ basePath }: { basePath: string }) => {
   const { state, dispatch, helpers } = useJourney();
+  const { user } = useAuth();
+  const curator = useCurator();
+  const { insight: historyInsight } = useJourneyHistory();
+  const mood = useMoodMomentum();
+  const { stats: emotionStats } = useJourneyAggregates(state.selectedEmotionId);
   const [note, setNote] = useState("");
   const [refineOpen, setRefineOpen] = useState(false);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const family = helpers.family;
+  const FamilyIcon = getFamilyIcon(family?.id);
   const level2Node = getEmotionNode(state.level2Id);
   const level3Node = getEmotionNode(state.level3Id);
   const contextQuestion = useMemo(() => getContextQuestion(state.familyId), [state.familyId]);
@@ -162,7 +178,19 @@ const JourneyFlow = () => {
   // ---------- entrada ----------
   if (stage === "entry") {
     return (
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-8">
+        <JourneyHero
+          basePath={basePath}
+          history={historyInsight}
+          mood={mood}
+          startLabel="Começar agora"
+          onStart={() => {
+            dispatch({ type: "SELECT_MODE", mode: "regulate", entryPoint: "jornada_entry" });
+            track(JOURNEY_EVENTS.journeyStarted, { journeyMode: "regulate" });
+          }}
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2">
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="space-y-4 p-6">
             <Badge className="text-xs">Começar aqui</Badge>
@@ -203,6 +231,17 @@ const JourneyFlow = () => {
             </Button>
           </CardContent>
         </Card>
+        </div>
+
+        <section className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold text-foreground">Práticas em destaque</h2>
+            <p className="text-sm text-muted-foreground">
+              Protocolos revisados pela curadoria — a Roda escolhe o melhor para o seu estado.
+            </p>
+          </div>
+          <FeaturedPractices stats={emotionStats} curatorName={curator.displayName} />
+        </section>
       </div>
     );
   }
@@ -303,7 +342,7 @@ const JourneyFlow = () => {
                       backgroundColor: `${family.color}1f`,
                     }}
                   >
-                    <span aria-hidden>{getFamilyEmoji(family.id)}</span>
+                    <FamilyIcon aria-hidden className="h-3.5 w-3.5" />
                     <span>{family.label}</span>
                     {level2Node && (
                       <>
@@ -368,7 +407,10 @@ const JourneyFlow = () => {
                     className="text-xl font-semibold"
                     style={{ color: family?.color ?? "hsl(var(--foreground))" }}
                   >
-                    {family ? `${getFamilyEmoji(family.id)} ${family.label}` : "Escolha uma família"}
+                    <span className="flex items-center gap-2">
+                      {family && <FamilyIcon aria-hidden className="h-5 w-5" />}
+                      {family ? family.label : "Escolha uma família"}
+                    </span>
                   </h3>
                   <p className="text-sm leading-relaxed text-muted-foreground">
                     {family
@@ -417,9 +459,7 @@ const JourneyFlow = () => {
                   className="rounded-full text-xs"
                   style={{ backgroundColor: family.color, color: "hsl(var(--background))" }}
                 >
-                  <span aria-hidden className="mr-1">
-                    {getFamilyEmoji(family.id)}
-                  </span>
+                  <FamilyIcon aria-hidden className="mr-1 h-3.5 w-3.5" />
                   {family.label}
 
                 </Badge>
@@ -666,6 +706,23 @@ const JourneyFlow = () => {
                       .
                     </div>
 
+                    {!!emotionStats.length && (
+                      <div className="rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+                        <p className="font-semibold text-foreground">
+                          O que ajudou quem sentiu o mesmo
+                        </p>
+                        <ul className="mt-1.5 space-y-1 text-muted-foreground">
+                          {emotionStats.slice(0, 3).map((stat) => (
+                            <li key={stat.practice_id}>
+                              {getPractice(stat.practice_id)?.title ?? stat.practice_id} ·{" "}
+                              <strong className="text-foreground">{stat.relief_rate}%</strong>{" "}
+                              sentiram alívio em {stat.sessions} sessões
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     <RecommendationCard
                       practice={result.primary}
                       primary
@@ -794,6 +851,18 @@ const JourneyFlow = () => {
                 }
                 onContinue={() => {
                   dispatch({ type: "COMPLETE_CHECKOUT" });
+                  void saveJourneySession({
+                    userId: user?.id ?? null,
+                    sessionKey: state.sessionId,
+                    familyId: state.familyId,
+                    emotionId: state.selectedEmotionId as string,
+                    intensityBefore: state.intensity,
+                    intensityAfter: state.intensityAfter,
+                    practiceId: state.selectedPracticeId,
+                    durationMinutes: state.selectedDuration ?? duration,
+                    perceivedChangeIds: state.perceivedChangeIds,
+                    usefulness: state.usefulness,
+                  });
                   track(JOURNEY_EVENTS.checkoutCompleted, {
                     intensityBefore: state.intensity,
                     intensityAfter: state.intensityAfter,
