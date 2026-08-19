@@ -465,6 +465,7 @@ const JourneyFlow = () => {
                   nodes={level2Node.children}
                   selectedId={state.level3Id}
                   levelLabel="Nível 3"
+                  familyLabel={family?.label}
                   color={family?.color}
                   onSelect={(emotionId) => dispatch({ type: "SELECT_LEVEL3", emotionId })}
                 />
