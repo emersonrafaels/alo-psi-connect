@@ -211,16 +211,6 @@ export const EmotionWheel = ({
             }
           }}
         />
-        <text
-          x={C}
-          y={C - 116}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          className="pointer-events-none select-none text-[15px] font-bold uppercase tracking-[0.2em]"
-          fill={familyInk}
-        >
-          {family.label}
-        </text>
 
         {level2List.map((node, index) => {
           const start = index * step2;
@@ -262,7 +252,13 @@ export const EmotionWheel = ({
                 dominantBaseline="middle"
                 className={cn(
                   "pointer-events-none select-none font-bold",
-                  lines.length > 1 ? "text-[16px]" : "text-[18px]"
+                  lines.length > 1
+                    ? "text-[15px]"
+                    : node.label.length > 11
+                      ? "text-[13px]"
+                      : node.label.length > 8
+                        ? "text-[15px]"
+                        : "text-[18px]"
                 )}
                 fill={ink2}
               >
@@ -305,7 +301,10 @@ export const EmotionWheel = ({
                       textAnchor="middle"
                       dominantBaseline="middle"
                       transform={`rotate(${rotation} ${cLabel.x} ${cLabel.y})`}
-                      className="pointer-events-none select-none text-[13px] font-semibold"
+                      className={cn(
+                        "pointer-events-none select-none font-semibold",
+                        child.label.length > 10 ? "text-[11px]" : "text-[13px]"
+                      )}
                       fill={ink3}
                     >
                       {cLines.map((line, i) => (
