@@ -57,24 +57,27 @@ const clampNum = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
 /**
- * Tamanho de fonte derivado do espaço real do arco (corda no raio do rótulo),
- * em vez de contagem bruta de caracteres.
+ * Tamanho de fonte derivado do espaço real do arco (corda no raio do rótulo)
+ * e da espessura do anel, em vez de contagem bruta de caracteres.
  */
 const fitFont = (
   label: string,
   radius: number,
   arcDeg: number,
-  bounds: { min: number; max: number }
+  bounds: { min: number; max: number },
+  maxWidth = Number.POSITIVE_INFINITY
 ) => {
   const chord = 2 * radius * Math.sin((arcDeg * Math.PI) / 360);
-  const lines = wrap(label, Math.max(6, Math.round(label.length / 2) + 1));
+  const available = Math.min(chord * 0.92, maxWidth);
+  const single = available / Math.max(label.length, 1) / 0.58;
+  const lines = single < bounds.min ? wrap(label, Math.ceil(label.length / 2)) : [label];
   const longest = Math.max(...lines.map((l) => l.length));
-  const perChar = (chord * 0.92) / Math.max(longest, 1);
   return {
     lines,
-    size: Math.round(clampNum(perChar / 0.58, bounds.min, bounds.max)),
+    size: Math.round(clampNum(available / Math.max(longest, 1) / 0.58, bounds.min, bounds.max)),
   };
 };
+
 
 export interface EmotionWheelProps {
   familyId: string | null;
