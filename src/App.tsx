@@ -108,6 +108,7 @@ import PraticaDetalhe from "./pages/praticas/PraticaDetalhe";
 import PraticaSessao from "./pages/praticas/PraticaSessao";
 import PraticaCheckout from "./pages/praticas/PraticaCheckout";
 import PraticaConcluida from "./pages/praticas/PraticaConcluida";
+import JornadaSessao from "./features/jornada/pages/JornadaSessao";
 import PraticasAdmin from "@/pages/admin/PraticasAdmin";
 import RadarInstitutional from "@/pages/admin/RadarInstitutional";
 import RadarInstitutionalDetail from "@/pages/admin/RadarInstitutionalDetail";
@@ -228,6 +229,8 @@ const AppWithShortcuts = () => {
 
       {/* Práticas para Reequilíbrio Emocional (público) */}
       <Route path="/praticas" element={<PraticasIndex />} />
+      <Route path="/praticas/jornada" element={<JornadaSessao />} />
+      <Route path="/medcos/praticas/jornada" element={<JornadaSessao />} />
       <Route path="/praticas/:slug" element={<PraticaDetalhe />} />
       <Route path="/praticas/:slug/sessao" element={<PraticaSessao />} />
       <Route path="/praticas/:slug/checkout" element={<PraticaCheckout />} />
