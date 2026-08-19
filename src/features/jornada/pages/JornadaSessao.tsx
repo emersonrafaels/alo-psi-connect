@@ -293,6 +293,22 @@ const JourneyFlow = () => {
           >
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
               <div className="space-y-4">
+                {family && (
+                  <div
+                    className="mx-auto flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold"
+                    style={{
+                      borderColor: `${family.color}66`,
+                      backgroundColor: `${family.color}1f`,
+                    }}
+                  >
+                    <span
+                      aria-hidden
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: family.color }}
+                    />
+                    Família selecionada: {family.label}
+                  </div>
+                )}
                 <EmotionWheel
                   className="mx-auto max-w-[560px]"
                   familyId={state.familyId}
