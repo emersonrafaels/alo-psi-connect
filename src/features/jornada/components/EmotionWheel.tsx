@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { EMOTION_FAMILIES, getEmotionNode } from "../config/emotion-taxonomy";
 import type { EmotionNode } from "../domain/types";
+import { inkOn, muteColor, ringTones, shade } from "../utils/wheelColors";
 
 const SIZE = 640;
 const C = SIZE / 2;
