@@ -185,7 +185,7 @@ export const EmotionWheel = ({
   const level2List = family.children ?? [];
   const step2 = 360 / Math.max(level2List.length, 1);
   const tones = ringTones(family.color);
-  const familyInk = inkOn(tones.family);
+  
 
   return (
     <div className={cn("relative w-full", className)}>
