@@ -61,6 +61,7 @@ export type JourneyAction =
   | { type: "SELECT_MODE"; mode: JourneyMode; entryPoint: string }
   | { type: "OPEN_WHEEL" }
   | { type: "SELECT_FAMILY"; familyId: string }
+  | { type: "CLEAR_FAMILY" }
   | { type: "SELECT_LEVEL2"; emotionId: string }
   | { type: "SELECT_LEVEL3"; emotionId: string }
   | { type: "CONFIRM_EMOTION"; emotionId: string }
@@ -215,6 +216,20 @@ export const journeyReducer = (state: JourneyState, action: JourneyAction): Jour
         contextAnswerId: null,
         stage: "wheel",
       });
+
+    case "CLEAR_FAMILY":
+      return touched({
+        ...clearFromEmotion(state),
+        familyId: null,
+        level2Id: null,
+        level3Id: null,
+        selectedEmotionId: null,
+        intensity: null,
+        contextAnswerId: null,
+        stage: "wheel",
+      });
+
+
 
     case "SELECT_LEVEL2":
       return touched({
