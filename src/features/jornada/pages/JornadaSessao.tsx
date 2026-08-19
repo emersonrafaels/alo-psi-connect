@@ -417,7 +417,11 @@ const JourneyFlow = () => {
                   className="rounded-full text-xs"
                   style={{ backgroundColor: family.color, color: "hsl(var(--background))" }}
                 >
+                  <span aria-hidden className="mr-1">
+                    {getFamilyEmoji(family.id)}
+                  </span>
                   {family.label}
+
                 </Badge>
 
                 <EmotionLevelCards
