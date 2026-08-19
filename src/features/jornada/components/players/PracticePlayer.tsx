@@ -49,10 +49,21 @@ export const PracticePlayer = ({
               size="sm"
               onClick={onToggleSilentMode}
               aria-pressed={silentMode}
+              title={
+                silentMode
+                  ? "Modo silencioso ativo: as orientações escritas de cada etapa estão ocultas"
+                  : "Orientações escritas visíveis. Toque para ativar o modo silencioso"
+              }
             >
-              <VolumeX className="mr-2 h-4 w-4" /> Silencioso
+              {silentMode ? (
+                <VolumeX className="mr-2 h-4 w-4" />
+              ) : (
+                <Volume2 className="mr-2 h-4 w-4" />
+              )}
+              {silentMode ? "Modo silencioso" : "Som ligado"}
             </Button>
           )}
+
           <Button variant="ghost" size="sm" onClick={onAbandon}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Sair
           </Button>
