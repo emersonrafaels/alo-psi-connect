@@ -338,59 +338,35 @@ export const EmotionWheel = ({
           </>
         )}
 
+        {/* fatias do nível 2 (todas as formas primeiro, rótulos depois) */}
         {level2List.map((node, index) => {
           const start = index * step2;
-          const end = start + step2;
           const active = level2Id === node.id;
-          const label = midPoint(186, start, end);
           const fill2 = active
             ? shade(tones.level2, -8, 6)
             : level2Id
               ? muteColor(tones.level2, 42)
               : tones.level2;
-          const ink2 = inkOn(fill2);
-          const font2 = fitFont(node.label, 186, step2, { min: 12, max: 19 });
-
           return (
-            <g key={node.id}>
-              <path
-                ref={registerSlice(node.id)}
-                d={sector(140, 230, start, end)}
-                fill={fill2}
-                stroke="hsl(var(--background))"
-                strokeWidth={2}
-                tabIndex={0}
-                role="button"
-                aria-pressed={active}
-                aria-label={`${node.label}, nível 2 de ${family.label}`}
-                className={sliceClass}
-                onClick={() => onSelectLevel2(node.id)}
-                onKeyDown={(e) =>
-                  handleKeys(e, level2List, index, () => onSelectLevel2(node.id), {
-                    down: active ? selectedChildren[0]?.id : null,
-                  })
-                }
-              />
-              <text
-                x={label.x}
-                y={label.y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize={font2.size}
-                className="pointer-events-none select-none font-bold"
-                fill={ink2}
-              >
-                {font2.lines.map((line, i) => (
-                  <tspan
-                    key={line}
-                    x={label.x}
-                    dy={i === 0 ? (font2.lines.length > 1 ? -font2.size * 0.55 : 0) : font2.size * 1.1}
-                  >
-                    {line}
-                  </tspan>
-                ))}
-              </text>
-            </g>
+            <path
+              key={node.id}
+              ref={registerSlice(node.id)}
+              d={sector(140, 230, start, start + step2)}
+              fill={fill2}
+              stroke="hsl(var(--background))"
+              strokeWidth={2}
+              tabIndex={0}
+              role="button"
+              aria-pressed={active}
+              aria-label={`${node.label}, nível 2 de ${family.label}`}
+              className={sliceClass}
+              onClick={() => onSelectLevel2(node.id)}
+              onKeyDown={(e) =>
+                handleKeys(e, level2List, index, () => onSelectLevel2(node.id), {
+                  down: active ? selectedChildren[0]?.id : null,
+                })
+              }
+            />
           );
         })}
 
@@ -398,59 +374,100 @@ export const EmotionWheel = ({
         {selected &&
           selectedChildren.map((child, childIndex) => {
             const cStart = outerStart + childIndex * step3;
-            const cEnd = cStart + step3;
-            const cLabel = midPoint(268, cStart, cEnd);
             const fill3 = level3Id === child.id ? shade(tones.level3, -12, 8) : tones.level3;
-            const ink3 = inkOn(fill3);
-            const font3 = fitFont(child.label, 268, step3, { min: 13, max: 20 });
             return (
-              <g key={child.id}>
-                <path
-                  ref={registerSlice(child.id)}
-                  d={sector(234, 306, cStart, cEnd)}
-                  fill={fill3}
-                  stroke="hsl(var(--background))"
-                  strokeWidth={2}
-                  tabIndex={0}
-                  role="button"
-                  aria-pressed={level3Id === child.id}
-                  aria-label={`${child.label}, nível 3 de ${selected.label}`}
-                  className={sliceClass}
-                  onClick={() => onSelectLevel3(child.id)}
-                  onKeyDown={(e) =>
-                    handleKeys(e, selectedChildren, childIndex, () => onSelectLevel3(child.id), {
-                      up: selected.id,
-                    })
-                  }
-                />
-                <text
-                  x={cLabel.x}
-                  y={cLabel.y}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontSize={font3.size}
-                  className="pointer-events-none select-none font-semibold"
-                  fill={ink3}
-                >
-                  {font3.lines.map((line, i) => (
-                    <tspan
-                      key={line}
-                      x={cLabel.x}
-                      dy={
-                        i === 0
-                          ? font3.lines.length > 1
-                            ? -font3.size * 0.55
-                            : 0
-                          : font3.size * 1.1
-                      }
-                    >
-                      {line}
-                    </tspan>
-                  ))}
-                </text>
-              </g>
+              <path
+                key={child.id}
+                ref={registerSlice(child.id)}
+                d={sector(234, 306, cStart, cStart + step3)}
+                fill={fill3}
+                stroke="hsl(var(--background))"
+                strokeWidth={2}
+                tabIndex={0}
+                role="button"
+                aria-pressed={level3Id === child.id}
+                aria-label={`${child.label}, nível 3 de ${selected.label}`}
+                className={sliceClass}
+                onClick={() => onSelectLevel3(child.id)}
+                onKeyDown={(e) =>
+                  handleKeys(e, selectedChildren, childIndex, () => onSelectLevel3(child.id), {
+                    up: selected.id,
+                  })
+                }
+              />
             );
           })}
+
+        {/* rótulos do nível 2 */}
+        {level2List.map((node, index) => {
+          const start = index * step2;
+          const active = level2Id === node.id;
+          const label = midPoint(186, start, start + step2);
+          const fill2 = active
+            ? shade(tones.level2, -8, 6)
+            : level2Id
+              ? muteColor(tones.level2, 42)
+              : tones.level2;
+          const font2 = fitFont(node.label, 186, step2, { min: 12, max: 18 }, 88);
+          return (
+            <text
+              key={`${node.id}-label`}
+              x={label.x}
+              y={label.y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontSize={font2.size}
+              className="pointer-events-none select-none font-bold"
+              fill={inkOn(fill2)}
+            >
+              {font2.lines.map((line, i) => (
+                <tspan
+                  key={line}
+                  x={label.x}
+                  dy={
+                    i === 0 ? (font2.lines.length > 1 ? -font2.size * 0.55 : 0) : font2.size * 1.1
+                  }
+                >
+                  {line}
+                </tspan>
+              ))}
+            </text>
+          );
+        })}
+
+        {/* rótulos do nível 3 */}
+        {selected &&
+          selectedChildren.map((child, childIndex) => {
+            const cStart = outerStart + childIndex * step3;
+            const cLabel = midPoint(270, cStart, cStart + step3);
+            const fill3 = level3Id === child.id ? shade(tones.level3, -12, 8) : tones.level3;
+            const font3 = fitFont(child.label, 270, step3, { min: 12, max: 18 }, 70);
+            return (
+              <text
+                key={`${child.id}-label`}
+                x={cLabel.x}
+                y={cLabel.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={font3.size}
+                className="pointer-events-none select-none font-semibold"
+                fill={inkOn(fill3)}
+              >
+                {font3.lines.map((line, i) => (
+                  <tspan
+                    key={line}
+                    x={cLabel.x}
+                    dy={
+                      i === 0 ? (font3.lines.length > 1 ? -font3.size * 0.55 : 0) : font3.size * 1.1
+                    }
+                  >
+                    {line}
+                  </tspan>
+                ))}
+              </text>
+            );
+          })}
+
 
         <circle cx={C} cy={C} r={90} fill="hsl(var(--card))" />
       </svg>
