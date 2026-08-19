@@ -455,7 +455,7 @@ export const EmotionWheel = ({
             const cStart = outerStart + childIndex * step3;
             const cLabel = midPoint(270, cStart, cStart + step3);
             const fill3 = level3Id === child.id ? shade(tones.level3, -12, 8) : tones.level3;
-            const font3 = fitFont(child.label, 270, step3, { min: 12, max: 18 }, 70);
+            const font3 = { lines: ringFont3[childIndex].lines, size: size3 };
             return (
               <text
                 key={`${child.id}-label`}
