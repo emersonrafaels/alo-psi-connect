@@ -294,6 +294,17 @@ export const EmotionWheel = ({
   const step3 = outerArc / Math.max(selectedChildren.length, 1);
   const neutralOuter = muteColor(tones.level3, 72);
 
+  // Tipografia uniforme por anel: usa o menor tamanho que serve a todos os rótulos.
+  const ringFont2 = level2List.map((node) =>
+    fitFont(node.label, 186, step2, { min: 12, max: 18 }, 112)
+  );
+  const size2 = Math.min(...ringFont2.map((f) => f.size));
+  const ringFont3 = selectedChildren.map((child) =>
+    fitFont(child.label, 270, step3, { min: 12, max: 17 }, 82)
+  );
+  const size3 = selectedChildren.length ? Math.min(...ringFont3.map((f) => f.size)) : 14;
+
+
   return (
     <div className={cn("relative w-full", className)}>
       <svg
