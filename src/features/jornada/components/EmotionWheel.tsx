@@ -422,7 +422,7 @@ export const EmotionWheel = ({
             : level2Id
               ? muteColor(tones.level2, 42)
               : tones.level2;
-          const font2 = fitFont(node.label, 186, step2, { min: 12, max: 18 }, 88);
+          const font2 = { lines: ringFont2[index].lines, size: size2 };
           return (
             <text
               key={`${node.id}-label`}
