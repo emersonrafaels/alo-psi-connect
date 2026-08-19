@@ -16,7 +16,7 @@ export const IntensityScale = ({
   label?: string;
 }) => (
   <div className="space-y-3">
-    <p className="text-sm text-muted-foreground">{label}</p>
+    {label && <p className="text-sm text-muted-foreground">{label}</p>}
     <div
       className="grid grid-cols-5 gap-2"
       role="radiogroup"
