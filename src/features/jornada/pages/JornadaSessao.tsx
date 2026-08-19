@@ -69,7 +69,6 @@ const StageShell = ({
 const JourneyFlow = () => {
   const { state, dispatch, helpers } = useJourney();
   const [note, setNote] = useState("");
-  const [note, setNote] = useState("");
 
   const family = helpers.family;
   const level2Node = getEmotionNode(state.level2Id);
