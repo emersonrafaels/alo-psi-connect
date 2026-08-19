@@ -466,17 +466,23 @@ export const EmotionWheel = ({
             const cLabel = midPoint(270, cStart, cStart + step3);
             const fill3 = level3Id === child.id ? shade(tones.level3, -12, 8) : tones.level3;
             const font3 = { lines: ringFont3[childIndex].lines, size: size3 };
+            const mid3 = cStart + step3 / 2;
+            const rot3 = ringFont3[childIndex].radial
+              ? `rotate(${mid3 > 180 ? mid3 + 90 : mid3 - 90}, ${cLabel.x}, ${cLabel.y})`
+              : undefined;
             return (
               <text
                 key={`${child.id}-label`}
                 x={cLabel.x}
                 y={cLabel.y}
+                transform={rot3}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fontSize={font3.size}
                 className="pointer-events-none select-none font-semibold"
                 fill={inkOn(fill3)}
               >
+
                 {font3.lines.map((line, i) => (
                   <tspan
                     key={line}
