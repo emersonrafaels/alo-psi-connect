@@ -22,3 +22,21 @@ Em `EmotionWheel.tsx`:
 - Arquivo único: `src/features/jornada/components/EmotionWheel.tsx` (funções `wrap`, `fitFont`, raios dos setores e blocos de rótulos dos níveis 2 e 3).
 - Nenhuma mudança em taxonomia, cores, dados ou lógica de seleção.
 - Validação visual com Playwright: abrir `/praticas/jornada`, entrar nas famílias com os termos mais longos e conferir por captura de tela que nenhum rótulo é cortado.
+
+---
+
+# Botão "Silencioso" na prática
+
+Nas duas capturas, o botão parece estar sempre em modo silencioso: o ícone é sempre `VolumeX` (alto-falante cortado) e o único sinal de estado é o preenchimento do botão, difícil de perceber. O estado real começa desligado (`silentMode: false`) e alterna corretamente.
+
+## Ajustes
+
+1. **Ícone reflete o estado**: `Volume2` quando o som/orientações estão ativos, `VolumeX` apenas quando o modo silencioso está ligado.
+2. **Rótulo explícito**: "Som ligado" no estado normal e "Modo silencioso" quando ativo, em vez de sempre "Silencioso".
+3. **Estado visual mais claro**: manter botão outline no estado normal e sólido quando silencioso, somando um ponto/badge de estado, além de `aria-pressed` já existente e um `title`/tooltip explicando o que o modo faz (oculta as orientações escritas de cada etapa).
+4. Nenhuma alteração no comportamento do player: o modo silencioso continua apenas ocultando as dicas escritas.
+
+## Escopo técnico
+
+- `src/features/jornada/components/players/PracticePlayer.tsx` (bloco do botão e imports de ícone).
+- Sem mudanças em `journeyReducer.ts`, `StepPlayer.tsx` ou `BreathingPlayer.tsx`.
