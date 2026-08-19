@@ -427,17 +427,23 @@ export const EmotionWheel = ({
               ? muteColor(tones.level2, 42)
               : tones.level2;
           const font2 = { lines: ringFont2[index].lines, size: size2 };
+          const mid2 = start + step2 / 2;
+          const rot2 = ringFont2[index].radial
+            ? `rotate(${mid2 > 180 ? mid2 + 90 : mid2 - 90}, ${label.x}, ${label.y})`
+            : undefined;
           return (
             <text
               key={`${node.id}-label`}
               x={label.x}
               y={label.y}
+              transform={rot2}
               textAnchor="middle"
               dominantBaseline="middle"
               fontSize={font2.size}
               className="pointer-events-none select-none font-bold"
               fill={inkOn(fill2)}
             >
+
               {font2.lines.map((line, i) => (
                 <tspan
                   key={line}
