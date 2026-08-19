@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { EMOTION_FAMILIES, getEmotionNode } from "../config/emotion-taxonomy";
+import { getFamilyEmoji } from "../config/family-emojis";
 import type { EmotionNode } from "../domain/types";
 import { inkOn, muteColor, ringTones, shade } from "../utils/wheelColors";
+
 
 const SIZE = 640;
 const C = SIZE / 2;
