@@ -16,7 +16,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 import { JourneyProvider, useJourney } from "../state/JourneyProvider";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { EmotionWheel } from "../components/EmotionWheel";
+import { EmotionSearch } from "../components/EmotionSearch";
 import { EmotionListFallback } from "../components/EmotionListFallback";
 import { EmotionBreadcrumb } from "../components/EmotionBreadcrumb";
 import { IntensityScale } from "../components/IntensityScale";
