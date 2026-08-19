@@ -597,6 +597,9 @@ export const EmotionWheel = ({
       </svg>
 
       <div className="absolute left-1/2 top-1/2 w-[26%] -translate-x-1/2 -translate-y-1/2 space-y-1 text-center">
+        <span className="block text-2xl leading-none" aria-hidden>
+          {getFamilyEmoji(family.id)}
+        </span>
         <span
           className="mx-auto flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest"
           style={{ color: tones.level2 }}
@@ -608,10 +611,16 @@ export const EmotionWheel = ({
           />
           {family.label}
         </span>
-        <p className="text-base font-semibold leading-tight text-foreground">
-          {level2Node ? level2Node.label : "Escolha uma palavra"}
+        <p
+          key={hoveredNode?.id ?? level2Node?.id ?? "vazio"}
+          className={cn(
+            "text-base font-semibold leading-tight text-foreground",
+            !reducedMotion && "animate-fade-in"
+          )}
+        >
+          {hoveredNode?.label ?? level2Node?.label ?? "Escolha uma palavra"}
         </p>
-        {level3Node && (
+        {!hoveredNode && level3Node && (
           <p className="text-xs font-medium leading-tight text-muted-foreground">
             {level3Node.label}
           </p>
@@ -624,6 +633,7 @@ export const EmotionWheel = ({
           {level2Node ? "voltar" : "trocar família"}
         </button>
       </div>
+
 
       <p className="sr-only" aria-live="polite">
         {liveMessage}
