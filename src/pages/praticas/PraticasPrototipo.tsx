@@ -24,7 +24,7 @@ import { getTenantSlugFromPath, getBasePath } from "@/utils/tenantHelpers";
 const scrollToId = (id: string) =>
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
-const PraticasIndex = () => {
+const PraticasPrototipo = () => {
   const location = useLocation();
   const tenantSlug = getTenantSlugFromPath(location.pathname);
   const basePath = getBasePath(tenantSlug);
@@ -34,7 +34,7 @@ const PraticasIndex = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = "Práticas para Reequilíbrio Emocional | Rede Bem-Estar";
+    document.title = "Práticas (protótipo) | Rede Bem-Estar";
   }, []);
 
   const grupos = useMemo(() => data?.grupos ?? [], [data]);
@@ -130,6 +130,34 @@ const PraticasIndex = () => {
           </div>
         </section>
 
+        {/* JORNADA DE AUTORREGULAÇÃO — protótipo */}
+        <section className="relative container mx-auto px-4 pb-10 max-w-6xl">
+          <Card
+            className="relative overflow-hidden border-primary/25 p-6 md:p-8"
+            style={{ backgroundImage: "var(--gradient-card)" }}
+          >
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2">
+                <Badge variant="secondary" className="uppercase tracking-wider text-xs">
+                  Novo
+                </Badge>
+                <h2 className="font-serif text-2xl md:text-3xl text-foreground">
+                  Jornada de Autorregulação
+                </h2>
+                <p className="text-muted-foreground max-w-xl">
+                  Nomeie o que você sente na Roda das Emoções, indique a intensidade e receba a
+                  prática mais adequada para esse momento.
+                </p>
+              </div>
+              <Button asChild size="lg" className="shrink-0 group">
+                <Link to={`${basePath}/praticas/jornada`}>
+                  Iniciar jornada
+                  <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </Button>
+            </div>
+          </Card>
+        </section>
 
         {/* PILL BAR — atalhos do banco */}
         {atalhos && atalhos.length > 0 && (
@@ -458,4 +486,4 @@ const PraticasIndex = () => {
   );
 };
 
-export default PraticasIndex;
+export default PraticasPrototipo;
