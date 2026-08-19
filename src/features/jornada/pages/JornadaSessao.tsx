@@ -368,7 +368,7 @@ const JourneyFlow = () => {
                     className="text-xl font-semibold"
                     style={{ color: family?.color ?? "hsl(var(--foreground))" }}
                   >
-                    {family?.label ?? "Escolha uma família"}
+                    {family ? `${getFamilyEmoji(family.id)} ${family.label}` : "Escolha uma família"}
                   </h3>
                   <p className="text-sm leading-relaxed text-muted-foreground">
                     {family
