@@ -46,13 +46,29 @@ const midPoint = (r: number, start: number, end: number) => {
   return { x: C + r * Math.cos(a), y: C + r * Math.sin(a), deg: (start + end) / 2 };
 };
 
-/** Divide um texto longo em duas linhas equilibradas. */
+/** Divide um texto longo em duas linhas equilibradas (com hífen em palavra única). */
 const wrap = (label: string, maxChars: number) => {
   if (label.length <= maxChars) return [label];
   const words = label.split(" ");
-  if (words.length === 1) return [label];
-  const mid = Math.ceil(words.length / 2);
-  return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
+  if (words.length > 1) {
+    const mid = Math.ceil(words.length / 2);
+    return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
+  }
+  // palavra única: quebra próxima ao meio, num ponto após vogal
+  const target = Math.ceil(label.length / 2);
+  const vowels = "aeiouáâãàéêíóôõú";
+  let cut = target;
+  for (let offset = 0; offset <= 3; offset += 1) {
+    const candidates = [target + offset, target - offset];
+    const found = candidates.find(
+      (i) => i > 1 && i < label.length - 1 && vowels.includes(label[i - 1].toLowerCase())
+    );
+    if (found) {
+      cut = found;
+      break;
+    }
+  }
+  return [`${label.slice(0, cut)}-`, label.slice(cut)];
 };
 
 const clampNum = (value: number, min: number, max: number) =>
@@ -61,7 +77,7 @@ const clampNum = (value: number, min: number, max: number) =>
 /**
  * Tamanho de fonte derivado do espaço real do arco (corda no raio do rótulo)
  * e da espessura do anel, em vez de contagem bruta de caracteres.
- * Fatias estreitas leem melhor com o texto no sentido radial.
+ * Fatias estreitas ou rótulos longos leem melhor no sentido radial.
  */
 const fitFont = (
   label: string,
@@ -71,18 +87,21 @@ const fitFont = (
   bounds: { min: number; max: number },
   preferRadial = false
 ) => {
-  const radial = preferRadial || arcDeg < 55;
+  const radial = preferRadial || arcDeg < 55 || label.length > 10;
   const chord = 2 * radius * Math.sin((arcDeg * Math.PI) / 360);
-  const available = radial ? ringWidth - 18 : Math.min(chord * 0.9, ringWidth * 1.4);
-  const single = available / Math.max(label.length, 1) / 0.58;
-  const lines = single < bounds.min ? wrap(label, Math.ceil(label.length / 2)) : [label];
+  const available = radial ? ringWidth - 14 : Math.min(chord * 0.9, ringWidth * 1.4);
+  const charWidth = 0.58;
+  const single = available / Math.max(label.length, 1) / charWidth;
+  const lines =
+    single < bounds.min ? wrap(label, Math.ceil(label.length / 2)) : [label];
   const longest = Math.max(...lines.map((l) => l.length));
   return {
     radial,
     lines,
-    size: Math.round(clampNum(available / Math.max(longest, 1) / 0.58, bounds.min, bounds.max)),
+    size: Math.round(clampNum(available / Math.max(longest, 1) / charWidth, bounds.min, bounds.max)),
   };
 };
+
 
 
 
