@@ -114,6 +114,17 @@ export const EmotionWheel = ({
   className,
 }: EmotionWheelProps) => {
   const reducedMotion = usePrefersReducedMotion();
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const buzz = useCallback(() => {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate?.(8);
+      } catch {
+        /* silencioso */
+      }
+    }
+  }, []);
+
   const family = useMemo(
     () => EMOTION_FAMILIES.find((f) => f.id === familyId) ?? null,
     [familyId]
