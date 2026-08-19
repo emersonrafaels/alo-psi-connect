@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { EMOTION_FAMILIES, getEmotionNode } from "../config/emotion-taxonomy";
-import { getFamilyEmoji } from "../config/family-emojis";
+import { getFamilyIcon } from "../config/family-icons";
 import type { EmotionNode } from "../domain/types";
 import { inkOn, muteColor, ringTones, shade } from "../utils/wheelColors";
 
@@ -239,6 +239,8 @@ export const EmotionWheel = ({
 
   const hoveredNode = getEmotionNode(hoveredId);
   const hoveredFamily = EMOTION_FAMILIES.find((f) => f.id === hoveredId) ?? null;
+  const HoveredIcon = getFamilyIcon(hoveredFamily?.id);
+  const FamilyIcon = getFamilyIcon(family?.id);
 
   if (!family) {
     return (
@@ -286,25 +288,42 @@ export const EmotionWheel = ({
                   )
                 }
               />
+              <g className="pointer-events-none" aria-hidden>
+                <circle
+                  cx={label.x}
+                  cy={label.y - 32}
+                  r={19}
+                  fill={ink}
+                  fillOpacity={0.14}
+                  stroke={ink}
+                  strokeOpacity={0.28}
+                />
+                {(() => {
+                  const Icon = getFamilyIcon(item.id);
+                  return (
+                    <Icon
+                      x={label.x - 11}
+                      y={label.y - 43}
+                      width={22}
+                      height={22}
+                      stroke={ink}
+                      strokeWidth={1.75}
+                      fill="none"
+                    />
+                  );
+                })()}
+              </g>
               <text
                 x={label.x}
-                y={label.y}
+                y={label.y + 4}
                 textAnchor="middle"
                 dominantBaseline="middle"
+                fontSize={font.size}
+                fontWeight={700}
                 className="pointer-events-none select-none"
                 fill={ink}
               >
-                <tspan
-                  x={label.x}
-                  dy={-font.size * 0.9}
-                  fontSize={font.size * 1.5}
-                  aria-hidden
-                >
-                  {getFamilyEmoji(item.id)}
-                </tspan>
-                <tspan x={label.x} dy={font.size * 1.6} fontSize={font.size} fontWeight={700}>
-                  {item.label}
-                </tspan>
+                {item.label}
               </text>
 
             </g>
@@ -315,9 +334,12 @@ export const EmotionWheel = ({
         <div className="pointer-events-none absolute left-1/2 top-1/2 w-[32%] -translate-x-1/2 -translate-y-1/2 space-y-1 text-center">
           {hoveredFamily ? (
             <div className={cn(!reducedMotion && "animate-fade-in")}>
-              <p className="text-3xl leading-none" aria-hidden>
-                {getFamilyEmoji(hoveredFamily.id)}
-              </p>
+              <HoveredIcon
+                className="mx-auto h-8 w-8"
+                strokeWidth={1.6}
+                style={{ color: hoveredFamily.color }}
+                aria-hidden
+              />
               <p
                 className="mt-1 text-xl font-bold leading-tight"
                 style={{ color: hoveredFamily.color }}
@@ -596,9 +618,12 @@ export const EmotionWheel = ({
       </svg>
 
       <div className="absolute left-1/2 top-1/2 w-[26%] -translate-x-1/2 -translate-y-1/2 space-y-1 text-center">
-        <span className="block text-2xl leading-none" aria-hidden>
-          {getFamilyEmoji(family.id)}
-        </span>
+        <FamilyIcon
+          className="mx-auto h-7 w-7"
+          strokeWidth={1.6}
+          style={{ color: tones.level2 }}
+          aria-hidden
+        />
         <span
           className="mx-auto flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest"
           style={{ color: tones.level2 }}
