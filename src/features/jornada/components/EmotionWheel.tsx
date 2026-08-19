@@ -457,7 +457,7 @@ export const EmotionWheel = ({
         {!selected && (
           <>
             <path
-              d={sector(234, 300, 0, 360)}
+              d={sector(240, 306, 0, 360)}
               fill={neutralOuter}
               className="pointer-events-none"
             />
@@ -488,7 +488,7 @@ export const EmotionWheel = ({
             <path
               key={node.id}
               ref={registerSlice(node.id)}
-              d={sector(140, 230, start, start + step2)}
+              d={sector(138, 236, start, start + step2)}
               fill={fill2}
               stroke="hsl(var(--background))"
               strokeWidth={active ? 3.5 : 2}
@@ -524,7 +524,7 @@ export const EmotionWheel = ({
               <path
                 key={child.id}
                 ref={registerSlice(child.id)}
-                d={sector(234, 306, cStart, cStart + step3)}
+                d={sector(240, 312, cStart, cStart + step3)}
                 fill={fill3}
                 stroke="hsl(var(--background))"
                 strokeWidth={level3Id === child.id ? 3.5 : 2}
@@ -555,7 +555,7 @@ export const EmotionWheel = ({
         {level2List.map((node, index) => {
           const start = index * step2;
           const active = level2Id === node.id;
-          const label = midPoint(186, start, start + step2);
+          const label = midPoint(187, start, start + step2);
           const fill2 = active
             ? shade(tones.level2, -8, 6)
             : level2Id
@@ -598,7 +598,7 @@ export const EmotionWheel = ({
         {selected &&
           selectedChildren.map((child, childIndex) => {
             const cStart = outerStart + childIndex * step3;
-            const cLabel = midPoint(270, cStart, cStart + step3);
+            const cLabel = midPoint(276, cStart, cStart + step3);
             const fill3 = level3Id === child.id ? shade(tones.level3, -12, 8) : tones.level3;
             const font3 = { lines: ringFont3[childIndex].lines, size: size3 };
             const mid3 = cStart + step3 / 2;
