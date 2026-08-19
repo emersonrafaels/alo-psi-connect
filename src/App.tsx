@@ -103,6 +103,7 @@ import Triagem from "@/pages/Triagem";
 import EmotionalScales from "./pages/EmotionalScales";
 import ScaleResponse from "./pages/ScaleResponse";
 import MyEmotions from "./pages/MyEmotions";
+import PraticasPrototipo from "./pages/praticas/PraticasPrototipo";
 import PraticasIndex from "./pages/praticas/PraticasIndex";
 import PraticaDetalhe from "./pages/praticas/PraticaDetalhe";
 import PraticaSessao from "./pages/praticas/PraticaSessao";
@@ -229,6 +230,8 @@ const AppWithShortcuts = () => {
 
       {/* Práticas para Reequilíbrio Emocional (público) */}
       <Route path="/praticas" element={<PraticasIndex />} />
+      <Route path="/praticas-prototipo" element={<PraticasPrototipo />} />
+      <Route path="/medcos/praticas-prototipo" element={<PraticasPrototipo />} />
       <Route path="/praticas/jornada" element={<JornadaSessao />} />
       <Route path="/medcos/praticas/jornada" element={<JornadaSessao />} />
       <Route path="/praticas/:slug" element={<PraticaDetalhe />} />
