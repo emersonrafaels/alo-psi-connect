@@ -167,7 +167,8 @@ const backStage = (state: JourneyState): JourneyStage => {
     case "context":
       return "intensity";
     case "recommendation":
-      return skipsContext(state.intensity, state.journeyMode) ? "intensity" : "context";
+      return "context";
+
     case "practice":
       return "recommendation";
     case "checkout":
