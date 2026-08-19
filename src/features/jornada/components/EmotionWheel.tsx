@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { EMOTION_FAMILIES, getEmotionNode } from "../config/emotion-taxonomy";
 import type { EmotionNode } from "../domain/types";
+import { inkOn, muteColor, ringTones, shade } from "../utils/wheelColors";
 
 const SIZE = 640;
 const C = SIZE / 2;
@@ -117,7 +118,7 @@ export const EmotionWheel = ({
   };
 
   const sliceClass =
-    "cursor-pointer outline-none transition-[opacity,filter] duration-300 hover:brightness-110 focus-visible:brightness-125";
+    "cursor-pointer outline-none transition-[fill,filter] duration-300 hover:brightness-105 focus-visible:brightness-110";
 
   // ---------- nível 1 (famílias) ----------
   if (!family) {
@@ -134,14 +135,15 @@ export const EmotionWheel = ({
             const start = index * step;
             const end = start + step;
             const label = midPoint(212, start, end);
+            const tone = shade(item.color, -4, 4);
             return (
               <g key={item.id}>
                 <path
                   ref={(el) => (sliceRefs.current[item.id] = el)}
                   d={sector(112, 302, start, end)}
-                  fill={item.color}
+                  fill={tone}
                   stroke="hsl(var(--background))"
-                  strokeWidth={5}
+                  strokeWidth={3}
                   tabIndex={0}
                   role="button"
                   aria-label={`Família ${item.label}`}
@@ -158,8 +160,8 @@ export const EmotionWheel = ({
                   y={label.y}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  className="pointer-events-none select-none text-[22px] font-semibold"
-                  fill="hsl(var(--background))"
+                  className="pointer-events-none select-none text-[23px] font-bold"
+                  fill={inkOn(tone)}
                 >
                   {item.label}
                 </text>
@@ -175,7 +177,6 @@ export const EmotionWheel = ({
             Toque na família mais próxima do que você sente agora
           </p>
         </div>
-
       </div>
     );
   }
@@ -183,6 +184,8 @@ export const EmotionWheel = ({
   // ---------- níveis 2 e 3 ----------
   const level2List = family.children ?? [];
   const step2 = 360 / Math.max(level2List.length, 1);
+  const tones = ringTones(family.color);
+  
 
   return (
     <div className={cn("relative w-full", className)}>
@@ -194,12 +197,12 @@ export const EmotionWheel = ({
       >
         {/* anel da família — clique volta para as famílias */}
         <path
-          d={sector(94, 134, 0, 360)}
-          fill={family.color}
+          d={sector(94, 138, 0, 360)}
+          fill={tones.family}
           tabIndex={0}
           role="button"
           aria-label={`Família ${family.label}. Voltar para escolher outra família`}
-          className={cn(sliceClass, "opacity-90")}
+          className={sliceClass}
           onClick={onBackLevel}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " " || e.key === "Escape") {
@@ -213,24 +216,30 @@ export const EmotionWheel = ({
           const start = index * step2;
           const end = start + step2;
           const active = level2Id === node.id;
-          const label = midPoint(184, start, end);
+          const label = midPoint(186, start, end);
           const lines = wrap(node.label, 11);
           const children = node.children ?? [];
           const step3 = (end - start) / Math.max(children.length, 1);
+          const fill2 = active
+            ? shade(tones.level2, -8, 6)
+            : level2Id
+              ? muteColor(tones.level2, 42)
+              : tones.level2;
+          const ink2 = inkOn(fill2);
 
           return (
             <g key={node.id}>
               <path
                 ref={(el) => (sliceRefs.current[node.id] = el)}
-                d={sector(140, 228, start, end)}
-                fill={family.color}
+                d={sector(140, 230, start, end)}
+                fill={fill2}
                 stroke="hsl(var(--background))"
-                strokeWidth={4}
+                strokeWidth={2.5}
                 tabIndex={0}
                 role="button"
                 aria-pressed={active}
                 aria-label={`${node.label}, nível 2 de ${family.label}`}
-                className={cn(sliceClass, active ? "opacity-100" : "opacity-75")}
+                className={sliceClass}
                 onClick={() => onSelectLevel2(node.id)}
                 onKeyDown={(e) =>
                   handleKeys(e, level2List, index, () => onSelectLevel2(node.id))
@@ -242,13 +251,19 @@ export const EmotionWheel = ({
                 textAnchor="middle"
                 dominantBaseline="middle"
                 className={cn(
-                  "pointer-events-none select-none font-semibold",
-                  node.label.length > 9 ? "text-[14px]" : "text-[17px]"
+                  "pointer-events-none select-none font-bold",
+                  lines.length > 1
+                    ? "text-[15px]"
+                    : node.label.length > 11
+                      ? "text-[13px]"
+                      : node.label.length > 8
+                        ? "text-[15px]"
+                        : "text-[18px]"
                 )}
-                fill="hsl(var(--background))"
+                fill={ink2}
               >
                 {lines.map((line, i) => (
-                  <tspan key={line} x={label.x} dy={i === 0 ? (lines.length > 1 ? -9 : 0) : 18}>
+                  <tspan key={line} x={label.x} dy={i === 0 ? (lines.length > 1 ? -10 : 0) : 19}>
                     {line}
                   </tspan>
                 ))}
@@ -257,24 +272,24 @@ export const EmotionWheel = ({
               {children.map((child, childIndex) => {
                 const cStart = start + childIndex * step3;
                 const cEnd = cStart + step3;
-                const cLabel = midPoint(270, cStart, cEnd);
+                const cLabel = midPoint(272, cStart, cEnd);
                 const flip = cLabel.deg > 180;
                 const rotation = flip ? cLabel.deg + 90 : cLabel.deg - 90;
+                const fill3 = active ? tones.level3 : muteColor(tones.level3, 55);
+                const ink3 = inkOn(fill3);
+                const cLines = wrap(child.label, 12);
                 return (
                   <g key={child.id}>
                     <path
                       ref={(el) => (sliceRefs.current[child.id] = el)}
                       d={sector(234, 306, cStart, cEnd)}
-                      fill={family.color}
+                      fill={fill3}
                       stroke="hsl(var(--background))"
-                      strokeWidth={3}
+                      strokeWidth={2}
                       tabIndex={0}
                       role="button"
                       aria-label={`${child.label}, nível 3 de ${node.label}`}
-                      className={cn(
-                        sliceClass,
-                        active ? "opacity-95" : "opacity-40 hover:opacity-70"
-                      )}
+                      className={sliceClass}
                       onClick={() => onSelectLevel3(child.id)}
                       onKeyDown={(e) =>
                         handleKeys(e, children, childIndex, () => onSelectLevel3(child.id))
@@ -287,12 +302,20 @@ export const EmotionWheel = ({
                       dominantBaseline="middle"
                       transform={`rotate(${rotation} ${cLabel.x} ${cLabel.y})`}
                       className={cn(
-                        "pointer-events-none select-none font-medium",
+                        "pointer-events-none select-none font-semibold",
                         child.label.length > 10 ? "text-[11px]" : "text-[13px]"
                       )}
-                      fill="hsl(var(--background))"
+                      fill={ink3}
                     >
-                      {child.label}
+                      {cLines.map((line, i) => (
+                        <tspan
+                          key={line}
+                          x={cLabel.x}
+                          dy={i === 0 ? (cLines.length > 1 ? -7 : 0) : 14}
+                        >
+                          {line}
+                        </tspan>
+                      ))}
                     </text>
                   </g>
                 );
@@ -304,10 +327,18 @@ export const EmotionWheel = ({
         <circle cx={C} cy={C} r={90} fill="hsl(var(--card))" />
       </svg>
 
-      <div className="absolute left-1/2 top-1/2 w-[24%] -translate-x-1/2 -translate-y-1/2 space-y-1 text-center">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">
-          {level2Node ? "Sua escolha" : family.label}
-        </p>
+      <div className="absolute left-1/2 top-1/2 w-[26%] -translate-x-1/2 -translate-y-1/2 space-y-1 text-center">
+        <span
+          className="mx-auto flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest"
+          style={{ color: tones.level2 }}
+        >
+          <span
+            aria-hidden
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: tones.level2 }}
+          />
+          {family.label}
+        </span>
         <p className="text-base font-semibold leading-tight text-foreground">
           {level2Node ? level2Node.label : "Escolha uma palavra"}
         </p>
