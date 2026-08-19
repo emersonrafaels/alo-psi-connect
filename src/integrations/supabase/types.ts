@@ -2547,6 +2547,54 @@ export type Database = {
         }
         Relationships: []
       }
+      journey_sessions: {
+        Row: {
+          created_at: string
+          duration_minutes: number | null
+          emotion_id: string
+          family_id: string | null
+          id: string
+          intensity_after: number | null
+          intensity_before: number | null
+          perceived_change_ids: string[]
+          practice_id: string | null
+          session_key: string | null
+          tenant_id: string | null
+          usefulness: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number | null
+          emotion_id: string
+          family_id?: string | null
+          id?: string
+          intensity_after?: number | null
+          intensity_before?: number | null
+          perceived_change_ids?: string[]
+          practice_id?: string | null
+          session_key?: string | null
+          tenant_id?: string | null
+          usefulness?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number | null
+          emotion_id?: string
+          family_id?: string | null
+          id?: string
+          intensity_after?: number | null
+          intensity_before?: number | null
+          perceived_change_ids?: string[]
+          practice_id?: string | null
+          session_key?: string | null
+          tenant_id?: string | null
+          usefulness?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       media_library: {
         Row: {
           alt_text: string | null
@@ -5095,6 +5143,15 @@ export type Database = {
       invoke_google_calendar_sync: { Args: never; Returns: undefined }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      journey_practice_stats: {
+        Args: { _emotion_id: string }
+        Returns: {
+          avg_relief: number
+          practice_id: string
+          relief_rate: number
+          sessions: number
+        }[]
+      }
       normalize_specialties: {
         Args: { raw_specialties: string[] }
         Returns: string[]
