@@ -229,42 +229,74 @@ export const EmotionWheel = ({
         item,
         index,
         path: sector(112, 302, start, end),
-        label: midPoint(212, start, end),
+        emoji: midPoint(246, start, end),
+        label: midPoint(196, start, end),
         tone,
         ink: inkOn(tone),
-        font: fitFont(item.label, 212, step, 190, { min: 16, max: 25 }),
+        font: fitFont(item.label, 196, step, 170, { min: 16, max: 24 }),
       };
     });
   }, []);
+
+  const hoveredNode = getEmotionNode(hoveredId);
+  const hoveredFamily = EMOTION_FAMILIES.find((f) => f.id === hoveredId) ?? null;
 
   if (!family) {
     return (
       <div className={cn("relative w-full", className)}>
         <svg
           viewBox={`0 0 ${SIZE} ${SIZE}`}
-          className="w-full"
+          className="w-full overflow-visible"
           role="group"
           aria-label="Roda das Emoções: escolha a família emocional mais próxima"
         >
-          {familyRing.map(({ item, index, path, label, tone, ink, font }) => (
-            <g key={item.id}>
+          <defs>
+            <radialGradient id="wheel-halo" cx="50%" cy="50%" r="50%">
+              <stop offset="55%" stopColor="hsl(var(--primary))" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <circle cx={C} cy={C} r={318} fill="url(#wheel-halo)" />
+          {familyRing.map(({ item, index, path, label, emoji, tone, ink, font }) => (
+            <g
+              key={item.id}
+              className={cn(!reducedMotion && "animate-scale-in")}
+              style={!reducedMotion ? { animationDelay: `${index * 45}ms` } : undefined}
+            >
               <path
                 ref={registerSlice(item.id)}
                 d={path}
                 fill={tone}
                 stroke="hsl(var(--background))"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 tabIndex={0}
                 role="button"
                 aria-label={`Família ${item.label}`}
                 className={sliceClass}
-                onClick={() => onSelectFamily(item.id)}
+                onMouseEnter={() => setHoveredId(item.id)}
+                onMouseLeave={() => setHoveredId((prev) => (prev === item.id ? null : prev))}
+                onFocus={() => setHoveredId(item.id)}
+                onBlur={() => setHoveredId((prev) => (prev === item.id ? null : prev))}
+                onClick={() => {
+                  buzz();
+                  onSelectFamily(item.id);
+                }}
                 onKeyDown={(e) =>
                   handleKeys(e, EMOTION_FAMILIES as EmotionNode[], index, () =>
                     onSelectFamily(item.id)
                   )
                 }
               />
+              <text
+                x={emoji.x}
+                y={emoji.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={34}
+                className="pointer-events-none select-none"
+              >
+                {getFamilyEmoji(item.id)}
+              </text>
               <text
                 x={label.x}
                 y={label.y}
@@ -282,10 +314,33 @@ export const EmotionWheel = ({
         </svg>
 
         <div className="pointer-events-none absolute left-1/2 top-1/2 w-[32%] -translate-x-1/2 -translate-y-1/2 space-y-1 text-center">
-          <p className="text-lg font-semibold leading-tight text-foreground">Como você está?</p>
-          <p className="text-xs leading-snug text-muted-foreground">
-            Toque na família mais próxima do que você sente agora
-          </p>
+          {hoveredFamily ? (
+            <div className={cn(!reducedMotion && "animate-fade-in")}>
+              <p className="text-3xl leading-none" aria-hidden>
+                {getFamilyEmoji(hoveredFamily.id)}
+              </p>
+              <p
+                className="mt-1 text-xl font-bold leading-tight"
+                style={{ color: hoveredFamily.color }}
+              >
+                {hoveredFamily.label}
+              </p>
+            </div>
+          ) : (
+            <>
+              <p
+                className={cn(
+                  "text-lg font-semibold leading-tight text-foreground",
+                  !reducedMotion && "pulse"
+                )}
+              >
+                Como você está?
+              </p>
+              <p className="text-xs leading-snug text-muted-foreground">
+                Toque na família mais próxima do que você sente agora
+              </p>
+            </>
+          )}
         </div>
 
         <p className="sr-only" aria-live="polite">
@@ -294,6 +349,7 @@ export const EmotionWheel = ({
       </div>
     );
   }
+
 
   // ---------- níveis 2 e 3 ----------
   const level2List = family.children ?? [];
