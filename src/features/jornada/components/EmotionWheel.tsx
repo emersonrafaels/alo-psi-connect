@@ -302,14 +302,25 @@ export const EmotionWheel = ({
         <circle cx={C} cy={C} r={90} fill="hsl(var(--card))" />
       </svg>
 
-      <div className="pointer-events-none absolute left-1/2 top-1/2 w-[26%] -translate-x-1/2 -translate-y-1/2 text-center">
+      <div className="absolute left-1/2 top-1/2 w-[24%] -translate-x-1/2 -translate-y-1/2 space-y-1 text-center">
         <p className="text-xs uppercase tracking-widest text-muted-foreground">
           {level2Node ? "Sua escolha" : family.label}
         </p>
         <p className="text-base font-semibold leading-tight text-foreground">
           {level2Node ? level2Node.label : "Escolha uma palavra"}
         </p>
+        <button
+          type="button"
+          onClick={onBackLevel}
+          className="text-[11px] text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+        >
+          {level2Node ? "voltar" : "trocar família"}
+        </button>
       </div>
+    </div>
+  );
+};
+
     </div>
   );
 };
