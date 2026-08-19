@@ -260,11 +260,9 @@ export const journeyReducer = (state: JourneyState, action: JourneyAction): Jour
 
     case "SELECT_INTENSITY": {
       const next = touched({ intensity: action.intensity, contextAnswerId: null });
-      if (skipsContext(action.intensity, state.journeyMode)) {
-        return runRecommendation({ ...next, stage: "recommendation" });
-      }
       return { ...next, stage: "context" };
     }
+
 
     case "ANSWER_CONTEXT":
       return runRecommendation(touched({ contextAnswerId: action.contextAnswerId }));
