@@ -7,6 +7,7 @@ import {
   ShieldCheck, Lock, Ear, Lightbulb, Activity, Users, Zap, ClipboardList,
   Workflow, LineChart, PlayCircle,
 } from "lucide-react";
+import rightSideImage from "../../assets/image_1f2243.png";
 
 /**
  * About page rebuilt from the Stitch mock "Serenity & Wisdom".
@@ -59,63 +60,12 @@ const AboutRedeBemEstar = () => {
         </div>
 
         {/* Composition of floating cards */}
-        <div className="relative h-[360px] sm:h-[480px] lg:h-[600px] flex items-center justify-center overflow-hidden">
-          <div className="absolute w-[320px] h-[320px] sm:w-[420px] sm:h-[420px] lg:w-[500px] lg:h-[500px] bg-[var(--rbe-turquoise-light)] rbe-organic-shape-1 -z-10 animate-pulse" />
-          <div className="absolute w-[260px] h-[260px] sm:w-[340px] sm:h-[340px] lg:w-[400px] lg:h-[400px] bg-[var(--rbe-lilac-light)] rbe-organic-shape-2 -z-10 mix-blend-multiply opacity-60" />
-
-          <div className="relative w-full h-full max-w-md mx-auto">
-            {/* Buddy mockup */}
-            <div className="absolute top-2 right-0 w-44 sm:w-56 lg:w-64 rbe-glass-card p-4 sm:p-5 rounded-3xl shadow-2xl rotate-2 sm:rotate-3 z-30">
-              <div className="flex items-center gap-3 mb-3 sm:mb-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[var(--rbe-secondary)] rounded-2xl flex items-center justify-center">
-                  <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--rbe-primary)]" />
-                </div>
-                <div>
-                  <p className="text-xs sm:text-sm font-bold text-[var(--rbe-text-strong)]">Buddy</p>
-                  <p className="text-[10px] text-[var(--rbe-text-muted)]">Inteligência Ativa</p>
-                </div>
-              </div>
-              <div className="bg-[var(--rbe-card-soft)] rounded-xl p-3 text-[11px] italic text-[var(--rbe-text)] border-l-4 border-[var(--rbe-secondary)]">
-                "Estou aqui para ouvir você agora."
-              </div>
-            </div>
-
-            {/* Check-in card */}
-            <div className="absolute top-1/2 left-0 -translate-y-1/2 w-40 sm:w-48 lg:w-56 bg-[var(--rbe-card)] p-4 sm:p-5 rounded-[28px] shadow-2xl -rotate-3 sm:-rotate-6 z-20 border-b-8 border-[var(--rbe-secondary)]">
-              <p className="text-[10px] font-bold text-[var(--rbe-text-subtle)] mb-3 uppercase tracking-widest">Check-in Diário</p>
-              <div className="flex justify-between gap-2">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 bg-[var(--rbe-lilac-light)] rounded-full flex items-center justify-center text-base sm:text-lg">😔</div>
-                <div className="w-8 h-8 sm:w-9 sm:h-9 bg-[var(--rbe-turquoise-light)] rounded-full flex items-center justify-center text-base sm:text-lg ring-4 ring-[var(--rbe-secondary)]">😊</div>
-                <div className="w-8 h-8 sm:w-9 sm:h-9 bg-[var(--rbe-lilac-light)] rounded-full flex items-center justify-center text-base sm:text-lg">🤩</div>
-              </div>
-            </div>
-
-            {/* Dashboard mockup */}
-            <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-6 w-52 sm:w-64 lg:w-72 bg-[var(--rbe-cta-bg)] text-white p-5 sm:p-7 rounded-[32px] sm:rounded-[36px] shadow-2xl z-40">
-              <div className="flex justify-between items-start mb-4 sm:mb-6">
-                <LineChart className="w-7 h-7 sm:w-9 sm:h-9 text-[var(--rbe-secondary)]" />
-                <span className="text-[10px] font-bold bg-white/20 px-2 py-1 rounded">LIVE</span>
-              </div>
-              <p className="text-xs opacity-70 mb-1">Engajamento Institucional</p>
-              <p className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">87.4%</p>
-              <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden">
-                <div className="h-full bg-[var(--rbe-secondary)] w-[87%]" />
-              </div>
-            </div>
-
-            {/* Mini diary */}
-            <div className="absolute top-12 sm:top-16 left-2 sm:left-6 w-36 sm:w-44 bg-[var(--rbe-card)] p-3 sm:p-4 rounded-2xl shadow-xl z-10 opacity-80 scale-90">
-              <div className="flex gap-2 mb-3">
-                <div className="w-3 h-3 rounded-full bg-red-400" />
-                <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                <div className="w-3 h-3 rounded-full bg-green-400" />
-              </div>
-              <div className="space-y-2">
-                <div className="h-2 w-full bg-[var(--rbe-card-border)] rounded" />
-                <div className="h-2 w-3/4 bg-[var(--rbe-card-border)] rounded" />
-              </div>
-            </div>
-          </div>
+        <div className="relative w-full h-[360px] sm:h-[480px] lg:h-[600px] flex items-center justify-center overflow-hidden">
+          <img 
+            src={rightSideImage} 
+            alt="Composição de cards flutuantes da plataforma" 
+            className="w-full h-full object-contain max-w-[280px] sm:max-w-md lg:max-w-xl"
+          />
         </div>
       </header>
 
