@@ -21,11 +21,11 @@ Criar a instituição **AeroTD** e **vincular os mesmos registros** (não duplic
 2. Vincular os mesmos 10 alunos à AeroTD (mantendo também o vínculo com a Carta Consulta).
 3. Vincular os mesmos 5 profissionais, preservando o tipo de relação (employee/partner) e status ativo.
 4. Liberar os mesmos 10 alunos no painel "Buddy dos Alunos" da AeroTD.
-5. Replicar os 3 administradores da instituição e os 3 visualizadores do Buddy para a AeroTD, para que o portal institucional já abra com dados.
+5. Não replicar os administradores da Carta Consulta: a AeroTD ficará sem usuários administradores nesta etapa, para que novos admins sejam criados depois (pelo Admin > Instituições ou em um passo seguinte, informando nome/e-mail).
 
 ## Detalhes técnicos
 
 - Uma única migração SQL com `INSERT ... SELECT` a partir dos vínculos da Carta Consulta, usando `ON CONFLICT DO NOTHING` para ser idempotente.
-- Tabelas envolvidas: `educational_institutions`, `patient_institutions`, `professional_institutions`, `institution_buddy_students`, `institution_users`, `institution_buddy_viewers`.
+- Tabelas envolvidas: `educational_institutions`, `patient_institutions`, `professional_institutions`, `institution_buddy_students` (sem escrita em `institution_users` / `institution_buddy_viewers`).
 - Nenhuma alteração de código de frontend é necessária: o portal institucional, o dashboard de bem-estar, a triagem e o Buddy dos Alunos já filtram por `institution_id`.
 - A triagem existente continua ligada à Carta Consulta (não será copiada, para não duplicar histórico clínico); o painel de triagem da AeroTD começará vazio.
