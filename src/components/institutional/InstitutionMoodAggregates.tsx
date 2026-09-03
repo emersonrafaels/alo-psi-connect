@@ -26,7 +26,7 @@ interface AggregateData {
 }
 
 const RISK_LABELS: Record<string, { label: string; color: string }> = {
-  healthy: { label: 'Saudável', color: 'bg-emerald-500' },
+  healthy: { label: 'Estável', color: 'bg-emerald-500' },
   attention: { label: 'Atenção', color: 'bg-yellow-500' },
   alert: { label: 'Alerta', color: 'bg-orange-500' },
   critical: { label: 'Crítico', color: 'bg-red-500' },
