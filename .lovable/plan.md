@@ -21,7 +21,7 @@ Criar a instituição **AeroTD** e **vincular os mesmos registros** (não duplic
 2. Vincular os mesmos 10 alunos à AeroTD (mantendo também o vínculo com a Carta Consulta).
 3. Vincular os mesmos 5 profissionais, preservando o tipo de relação (employee/partner) e status ativo.
 4. Liberar os mesmos 10 alunos no painel "Buddy dos Alunos" da AeroTD.
-5. Replicar os 3 administradores da instituição e os 3 visualizadores do Buddy para a AeroTD, para que o portal institucional já abra com dados.
+5. Não replicar os administradores da Carta Consulta: a AeroTD ficará sem usuários administradores nesta etapa, para que novos admins sejam criados depois (pelo Admin > Instituições ou em um passo seguinte, informando nome/e-mail).
 
 ## Detalhes técnicos
 
