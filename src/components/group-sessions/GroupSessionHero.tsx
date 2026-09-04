@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import heroImage from '@/assets/encontros.png';
+import heroImage from '@/assets/encontros-hero.mp4';
 
 export const GroupSessionHero = () => {
   const scrollToSessions = () => {
@@ -14,11 +14,14 @@ export const GroupSessionHero = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           {/* Imagem AI - Esquerda */}
           <div className="hidden md:flex justify-center items-center">
-            <img 
-              src={heroImage}
-              alt="Encontros em grupo online"
-              className="w-full max-w-md rounded-2xl shadow-2xl animate-fade-in dark:shadow-primary/50"
-            />
+            <video
+      src={heroImage}
+      autoPlay
+      muted
+      loop
+      playsInline
+      className="w-full max-w-md rounded-2xl shadow-2xl animate-fade-in dark:shadow-primary/50"
+    />
           </div>
           
           <div className="text-center md:text-left space-y-6">
