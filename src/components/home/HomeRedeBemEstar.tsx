@@ -22,7 +22,7 @@ import heroImg from "@/assets/students-hero.png";
 import ameImg from "@/assets/home-rbe-ame.jpg";
 import buddyImg from "@/assets/buddy-main.png";
 import buddyChat from "@/assets/buddy-chat.png";
-
+import EmotionalCheckinHome from "@/components/emotionalcheckinhome/emotionalcheckinhome";
 interface FeaturedProfessional {
   id: number;
   display_name: string;
@@ -489,54 +489,8 @@ const HomeRedeBemEstar = () => {
         </div>
       </section>
 
-      {/* ═════════ CHECK-IN DIÁRIO ═════════ */}
-      <section className="py-16 sm:py-20 lg:py-24" style={{ background: "var(--rbe-surface-container-low)" }}>
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-3 sm:mb-4"
-                style={{ color: "var(--rbe-primary)" }}>
-              Check-in Diário
-            </h2>
-            <p className="text-base sm:text-lg max-w-2xl mx-auto"
-               style={{ color: "var(--rbe-on-surface-variant)" }}>
-              Breves reflexões para mapear seu estado de presença.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
-            {[
-              { Icon: Sparkles, color: "var(--rbe-brand-purple)", title: "Como está sua energia hoje?", desc: "Identifique o nível de vitalidade física e mental para ajustar suas expectativas.", chips: [{ label: "Alta", active: true, color: "var(--rbe-brand-mint)" }, { label: "Moderada" }, { label: "Baixa" }] },
-              { Icon: Brain, color: "var(--rbe-brand-mint)", title: "Qual é o foco da sua mente?", desc: "Mapeie se seus pensamentos estão no presente, passado ou futuro.", chips: [{ label: "Presente" }, { label: "Futuro", active: true, color: "var(--rbe-brand-purple)", textOnActive: "#fff" }, { label: "Passado" }] },
-              { Icon: Moon, color: "var(--rbe-brand-purple)", title: "Como foi a sua noite de sono?", desc: "A qualidade do descanso é a base para a regulação emocional.", chips: [{ label: "Reparador" }, { label: "Interrompido", active: true, color: "var(--rbe-primary-fixed)" }] },
-              { Icon: Heart, color: "var(--rbe-brand-mint)", title: "Sente conexão com o agora?", desc: "Avalie sua percepção de pertencimento e satisfação imediata.", chips: [{ label: "Plena", active: true, color: "var(--rbe-brand-mint)" }, { label: "Mínima" }] },
-            ].map(card => (
-              <div key={card.title}
-                   className="p-7 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] shadow-sm flex flex-col justify-between min-h-[260px] sm:min-h-[320px]"
-                   style={{ background: "var(--rbe-surface-container-lowest)", borderTop: `4px solid ${card.color}` }}>
-                <div>
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center mb-5 sm:mb-6"
-                       style={{ background: `color-mix(in srgb, ${card.color} 15%, transparent)`, color: card.color }}>
-                    <card.Icon className="w-5 h-5" />
-                  </div>
-                  <h4 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3" style={{ color: "var(--rbe-primary)" }}>{card.title}</h4>
-                  <p className="text-sm mb-6 sm:mb-8" style={{ color: "var(--rbe-on-surface-variant)" }}>{card.desc}</p>
-                </div>
-                <div className="flex flex-wrap gap-2 sm:gap-3">
-                  {card.chips.map((chip: any) => (
-                    <span key={chip.label}
-                          className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs sm:text-sm"
-                          style={{
-                            background: chip.active ? chip.color : "var(--rbe-surface-container)",
-                            color: chip.active ? (chip.textOnActive || "var(--rbe-primary)") : "var(--rbe-on-surface-variant)",
-                          }}>
-                      {chip.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ═════════ DIÁRIO EMOCIONAL ═════════ */}
+<EmotionalCheckinHome />
 
       {/* ═════════ INFOGRÁFICO DE SERVIÇOS ═════════ */}
       <section className="py-16 sm:py-20 lg:py-24 overflow-hidden" style={{ background: "var(--rbe-surface-container-lowest)" }}>
