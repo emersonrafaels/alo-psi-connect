@@ -123,6 +123,7 @@ import HiddenMoodDiaryPrototype, {
   HiddenMoodDiaryPrototypeImprovements,
   HiddenMoodDiaryPrototypeMobile,
   HiddenMoodDiaryPrototypeNewEntry,
+  HiddenMoodDiaryPrototypeSettings,
 } from "@/pages/prototypes/HiddenMoodDiaryPrototype";
 
 import "./App.css";
@@ -241,6 +242,7 @@ const AppWithShortcuts = () => {
       <Route path="/__hidden/prototipo-diario-emocional" element={<HiddenMoodDiaryPrototype />} />
       <Route path="/__hidden/prototipo-diario-emocional/novo-registro" element={<HiddenMoodDiaryPrototypeNewEntry />} />
       <Route path="/__hidden/prototipo-diario-emocional/historico" element={<HiddenMoodDiaryPrototypeHistory />} />
+      <Route path="/__hidden/prototipo-diario-emocional/configuracoes" element={<HiddenMoodDiaryPrototypeSettings />} />
       <Route path="/__hidden/prototipo-diario-emocional/mobile" element={<HiddenMoodDiaryPrototypeMobile />} />
       <Route path="/__hidden/prototipo-diario-emocional/melhorias" element={<HiddenMoodDiaryPrototypeImprovements />} />
       <Route path="/praticas/jornada" element={<JornadaSessao />} />
