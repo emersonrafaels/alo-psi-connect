@@ -11,6 +11,15 @@ import {
   Sparkles,
   UserCircle2,
 } from "lucide-react";
+import { Link } from "react-router-dom";
+
+const hiddenMoodDiaryRoutes = {
+  home: "/__hidden/prototipo-diario-emocional",
+  newEntry: "/__hidden/prototipo-diario-emocional/novo-registro",
+  history: "/__hidden/prototipo-diario-emocional/historico",
+  mobile: "/__hidden/prototipo-diario-emocional/mobile",
+  improvements: "/__hidden/prototipo-diario-emocional/melhorias",
+};
 
 const moodOptions = [
   { label: "Muito ruim", emoji: "☹️", tone: "bg-rose-100 text-rose-500" },
@@ -45,6 +54,18 @@ const improvements = [
   "Mais foco na sua jornada de autocuidado",
 ];
 
+const PrototypeNavigation = () => (
+  <div className="border-b bg-[#f5f7ff] px-4 py-3">
+    <div className="mx-auto flex max-w-[1240px] flex-wrap gap-2">
+      <Link to={hiddenMoodDiaryRoutes.home} className="rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-[#315186]">Desktop</Link>
+      <Link to={hiddenMoodDiaryRoutes.newEntry} className="rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-[#315186]">Novo registro</Link>
+      <Link to={hiddenMoodDiaryRoutes.history} className="rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-[#315186]">Histórico</Link>
+      <Link to={hiddenMoodDiaryRoutes.mobile} className="rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-[#315186]">Mobile</Link>
+      <Link to={hiddenMoodDiaryRoutes.improvements} className="rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-[#315186]">Melhorias</Link>
+    </div>
+  </div>
+);
+
 const DesktopShell = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen bg-[#f5f7ff] p-4 md:p-6">
     <div className="mx-auto max-w-[1240px] overflow-hidden rounded-3xl border bg-white shadow-sm">
@@ -62,6 +83,7 @@ const DesktopShell = ({ children }: { children: React.ReactNode }) => (
           <UserCircle2 className="h-5 w-5" />
         </div>
       </div>
+      <PrototypeNavigation />
       {children}
     </div>
   </div>
@@ -84,7 +106,7 @@ export const HiddenMoodDiaryPrototypeHome = () => (
             <h1 className="text-4xl font-bold text-[#112c6b]">Diário Emocional</h1>
             <p className="mt-2 max-w-2xl text-sm text-[#426198]">Acompanhe seu bem-estar emocional diariamente e descubra padrões que podem melhorar sua qualidade de vida.</p>
           </div>
-          <button className="rounded-xl bg-[#5d35c3] px-5 py-2.5 text-sm font-semibold text-white">+ Registrar novo dia</button>
+          <Link to={hiddenMoodDiaryRoutes.newEntry} className="rounded-xl bg-[#5d35c3] px-5 py-2.5 text-sm font-semibold text-white">+ Registrar novo dia</Link>
         </div>
         <div className="grid gap-3 lg:grid-cols-4">
           {stats.map((item) => (
@@ -129,8 +151,9 @@ export const HiddenMoodDiaryPrototypeNewEntry = () => (
         <div className="flex items-center gap-2 text-base font-semibold"><Sparkles className="h-4 w-4 text-cyan-200" />bem-estar</div>
         <div className="flex items-center gap-2"><Bell className="h-4 w-4" /><UserCircle2 className="h-5 w-5" /></div>
       </div>
+      <PrototypeNavigation />
       <div className="space-y-4 p-4">
-        <button className="text-sm text-[#466db1]">← Voltar</button>
+        <Link to={hiddenMoodDiaryRoutes.home} className="inline-block text-sm text-[#466db1]">← Voltar</Link>
         <div className="flex items-center gap-3">
           <div className="rounded-lg bg-[#f1edff] p-2 text-[#5d35c3]"><CalendarDays className="h-5 w-5" /></div>
           <div><h2 className="text-2xl font-bold text-[#112c6b]">Novo registro</h2><p className="text-sm text-[#426198]">Conte como você está se sentindo hoje.</p></div>
@@ -164,8 +187,8 @@ export const HiddenMoodDiaryPrototypeNewEntry = () => (
           </div>
         </div>
         <div className="flex justify-end gap-3 pb-1">
-          <button className="rounded-lg border px-4 py-2 text-sm font-semibold text-[#4f47cc]">Cancelar</button>
-          <button className="rounded-lg bg-[#5d35c3] px-5 py-2 text-sm font-semibold text-white">Salvar</button>
+          <Link to={hiddenMoodDiaryRoutes.home} className="rounded-lg border px-4 py-2 text-sm font-semibold text-[#4f47cc]">Cancelar</Link>
+          <Link to={hiddenMoodDiaryRoutes.history} className="rounded-lg bg-[#5d35c3] px-5 py-2 text-sm font-semibold text-white">Salvar</Link>
         </div>
       </div>
     </div>
@@ -177,8 +200,8 @@ export const HiddenMoodDiaryPrototypeHistory = () => (
     <div className="grid md:grid-cols-[190px_1fr]">
       <aside className="border-r bg-[#fbfcff] p-4 text-sm text-[#2d4570]">
         <div className="space-y-2">
-          <div className="px-3 py-2">Diário Emocional</div>
-          <div className="px-3 py-2">Resumo</div>
+          <Link to={hiddenMoodDiaryRoutes.home} className="block px-3 py-2">Diário Emocional</Link>
+          <Link to={hiddenMoodDiaryRoutes.home} className="block px-3 py-2">Resumo</Link>
           <div className="rounded-lg bg-[#ece8ff] px-3 py-2 font-medium">Histórico</div>
           <div className="px-3 py-2">Configurações</div>
         </div>
@@ -233,6 +256,7 @@ export const HiddenMoodDiaryPrototypeMobile = () => (
         </div>
         <p className="mt-1 font-semibold">bem-estar</p>
       </div>
+      <PrototypeNavigation />
       <div className="space-y-3 p-4 text-xs">
         <h4 className="text-xl font-bold text-[#112c6b]">Diário Emocional</h4>
         <div className="grid grid-cols-2 gap-2 rounded-lg border p-2 text-[#315186]">
@@ -249,11 +273,11 @@ export const HiddenMoodDiaryPrototypeMobile = () => (
               </div>
             ))}
           </div>
-          <button className="mt-3 w-full rounded-lg bg-[#5d35c3] py-2 text-xs font-semibold text-white">+ Registrar novo dia</button>
+          <Link to={hiddenMoodDiaryRoutes.newEntry} className="mt-3 block w-full rounded-lg bg-[#5d35c3] py-2 text-center text-xs font-semibold text-white">+ Registrar novo dia</Link>
         </div>
         <div className="rounded-lg border p-3">
           <div className="mb-2 flex items-center justify-between text-sm font-semibold text-[#112c6b]">
-            <span>Últimos registros</span><span className="text-[#5d35c3]">Ver todos</span>
+            <span>Últimos registros</span><Link to={hiddenMoodDiaryRoutes.history} className="text-[#5d35c3]">Ver todos</Link>
           </div>
           <div className="space-y-2 text-[#315186]">
             <div className="flex items-center justify-between"><span>12 Ago · Muito bem</span><span>›</span></div>
@@ -262,10 +286,10 @@ export const HiddenMoodDiaryPrototypeMobile = () => (
           </div>
         </div>
         <div className="grid grid-cols-4 gap-2 border-t pt-2 text-center text-[#315186]">
-          <div><Home className="mx-auto h-4 w-4" />Início</div>
-          <div><Plus className="mx-auto h-4 w-4" />Diário</div>
-          <div><LineChart className="mx-auto h-4 w-4" />Relat.</div>
-          <div><ListChecks className="mx-auto h-4 w-4" />Mais</div>
+          <Link to={hiddenMoodDiaryRoutes.home}><Home className="mx-auto h-4 w-4" />Início</Link>
+          <Link to={hiddenMoodDiaryRoutes.newEntry}><Plus className="mx-auto h-4 w-4" />Diário</Link>
+          <Link to={hiddenMoodDiaryRoutes.history}><LineChart className="mx-auto h-4 w-4" />Relat.</Link>
+          <Link to={hiddenMoodDiaryRoutes.improvements}><ListChecks className="mx-auto h-4 w-4" />Mais</Link>
         </div>
       </div>
     </div>
@@ -275,6 +299,7 @@ export const HiddenMoodDiaryPrototypeMobile = () => (
 export const HiddenMoodDiaryPrototypeImprovements = () => (
   <div className="min-h-screen bg-[#f5f7ff] p-4 md:p-8">
     <div className="mx-auto max-w-[560px] rounded-3xl border bg-gradient-to-br from-[#f4f6ff] to-[#f0f2ff] p-6 shadow-sm">
+      <PrototypeNavigation />
       <h1 className="mb-4 flex items-center gap-2 text-4xl font-bold text-[#39229b]">
         <Heart className="h-7 w-7" />
         Principais melhorias
