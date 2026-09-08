@@ -54,16 +54,29 @@ const improvements = [
   "Mais foco na sua jornada de autocuidado",
 ];
 
-const PrototypeNavigation = () => (
-  <div className="border-b bg-[#f5f7ff] px-4 py-3">
-    <div className="mx-auto flex max-w-[1240px] flex-wrap gap-2">
-      <Link to={hiddenMoodDiaryRoutes.home} className="rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-[#315186]">Desktop</Link>
-      <Link to={hiddenMoodDiaryRoutes.newEntry} className="rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-[#315186]">Novo registro</Link>
-      <Link to={hiddenMoodDiaryRoutes.history} className="rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-[#315186]">Histórico</Link>
-      <Link to={hiddenMoodDiaryRoutes.mobile} className="rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-[#315186]">Mobile</Link>
-      <Link to={hiddenMoodDiaryRoutes.improvements} className="rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold text-[#315186]">Melhorias</Link>
+type SidebarSection = "diary" | "summary" | "history" | "settings";
+
+const sidebarItems: { label: string; route: string; key: SidebarSection }[] = [
+  { label: "Diário Emocional", route: hiddenMoodDiaryRoutes.home, key: "diary" },
+  { label: "Resumo", route: hiddenMoodDiaryRoutes.home, key: "summary" },
+  { label: "Histórico", route: hiddenMoodDiaryRoutes.history, key: "history" },
+  { label: "Configurações", route: hiddenMoodDiaryRoutes.improvements, key: "settings" },
+];
+
+const SidebarNavigation = ({ active }: { active: SidebarSection }) => (
+  <aside className="border-r bg-[#fbfcff] p-4 text-sm text-[#2d4570]">
+    <div className="space-y-2">
+      {sidebarItems.map((item) => (
+        <Link
+          key={item.key}
+          to={item.route}
+          className={`block rounded-lg px-3 py-2 ${item.key === active ? "bg-[#ece8ff] font-medium" : ""}`}
+        >
+          {item.label}
+        </Link>
+      ))}
     </div>
-  </div>
+  </aside>
 );
 
 const DesktopShell = ({ children }: { children: React.ReactNode }) => (
@@ -83,7 +96,6 @@ const DesktopShell = ({ children }: { children: React.ReactNode }) => (
           <UserCircle2 className="h-5 w-5" />
         </div>
       </div>
-      <PrototypeNavigation />
       {children}
     </div>
   </div>
@@ -92,14 +104,7 @@ const DesktopShell = ({ children }: { children: React.ReactNode }) => (
 export const HiddenMoodDiaryPrototypeHome = () => (
   <DesktopShell>
     <div className="grid md:grid-cols-[190px_1fr]">
-      <aside className="border-r bg-[#fbfcff] p-4 text-sm text-[#2d4570]">
-        <div className="space-y-2">
-          <div className="rounded-lg bg-[#ece8ff] px-3 py-2 font-medium">Diário Emocional</div>
-          <div className="px-3 py-2">Resumo</div>
-          <div className="px-3 py-2">Histórico</div>
-          <div className="px-3 py-2">Configurações</div>
-        </div>
-      </aside>
+      <SidebarNavigation active="diary" />
       <main className="space-y-5 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -151,7 +156,6 @@ export const HiddenMoodDiaryPrototypeNewEntry = () => (
         <div className="flex items-center gap-2 text-base font-semibold"><Sparkles className="h-4 w-4 text-cyan-200" />bem-estar</div>
         <div className="flex items-center gap-2"><Bell className="h-4 w-4" /><UserCircle2 className="h-5 w-5" /></div>
       </div>
-      <PrototypeNavigation />
       <div className="space-y-4 p-4">
         <Link to={hiddenMoodDiaryRoutes.home} className="inline-block text-sm text-[#466db1]">← Voltar</Link>
         <div className="flex items-center gap-3">
@@ -198,14 +202,7 @@ export const HiddenMoodDiaryPrototypeNewEntry = () => (
 export const HiddenMoodDiaryPrototypeHistory = () => (
   <DesktopShell>
     <div className="grid md:grid-cols-[190px_1fr]">
-      <aside className="border-r bg-[#fbfcff] p-4 text-sm text-[#2d4570]">
-        <div className="space-y-2">
-          <Link to={hiddenMoodDiaryRoutes.home} className="block px-3 py-2">Diário Emocional</Link>
-          <Link to={hiddenMoodDiaryRoutes.home} className="block px-3 py-2">Resumo</Link>
-          <div className="rounded-lg bg-[#ece8ff] px-3 py-2 font-medium">Histórico</div>
-          <div className="px-3 py-2">Configurações</div>
-        </div>
-      </aside>
+      <SidebarNavigation active="history" />
       <main className="space-y-3 p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -256,7 +253,6 @@ export const HiddenMoodDiaryPrototypeMobile = () => (
         </div>
         <p className="mt-1 font-semibold">bem-estar</p>
       </div>
-      <PrototypeNavigation />
       <div className="space-y-3 p-4 text-xs">
         <h4 className="text-xl font-bold text-[#112c6b]">Diário Emocional</h4>
         <div className="grid grid-cols-2 gap-2 rounded-lg border p-2 text-[#315186]">
@@ -299,7 +295,6 @@ export const HiddenMoodDiaryPrototypeMobile = () => (
 export const HiddenMoodDiaryPrototypeImprovements = () => (
   <div className="min-h-screen bg-[#f5f7ff] p-4 md:p-8">
     <div className="mx-auto max-w-[560px] rounded-3xl border bg-gradient-to-br from-[#f4f6ff] to-[#f0f2ff] p-6 shadow-sm">
-      <PrototypeNavigation />
       <h1 className="mb-4 flex items-center gap-2 text-4xl font-bold text-[#39229b]">
         <Heart className="h-7 w-7" />
         Principais melhorias
