@@ -17,6 +17,7 @@ const hiddenMoodDiaryRoutes = {
   home: "/__hidden/prototipo-diario-emocional",
   newEntry: "/__hidden/prototipo-diario-emocional/novo-registro",
   history: "/__hidden/prototipo-diario-emocional/historico",
+  settings: "/__hidden/prototipo-diario-emocional/configuracoes",
   mobile: "/__hidden/prototipo-diario-emocional/mobile",
   improvements: "/__hidden/prototipo-diario-emocional/melhorias",
 };
@@ -54,13 +55,20 @@ const improvements = [
   "Mais foco na sua jornada de autocuidado",
 ];
 
+const settingsSections = [
+  { title: "Privacidade", description: "Defina quem pode visualizar seus registros emocionais.", status: "Somente você" },
+  { title: "Lembretes", description: "Escolha os horários para receber lembretes diários.", status: "08:00 e 20:00" },
+  { title: "Exportar histórico", description: "Baixe um relatório com seus registros por período.", status: "Últimos 30 dias" },
+  { title: "Categorias de emoções", description: "Personalize as emoções e tags disponíveis no diário.", status: "12 categorias ativas" },
+];
+
 type SidebarSection = "diary" | "summary" | "history" | "settings";
 
 const sidebarItems: { label: string; route: string; key: SidebarSection }[] = [
   { label: "Diário Emocional", route: hiddenMoodDiaryRoutes.home, key: "diary" },
   { label: "Resumo", route: hiddenMoodDiaryRoutes.home, key: "summary" },
   { label: "Histórico", route: hiddenMoodDiaryRoutes.history, key: "history" },
-  { label: "Configurações", route: hiddenMoodDiaryRoutes.improvements, key: "settings" },
+  { label: "Configurações", route: hiddenMoodDiaryRoutes.settings, key: "settings" },
 ];
 
 const SidebarNavigation = ({ active }: { active: SidebarSection }) => (
@@ -310,6 +318,37 @@ export const HiddenMoodDiaryPrototypeImprovements = () => (
       <p className="mt-8 text-right text-3xl italic text-[#4f47cc]">Seu bem-estar importa!</p>
     </div>
   </div>
+);
+
+export const HiddenMoodDiaryPrototypeSettings = () => (
+  <DesktopShell>
+    <div className="grid md:grid-cols-[190px_1fr]">
+      <SidebarNavigation active="settings" />
+      <main className="space-y-5 p-5">
+        <div>
+          <h2 className="text-4xl font-bold text-[#112c6b]">Configurações do Diário Emocional</h2>
+          <p className="mt-2 text-sm text-[#426198]">
+            Protótipo em visual horizontal para organizar preferências e ajustes de forma mais clara.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {settingsSections.map((section) => (
+            <div key={section.title} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#dfe7fb] bg-white px-4 py-4">
+              <div className="min-w-[260px] flex-1">
+                <p className="text-base font-semibold text-[#112c6b]">{section.title}</p>
+                <p className="text-sm text-[#426198]">{section.description}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="rounded-full bg-[#f1edff] px-3 py-1 text-xs font-medium text-[#5d35c3]">{section.status}</span>
+                <button className="rounded-lg border border-[#d6ddf6] px-4 py-2 text-sm font-semibold text-[#315186]">Editar</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+    </div>
+  </DesktopShell>
 );
 
 const HiddenMoodDiaryPrototype = HiddenMoodDiaryPrototypeHome;
