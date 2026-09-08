@@ -118,6 +118,12 @@ import InstitutionRadar from "@/pages/institution/InstitutionRadar";
 import { RadarProtectedRoute } from "@/components/RadarProtectedRoute";
 import PublicRadar from "@/pages/public/PublicRadar";
 import PublicRadarResult from "@/pages/public/PublicRadarResult";
+import HiddenMoodDiaryPrototype, {
+  HiddenMoodDiaryPrototypeHistory,
+  HiddenMoodDiaryPrototypeImprovements,
+  HiddenMoodDiaryPrototypeMobile,
+  HiddenMoodDiaryPrototypeNewEntry,
+} from "@/pages/prototypes/HiddenMoodDiaryPrototype";
 
 import "./App.css";
 
@@ -232,6 +238,11 @@ const AppWithShortcuts = () => {
       <Route path="/praticas" element={<PraticasIndex />} />
       <Route path="/praticas-prototipo" element={<PraticasPrototipo />} />
       <Route path="/medcos/praticas-prototipo" element={<PraticasPrototipo />} />
+      <Route path="/__hidden/prototipo-diario-emocional" element={<HiddenMoodDiaryPrototype />} />
+      <Route path="/__hidden/prototipo-diario-emocional/novo-registro" element={<HiddenMoodDiaryPrototypeNewEntry />} />
+      <Route path="/__hidden/prototipo-diario-emocional/historico" element={<HiddenMoodDiaryPrototypeHistory />} />
+      <Route path="/__hidden/prototipo-diario-emocional/mobile" element={<HiddenMoodDiaryPrototypeMobile />} />
+      <Route path="/__hidden/prototipo-diario-emocional/melhorias" element={<HiddenMoodDiaryPrototypeImprovements />} />
       <Route path="/praticas/jornada" element={<JornadaSessao />} />
       <Route path="/medcos/praticas/jornada" element={<JornadaSessao />} />
       <Route path="/praticas/:slug" element={<PraticaDetalhe />} />
