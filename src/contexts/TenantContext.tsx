@@ -5,6 +5,11 @@ import { Tenant, TenantContextType, DEFAULT_TENANT_SLUG } from '@/types/tenant';
 import { getTenantSlugFromPath, clearTenantCache } from '@/utils/tenantHelpers';
 import { hexToHSL, isHexColor, getContrastingTextColor } from '@/utils/colorHelpers';
 
+// Versão do cache local de tenants. Incremente ao alterar configurações
+// que precisam chegar imediatamente a todos os visitantes.
+const TENANT_CACHE_VERSION = 2;
+const TENANT_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
 export const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
 export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -82,37 +87,37 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Função para buscar dados do tenant
   const fetchTenant = useCallback(async (slug: string) => {
+    const cacheKey = `tenant_${slug}_cache`;
+    let servedFromCache = false;
+
     try {
-      setLoading(true);
       setError(null);
 
-      // Check cache first (1 hour TTL)
-      const cacheKey = `tenant_${slug}_cache`;
+      // Cache local (curto, versionado)
       const cached = localStorage.getItem(cacheKey);
-      
+
       if (cached) {
         try {
-          const { data, timestamp } = JSON.parse(cached);
-          const oneHour = 60 * 60 * 1000;
-          
-          // ✅ VALIDAR SE O CACHE ESTÁ CORRETO
-          if (data.slug !== slug) {
-            console.error(`[TenantContext] ❌ Cache corrupted: esperado ${slug}, encontrado ${data.slug}`);
-            console.error(`[TenantContext] ❌ Cached tenant ID: ${data.id}`);
+          const { data, timestamp, version } = JSON.parse(cached);
+
+          if (version !== TENANT_CACHE_VERSION || data?.slug !== slug) {
+            console.log('[TenantContext] Cache inválido/desatualizado, removendo:', cacheKey);
             localStorage.removeItem(cacheKey);
-            // Continuar para buscar do banco
-          } else if (Date.now() - timestamp < oneHour) {
-            console.log('[TenantContext] ✅ Using cached tenant data for', slug);
-            console.log('[TenantContext] ✅ Cached tenant ID:', data.id);
+          } else if (Date.now() - timestamp < TENANT_CACHE_TTL) {
+            // Render imediato com cache, revalidação em segundo plano abaixo
+            servedFromCache = true;
             setTenant(data as Tenant);
             applyTenantTheme(data as Tenant);
             setLoading(false);
-            return;
           }
         } catch (e) {
           console.error('[TenantContext] ❌ Invalid cache format, removing:', e);
           localStorage.removeItem(cacheKey);
         }
+      }
+
+      if (!servedFromCache) {
+        setLoading(true);
       }
 
       const { data, error: fetchError } = await supabase
@@ -125,50 +130,43 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (fetchError) throw fetchError;
       if (!data) throw new Error(`Tenant '${slug}' não encontrado`);
 
-      // Cache the result
-      localStorage.setItem(cacheKey, JSON.stringify({
-        data,
-        timestamp: Date.now()
-      }));
-
-      console.log('[TenantContext] ✅ Fetched tenant from database:', data);
-      console.log('[TenantContext] ✅ Tenant ID:', data.id, 'Slug:', data.slug);
-
       // Validar se o tenant carregado é o correto
       if (data.slug !== slug) {
-        console.error(`[TenantContext] ❌ CRITICAL: Tenant mismatch após fetch!`);
-        console.error(`[TenantContext] ❌ Esperado: ${slug}, Recebido: ${data.slug}`);
-        console.error(`[TenantContext] ❌ ID recebido: ${data.id}`);
-        
-        // Limpar TODOS os caches de tenant
+        console.error(`[TenantContext] ❌ CRITICAL: Tenant mismatch após fetch! Esperado: ${slug}, Recebido: ${data.slug}`);
+
         const tenantKeys = Object.keys(localStorage).filter(k => k.startsWith('tenant_'));
-        tenantKeys.forEach(k => {
-          console.log('[TenantContext] 🗑️ Removing corrupted cache:', k);
-          localStorage.removeItem(k);
-        });
-        
-        // Recarregar página para forçar fetch limpo
-        console.log('[TenantContext] 🔄 Forcing page reload...');
+        tenantKeys.forEach(k => localStorage.removeItem(k));
+
         window.location.reload();
         return;
       }
 
-      setTenant(data as unknown as Tenant);
+      // Atualizar cache versionado
+      localStorage.setItem(cacheKey, JSON.stringify({
+        data,
+        timestamp: Date.now(),
+        version: TENANT_CACHE_VERSION,
+      }));
 
-      // Aplicar CSS variables dinamicamente
+      setTenant(data as unknown as Tenant);
       applyTenantTheme(data as unknown as Tenant);
     } catch (err) {
       console.error('Erro ao buscar tenant:', err);
-      setError(err as Error);
-      
-      // Fallback para tenant padrão em caso de erro
-      if (slug !== DEFAULT_TENANT_SLUG) {
-        fetchTenant(DEFAULT_TENANT_SLUG);
+
+      // Se já mostramos o cache, mantemos a tela funcionando
+      if (!servedFromCache) {
+        setError(err as Error);
+
+        // Fallback para tenant padrão em caso de erro
+        if (slug !== DEFAULT_TENANT_SLUG) {
+          fetchTenant(DEFAULT_TENANT_SLUG);
+        }
       }
     } finally {
       setLoading(false);
     }
   }, []);
+
 
   // Aplicar tema do tenant
   const applyTenantTheme = useCallback((tenantData: Tenant) => {
