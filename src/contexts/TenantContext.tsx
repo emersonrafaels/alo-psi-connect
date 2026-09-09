@@ -5,6 +5,11 @@ import { Tenant, TenantContextType, DEFAULT_TENANT_SLUG } from '@/types/tenant';
 import { getTenantSlugFromPath, clearTenantCache } from '@/utils/tenantHelpers';
 import { hexToHSL, isHexColor, getContrastingTextColor } from '@/utils/colorHelpers';
 
+// Versão do cache local de tenants. Incremente ao alterar configurações
+// que precisam chegar imediatamente a todos os visitantes.
+const TENANT_CACHE_VERSION = 2;
+const TENANT_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
 export const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
 export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
