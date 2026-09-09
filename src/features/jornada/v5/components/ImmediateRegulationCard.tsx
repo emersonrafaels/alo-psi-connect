@@ -145,7 +145,7 @@ export const ImmediateRegulationCard = ({
           </div>
         </div>
         <div className="mx-auto hidden w-32 md:block">
-          <BuddyMascot mood="calm" size="lg" />
+          <BuddyMascot size="lg" stack animated />
         </div>
       </CardContent>
     </Card>
