@@ -109,7 +109,7 @@ import PraticaDetalhe from "./pages/praticas/PraticaDetalhe";
 import PraticaSessao from "./pages/praticas/PraticaSessao";
 import PraticaCheckout from "./pages/praticas/PraticaCheckout";
 import PraticaConcluida from "./pages/praticas/PraticaConcluida";
-import JornadaSessao from "./features/jornada/pages/JornadaSessao";
+import JornadaEmocionalV5 from "./features/jornada/v5/JornadaEmocionalV5";
 import PraticasAdmin from "@/pages/admin/PraticasAdmin";
 import RadarInstitutional from "@/pages/admin/RadarInstitutional";
 import RadarInstitutionalDetail from "@/pages/admin/RadarInstitutionalDetail";
@@ -245,8 +245,8 @@ const AppWithShortcuts = () => {
       <Route path="/__hidden/prototipo-diario-emocional/configuracoes" element={<HiddenMoodDiaryPrototypeSettings />} />
       <Route path="/__hidden/prototipo-diario-emocional/mobile" element={<HiddenMoodDiaryPrototypeMobile />} />
       <Route path="/__hidden/prototipo-diario-emocional/melhorias" element={<HiddenMoodDiaryPrototypeImprovements />} />
-      <Route path="/praticas/jornada" element={<JornadaSessao />} />
-      <Route path="/medcos/praticas/jornada" element={<JornadaSessao />} />
+      <Route path="/praticas/jornada" element={<JornadaEmocionalV5 />} />
+      <Route path="/medcos/praticas/jornada" element={<JornadaEmocionalV5 />} />
       <Route path="/praticas/:slug" element={<PraticaDetalhe />} />
       <Route path="/praticas/:slug/sessao" element={<PraticaSessao />} />
       <Route path="/praticas/:slug/checkout" element={<PraticaCheckout />} />
