@@ -4,6 +4,12 @@ import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { EmotionWheel } from "../components/EmotionWheel";
