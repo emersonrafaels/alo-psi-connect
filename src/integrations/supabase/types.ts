@@ -2547,49 +2547,126 @@ export type Database = {
         }
         Relationships: []
       }
-      journey_sessions: {
+      journey_session_emotions: {
         Row: {
           created_at: string
-          duration_minutes: number | null
           emotion_id: string
+          emotion_level: number
           family_id: string | null
           id: string
           intensity_after: number | null
           intensity_before: number | null
-          perceived_change_ids: string[]
-          practice_id: string | null
-          session_key: string | null
-          tenant_id: string | null
-          usefulness: number | null
+          is_focus: boolean
+          position: number
+          session_id: string
           user_id: string | null
         }
         Insert: {
           created_at?: string
-          duration_minutes?: number | null
           emotion_id: string
+          emotion_level?: number
           family_id?: string | null
           id?: string
           intensity_after?: number | null
           intensity_before?: number | null
-          perceived_change_ids?: string[]
-          practice_id?: string | null
-          session_key?: string | null
-          tenant_id?: string | null
-          usefulness?: number | null
+          is_focus?: boolean
+          position?: number
+          session_id: string
           user_id?: string | null
         }
         Update: {
           created_at?: string
-          duration_minutes?: number | null
           emotion_id?: string
+          emotion_level?: number
           family_id?: string | null
           id?: string
           intensity_after?: number | null
           intensity_before?: number | null
+          is_focus?: boolean
+          position?: number
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_session_emotions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "journey_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journey_sessions: {
+        Row: {
+          action: Json
+          completed_at: string | null
+          comprehension: Json
+          created_at: string
+          duration_minutes: number | null
+          emotion_id: string | null
+          family_id: string | null
+          focus_mode: string | null
+          id: string
+          immediate_regulation: Json
+          intensity_after: number | null
+          intensity_before: number | null
+          learning_practice: Json
+          perceived_change_ids: string[]
+          phase: string | null
+          practice_id: string | null
+          session_key: string | null
+          status: string | null
+          tenant_id: string | null
+          updated_at: string
+          usefulness: number | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: Json
+          completed_at?: string | null
+          comprehension?: Json
+          created_at?: string
+          duration_minutes?: number | null
+          emotion_id?: string | null
+          family_id?: string | null
+          focus_mode?: string | null
+          id?: string
+          immediate_regulation?: Json
+          intensity_after?: number | null
+          intensity_before?: number | null
+          learning_practice?: Json
           perceived_change_ids?: string[]
+          phase?: string | null
           practice_id?: string | null
           session_key?: string | null
+          status?: string | null
           tenant_id?: string | null
+          updated_at?: string
+          usefulness?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: Json
+          completed_at?: string | null
+          comprehension?: Json
+          created_at?: string
+          duration_minutes?: number | null
+          emotion_id?: string | null
+          family_id?: string | null
+          focus_mode?: string | null
+          id?: string
+          immediate_regulation?: Json
+          intensity_after?: number | null
+          intensity_before?: number | null
+          learning_practice?: Json
+          perceived_change_ids?: string[]
+          phase?: string | null
+          practice_id?: string | null
+          session_key?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          updated_at?: string
           usefulness?: number | null
           user_id?: string | null
         }
@@ -5143,6 +5220,25 @@ export type Database = {
       invoke_google_calendar_sync: { Args: never; Returns: undefined }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      journey_landscape: {
+        Args: { _user_id: string }
+        Returns: {
+          avg_intensity: number
+          emotion_id: string
+          family_id: string
+          last_at: string
+          occurrences: number
+        }[]
+      }
+      journey_next_resource: {
+        Args: { _user_id: string }
+        Returns: {
+          avg_usefulness: number
+          last_at: string
+          practice_id: string
+          times_seen: number
+        }[]
+      }
       journey_practice_stats: {
         Args: { _emotion_id: string }
         Returns: {
