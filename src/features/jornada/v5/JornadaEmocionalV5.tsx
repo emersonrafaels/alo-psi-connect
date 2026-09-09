@@ -225,9 +225,18 @@ const JornadaEmocionalV5 = () => {
                     onBackLevel={() => dispatch({ type: "BACK_LEVEL" })}
                   />
 
-                  <EmotionListFallback
-                    onSelect={(emotionId) => dispatch({ type: "PICK_EMOTION", emotionId })}
-                  />
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value="list" className="border-border/70">
+                      <AccordionTrigger className="text-sm font-medium hover:no-underline">
+                        Ver a lista completa de palavras
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <EmotionListFallback
+                          onSelect={(emotionId) => dispatch({ type: "PICK_EMOTION", emotionId })}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
 
                   <p className="rounded-2xl border border-border/70 bg-muted/25 p-4 text-xs leading-relaxed text-muted-foreground">
                     {V5_COPY.perceive.principle}
