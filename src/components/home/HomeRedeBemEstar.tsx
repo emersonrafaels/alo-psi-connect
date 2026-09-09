@@ -16,7 +16,7 @@ import {
   CalendarDays, AlertTriangle, Building2, Moon, UserSearch,
   ArrowRight, TrendingUp, HeartHandshake, Smartphone, CheckCircle2,
   MessageCircle, ShieldCheck, Bell, Activity, Eye, Battery,
-  ArrowUpRight, Zap, Quote,
+  Zap, Quote,
 } from "lucide-react";
 import heroImg from "@/assets/students-hero.png";
 import ameImg from "@/assets/home-rbe-ame.jpg";
