@@ -908,7 +908,7 @@ const HomeRedeBemEstar = () => {
               {[
                 { Icon: Zap, title: "Check-ins rápidos", desc: "Pulsos diários para registrar humor, sono e energia em segundos." },
                 { Icon: Bell, title: "Notificações inteligentes", desc: "Lembretes contextuais que respeitam seu ritmo e evitam ruído." },
-                { Icon: ShieldCheck, title: "Privacidade total", desc: "Conversas criptografadas e dados nunca compartilhados com a instituição." },
+                { Icon: ShieldCheck, title: "Privacidade total", desc: "Seus registros individuais permanecem privados. A instituição acessa apenas indicadores agregados e anonimizados, conforme consentimento e regras de privacidade." },
               ].map(f => (
                 <div key={f.title} className="flex items-start gap-3 sm:gap-4">
                   <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0"
