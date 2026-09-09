@@ -5,7 +5,7 @@ import Footer from "@/components/ui/footer";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/hooks/useTenant";
 import { EmotionWheel } from "../components/EmotionWheel";
 import { EmotionListFallback } from "../components/EmotionListFallback";
 import { EmotionBreadcrumb } from "../components/EmotionBreadcrumb";
