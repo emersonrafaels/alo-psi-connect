@@ -317,14 +317,9 @@ export const v5Reducer = (state: V5State, action: V5Action): V5State => {
   }
 };
 
-/** Sub-etapa dentro de "Perceber": roda → pausa → foco. */
-export type PerceiveStep = "wheel" | "pause" | "focus";
+/** A pausa de regulação é oferecida quando alguma emoção foi registrada com intensidade alta. */
+export const shouldOfferPause = (state: V5State) =>
+  state.emotions.some((item) => item.intensityBefore >= 4);
 
-export const perceiveStep = (state: V5State): PerceiveStep => {
-  if (!state.emotions.length) return "wheel";
-  if (state.regulation.offered && !state.regulation.declined) {
-    if (!state.regulation.completed || state.regulation.intensityAfter == null) return "pause";
-  }
-  if (state.focus.mode) return "focus";
-  return state.regulation.offered || state.emotions.length ? "focus" : "wheel";
-};
+/** A fase "Perceber" está concluída quando existe pelo menos uma emoção e um foco. */
+export const perceiveDone = (state: V5State) => state.emotions.length > 0 && !!state.focus.mode;
