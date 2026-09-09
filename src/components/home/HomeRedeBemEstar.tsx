@@ -16,7 +16,7 @@ import {
   CalendarDays, AlertTriangle, Building2, Moon, UserSearch,
   ArrowRight, TrendingUp, HeartHandshake, Smartphone, CheckCircle2,
   MessageCircle, ShieldCheck, Bell, Activity, Eye, Battery,
-  ArrowUpRight, Zap, Quote,
+  Zap, Quote,
 } from "lucide-react";
 import heroImg from "@/assets/students-hero.png";
 import ameImg from "@/assets/home-rbe-ame.jpg";
@@ -863,20 +863,13 @@ const HomeRedeBemEstar = () => {
                             ))}
                           </div>
                         )}
-                        <div className="mt-auto flex items-center justify-between gap-3">
-                          {showPrices && p.preco_consulta && (
+                        {showPrices && p.preco_consulta && (
+                          <div className="mt-auto pt-2">
                             <span className="text-sm font-bold" style={{ color: "var(--rbe-primary)" }}>
                               R$ {p.preco_consulta}
                             </span>
-                          )}
-                          <button
-                            onClick={() => goToProfessional(p.id)}
-                            className="px-5 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105"
-                            style={{ background: "var(--rbe-primary-container)", color: "var(--rbe-on-primary)" }}
-                          >
-                            Ver Perfil <ArrowUpRight className="w-3.5 h-3.5 inline ml-1" />
-                          </button>
-                        </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
