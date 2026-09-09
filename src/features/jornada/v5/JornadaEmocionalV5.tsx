@@ -211,12 +211,8 @@ const JornadaEmocionalV5 = () => {
                   </div>
 
                   <EmotionBreadcrumb
-                    familyId={state.familyId}
-                    level2Id={state.level2Id}
-                    level3Id={state.level3Id}
-                    onReset={() => dispatch({ type: "BACK_LEVEL" })}
-                    onSelectFamily={(familyId) => dispatch({ type: "SELECT_FAMILY", familyId })}
-                    onSelectLevel2={(emotionId) => dispatch({ type: "SELECT_LEVEL2", emotionId })}
+                    ids={[state.familyId, state.level2Id, state.level3Id]}
+                    onSelect={(id) => dispatch({ type: "PICK_EMOTION", emotionId: id })}
                   />
 
                   <EmotionWheel
@@ -230,11 +226,7 @@ const JornadaEmocionalV5 = () => {
                   />
 
                   <EmotionListFallback
-                    familyId={state.familyId}
-                    level2Id={state.level2Id}
-                    onSelectFamily={(familyId) => dispatch({ type: "SELECT_FAMILY", familyId })}
-                    onSelectLevel2={(emotionId) => dispatch({ type: "SELECT_LEVEL2", emotionId })}
-                    onSelectLevel3={(emotionId) => dispatch({ type: "SELECT_LEVEL3", emotionId })}
+                    onSelect={(emotionId) => dispatch({ type: "PICK_EMOTION", emotionId })}
                   />
 
                   <p className="rounded-2xl border border-border/70 bg-muted/25 p-4 text-xs leading-relaxed text-muted-foreground">
