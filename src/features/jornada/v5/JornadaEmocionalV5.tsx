@@ -23,6 +23,7 @@ import { ControlColumns } from "./components/ControlColumns";
 import { EmotionLandscape } from "./components/EmotionLandscape";
 import { FocusSelection } from "./components/FocusSelection";
 import { ImmediateRegulationCard } from "./components/ImmediateRegulationCard";
+import { IntensityDialog } from "./components/IntensityDialog";
 import { LearningResourceCard } from "./components/LearningResourceCard";
 import { PerceiveSidebar } from "./components/PerceiveSidebar";
 import { PhaseStepper } from "./components/PhaseStepper";
@@ -35,8 +36,9 @@ import {
 } from "./learningTrail";
 import { clearDraft, loadDraft, persistSession, saveDraft } from "./repository";
 import { createV5State, phaseIndex, shouldOfferPause, v5Reducer } from "./reducer";
-import type { V5Phase } from "./types";
-import { useEmotionLandscape, useKnownPractices } from "./useV5Signals";
+import { MAX_EMOTIONS, type V5Phase } from "./types";
+import { useEmotionLandscape, useKnownPractices, emotionFrequency } from "./useV5Signals";
+
 
 /** Jornada Emocional V5 — perceber, compreender, regular, agir, registro. */
 const JornadaEmocionalV5 = () => {
@@ -83,6 +85,19 @@ const JornadaEmocionalV5 = () => {
     () => getPractice(state.regulation.practiceId ?? IMMEDIATE_PAUSE_PRACTICE_ID) ?? getImmediatePausePractice(),
     [state.regulation.practiceId]
   );
+
+  const pendingHistoryNote = useMemo(() => {
+    if (!state.pendingEmotionId) return null;
+    const history = emotionFrequency(bubbles, state.pendingEmotionId);
+    if (!history.count30d) return null;
+    const times = history.count30d === 1 ? "vez" : "vezes";
+    const avg =
+      history.avgIntensity != null
+        ? `, com intensidade média ${history.avgIntensity.toString().replace(".", ",")}`
+        : "";
+    return `Você já registrou esta palavra ${history.count30d} ${times}${avg}.`;
+  }, [bubbles, state.pendingEmotionId]);
+
 
   const showPause =
     state.phase === "perceive" &&
@@ -171,36 +186,6 @@ const JornadaEmocionalV5 = () => {
 
         {state.phase === "perceive" && !state.focus.mode && (
           <>
-            {showPause && state.regulation.offered && (
-              <ImmediateRegulationCard
-                practice={pausePractice ?? null}
-                regulation={state.regulation}
-                onAccept={() => dispatch({ type: "ACCEPT_PAUSE" })}
-                onDecline={() => dispatch({ type: "DECLINE_PAUSE" })}
-                onSaveForLater={() => dispatch({ type: "DECLINE_PAUSE" })}
-                onStart={() => dispatch({ type: "START_PAUSE_PRACTICE" })}
-                onComplete={() => dispatch({ type: "COMPLETE_PAUSE_PRACTICE" })}
-                onAbandon={() => dispatch({ type: "ABANDON_PAUSE_PRACTICE" })}
-                onReassess={(intensity) => dispatch({ type: "SET_REASSESS", intensity })}
-                onContinue={() => dispatch({ type: "DECLINE_PAUSE" })}
-              />
-            )}
-
-            {state.regulation.completed && state.regulation.intensityAfter == null && (
-              <ImmediateRegulationCard
-                practice={pausePractice ?? null}
-                regulation={state.regulation}
-                onAccept={() => dispatch({ type: "ACCEPT_PAUSE" })}
-                onDecline={() => dispatch({ type: "DECLINE_PAUSE" })}
-                onSaveForLater={() => dispatch({ type: "DECLINE_PAUSE" })}
-                onStart={() => dispatch({ type: "START_PAUSE_PRACTICE" })}
-                onComplete={() => dispatch({ type: "COMPLETE_PAUSE_PRACTICE" })}
-                onAbandon={() => dispatch({ type: "ABANDON_PAUSE_PRACTICE" })}
-                onReassess={(intensity) => dispatch({ type: "SET_REASSESS", intensity })}
-                onContinue={() => dispatch({ type: "DECLINE_PAUSE" })}
-              />
-            )}
-
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
               <Card className="border-border/70 shadow-sm">
                 <CardContent className="space-y-5 p-4 sm:p-6">
@@ -252,17 +237,26 @@ const JornadaEmocionalV5 = () => {
 
               <PerceiveSidebar
                 emotions={state.emotions}
-                pendingEmotionId={state.pendingEmotionId}
-                bubbles={bubbles}
                 onPick={(emotionId) => dispatch({ type: "PICK_EMOTION", emotionId })}
-                onConfirm={(intensity: Intensity) =>
-                  dispatch({ type: "CONFIRM_EMOTION", intensity })
-                }
-                onCancelPending={() => dispatch({ type: "CANCEL_PENDING" })}
                 onRemove={(emotionId) => dispatch({ type: "REMOVE_EMOTION", emotionId })}
                 onClear={() => dispatch({ type: "CLEAR_EMOTIONS" })}
               />
             </div>
+
+            {(showPause || (state.regulation.completed && state.regulation.intensityAfter == null)) && (
+              <ImmediateRegulationCard
+                practice={pausePractice ?? null}
+                regulation={state.regulation}
+                onAccept={() => dispatch({ type: "ACCEPT_PAUSE" })}
+                onDecline={() => dispatch({ type: "DECLINE_PAUSE" })}
+                onSaveForLater={() => dispatch({ type: "DECLINE_PAUSE" })}
+                onStart={() => dispatch({ type: "START_PAUSE_PRACTICE" })}
+                onComplete={() => dispatch({ type: "COMPLETE_PAUSE_PRACTICE" })}
+                onAbandon={() => dispatch({ type: "ABANDON_PAUSE_PRACTICE" })}
+                onReassess={(intensity) => dispatch({ type: "SET_REASSESS", intensity })}
+                onContinue={() => dispatch({ type: "DECLINE_PAUSE" })}
+              />
+            )}
 
             {state.emotions.length > 0 && !showPause && (
               <FocusSelection
@@ -274,8 +268,19 @@ const JornadaEmocionalV5 = () => {
                 onNext={() => dispatch({ type: "GO_TO", phase: "comprehend" })}
               />
             )}
+
+            <IntensityDialog
+              emotionId={state.pendingEmotionId}
+              full={state.emotions.length >= MAX_EMOTIONS}
+              historyNote={pendingHistoryNote}
+              onConfirm={(intensity: Intensity) =>
+                dispatch({ type: "CONFIRM_EMOTION", intensity })
+              }
+              onCancel={() => dispatch({ type: "CANCEL_PENDING" })}
+            />
           </>
         )}
+
 
         {state.phase === "perceive" && state.focus.mode && (
           <FocusSelection
