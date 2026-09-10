@@ -25,7 +25,8 @@ import {
   Compass,
   ClipboardList,
   StickyNote,
-  Radar as RadarIcon
+  Radar as RadarIcon,
+  HeartHandshake
 } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
@@ -260,6 +261,24 @@ export default function InstitutionPortal() {
                 <div className="text-2xl md:text-3xl font-bold">{activeStudents.length}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Total de {linkedStudents.length} vinculados
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link 
+            to={buildTenantPath(tenant?.slug, '/portal-institucional/apoios')} 
+            className="block transition-transform hover:scale-105"
+          >
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-xs md:text-sm font-medium">Apoios</CardTitle>
+                <HeartHandshake className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-2xl md:text-3xl font-bold">Biblioteca</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Gerencie os apoios da instituição
                 </p>
               </CardContent>
             </Card>

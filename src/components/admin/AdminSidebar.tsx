@@ -20,7 +20,8 @@ import {
   Database,
   Brain,
   Sparkles,
-  ShieldCheck
+  ShieldCheck,
+  HeartHandshake
 } from 'lucide-react';
 import {
   Sidebar,
@@ -145,6 +146,12 @@ const adminMenuGroups = [
         url: '/admin/blog-analytics',
         icon: TrendingUp,
         requiredRole: null
+      },
+      {
+        title: 'Biblioteca de Apoios',
+        url: '/admin/biblioteca-apoios',
+        icon: HeartHandshake,
+        requiredRole: 'admin' as const
       },
       {
         title: 'Práticas',

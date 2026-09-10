@@ -58,6 +58,7 @@ const Header = () => {
     { name: "Sobre", href: buildTenantPath(tenantSlug, '/sobre'), module: 'about' as const },
     { name: "Profissionais", href: buildTenantPath(tenantSlug, '/profissionais'), module: 'professionals' as const },
     { name: "Práticas", href: buildTenantPath(tenantSlug, '/praticas'), module: null },
+    { name: "Apoios", href: buildTenantPath(tenantSlug, '/biblioteca-apoios'), module: null },
     { name: "Encontros", href: buildTenantPath(tenantSlug, '/encontros'), module: 'group_sessions' as const },
     { name: "Diário Emocional", href: buildTenantPath(tenantSlug, loading ? '/diario-emocional/experiencia' : (user ? '/diario-emocional' : '/diario-emocional/experiencia')), module: 'mood_diary' as const },
     { name: "Escalas", href: buildTenantPath(tenantSlug, '/escalas'), module: null },

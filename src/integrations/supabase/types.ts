@@ -2417,6 +2417,194 @@ export type Database = {
           },
         ]
       }
+      institution_support_plan: {
+        Row: {
+          catalog_id: string
+          created_at: string
+          id: string
+          institution_id: string
+          is_included: boolean
+          updated_at: string
+        }
+        Insert: {
+          catalog_id: string
+          created_at?: string
+          id?: string
+          institution_id: string
+          is_included?: boolean
+          updated_at?: string
+        }
+        Update: {
+          catalog_id?: string
+          created_at?: string
+          id?: string
+          institution_id?: string
+          is_included?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_support_plan_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "support_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_support_plan_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_support_plan_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_support_settings: {
+        Row: {
+          allowed_categories: string[]
+          created_at: string
+          id: string
+          institution_id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          allowed_categories?: string[]
+          created_at?: string
+          id?: string
+          institution_id: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          allowed_categories?: string[]
+          created_at?: string
+          id?: string
+          institution_id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_support_settings_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: true
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_support_settings_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: true
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_supports: {
+        Row: {
+          access_type: string
+          catalog_id: string | null
+          category: string
+          contact_channel: string | null
+          contact_value: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          details: string | null
+          featured: boolean
+          format: string
+          how_to: string | null
+          icon: string
+          id: string
+          institution_id: string
+          is_published: boolean
+          notes: string | null
+          provider: string | null
+          sort_order: number
+          title: string
+          updated_at: string
+          when_to: string | null
+        }
+        Insert: {
+          access_type?: string
+          catalog_id?: string | null
+          category: string
+          contact_channel?: string | null
+          contact_value?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          details?: string | null
+          featured?: boolean
+          format?: string
+          how_to?: string | null
+          icon?: string
+          id?: string
+          institution_id: string
+          is_published?: boolean
+          notes?: string | null
+          provider?: string | null
+          sort_order?: number
+          title: string
+          updated_at?: string
+          when_to?: string | null
+        }
+        Update: {
+          access_type?: string
+          catalog_id?: string | null
+          category?: string
+          contact_channel?: string | null
+          contact_value?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          details?: string | null
+          featured?: boolean
+          format?: string
+          how_to?: string | null
+          icon?: string
+          id?: string
+          institution_id?: string
+          is_published?: boolean
+          notes?: string | null
+          provider?: string | null
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          when_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_supports_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "support_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_supports_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_supports_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_user_permissions: {
         Row: {
           granted_at: string | null
@@ -4093,6 +4281,141 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      support_catalog: {
+        Row: {
+          access_type: string
+          category: string
+          created_at: string
+          cta_label: string | null
+          cta_route: string | null
+          description: string
+          details: string | null
+          featured: boolean
+          format: string
+          how_to: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          origin_type: string
+          provider: string | null
+          slug: string
+          sort_order: number
+          title: string
+          updated_at: string
+          when_to: string | null
+        }
+        Insert: {
+          access_type: string
+          category: string
+          created_at?: string
+          cta_label?: string | null
+          cta_route?: string | null
+          description?: string
+          details?: string | null
+          featured?: boolean
+          format: string
+          how_to?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          origin_type?: string
+          provider?: string | null
+          slug: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+          when_to?: string | null
+        }
+        Update: {
+          access_type?: string
+          category?: string
+          created_at?: string
+          cta_label?: string | null
+          cta_route?: string | null
+          description?: string
+          details?: string | null
+          featured?: boolean
+          format?: string
+          how_to?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          origin_type?: string
+          provider?: string | null
+          slug?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          when_to?: string | null
+        }
+        Relationships: []
+      }
+      support_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          support_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          support_key: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          support_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      support_plan_items: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          support_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          support_key: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          support_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      support_visits: {
+        Row: {
+          id: string
+          support_key: string
+          user_id: string
+          visited_at: string
+        }
+        Insert: {
+          id?: string
+          support_key: string
+          user_id?: string
+          visited_at?: string
+        }
+        Update: {
+          id?: string
+          support_key?: string
+          user_id?: string
+          visited_at?: string
+        }
+        Relationships: []
       }
       system_configurations: {
         Row: {

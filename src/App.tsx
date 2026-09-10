@@ -115,6 +115,9 @@ import RadarInstitutional from "@/pages/admin/RadarInstitutional";
 import RadarInstitutionalDetail from "@/pages/admin/RadarInstitutionalDetail";
 import RadarAccess from "@/pages/admin/RadarAccess";
 import InstitutionRadar from "@/pages/institution/InstitutionRadar";
+import InstitutionSupports from "@/pages/institution/InstitutionSupports";
+import BibliotecaApoios from "@/pages/apoios/BibliotecaApoios";
+import SupportLibraryAdmin from "@/pages/admin/SupportLibraryAdmin";
 import { RadarProtectedRoute } from "@/components/RadarProtectedRoute";
 import PublicRadar from "@/pages/public/PublicRadar";
 import PublicRadarResult from "@/pages/public/PublicRadarResult";
@@ -236,6 +239,8 @@ const AppWithShortcuts = () => {
       <Route path="/medcos/minhas-emocoes" element={<MyEmotions />} />
 
       {/* Práticas para Reequilíbrio Emocional (público) */}
+      <Route path="/biblioteca-apoios" element={<BibliotecaApoios />} />
+      <Route path="/medcos/biblioteca-apoios" element={<BibliotecaApoios />} />
       <Route path="/praticas" element={<PraticasIndex />} />
       <Route path="/praticas-prototipo" element={<PraticasPrototipo />} />
       <Route path="/medcos/praticas-prototipo" element={<PraticasPrototipo />} />
@@ -316,6 +321,22 @@ const AppWithShortcuts = () => {
         } 
       />
       
+      <Route 
+        path="/portal-institucional/apoios" 
+        element={
+          <ProtectedRoute requiredRole="institution_admin">
+            <InstitutionSupports />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/medcos/portal-institucional/apoios" 
+        element={
+          <ProtectedRoute requiredRole="institution_admin">
+            <InstitutionSupports />
+          </ProtectedRoute>
+        } 
+      />
       <Route 
         path="/portal-institucional/radar" 
         element={
@@ -398,6 +419,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/tests" element={<AdminLayout><AdminTests /></AdminLayout>} />
       <Route path="/admin/demo-data" element={<AdminLayout><DemoData /></AdminLayout>} />
       <Route path="/admin/pacientes-completo" element={<AdminLayout><PatientsFullView /></AdminLayout>} />
+      <Route path="/admin/biblioteca-apoios" element={<ProtectedRoute requiredRole="admin"><AdminLayout><SupportLibraryAdmin /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/praticas" element={<ProtectedRoute requiredRole="admin"><AdminLayout><PraticasAdmin /></AdminLayout></ProtectedRoute>} />
 
       <Route 
