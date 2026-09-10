@@ -25,7 +25,8 @@ import {
   Compass,
   ClipboardList,
   StickyNote,
-  Radar as RadarIcon
+  Radar as RadarIcon,
+  HeartHandshake
 } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
