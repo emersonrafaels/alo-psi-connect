@@ -1,4 +1,4 @@
-import { Sparkles, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,37 +6,22 @@ import { cn } from "@/lib/utils";
 import { getEmotionNode, getFamilyOf } from "../../config/emotion-taxonomy";
 import { INTENSITY_LABELS } from "../../config/perceived-change-options";
 import { EmotionSearch } from "../../components/EmotionSearch";
-import { IntensityScale } from "../../components/IntensityScale";
-import type { Intensity } from "../../domain/types";
 import { V5_COPY } from "../copy";
 import { MAX_EMOTIONS, type PickedEmotion } from "../types";
-import type { LandscapeBubble } from "../useV5Signals";
-import { emotionFrequency } from "../useV5Signals";
 
-/** Painel lateral da fase Perceber: registro em construção e intensidade da emoção clicada. */
+/** Painel lateral da fase Perceber: registro em construção das emoções escolhidas. */
 export const PerceiveSidebar = ({
   emotions,
-  pendingEmotionId,
-  bubbles,
   onPick,
-  onConfirm,
-  onCancelPending,
   onRemove,
   onClear,
 }: {
   emotions: PickedEmotion[];
-  pendingEmotionId: string | null;
-  bubbles: LandscapeBubble[];
   onPick: (emotionId: string) => void;
-  onConfirm: (intensity: Intensity) => void;
-  onCancelPending: () => void;
   onRemove: (emotionId: string) => void;
   onClear: () => void;
 }) => {
-  const pending = getEmotionNode(pendingEmotionId);
-  const pendingFamily = getFamilyOf(pendingEmotionId);
   const full = emotions.length >= MAX_EMOTIONS;
-  const history = emotionFrequency(bubbles, pendingEmotionId);
 
   return (
     <Card className="border-border/70 shadow-sm lg:sticky lg:top-24">
@@ -53,58 +38,6 @@ export const PerceiveSidebar = ({
 
         <EmotionSearch onPick={onPick} />
 
-        {pending && (
-          <div
-            className="space-y-3 rounded-2xl border p-4"
-            style={{
-              borderColor: `${pendingFamily?.color ?? "hsl(var(--border))"}66`,
-              backgroundColor: `${pendingFamily?.color ?? "#999"}14`,
-            }}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  {pendingFamily?.label}
-                </p>
-                <p className="text-base font-semibold text-foreground">{pending.label}</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                aria-label="Cancelar esta emoção"
-                onClick={onCancelPending}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {history.count30d > 0 && (
-              <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                <Sparkles aria-hidden className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-                Você já registrou esta palavra {history.count30d}
-                {history.count30d === 1 ? " vez" : " vezes"}
-                {history.avgIntensity != null
-                  ? `, com intensidade média ${history.avgIntensity.toString().replace(".", ",")}`
-                  : ""}
-                .
-              </p>
-            )}
-
-            {full ? (
-              <p className="text-sm text-muted-foreground">
-                Você já registrou três emoções. Remova uma para incluir esta.
-              </p>
-            ) : (
-              <IntensityScale
-                value={null}
-                color={pendingFamily?.color}
-                onChange={(intensity) => onConfirm(intensity)}
-                label="Quanto essa emoção está presente agora?"
-              />
-            )}
-          </div>
-        )}
 
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
