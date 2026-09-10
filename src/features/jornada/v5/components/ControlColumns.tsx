@@ -4,6 +4,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -60,7 +67,7 @@ export const ControlColumns = ({
                   onChange(column.key as "direct" | "influence" | "none", event.target.value)
                 }
                 rows={4}
-                placeholder="Escreva livremente, em poucas linhas."
+                placeholder={column.placeholder}
                 className="resize-none bg-card"
               />
             </div>
@@ -87,31 +94,30 @@ export const ControlColumns = ({
           <h3 className="text-base font-semibold text-foreground">{V5_COPY.act.stepTitle}</h3>
           <p className="text-xs text-muted-foreground">{V5_COPY.act.stepNote}</p>
         </div>
-        <Input
-          value={value.next}
-          onChange={(event) => onChange("next", event.target.value)}
-          placeholder="Ex.: enviar uma mensagem pedindo prazo maior."
-          aria-label="Meu menor próximo passo possível"
-          className="bg-card"
-        />
 
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {V5_COPY.act.whenLabel}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {V5_COPY.act.whenOptions.map((option) => (
-              <Button
-                key={option.id}
-                size="sm"
-                variant={value.when === option.id ? "default" : "outline"}
-                className="rounded-full"
-                onClick={() => onWhen(option.id as ActionWhen)}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px]">
+          <Input
+            value={value.next}
+            onChange={(event) => onChange("next", event.target.value)}
+            placeholder={V5_COPY.act.stepPlaceholder}
+            aria-label={V5_COPY.act.stepTitle}
+            className="bg-card"
+          />
+          <Select
+            value={value.when ?? ""}
+            onValueChange={(next) => onWhen(next as ActionWhen)}
+          >
+            <SelectTrigger className="bg-card" aria-label={V5_COPY.act.whenLabel}>
+              <SelectValue placeholder={V5_COPY.act.whenLabel} />
+            </SelectTrigger>
+            <SelectContent>
+              {V5_COPY.act.whenOptions.map((option) => (
+                <SelectItem key={option.id} value={option.id}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -119,10 +125,10 @@ export const ControlColumns = ({
             <Button
               key={option.id}
               size="sm"
-              variant="ghost"
+              variant="outline"
               className={cn(
                 "rounded-full",
-                value.status === option.id && "bg-secondary text-secondary-foreground"
+                value.status === option.id && "border-primary bg-primary/10 text-primary"
               )}
               onClick={() => onStatus(option.id as ActionStatus)}
             >
