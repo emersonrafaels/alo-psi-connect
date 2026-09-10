@@ -171,36 +171,6 @@ const JornadaEmocionalV5 = () => {
 
         {state.phase === "perceive" && !state.focus.mode && (
           <>
-            {showPause && state.regulation.offered && (
-              <ImmediateRegulationCard
-                practice={pausePractice ?? null}
-                regulation={state.regulation}
-                onAccept={() => dispatch({ type: "ACCEPT_PAUSE" })}
-                onDecline={() => dispatch({ type: "DECLINE_PAUSE" })}
-                onSaveForLater={() => dispatch({ type: "DECLINE_PAUSE" })}
-                onStart={() => dispatch({ type: "START_PAUSE_PRACTICE" })}
-                onComplete={() => dispatch({ type: "COMPLETE_PAUSE_PRACTICE" })}
-                onAbandon={() => dispatch({ type: "ABANDON_PAUSE_PRACTICE" })}
-                onReassess={(intensity) => dispatch({ type: "SET_REASSESS", intensity })}
-                onContinue={() => dispatch({ type: "DECLINE_PAUSE" })}
-              />
-            )}
-
-            {state.regulation.completed && state.regulation.intensityAfter == null && (
-              <ImmediateRegulationCard
-                practice={pausePractice ?? null}
-                regulation={state.regulation}
-                onAccept={() => dispatch({ type: "ACCEPT_PAUSE" })}
-                onDecline={() => dispatch({ type: "DECLINE_PAUSE" })}
-                onSaveForLater={() => dispatch({ type: "DECLINE_PAUSE" })}
-                onStart={() => dispatch({ type: "START_PAUSE_PRACTICE" })}
-                onComplete={() => dispatch({ type: "COMPLETE_PAUSE_PRACTICE" })}
-                onAbandon={() => dispatch({ type: "ABANDON_PAUSE_PRACTICE" })}
-                onReassess={(intensity) => dispatch({ type: "SET_REASSESS", intensity })}
-                onContinue={() => dispatch({ type: "DECLINE_PAUSE" })}
-              />
-            )}
-
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
               <Card className="border-border/70 shadow-sm">
                 <CardContent className="space-y-5 p-4 sm:p-6">
@@ -252,17 +222,26 @@ const JornadaEmocionalV5 = () => {
 
               <PerceiveSidebar
                 emotions={state.emotions}
-                pendingEmotionId={state.pendingEmotionId}
-                bubbles={bubbles}
                 onPick={(emotionId) => dispatch({ type: "PICK_EMOTION", emotionId })}
-                onConfirm={(intensity: Intensity) =>
-                  dispatch({ type: "CONFIRM_EMOTION", intensity })
-                }
-                onCancelPending={() => dispatch({ type: "CANCEL_PENDING" })}
                 onRemove={(emotionId) => dispatch({ type: "REMOVE_EMOTION", emotionId })}
                 onClear={() => dispatch({ type: "CLEAR_EMOTIONS" })}
               />
             </div>
+
+            {(showPause || (state.regulation.completed && state.regulation.intensityAfter == null)) && (
+              <ImmediateRegulationCard
+                practice={pausePractice ?? null}
+                regulation={state.regulation}
+                onAccept={() => dispatch({ type: "ACCEPT_PAUSE" })}
+                onDecline={() => dispatch({ type: "DECLINE_PAUSE" })}
+                onSaveForLater={() => dispatch({ type: "DECLINE_PAUSE" })}
+                onStart={() => dispatch({ type: "START_PAUSE_PRACTICE" })}
+                onComplete={() => dispatch({ type: "COMPLETE_PAUSE_PRACTICE" })}
+                onAbandon={() => dispatch({ type: "ABANDON_PAUSE_PRACTICE" })}
+                onReassess={(intensity) => dispatch({ type: "SET_REASSESS", intensity })}
+                onContinue={() => dispatch({ type: "DECLINE_PAUSE" })}
+              />
+            )}
 
             {state.emotions.length > 0 && !showPause && (
               <FocusSelection
@@ -274,8 +253,19 @@ const JornadaEmocionalV5 = () => {
                 onNext={() => dispatch({ type: "GO_TO", phase: "comprehend" })}
               />
             )}
+
+            <IntensityDialog
+              emotionId={state.pendingEmotionId}
+              full={state.emotions.length >= MAX_EMOTIONS}
+              historyNote={pendingHistoryNote}
+              onConfirm={(intensity: Intensity) =>
+                dispatch({ type: "CONFIRM_EMOTION", intensity })
+              }
+              onCancel={() => dispatch({ type: "CANCEL_PENDING" })}
+            />
           </>
         )}
+
 
         {state.phase === "perceive" && state.focus.mode && (
           <FocusSelection
