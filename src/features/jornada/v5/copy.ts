@@ -77,31 +77,38 @@ export const V5_COPY = {
     dimensions: [
       {
         key: "situation",
-        label: "Situação",
-        question: "O que estava acontecendo?",
+        label: "Situação ou fonte de estresse",
+        help: "Procure localizar o contexto: onde você estava, o que acontecia e quem estava envolvido, se isso fizer sentido.",
+        question: "O que estava acontecendo quando você percebeu essas emoções?",
         why: "Separar o fato do significado ajuda a ver a situação com menos sobrecarga.",
-        placeholder: "Descreva brevemente o que aconteceu, sem se explicar.",
+        placeholder:
+          "Descreva o momento com suas palavras. Não é necessário encontrar uma explicação perfeita.",
       },
       {
         key: "body",
         label: "Corpo",
-        question: "O que o corpo mostrou?",
+        help: "Observe sem tentar mudar imediatamente. Também é válido não perceber nada com clareza.",
+        question: "O que você percebe em seu corpo neste momento?",
         why: "O corpo costuma sinalizar antes das palavras. Notar isso amplia a percepção.",
-        placeholder: "Ex.: ombros tensos, respiração curta, estômago apertado.",
+        placeholder:
+          "Registre sensações, ritmo, tensão, temperatura, respiração ou ausência de sinais claros.",
       },
       {
         key: "behavior",
-        label: "Comportamento",
-        question: "O que você fez ou deixou de fazer?",
+        label: "Comportamento e impulso",
+        help: "Descreva ações ou impulsos, sem classificar como certos ou errados.",
+        question: "O que você sente vontade de fazer ou costuma fazer diante disso?",
         why: "Reconhecer a reação não é julgá-la. É perceber onde existe alguma margem de escolha.",
-        placeholder: "Ex.: adiei a tarefa, respondi rápido, procurei alguém.",
+        placeholder:
+          "Ex.: evitar, conversar, acelerar, parar, pedir ajuda, ficar em silêncio ou algo diferente.",
       },
       {
         key: "thoughts",
-        label: "Pensamentos",
-        question: "O que passou pela sua cabeça?",
+        label: "Pensamentos e diálogo interno",
+        help: "O objetivo é reconhecer o que passa pela mente, não provar se o pensamento está certo ou errado.",
+        question: "Que pensamentos, frases ou cobranças aparecem?",
         why: "Escrever o pensamento tira dele parte do peso de verdade absoluta.",
-        placeholder: "Ex.: “não vou dar conta”, “sempre erro nisso”.",
+        placeholder: "Registre as palavras que surgem, sem precisar concordar com elas.",
       },
     ] as const,
     unclear: "Ainda não consigo identificar",
@@ -121,9 +128,35 @@ export const V5_COPY = {
     knownBadge: "Você já conheceu",
     whyLabel: "Por que esta prática aparece agora?",
     practice: "Praticar agora",
+    practiced: "Prática concluída",
+    continue: "Continuar para agir",
     skip: "Continuar sem prática",
     another: "Conhecer outro recurso",
     utilityLabel: "Como este recurso foi para você?",
+    utilityOptions: [
+      { value: 1, label: "Não ajudou" },
+      { value: 2, label: "Ajudou pouco" },
+      { value: 4, label: "Ajudou" },
+      { value: 5, label: "Ajudou bastante" },
+    ] as const,
+    autonomyTitle: "Autonomia se constrói aos poucos",
+    autonomyDescription:
+      "O aplicativo não precisa decidir qual respiração ou prática é “a correta” para cada emoção. Ele pode ajudar você a conhecer recursos e perceber, com o tempo, quais são mais úteis.",
+    autonomyItems: [
+      {
+        title: "Uma prática por vez",
+        description: "Menos opções quando a carga de decisão pode atrapalhar.",
+      },
+      {
+        title: "Sem prescrição por emoção",
+        description: "A escolha não parte de “ansiedade → técnica X”.",
+      },
+      {
+        title: "Aprendizado pelo histórico",
+        description:
+          "Utilidade percebida, acessibilidade, tempo e preferência ajudam a construir repertório.",
+      },
+    ] as const,
   },
 
   act: {
@@ -136,17 +169,20 @@ export const V5_COPY = {
         key: "direct",
         title: "Depende de mim",
         description: "Ações que você pode iniciar, interromper ou escolher diretamente.",
+        placeholder: "Ex.: separar os materiais e começar por 10 minutos",
       },
       {
         key: "influence",
         title: "Posso influenciar",
         description:
           "Você pode conversar, pedir, negociar ou buscar apoio, mas o resultado também depende de outras pessoas.",
+        placeholder: "Ex.: conversar com o professor sobre uma dúvida",
       },
       {
         key: "none",
         title: "Não depende de mim",
         description: "Acontecimentos ou respostas que não estão sob seu controle direto.",
+        placeholder: "Ex.: a decisão final de outra pessoa ou o clima",
       },
     ] as const,
     guiltQuestion: "Como pensar sobre controle sem se culpar?",
@@ -155,6 +191,7 @@ export const V5_COPY = {
     stepTitle: "Meu menor próximo passo possível",
     stepNote:
       "Defina apenas se isso fizer sentido. Um registro sem ação imediata também pode ser válido.",
+    stepPlaceholder: "Ex.: abrir o material e escolher a primeira tarefa",
     whenLabel: "Quando?",
     whenOptions: [
       { id: "now", label: "Agora" },
@@ -171,6 +208,7 @@ export const V5_COPY = {
     back: "Voltar",
     finish: "Concluir meu registro",
   },
+
 
   record: {
     eyebrow: "Seu registro de hoje",
