@@ -11,7 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { getEmotionNode, getFamilyOf } from "../../config/emotion-taxonomy";
+import { ChevronRight } from "lucide-react";
+import { getEmotionNode, getEmotionPath, getFamilyOf } from "../../config/emotion-taxonomy";
 import { INTENSITY_LABELS } from "../../config/perceived-change-options";
 import type { Intensity } from "../../domain/types";
 
