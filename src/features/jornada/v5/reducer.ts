@@ -68,6 +68,9 @@ export type V5Action =
   | { type: "PICK_EMOTION"; emotionId: string }
   | { type: "CANCEL_PENDING" }
   | { type: "CONFIRM_EMOTION"; intensity: Intensity }
+  | { type: "POST_REGISTER_ANOTHER" }
+  | { type: "GO_TO_REVIEW" }
+  | { type: "BACK_TO_WHEEL" }
   | { type: "REMOVE_EMOTION"; emotionId: string }
   | { type: "CLEAR_EMOTIONS" }
   | { type: "OFFER_PAUSE"; practiceId: string }
@@ -141,6 +144,8 @@ export const v5Reducer = (state: V5State, action: V5Action): V5State => {
       if (state.emotions.length >= MAX_EMOTIONS) return touch({ pendingEmotionId: null });
       return touch({
         pendingEmotionId: null,
+        postRegisterPrompt: true,
+        perceiveReview: false,
         emotions: [
           ...state.emotions,
           {
@@ -154,6 +159,15 @@ export const v5Reducer = (state: V5State, action: V5Action): V5State => {
       });
     }
 
+    case "POST_REGISTER_ANOTHER":
+      return touch({ postRegisterPrompt: false, perceiveReview: false });
+
+    case "GO_TO_REVIEW":
+      return touch({ postRegisterPrompt: false, perceiveReview: true });
+
+    case "BACK_TO_WHEEL":
+      return touch({ perceiveReview: false });
+
     case "REMOVE_EMOTION":
       return touch({
         emotions: state.emotions.filter((item) => item.emotionId !== action.emotionId),
@@ -165,6 +179,8 @@ export const v5Reducer = (state: V5State, action: V5Action): V5State => {
       return touch({
         emotions: [],
         pendingEmotionId: null,
+        postRegisterPrompt: false,
+        perceiveReview: false,
         focus: { mode: null, emotionId: null },
         regulation: createV5State().regulation,
       });
