@@ -322,16 +322,6 @@ const Header = () => {
                       Meus Agendamentos
                     </Link>
                   )}
-                  {hasRadarAccess && (
-                    <Link
-                      to={radarHref}
-                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Radar className="h-5 w-5 opacity-70" />
-                      Radar Institucional
-                    </Link>
-                  )}
                   <Link
                     to={buildTenantPath(tenantSlug, '/meus-encontros')}
                     className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
@@ -386,14 +376,15 @@ const Header = () => {
                       Gerenciar Blog
                     </Link>
                   )}
-                  {isAdmin && (
+                  <div className="my-1 border-t border-border/50" />
+                  {hasRadarAccess && (
                     <Link
-                      to="/admin"
+                      to={radarHref}
                       className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <Shield className="h-5 w-5 opacity-70" />
-                      Acessar Admin
+                      <Radar className="h-5 w-5 opacity-70" />
+                      Radar Institucional
                     </Link>
                   )}
                   {isAdmin && (
@@ -404,6 +395,17 @@ const Header = () => {
                     >
                       <HeartHandshake className="h-5 w-5 opacity-70" />
                       Gerenciar Apoios
+                    </Link>
+                  )}
+                  <div className="my-1 border-t border-border/50" />
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Shield className="h-5 w-5 opacity-70" />
+                      Acessar Admin
                     </Link>
                   )}
                 </nav>
