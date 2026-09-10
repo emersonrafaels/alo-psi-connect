@@ -1,4 +1,4 @@
-import { Plus, ArrowRight } from "lucide-react";
+import { ChevronRight, Plus, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getEmotionNode, getFamilyOf } from "../../config/emotion-taxonomy";
+import { getEmotionNode, getEmotionPath, getFamilyOf } from "../../config/emotion-taxonomy";
 import { INTENSITY_LABELS } from "../../config/perceived-change-options";
 import { MAX_EMOTIONS, type PickedEmotion } from "../types";
 
