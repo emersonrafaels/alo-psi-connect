@@ -155,7 +155,7 @@ const SupportLibraryAdmin = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {institutions.map((i) => (
-                    <SelectItem key={i.id} value={i.id} keywords={[i.name]}>
+                    <SelectItem key={i.id} value={i.id}>
                       {i.name}
                     </SelectItem>
                   ))}
