@@ -23,6 +23,7 @@ import { ControlColumns } from "./components/ControlColumns";
 import { EmotionLandscape } from "./components/EmotionLandscape";
 import { FocusSelection } from "./components/FocusSelection";
 import { ImmediateRegulationCard } from "./components/ImmediateRegulationCard";
+import { IntensityDialog } from "./components/IntensityDialog";
 import { LearningResourceCard } from "./components/LearningResourceCard";
 import { PerceiveSidebar } from "./components/PerceiveSidebar";
 import { PhaseStepper } from "./components/PhaseStepper";
@@ -35,8 +36,9 @@ import {
 } from "./learningTrail";
 import { clearDraft, loadDraft, persistSession, saveDraft } from "./repository";
 import { createV5State, phaseIndex, shouldOfferPause, v5Reducer } from "./reducer";
-import type { V5Phase } from "./types";
-import { useEmotionLandscape, useKnownPractices } from "./useV5Signals";
+import { MAX_EMOTIONS, type V5Phase } from "./types";
+import { useEmotionLandscape, useKnownPractices, emotionFrequency } from "./useV5Signals";
+
 
 /** Jornada Emocional V5 — perceber, compreender, regular, agir, registro. */
 const JornadaEmocionalV5 = () => {
