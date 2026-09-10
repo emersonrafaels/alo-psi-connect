@@ -1,8 +1,6 @@
-import { ArrowRight, X } from "lucide-react";
+import { ArrowRight, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { getEmotionNode, getFamilyOf } from "../../config/emotion-taxonomy";
 import { INTENSITY_LABELS } from "../../config/perceived-change-options";
 import { EmotionSearch } from "../../components/EmotionSearch";
@@ -16,12 +14,14 @@ export const PerceiveSidebar = ({
   onRemove,
   onClear,
   onAdvance,
+  onAddAnother,
 }: {
   emotions: PickedEmotion[];
   onPick: (emotionId: string) => void;
   onRemove: (emotionId: string) => void;
   onClear: () => void;
   onAdvance?: () => void;
+  onAddAnother?: () => void;
 }) => {
   const full = emotions.length >= MAX_EMOTIONS;
 
@@ -89,13 +89,11 @@ export const PerceiveSidebar = ({
           )}
         </div>
 
-        {!full && (
-          <Badge
-            variant="secondary"
-            className={cn("w-full justify-center rounded-full py-2 text-xs font-normal")}
-          >
+        {!full && onAddAnother && (
+          <Button variant="outline" className="w-full rounded-full" onClick={onAddAnother}>
+            <Plus className="mr-2 h-4 w-4" />
             {V5_COPY.perceive.exploreAnother}
-          </Badge>
+          </Button>
         )}
 
         {emotions.length > 0 && onAdvance && (

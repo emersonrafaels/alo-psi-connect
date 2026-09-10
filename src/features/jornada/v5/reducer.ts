@@ -118,8 +118,16 @@ export const v5Reducer = (state: V5State, action: V5Action): V5State => {
     case "SELECT_FAMILY":
       return touch({ familyId: action.familyId, level2Id: null, level3Id: null });
 
-    case "SELECT_LEVEL2":
-      return touch({ level2Id: action.emotionId, level3Id: null, pendingEmotionId: action.emotionId });
+    case "SELECT_LEVEL2": {
+      // Só abre a janela de intensidade quando a palavra não tem terceiro nível.
+      const node = getEmotionNode(action.emotionId);
+      const hasChildren = !!node?.children?.length;
+      return touch({
+        level2Id: action.emotionId,
+        level3Id: null,
+        pendingEmotionId: hasChildren ? null : action.emotionId,
+      });
+    }
 
     case "SELECT_LEVEL3":
       return touch({ level3Id: action.emotionId, pendingEmotionId: action.emotionId });

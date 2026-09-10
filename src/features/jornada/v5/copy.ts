@@ -32,7 +32,7 @@ export const V5_COPY = {
       "Nenhuma emoção registrada ainda. Clique em uma palavra e informe quanto ela está presente.",
     limitNote:
       "Você pode registrar até três emoções. O limite reduz a carga da atividade; não significa que sua experiência esteja restrita a três sentimentos.",
-    exploreAnother: "Explorar outra emoção",
+    exploreAnother: "Adicionar outra emoção",
     restart: "Recomeçar este registro",
   },
 

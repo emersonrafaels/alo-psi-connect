@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
@@ -50,6 +50,18 @@ const JornadaEmocionalV5 = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  const wheelRef = useRef<HTMLDivElement | null>(null);
+
+  /** Volta para a roda (do início dos níveis) para registrar outra emoção. */
+  const handleAddAnother = useCallback(() => {
+    dispatch({ type: "BACK_TO_WHEEL" });
+    dispatch({ type: "BACK_LEVEL" });
+    dispatch({ type: "BACK_LEVEL" });
+    requestAnimationFrame(() => {
+      wheelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, []);
 
   const { bubbles, isLoading: landscapeLoading, refetch } = useEmotionLandscape();
   const { known } = useKnownPractices();
@@ -212,6 +224,7 @@ const JornadaEmocionalV5 = () => {
                     onSelect={(id) => dispatch({ type: "PICK_EMOTION", emotionId: id })}
                   />
 
+                  <div ref={wheelRef} />
                   <EmotionWheel
                     familyId={state.familyId}
                     level2Id={state.level2Id}
@@ -247,6 +260,7 @@ const JornadaEmocionalV5 = () => {
                 onRemove={(emotionId) => dispatch({ type: "REMOVE_EMOTION", emotionId })}
                 onClear={() => dispatch({ type: "CLEAR_EMOTIONS" })}
                 onAdvance={() => dispatch({ type: "GO_TO_REVIEW" })}
+                onAddAnother={handleAddAnother}
               />
             </div>
             )}
