@@ -14,12 +14,14 @@ export const PerceiveSidebar = ({
   onRemove,
   onClear,
   onAdvance,
+  onAddAnother,
 }: {
   emotions: PickedEmotion[];
   onPick: (emotionId: string) => void;
   onRemove: (emotionId: string) => void;
   onClear: () => void;
   onAdvance?: () => void;
+  onAddAnother?: () => void;
 }) => {
   const full = emotions.length >= MAX_EMOTIONS;
 
