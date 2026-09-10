@@ -86,6 +86,19 @@ const JornadaEmocionalV5 = () => {
     [state.regulation.practiceId]
   );
 
+  const pendingHistoryNote = useMemo(() => {
+    if (!state.pendingEmotionId) return null;
+    const history = emotionFrequency(bubbles, state.pendingEmotionId);
+    if (!history.count30d) return null;
+    const times = history.count30d === 1 ? "vez" : "vezes";
+    const avg =
+      history.avgIntensity != null
+        ? `, com intensidade média ${history.avgIntensity.toString().replace(".", ",")}`
+        : "";
+    return `Você já registrou esta palavra ${history.count30d} ${times}${avg}.`;
+  }, [bubbles, state.pendingEmotionId]);
+
+
   const showPause =
     state.phase === "perceive" &&
     shouldOfferPause(state) &&
