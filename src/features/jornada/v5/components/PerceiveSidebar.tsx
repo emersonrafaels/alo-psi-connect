@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,11 +15,13 @@ export const PerceiveSidebar = ({
   onPick,
   onRemove,
   onClear,
+  onAdvance,
 }: {
   emotions: PickedEmotion[];
   onPick: (emotionId: string) => void;
   onRemove: (emotionId: string) => void;
   onClear: () => void;
+  onAdvance?: () => void;
 }) => {
   const full = emotions.length >= MAX_EMOTIONS;
 
@@ -94,6 +96,13 @@ export const PerceiveSidebar = ({
           >
             {V5_COPY.perceive.exploreAnother}
           </Badge>
+        )}
+
+        {emotions.length > 0 && onAdvance && (
+          <Button className="w-full" onClick={onAdvance}>
+            Avançar para a compreensão
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
         )}
 
         {emotions.length > 0 && (

@@ -22,6 +22,7 @@ import { ComprehensionDimensions } from "./components/ComprehensionDimensions";
 import { ControlColumns } from "./components/ControlColumns";
 import { EmotionLandscape } from "./components/EmotionLandscape";
 import { FocusSelection } from "./components/FocusSelection";
+import { AfterRegisterDialog } from "./components/AfterRegisterDialog";
 import { ImmediateRegulationCard } from "./components/ImmediateRegulationCard";
 import { IntensityDialog } from "./components/IntensityDialog";
 import { LearningResourceCard } from "./components/LearningResourceCard";
@@ -72,6 +73,10 @@ const JornadaEmocionalV5 = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [state.phase]);
+
+  useEffect(() => {
+    if (state.perceiveReview) window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [state.perceiveReview]);
 
   const peakIntensity = useMemo(
     () =>
@@ -186,6 +191,7 @@ const JornadaEmocionalV5 = () => {
 
         {state.phase === "perceive" && !state.focus.mode && (
           <>
+            {!state.perceiveReview && (
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
               <Card className="border-border/70 shadow-sm">
                 <CardContent className="space-y-5 p-4 sm:p-6">
@@ -240,8 +246,10 @@ const JornadaEmocionalV5 = () => {
                 onPick={(emotionId) => dispatch({ type: "PICK_EMOTION", emotionId })}
                 onRemove={(emotionId) => dispatch({ type: "REMOVE_EMOTION", emotionId })}
                 onClear={() => dispatch({ type: "CLEAR_EMOTIONS" })}
+                onAdvance={() => dispatch({ type: "GO_TO_REVIEW" })}
               />
             </div>
+            )}
 
             {(showPause || (state.regulation.completed && state.regulation.intensityAfter == null)) && (
               <ImmediateRegulationCard
@@ -258,13 +266,13 @@ const JornadaEmocionalV5 = () => {
               />
             )}
 
-            {state.emotions.length > 0 && !showPause && (
+            {state.perceiveReview && state.emotions.length > 0 && !showPause && (
               <FocusSelection
                 emotions={state.emotions}
                 mode={state.focus.mode}
                 emotionId={state.focus.emotionId}
                 onSelect={(mode, emotionId) => dispatch({ type: "SET_FOCUS", mode, emotionId })}
-                onBack={() => dispatch({ type: "CLEAR_EMOTIONS" })}
+                onBack={() => dispatch({ type: "BACK_TO_WHEEL" })}
                 onNext={() => dispatch({ type: "GO_TO", phase: "comprehend" })}
               />
             )}
@@ -277,6 +285,13 @@ const JornadaEmocionalV5 = () => {
                 dispatch({ type: "CONFIRM_EMOTION", intensity })
               }
               onCancel={() => dispatch({ type: "CANCEL_PENDING" })}
+            />
+
+            <AfterRegisterDialog
+              open={state.postRegisterPrompt}
+              emotions={state.emotions}
+              onAnother={() => dispatch({ type: "POST_REGISTER_ANOTHER" })}
+              onAdvance={() => dispatch({ type: "GO_TO_REVIEW" })}
             />
           </>
         )}
