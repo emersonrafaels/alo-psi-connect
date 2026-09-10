@@ -226,4 +226,33 @@ export const V5_COPY = {
     again: "Fazer novo registro",
     openLandscape: "Abrir Paisagem Emocional completa",
   },
+
+  support: {
+    eyebrow: "Apoio disponível",
+    title: "Você não precisa organizar tudo sozinho",
+    description:
+      "Esta tela usa os serviços e contatos definidos com cada instituição. Intensidade emocional alta, isoladamente, não é tratada como diagnóstico ou crise.",
+    options: [
+      {
+        title: "Acolhimento institucional",
+        description: "Canal da faculdade para escuta, orientação e encaminhamento.",
+      },
+      {
+        title: "Rede de profissionais",
+        description:
+          "Psicologia, psiquiatria, psicopedagogia e outros serviços, conforme disponibilidade e contrato.",
+      },
+      {
+        title: "Meu Plano de Apoio",
+        description: "Organize necessidades, pessoas de referência e próximos passos.",
+      },
+      {
+        title: "Ajuda imediata",
+        description:
+          "Em uma situação de risco imediato, procure os serviços de emergência da sua região ou uma pessoa de confiança.",
+      },
+    ] as const,
+    close: "Entendi",
+  },
+
 } as const;
