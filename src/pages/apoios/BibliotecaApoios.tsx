@@ -426,12 +426,19 @@ const BibliotecaApoios = () => {
 
                 <div className="flex flex-col sm:flex-row gap-2 pt-2">
                   {selected.ctaRoute ? (
-                    <Button asChild className="flex-1">
-                      <Link to={`${basePath}${selected.ctaRoute}`}>
-                        {selected.ctaLabel || "Acessar apoio"}
-                      </Link>
-                    </Button>
+                    isKnownRoute(selected.ctaRoute) ? (
+                      <Button asChild className="flex-1">
+                        <Link to={`${basePath}${selected.ctaRoute}`}>
+                          {selected.ctaLabel || "Acessar apoio"}
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button disabled className="flex-1" title="Página ainda não disponível">
+                        Em breve
+                      </Button>
+                    )
                   ) : null}
+
                   <Button
                     variant="outline"
                     className="flex-1"
