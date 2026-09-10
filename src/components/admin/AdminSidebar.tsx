@@ -154,6 +154,12 @@ const adminMenuGroups = [
         requiredRole: 'admin' as const
       },
       {
+        title: 'Gerenciar Apoios',
+        url: '/admin/biblioteca-apoios',
+        icon: HeartHandshake,
+        requiredRole: 'admin' as const
+      },
+      {
         title: 'Práticas',
         url: '/admin/praticas',
         icon: Sparkles,
