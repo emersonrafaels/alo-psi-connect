@@ -11,7 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { getEmotionNode, getFamilyOf } from "../../config/emotion-taxonomy";
+import { ChevronRight } from "lucide-react";
+import { getEmotionNode, getEmotionPath, getFamilyOf } from "../../config/emotion-taxonomy";
 import { INTENSITY_LABELS } from "../../config/perceived-change-options";
 import type { Intensity } from "../../domain/types";
 
@@ -34,6 +35,7 @@ export const IntensityDialog = ({
   const [value, setValue] = useState<Intensity | null>(null);
   const node = getEmotionNode(emotionId);
   const family = getFamilyOf(emotionId);
+  const path = getEmotionPath(emotionId);
   const open = !!node;
 
   useEffect(() => {
@@ -62,6 +64,28 @@ export const IntensityDialog = ({
             A intensidade é registrada separadamente da posição da palavra na roda.
           </DialogDescription>
         </DialogHeader>
+
+        {path.length > 0 && (
+          <nav
+            aria-label="Caminho da emoção selecionada"
+            className="flex flex-wrap items-center gap-1 rounded-2xl border border-border/70 bg-muted/30 p-3 text-xs"
+          >
+            {path.map((item, i) => (
+              <span key={item.id} className="flex items-center gap-1">
+                {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                <span
+                  className={
+                    i === path.length - 1
+                      ? "font-semibold text-foreground"
+                      : "text-muted-foreground"
+                  }
+                >
+                  {item.label}
+                </span>
+              </span>
+            ))}
+          </nav>
+        )}
 
         {full ? (
           <p className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">

@@ -1,4 +1,4 @@
-import { Plus, ArrowRight } from "lucide-react";
+import { ChevronRight, Plus, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getEmotionNode, getFamilyOf } from "../../config/emotion-taxonomy";
+import { getEmotionNode, getEmotionPath, getFamilyOf } from "../../config/emotion-taxonomy";
 import { INTENSITY_LABELS } from "../../config/perceived-change-options";
 import { MAX_EMOTIONS, type PickedEmotion } from "../types";
 
@@ -31,6 +31,7 @@ export const AfterRegisterDialog = ({
   const last = emotions[emotions.length - 1];
   const node = last ? getEmotionNode(last.emotionId) : null;
   const family = last ? getFamilyOf(last.emotionId) : null;
+  const path = last ? getEmotionPath(last.emotionId) : [];
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onAdvance()}>
@@ -49,20 +50,41 @@ export const AfterRegisterDialog = ({
         </DialogHeader>
 
         {last && (
-          <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-muted/30 p-3">
-            <span
-              aria-hidden
-              className="h-8 w-1.5 shrink-0 rounded-full"
-              style={{ backgroundColor: family?.color ?? "hsl(var(--primary))" }}
-            />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-foreground">
-                {node?.label ?? last.emotionId}
+          <div className="space-y-3 rounded-2xl border border-border/70 bg-muted/30 p-3">
+            <nav
+              aria-label="Caminho da emoção selecionada"
+              className="flex flex-wrap items-center gap-1 text-xs"
+            >
+              {path.map((item, i) => (
+                <span key={item.id} className="flex items-center gap-1">
+                  {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                  <span
+                    className={
+                      i === path.length - 1
+                        ? "font-semibold text-foreground"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    {item.label}
+                  </span>
+                </span>
+              ))}
+            </nav>
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden
+                className="h-8 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: family?.color ?? "hsl(var(--primary))" }}
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-foreground">
+                  {node?.label ?? last.emotionId}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  Intensidade {last.intensityBefore} · {INTENSITY_LABELS[last.intensityBefore]}
+                </span>
               </span>
-              <span className="block text-xs text-muted-foreground">
-                Intensidade {last.intensityBefore} · {INTENSITY_LABELS[last.intensityBefore]}
-              </span>
-            </span>
+            </div>
           </div>
         )}
 
