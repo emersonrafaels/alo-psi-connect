@@ -65,6 +65,28 @@ export const IntensityDialog = ({
           </DialogDescription>
         </DialogHeader>
 
+        {path.length > 0 && (
+          <nav
+            aria-label="Caminho da emoção selecionada"
+            className="flex flex-wrap items-center gap-1 rounded-2xl border border-border/70 bg-muted/30 p-3 text-xs"
+          >
+            {path.map((item, i) => (
+              <span key={item.id} className="flex items-center gap-1">
+                {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                <span
+                  className={
+                    i === path.length - 1
+                      ? "font-semibold text-foreground"
+                      : "text-muted-foreground"
+                  }
+                >
+                  {item.label}
+                </span>
+              </span>
+            ))}
+          </nav>
+        )}
+
         {full ? (
           <p className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
             Você já registrou três emoções neste momento. Remova uma no painel ao lado para incluir
