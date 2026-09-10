@@ -179,12 +179,6 @@ const Header = () => {
                     Meus Agendamentos
                   </DropdownMenuItem>
                 )}
-                  {hasRadarAccess && (
-                    <DropdownMenuItem onClick={() => navigate(radarHref)}>
-                      <Radar className="h-4 w-4 mr-2" />
-                      Radar Institucional
-                    </DropdownMenuItem>
-                  )}
                   <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/meus-encontros'))}>
                     <Users className="h-4 w-4 mr-2" />
                     {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
@@ -215,18 +209,25 @@ const Header = () => {
                       Gerenciar Blog
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuSeparator />
+                  {hasRadarAccess && (
+                    <DropdownMenuItem onClick={() => navigate(radarHref)}>
+                      <Radar className="h-4 w-4 mr-2" />
+                      Radar Institucional
+                    </DropdownMenuItem>
+                  )}
                   {isAdmin && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate('/admin')}>
-                        <Shield className="h-4 w-4 mr-2" />
-                        Acessar Admin
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/admin/biblioteca-apoios')}>
-                        <HeartHandshake className="h-4 w-4 mr-2" />
-                        Gerenciar Apoios
-                      </DropdownMenuItem>
-                    </>
+                    <DropdownMenuItem onClick={() => navigate('/admin/biblioteca-apoios')}>
+                      <HeartHandshake className="h-4 w-4 mr-2" />
+                      Gerenciar Apoios
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Shield className="h-4 w-4 mr-2" />
+                      Acessar Admin
+                    </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   {isAdmin && (
@@ -321,16 +322,6 @@ const Header = () => {
                       Meus Agendamentos
                     </Link>
                   )}
-                  {hasRadarAccess && (
-                    <Link
-                      to={radarHref}
-                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Radar className="h-5 w-5 opacity-70" />
-                      Radar Institucional
-                    </Link>
-                  )}
                   <Link
                     to={buildTenantPath(tenantSlug, '/meus-encontros')}
                     className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
@@ -385,14 +376,15 @@ const Header = () => {
                       Gerenciar Blog
                     </Link>
                   )}
-                  {isAdmin && (
+                  <div className="my-1 border-t border-border/50" />
+                  {hasRadarAccess && (
                     <Link
-                      to="/admin"
+                      to={radarHref}
                       className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <Shield className="h-5 w-5 opacity-70" />
-                      Acessar Admin
+                      <Radar className="h-5 w-5 opacity-70" />
+                      Radar Institucional
                     </Link>
                   )}
                   {isAdmin && (
@@ -403,6 +395,17 @@ const Header = () => {
                     >
                       <HeartHandshake className="h-5 w-5 opacity-70" />
                       Gerenciar Apoios
+                    </Link>
+                  )}
+                  <div className="my-1 border-t border-border/50" />
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Shield className="h-5 w-5 opacity-70" />
+                      Acessar Admin
                     </Link>
                   )}
                 </nav>
