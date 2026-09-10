@@ -74,6 +74,10 @@ const JornadaEmocionalV5 = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [state.phase]);
 
+  useEffect(() => {
+    if (state.perceiveReview) window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [state.perceiveReview]);
+
   const peakIntensity = useMemo(
     () =>
       state.emotions.length
