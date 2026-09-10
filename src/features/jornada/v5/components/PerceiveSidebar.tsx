@@ -89,13 +89,11 @@ export const PerceiveSidebar = ({
           )}
         </div>
 
-        {!full && (
-          <Badge
-            variant="secondary"
-            className={cn("w-full justify-center rounded-full py-2 text-xs font-normal")}
-          >
+        {!full && onAddAnother && (
+          <Button variant="outline" className="w-full rounded-full" onClick={onAddAnother}>
+            <Plus className="mr-2 h-4 w-4" />
             {V5_COPY.perceive.exploreAnother}
-          </Badge>
+          </Button>
         )}
 
         {emotions.length > 0 && onAdvance && (
