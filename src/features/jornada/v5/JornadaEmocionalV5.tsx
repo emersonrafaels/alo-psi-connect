@@ -187,6 +187,7 @@ const JornadaEmocionalV5 = () => {
 
         {state.phase === "perceive" && !state.focus.mode && (
           <>
+            {!state.perceiveReview && (
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
               <Card className="border-border/70 shadow-sm">
                 <CardContent className="space-y-5 p-4 sm:p-6">
@@ -244,6 +245,7 @@ const JornadaEmocionalV5 = () => {
                 onAdvance={() => dispatch({ type: "GO_TO_REVIEW" })}
               />
             </div>
+            )}
 
             {(showPause || (state.regulation.completed && state.regulation.intensityAfter == null)) && (
               <ImmediateRegulationCard
