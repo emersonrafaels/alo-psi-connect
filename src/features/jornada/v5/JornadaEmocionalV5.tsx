@@ -51,6 +51,18 @@ const JornadaEmocionalV5 = () => {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  const wheelRef = useRef<HTMLDivElement | null>(null);
+
+  /** Volta para a roda (do início dos níveis) para registrar outra emoção. */
+  const handleAddAnother = useCallback(() => {
+    dispatch({ type: "BACK_TO_WHEEL" });
+    dispatch({ type: "BACK_LEVEL" });
+    dispatch({ type: "BACK_LEVEL" });
+    requestAnimationFrame(() => {
+      wheelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, []);
+
   const { bubbles, isLoading: landscapeLoading, refetch } = useEmotionLandscape();
   const { known } = useKnownPractices();
 
