@@ -179,12 +179,6 @@ const Header = () => {
                     Meus Agendamentos
                   </DropdownMenuItem>
                 )}
-                  {hasRadarAccess && (
-                    <DropdownMenuItem onClick={() => navigate(radarHref)}>
-                      <Radar className="h-4 w-4 mr-2" />
-                      Radar Institucional
-                    </DropdownMenuItem>
-                  )}
                   <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/meus-encontros'))}>
                     <Users className="h-4 w-4 mr-2" />
                     {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
@@ -215,18 +209,25 @@ const Header = () => {
                       Gerenciar Blog
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuSeparator />
+                  {hasRadarAccess && (
+                    <DropdownMenuItem onClick={() => navigate(radarHref)}>
+                      <Radar className="h-4 w-4 mr-2" />
+                      Radar Institucional
+                    </DropdownMenuItem>
+                  )}
                   {isAdmin && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate('/admin')}>
-                        <Shield className="h-4 w-4 mr-2" />
-                        Acessar Admin
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/admin/biblioteca-apoios')}>
-                        <HeartHandshake className="h-4 w-4 mr-2" />
-                        Gerenciar Apoios
-                      </DropdownMenuItem>
-                    </>
+                    <DropdownMenuItem onClick={() => navigate('/admin/biblioteca-apoios')}>
+                      <HeartHandshake className="h-4 w-4 mr-2" />
+                      Gerenciar Apoios
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Shield className="h-4 w-4 mr-2" />
+                      Acessar Admin
+                    </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   {isAdmin && (
