@@ -1,8 +1,6 @@
-import { ArrowRight, X } from "lucide-react";
+import { ArrowRight, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { getEmotionNode, getFamilyOf } from "../../config/emotion-taxonomy";
 import { INTENSITY_LABELS } from "../../config/perceived-change-options";
 import { EmotionSearch } from "../../components/EmotionSearch";
