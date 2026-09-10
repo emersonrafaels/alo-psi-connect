@@ -80,6 +80,11 @@ export interface V5State {
   /** Emoção clicada aguardando intensidade. */
   pendingEmotionId: string | null;
 
+  /** Modal "registrar outra emoção ou avançar" aberto após confirmar intensidade. */
+  postRegisterPrompt: boolean;
+  /** Mostra a tela de revisão/foco (FocusSelection) dentro de Perceber. */
+  perceiveReview: boolean;
+
   emotions: PickedEmotion[];
   regulation: RegulationState;
   focus: { mode: FocusMode; emotionId: string | null };

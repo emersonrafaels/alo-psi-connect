@@ -27,6 +27,8 @@ export const createV5State = (): V5State => ({
   level2Id: null,
   level3Id: null,
   pendingEmotionId: null,
+  postRegisterPrompt: false,
+  perceiveReview: false,
   emotions: [],
   regulation: {
     offered: false,
