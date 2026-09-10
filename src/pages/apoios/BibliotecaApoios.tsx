@@ -29,6 +29,8 @@ import {
 import buddySvg from "@/assets/buddy.svg";
 import { SupportCard } from "@/features/apoios/SupportCard";
 import { SupportIcon } from "@/features/apoios/SupportIcon";
+import { isKnownRoute } from "@/features/apoios/knownRoutes";
+
 import {
   SUPPORT_ACCESS_TYPES,
   SUPPORT_CATEGORIES,
