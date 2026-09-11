@@ -5496,6 +5496,13 @@ export type Database = {
           total: number
         }[]
       }
+      get_support_plan_counts: {
+        Args: never
+        Returns: {
+          support_key: string
+          total: number
+        }[]
+      }
       get_support_visits_counts: {
         Args: never
         Returns: {
