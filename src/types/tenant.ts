@@ -78,6 +78,7 @@ export interface Tenant {
     group_sessions?: boolean;
     contact?: boolean;
     about?: boolean;
+    buddy?: boolean;
     [key: string]: boolean | undefined;
   };
   cta_primary_text?: string;

@@ -325,7 +325,11 @@ export const ModulesConfigTab = ({ formData, setFormData }: TenantConfigTabsProp
     { key: 'group_sessions', label: 'Encontros em Grupo' },
     { key: 'contact', label: 'Contato' },
     { key: 'about', label: 'Sobre' },
+    { key: 'buddy', label: 'Meu Buddy (menu superior)' },
   ];
+
+  // Módulos que são opt-in (padrão desativado)
+  const optInModules = ['buddy'];
 
   const handleModuleToggle = (moduleKey: string, checked: boolean) => {
     setFormData({
@@ -346,6 +350,7 @@ export const ModulesConfigTab = ({ formData, setFormData }: TenantConfigTabsProp
     group_sessions: "Habilita/desabilita páginas de encontros e sessões em grupo. Remove menu 'Encontros' quando desabilitado",
     contact: "Habilita/desabilita a página de contato. Remove link 'Contato' do menu quando desabilitado",
     about: "Habilita/desabilita a página 'Sobre'. Remove link do menu quando desabilitado",
+    buddy: "Exibe o link 'Meu Buddy' no menu superior para usuários logados. Desativado por padrão; as páginas do Buddy continuam acessíveis por link direto",
   };
 
   return (
@@ -362,7 +367,9 @@ export const ModulesConfigTab = ({ formData, setFormData }: TenantConfigTabsProp
               <div className="flex items-center space-x-3 p-3 rounded-lg border">
                 <Checkbox
                   id={`module_${module.key}`}
-                  checked={formData.modules_enabled?.[module.key] !== false}
+                  checked={optInModules.includes(module.key)
+                    ? formData.modules_enabled?.[module.key] === true
+                    : formData.modules_enabled?.[module.key] !== false}
                   onCheckedChange={(checked) => handleModuleToggle(module.key, checked as boolean)}
                 />
                 <Label htmlFor={`module_${module.key}`} className="cursor-pointer flex-1">
