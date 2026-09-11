@@ -397,6 +397,14 @@ const SupportLibraryAdmin = () => {
                       <p className="text-[11px] text-muted-foreground mt-1">
                         {item.category} · {item.format} · {item.access_type}
                       </p>
+                      <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-3">
+                        <span className="flex items-center gap-1">
+                          <Heart className="h-3 w-3" /> {metrics.favOf(item.id)} favoritos
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" /> {metrics.visOf(item.id)} acessos
+                        </span>
+                      </p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <Switch
@@ -406,7 +414,14 @@ const SupportLibraryAdmin = () => {
                         }
                         aria-label="Ativo"
                       />
-                      <Button variant="ghost" size="icon" onClick={() => setEditing(item)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setIsCreating(false);
+                          setEditing(item);
+                        }}
+                      >
                         <Pencil className="h-4 w-4" />
                       </Button>
                     </div>
