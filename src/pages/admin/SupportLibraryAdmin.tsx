@@ -180,14 +180,25 @@ const SupportLibraryAdmin = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-primary" /> Biblioteca de Apoios
-        </h1>
-        <p className="text-muted-foreground">
-          Gerencie o catálogo de apoios e defina o que cada instituição tem disponível no plano dela.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" /> Biblioteca de Apoios
+          </h1>
+          <p className="text-muted-foreground">
+            Gerencie o catálogo de apoios e defina o que cada instituição tem disponível no plano dela.
+          </p>
+        </div>
+        <Button
+          onClick={() => {
+            setIsCreating(true);
+            setEditing({ ...emptyDraft });
+          }}
+        >
+          <Plus className="h-4 w-4 mr-2" /> Novo apoio
+        </Button>
       </div>
+
 
       <Tabs defaultValue="catalog">
         <TabsList>
