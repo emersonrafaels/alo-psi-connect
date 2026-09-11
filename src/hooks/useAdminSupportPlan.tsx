@@ -16,17 +16,19 @@ export const useSupportInstitutions = () =>
     },
   });
 
-/** Contagens agregadas de favoritos e acessos por apoio (somente admins). */
+/** Contagens agregadas de favoritos, acessos e uso (plano) por apoio (somente admins). */
 export const useSupportUsageMetrics = () =>
   useQuery({
     queryKey: ["support-usage-metrics"],
     queryFn: async () => {
-      const [fav, vis] = await Promise.all([
+      const [fav, vis, plan] = await Promise.all([
         supabase.rpc("get_support_favorites_counts"),
         supabase.rpc("get_support_visits_counts"),
+        supabase.rpc("get_support_plan_counts"),
       ]);
       if (fav.error) throw fav.error;
       if (vis.error) throw vis.error;
+      if (plan.error) throw plan.error;
       const toMap = (rows: { support_key: string; total: number }[] | null) => {
         const map = new Map<string, number>();
         (rows || []).forEach((r) => map.set(r.support_key, Number(r.total)));
@@ -34,15 +36,19 @@ export const useSupportUsageMetrics = () =>
       };
       const favorites = toMap(fav.data as any);
       const visits = toMap(vis.data as any);
+      const planItems = toMap(plan.data as any);
       const sum = (m: Map<string, number>) => Array.from(m.values()).reduce((a, b) => a + b, 0);
       return {
         favorites,
         visits,
+        planItems,
         totalFavorites: sum(favorites),
         totalVisits: sum(visits),
+        totalPlanItems: sum(planItems),
       };
     },
   });
+
 
 export const useAdminSupportCatalogMutations = () => {
   const queryClient = useQueryClient();
