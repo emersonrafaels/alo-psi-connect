@@ -207,15 +207,167 @@ const SupportLibraryAdmin = () => {
         </TabsList>
 
         <TabsContent value="catalog" className="space-y-4 pt-4">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar no catálogo"
-              className="pl-9"
-            />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                label: "Apoios no catálogo",
+                value: metrics.total,
+                hint: `${metrics.active} ativos`,
+                icon: LayoutGrid,
+              },
+              {
+                label: "Em destaque",
+                value: metrics.featured,
+                hint: "Aparecem no topo para o aluno",
+                icon: Star,
+              },
+              {
+                label: "Favoritos dos alunos",
+                value: metrics.totalFavorites,
+                hint: "Total de vezes marcado como favorito",
+                icon: Heart,
+              },
+              {
+                label: "Apoios usados",
+                value: metrics.totalVisits,
+                hint: "Total de acessos registrados",
+                icon: Eye,
+              },
+            ].map((m) => (
+              <Card key={m.label}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">{m.label}</p>
+                    <m.icon className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-2xl font-bold mt-1">{m.value}</p>
+                  <p className="text-[11px] text-muted-foreground">{m.hint}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {[
+              { title: "Mais favoritados", rows: metrics.topFavorites },
+              { title: "Mais acessados", rows: metrics.topVisits },
+            ].map((block) => (
+              <Card key={block.title}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">{block.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1">
+                  {block.rows.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Ainda sem registros.</p>
+                  ) : (
+                    block.rows.map((r) => (
+                      <div key={r.title} className="flex items-center justify-between text-sm">
+                        <span className="truncate">{r.title}</span>
+                        <span className="font-semibold tabular-nums">{r.total}</span>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar no catálogo"
+                className="pl-9"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={originFilter} onValueChange={setOriginFilter}>
+                <SelectTrigger className="w-[190px]">
+                  <SelectValue placeholder="Origem" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todas as origens</SelectItem>
+                  <SelectItem value="platform">Plataforma</SelectItem>
+                  <SelectItem value="institution">Modelo institucional</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[190px]">
+                  <SelectValue placeholder="Categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todas as categorias</SelectItem>
+                  {SUPPORT_CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={formatFilter} onValueChange={setFormatFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Formato" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todos os formatos</SelectItem>
+                  {SUPPORT_FORMATS.map((f) => (
+                    <SelectItem key={f} value={f}>
+                      {f}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={accessFilter} onValueChange={setAccessFilter}>
+                <SelectTrigger className="w-[190px]">
+                  <SelectValue placeholder="Acesso" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todos os acessos</SelectItem>
+                  {SUPPORT_ACCESS_TYPES.map((a) => (
+                    <SelectItem key={a} value={a}>
+                      {a}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Situação" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Ativos e inativos</SelectItem>
+                  <SelectItem value="active">Somente ativos</SelectItem>
+                  <SelectItem value="inactive">Somente inativos</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant={onlyFeatured ? "default" : "outline"}
+                size="sm"
+                onClick={() => setOnlyFeatured((v) => !v)}
+              >
+                <Star className="h-4 w-4 mr-2" /> Só destaques
+              </Button>
+
+              {hasFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="h-4 w-4 mr-2" /> Limpar filtros
+                </Button>
+              )}
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              {filtered.length} de {catalog.length} apoios
+            </p>
+          </div>
+
 
           {isLoading ? (
             <div className="grid gap-3 md:grid-cols-2">
