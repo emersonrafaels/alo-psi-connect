@@ -74,7 +74,7 @@ export const useAdminSupportCatalogMutations = () => {
     onError: (e: any) => toast({ title: "Não foi possível salvar", description: e.message, variant: "destructive" }),
   });
 
-  return { updateCatalog };
+  return { updateCatalog, createCatalog };
 };
 
 export const useAdminInstitutionPlan = (institutionId?: string) => {
