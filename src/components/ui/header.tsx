@@ -219,7 +219,7 @@ const Header = () => {
                     </DropdownMenuItem>
                   )}
                   {isAdmin && (
-                    <DropdownMenuItem onClick={() => navigate('/admin/biblioteca-apoios')}>
+                    <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/gerenciar-apoios'))}>
                       <HeartHandshake className="h-4 w-4 mr-2" />
                       Gerenciar Apoios
                     </DropdownMenuItem>
@@ -391,7 +391,7 @@ const Header = () => {
                   )}
                   {isAdmin && (
                     <Link
-                      to="/admin/biblioteca-apoios"
+                      to={buildTenantPath(tenantSlug, '/gerenciar-apoios')}
                       className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
                       onClick={() => setIsMenuOpen(false)}
                     >

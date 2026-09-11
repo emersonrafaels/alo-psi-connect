@@ -118,6 +118,7 @@ import InstitutionRadar from "@/pages/institution/InstitutionRadar";
 import InstitutionSupports from "@/pages/institution/InstitutionSupports";
 import BibliotecaApoios from "@/pages/apoios/BibliotecaApoios";
 import SupportLibraryAdmin from "@/pages/admin/SupportLibraryAdmin";
+import GerenciarApoios from "@/pages/GerenciarApoios";
 import { RadarProtectedRoute } from "@/components/RadarProtectedRoute";
 import PublicRadar from "@/pages/public/PublicRadar";
 import PublicRadarResult from "@/pages/public/PublicRadarResult";
@@ -241,6 +242,8 @@ const AppWithShortcuts = () => {
       {/* Práticas para Reequilíbrio Emocional (público) */}
       <Route path="/biblioteca-apoios" element={<BibliotecaApoios />} />
       <Route path="/medcos/biblioteca-apoios" element={<BibliotecaApoios />} />
+      <Route path="/gerenciar-apoios" element={<ProtectedRoute requiredRole="admin"><GerenciarApoios /></ProtectedRoute>} />
+      <Route path="/medcos/gerenciar-apoios" element={<ProtectedRoute requiredRole="admin"><GerenciarApoios /></ProtectedRoute>} />
       <Route path="/praticas" element={<PraticasIndex />} />
       <Route path="/praticas-prototipo" element={<PraticasPrototipo />} />
       <Route path="/medcos/praticas-prototipo" element={<PraticasPrototipo />} />
