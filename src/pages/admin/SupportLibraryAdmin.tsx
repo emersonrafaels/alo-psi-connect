@@ -22,37 +22,152 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Pencil, Sparkles } from "lucide-react";
+import { Search, Pencil, Sparkles, Plus, Star, Heart, Eye, LayoutGrid, X } from "lucide-react";
 import { SupportIcon } from "@/features/apoios/SupportIcon";
-import { SUPPORT_CATEGORIES, type SupportCatalogRow } from "@/features/apoios/types";
+import {
+  SUPPORT_CATEGORIES,
+  SUPPORT_FORMATS,
+  SUPPORT_ACCESS_TYPES,
+  type SupportCatalogRow,
+} from "@/features/apoios/types";
 import { useSupportCatalog } from "@/hooks/useSupportLibrary";
 import {
   useAdminInstitutionPlan,
   useAdminSupportCatalogMutations,
   useSupportInstitutions,
+  useSupportUsageMetrics,
 } from "@/hooks/useAdminSupportPlan";
+
+const ALL = "__all__";
+
+type Draft = Partial<SupportCatalogRow>;
+
+const emptyDraft: Draft = {
+  title: "",
+  description: "",
+  details: "",
+  how_to: "",
+  when_to: "",
+  origin_type: "platform",
+  category: SUPPORT_CATEGORIES[0],
+  format: SUPPORT_FORMATS[0],
+  access_type: SUPPORT_ACCESS_TYPES[0],
+  icon: "HeartHandshake",
+  provider: "",
+  cta_label: "",
+  cta_route: "",
+  featured: false,
+  is_active: true,
+};
+
+const slugify = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 60);
 
 const SupportLibraryAdmin = () => {
   const { data: catalog = [], isLoading } = useSupportCatalog(true);
-  const { updateCatalog } = useAdminSupportCatalogMutations();
+  const { updateCatalog, createCatalog } = useAdminSupportCatalogMutations();
   const { data: institutions = [] } = useSupportInstitutions();
+  const { data: usage } = useSupportUsageMetrics();
 
   const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState<SupportCatalogRow | null>(null);
+  const [editing, setEditing] = useState<Draft | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [institutionId, setInstitutionId] = useState<string>("");
+
+  const [originFilter, setOriginFilter] = useState(ALL);
+  const [categoryFilter, setCategoryFilter] = useState(ALL);
+  const [formatFilter, setFormatFilter] = useState(ALL);
+  const [accessFilter, setAccessFilter] = useState(ALL);
+  const [statusFilter, setStatusFilter] = useState(ALL);
+  const [onlyFeatured, setOnlyFeatured] = useState(false);
+
+  const hasFilters =
+    !!search ||
+    originFilter !== ALL ||
+    categoryFilter !== ALL ||
+    formatFilter !== ALL ||
+    accessFilter !== ALL ||
+    statusFilter !== ALL ||
+    onlyFeatured;
+
+  const clearFilters = () => {
+    setSearch("");
+    setOriginFilter(ALL);
+    setCategoryFilter(ALL);
+    setFormatFilter(ALL);
+    setAccessFilter(ALL);
+    setStatusFilter(ALL);
+    setOnlyFeatured(false);
+  };
 
   const { excludedIds, allowedCategories, setIncluded, setAllowedCategories } =
     useAdminInstitutionPlan(institutionId || undefined);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return catalog;
-    return catalog.filter((c) =>
-      [c.title, c.category, c.format, c.provider].filter(Boolean).some((v) =>
-        String(v).toLowerCase().includes(term)
+    return catalog.filter((c) => {
+      if (
+        term &&
+        ![c.title, c.category, c.format, c.provider]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(term))
       )
-    );
-  }, [catalog, search]);
+        return false;
+      if (originFilter !== ALL && c.origin_type !== originFilter) return false;
+      if (categoryFilter !== ALL && c.category !== categoryFilter) return false;
+      if (formatFilter !== ALL && c.format !== formatFilter) return false;
+      if (accessFilter !== ALL && c.access_type !== accessFilter) return false;
+      if (statusFilter === "active" && !c.is_active) return false;
+      if (statusFilter === "inactive" && c.is_active) return false;
+      if (onlyFeatured && !c.featured) return false;
+      return true;
+    });
+  }, [catalog, search, originFilter, categoryFilter, formatFilter, accessFilter, statusFilter, onlyFeatured]);
+
+  const metrics = useMemo(() => {
+    const favOf = (id: string) => usage?.favorites.get(`catalog:${id}`) || 0;
+    const visOf = (id: string) => usage?.visits.get(`catalog:${id}`) || 0;
+    const topBy = (fn: (id: string) => number) =>
+      [...catalog]
+        .map((c) => ({ title: c.title, total: fn(c.id) }))
+        .filter((r) => r.total > 0)
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+    return {
+      favOf,
+      visOf,
+      total: catalog.length,
+      active: catalog.filter((c) => c.is_active).length,
+      featured: catalog.filter((c) => c.featured).length,
+      totalFavorites: usage?.totalFavorites || 0,
+      totalVisits: usage?.totalVisits || 0,
+      topFavorites: topBy(favOf),
+      topVisits: topBy(visOf),
+    };
+  }, [catalog, usage]);
+
+  const saveDraft = () => {
+    if (!editing?.title?.trim()) return;
+    if (isCreating) {
+      createCatalog.mutate({
+        ...editing,
+        slug: slugify(editing.title || "") || `apoio-${Date.now()}`,
+        sort_order: catalog.length + 1,
+      });
+    } else {
+      const { id, ...values } = editing as SupportCatalogRow;
+      updateCatalog.mutate({ id, values });
+    }
+    setEditing(null);
+    setIsCreating(false);
+  };
+
 
   const platformSupports = useMemo(
     () => catalog.filter((c) => c.origin_type === "platform"),
