@@ -16,9 +16,51 @@ export const useSupportInstitutions = () =>
     },
   });
 
+/** Contagens agregadas de favoritos e acessos por apoio (somente admins). */
+export const useSupportUsageMetrics = () =>
+  useQuery({
+    queryKey: ["support-usage-metrics"],
+    queryFn: async () => {
+      const [fav, vis] = await Promise.all([
+        supabase.rpc("get_support_favorites_counts"),
+        supabase.rpc("get_support_visits_counts"),
+      ]);
+      if (fav.error) throw fav.error;
+      if (vis.error) throw vis.error;
+      const toMap = (rows: { support_key: string; total: number }[] | null) => {
+        const map = new Map<string, number>();
+        (rows || []).forEach((r) => map.set(r.support_key, Number(r.total)));
+        return map;
+      };
+      const favorites = toMap(fav.data as any);
+      const visits = toMap(vis.data as any);
+      const sum = (m: Map<string, number>) => Array.from(m.values()).reduce((a, b) => a + b, 0);
+      return {
+        favorites,
+        visits,
+        totalFavorites: sum(favorites),
+        totalVisits: sum(visits),
+      };
+    },
+  });
+
 export const useAdminSupportCatalogMutations = () => {
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["support-catalog"] });
+
+  const createCatalog = useMutation({
+    mutationFn: async (values: Partial<SupportCatalogRow>) => {
+      const { error } = await supabase.from("support_catalog").insert(values as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidate();
+      toast({ title: "Apoio criado" });
+    },
+    onError: (e: any) =>
+      toast({ title: "Não foi possível criar", description: e.message, variant: "destructive" }),
+  });
+
 
   const updateCatalog = useMutation({
     mutationFn: async ({ id, values }: { id: string; values: Partial<SupportCatalogRow> }) => {
