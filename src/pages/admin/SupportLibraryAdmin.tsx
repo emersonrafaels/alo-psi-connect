@@ -22,7 +22,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Pencil, Sparkles, Plus, Star, Heart, Eye, LayoutGrid, X } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Search,
+  Pencil,
+  Sparkles,
+  Plus,
+  Star,
+  Heart,
+  Eye,
+  LayoutGrid,
+  X,
+  Info,
+  ClipboardCheck,
+} from "lucide-react";
 import { SupportIcon } from "@/features/apoios/SupportIcon";
 import {
   SUPPORT_CATEGORIES,
@@ -133,6 +151,7 @@ const SupportLibraryAdmin = () => {
   const metrics = useMemo(() => {
     const favOf = (id: string) => usage?.favorites.get(`catalog:${id}`) || 0;
     const visOf = (id: string) => usage?.visits.get(`catalog:${id}`) || 0;
+    const planOf = (id: string) => usage?.planItems.get(`catalog:${id}`) || 0;
     const topBy = (fn: (id: string) => number) =>
       [...catalog]
         .map((c) => ({ title: c.title, total: fn(c.id) }))
@@ -142,13 +161,16 @@ const SupportLibraryAdmin = () => {
     return {
       favOf,
       visOf,
+      planOf,
       total: catalog.length,
       active: catalog.filter((c) => c.is_active).length,
       featured: catalog.filter((c) => c.featured).length,
       totalFavorites: usage?.totalFavorites || 0,
       totalVisits: usage?.totalVisits || 0,
+      totalPlanItems: usage?.totalPlanItems || 0,
       topFavorites: topBy(favOf),
       topVisits: topBy(visOf),
+      topPlan: topBy(planOf),
     };
   }, [catalog, usage]);
 
@@ -207,50 +229,85 @@ const SupportLibraryAdmin = () => {
         </TabsList>
 
         <TabsContent value="catalog" className="space-y-4 pt-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                label: "Apoios no catálogo",
-                value: metrics.total,
-                hint: `${metrics.active} ativos`,
-                icon: LayoutGrid,
-              },
-              {
-                label: "Em destaque",
-                value: metrics.featured,
-                hint: "Aparecem no topo para o aluno",
-                icon: Star,
-              },
-              {
-                label: "Favoritos dos alunos",
-                value: metrics.totalFavorites,
-                hint: "Total de vezes marcado como favorito",
-                icon: Heart,
-              },
-              {
-                label: "Apoios usados",
-                value: metrics.totalVisits,
-                hint: "Total de acessos registrados",
-                icon: Eye,
-              },
-            ].map((m) => (
-              <Card key={m.label}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">{m.label}</p>
-                    <m.icon className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <p className="text-2xl font-bold mt-1">{m.value}</p>
-                  <p className="text-[11px] text-muted-foreground">{m.hint}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <TooltipProvider delayDuration={150}>
+            <p className="text-xs text-muted-foreground">
+              Os números abaixo são totais agregados e não identificam alunos. Cada aluno conta uma
+              vez por apoio em cada indicador.
+            </p>
 
-          <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {[
+                {
+                  label: "Apoios no catálogo",
+                  value: metrics.total,
+                  hint: `${metrics.active} ativos`,
+                  icon: LayoutGrid,
+                  info: "Quantidade de apoios cadastrados na biblioteca, somando plataforma e modelos institucionais.",
+                },
+                {
+                  label: "Em destaque",
+                  value: metrics.featured,
+                  hint: "Aparecem no topo para o aluno",
+                  icon: Star,
+                  info: "Apoios marcados como destaque, que aparecem primeiro na biblioteca do aluno.",
+                },
+                {
+                  label: "Favoritos dos alunos",
+                  value: metrics.totalFavorites,
+                  hint: "Salvos para consultar depois",
+                  icon: Heart,
+                  info: "Quantos alunos salvaram apoios como favoritos para voltar depois.",
+                },
+                {
+                  label: "Apoios acessados",
+                  value: metrics.totalVisits,
+                  hint: "Alunos que abriram o apoio",
+                  icon: Eye,
+                  info: "Quantas vezes um aluno abriu os detalhes de um apoio na biblioteca. Mede alcance e interesse.",
+                },
+                {
+                  label: "Apoios usados",
+                  value: metrics.totalPlanItems,
+                  hint: "Incluídos no plano de apoio",
+                  icon: ClipboardCheck,
+                  info: "Quantas vezes um aluno incluiu um apoio no plano de apoio dele, indicando que pretende usar de fato. Mede adoção.",
+                },
+              ].map((m) => (
+                <Card key={m.label}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        {m.label}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label={`O que significa ${m.label}`}
+                              className="text-muted-foreground hover:text-foreground"
+                            >
+                              <Info className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[260px] text-xs">
+                            {m.info}
+                          </TooltipContent>
+                        </Tooltip>
+                      </p>
+                      <m.icon className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <p className="text-2xl font-bold mt-1">{m.value}</p>
+                    <p className="text-[11px] text-muted-foreground">{m.hint}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TooltipProvider>
+
+          <div className="grid gap-3 md:grid-cols-3">
             {[
               { title: "Mais favoritados", rows: metrics.topFavorites },
               { title: "Mais acessados", rows: metrics.topVisits },
+              { title: "Mais usados (no plano)", rows: metrics.topPlan },
             ].map((block) => (
               <Card key={block.title}>
                 <CardHeader className="pb-2">
@@ -397,12 +454,15 @@ const SupportLibraryAdmin = () => {
                       <p className="text-[11px] text-muted-foreground mt-1">
                         {item.category} · {item.format} · {item.access_type}
                       </p>
-                      <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-3">
+                      <p className="text-[11px] text-muted-foreground mt-1 flex flex-wrap items-center gap-3">
                         <span className="flex items-center gap-1">
                           <Heart className="h-3 w-3" /> {metrics.favOf(item.id)} favoritos
                         </span>
                         <span className="flex items-center gap-1">
                           <Eye className="h-3 w-3" /> {metrics.visOf(item.id)} acessos
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <ClipboardCheck className="h-3 w-3" /> {metrics.planOf(item.id)} no plano
                         </span>
                       </p>
                     </div>
