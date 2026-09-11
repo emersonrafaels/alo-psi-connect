@@ -537,18 +537,26 @@ const SupportLibraryAdmin = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Edição */}
-      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+      {/* Criação / edição */}
+      <Dialog
+        open={!!editing}
+        onOpenChange={(o) => {
+          if (!o) {
+            setEditing(null);
+            setIsCreating(false);
+          }
+        }}
+      >
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Editar apoio</DialogTitle>
+            <DialogTitle>{isCreating ? "Novo apoio" : "Editar apoio"}</DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-3">
               <div>
                 <Label>Título</Label>
                 <Input
-                  value={editing.title}
+                  value={editing.title || ""}
                   onChange={(e) => setEditing({ ...editing, title: e.target.value })}
                 />
               </div>
@@ -556,9 +564,110 @@ const SupportLibraryAdmin = () => {
                 <Label>Descrição</Label>
                 <Textarea
                   rows={2}
-                  value={editing.description}
+                  value={editing.description || ""}
                   onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Origem</Label>
+                  <Select
+                    value={editing.origin_type || "platform"}
+                    onValueChange={(v) => setEditing({ ...editing, origin_type: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="platform">Plataforma</SelectItem>
+                      <SelectItem value="institution">Modelo institucional</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Categoria</Label>
+                  <Select
+                    value={editing.category || SUPPORT_CATEGORIES[0]}
+                    onValueChange={(v) => setEditing({ ...editing, category: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SUPPORT_CATEGORIES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Formato</Label>
+                  <Select
+                    value={editing.format || SUPPORT_FORMATS[0]}
+                    onValueChange={(v) => setEditing({ ...editing, format: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SUPPORT_FORMATS.map((f) => (
+                        <SelectItem key={f} value={f}>
+                          {f}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Tipo de acesso</Label>
+                  <Select
+                    value={editing.access_type || SUPPORT_ACCESS_TYPES[0]}
+                    onValueChange={(v) => setEditing({ ...editing, access_type: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SUPPORT_ACCESS_TYPES.map((a) => (
+                        <SelectItem key={a} value={a}>
+                          {a}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Ícone</Label>
+                  <Input
+                    value={editing.icon || ""}
+                    placeholder="HeartHandshake"
+                    onChange={(e) => setEditing({ ...editing, icon: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Responsável</Label>
+                  <Input
+                    value={editing.provider || ""}
+                    onChange={(e) => setEditing({ ...editing, provider: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Texto do botão</Label>
+                  <Input
+                    value={editing.cta_label || ""}
+                    onChange={(e) => setEditing({ ...editing, cta_label: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Destino do botão</Label>
+                  <Input
+                    value={editing.cta_route || ""}
+                    placeholder="/profissionais"
+                    onChange={(e) => setEditing({ ...editing, cta_route: e.target.value })}
+                  />
+                </div>
               </div>
               <div>
                 <Label>Detalhes</Label>
@@ -588,34 +697,32 @@ const SupportLibraryAdmin = () => {
                 <Label htmlFor="featured">Mostrar em destaque</Label>
                 <Switch
                   id="featured"
-                  checked={editing.featured}
+                  checked={!!editing.featured}
                   onCheckedChange={(v) => setEditing({ ...editing, featured: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <Label htmlFor="is-active">Ativo</Label>
+                <Switch
+                  id="is-active"
+                  checked={editing.is_active !== false}
+                  onCheckedChange={(v) => setEditing({ ...editing, is_active: v })}
                 />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditing(null)}>
-              Cancelar
-            </Button>
             <Button
+              variant="outline"
               onClick={() => {
-                if (!editing) return;
-                updateCatalog.mutate({
-                  id: editing.id,
-                  values: {
-                    title: editing.title,
-                    description: editing.description,
-                    details: editing.details,
-                    how_to: editing.how_to,
-                    when_to: editing.when_to,
-                    featured: editing.featured,
-                  },
-                });
                 setEditing(null);
+                setIsCreating(false);
               }}
             >
-              Salvar
+              Cancelar
+            </Button>
+            <Button onClick={saveDraft} disabled={!editing?.title?.trim()}>
+              {isCreating ? "Criar apoio" : "Salvar"}
             </Button>
           </DialogFooter>
         </DialogContent>
