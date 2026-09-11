@@ -5489,6 +5489,20 @@ export type Database = {
           profile_id: string
         }[]
       }
+      get_support_favorites_counts: {
+        Args: never
+        Returns: {
+          support_key: string
+          total: number
+        }[]
+      }
+      get_support_visits_counts: {
+        Args: never
+        Returns: {
+          support_key: string
+          total: number
+        }[]
+      }
       get_uncatalogued_institutions: {
         Args: never
         Returns: {

@@ -22,37 +22,152 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Pencil, Sparkles } from "lucide-react";
+import { Search, Pencil, Sparkles, Plus, Star, Heart, Eye, LayoutGrid, X } from "lucide-react";
 import { SupportIcon } from "@/features/apoios/SupportIcon";
-import { SUPPORT_CATEGORIES, type SupportCatalogRow } from "@/features/apoios/types";
+import {
+  SUPPORT_CATEGORIES,
+  SUPPORT_FORMATS,
+  SUPPORT_ACCESS_TYPES,
+  type SupportCatalogRow,
+} from "@/features/apoios/types";
 import { useSupportCatalog } from "@/hooks/useSupportLibrary";
 import {
   useAdminInstitutionPlan,
   useAdminSupportCatalogMutations,
   useSupportInstitutions,
+  useSupportUsageMetrics,
 } from "@/hooks/useAdminSupportPlan";
+
+const ALL = "__all__";
+
+type Draft = Partial<SupportCatalogRow>;
+
+const emptyDraft: Draft = {
+  title: "",
+  description: "",
+  details: "",
+  how_to: "",
+  when_to: "",
+  origin_type: "platform",
+  category: SUPPORT_CATEGORIES[0],
+  format: SUPPORT_FORMATS[0],
+  access_type: SUPPORT_ACCESS_TYPES[0],
+  icon: "HeartHandshake",
+  provider: "",
+  cta_label: "",
+  cta_route: "",
+  featured: false,
+  is_active: true,
+};
+
+const slugify = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 60);
 
 const SupportLibraryAdmin = () => {
   const { data: catalog = [], isLoading } = useSupportCatalog(true);
-  const { updateCatalog } = useAdminSupportCatalogMutations();
+  const { updateCatalog, createCatalog } = useAdminSupportCatalogMutations();
   const { data: institutions = [] } = useSupportInstitutions();
+  const { data: usage } = useSupportUsageMetrics();
 
   const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState<SupportCatalogRow | null>(null);
+  const [editing, setEditing] = useState<Draft | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [institutionId, setInstitutionId] = useState<string>("");
+
+  const [originFilter, setOriginFilter] = useState(ALL);
+  const [categoryFilter, setCategoryFilter] = useState(ALL);
+  const [formatFilter, setFormatFilter] = useState(ALL);
+  const [accessFilter, setAccessFilter] = useState(ALL);
+  const [statusFilter, setStatusFilter] = useState(ALL);
+  const [onlyFeatured, setOnlyFeatured] = useState(false);
+
+  const hasFilters =
+    !!search ||
+    originFilter !== ALL ||
+    categoryFilter !== ALL ||
+    formatFilter !== ALL ||
+    accessFilter !== ALL ||
+    statusFilter !== ALL ||
+    onlyFeatured;
+
+  const clearFilters = () => {
+    setSearch("");
+    setOriginFilter(ALL);
+    setCategoryFilter(ALL);
+    setFormatFilter(ALL);
+    setAccessFilter(ALL);
+    setStatusFilter(ALL);
+    setOnlyFeatured(false);
+  };
 
   const { excludedIds, allowedCategories, setIncluded, setAllowedCategories } =
     useAdminInstitutionPlan(institutionId || undefined);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return catalog;
-    return catalog.filter((c) =>
-      [c.title, c.category, c.format, c.provider].filter(Boolean).some((v) =>
-        String(v).toLowerCase().includes(term)
+    return catalog.filter((c) => {
+      if (
+        term &&
+        ![c.title, c.category, c.format, c.provider]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(term))
       )
-    );
-  }, [catalog, search]);
+        return false;
+      if (originFilter !== ALL && c.origin_type !== originFilter) return false;
+      if (categoryFilter !== ALL && c.category !== categoryFilter) return false;
+      if (formatFilter !== ALL && c.format !== formatFilter) return false;
+      if (accessFilter !== ALL && c.access_type !== accessFilter) return false;
+      if (statusFilter === "active" && !c.is_active) return false;
+      if (statusFilter === "inactive" && c.is_active) return false;
+      if (onlyFeatured && !c.featured) return false;
+      return true;
+    });
+  }, [catalog, search, originFilter, categoryFilter, formatFilter, accessFilter, statusFilter, onlyFeatured]);
+
+  const metrics = useMemo(() => {
+    const favOf = (id: string) => usage?.favorites.get(`catalog:${id}`) || 0;
+    const visOf = (id: string) => usage?.visits.get(`catalog:${id}`) || 0;
+    const topBy = (fn: (id: string) => number) =>
+      [...catalog]
+        .map((c) => ({ title: c.title, total: fn(c.id) }))
+        .filter((r) => r.total > 0)
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+    return {
+      favOf,
+      visOf,
+      total: catalog.length,
+      active: catalog.filter((c) => c.is_active).length,
+      featured: catalog.filter((c) => c.featured).length,
+      totalFavorites: usage?.totalFavorites || 0,
+      totalVisits: usage?.totalVisits || 0,
+      topFavorites: topBy(favOf),
+      topVisits: topBy(visOf),
+    };
+  }, [catalog, usage]);
+
+  const saveDraft = () => {
+    if (!editing?.title?.trim()) return;
+    if (isCreating) {
+      createCatalog.mutate({
+        ...editing,
+        slug: slugify(editing.title || "") || `apoio-${Date.now()}`,
+        sort_order: catalog.length + 1,
+      });
+    } else {
+      const { id, ...values } = editing as SupportCatalogRow;
+      updateCatalog.mutate({ id, values });
+    }
+    setEditing(null);
+    setIsCreating(false);
+  };
+
 
   const platformSupports = useMemo(
     () => catalog.filter((c) => c.origin_type === "platform"),
@@ -65,14 +180,25 @@ const SupportLibraryAdmin = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-primary" /> Biblioteca de Apoios
-        </h1>
-        <p className="text-muted-foreground">
-          Gerencie o catálogo de apoios e defina o que cada instituição tem disponível no plano dela.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" /> Biblioteca de Apoios
+          </h1>
+          <p className="text-muted-foreground">
+            Gerencie o catálogo de apoios e defina o que cada instituição tem disponível no plano dela.
+          </p>
+        </div>
+        <Button
+          onClick={() => {
+            setIsCreating(true);
+            setEditing({ ...emptyDraft });
+          }}
+        >
+          <Plus className="h-4 w-4 mr-2" /> Novo apoio
+        </Button>
       </div>
+
 
       <Tabs defaultValue="catalog">
         <TabsList>
@@ -81,15 +207,167 @@ const SupportLibraryAdmin = () => {
         </TabsList>
 
         <TabsContent value="catalog" className="space-y-4 pt-4">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar no catálogo"
-              className="pl-9"
-            />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                label: "Apoios no catálogo",
+                value: metrics.total,
+                hint: `${metrics.active} ativos`,
+                icon: LayoutGrid,
+              },
+              {
+                label: "Em destaque",
+                value: metrics.featured,
+                hint: "Aparecem no topo para o aluno",
+                icon: Star,
+              },
+              {
+                label: "Favoritos dos alunos",
+                value: metrics.totalFavorites,
+                hint: "Total de vezes marcado como favorito",
+                icon: Heart,
+              },
+              {
+                label: "Apoios usados",
+                value: metrics.totalVisits,
+                hint: "Total de acessos registrados",
+                icon: Eye,
+              },
+            ].map((m) => (
+              <Card key={m.label}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">{m.label}</p>
+                    <m.icon className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-2xl font-bold mt-1">{m.value}</p>
+                  <p className="text-[11px] text-muted-foreground">{m.hint}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {[
+              { title: "Mais favoritados", rows: metrics.topFavorites },
+              { title: "Mais acessados", rows: metrics.topVisits },
+            ].map((block) => (
+              <Card key={block.title}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">{block.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1">
+                  {block.rows.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Ainda sem registros.</p>
+                  ) : (
+                    block.rows.map((r) => (
+                      <div key={r.title} className="flex items-center justify-between text-sm">
+                        <span className="truncate">{r.title}</span>
+                        <span className="font-semibold tabular-nums">{r.total}</span>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar no catálogo"
+                className="pl-9"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={originFilter} onValueChange={setOriginFilter}>
+                <SelectTrigger className="w-[190px]">
+                  <SelectValue placeholder="Origem" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todas as origens</SelectItem>
+                  <SelectItem value="platform">Plataforma</SelectItem>
+                  <SelectItem value="institution">Modelo institucional</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[190px]">
+                  <SelectValue placeholder="Categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todas as categorias</SelectItem>
+                  {SUPPORT_CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={formatFilter} onValueChange={setFormatFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Formato" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todos os formatos</SelectItem>
+                  {SUPPORT_FORMATS.map((f) => (
+                    <SelectItem key={f} value={f}>
+                      {f}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={accessFilter} onValueChange={setAccessFilter}>
+                <SelectTrigger className="w-[190px]">
+                  <SelectValue placeholder="Acesso" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todos os acessos</SelectItem>
+                  {SUPPORT_ACCESS_TYPES.map((a) => (
+                    <SelectItem key={a} value={a}>
+                      {a}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Situação" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Ativos e inativos</SelectItem>
+                  <SelectItem value="active">Somente ativos</SelectItem>
+                  <SelectItem value="inactive">Somente inativos</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant={onlyFeatured ? "default" : "outline"}
+                size="sm"
+                onClick={() => setOnlyFeatured((v) => !v)}
+              >
+                <Star className="h-4 w-4 mr-2" /> Só destaques
+              </Button>
+
+              {hasFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="h-4 w-4 mr-2" /> Limpar filtros
+                </Button>
+              )}
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              {filtered.length} de {catalog.length} apoios
+            </p>
+          </div>
+
 
           {isLoading ? (
             <div className="grid gap-3 md:grid-cols-2">
@@ -119,6 +397,14 @@ const SupportLibraryAdmin = () => {
                       <p className="text-[11px] text-muted-foreground mt-1">
                         {item.category} · {item.format} · {item.access_type}
                       </p>
+                      <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-3">
+                        <span className="flex items-center gap-1">
+                          <Heart className="h-3 w-3" /> {metrics.favOf(item.id)} favoritos
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" /> {metrics.visOf(item.id)} acessos
+                        </span>
+                      </p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <Switch
@@ -128,7 +414,14 @@ const SupportLibraryAdmin = () => {
                         }
                         aria-label="Ativo"
                       />
-                      <Button variant="ghost" size="icon" onClick={() => setEditing(item)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setIsCreating(false);
+                          setEditing(item);
+                        }}
+                      >
                         <Pencil className="h-4 w-4" />
                       </Button>
                     </div>
@@ -244,18 +537,26 @@ const SupportLibraryAdmin = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Edição */}
-      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+      {/* Criação / edição */}
+      <Dialog
+        open={!!editing}
+        onOpenChange={(o) => {
+          if (!o) {
+            setEditing(null);
+            setIsCreating(false);
+          }
+        }}
+      >
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Editar apoio</DialogTitle>
+            <DialogTitle>{isCreating ? "Novo apoio" : "Editar apoio"}</DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-3">
               <div>
                 <Label>Título</Label>
                 <Input
-                  value={editing.title}
+                  value={editing.title || ""}
                   onChange={(e) => setEditing({ ...editing, title: e.target.value })}
                 />
               </div>
@@ -263,9 +564,110 @@ const SupportLibraryAdmin = () => {
                 <Label>Descrição</Label>
                 <Textarea
                   rows={2}
-                  value={editing.description}
+                  value={editing.description || ""}
                   onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Origem</Label>
+                  <Select
+                    value={editing.origin_type || "platform"}
+                    onValueChange={(v) => setEditing({ ...editing, origin_type: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="platform">Plataforma</SelectItem>
+                      <SelectItem value="institution">Modelo institucional</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Categoria</Label>
+                  <Select
+                    value={editing.category || SUPPORT_CATEGORIES[0]}
+                    onValueChange={(v) => setEditing({ ...editing, category: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SUPPORT_CATEGORIES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Formato</Label>
+                  <Select
+                    value={editing.format || SUPPORT_FORMATS[0]}
+                    onValueChange={(v) => setEditing({ ...editing, format: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SUPPORT_FORMATS.map((f) => (
+                        <SelectItem key={f} value={f}>
+                          {f}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Tipo de acesso</Label>
+                  <Select
+                    value={editing.access_type || SUPPORT_ACCESS_TYPES[0]}
+                    onValueChange={(v) => setEditing({ ...editing, access_type: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SUPPORT_ACCESS_TYPES.map((a) => (
+                        <SelectItem key={a} value={a}>
+                          {a}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Ícone</Label>
+                  <Input
+                    value={editing.icon || ""}
+                    placeholder="HeartHandshake"
+                    onChange={(e) => setEditing({ ...editing, icon: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Responsável</Label>
+                  <Input
+                    value={editing.provider || ""}
+                    onChange={(e) => setEditing({ ...editing, provider: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Texto do botão</Label>
+                  <Input
+                    value={editing.cta_label || ""}
+                    onChange={(e) => setEditing({ ...editing, cta_label: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Destino do botão</Label>
+                  <Input
+                    value={editing.cta_route || ""}
+                    placeholder="/profissionais"
+                    onChange={(e) => setEditing({ ...editing, cta_route: e.target.value })}
+                  />
+                </div>
               </div>
               <div>
                 <Label>Detalhes</Label>
@@ -295,34 +697,32 @@ const SupportLibraryAdmin = () => {
                 <Label htmlFor="featured">Mostrar em destaque</Label>
                 <Switch
                   id="featured"
-                  checked={editing.featured}
+                  checked={!!editing.featured}
                   onCheckedChange={(v) => setEditing({ ...editing, featured: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <Label htmlFor="is-active">Ativo</Label>
+                <Switch
+                  id="is-active"
+                  checked={editing.is_active !== false}
+                  onCheckedChange={(v) => setEditing({ ...editing, is_active: v })}
                 />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditing(null)}>
-              Cancelar
-            </Button>
             <Button
+              variant="outline"
               onClick={() => {
-                if (!editing) return;
-                updateCatalog.mutate({
-                  id: editing.id,
-                  values: {
-                    title: editing.title,
-                    description: editing.description,
-                    details: editing.details,
-                    how_to: editing.how_to,
-                    when_to: editing.when_to,
-                    featured: editing.featured,
-                  },
-                });
                 setEditing(null);
+                setIsCreating(false);
               }}
             >
-              Salvar
+              Cancelar
+            </Button>
+            <Button onClick={saveDraft} disabled={!editing?.title?.trim()}>
+              {isCreating ? "Criar apoio" : "Salvar"}
             </Button>
           </DialogFooter>
         </DialogContent>
