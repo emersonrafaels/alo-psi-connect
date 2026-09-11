@@ -41,7 +41,7 @@ import {
   Info,
   ClipboardCheck,
 } from "lucide-react";
-import { SupportIcon } from "@/features/apoios/SupportIcon";
+import { SupportIcon, SUPPORT_ICON_OPTIONS } from "@/features/apoios/SupportIcon";
 import {
   SUPPORT_CATEGORIES,
   SUPPORT_FORMATS,
@@ -700,11 +700,27 @@ const SupportLibraryAdmin = () => {
                 </div>
                 <div>
                   <Label>Ícone</Label>
-                  <Input
-                    value={editing.icon || ""}
-                    placeholder="HeartHandshake"
-                    onChange={(e) => setEditing({ ...editing, icon: e.target.value })}
-                  />
+                  <Select
+                    value={editing.icon || "sparkles"}
+                    onValueChange={(v) => setEditing({ ...editing, icon: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(editing.icon && !SUPPORT_ICON_OPTIONS.includes(editing.icon)
+                        ? [editing.icon, ...SUPPORT_ICON_OPTIONS]
+                        : SUPPORT_ICON_OPTIONS
+                      ).map((iconKey) => (
+                        <SelectItem key={iconKey} value={iconKey}>
+                          <span className="flex items-center gap-2">
+                            <SupportIcon name={iconKey} className="h-4 w-4" />
+                            {iconKey}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label>Responsável</Label>
