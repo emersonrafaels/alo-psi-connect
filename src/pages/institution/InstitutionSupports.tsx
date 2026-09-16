@@ -310,8 +310,8 @@ const InstitutionSupports = () => {
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="network">Da Rede Bem-Estar ({networkSupports.length})</TabsTrigger>
-            <TabsTrigger value="mine">Meus apoios ({supports.length})</TabsTrigger>
-            <TabsTrigger value="models">Modelos prontos ({models.length})</TabsTrigger>
+            <TabsTrigger value="mine">Meus Apoios Institucionais ({supports.length})</TabsTrigger>
+            <TabsTrigger value="models">Modelos prontos de apoios institucionais ({models.length})</TabsTrigger>
           </TabsList>
 
           {/* Apoios da Rede Bem-Estar */}
