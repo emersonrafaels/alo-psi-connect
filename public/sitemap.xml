@@ -55,4 +55,52 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
+  <url>
+    <loc>https://redebemestar.com.br/blog/a-importancia-do-autocuidado-na-pratica-da-medicina</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://redebemestar.com.br/blog/a-forca-da-resiliencia-na-jornada-medica-alinhando-coracao-e-mente</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://redebemestar.com.br/blog/teleconsultas-facilitando-o-acesso-a-tratamentos-de-saude-mental-para-medicos</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://redebemestar.com.br/blog/carta-a-um-jovem-medico</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://redebemestar.com.br/blog/a-importancia-do-autocuidado-na-pratica-da-medicina</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://redebemestar.com.br/blog/saude-mental-dos-medicos-desafio</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://redebemestar.com.br/blog/como-ajudar-alguem-que-amamos-a-buscar-ajuda-psiquiatrica-um-guia-para-medicos-e-estudantes-de-medicina</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://redebemestar.com.br/blog/por-que-muitos-medicos-sentem-se-isolados</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>
