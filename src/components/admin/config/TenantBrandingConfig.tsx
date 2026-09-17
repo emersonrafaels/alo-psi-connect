@@ -172,15 +172,15 @@ export const TenantBrandingConfig = () => {
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Logo para Fundo Claro (Light Mode)</CardTitle>
+              <CardTitle>Logo para fundo claro</CardTitle>
               <CardDescription>
-                Usado no header, footer e no switcher de outros tenants quando em light mode. 
+                Usado quando o cabeçalho ou áreas da marca estiverem com fundo claro. 
                 Recomendado: logo com texto escuro/colorido.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="logo_url">URL da Logo (Light Mode)</Label>
+                <Label htmlFor="logo_url">URL da logo para fundo claro</Label>
                 <Input
                   id="logo_url"
                   value={branding.logo_url}
@@ -192,7 +192,7 @@ export const TenantBrandingConfig = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Preview no Header */}
                   <div className="border rounded-lg p-4 bg-white">
-                    <p className="text-sm text-gray-600 mb-2">No Header (fundo claro):</p>
+                    <p className="text-sm text-gray-600 mb-2">No cabeçalho com fundo claro:</p>
                     <img 
                       src={branding.logo_url} 
                       alt="Logo light preview" 
@@ -223,15 +223,15 @@ export const TenantBrandingConfig = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Logo para Fundo Escuro (Dark Mode)</CardTitle>
+              <CardTitle>Logo para fundo escuro</CardTitle>
               <CardDescription>
-                Usado no header, footer e no switcher de outros tenants quando em dark mode. 
+                Usado quando o cabeçalho ou áreas da marca estiverem com fundo escuro. 
                 Recomendado: logo com texto branco/claro.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="logo_url_dark">URL da Logo (Dark Mode)</Label>
+                <Label htmlFor="logo_url_dark">URL da logo para fundo escuro</Label>
                 <Input
                   id="logo_url_dark"
                   value={branding.logo_url_dark}
@@ -285,7 +285,7 @@ export const TenantBrandingConfig = () => {
                           
                           toast({
                             title: 'Upload concluído!',
-                            description: 'Logo dark mode enviado com sucesso',
+                            description: 'Logo para fundo escuro enviado com sucesso',
                           });
                         };
                       } catch (error) {
@@ -314,7 +314,7 @@ export const TenantBrandingConfig = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Preview no Header */}
                   <div className="border rounded-lg p-4 bg-gray-900">
-                    <p className="text-sm text-gray-400 mb-2">No Header (fundo escuro):</p>
+                    <p className="text-sm text-gray-400 mb-2">No cabeçalho com fundo escuro:</p>
                     <img 
                       src={branding.logo_url_dark} 
                       alt="Logo dark preview" 

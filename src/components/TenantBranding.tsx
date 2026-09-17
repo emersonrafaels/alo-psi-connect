@@ -2,14 +2,13 @@ import { useTenant } from '@/hooks/useTenant';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link, useLocation } from 'react-router-dom';
 import { buildTenantPath, getTenantSlugFromPath } from '@/utils/tenantHelpers';
-import { useState } from 'react';
-import { useTheme } from 'next-themes';
+import { useEffect, useMemo, useState } from 'react';
+import { getLuminance, hexToHSL, isHexColor } from '@/utils/colorHelpers';
 
 export const TenantBranding = () => {
   const { tenant, loading } = useTenant();
   const location = useLocation();
   const [imageError, setImageError] = useState(false);
-  const { resolvedTheme } = useTheme();
 
   // Verificar se o tenant no estado é consistente com a URL
   const urlTenantSlug = getTenantSlugFromPath(location.pathname);
@@ -35,9 +34,23 @@ export const TenantBranding = () => {
     return `hsl(${color})`;
   };
 
-  // Use dark logo when in dark mode and it's available
-  const isDarkMode = resolvedTheme === 'dark';
-  const logoUrl = isDarkMode && tenant.logo_url_dark ? tenant.logo_url_dark : tenant.logo_url;
+  const headerBackgroundColor = tenant.header_color || tenant.primary_color;
+  const headerBackgroundHsl = isHexColor(headerBackgroundColor)
+    ? hexToHSL(headerBackgroundColor)
+    : headerBackgroundColor;
+  const isHeaderBackgroundDark = getLuminance(headerBackgroundHsl) <= 0.5;
+
+  const logoUrl = useMemo(() => {
+    if (isHeaderBackgroundDark) {
+      return tenant.logo_url_dark || tenant.logo_url;
+    }
+
+    return tenant.logo_url || tenant.logo_url_dark;
+  }, [isHeaderBackgroundDark, tenant.logo_url, tenant.logo_url_dark]);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [tenant.id, logoUrl]);
 
   return (
     <Link to={buildTenantPath(tenant.slug, '/')} className="flex items-center space-x-2 max-w-[200px]">
@@ -63,7 +76,7 @@ export const TenantBranding = () => {
               backgroundColor: formatColor(tenant.primary_color)
             }}
           >
-            <span className="text-white font-bold text-sm relative z-10">
+            <span className="text-primary-foreground font-bold text-sm relative z-10">
               {tenant.slug === 'alopsi' ? 'AP' : 'MC'}
             </span>
           </div>
