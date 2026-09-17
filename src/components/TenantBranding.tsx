@@ -56,14 +56,14 @@ export const TenantBranding = () => {
     setLogoCandidateIndex(0);
   }, [tenant?.id, logoCandidates]);
 
-  // Mostrar skeleton se loading OU se estado inconsistente com URL
-  if (loading || (tenant && !isConsistent)) {
+  // Mostrar skeleton apenas quando houver tenant de outra rota; durante carregamento inicial, usar logo padrão.
+  if (tenant && !isConsistent) {
     return <Skeleton className="h-10 w-40" />;
   }
 
   if (!tenant) {
     return (
-      <Link to="/" className="flex items-center space-x-2">
+      <Link to={buildTenantPath(currentSlug, '/')} className="flex items-center space-x-2 max-w-[200px]">
         {logoUrl && !imageError ? (
           <img
             src={logoUrl}
