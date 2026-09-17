@@ -10,6 +10,7 @@ import { buildTenantPath } from "@/utils/tenantHelpers";
 import { getTodayLocalDateString } from "@/lib/utils";
 
 import { Plus, CalendarDays, Heart } from "lucide-react";
+import DataLoadError from "@/components/system/DataLoadError";
 
 const DiarioEmocional = () => {
   const navigate = useNavigate();
@@ -20,6 +21,8 @@ const DiarioEmocional = () => {
   const {
     entries,
     loading: entriesLoading,
+    isError: entriesError,
+    refetch: refetchEntries,
   } = useMoodEntries();
 
   const {
@@ -41,6 +44,18 @@ const DiarioEmocional = () => {
     return (
       <div className="p-8 text-sm text-slate-500">
         Carregando diário emocional...
+      </div>
+    );
+  }
+
+  if (entriesError) {
+    return (
+      <div className="mx-auto max-w-2xl px-8 py-16">
+        <DataLoadError
+          title="Não conseguimos carregar seu diário agora"
+          description="O serviço de dados está instável neste momento. Seus registros estão salvos; tente novamente em alguns instantes."
+          onRetry={() => refetchEntries()}
+        />
       </div>
     );
   }

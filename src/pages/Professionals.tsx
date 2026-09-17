@@ -55,6 +55,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 import { AIAssistantModal } from "@/components/AIAssistantModal"
 import { toast } from "@/hooks/use-toast"
+import DataLoadError from "@/components/system/DataLoadError"
+import { withTimeout, DEFAULT_QUERY_TIMEOUT_MS } from "@/lib/withTimeout"
 
 interface ProfessionalSession {
   day: string
@@ -86,7 +88,7 @@ interface Professional {
 
 const Professionals = () => {
   const navigate = useNavigate()
-  const { tenant } = useTenant()
+  const { tenant, loading: tenantLoading, error: tenantError } = useTenant()
   const tenantSlug = tenant?.slug || 'alopsi'
   const showPrices = useShowPrices()
   const [professionals, setProfessionals] = useState<Professional[]>([])
@@ -174,8 +176,12 @@ const Professionals = () => {
   useEffect(() => {
     if (tenant) {
       fetchProfessionals()
+    } else if (!tenantLoading) {
+      // Configuração da instituição indisponível: mostrar erro em vez de carregar sem fim
+      setLoading(false)
+      setError('Erro ao carregar profissionais')
     }
-  }, [tenant])
+  }, [tenant, tenantLoading, tenantError])
 
   useEffect(() => {
     filterProfessionals()
@@ -378,48 +384,64 @@ const Professionals = () => {
   }
 
   const fetchProfessionals = async () => {
-    if (!tenant) return;
-    
+    if (!tenant) {
+      // Sem configuração da instituição não há o que buscar: evita carregamento eterno
+      setLoading(false)
+      setError('Erro ao carregar profissionais')
+      return;
+    }
+
     try {
+      setError(null)
       setLoading(true)
       
-      // Fetch professionals with tenant filter
-      const { data: professionalsData, error: profError } = await supabase
-        .from('profissionais')
-        .select(`
-          id,
-          display_name,
-          resumo_profissional,
-          foto_perfil_url,
-          profissao,
-          crp_crm,
-          preco_consulta,
-          tempo_consulta,
-          user_email,
-          linkedin,
-          servicos_raw,
-          servicos_normalizados,
-          em_destaque,
-          user_id,
-          profile_id,
-          professional_tenants!inner(tenant_id),
-          profiles!profile_id (
-            genero,
-            raca,
-            sexualidade
-          )
-        `)
-        .eq('ativo', true)
-        .eq('professional_tenants.tenant_id', tenant.id)
-        .order('display_name')
+      // Buscar profissionais e sessões em paralelo, com tempo limite
+      const [
+        { data: professionalsData, error: profError },
+        { data: sessionsData, error: sessError },
+      ] = await Promise.all([
+        withTimeout(
+          supabase
+            .from('profissionais')
+            .select(`
+              id,
+              display_name,
+              resumo_profissional,
+              foto_perfil_url,
+              profissao,
+              crp_crm,
+              preco_consulta,
+              tempo_consulta,
+              user_email,
+              linkedin,
+              servicos_raw,
+              servicos_normalizados,
+              em_destaque,
+              user_id,
+              profile_id,
+              professional_tenants!inner(tenant_id),
+              profiles!profile_id (
+                genero,
+                raca,
+                sexualidade
+              )
+            `)
+            .eq('ativo', true)
+            .eq('professional_tenants.tenant_id', tenant.id)
+            .order('display_name'),
+          DEFAULT_QUERY_TIMEOUT_MS,
+          'a lista de profissionais'
+        ),
+        withTimeout(
+          supabase
+            .from('profissionais_sessoes')
+            .select('user_id, day, start_time, end_time'),
+          DEFAULT_QUERY_TIMEOUT_MS,
+          'os horários dos profissionais'
+        ),
+      ])
 
       if (profError) throw profError
-
-      // Fetch sessions for all professionals
-      const { data: sessionsData, error: sessError } = await supabase
-        .from('profissionais_sessoes')
-        .select('user_id, day, start_time, end_time')
-
       if (sessError) throw sessError
 
       // Combine data
@@ -793,14 +815,13 @@ const Professionals = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-destructive mb-4">Erro</h1>
-            <p className="text-muted-foreground">{error}</p>
-            <Button onClick={fetchProfessionals} className="mt-4">
-              Tentar novamente
-            </Button>
-          </div>
+        <main className="container mx-auto px-4 py-12">
+          <DataLoadError
+            title="Não conseguimos carregar os profissionais agora"
+            description="O serviço de dados está instável neste momento. Tente novamente em alguns instantes."
+            onRetry={fetchProfessionals}
+            className="max-w-xl mx-auto"
+          />
         </main>
         <Footer />
       </div>
