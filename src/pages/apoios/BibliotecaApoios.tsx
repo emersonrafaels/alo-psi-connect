@@ -162,6 +162,13 @@ const BibliotecaApoios = () => {
       <Header />
 
       <main className="container mx-auto px-4 py-8 md:py-12 space-y-8">
+        {fromPortal && (
+          <Button variant="outline" asChild className="mb-2">
+            <Link to={`${basePath}/portal-institucional/apoios`}>
+              <ArrowLeft className="h-4 w-4 mr-2" /> Voltar ao Portal Institucional
+            </Link>
+          </Button>
+        )}
         {/* Hero */}
         <section className="rounded-3xl border bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-6 md:p-10">
           <Badge variant="secondary" className="mb-4">
