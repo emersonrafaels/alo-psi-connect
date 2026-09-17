@@ -77,6 +77,7 @@ const QUIZ = [
 const BibliotecaApoios = () => {
   const location = useLocation();
   const basePath = getBasePath(getTenantSlugFromPath(location.pathname));
+  const fromPortal = (location.state as { from?: string } | null)?.from === 'institution-portal';
   const { items, institutionName, hasInstitution, isLoading } = useStudentSupportLibrary();
   const { favorites, planItems, history, isAuthenticated, toggle, registerVisit } =
     useSupportUserLists();
