@@ -2,28 +2,84 @@ import { useTenant } from '@/hooks/useTenant';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link, useLocation } from 'react-router-dom';
 import { buildTenantPath, getTenantSlugFromPath } from '@/utils/tenantHelpers';
-import { useState } from 'react';
-import { useTheme } from 'next-themes';
+import { useEffect, useMemo, useState } from 'react';
+import { getLuminance, hexToHSL, isHexColor } from '@/utils/colorHelpers';
+
+const REDE_BEM_ESTAR_LOGO_LIGHT_BG = 'https://alopsi-website.s3.us-east-1.amazonaws.com/rede_bem_estar/imagens/logos/logo_redebemestar_1.png';
+const REDE_BEM_ESTAR_LOGO_DARK_BG = 'https://alopsi-website.s3.us-east-1.amazonaws.com/rede_bem_estar/imagens/logos/logo_redebemestar_2.png';
+const MEDCOS_LOGO = 'https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/logo/logo_medcos.png';
+
+const getDefaultLogoUrl = (slug: string, isDarkBackground: boolean) => {
+  if (slug === 'medcos') {
+    return MEDCOS_LOGO;
+  }
+
+  return isDarkBackground ? REDE_BEM_ESTAR_LOGO_DARK_BG : REDE_BEM_ESTAR_LOGO_LIGHT_BG;
+};
+
+const getDefaultTenantName = (slug: string) => (slug === 'medcos' ? 'MEDCOS' : 'Rede Bem-Estar');
 
 export const TenantBranding = () => {
   const { tenant, loading } = useTenant();
   const location = useLocation();
   const [imageError, setImageError] = useState(false);
-  const { resolvedTheme } = useTheme();
 
   // Verificar se o tenant no estado é consistente com a URL
   const urlTenantSlug = getTenantSlugFromPath(location.pathname);
   const isConsistent = tenant && tenant.slug === urlTenantSlug;
 
-  // Mostrar skeleton se loading OU se estado inconsistente com URL
-  if (loading || !isConsistent) {
+  const currentSlug = tenant?.slug || urlTenantSlug;
+  const currentName = tenant?.name || getDefaultTenantName(currentSlug);
+  const headerBackgroundColor = tenant?.header_color || tenant?.primary_color || '280 63% 34%';
+  const headerBackgroundHsl = isHexColor(headerBackgroundColor)
+    ? hexToHSL(headerBackgroundColor)
+    : headerBackgroundColor;
+  const isHeaderBackgroundDark = getLuminance(headerBackgroundHsl) <= 0.5;
+
+  const logoCandidates = useMemo(() => {
+    const configuredLogos = tenant
+      ? isHeaderBackgroundDark
+        ? [tenant.logo_url_dark, tenant.logo_url]
+        : [tenant.logo_url, tenant.logo_url_dark]
+      : [];
+
+    return [...configuredLogos, getDefaultLogoUrl(currentSlug, isHeaderBackgroundDark)]
+      .filter((url): url is string => Boolean(url))
+      .filter((url, index, urls) => urls.indexOf(url) === index);
+  }, [currentSlug, isHeaderBackgroundDark, tenant]);
+
+  const [logoCandidateIndex, setLogoCandidateIndex] = useState(0);
+  const logoUrl = logoCandidates[logoCandidateIndex];
+
+  useEffect(() => {
+    setImageError(false);
+    setLogoCandidateIndex(0);
+  }, [tenant?.id, logoCandidates]);
+
+  // Mostrar skeleton apenas quando houver tenant de outra rota; durante carregamento inicial, usar logo padrão.
+  if (tenant && !isConsistent) {
     return <Skeleton className="h-10 w-40" />;
   }
 
   if (!tenant) {
     return (
-      <Link to="/" className="flex items-center space-x-2">
-        <span className="text-xl font-bold">Rede Bem-Estar</span>
+      <Link to={buildTenantPath(currentSlug, '/')} className="flex items-center space-x-2 max-w-[200px]">
+        {logoUrl && !imageError ? (
+          <img
+            src={logoUrl}
+            alt={currentName}
+            className="h-10 w-auto object-contain max-w-full"
+            onError={() => {
+              if (logoCandidateIndex + 1 < logoCandidates.length) {
+                setLogoCandidateIndex(prev => prev + 1);
+                return;
+              }
+              setImageError(true);
+            }}
+          />
+        ) : (
+          <span className="text-xl font-bold">{currentName}</span>
+        )}
       </Link>
     );
   }
@@ -34,10 +90,6 @@ export const TenantBranding = () => {
     }
     return `hsl(${color})`;
   };
-
-  // Use dark logo when in dark mode and it's available
-  const isDarkMode = resolvedTheme === 'dark';
-  const logoUrl = isDarkMode && tenant.logo_url_dark ? tenant.logo_url_dark : tenant.logo_url;
 
   return (
     <Link to={buildTenantPath(tenant.slug, '/')} className="flex items-center space-x-2 max-w-[200px]">
@@ -50,8 +102,13 @@ export const TenantBranding = () => {
             width: 'auto'
           }}
           className="object-contain max-w-full"
-          onError={(e) => {
-            console.error('[TenantBranding] Failed to load logo:', logoUrl, e);
+          onError={() => {
+            if (logoCandidateIndex + 1 < logoCandidates.length) {
+              setLogoCandidateIndex(prev => prev + 1);
+              return;
+            }
+
+            console.error('[TenantBranding] Failed to load logo:', logoUrl);
             setImageError(true);
           }}
         />
@@ -63,7 +120,7 @@ export const TenantBranding = () => {
               backgroundColor: formatColor(tenant.primary_color)
             }}
           >
-            <span className="text-white font-bold text-sm relative z-10">
+            <span className="text-primary-foreground font-bold text-sm relative z-10">
               {tenant.slug === 'alopsi' ? 'AP' : 'MC'}
             </span>
           </div>
