@@ -94,8 +94,10 @@ All colors MUST be HSL.
 
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Header text colors - theme aware */
-    --header-text: var(--header-text-light, 0 0% 100%);
+    /* Header colors - safe before tenant branding finishes loading */
+    --header-bg: var(--primary);
+    --header-fg-auto: var(--primary-foreground);
+    --header-fg: var(--header-text-light, var(--header-fg-auto));
 
     /* Footer colors - theme aware */
     --footer-bg: var(--footer-bg-light, 280 63% 34%);
@@ -176,7 +178,7 @@ All colors MUST be HSL.
     --hover-text: 210 40% 98%; /* Light text for hover */
 
     /* Header text colors - dark mode */
-    --header-text: var(--header-text-dark, 0 0% 100%);
+    --header-fg: var(--header-text-dark, var(--header-fg-auto));
 
     /* Footer colors - dark mode */
     --footer-bg: var(--footer-bg-dark, 280 63% 16%);
