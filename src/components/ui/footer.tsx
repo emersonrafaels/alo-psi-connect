@@ -5,7 +5,22 @@ import { useTenant } from "@/hooks/useTenant";
 import { buildTenantPath } from "@/utils/tenantHelpers";
 import { useModuleEnabled } from "@/hooks/useModuleEnabled";
 import { useTheme } from "next-themes";
+import { useEffect, useMemo, useState } from "react";
+import { getLuminance, hexToHSL, isHexColor } from "@/utils/colorHelpers";
 import { MapPin, Phone, Instagram, Facebook, Twitter, Linkedin, Users, FileText, Heart, MessageCircleIcon, Mail } from "lucide-react";
+
+const REDE_BEM_ESTAR_LOGO_LIGHT_BG = 'https://alopsi-website.s3.us-east-1.amazonaws.com/rede_bem_estar/imagens/logos/logo_redebemestar_1.png';
+const REDE_BEM_ESTAR_LOGO_DARK_BG = 'https://alopsi-website.s3.us-east-1.amazonaws.com/rede_bem_estar/imagens/logos/logo_redebemestar_2.png';
+const MEDCOS_LOGO = 'https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/logo/logo_medcos.png';
+
+const getDefaultFooterLogoUrl = (slug: string, isDarkBackground: boolean) => {
+  if (slug === 'medcos') {
+    return MEDCOS_LOGO;
+  }
+
+  return isDarkBackground ? REDE_BEM_ESTAR_LOGO_DARK_BG : REDE_BEM_ESTAR_LOGO_LIGHT_BG;
+};
+
 const Footer = () => {
   const {
     isAdmin
@@ -15,12 +30,32 @@ const Footer = () => {
   } = useTenant();
   const { resolvedTheme } = useTheme();
   const tenantSlug = tenant?.slug || 'alopsi';
-  
-  // Use footer-specific logo with fallback to main logo
+  const [footerLogoIndex, setFooterLogoIndex] = useState(0);
+  const [footerLogoFailed, setFooterLogoFailed] = useState(false);
+
   const isDarkMode = resolvedTheme === 'dark';
-  const footerLogoUrl = isDarkMode 
-    ? (tenant?.footer_logo_url_dark || tenant?.logo_url_dark)
-    : (tenant?.footer_logo_url || tenant?.logo_url);
+  const footerBgColor = isDarkMode
+    ? tenant?.footer_bg_color_dark || '280 63% 16%'
+    : tenant?.footer_bg_color_light || '280 63% 34%';
+  const footerBgHsl = isHexColor(footerBgColor) ? hexToHSL(footerBgColor) : footerBgColor;
+  const isFooterBackgroundDark = getLuminance(footerBgHsl) <= 0.5;
+
+  const footerLogoCandidates = useMemo(() => {
+    const configuredLogos = isFooterBackgroundDark
+      ? [tenant?.footer_logo_url_dark, tenant?.footer_logo_url, tenant?.logo_url_dark, tenant?.logo_url]
+      : [tenant?.footer_logo_url, tenant?.footer_logo_url_dark, tenant?.logo_url, tenant?.logo_url_dark];
+
+    return [...configuredLogos, getDefaultFooterLogoUrl(tenantSlug, isFooterBackgroundDark)]
+      .filter((url): url is string => Boolean(url))
+      .filter((url, index, urls) => urls.indexOf(url) === index);
+  }, [isFooterBackgroundDark, tenant, tenantSlug]);
+
+  const footerLogoUrl = footerLogoCandidates[footerLogoIndex];
+
+  useEffect(() => {
+    setFooterLogoIndex(0);
+    setFooterLogoFailed(false);
+  }, [tenant?.id, footerLogoCandidates]);
 
   // Helper function to build footer links with tenant context
   const buildFooterLink = (customUrl: string | null | undefined, defaultPath: string) => {
@@ -169,12 +204,24 @@ const Footer = () => {
         {/* Bottom */}
         <div className="border-t border-primary-foreground/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm opacity-60">Copyright © {tenant?.name || 'Rede Bem-Estar'} | Todos os direitos reservados</p>
-          {footerLogoUrl && (
-            <img 
-              src={footerLogoUrl} 
-              alt={tenant?.name || 'Logo'} 
-              className="h-12 w-auto mt-4 md:mt-0 opacity-80" 
+          {footerLogoUrl && !footerLogoFailed ? (
+            <img
+              src={footerLogoUrl}
+              alt={tenant?.name || 'Rede Bem-Estar'}
+              className="h-12 w-auto mt-4 md:mt-0 opacity-80"
+              onError={() => {
+                if (footerLogoIndex + 1 < footerLogoCandidates.length) {
+                  setFooterLogoIndex(prev => prev + 1);
+                  return;
+                }
+
+                setFooterLogoFailed(true);
+              }}
             />
+          ) : (
+            <span className="text-lg font-semibold mt-4 md:mt-0 opacity-80">
+              {tenant?.name || 'Rede Bem-Estar'}
+            </span>
           )}
         </div>
       </div>
