@@ -5,6 +5,20 @@ import { buildTenantPath, getTenantSlugFromPath } from '@/utils/tenantHelpers';
 import { useEffect, useMemo, useState } from 'react';
 import { getLuminance, hexToHSL, isHexColor } from '@/utils/colorHelpers';
 
+const REDE_BEM_ESTAR_LOGO_LIGHT_BG = 'https://alopsi-website.s3.us-east-1.amazonaws.com/rede_bem_estar/imagens/logos/logo_redebemestar_1.png';
+const REDE_BEM_ESTAR_LOGO_DARK_BG = 'https://alopsi-website.s3.us-east-1.amazonaws.com/rede_bem_estar/imagens/logos/logo_redebemestar_2.png';
+const MEDCOS_LOGO = 'https://alopsi-website.s3.us-east-1.amazonaws.com/imagens/logo/logo_medcos.png';
+
+const getDefaultLogoUrl = (slug: string, isDarkBackground: boolean) => {
+  if (slug === 'medcos') {
+    return MEDCOS_LOGO;
+  }
+
+  return isDarkBackground ? REDE_BEM_ESTAR_LOGO_DARK_BG : REDE_BEM_ESTAR_LOGO_LIGHT_BG;
+};
+
+const getDefaultTenantName = (slug: string) => (slug === 'medcos' ? 'MEDCOS' : 'Rede Bem-Estar');
+
 export const TenantBranding = () => {
   const { tenant, loading } = useTenant();
   const location = useLocation();
@@ -14,35 +28,58 @@ export const TenantBranding = () => {
   const urlTenantSlug = getTenantSlugFromPath(location.pathname);
   const isConsistent = tenant && tenant.slug === urlTenantSlug;
 
-  const headerBackgroundColor = tenant?.header_color || tenant?.primary_color || '0 0% 100%';
+  const currentSlug = tenant?.slug || urlTenantSlug;
+  const currentName = tenant?.name || getDefaultTenantName(currentSlug);
+  const headerBackgroundColor = tenant?.header_color || tenant?.primary_color || '280 63% 34%';
   const headerBackgroundHsl = isHexColor(headerBackgroundColor)
     ? hexToHSL(headerBackgroundColor)
     : headerBackgroundColor;
   const isHeaderBackgroundDark = getLuminance(headerBackgroundHsl) <= 0.5;
 
-  const logoUrl = useMemo(() => {
-    if (!tenant) return null;
+  const logoCandidates = useMemo(() => {
+    const configuredLogos = tenant
+      ? isHeaderBackgroundDark
+        ? [tenant.logo_url_dark, tenant.logo_url]
+        : [tenant.logo_url, tenant.logo_url_dark]
+      : [];
 
-    if (isHeaderBackgroundDark) {
-      return tenant.logo_url_dark || tenant.logo_url;
-    }
+    return [...configuredLogos, getDefaultLogoUrl(currentSlug, isHeaderBackgroundDark)]
+      .filter((url): url is string => Boolean(url))
+      .filter((url, index, urls) => urls.indexOf(url) === index);
+  }, [currentSlug, isHeaderBackgroundDark, tenant]);
 
-    return tenant.logo_url || tenant.logo_url_dark;
-  }, [isHeaderBackgroundDark, tenant]);
+  const [logoCandidateIndex, setLogoCandidateIndex] = useState(0);
+  const logoUrl = logoCandidates[logoCandidateIndex];
 
   useEffect(() => {
     setImageError(false);
-  }, [tenant?.id, logoUrl]);
+    setLogoCandidateIndex(0);
+  }, [tenant?.id, logoCandidates]);
 
   // Mostrar skeleton se loading OU se estado inconsistente com URL
-  if (loading || !isConsistent) {
+  if (loading || (tenant && !isConsistent)) {
     return <Skeleton className="h-10 w-40" />;
   }
 
   if (!tenant) {
     return (
       <Link to="/" className="flex items-center space-x-2">
-        <span className="text-xl font-bold">Rede Bem-Estar</span>
+        {logoUrl && !imageError ? (
+          <img
+            src={logoUrl}
+            alt={currentName}
+            className="h-10 w-auto object-contain max-w-full"
+            onError={() => {
+              if (logoCandidateIndex + 1 < logoCandidates.length) {
+                setLogoCandidateIndex(prev => prev + 1);
+                return;
+              }
+              setImageError(true);
+            }}
+          />
+        ) : (
+          <span className="text-xl font-bold">{currentName}</span>
+        )}
       </Link>
     );
   }
@@ -65,8 +102,13 @@ export const TenantBranding = () => {
             width: 'auto'
           }}
           className="object-contain max-w-full"
-          onError={(e) => {
-            console.error('[TenantBranding] Failed to load logo:', logoUrl, e);
+          onError={() => {
+            if (logoCandidateIndex + 1 < logoCandidates.length) {
+              setLogoCandidateIndex(prev => prev + 1);
+              return;
+            }
+
+            console.error('[TenantBranding] Failed to load logo:', logoUrl);
             setImageError(true);
           }}
         />
