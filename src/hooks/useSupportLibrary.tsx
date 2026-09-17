@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { withTimeout, DEFAULT_QUERY_TIMEOUT_MS } from "@/lib/withTimeout";
 import { useAuth } from "./useAuth";
 import { usePatientInstitutions } from "./usePatientInstitutions";
 import {
@@ -15,13 +16,15 @@ import {
 export const useSupportCatalog = (includeInactive = false) => {
   return useQuery({
     queryKey: ["support-catalog", includeInactive],
+    // Catálogo muda pouco: mantém em cache e evita recarregar a cada visita
+    staleTime: 1000 * 60 * 15,
     queryFn: async () => {
       let query = supabase
         .from("support_catalog")
         .select("*")
         .order("sort_order", { ascending: true });
       if (!includeInactive) query = query.eq("is_active", true);
-      const { data, error } = await query;
+      const { data, error } = await withTimeout(query, DEFAULT_QUERY_TIMEOUT_MS, "os apoios");
       if (error) throw error;
       return (data || []) as SupportCatalogRow[];
     },
@@ -90,6 +93,7 @@ export const useInstitutionSupportPlan = (institutionId?: string) => {
     allowedCategories: (settings.data?.allowed_categories as string[] | undefined) || [],
     settings: settings.data,
     isLoading: plan.isLoading || settings.isLoading,
+    isError: plan.isError || settings.isError,
   };
 };
 
@@ -99,12 +103,13 @@ export const useStudentSupportLibrary = () => {
   const institution = linkedInstitutions?.[0];
   const institutionId = institution?.institution_id;
 
-  const { data: catalog = [], isLoading: loadingCatalog } = useSupportCatalog();
-  const { data: instSupports = [], isLoading: loadingInst } = useInstitutionSupports(
-    institutionId,
-    true
-  );
-  const { excludedCatalogIds, isLoading: loadingPlan } = useInstitutionSupportPlan(institutionId);
+  const catalogQuery = useSupportCatalog();
+  const instQuery = useInstitutionSupports(institutionId, true);
+  const plan = useInstitutionSupportPlan(institutionId);
+
+  const catalog = catalogQuery.data || [];
+  const instSupports = instQuery.data || [];
+  const { excludedCatalogIds } = plan;
 
   const items = useMemo<SupportItem[]>(() => {
     const platform = catalog
@@ -120,7 +125,13 @@ export const useStudentSupportLibrary = () => {
     items,
     institutionName: institution?.institution_name as string | undefined,
     hasInstitution: !!institutionId,
-    isLoading: loadingInstitutions || loadingCatalog || loadingInst || loadingPlan,
+    isLoading:
+      loadingInstitutions || catalogQuery.isLoading || instQuery.isLoading || plan.isLoading,
+    isError: catalogQuery.isError || instQuery.isError || plan.isError,
+    refetch: () => {
+      catalogQuery.refetch();
+      instQuery.refetch();
+    },
   };
 };
 

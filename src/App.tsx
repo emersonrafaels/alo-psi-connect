@@ -135,12 +135,17 @@ import HiddenMoodDiaryPrototype, {
 } from "@/pages/prototypes/HiddenMoodDiaryPrototype";
 
 import "./App.css";
+import ServiceStatusBanner from "@/components/system/ServiceStatusBanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30,
       refetchOnWindowFocus: false,
+      // Falhar rápido em vez de girar indefinidamente quando o serviço de dados cai
+      retry: 1,
+      retryDelay: (attempt) => Math.min(1500 * 2 ** attempt, 5000),
     },
   },
 });
@@ -499,6 +504,7 @@ const App: React.FC = () => {
                 <TenantGuard>
                   <DomainRedirect />
                 </TenantGuard>
+                <ServiceStatusBanner />
                 <FirstLoginWelcome />
                 <AppWithShortcuts />
                 <WhatsAppFloat />

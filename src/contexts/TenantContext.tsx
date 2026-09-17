@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tenant, TenantContextType, DEFAULT_TENANT_SLUG } from '@/types/tenant';
 import { getTenantSlugFromPath, clearTenantCache } from '@/utils/tenantHelpers';
 import { hexToHSL, isHexColor, getContrastingTextColor } from '@/utils/colorHelpers';
+import { withTimeout } from '@/lib/withTimeout';
 
 // Versão do cache local de tenants. Incremente ao alterar configurações
 // que precisam chegar imediatamente a todos os visitantes.
@@ -120,12 +121,16 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setLoading(true);
       }
 
-      const { data, error: fetchError } = await supabase
-        .from('tenants')
-        .select('*')
-        .eq('slug', slug)
-        .eq('is_active', true)
-        .single();
+      const { data, error: fetchError } = await withTimeout(
+        supabase
+          .from('tenants')
+          .select('*')
+          .eq('slug', slug)
+          .eq('is_active', true)
+          .single(),
+        10000,
+        'a configuração da instituição'
+      );
 
       if (fetchError) throw fetchError;
       if (!data) throw new Error(`Tenant '${slug}' não encontrado`);

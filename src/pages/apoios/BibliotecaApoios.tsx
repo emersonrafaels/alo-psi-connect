@@ -39,6 +39,7 @@ import {
   type SupportItem,
 } from "@/features/apoios/types";
 import { useStudentSupportLibrary, useSupportUserLists } from "@/hooks/useSupportLibrary";
+import DataLoadError from "@/components/system/DataLoadError";
 import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 
 type ViewTab = "all" | "platform" | "institution" | "favorites" | "plan" | "history";
@@ -78,7 +79,8 @@ const BibliotecaApoios = () => {
   const location = useLocation();
   const basePath = getBasePath(getTenantSlugFromPath(location.pathname));
   const fromPortal = (location.state as { from?: string } | null)?.from === 'institution-portal';
-  const { items, institutionName, hasInstitution, isLoading } = useStudentSupportLibrary();
+  const { items, institutionName, hasInstitution, isLoading, isError, refetch } =
+    useStudentSupportLibrary();
   const { favorites, planItems, history, isAuthenticated, toggle, registerVisit } =
     useSupportUserLists();
 
@@ -323,7 +325,11 @@ const BibliotecaApoios = () => {
         {/* Resultados */}
         <section>
           <p className="text-sm text-muted-foreground mb-4">
-            {isLoading ? "Carregando apoios..." : `${filtered.length} apoios encontrados`}
+            {isLoading
+              ? "Carregando apoios..."
+              : isError
+                ? "Não foi possível carregar os apoios."
+                : `${filtered.length} apoios encontrados`}
           </p>
 
           {isLoading ? (
@@ -332,6 +338,12 @@ const BibliotecaApoios = () => {
                 <Skeleton key={i} className="h-64 rounded-xl" />
               ))}
             </div>
+          ) : isError ? (
+            <DataLoadError
+              title="Não conseguimos carregar os apoios agora"
+              description="O serviço de dados está instável neste momento. Tente novamente em alguns instantes."
+              onRetry={refetch}
+            />
           ) : filtered.length === 0 ? (
             <Card className="p-10 text-center border-dashed">
               <p className="font-semibold">Nada por aqui ainda</p>

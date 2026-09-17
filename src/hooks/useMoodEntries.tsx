@@ -5,6 +5,7 @@ import { useUserProfile } from './useUserProfile';
 import { useTenant } from './useTenant';
 import { useToast } from '@/hooks/use-toast';
 import { normalizeDateForStorage } from '@/lib/utils';
+import { withTimeout, DEFAULT_QUERY_TIMEOUT_MS } from '@/lib/withTimeout';
 
 export interface MoodEntry {
   id: string;
@@ -35,11 +36,12 @@ export interface MoodFactor {
 export const useMoodEntries = () => {
   const { user } = useAuth();
   const { profile } = useUserProfile();
-  const { tenant } = useTenant();
+  const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
   const tenantId = tenant?.id;
   const { toast } = useToast();
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const fetchingRef = useRef(false);
 
   const fetchEntries = useCallback(async () => {
@@ -54,17 +56,23 @@ export const useMoodEntries = () => {
     fetchingRef.current = true;
     
     try {
-      const { data, error } = await supabase
-        .from('mood_entries')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('tenant_id', tenantId)
-        .order('date', { ascending: false });
+      const { data, error } = await withTimeout(
+        supabase
+          .from('mood_entries')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('tenant_id', tenantId)
+          .order('date', { ascending: false }),
+        DEFAULT_QUERY_TIMEOUT_MS,
+        'seus registros do diário'
+      );
 
       if (error) throw error;
       setEntries((data || []) as MoodEntry[]);
+      setHasError(false);
     } catch (error) {
       console.error('Error fetching mood entries:', error);
+      setHasError(true);
       toast({
         title: "Erro",
         description: "Não foi possível carregar suas entradas do diário.",
@@ -75,6 +83,14 @@ export const useMoodEntries = () => {
       fetchingRef.current = false;
     }
   }, [user?.id, profile?.id, tenantId, toast]);
+
+  // Se a configuração da instituição falhou, não deixe a tela em carregamento eterno
+  useEffect(() => {
+    if (!tenantId && !tenantLoading && (tenantError || !tenant)) {
+      setLoading(false);
+      if (tenantError) setHasError(true);
+    }
+  }, [tenantId, tenantLoading, tenantError, tenant]);
 
   const createEntry = useCallback(async (entryData: Omit<MoodEntry, 'id' | 'user_id' | 'profile_id' | 'created_at' | 'updated_at'>) => {
     if (!user || !profile || !tenantId) {
@@ -301,5 +317,6 @@ export const useMoodEntries = () => {
     getEntryById,
     createOrUpdateEntry,
     refetch: fetchEntries,
+    isError: hasError,
   };
 };
