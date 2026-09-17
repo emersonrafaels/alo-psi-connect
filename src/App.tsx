@@ -58,7 +58,11 @@ import BuddyPatterns from "./pages/buddy/BuddyPatterns";
 import BuddyJourney from "./pages/buddy/BuddyJourney";
 import BuddyStrengths from "./pages/buddy/BuddyStrengths";
 import BuddyPrivacy from "./pages/buddy/BuddyPrivacy";
-
+import DiarioEmocionalLayout from "./pages/diary/DiarioEmocionalLayout";
+import DiarioEmocional from "./pages/diary/DiarioEmocional";
+import DiarioHistorico from "./pages/diary/DiarioHistorico";
+import DiarioConfiguracoes from "./pages/diary/DiarioConfiguracoes";
+import DiarioRegistro from "./pages/diary/DiarioRegistro";
 // Appointment management pages
 import MyAppointments from "./pages/MyAppointments";
 import RescheduleAppointment from "./pages/RescheduleAppointment";
@@ -445,6 +449,31 @@ const AppWithShortcuts = () => {
           </ProtectedRoute>
         } 
       />
+
+<Route
+  path="/diario-emocional-v2"
+  element={<DiarioEmocionalLayout />}
+>
+  <Route
+    index
+    element={<DiarioEmocional />}
+  />
+
+  <Route
+    path="historico"
+    element={<DiarioHistorico />}
+  />
+
+  <Route
+    path="configuracoes"
+    element={<DiarioConfiguracoes />}
+  />
+
+  <Route
+    path="novo-registro"
+    element={<DiarioRegistro />}
+  />
+</Route>
 
       <Route path="/admin/blog" element={<BlogLayout><BlogManagement /></BlogLayout>} />
       <Route path="/admin/blog/curation" element={<BlogLayout><BlogCuration /></BlogLayout>} />
