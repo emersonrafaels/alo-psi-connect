@@ -14,6 +14,26 @@ export const TenantBranding = () => {
   const urlTenantSlug = getTenantSlugFromPath(location.pathname);
   const isConsistent = tenant && tenant.slug === urlTenantSlug;
 
+  const headerBackgroundColor = tenant?.header_color || tenant?.primary_color || '0 0% 100%';
+  const headerBackgroundHsl = isHexColor(headerBackgroundColor)
+    ? hexToHSL(headerBackgroundColor)
+    : headerBackgroundColor;
+  const isHeaderBackgroundDark = getLuminance(headerBackgroundHsl) <= 0.5;
+
+  const logoUrl = useMemo(() => {
+    if (!tenant) return null;
+
+    if (isHeaderBackgroundDark) {
+      return tenant.logo_url_dark || tenant.logo_url;
+    }
+
+    return tenant.logo_url || tenant.logo_url_dark;
+  }, [isHeaderBackgroundDark, tenant]);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [tenant?.id, logoUrl]);
+
   // Mostrar skeleton se loading OU se estado inconsistente com URL
   if (loading || !isConsistent) {
     return <Skeleton className="h-10 w-40" />;
@@ -33,24 +53,6 @@ export const TenantBranding = () => {
     }
     return `hsl(${color})`;
   };
-
-  const headerBackgroundColor = tenant.header_color || tenant.primary_color;
-  const headerBackgroundHsl = isHexColor(headerBackgroundColor)
-    ? hexToHSL(headerBackgroundColor)
-    : headerBackgroundColor;
-  const isHeaderBackgroundDark = getLuminance(headerBackgroundHsl) <= 0.5;
-
-  const logoUrl = useMemo(() => {
-    if (isHeaderBackgroundDark) {
-      return tenant.logo_url_dark || tenant.logo_url;
-    }
-
-    return tenant.logo_url || tenant.logo_url_dark;
-  }, [isHeaderBackgroundDark, tenant.logo_url, tenant.logo_url_dark]);
-
-  useEffect(() => {
-    setImageError(false);
-  }, [tenant.id, logoUrl]);
 
   return (
     <Link to={buildTenantPath(tenant.slug, '/')} className="flex items-center space-x-2 max-w-[200px]">
