@@ -933,7 +933,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             <Clock className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-sm text-orange-800 dark:text-orange-300 flex items-center justify-between">
               <span>
-                <span className="font-semibold">{overdueFollowUpCount} triagem{overdueFollowUpCount > 1 ? 'ns' : ''} com follow-up vencido.</span>
+                <span className="font-semibold">{overdueFollowUpCount} {overdueFollowUpCount === 1 ? 'triagem' : 'triagens'} com follow-up vencido.</span>
               </span>
               <Button variant="ghost" size="sm" className="text-orange-700 hover:text-orange-900 h-7 text-xs" onClick={() => setActiveTab('em_andamento')}>
                 Ver <ChevronRight className="h-3 w-3 ml-1" />
