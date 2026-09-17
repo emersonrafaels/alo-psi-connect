@@ -214,11 +214,11 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       root.style.setProperty('--header-bg', headerColor);
       
-      const headerTextColor = getContrastingTextColor(tenantData.header_color);
-      root.style.setProperty('--header-fg', headerTextColor);
+      const headerTextColor = getContrastingTextColor(headerColor);
+      root.style.setProperty('--header-fg-auto', headerTextColor);
     } else {
       root.style.setProperty('--header-bg', 'var(--primary)');
-      root.style.setProperty('--header-fg', 'var(--primary-foreground)');
+      root.style.setProperty('--header-fg-auto', 'var(--primary-foreground)');
     }
 
     // Aplicar cores dos textos do header (light/dark mode)
@@ -227,6 +227,8 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         ? hexToHSL(tenantData.header_text_color_light)
         : tenantData.header_text_color_light;
       root.style.setProperty('--header-text-light', headerTextLight);
+    } else {
+      root.style.removeProperty('--header-text-light');
     }
     
     if (tenantData.header_text_color_dark) {
@@ -234,6 +236,8 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         ? hexToHSL(tenantData.header_text_color_dark)
         : tenantData.header_text_color_dark;
       root.style.setProperty('--header-text-dark', headerTextDark);
+    } else {
+      root.style.removeProperty('--header-text-dark');
     }
 
     // Aplicar tamanho do logo

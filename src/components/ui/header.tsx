@@ -91,7 +91,7 @@ const Header = () => {
       className="sticky top-0 z-50 w-full border-b shadow-sm" 
       style={{ 
         backgroundColor: 'hsl(var(--header-bg))',
-        color: 'hsl(var(--header-text))'
+        color: 'hsl(var(--header-fg))'
       }}
     >
       <div className="container mx-auto px-4">
