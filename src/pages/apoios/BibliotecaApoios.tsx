@@ -24,6 +24,7 @@ import {
   ListChecks,
   History,
   ArrowRight,
+  ArrowLeft,
   X,
 } from "lucide-react";
 import buddySvg from "@/assets/buddy.svg";

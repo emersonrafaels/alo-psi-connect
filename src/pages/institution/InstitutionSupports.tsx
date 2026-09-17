@@ -243,7 +243,7 @@ const InstitutionSupports = () => {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" asChild>
-              <Link to={buildTenantPath(tenant?.slug, "/biblioteca-apoios")}>
+              <Link to={buildTenantPath(tenant?.slug, "/biblioteca-apoios")} state={{ from: 'institution-portal' }}>
                 <Eye className="h-4 w-4 mr-2" /> Ver como o aluno
               </Link>
             </Button>
