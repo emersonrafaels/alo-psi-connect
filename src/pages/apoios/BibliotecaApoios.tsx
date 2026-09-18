@@ -27,7 +27,7 @@ import {
   ArrowLeft,
   X,
 } from "lucide-react";
-import buddySvg from "@/assets/buddy.svg";
+import buddySvg from "@/assets/buddy-purple.svg";
 import { SupportCard } from "@/features/apoios/SupportCard";
 import { SupportIcon } from "@/features/apoios/SupportIcon";
 import { isKnownRoute } from "@/features/apoios/knownRoutes";
