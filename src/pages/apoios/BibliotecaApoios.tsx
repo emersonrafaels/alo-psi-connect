@@ -210,7 +210,21 @@ const BibliotecaApoios = () => {
 
         {/* Buddy */}
         <Card className="p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4">
-          <img src={buddySvg} alt="Buddy" className="h-14 w-14 shrink-0" />
+          <span
+            role="img"
+            aria-label="Buddy"
+            className="h-14 w-14 shrink-0 bg-primary"
+            style={{
+              WebkitMaskImage: `url(${buddySvg})`,
+              WebkitMaskPosition: "center",
+              WebkitMaskRepeat: "no-repeat",
+              WebkitMaskSize: "contain",
+              maskImage: `url(${buddySvg})`,
+              maskPosition: "center",
+              maskRepeat: "no-repeat",
+              maskSize: "contain",
+            }}
+          />
           <div className="flex-1">
             <p className="text-sm font-semibold">O Buddy sugere começar aqui</p>
             <p className="text-sm text-muted-foreground">
