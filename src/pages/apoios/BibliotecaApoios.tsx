@@ -27,7 +27,7 @@ import {
   ArrowLeft,
   X,
 } from "lucide-react";
-import buddySvg from "@/assets/buddy.svg";
+import buddySvg from "@/assets/buddy-purple.svg";
 import { SupportCard } from "@/features/apoios/SupportCard";
 import { SupportIcon } from "@/features/apoios/SupportIcon";
 import { isKnownRoute } from "@/features/apoios/knownRoutes";
@@ -210,20 +210,10 @@ const BibliotecaApoios = () => {
 
         {/* Buddy */}
         <Card className="p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4">
-          <span
-            role="img"
-            aria-label="Buddy"
-            className="h-14 w-14 shrink-0 bg-primary"
-            style={{
-              WebkitMaskImage: `url(${buddySvg})`,
-              WebkitMaskPosition: "center",
-              WebkitMaskRepeat: "no-repeat",
-              WebkitMaskSize: "contain",
-              maskImage: `url(${buddySvg})`,
-              maskPosition: "center",
-              maskRepeat: "no-repeat",
-              maskSize: "contain",
-            }}
+          <img
+            src={buddySvg}
+            alt="Buddy"
+            className="h-14 w-14 shrink-0 object-contain"
           />
           <div className="flex-1">
             <p className="text-sm font-semibold">O Buddy sugere começar aqui</p>
