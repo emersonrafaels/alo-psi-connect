@@ -45,3 +45,12 @@
   transform: none;
   will-change: auto;
 }
+
+/* Ocultar botão flutuante do WhatsApp no mobile do Diário V2 */
+
+@media (max-width: 767px) {
+  body:has(.diario-v2)
+  button.fixed.right-6.bottom-6.bg-green-500 {
+    display: none !important;
+  }
+}

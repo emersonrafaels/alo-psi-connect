@@ -905,6 +905,191 @@ export default function EmotionalCheckinHome() { const navigate = useNavigate();
             width: min(355px, 92%);
           }
         }
+
+/* ==========================================
+   DIÁRIO EMOCIONAL — MODO ESCURO
+========================================== */
+
+:root.dark .emotional-home,
+.dark .emotional-home {
+  background:
+    radial-gradient(
+      circle at 50% 35%,
+      rgba(119, 65, 223, 0.16),
+      transparent 40%
+    ),
+    #0f0b1d;
+}
+
+/* Badge */
+.dark .emotional-home__badge {
+  background: linear-gradient(
+    135deg,
+    #312048,
+    #3c204a
+  );
+
+  color: #e5c8ff;
+}
+
+/* Título principal */
+.dark .emotional-home__title {
+  color: #f5efff;
+}
+
+.dark .emotional-home__title span {
+  background: linear-gradient(
+    90deg,
+    #b794ff,
+    #ec9cde,
+    #ff9dc6
+  );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Etapas */
+.dark .emotional-home__step {
+  background: linear-gradient(
+    135deg,
+    #241a38,
+    #2c1d42
+  );
+
+  color: #bca8d8;
+
+  border-color: rgba(190, 150, 255, 0.12);
+
+  box-shadow: none;
+}
+
+/* Etapa ativa */
+.dark .emotional-home__step--active {
+  background: linear-gradient(
+    120deg,
+    #5725ac,
+    #7931c7,
+    #b63ab0
+  );
+
+  color: #ffffff;
+
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.20);
+}
+
+/* Ícones das etapas */
+.dark .emotional-home__step-icon {
+  background: #38274f;
+  color: #c7a5ff;
+}
+
+.dark .emotional-home__step-icon--active {
+  background: #ffffff;
+  color: #7130c8;
+}
+
+/* Numeração */
+.dark .emotional-home__step-number {
+  background: #3e2c55;
+  color: #d5baff;
+}
+
+.dark .emotional-home__step--active
+.emotional-home__step-number {
+  background: #ffffff;
+  color: #5c1db2;
+}
+
+/* Conectores */
+.dark .emotional-home__connector {
+  border-color: rgba(190, 150, 255, 0.30);
+}
+
+/* Card principal */
+.dark .emotional-home__card {
+  background: linear-gradient(
+    112deg,
+    #21172f 0%,
+    #2b1b40 51%,
+    #382042 100%
+  );
+
+  border-color: rgba(190, 150, 255, 0.12);
+
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+}
+
+/* Brilho decorativo */
+.dark .emotional-home__card-glow {
+  background: radial-gradient(
+    circle,
+    rgba(155, 89, 230, 0.16),
+    transparent 65%
+  );
+}
+
+/* Textos do card */
+.dark .emotional-home__eyebrow {
+  color: #ee9bd9;
+}
+
+.dark .emotional-home__card-title {
+  color: #f5efff;
+}
+
+.dark .emotional-home__description {
+  color: #c5b8d2;
+}
+
+/* Benefícios */
+.dark .emotional-home__benefit {
+  background: rgba(255, 255, 255, 0.07);
+
+  color: #dbbaff;
+
+  border-color: rgba(255, 255, 255, 0.08);
+
+  box-shadow: none;
+}
+
+/* Elementos decorativos */
+.dark .emotional-home__floating {
+  background: rgba(255, 255, 255, 0.08);
+
+  border-color: rgba(255, 255, 255, 0.10);
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.dark .emotional-home__smile,
+.dark .emotional-home__floating--note,
+.dark .emotional-home__sparkle {
+  color: #c89cff;
+}
+
+.dark .emotional-home__note-line {
+  background: rgba(200, 156, 255, 0.25);
+}
+
+/* Botão principal */
+.dark .emotional-home__cta {
+  background: linear-gradient(
+    90deg,
+    #7030c8,
+    #8a38d4,
+    #a546dc
+  );
+
+  color: #ffffff;
+}
+
+/* Saiba mais */
+.dark .emotional-home__learn-more {
+  color: #cba9ff;
+}
+        
       `}</style>
     </>
   );
