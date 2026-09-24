@@ -8,11 +8,9 @@ import type { V5Phase } from "../types";
 export const PhaseStepper = ({
   phase,
   maxReached,
-  onGoTo,
 }: {
   phase: V5Phase;
   maxReached: V5Phase;
-  onGoTo: (phase: V5Phase) => void;
 }) => {
   const current = phaseIndex(phase);
   const reached = phaseIndex(maxReached);
@@ -29,15 +27,12 @@ export const PhaseStepper = ({
           const enabled = index <= reached;
           return (
             <li key={item.key}>
-              <button
-                type="button"
-                disabled={!enabled}
+              <div
                 aria-current={isActive ? "step" : undefined}
-                onClick={() => onGoTo(item.key as V5Phase)}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors",
-                  enabled ? "cursor-pointer" : "cursor-default opacity-60",
-                  isActive ? "bg-primary/10" : enabled ? "hover:bg-accent/50" : ""
+                  !enabled && "opacity-60",
+                  isActive && "bg-primary/10"
                 )}
               >
                 <span
@@ -63,7 +58,7 @@ export const PhaseStepper = ({
                   </span>
                   <span className="block truncate text-xs text-muted-foreground">{item.hint}</span>
                 </span>
-              </button>
+              </div>
             </li>
           );
         })}

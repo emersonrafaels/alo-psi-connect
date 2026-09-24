@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { V5_COPY } from "../copy";
 import type { ActionState, ActionStatus, ActionWhen } from "../types";
+import { JourneyGuide } from "./JourneyGuide";
 
 const ICONS = { direct: CircleDot, influence: Users, none: Minus } as const;
 
@@ -47,6 +48,7 @@ export const ControlColumns = ({
         <h2 className="text-xl font-semibold text-foreground sm:text-2xl">{V5_COPY.act.title}</h2>
         <p className="max-w-3xl text-sm text-muted-foreground">{V5_COPY.act.description}</p>
       </div>
+      <JourneyGuide title="Transformar percepção em possibilidade de ação" text="Diferencie ação, influência e limites sem culpa." />
 
       <div className="grid gap-4 lg:grid-cols-3">
         {V5_COPY.act.columns.map((column) => {
@@ -86,6 +88,10 @@ export const ControlColumns = ({
           <AccordionContent className="text-sm text-muted-foreground">
             {V5_COPY.act.guiltAnswer}
           </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="release" className="border-none">
+          <AccordionTrigger className="text-sm font-medium hover:no-underline">Como soltar o que não está sob meu controle, sem culpa?</AccordionTrigger>
+          <AccordionContent className="text-sm text-muted-foreground">Reconhecer um limite não significa deixar de se importar. Preserve energia para aquilo em que existe alguma possibilidade real de ação.</AccordionContent>
         </AccordionItem>
       </Accordion>
 

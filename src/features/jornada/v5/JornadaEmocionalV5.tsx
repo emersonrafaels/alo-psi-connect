@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/accordion";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
-import { EmotionWheel } from "../components/EmotionWheel";
 import { EmotionListFallback } from "../components/EmotionListFallback";
 import { EmotionBreadcrumb } from "../components/EmotionBreadcrumb";
 import { getEmotionNode } from "../config/emotion-taxonomy";
@@ -29,6 +28,10 @@ import { LearningResourceCard } from "./components/LearningResourceCard";
 import { PerceiveSidebar } from "./components/PerceiveSidebar";
 import { PhaseStepper } from "./components/PhaseStepper";
 import { SessionSummary } from "./components/SessionSummary";
+import { EmotionWheelV11 } from "./components/EmotionWheelV11";
+import { JourneyGuide } from "./components/JourneyGuide";
+import { BodyCheckout } from "./components/BodyCheckout";
+import { SupportPathsDialog } from "./components/SupportPathsDialog";
 import { V5_COPY } from "./copy";
 import {
   getImmediatePausePractice,
@@ -50,6 +53,8 @@ const JornadaEmocionalV5 = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [bodyCheckout, setBodyCheckout] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
 
   const wheelRef = useRef<HTMLDivElement | null>(null);
 
@@ -181,7 +186,7 @@ const JornadaEmocionalV5 = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto w-full max-w-[1320px] space-y-6 px-4 py-8 sm:px-6 sm:py-12">
         <header className="space-y-3">
           <Badge variant="secondary" className="rounded-full text-xs font-normal">
             <Sparkles aria-hidden className="mr-1.5 h-3.5 w-3.5" />
@@ -198,8 +203,9 @@ const JornadaEmocionalV5 = () => {
         <PhaseStepper
           phase={state.phase}
           maxReached={maxPhase}
-          onGoTo={(phase) => dispatch({ type: "GO_TO", phase })}
         />
+
+        <JourneyGuide title={`Ouvir a etapa ${V5_COPY.phases[phaseIndex(state.phase)].label}`} text={V5_COPY.phases[phaseIndex(state.phase)].hint} allowVideo={false} />
 
         {state.phase === "perceive" && !state.focus.mode && (
           <>
@@ -219,20 +225,23 @@ const JornadaEmocionalV5 = () => {
                     </p>
                   </div>
 
+                   <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-muted-foreground"><span className="rounded-full bg-muted px-3 py-1">Família emocional</span><span className="rounded-full bg-muted px-3 py-1">Emoção mais precisa</span><span className="rounded-full bg-muted px-3 py-1">Nuance emocional</span></div>
+
+                   <JourneyGuide title="Como explorar a roda" text="Orientação curta e opcional de um profissional da Rede Bem-Estar." duration="~20s" />
+
                   <EmotionBreadcrumb
                     ids={[state.familyId, state.level2Id, state.level3Id]}
                     onSelect={(id) => dispatch({ type: "PICK_EMOTION", emotionId: id })}
                   />
 
                   <div ref={wheelRef} />
-                  <EmotionWheel
+                  <EmotionWheelV11
                     familyId={state.familyId}
                     level2Id={state.level2Id}
                     level3Id={state.level3Id}
                     onSelectFamily={(familyId) => dispatch({ type: "SELECT_FAMILY", familyId })}
                     onSelectLevel2={(emotionId) => dispatch({ type: "SELECT_LEVEL2", emotionId })}
                     onSelectLevel3={(emotionId) => dispatch({ type: "SELECT_LEVEL3", emotionId })}
-                    onBackLevel={() => dispatch({ type: "BACK_LEVEL" })}
                   />
 
                   <Accordion type="single" collapsible>
@@ -277,6 +286,8 @@ const JornadaEmocionalV5 = () => {
                 onAbandon={() => dispatch({ type: "ABANDON_PAUSE_PRACTICE" })}
                 onReassess={(intensity) => dispatch({ type: "SET_REASSESS", intensity })}
                 onContinue={() => dispatch({ type: "DECLINE_PAUSE" })}
+                onRepeat={() => dispatch({ type: "REPEAT_PAUSE" })}
+                onSupport={() => setSupportOpen(true)}
               />
             )}
 
@@ -332,10 +343,19 @@ const JornadaEmocionalV5 = () => {
             onClear={() => dispatch({ type: "CLEAR_COMPREHENSION" })}
             onBack={() => dispatch({ type: "GO_TO", phase: "perceive" })}
             onNext={() => dispatch({ type: "GO_TO", phase: "regulate" })}
+            emotions={state.emotions}
+            onBodyMapChange={(bodyLayers, bodyNote, status) => dispatch({ type: "SET_BODY_MAP", bodyLayers, bodyNote, status })}
           />
         )}
 
-        {state.phase === "regulate" && (
+        {state.phase === "regulate" && bodyCheckout && state.comprehension.bodyLayers.length > 0 ? (
+          <BodyCheckout
+            layers={state.comprehension.bodyLayers}
+            onChange={(layerId, after) => dispatch({ type: "SET_BODY_CHECKOUT", layerId, after })}
+            onBack={() => setBodyCheckout(false)}
+            onNext={() => { setBodyCheckout(false); dispatch({ type: "GO_TO", phase: "act" }); }}
+          />
+        ) : state.phase === "regulate" && (
           <LearningResourceCard
             practice={learningPractice ?? null}
             learning={state.learning}
@@ -348,7 +368,7 @@ const JornadaEmocionalV5 = () => {
             onSkip={() => dispatch({ type: "SKIP_LEARNING" })}
             onAnother={() => dispatch({ type: "REJECT_LEARNING" })}
             onSetUtility={(utility) => dispatch({ type: "SET_LEARNING_UTILITY", utility })}
-            onNext={() => dispatch({ type: "GO_TO", phase: "act" })}
+            onNext={() => state.learning.completed && state.comprehension.bodyLayers.length > 0 ? setBodyCheckout(true) : dispatch({ type: "GO_TO", phase: "act" })}
           />
         )}
 
@@ -381,6 +401,7 @@ const JornadaEmocionalV5 = () => {
           </div>
         )}
       </main>
+      <SupportPathsDialog open={supportOpen} onOpenChange={setSupportOpen} />
       <Footer />
     </div>
   );

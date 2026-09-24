@@ -23,6 +23,8 @@ export const ImmediateRegulationCard = ({
   onAbandon,
   onReassess,
   onContinue,
+  onRepeat,
+  onSupport,
 }: {
   practice: Practice | null;
   regulation: RegulationState;
@@ -34,6 +36,8 @@ export const ImmediateRegulationCard = ({
   onAbandon: () => void;
   onReassess: (intensity: Intensity) => void;
   onContinue: () => void;
+  onRepeat: () => void;
+  onSupport: () => void;
 }) => {
   const reassessNode = getEmotionNode(regulation.reassessEmotionId);
   const reassessFamily = getFamilyOf(regulation.reassessEmotionId);
@@ -61,9 +65,16 @@ export const ImmediateRegulationCard = ({
             onChange={onReassess}
             label="Muito pouco → Muito intensamente"
           />
-          {regulation.intensityAfter != null && (
-            <Button onClick={onContinue}>Continuar</Button>
-          )}
+          {regulation.intensityAfter != null && regulation.intensityAfter > 3 ? (
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <p className="text-sm text-muted-foreground">A intensidade continua alta. Você pode escolher o caminho que fizer mais sentido agora.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {regulation.rounds < 2 && <Button onClick={onRepeat}>Repetir a respiração</Button>}
+                <Button variant="outline" onClick={onContinue}>Continuar mesmo assim</Button>
+                <Button variant="outline" onClick={onSupport}>Ver apoio disponível</Button>
+              </div>
+            </div>
+          ) : regulation.intensityAfter != null ? <Button onClick={onContinue}>Continuar</Button> : null}
         </CardContent>
       </Card>
     );

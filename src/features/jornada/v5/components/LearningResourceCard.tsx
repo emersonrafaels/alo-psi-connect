@@ -9,6 +9,7 @@ import { PracticePlayer } from "../../components/players/PracticePlayer";
 import type { Intensity, Practice } from "../../domain/types";
 import { V5_COPY } from "../copy";
 import type { LearningState } from "../types";
+import { JourneyGuide } from "./JourneyGuide";
 
 /** Fase Regular: um recurso da trilha de aprendizagem, com transparência da escolha. */
 export const LearningResourceCard = ({
@@ -94,6 +95,7 @@ export const LearningResourceCard = ({
               {V5_COPY.regulate.description}
             </p>
           </div>
+        <JourneyGuide title="O que significa regular uma emoção?" text="A proposta não é apagar o que você sente, mas ampliar repertório e escolha." />
 
           <div className="space-y-4 rounded-2xl border border-border/70 bg-muted/25 p-4 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">

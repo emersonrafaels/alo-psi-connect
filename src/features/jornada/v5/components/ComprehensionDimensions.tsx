@@ -12,6 +12,9 @@ import {
 import { cn } from "@/lib/utils";
 import { V5_COPY } from "../copy";
 import type { ComprehensionState } from "../types";
+import type { PickedEmotion } from "../types";
+import { BodyMap } from "./BodyMap";
+import { JourneyGuide } from "./JourneyGuide";
 
 type DimensionKey = "situation" | "body" | "behavior" | "thoughts";
 
@@ -25,6 +28,8 @@ export const ComprehensionDimensions = ({
   onClear,
   onBack,
   onNext,
+  emotions,
+  onBodyMapChange,
 }: {
   value: ComprehensionState;
   focusLabel: string;
@@ -34,6 +39,8 @@ export const ComprehensionDimensions = ({
   onClear: () => void;
   onBack: () => void;
   onNext: () => void;
+  emotions: PickedEmotion[];
+  onBodyMapChange: (layers: ComprehensionState["bodyLayers"], note?: string, status?: ComprehensionState["bodyMapStatus"]) => void;
 }) => {
   const [index, setIndex] = useState(0);
   const dimensions = V5_COPY.comprehend.dimensions;
@@ -107,7 +114,18 @@ export const ComprehensionDimensions = ({
             </p>
           </div>
 
-          <div className="space-y-3">
+          <JourneyGuide title="Observar sem procurar uma resposta certa" text="Uma orientação curta pode ajudar você a usar esta etapa no seu próprio ritmo." />
+
+          {current.key === "body" ? (
+            <BodyMap
+              emotions={emotions}
+              layers={value.bodyLayers}
+              note={value.bodyNote}
+              onChange={(layers) => onBodyMapChange(layers)}
+              onNote={(note) => onBodyMapChange(value.bodyLayers, note)}
+              onStatus={(status) => onBodyMapChange(status === "mapped" ? value.bodyLayers : [], value.bodyNote, status)}
+            />
+          ) : <div className="space-y-3">
             <label
               htmlFor="dimension-text"
               className="block text-sm font-semibold text-foreground"
@@ -153,7 +171,7 @@ export const ComprehensionDimensions = ({
                 {V5_COPY.comprehend.clear}
               </Button>
             </div>
-          </div>
+          </div>}
 
           <Accordion
             type="single"

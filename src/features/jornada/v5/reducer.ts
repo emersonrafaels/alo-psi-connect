@@ -2,7 +2,7 @@
  * Máquina de estados da Jornada Emocional V5.
  * Toda navegação passa por aqui — evita estados impossíveis.
  */
-import { getEmotionNode } from "../config/emotion-taxonomy";
+import { getEmotionNode, getFamilyOf } from "../config/emotion-taxonomy";
 import type { Intensity } from "../domain/types";
 import {
   MAX_EMOTIONS,
@@ -39,9 +39,10 @@ export const createV5State = (): V5State => ({
     declined: false,
     reassessEmotionId: null,
     intensityAfter: null,
+    rounds: 0,
   },
   focus: { mode: null, emotionId: null },
-  comprehension: { situation: "", body: "", behavior: "", thoughts: "", unclear: [], skipped: false },
+  comprehension: { situation: "", body: "", behavior: "", thoughts: "", unclear: [], skipped: false, bodyLayers: [], bodyNote: "", bodyMapStatus: null },
   learning: {
     practiceId: null,
     reason: "",
@@ -80,11 +81,14 @@ export type V5Action =
   | { type: "COMPLETE_PAUSE_PRACTICE" }
   | { type: "ABANDON_PAUSE_PRACTICE" }
   | { type: "SET_REASSESS"; intensity: Intensity }
+  | { type: "REPEAT_PAUSE" }
   | { type: "SET_FOCUS"; mode: "single" | "whole"; emotionId?: string | null }
   | { type: "SET_COMPREHENSION"; key: "situation" | "body" | "behavior" | "thoughts"; value: string }
   | { type: "TOGGLE_UNCLEAR"; key: string }
   | { type: "SKIP_COMPREHENSION" }
   | { type: "CLEAR_COMPREHENSION" }
+  | { type: "SET_BODY_MAP"; bodyLayers: V5State["comprehension"]["bodyLayers"]; bodyNote?: string; status?: V5State["comprehension"]["bodyMapStatus"] }
+  | { type: "SET_BODY_CHECKOUT"; layerId: string; after: NonNullable<V5State["comprehension"]["bodyLayers"][number]["after"]> }
   | { type: "SET_LEARNING"; practiceId: string; reason: string }
   | { type: "SET_LEARNING_DURATION"; minutes: number }
   | { type: "TOGGLE_LEARNING_SILENT" }
@@ -110,7 +114,12 @@ export const v5Reducer = (state: V5State, action: V5Action): V5State => {
 
   switch (action.type) {
     case "HYDRATE":
-      return action.state;
+      return {
+        ...createV5State(),
+        ...action.state,
+        regulation: { ...createV5State().regulation, ...action.state.regulation },
+        comprehension: { ...createV5State().comprehension, ...action.state.comprehension },
+      };
 
     case "RESET":
       return createV5State();
@@ -137,7 +146,13 @@ export const v5Reducer = (state: V5State, action: V5Action): V5State => {
       return touch({ familyId: null, level2Id: null, level3Id: null, pendingEmotionId: null });
 
     case "PICK_EMOTION":
-      return touch({ pendingEmotionId: action.emotionId });
+      {
+        const node = getEmotionNode(action.emotionId);
+        if (!node) return state;
+        if (node.level === 1) return touch({ familyId: node.id, level2Id: null, level3Id: null, pendingEmotionId: null });
+        if (node.level === 2 && node.children?.length) return touch({ familyId: node.familyId, level2Id: node.id, level3Id: null, pendingEmotionId: null });
+        return touch({ familyId: node.familyId, level2Id: node.parentId, level3Id: node.level === 3 ? node.id : null, pendingEmotionId: node.id });
+      }
 
     case "CANCEL_PENDING":
       return touch({ pendingEmotionId: null });
@@ -236,6 +251,18 @@ export const v5Reducer = (state: V5State, action: V5Action): V5State => {
       });
     }
 
+    case "REPEAT_PAUSE":
+      if (state.regulation.rounds >= 2) return state;
+      return touch({
+        regulation: {
+          ...state.regulation,
+          playing: true,
+          completed: false,
+          intensityAfter: null,
+          rounds: state.regulation.rounds + 1,
+        },
+      });
+
     case "SET_FOCUS":
       return touch({
         focus: {
@@ -269,6 +296,26 @@ export const v5Reducer = (state: V5State, action: V5Action): V5State => {
 
     case "CLEAR_COMPREHENSION":
       return touch({ comprehension: createV5State().comprehension });
+
+    case "SET_BODY_MAP":
+      return touch({
+        comprehension: {
+          ...state.comprehension,
+          bodyLayers: action.bodyLayers,
+          bodyNote: action.bodyNote ?? state.comprehension.bodyNote,
+          bodyMapStatus: action.status ?? (action.bodyLayers.length ? "mapped" : state.comprehension.bodyMapStatus),
+        },
+      });
+
+    case "SET_BODY_CHECKOUT":
+      return touch({
+        comprehension: {
+          ...state.comprehension,
+          bodyLayers: state.comprehension.bodyLayers.map((layer) =>
+            layer.id === action.layerId ? { ...layer, after: action.after } : layer
+          ),
+        },
+      });
 
     case "SET_LEARNING":
       return touch({
@@ -343,9 +390,11 @@ export const v5Reducer = (state: V5State, action: V5Action): V5State => {
   }
 };
 
-/** A pausa de regulação é oferecida quando alguma emoção foi registrada com intensidade alta. */
-export const shouldOfferPause = (state: V5State) =>
-  state.emotions.some((item) => item.intensityBefore >= 4);
+/** Regra V11: somente a primeira emoção, desagradável e em 5/5, oferece a pausa. */
+export const shouldOfferPause = (state: V5State) => {
+  const first = state.emotions[0];
+  return !!first && first.intensityBefore === 5 && getFamilyOf(first.emotionId)?.valence === "unpleasant";
+};
 
 /** A fase "Perceber" está concluída quando existe pelo menos uma emoção e um foco. */
 export const perceiveDone = (state: V5State) => state.emotions.length > 0 && !!state.focus.mode;

@@ -1,81 +1,16 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { useMemo, useState } from "react";
+import { BarChart3, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { getFamilyOf } from "../../config/emotion-taxonomy";
-import { V5_COPY } from "../copy";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { EMOTION_FAMILIES, getFamilyOf } from "../../config/emotion-taxonomy";
 import type { LandscapeBubble } from "../useV5Signals";
 
-/** Paisagem Emocional: tamanho = frequência, cor = intensidade média, contorno = hoje. */
-export const EmotionLandscape = ({
-  bubbles,
-  todayIds,
-  isLoading,
-}: {
-  bubbles: LandscapeBubble[];
-  todayIds: string[];
-  isLoading?: boolean;
-}) => {
-  const items = [...bubbles].sort((a, b) => b.occurrences - a.occurrences).slice(0, 18);
-  const maxOccurrences = Math.max(1, ...items.map((item) => item.occurrences));
-
-  return (
-    <Card className="border-border/70 shadow-sm">
-      <CardContent className="space-y-5 p-5 sm:p-6">
-        <div className="space-y-1.5">
-          <h3 className="text-lg font-semibold text-foreground">
-            {V5_COPY.record.landscapeTitle}
-          </h3>
-          <p className="text-sm text-muted-foreground">{V5_COPY.record.landscapeDescription}</p>
-        </div>
-
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Carregando sua paisagem…</p>
-        ) : items.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-            Sua Paisagem Emocional começa a se formar a partir dos seus registros. Este é o primeiro
-            passo.
-          </p>
-        ) : (
-          <ul className="flex flex-wrap items-end gap-3">
-            {items.map((item) => {
-              const family = getFamilyOf(item.emotion_id);
-              const color = family?.color ?? "hsl(var(--primary))";
-              const scale = 0.55 + (item.occurrences / maxOccurrences) * 0.45;
-              const opacity = 0.25 + ((item.avg_intensity ?? 3) / 5) * 0.6;
-              const isToday = todayIds.includes(item.emotion_id);
-              return (
-                <li key={item.emotion_id}>
-                  <span
-                    className="flex flex-col items-center justify-center rounded-full border-2 px-3 text-center"
-                    style={{
-                      backgroundColor: color,
-                      opacity,
-                      borderColor: isToday ? "hsl(var(--foreground))" : "transparent",
-                      minWidth: `${Math.round(76 * scale)}px`,
-                      minHeight: `${Math.round(76 * scale)}px`,
-                    }}
-                    title={`${item.label} · ${item.occurrences} ocorrência(s)`}
-                  >
-                    <span className="text-[11px] font-semibold leading-tight text-background">
-                      {item.label}
-                    </span>
-                    <span className="text-[10px] text-background/90">{item.occurrences}×</span>
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
-        <ul className="flex flex-wrap gap-2">
-          {V5_COPY.record.legend.map((legend) => (
-            <li key={legend}>
-              <Badge variant="secondary" className="rounded-full text-xs font-normal">
-                {legend}
-              </Badge>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
-  );
+export const EmotionLandscape = ({ bubbles, todayIds, isLoading }: { bubbles: LandscapeBubble[]; todayIds: string[]; isLoading?: boolean }) => {
+  const [tab, setTab] = useState<"emotion" | "body">("emotion");
+  const items = useMemo(() => [...bubbles].sort((a, b) => b.occurrences - a.occurrences).slice(0, 18), [bubbles]);
+  const max = Math.max(1, ...items.map((item) => item.occurrences));
+  const familyCounts = EMOTION_FAMILIES.map((family) => ({ family, count: items.filter((item) => item.family_id === family.id).reduce((sum, item) => sum + item.occurrences, 0) })).filter((item) => item.count > 0);
+  return <details className="group" open><summary className="flex cursor-pointer list-none items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm"><span><strong className="block text-base">Explorar minha Paisagem Emocional</strong><small className="text-muted-foreground">Frequência, intensidade e sinais corporais ao longo dos registros</small></span><ChevronDown className="h-5 w-5 transition-transform group-open:rotate-180" /></summary><Card className="mt-3 border-border/70"><CardContent className="space-y-5 p-5 sm:p-7"><div><h3 className="text-xl font-semibold">Sua Paisagem Emocional</h3><p className="mt-1 text-sm text-muted-foreground">Uma leitura longitudinal dos registros escolhidos. Frequência e intensidade permanecem separadas.</p></div><div className="flex gap-2" role="tablist"><Button variant={tab === "emotion" ? "default" : "outline"} size="sm" onClick={() => setTab("emotion")}>Emoções</Button><Button variant={tab === "body" ? "default" : "outline"} size="sm" onClick={() => setTab("body")}>Corpo</Button></div>{tab === "emotion" ? <>{isLoading ? <p className="text-sm text-muted-foreground">Carregando sua paisagem…</p> : items.length === 0 ? <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">Sua Paisagem começa a se formar com este registro.</p> : <div className="flex min-h-44 flex-wrap items-end justify-center gap-3 rounded-2xl bg-muted/20 p-5">{items.map((item) => { const family = getFamilyOf(item.emotion_id); const size = 58 + item.occurrences / max * 50; return <div key={item.emotion_id} className={cn("grid place-items-center rounded-full border-2 text-center shadow-sm", todayIds.includes(item.emotion_id) ? "border-foreground" : "border-transparent")} style={{ width: size, height: size, backgroundColor: family?.color, opacity: .48 + (item.avg_intensity ?? 3) / 10 }} title={`${item.occurrences} ocorrência(s)`}><strong className="text-xs text-foreground">{item.label}</strong><span className="text-[10px] text-foreground">{item.avg_intensity?.toFixed(1) ?? "—"}/5</span></div>; })}</div>}<div className="grid gap-4 lg:grid-cols-2"><div className="rounded-2xl border border-border p-4"><h4 className="flex items-center gap-2 font-semibold"><BarChart3 className="h-4 w-4 text-primary"/>Frequência por família emocional</h4><div className="mt-4 space-y-3">{familyCounts.map(({ family, count }) => <div key={family.id}><div className="mb-1 flex justify-between text-xs"><span>{family.label}</span><span>{count}</span></div><div className="h-2 rounded-full bg-muted"><div className="h-full rounded-full" style={{ width: `${count / Math.max(...familyCounts.map((item) => item.count)) * 100}%`, backgroundColor: family.color }}/></div></div>)}</div></div><div className="rounded-2xl border border-border p-4"><h4 className="font-semibold">Emoções deste check-in</h4><div className="mt-4 space-y-2">{todayIds.map((id) => { const item = items.find((row) => row.emotion_id === id); return <div key={id} className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getFamilyOf(id)?.color }}/><span className="text-sm">{item?.label ?? id}</span><Badge variant="secondary" className="ml-auto">Hoje</Badge></div>; })}</div></div></div></> : <div className="rounded-2xl border border-dashed border-border p-8 text-center"><h4 className="font-semibold">Histórico corporal</h4><p className="mt-2 text-sm text-muted-foreground">As regiões e sensações começam a aparecer aqui depois que você salvar registros com o Mapa Corporal.</p></div>}<div className="flex flex-wrap gap-2"><Badge variant="secondary">Bolha = frequência</Badge><Badge variant="secondary">Número = intensidade típica</Badge><Badge variant="secondary">Cor = família emocional</Badge></div></CardContent></Card></details>;
 };

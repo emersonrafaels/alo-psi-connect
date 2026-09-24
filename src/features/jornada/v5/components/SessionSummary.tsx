@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Check, Loader2, RefreshCw, Save, ShieldCheck, Sparkles } from "lucide-react";
+import { Check, ChevronDown, Loader2, RefreshCw, Save, ShieldCheck, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import buddyHeart from "@/assets/buddy/buddy-arms.png";
-import { getEmotionNode, getFamilyOf } from "../../config/emotion-taxonomy";
+import { getEmotionNode, getEmotionPath, getFamilyOf } from "../../config/emotion-taxonomy";
 import { INTENSITY_LABELS, USEFULNESS_LABELS } from "../../config/perceived-change-options";
 import { getPractice } from "../../config/practices";
 import { V5_COPY } from "../copy";
@@ -41,6 +41,7 @@ export const SessionSummary = ({
   const comprehension = (["situation", "body", "behavior", "thoughts"] as const).filter(
     (key) => !!state.comprehension[key]
   );
+  const elapsedMinutes = Math.max(1, Math.round(((state.completedAt ? new Date(state.completedAt).getTime() : Date.now()) - new Date(state.startedAt).getTime()) / 60000));
 
   const strip = [
     { label: "Emoções registradas", value: String(state.emotions.length) },
@@ -73,9 +74,7 @@ export const SessionSummary = ({
               <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                 {V5_COPY.record.eyebrow}
               </p>
-              <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
-                {V5_COPY.record.title}
-              </h2>
+              <h2 className="text-xl font-semibold text-foreground sm:text-2xl">Você criou um retrato do seu momento</h2>
               <p className="max-w-3xl text-sm text-muted-foreground">
                 {V5_COPY.record.description}
               </p>
@@ -91,6 +90,8 @@ export const SessionSummary = ({
             />
           </div>
 
+          <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 p-4"><div><span className="text-xs text-muted-foreground">Tempo desta jornada</span><strong className="block text-xl text-foreground">{elapsedMinutes} min</strong></div><small className="max-w-md text-right text-xs text-muted-foreground">O tempo foi registrado automaticamente, sem cronômetro durante a experiência.</small></div>
+
           <dl className="grid gap-3 sm:grid-cols-4">
             {strip.map((item) => (
               <div
@@ -103,7 +104,9 @@ export const SessionSummary = ({
             ))}
           </dl>
 
-          <div className="space-y-3 rounded-2xl border border-border/70 p-5">
+          <details className="group rounded-2xl border border-border/70 p-5" open>
+            <summary className="flex cursor-pointer list-none items-center justify-between"><span><strong className="block text-sm">Rever meu registro</strong><small className="text-muted-foreground">Emoções, contexto, prática e próximo passo</small></span><ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" /></summary>
+          <div className="mt-5 space-y-3">
             <h3 className="text-sm font-semibold text-foreground">Emoções registradas</h3>
             <ul className="grid gap-2 sm:grid-cols-3">
               {state.emotions.map((item) => {
@@ -125,6 +128,7 @@ export const SessionSummary = ({
                       </span>
                     </span>
                     <span className="mt-1 block text-xs text-muted-foreground">
+                        {getEmotionPath(item.emotionId).map((part) => part.label).join(" › ")} ·{" "}
                       Antes: {item.intensityBefore} · {INTENSITY_LABELS[item.intensityBefore]}
                       {item.intensityAfter != null && (
                         <> · Depois da pausa: {item.intensityAfter}</>
@@ -216,6 +220,10 @@ export const SessionSummary = ({
               </div>
             </div>
           )}
+          {state.comprehension.bodyLayers.length > 0 && <div className="space-y-3 rounded-2xl border border-border/70 p-5"><h3 className="text-sm font-semibold">Seu Mapa Corporal de hoje</h3><p className="text-xs text-muted-foreground">Esta visualização usa somente o que você marcou neste check-in.</p><div className="flex flex-wrap gap-2">{state.comprehension.bodyLayers.map((layer) => <span key={layer.id} className="rounded-full border border-border px-3 py-1.5 text-xs"><i className="mr-2 inline-block h-2 w-2 rounded-full" style={{ backgroundColor: layer.color }}/>{layer.label} · {layer.zoneIds.length} regiões · intensidade {layer.intensity}</span>)}</div></div>}
+          </details>
+
+          <section className="rounded-2xl border border-border/70 bg-muted/20 p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-primary">Fora desta jornada</p><h3 className="mt-1 text-lg font-semibold">Conheça-se melhor</h3><p className="text-sm text-muted-foreground">Experiências complementares de autoconhecimento, separadas deste check-in.</p></div><Badge variant="secondary">Prévia · acesso do estudante</Badge></div><div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-card p-4"><strong>Sua conexão emocional</strong><p className="mt-1 text-xs text-muted-foreground">Trait Meta-Mood Scale – TMMS-24</p></div><div className="rounded-xl bg-card p-4"><strong>Suas competências emocionais</strong><p className="mt-1 text-xs text-muted-foreground">Schutte Self-Report Emotional Intelligence Test – SSEIT</p></div></div><p className="mt-4 text-xs text-muted-foreground"><strong className="text-foreground">Ferramentas de aprofundamento:</strong> CBI-S e DERS-36 ficam fora da descoberta espontânea e podem ser disponibilizadas no ambiente profissional quando houver indicação adequada.</p></section>
 
           {saveError && (
             <Alert variant="destructive">

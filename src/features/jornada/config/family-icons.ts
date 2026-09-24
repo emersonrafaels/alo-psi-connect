@@ -1,4 +1,4 @@
-import { Circle, Droplet, Shield, Star, Sun, Waves, Zap, type LucideIcon } from "lucide-react";
+import { Circle, Droplet, Shield, Sparkles, Sun, Waves, Zap, type LucideIcon } from "lucide-react";
 
 /** Ícone de linha de cada família emocional da Roda. */
 export const FAMILY_ICONS: Record<string, LucideIcon> = {
@@ -6,8 +6,8 @@ export const FAMILY_ICONS: Record<string, LucideIcon> = {
   medo: Shield,
   tristeza: Droplet,
   alegria: Sun,
-  surpresa: Star,
-  nojo: Waves,
+  forca: Sparkles,
+  tranquilidade: Waves,
 };
 
 export const getFamilyIcon = (familyId?: string | null): LucideIcon =>
