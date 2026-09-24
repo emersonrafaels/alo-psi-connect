@@ -106,14 +106,26 @@ export const ComprehensionDimensions = ({
       </Card>
 
       {current.key === "body" ? (
-        <BodyMap
-          emotions={emotions}
-          layers={value.bodyLayers}
-          note={value.bodyNote}
-          onChange={(layers) => onBodyMapChange(layers)}
-          onNote={(note) => onBodyMapChange(value.bodyLayers, note)}
-          onStatus={(status) => onBodyMapChange(status === "mapped" ? value.bodyLayers : [], value.bodyNote, status)}
-        />
+        <div className="space-y-5">
+          <BodyMap
+            emotions={emotions}
+            layers={value.bodyLayers}
+            note={value.bodyNote}
+            onChange={(layers) => onBodyMapChange(layers)}
+            onNote={(note) => onBodyMapChange(value.bodyLayers, note)}
+            onStatus={(status) => onBodyMapChange(status === "mapped" ? value.bodyLayers : [], value.bodyNote, status)}
+          />
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
+            <Button variant="outline" onClick={() => setIndex(index - 1)}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar
+            </Button>
+            <Button onClick={() => setIndex(index + 1)}>
+              Próxima Dimensão
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       ) : <Card className="border-border/70 shadow-sm">
         <CardContent className="space-y-5 p-5 sm:p-8">
           <div className="space-y-2">
