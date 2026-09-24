@@ -10,11 +10,13 @@ import { PracticePlayer } from "../../components/players/PracticePlayer";
 import type { Intensity, Practice } from "../../domain/types";
 import { V5_COPY } from "../copy";
 import type { RegulationState } from "../types";
+import type { PickedEmotion } from "../types";
 
 /** Pausa opcional de regulação imediata + reavaliação da mesma ocorrência. */
 export const ImmediateRegulationCard = ({
   practice,
   regulation,
+  firstEmotion,
   onAccept,
   onDecline,
   onSaveForLater,
@@ -28,6 +30,7 @@ export const ImmediateRegulationCard = ({
 }: {
   practice: Practice | null;
   regulation: RegulationState;
+  firstEmotion: PickedEmotion | null;
   onAccept: () => void;
   onDecline: () => void;
   onSaveForLater: () => void;
@@ -41,6 +44,7 @@ export const ImmediateRegulationCard = ({
 }) => {
   const reassessNode = getEmotionNode(regulation.reassessEmotionId);
   const reassessFamily = getFamilyOf(regulation.reassessEmotionId);
+  const firstEmotionNode = getEmotionNode(firstEmotion?.emotionId);
 
   if (regulation.completed) {
     return (
@@ -128,20 +132,25 @@ export const ImmediateRegulationCard = ({
   }
 
   return (
-    <Card className="border-primary/25 bg-primary/5">
-      <CardContent className="grid gap-5 p-5 sm:p-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-        <div className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+    <Card className="overflow-hidden border-primary/20 bg-card shadow-sm">
+      <CardContent className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
+        <div className="space-y-5">
+          <p className="inline-flex rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
             {V5_COPY.pause.eyebrow}
           </p>
-          <h3 className="text-lg font-semibold leading-snug text-foreground sm:text-xl">
+          <h3 className="max-w-3xl text-2xl font-bold leading-tight text-foreground sm:text-3xl">
             {V5_COPY.pause.title}
           </h3>
-          <p className="text-sm text-muted-foreground">
+          {firstEmotion && (
+            <p className="max-w-4xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+              Você marcou <strong className="text-foreground">{firstEmotionNode?.label ?? firstEmotion.emotionId}</strong> como sua primeira emoção e indicou intensidade <strong className="text-foreground">{firstEmotion.intensityBefore}/5</strong>. Quando uma emoção desagradável está no nível máximo desta escala, a Rede Bem-Estar pode oferecer uma única pausa curta antes da continuidade, sem obrigar você a realizá-la.
+            </p>
+          )}
+          <div className="rounded-xl bg-primary/10 p-4 text-sm leading-relaxed text-foreground">
             <strong className="text-foreground">{V5_COPY.pause.lead}</strong>{" "}
             {V5_COPY.pause.description}
-          </p>
-          <p className="flex items-start gap-2 rounded-2xl border border-border/70 bg-card p-3 text-xs text-muted-foreground">
+          </div>
+          <p className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning/10 p-4 text-xs leading-relaxed text-muted-foreground">
             <Heart aria-hidden className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
             {V5_COPY.pause.safety}
           </p>
@@ -155,7 +164,7 @@ export const ImmediateRegulationCard = ({
             </Button>
           </div>
         </div>
-        <div className="mx-auto hidden w-32 md:block">
+        <div className="mx-auto hidden w-40 lg:block">
           <BuddyMascot size="lg" stack animated />
         </div>
       </CardContent>

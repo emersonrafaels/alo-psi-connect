@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, Volume2, VolumeX } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Clock3, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getProtocol } from "../../config/practice-protocols";
@@ -37,12 +37,14 @@ export const PracticePlayer = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-foreground">{practice.title}</h2>
-          <p className="text-sm text-muted-foreground">{durationMinutes} minutos</p>
+          <h2 className="text-xl font-bold text-foreground sm:text-2xl">{practice.title}</h2>
+          <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Clock3 className="h-4 w-4" /> {durationMinutes} {durationMinutes === 1 ? "minuto" : "minutos"}
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {practice.silentModeAvailable && (
             <Button
               variant={silentMode ? "default" : "outline"}
@@ -60,7 +62,7 @@ export const PracticePlayer = ({
               ) : (
                 <Volume2 className="mr-2 h-4 w-4" />
               )}
-              {silentMode ? "Modo silencioso" : "Som ligado"}
+              {silentMode ? "Som desligado" : "Som ligado"}
             </Button>
           )}
 
@@ -71,7 +73,7 @@ export const PracticePlayer = ({
       </div>
 
       {!!practice.safetyInstructions?.length && (
-        <Alert>
+        <Alert className="border-border/70 bg-muted/20">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="space-y-1 text-sm">
             {practice.safetyInstructions.map((s) => (

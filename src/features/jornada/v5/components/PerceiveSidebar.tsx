@@ -26,16 +26,16 @@ export const PerceiveSidebar = ({
   const full = emotions.length >= MAX_EMOTIONS;
 
   return (
-    <Card className="border-border/70 shadow-sm lg:sticky lg:top-24">
-      <CardContent className="space-y-5 p-5">
-        <div className="space-y-1.5">
+    <Card className="self-start overflow-hidden border-primary/15 shadow-sm lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
+      <CardContent className="space-y-6 p-5 sm:p-6">
+        <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">
             1 · {V5_COPY.perceive.sidebarEyebrow}
           </p>
-          <h2 className="text-lg font-semibold leading-snug text-foreground">
+          <h2 className="text-xl font-bold leading-tight text-foreground sm:text-2xl">
             {V5_COPY.perceive.sidebarTitle}
           </h2>
-          <p className="text-sm text-muted-foreground">{V5_COPY.perceive.sidebarDescription}</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">{V5_COPY.perceive.sidebarDescription}</p>
         </div>
 
         <EmotionSearch onPick={onPick} />
@@ -46,7 +46,7 @@ export const PerceiveSidebar = ({
             {V5_COPY.perceive.recordLabel}
           </p>
           {emotions.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed border-primary/25 bg-background p-4 text-sm leading-relaxed text-muted-foreground">
               {V5_COPY.perceive.emptyRecord}
             </p>
           ) : (
@@ -57,7 +57,7 @@ export const PerceiveSidebar = ({
                 return (
                   <li
                     key={item.emotionId}
-                    className="flex items-center gap-3 rounded-2xl border border-border/70 bg-muted/30 p-3"
+                    className="flex items-center gap-3 rounded-xl border border-border/70 bg-muted/30 p-3"
                   >
                     <span
                       aria-hidden
@@ -93,7 +93,7 @@ export const PerceiveSidebar = ({
         </div>
 
         {!full && onAddAnother && (
-          <Button variant="outline" className="w-full rounded-full" onClick={onAddAnother}>
+          <Button className="w-full" onClick={onAddAnother}>
             <Plus className="mr-2 h-4 w-4" />
             {V5_COPY.perceive.exploreAnother}
           </Button>
@@ -107,12 +107,12 @@ export const PerceiveSidebar = ({
         )}
 
         {emotions.length > 0 && (
-          <Button variant="link" className="h-auto w-full p-0 text-sm" onClick={onClear}>
+          <Button variant="link" className="h-auto w-full p-0 text-sm font-semibold" onClick={onClear}>
             {V5_COPY.perceive.restart}
           </Button>
         )}
 
-        <p className="text-xs leading-relaxed text-muted-foreground">
+        <p className="border-t border-border/70 pt-5 text-xs leading-relaxed text-muted-foreground">
           {V5_COPY.perceive.limitNote}
         </p>
       </CardContent>

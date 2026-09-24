@@ -126,6 +126,11 @@ const JornadaEmocionalV5 = () => {
     shouldOfferPause(state) &&
     !state.regulation.declined &&
     !state.regulation.completed;
+  const pauseFlowActive =
+    showPause ||
+    state.regulation.accepted ||
+    state.regulation.playing ||
+    (state.regulation.completed && state.regulation.intensityAfter == null);
 
   useEffect(() => {
     if (showPause && !state.regulation.offered && pausePractice) {
@@ -278,6 +283,7 @@ const JornadaEmocionalV5 = () => {
               <ImmediateRegulationCard
                 practice={pausePractice ?? null}
                 regulation={state.regulation}
+                firstEmotion={state.emotions[0] ?? null}
                 onAccept={() => dispatch({ type: "ACCEPT_PAUSE" })}
                 onDecline={() => dispatch({ type: "DECLINE_PAUSE" })}
                 onSaveForLater={() => dispatch({ type: "DECLINE_PAUSE" })}
@@ -313,7 +319,7 @@ const JornadaEmocionalV5 = () => {
             />
 
             <AfterRegisterDialog
-              open={state.postRegisterPrompt}
+              open={state.postRegisterPrompt && !pauseFlowActive}
               emotions={state.emotions}
               onAnother={() => dispatch({ type: "POST_REGISTER_ANOTHER" })}
               onAdvance={() => dispatch({ type: "GO_TO_REVIEW" })}

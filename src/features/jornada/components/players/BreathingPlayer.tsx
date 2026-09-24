@@ -57,20 +57,20 @@ export const BreathingPlayer = ({
           : 0.65;
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <div className="relative flex h-64 w-64 items-center justify-center">
+    <div className="flex min-h-[430px] flex-col items-center justify-center gap-7 py-4 sm:min-h-[500px]">
+      <div className="relative flex h-64 w-64 items-center justify-center sm:h-72 sm:w-72">
         <div
-          className="absolute h-56 w-56 rounded-full bg-primary/15 transition-transform duration-1000 ease-linear"
+          className="absolute h-56 w-56 rounded-full border border-primary/15 bg-primary/10 transition-transform duration-1000 ease-linear sm:h-64 sm:w-64"
           style={{ transform: `scale(${scale})` }}
           aria-hidden
         />
         <div
-          className="absolute h-40 w-40 rounded-full bg-primary/30 transition-transform duration-1000 ease-linear"
+          className="absolute h-40 w-40 rounded-full bg-primary/30 shadow-[var(--shadow-glow)] transition-transform duration-1000 ease-linear sm:h-44 sm:w-44"
           style={{ transform: `scale(${scale})` }}
           aria-hidden
         />
         <div className="relative z-10 text-center" aria-live="polite">
-          <p className="text-2xl font-semibold text-foreground">{phase?.label}</p>
+          <p className="text-2xl font-semibold text-foreground sm:text-3xl">{phase?.label}</p>
           <p className="mt-1 text-sm text-muted-foreground">
             {Math.max(Math.ceil((phase?.seconds ?? 0) - phaseElapsed), 0)}s
           </p>
@@ -78,7 +78,7 @@ export const BreathingPlayer = ({
       </div>
 
       {!silentMode && phase?.hint && (
-        <p className="max-w-sm text-center text-sm text-muted-foreground">{phase.hint}</p>
+        <p className="max-w-sm text-center text-sm leading-relaxed text-muted-foreground">{phase.hint}</p>
       )}
 
       <div className="w-full max-w-sm space-y-2">
@@ -94,7 +94,7 @@ export const BreathingPlayer = ({
         </div>
       </div>
 
-      <Button variant="secondary" onClick={toggle}>
+      <Button onClick={toggle} className="min-w-32">
         {running ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
         {running ? "Pausar" : "Continuar"}
       </Button>
