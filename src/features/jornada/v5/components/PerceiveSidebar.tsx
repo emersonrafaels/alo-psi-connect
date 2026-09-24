@@ -69,7 +69,7 @@ export const PerceiveSidebar = ({
                         {node?.label ?? item.emotionId}
                       </span>
                       <span className="block truncate text-[11px] text-muted-foreground">
-                        {getEmotionPath(item.emotionId).map((part) => part.label).join(" › ")}
+                        {getEmotionNode(item.emotionId)?.label}
                       </span>
                       <span className="block text-xs text-muted-foreground">
                         {item.intensityBefore} · {INTENSITY_LABELS[item.intensityBefore]}

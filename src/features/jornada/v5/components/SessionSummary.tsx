@@ -128,7 +128,7 @@ export const SessionSummary = ({
                       </span>
                     </span>
                     <span className="mt-1 block text-xs text-muted-foreground">
-                        {getEmotionPath(item.emotionId).map((part) => part.label).join(" › ")} ·{" "}
+                        {getEmotionNode(item.emotionId)?.label} ·{" "}
                       Antes: {item.intensityBefore} · {INTENSITY_LABELS[item.intensityBefore]}
                       {item.intensityAfter != null && (
                         <> · Depois da pausa: {item.intensityAfter}</>

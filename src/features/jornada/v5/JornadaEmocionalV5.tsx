@@ -244,14 +244,7 @@ const JornadaEmocionalV5 = () => {
                     </p>
                   </div>
 
-                   <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-muted-foreground"><span className="rounded-full bg-muted px-3 py-1">Família emocional</span><span className="rounded-full bg-muted px-3 py-1">Emoção mais precisa</span><span className="rounded-full bg-muted px-3 py-1">Nuance emocional</span></div>
-
                    <JourneyGuide title="Como explorar a roda" text="Orientação curta e opcional de um profissional da Rede Bem-Estar." duration="~20s" />
-
-                  <EmotionBreadcrumb
-                    ids={[state.familyId, state.level2Id, state.level3Id]}
-                    onSelect={(id) => dispatch({ type: "PICK_EMOTION", emotionId: id })}
-                  />
 
                   <div ref={wheelRef} />
                   <EmotionWheelV11
@@ -319,7 +312,7 @@ const JornadaEmocionalV5 = () => {
                 mode={state.focus.mode}
                 emotionId={state.focus.emotionId}
                 onSelect={(mode, emotionId) => dispatch({ type: "SET_FOCUS", mode, emotionId })}
-                onBack={() => dispatch({ type: "BACK_TO_WHEEL" })}
+                onBack={() => { dispatch({ type: "BACK_TO_WHEEL" }); requestAnimationFrame(() => wheelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }}
                 onNext={() => dispatch({ type: "GO_TO", phase: "comprehend" })}
               />
             )}
