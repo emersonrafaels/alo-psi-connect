@@ -27,6 +27,18 @@ export interface RegulationState {
   /** Reavaliação da mesma ocorrência — não cria novo registro. */
   reassessEmotionId: string | null;
   intensityAfter: Intensity | null;
+  rounds: number;
+}
+
+export interface BodyMapLayer {
+  id: string;
+  sourceId: string;
+  label: string;
+  kind: "emotion" | "sensation";
+  color: string;
+  intensity: Intensity;
+  zoneIds: string[];
+  after?: "less" | "same" | "more" | "unsure" | null;
 }
 
 export interface ComprehensionState {
@@ -37,6 +49,9 @@ export interface ComprehensionState {
   /** "Ainda não consigo identificar" por dimensão. */
   unclear: string[];
   skipped: boolean;
+  bodyLayers: BodyMapLayer[];
+  bodyNote: string;
+  bodyMapStatus: "mapped" | "no_clear_signals" | "skipped" | null;
 }
 
 export interface LearningState {

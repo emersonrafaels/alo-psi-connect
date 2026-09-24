@@ -4,6 +4,7 @@
  * ao concluir o registro. Visitantes sem conta gravam de forma anônima.
  */
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import type { V5State } from "./types";
 
 const KEY = "rbe.jornada.v5.session";
@@ -76,7 +77,13 @@ export const persistSession = async (
         thoughts: state.comprehension.thoughts,
         unclear: state.comprehension.unclear,
         skipped: state.comprehension.skipped,
-      },
+        body_layers: state.comprehension.bodyLayers.map((layer) => ({
+          ...layer,
+          after: layer.after ?? null,
+        })),
+        body_note: state.comprehension.bodyNote,
+        body_map_status: state.comprehension.bodyMapStatus,
+      } as Json,
       action: {
         direct: state.action.direct,
         influence: state.action.influence,

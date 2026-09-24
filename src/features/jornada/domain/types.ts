@@ -17,6 +17,7 @@ export interface EmotionNode {
 export interface EmotionFamily extends EmotionNode {
   level: 1;
   color: string;
+  valence?: "pleasant" | "unpleasant";
   children: EmotionNode[];
 }
 

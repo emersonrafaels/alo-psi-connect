@@ -163,7 +163,7 @@ export const V5_COPY = {
     eyebrow: "Agir",
     title: "O que está ao seu alcance agora?",
     description:
-      "Organizar a situação em três áreas evita uma divisão rígida entre “controlo” e “não controlo”. Muitas situações universitárias podem ser influenciadas, mas não controladas por uma única pessoa.",
+      "Organizar a situação em três áreas evita uma divisão rígida entre “controle” e “não controle”. Muitas situações universitárias podem ser influenciadas, mas não controladas por uma única pessoa.",
     columns: [
       {
         key: "direct",

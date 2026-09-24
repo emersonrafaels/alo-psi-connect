@@ -1,7 +1,7 @@
 import { ArrowRight, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getEmotionNode, getFamilyOf } from "../../config/emotion-taxonomy";
+import { getEmotionNode, getEmotionPath, getFamilyOf } from "../../config/emotion-taxonomy";
 import { INTENSITY_LABELS } from "../../config/perceived-change-options";
 import { EmotionSearch } from "../../components/EmotionSearch";
 import { V5_COPY } from "../copy";
@@ -67,6 +67,9 @@ export const PerceiveSidebar = ({
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold text-foreground">
                         {node?.label ?? item.emotionId}
+                      </span>
+                      <span className="block truncate text-[11px] text-muted-foreground">
+                        {getEmotionPath(item.emotionId).map((part) => part.label).join(" › ")}
                       </span>
                       <span className="block text-xs text-muted-foreground">
                         {item.intensityBefore} · {INTENSITY_LABELS[item.intensityBefore]}
