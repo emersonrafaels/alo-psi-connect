@@ -51,7 +51,7 @@ export const StepPlayer = ({
   if (!current) return null;
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex min-h-[430px] flex-col items-center justify-center gap-7 py-4 sm:min-h-[500px]">
       <div className="flex gap-1.5" aria-hidden>
         {scaled.map((s, i) => (
           <span
@@ -66,7 +66,7 @@ export const StepPlayer = ({
 
       <div
         className={cn(
-          "w-full max-w-md rounded-3xl border border-border p-8 text-center",
+          "w-full max-w-xl rounded-xl border border-border p-8 text-center shadow-sm sm:p-12",
           variant === "grounding" ? "bg-accent/30" : "bg-card"
         )}
         aria-live="polite"
@@ -96,7 +96,7 @@ export const StepPlayer = ({
       </div>
 
       <div className="flex gap-2">
-        <Button variant="secondary" onClick={toggle}>
+        <Button onClick={toggle}>
           {running ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
           {running ? "Pausar" : "Continuar"}
         </Button>
