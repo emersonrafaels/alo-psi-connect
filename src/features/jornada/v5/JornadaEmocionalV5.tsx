@@ -58,14 +58,12 @@ const JornadaEmocionalV5 = () => {
   const wheelRef = useRef<HTMLDivElement | null>(null);
   const pauseRef = useRef<HTMLDivElement | null>(null);
 
-  /** Volta para a roda (do início dos níveis) para registrar outra emoção. */
-  const handleAddAnother = useCallback(() => {
+  /** Restaura a etapa Perceber e rola para a roda depois que ela voltar ao DOM. */
+  const handleBackToWheel = useCallback(() => {
     dispatch({ type: "BACK_TO_WHEEL" });
-    dispatch({ type: "BACK_LEVEL" });
-    dispatch({ type: "BACK_LEVEL" });
-    requestAnimationFrame(() => {
+    window.setTimeout(() => {
       wheelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    }, 0);
   }, []);
 
   const { bubbles, isLoading: landscapeLoading, refetch } = useEmotionLandscape();
@@ -280,7 +278,7 @@ const JornadaEmocionalV5 = () => {
                 onRemove={(emotionId) => dispatch({ type: "REMOVE_EMOTION", emotionId })}
                 onClear={() => dispatch({ type: "CLEAR_EMOTIONS" })}
                 onAdvance={() => dispatch({ type: "GO_TO_REVIEW" })}
-                onAddAnother={handleAddAnother}
+                onAddAnother={handleBackToWheel}
               />
             </div>
             )}
@@ -311,7 +309,7 @@ const JornadaEmocionalV5 = () => {
                 mode={state.focus.mode}
                 emotionId={state.focus.emotionId}
                 onSelect={(mode, emotionId) => dispatch({ type: "SET_FOCUS", mode, emotionId })}
-                onBack={() => { dispatch({ type: "BACK_TO_WHEEL" }); requestAnimationFrame(() => wheelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }}
+                onBack={handleBackToWheel}
                 onNext={() => dispatch({ type: "GO_TO", phase: "comprehend" })}
               />
             )}
@@ -342,7 +340,7 @@ const JornadaEmocionalV5 = () => {
             mode={state.focus.mode}
             emotionId={state.focus.emotionId}
             onSelect={(mode, emotionId) => dispatch({ type: "SET_FOCUS", mode, emotionId })}
-            onBack={() => dispatch({ type: "SET_FOCUS", mode: "single", emotionId: null })}
+            onBack={handleBackToWheel}
             onNext={() => dispatch({ type: "GO_TO", phase: "comprehend" })}
           />
         )}
