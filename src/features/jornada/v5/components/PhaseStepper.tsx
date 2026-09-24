@@ -66,7 +66,7 @@ export const PhaseStepper = ({
                   </span>
                   <span className="block truncate text-xs text-muted-foreground">{item.hint}</span>
                 </span>
-              </div>
+              </button>
             </li>
           );
         })}
