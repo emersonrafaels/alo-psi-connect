@@ -47,6 +47,17 @@ for (const family of EMOTION_FAMILIES) {
 
 export const EMOTION_INDEX = flat;
 export const getEmotionNode = (id: string | null | undefined): FlatEmotionNode | null => (id && flat[id]) || null;
+/** Nome humano para a interface, inclusive para identificadores antigos fora do catálogo atual. */
+export const getEmotionLabel = (id: string | null | undefined): string => {
+  const node = getEmotionNode(id);
+  if (node) return node.label;
+  if (!id) return "Emoção";
+  const lastSegment = id.split("_").filter(Boolean).at(-1) ?? id;
+  const normalized = lastSegment.replace(/[-_]+/g, " ").trim();
+  return normalized
+    ? normalized.charAt(0).toLocaleUpperCase("pt-BR") + normalized.slice(1)
+    : "Emoção";
+};
 export const getEmotionPath = (id: string | null | undefined): FlatEmotionNode[] => {
   const node = getEmotionNode(id);
   if (!node) return [];
