@@ -8,9 +8,11 @@ import type { V5Phase } from "../types";
 export const PhaseStepper = ({
   phase,
   maxReached,
+  onSelect,
 }: {
   phase: V5Phase;
   maxReached: V5Phase;
+  onSelect?: (phase: V5Phase) => void;
 }) => {
   const current = phaseIndex(phase);
   const reached = phaseIndex(maxReached);
@@ -25,14 +27,20 @@ export const PhaseStepper = ({
           const isActive = index === current;
           const isDone = index < current;
           const enabled = index <= reached;
+          const clickable = !!onSelect && isDone && phase !== "record";
           return (
             <li key={item.key}>
-              <div
+              <button
+                type="button"
+                disabled={!clickable}
+                onClick={() => clickable && onSelect?.(item.key as V5Phase)}
                 aria-current={isActive ? "step" : undefined}
+                title={clickable ? `Voltar para ${item.label}` : undefined}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors",
+                  "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors disabled:cursor-default",
                   !enabled && "opacity-60",
-                  isActive && "bg-primary/10"
+                  isActive && "bg-primary/10",
+                  clickable && "cursor-pointer hover:bg-muted"
                 )}
               >
                 <span

@@ -216,9 +216,15 @@ const JornadaEmocionalV5 = () => {
         <PhaseStepper
           phase={state.phase}
           maxReached={maxPhase}
+          onSelect={(phase) => {
+            if (phaseIndex(phase) < phaseIndex(state.phase)) {
+              dispatch({ type: "GO_TO", phase });
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }}
         />
 
-        <JourneyGuide title={`Ouvir a etapa ${V5_COPY.phases[phaseIndex(state.phase)].label}`} text={V5_COPY.phases[phaseIndex(state.phase)].hint} allowVideo={false} />
+        <JourneyGuide title={`Ouvir a etapa ${V5_COPY.phases[phaseIndex(state.phase)].label}`} text={V5_COPY.phases[phaseIndex(state.phase)].hint} allowVideo={false} readPage />
 
         {state.phase === "perceive" && !state.focus.mode && (
           <>
