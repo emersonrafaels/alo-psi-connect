@@ -10,3 +10,7 @@
 - [x] Personalizar a explicação da pausa para a primeira emoção desagradável em 5/5
 - [x] Alinhar os players internos da Jornada ao visual das Práticas
 - [x] Reproduzir a etapa Corpo com mapa demarcado e painel lateral de camadas
+- [x] Trocar “Próxima Dimensão” por “Próxima Etapa” na etapa Corpo
+- [x] Refinar a página de Registro com a direção Zen aprovada
+- [x] Exibir nomes legíveis das emoções em todo o Registro
+- [ ] Validar o Registro em computador e celular

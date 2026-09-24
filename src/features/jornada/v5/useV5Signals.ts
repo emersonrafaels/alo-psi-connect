@@ -5,7 +5,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { getEmotionNode } from "../config/emotion-taxonomy";
+import { getEmotionLabel } from "../config/emotion-taxonomy";
 import type { KnownPractice } from "./learningTrail";
 
 export interface LandscapeRow {
@@ -37,7 +37,7 @@ export const useEmotionLandscape = () => {
         ...row,
         occurrences: Number(row.occurrences ?? 0),
         avg_intensity: row.avg_intensity == null ? null : Number(row.avg_intensity),
-        label: getEmotionNode(row.emotion_id)?.label ?? row.emotion_id,
+        label: getEmotionLabel(row.emotion_id),
       }));
     },
   });

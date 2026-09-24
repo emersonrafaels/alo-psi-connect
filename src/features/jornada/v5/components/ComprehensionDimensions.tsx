@@ -121,7 +121,7 @@ export const ComprehensionDimensions = ({
               Voltar
             </Button>
             <Button onClick={() => setIndex(index + 1)}>
-              Próxima Dimensão
+              Próxima Etapa
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>

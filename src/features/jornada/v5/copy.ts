@@ -115,7 +115,7 @@ export const V5_COPY = {
     skip: "Prefiro não registrar agora",
     clear: "Limpar",
     prev: "Anterior",
-    next: "Próxima dimensão",
+    next: "Próxima Etapa",
     whyLabel: "Por que observar isso pode ajudar?",
   },
 
