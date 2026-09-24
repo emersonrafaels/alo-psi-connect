@@ -57,6 +57,7 @@ const JornadaEmocionalV5 = () => {
   const [supportOpen, setSupportOpen] = useState(false);
 
   const wheelRef = useRef<HTMLDivElement | null>(null);
+  const pauseRef = useRef<HTMLDivElement | null>(null);
 
   /** Volta para a roda (do início dos níveis) para registrar outra emoção. */
   const handleAddAnother = useCallback(() => {
@@ -137,6 +138,13 @@ const JornadaEmocionalV5 = () => {
       dispatch({ type: "OFFER_PAUSE", practiceId: pausePractice.id });
     }
   }, [showPause, state.regulation.offered, pausePractice]);
+
+  useEffect(() => {
+    if (!showPause) return;
+    requestAnimationFrame(() => {
+      pauseRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [showPause]);
 
   const learningPick = useMemo(() => {
     if (state.phase !== "regulate") return null;
@@ -280,21 +288,23 @@ const JornadaEmocionalV5 = () => {
             )}
 
             {(showPause || (state.regulation.completed && state.regulation.intensityAfter == null)) && (
-              <ImmediateRegulationCard
-                practice={pausePractice ?? null}
-                regulation={state.regulation}
-                firstEmotion={state.emotions[0] ?? null}
-                onAccept={() => dispatch({ type: "ACCEPT_PAUSE" })}
-                onDecline={() => dispatch({ type: "DECLINE_PAUSE" })}
-                onSaveForLater={() => dispatch({ type: "DECLINE_PAUSE" })}
-                onStart={() => dispatch({ type: "START_PAUSE_PRACTICE" })}
-                onComplete={() => dispatch({ type: "COMPLETE_PAUSE_PRACTICE" })}
-                onAbandon={() => dispatch({ type: "ABANDON_PAUSE_PRACTICE" })}
-                onReassess={(intensity) => dispatch({ type: "SET_REASSESS", intensity })}
-                onContinue={() => dispatch({ type: "DECLINE_PAUSE" })}
-                onRepeat={() => dispatch({ type: "REPEAT_PAUSE" })}
-                onSupport={() => setSupportOpen(true)}
-              />
+              <div ref={pauseRef} className="scroll-mt-20">
+                <ImmediateRegulationCard
+                  practice={pausePractice ?? null}
+                  regulation={state.regulation}
+                  firstEmotion={state.emotions[0] ?? null}
+                  onAccept={() => dispatch({ type: "ACCEPT_PAUSE" })}
+                  onDecline={() => dispatch({ type: "DECLINE_PAUSE" })}
+                  onSaveForLater={() => dispatch({ type: "DECLINE_PAUSE" })}
+                  onStart={() => dispatch({ type: "START_PAUSE_PRACTICE" })}
+                  onComplete={() => dispatch({ type: "COMPLETE_PAUSE_PRACTICE" })}
+                  onAbandon={() => dispatch({ type: "ABANDON_PAUSE_PRACTICE" })}
+                  onReassess={(intensity) => dispatch({ type: "SET_REASSESS", intensity })}
+                  onContinue={() => dispatch({ type: "DECLINE_PAUSE" })}
+                  onRepeat={() => dispatch({ type: "REPEAT_PAUSE" })}
+                  onSupport={() => setSupportOpen(true)}
+                />
+              </div>
             )}
 
             {state.perceiveReview && state.emotions.length > 0 && !showPause && (
