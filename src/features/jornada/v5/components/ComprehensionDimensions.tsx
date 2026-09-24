@@ -17,6 +17,8 @@ import { BodyMap } from "./BodyMap";
 import { JourneyGuide } from "./JourneyGuide";
 
 type DimensionKey = "situation" | "body" | "behavior" | "thoughts";
+const UNCLEAR_TEXT = "Ainda não consigo identificar.";
+const PRIVATE_TEXT = "Prefiro não registrar agora.";
 
 /** Panorama do momento: navegação lateral por dimensão, uma por vez. */
 export const ComprehensionDimensions = ({
@@ -47,6 +49,8 @@ export const ComprehensionDimensions = ({
   const current = dimensions[index];
   const isLast = index === dimensions.length - 1;
   const unclear = value.unclear.includes(current.key);
+  const privateChosen = value[current.key as DimensionKey] === PRIVATE_TEXT;
+  void onSkip;
 
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(220px,280px)_minmax(0,1fr)]">
@@ -138,17 +142,25 @@ export const ComprehensionDimensions = ({
               onChange={(event) => onChange(current.key as DimensionKey, event.target.value)}
               placeholder={current.placeholder}
               rows={7}
-              disabled={unclear}
               className="resize-none bg-card"
             />
 
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
-                variant={unclear ? "default" : "outline"}
+                variant="outline"
                 size="sm"
-                className="rounded-full"
-                onClick={() => onToggleUnclear(current.key)}
+                className={cn("rounded-full", unclear && "border-primary bg-primary/10 text-primary")}
+                onClick={() => {
+                  const key = current.key as DimensionKey;
+                  if (unclear) {
+                    onToggleUnclear(key);
+                    onChange(key, "");
+                  } else {
+                    onToggleUnclear(key);
+                    onChange(key, UNCLEAR_TEXT);
+                  }
+                }}
               >
                 {V5_COPY.comprehend.unclear}
               </Button>
@@ -156,8 +168,12 @@ export const ComprehensionDimensions = ({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="rounded-full"
-                onClick={onSkip}
+                className={cn("rounded-full", privateChosen && "border-primary bg-primary/10 text-primary")}
+                onClick={() => {
+                  const key = current.key as DimensionKey;
+                  if (unclear) onToggleUnclear(key);
+                  onChange(key, privateChosen ? "" : PRIVATE_TEXT);
+                }}
               >
                 {V5_COPY.comprehend.skip}
               </Button>
