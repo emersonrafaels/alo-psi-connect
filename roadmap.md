@@ -9,3 +9,4 @@
 - [x] Refinar o painel lateral da primeira etapa e mantê-lo acompanhando o scroll
 - [x] Personalizar a explicação da pausa para a primeira emoção desagradável em 5/5
 - [x] Alinhar os players internos da Jornada ao visual das Práticas
+- [x] Reproduzir a etapa Corpo com mapa demarcado e painel lateral de camadas

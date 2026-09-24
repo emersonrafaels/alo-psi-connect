@@ -105,7 +105,16 @@ export const ComprehensionDimensions = ({
         </CardContent>
       </Card>
 
-      <Card className="border-border/70 shadow-sm">
+      {current.key === "body" ? (
+        <BodyMap
+          emotions={emotions}
+          layers={value.bodyLayers}
+          note={value.bodyNote}
+          onChange={(layers) => onBodyMapChange(layers)}
+          onNote={(note) => onBodyMapChange(value.bodyLayers, note)}
+          onStatus={(status) => onBodyMapChange(status === "mapped" ? value.bodyLayers : [], value.bodyNote, status)}
+        />
+      ) : <Card className="border-border/70 shadow-sm">
         <CardContent className="space-y-5 p-5 sm:p-8">
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">
@@ -120,16 +129,7 @@ export const ComprehensionDimensions = ({
 
           <JourneyGuide title="Observar sem procurar uma resposta certa" text="Uma orientação curta pode ajudar você a usar esta etapa no seu próprio ritmo." />
 
-          {current.key === "body" ? (
-            <BodyMap
-              emotions={emotions}
-              layers={value.bodyLayers}
-              note={value.bodyNote}
-              onChange={(layers) => onBodyMapChange(layers)}
-              onNote={(note) => onBodyMapChange(value.bodyLayers, note)}
-              onStatus={(status) => onBodyMapChange(status === "mapped" ? value.bodyLayers : [], value.bodyNote, status)}
-            />
-          ) : <div className="space-y-3">
+          <div className="space-y-3">
             <label
               htmlFor="dimension-text"
               className="block text-sm font-semibold text-foreground"
@@ -187,7 +187,7 @@ export const ComprehensionDimensions = ({
                 {V5_COPY.comprehend.clear}
               </Button>
             </div>
-          </div>}
+          </div>
 
           <Accordion
             type="single"
@@ -221,7 +221,7 @@ export const ComprehensionDimensions = ({
             </Button>
           </div>
         </CardContent>
-      </Card>
+      </Card>}
     </div>
   );
 };
