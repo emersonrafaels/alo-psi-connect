@@ -13,7 +13,6 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { EmotionListFallback } from "../components/EmotionListFallback";
-import { EmotionBreadcrumb } from "../components/EmotionBreadcrumb";
 import { getEmotionNode } from "../config/emotion-taxonomy";
 import { getPractice } from "../config/practices";
 import type { Intensity } from "../domain/types";

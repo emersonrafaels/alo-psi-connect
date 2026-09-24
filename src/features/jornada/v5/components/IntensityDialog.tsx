@@ -35,7 +35,7 @@ export const IntensityDialog = ({
   const [value, setValue] = useState<Intensity | null>(null);
   const node = getEmotionNode(emotionId);
   const family = getFamilyOf(emotionId);
-  const path = getEmotionPath(emotionId);
+  const path = getEmotionPath(emotionId).slice(-1);
   const open = !!node;
 
   useEffect(() => {
