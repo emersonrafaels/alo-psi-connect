@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Check, ChevronDown, Loader2, RefreshCw, Save, ShieldCheck, Sparkles } from "lucide-react";
+import { Check, ChevronDown, Clock3, Gauge, Heart, Loader2, RefreshCw, Save, ShieldCheck, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import buddyHeart from "@/assets/buddy/buddy-arms.png";
-import { getEmotionNode, getEmotionPath, getFamilyOf } from "../../config/emotion-taxonomy";
+import { getEmotionLabel, getFamilyOf } from "../../config/emotion-taxonomy";
 import { INTENSITY_LABELS, USEFULNESS_LABELS } from "../../config/perceived-change-options";
 import { getPractice } from "../../config/practices";
 import { V5_COPY } from "../copy";
@@ -21,14 +20,7 @@ const dimensionLabels: Record<string, string> = {
 };
 
 /** Resumo do registro concluído, com salvamento na Minha Jornada. */
-export const SessionSummary = ({
-  state,
-  saving,
-  saved,
-  saveError,
-  onSave,
-  onRestart,
-}: {
+export const SessionSummary = ({ state, saving, saved, saveError, onSave, onRestart }: {
   state: V5State;
   saving: boolean;
   saved: boolean;
@@ -42,223 +34,174 @@ export const SessionSummary = ({
     (key) => !!state.comprehension[key]
   );
   const elapsedMinutes = Math.max(1, Math.round(((state.completedAt ? new Date(state.completedAt).getTime() : Date.now()) - new Date(state.startedAt).getTime()) / 60000));
+  const peakIntensity = state.emotions.length
+    ? Math.max(...state.emotions.map((item) => item.intensityBefore))
+    : null;
 
-  const strip = [
-    { label: "Emoções registradas", value: String(state.emotions.length) },
-    {
-      label: "Intensidade mais alta",
-      value: state.emotions.length
-        ? String(Math.max(...state.emotions.map((item) => item.intensityBefore)))
-        : "—",
-    },
-    {
-      label: "Prática",
-      value: practice
-        ? state.learning.completed
-          ? "Concluída"
-          : "Conhecida"
-        : "Sem prática",
-    },
-    {
-      label: "Próximo passo",
-      value: state.action.next ? "Definido" : "Sem ação definida",
-    },
+  const metrics = [
+    { label: "Tempo da jornada", value: `${elapsedMinutes} min`, icon: Clock3 },
+    { label: "Emoções registradas", value: String(state.emotions.length), icon: Heart },
+    { label: "Intensidade mais alta", value: peakIntensity == null ? "—" : `${peakIntensity}/5`, icon: Gauge },
+    { label: "Próximo passo", value: state.action.next ? "Definido" : "Sem ação", icon: Check },
   ];
 
   return (
     <>
-      <Card className="border-border/70 shadow-sm">
-        <CardContent className="space-y-6 p-5 sm:p-8">
-          <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_180px] sm:items-center">
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+      <article className="overflow-hidden rounded-lg border border-border/70 bg-card shadow-[var(--shadow-elegant)]">
+        <section className="relative overflow-hidden border-b border-border/70 bg-primary px-5 py-8 text-primary-foreground sm:px-10 sm:py-10">
+          <div className="relative z-10 grid items-center gap-6 sm:grid-cols-[minmax(0,1fr)_180px]">
+            <div className="space-y-4">
+              <Badge className="border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/10">
                 {V5_COPY.record.eyebrow}
-              </p>
-              <h2 className="text-xl font-semibold text-foreground sm:text-2xl">Você criou um retrato do seu momento</h2>
-              <p className="max-w-3xl text-sm text-muted-foreground">
+              </Badge>
+              <h2 className="max-w-2xl text-2xl font-bold leading-tight sm:text-4xl">
+                Você criou um retrato do seu momento
+              </h2>
+              <p className="max-w-2xl text-sm leading-relaxed text-primary-foreground/80 sm:text-base">
                 {V5_COPY.record.description}
               </p>
-              <p className="rounded-2xl border border-border/70 bg-muted/25 p-4 text-xs leading-relaxed text-muted-foreground">
+              <p className="max-w-2xl border-l-2 border-primary-foreground/30 pl-4 text-xs leading-relaxed text-primary-foreground/70">
                 {V5_COPY.record.occurrenceNote}
               </p>
             </div>
-            <img
-              src={buddyHeart}
-              alt="Buddy, o companheiro da Rede Bem-Estar"
-              loading="lazy"
-              className="mx-auto max-h-44 w-auto object-contain"
-            />
+            <div className="mx-auto grid h-36 w-36 place-items-center rounded-full bg-primary-foreground/10 sm:h-40 sm:w-40">
+              <img src={buddyHeart} alt="Buddy, o companheiro da Rede Bem-Estar" loading="lazy" className="max-h-36 w-auto object-contain" />
+            </div>
           </div>
+        </section>
 
-          <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 p-4"><div><span className="text-xs text-muted-foreground">Tempo desta jornada</span><strong className="block text-xl text-foreground">{elapsedMinutes} min</strong></div><small className="max-w-md text-right text-xs text-muted-foreground">O tempo foi registrado automaticamente, sem cronômetro durante a experiência.</small></div>
-
-          <dl className="grid gap-3 sm:grid-cols-4">
-            {strip.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-2xl border border-border/70 bg-muted/25 p-4"
-              >
-                <dt className="text-xs text-muted-foreground">{item.label}</dt>
-                <dd className="mt-1 text-lg font-semibold text-foreground">{item.value}</dd>
+        <section className="space-y-8 px-5 py-7 sm:px-10 sm:py-10">
+          <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {metrics.map(({ label, value, icon: Icon }) => (
+              <div key={label} className="min-w-0 rounded-lg border border-border/70 bg-muted/35 p-4 transition-colors hover:bg-primary/5">
+                <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-lg bg-background text-primary shadow-sm">
+                  <Icon aria-hidden className="h-4 w-4" />
+                </div>
+                <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+                <dd className="mt-1 break-words text-xl font-bold text-foreground">{value}</dd>
               </div>
             ))}
           </dl>
 
-          <details className="group rounded-2xl border border-border/70 p-5" open>
-            <summary className="flex cursor-pointer list-none items-center justify-between"><span><strong className="block text-sm">Rever meu registro</strong><small className="text-muted-foreground">Emoções, contexto, prática e próximo passo</small></span><ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" /></summary>
-          <div className="mt-5 space-y-3">
-            <h3 className="text-sm font-semibold text-foreground">Emoções registradas</h3>
-            <ul className="grid gap-2 sm:grid-cols-3">
-              {state.emotions.map((item) => {
-                const node = getEmotionNode(item.emotionId);
-                const family = getFamilyOf(item.emotionId);
-                return (
-                  <li
-                    key={item.emotionId}
-                    className="rounded-2xl border border-border/70 bg-card p-3"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span
-                        aria-hidden
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: family?.color ?? "hsl(var(--primary))" }}
-                      />
-                      <span className="text-sm font-semibold text-foreground">
-                        {node?.label ?? item.emotionId}
-                      </span>
-                    </span>
-                    <span className="mt-1 block text-xs text-muted-foreground">
-                        {getEmotionNode(item.emotionId)?.label} ·{" "}
-                      Antes: {item.intensityBefore} · {INTENSITY_LABELS[item.intensityBefore]}
-                      {item.intensityAfter != null && (
-                        <> · Depois da pausa: {item.intensityAfter}</>
-                      )}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+          <details className="group" open>
+            <summary className="flex cursor-pointer list-none items-center justify-between border-b border-border pb-4">
+              <span>
+                <strong className="block text-lg text-foreground">Rever meu registro</strong>
+                <small className="text-muted-foreground">Emoções, contexto, prática e próximo passo</small>
+              </span>
+              <span className="flex items-center gap-2 text-sm font-semibold text-primary">
+                <span className="hidden sm:inline">Detalhes</span>
+                <ChevronDown aria-hidden className="h-4 w-4 transition-transform group-open:rotate-180" />
+              </span>
+            </summary>
 
-          {comprehension.length > 0 && (
-            <div className="space-y-3 rounded-2xl border border-border/70 p-5">
-              <h3 className="text-sm font-semibold text-foreground">Panorama do momento</h3>
-              <dl className="grid gap-3 sm:grid-cols-2">
-                {comprehension.map((key) => (
-                  <div key={key}>
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {dimensionLabels[key]}
-                    </dt>
-                    <dd className="text-sm text-foreground">{state.comprehension[key]}</dd>
+            <div className="space-y-8 pt-7">
+              <section aria-labelledby="registered-emotions-title">
+                <h3 id="registered-emotions-title" className="mb-4 text-xs font-bold uppercase text-muted-foreground">Emoções registradas</h3>
+                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {state.emotions.map((item, index) => {
+                    const family = getFamilyOf(item.emotionId);
+                    return (
+                      <li key={item.emotionId} className="relative overflow-hidden rounded-lg border border-border/70 bg-background p-5 shadow-sm">
+                        <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ backgroundColor: family?.color ?? "hsl(var(--primary))" }} />
+                        <p className="text-xs font-semibold text-muted-foreground">Emoção {index + 1}</p>
+                        <p className="mt-2 text-lg font-bold text-foreground">{getEmotionLabel(item.emotionId)}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Antes: {item.intensityBefore}/5 · {INTENSITY_LABELS[item.intensityBefore]}
+                        </p>
+                        {item.intensityAfter != null && (
+                          <p className="mt-1 text-xs font-medium text-primary">Depois da pausa: {item.intensityAfter}/5</p>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+
+              <div className="grid gap-8 border-y border-border/70 py-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.72fr)]">
+                <section>
+                  <p className="text-xs font-bold uppercase text-primary">Panorama do momento</p>
+                  {comprehension.length > 0 ? (
+                    <dl className="mt-5 grid gap-5 sm:grid-cols-2">
+                      {comprehension.map((key) => (
+                        <div key={key}>
+                          <dt className="text-xs font-semibold uppercase text-muted-foreground">{dimensionLabels[key]}</dt>
+                          <dd className="mt-1 text-sm leading-relaxed text-foreground">{state.comprehension[key]}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : (
+                    <p className="mt-3 text-sm text-muted-foreground">Nenhuma observação registrada nesta etapa.</p>
+                  )}
+                </section>
+
+                <section className="rounded-lg border border-primary/20 bg-primary/5 p-5">
+                  <p className="text-xs font-bold uppercase text-primary">Meu menor próximo passo possível</p>
+                  <p className="mt-3 text-lg font-bold text-foreground">{state.action.next || "Sem ação definida neste registro."}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {state.action.when && <Badge variant="secondary">{V5_COPY.act.whenOptions.find((option) => option.id === state.action.when)?.label}</Badge>}
+                    {state.action.status && state.action.status !== "defined" && <Badge variant="secondary">{V5_COPY.act.statusOptions.find((option) => option.id === state.action.status)?.label}</Badge>}
                   </div>
-                ))}
-              </dl>
-            </div>
-          )}
+                </section>
+              </div>
 
-          {(practice || state.learning.skipped) && (
-            <div className="space-y-2 rounded-2xl border border-border/70 p-5">
-              <h3 className="text-sm font-semibold text-foreground">Recurso desta jornada</h3>
-              {practice ? (
-                <p className="text-sm text-muted-foreground">
-                  {practice.title}
-                  {state.learning.durationMinutes ? ` · ${state.learning.durationMinutes} min` : ""}
-                  {state.learning.completed ? " · concluída" : " · não concluída"}
-                  {state.learning.utility != null &&
-                    ` · ${USEFULNESS_LABELS[state.learning.utility]}`}
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Você seguiu sem praticar. Isso também é uma escolha válida.
-                </p>
-              )}
-            </div>
-          )}
-
-          {(state.action.direct || state.action.influence || state.action.none) && (
-            <div className="grid gap-3 rounded-2xl border border-border/70 p-5 sm:grid-cols-3">
-              {V5_COPY.act.columns.map((column) => {
-                const text = state.action[column.key as "direct" | "influence" | "none"];
-                if (!text) return null;
-                return (
-                  <div key={column.key}>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {column.title}
+              <div className="grid gap-6 lg:grid-cols-2">
+                {(practice || state.learning.skipped) && (
+                  <section>
+                    <h3 className="text-xs font-bold uppercase text-muted-foreground">Recurso desta jornada</h3>
+                    <p className="mt-2 text-base font-semibold text-foreground">{practice?.title ?? "Sem prática nesta jornada"}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {practice ? `${state.learning.durationMinutes ? `${state.learning.durationMinutes} min · ` : ""}${state.learning.completed ? "Concluída" : "Não concluída"}${state.learning.utility != null ? ` · ${USEFULNESS_LABELS[state.learning.utility]}` : ""}` : "Você seguiu sem praticar. Isso também é uma escolha válida."}
                     </p>
-                    <p className="text-sm text-foreground">{text}</p>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {(state.action.next || state.action.status) && (
-            <div className="space-y-2 rounded-2xl border border-primary/25 bg-primary/5 p-5">
-              <h3 className="text-sm font-semibold text-foreground">{V5_COPY.act.stepTitle}</h3>
-              {state.action.next ? (
-                <p className="text-sm text-foreground">{state.action.next}</p>
-              ) : (
-                <p className="text-sm text-muted-foreground">Sem ação definida neste registro.</p>
-              )}
-              <div className="flex flex-wrap gap-2">
-                {state.action.when && (
-                  <Badge variant="secondary" className="rounded-full text-xs font-normal">
-                    {
-                      V5_COPY.act.whenOptions.find((option) => option.id === state.action.when)
-                        ?.label
-                    }
-                  </Badge>
+                  </section>
                 )}
-                {state.action.status && state.action.status !== "defined" && (
-                  <Badge variant="secondary" className="rounded-full text-xs font-normal">
-                    {
-                      V5_COPY.act.statusOptions.find((option) => option.id === state.action.status)
-                        ?.label
-                    }
-                  </Badge>
+
+                {state.comprehension.bodyLayers.length > 0 && (
+                  <section>
+                    <h3 className="text-xs font-bold uppercase text-muted-foreground">Seu Mapa Corporal de hoje</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">Somente o que você marcou neste check-in.</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {state.comprehension.bodyLayers.map((layer) => (
+                        <span key={layer.id} className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-foreground">
+                          <i aria-hidden className="mr-2 inline-block h-2 w-2 rounded-full" style={{ backgroundColor: layer.color }} />
+                          {layer.label} · {layer.zoneIds.length} regiões · intensidade {layer.intensity}
+                        </span>
+                      ))}
+                    </div>
+                  </section>
                 )}
               </div>
             </div>
-          )}
-          {state.comprehension.bodyLayers.length > 0 && <div className="space-y-3 rounded-2xl border border-border/70 p-5"><h3 className="text-sm font-semibold">Seu Mapa Corporal de hoje</h3><p className="text-xs text-muted-foreground">Esta visualização usa somente o que você marcou neste check-in.</p><div className="flex flex-wrap gap-2">{state.comprehension.bodyLayers.map((layer) => <span key={layer.id} className="rounded-full border border-border px-3 py-1.5 text-xs"><i className="mr-2 inline-block h-2 w-2 rounded-full" style={{ backgroundColor: layer.color }}/>{layer.label} · {layer.zoneIds.length} regiões · intensidade {layer.intensity}</span>)}</div></div>}
           </details>
+        </section>
+      </article>
 
-          <section className="rounded-2xl border border-border/70 bg-muted/20 p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-primary">Fora desta jornada</p><h3 className="mt-1 text-lg font-semibold">Conheça-se melhor</h3><p className="text-sm text-muted-foreground">Experiências complementares de autoconhecimento, separadas deste check-in.</p></div><Badge variant="secondary">Prévia · acesso do estudante</Badge></div><div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-card p-4"><strong>Sua conexão emocional</strong><p className="mt-1 text-xs text-muted-foreground">Trait Meta-Mood Scale – TMMS-24</p></div><div className="rounded-xl bg-card p-4"><strong>Suas competências emocionais</strong><p className="mt-1 text-xs text-muted-foreground">Schutte Self-Report Emotional Intelligence Test – SSEIT</p></div></div><p className="mt-4 text-xs text-muted-foreground"><strong className="text-foreground">Ferramentas de aprofundamento:</strong> CBI-S e DERS-36 ficam fora da descoberta espontânea e podem ser disponibilizadas no ambiente profissional quando houver indicação adequada.</p></section>
-
-          {saveError && (
-            <Alert variant="destructive">
-              <AlertDescription className="text-sm">{saveError}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={onSave} disabled={saving || saved}>
-              {saving ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : saved ? (
-                <Check className="mr-2 h-4 w-4" />
-              ) : (
-                <Save className="mr-2 h-4 w-4" />
-              )}
-              {saved ? "Registro salvo" : V5_COPY.record.save}
-            </Button>
-            <Button variant="outline" onClick={() => setSupportOpen(true)}>
-              <ShieldCheck className="mr-2 h-4 w-4" />
-              {V5_COPY.record.support}
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/buddy/jornada">
-                <Sparkles className="mr-2 h-4 w-4" />
-                {V5_COPY.record.openLandscape}
-              </Link>
-            </Button>
-            <Button variant="ghost" onClick={onRestart}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              {V5_COPY.record.again}
-            </Button>
+      <section className="mt-6 rounded-lg border border-border/70 bg-muted/30 p-5 sm:p-8">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase text-primary">Fora desta jornada</p>
+            <h3 className="mt-1 text-2xl font-bold text-foreground">Conheça-se melhor</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Experiências complementares de autoconhecimento, separadas deste check-in.</p>
           </div>
-        </CardContent>
-      </Card>
+          <Badge variant="secondary">Prévia · acesso do estudante</Badge>
+        </div>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border border-border/70 bg-card p-5"><strong className="text-foreground">Sua conexão emocional</strong><p className="mt-1 text-xs text-muted-foreground">Trait Meta-Mood Scale – TMMS-24</p></div>
+          <div className="rounded-lg border border-border/70 bg-card p-5"><strong className="text-foreground">Suas competências emocionais</strong><p className="mt-1 text-xs text-muted-foreground">Schutte Self-Report Emotional Intelligence Test – SSEIT</p></div>
+        </div>
+      </section>
+
+      {saveError && <Alert variant="destructive" className="mt-6"><AlertDescription className="text-sm">{saveError}</AlertDescription></Alert>}
+
+      <div className="mt-6 flex flex-wrap gap-2 rounded-lg border border-border/70 bg-card p-4 shadow-sm">
+        <Button onClick={onSave} disabled={saving || saved}>
+          {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : saved ? <Check className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
+          {saved ? "Registro salvo" : V5_COPY.record.save}
+        </Button>
+        <Button variant="outline" onClick={() => setSupportOpen(true)}><ShieldCheck className="mr-2 h-4 w-4" />{V5_COPY.record.support}</Button>
+        <Button variant="outline" asChild><Link to="/buddy/jornada"><Sparkles className="mr-2 h-4 w-4" />{V5_COPY.record.openLandscape}</Link></Button>
+        <Button variant="ghost" onClick={onRestart}><RefreshCw className="mr-2 h-4 w-4" />{V5_COPY.record.again}</Button>
+      </div>
 
       <SupportPathsDialog open={supportOpen} onOpenChange={setSupportOpen} />
     </>
