@@ -31,7 +31,7 @@ export const AfterRegisterDialog = ({
   const last = emotions[emotions.length - 1];
   const node = last ? getEmotionNode(last.emotionId) : null;
   const family = last ? getFamilyOf(last.emotionId) : null;
-  const path = last ? getEmotionPath(last.emotionId) : [];
+  const path = last ? getEmotionPath(last.emotionId).slice(-1) : [];
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onAdvance()}>

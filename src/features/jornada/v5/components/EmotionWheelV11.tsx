@@ -41,11 +41,11 @@ export const EmotionWheelV11 = ({ familyId, level2Id, level3Id, onSelectFamily, 
           return <g key={family.id} className={cn("transition-opacity", !activeFamily && "opacity-30")}>
             <path d={slice(56, 158, familyStart, familyStart + 60)} fill={family.color} stroke="hsl(var(--background))" strokeWidth="4" role="button" tabIndex={0} aria-label={`Família ${family.label}`} onClick={() => onSelectFamily(family.id)} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && onSelectFamily(family.id)} onMouseEnter={() => setHovered(family.id)} onMouseLeave={() => setHovered(null)} className="cursor-pointer outline-none transition-[filter] hover:brightness-105 focus-visible:brightness-110" />
             {text(family.label, 108, familyStart, familyStart + 60, 17)}
-            {level2.filter((item) => item.node.level === 2).map(({ node, start, end }) => <g key={node.id} className={cn(level2Id && level2Id !== node.id && "opacity-55")}>
+            {level2.filter((item) => item.node.level === 2).map(({ node, start, end }) => <g key={node.id} >
               <path d={slice(162, 275, start, end)} fill={family.color} fillOpacity=".72" stroke="hsl(var(--background))" strokeWidth="3" role="button" tabIndex={0} aria-label={`${family.label}, ${node.label}`} onClick={() => onSelectLevel2(node.id)} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && onSelectLevel2(node.id)} onMouseEnter={() => setHovered(node.id)} onMouseLeave={() => setHovered(null)} className="cursor-pointer outline-none hover:brightness-105" />
               {text(node.label, 218, start, end, 13)}
             </g>)}
-            {level2.filter((item) => item.node.level === 3).map(({ node, start, end }) => <g key={node.id} className={cn(level2Id && getEmotionNode(node.id)?.parentId !== level2Id && "opacity-40")}>
+            {level2.filter((item) => item.node.level === 3).map(({ node, start, end }) => <g key={node.id} >
               <path d={slice(279, 394, start, end)} fill={family.color} fillOpacity=".42" stroke="hsl(var(--background))" strokeWidth="2" role="button" tabIndex={0} aria-label={`Selecionar ${node.label}`} onClick={() => onSelectLevel3(node.id)} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && onSelectLevel3(node.id)} onMouseEnter={() => setHovered(node.id)} onMouseLeave={() => setHovered(null)} className={cn("cursor-pointer outline-none hover:brightness-105", selectedIds.includes(node.id) && "brightness-110")} />
               {text(node.label, 334, start, end, 11)}
             </g>)}
