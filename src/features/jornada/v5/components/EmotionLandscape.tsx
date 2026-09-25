@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { BarChart3, ChevronDown, LineChart, MapPinned, Sparkles } from "lucide-react";
+import { BarChart3, ChevronDown, LineChart, MapPinned } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
