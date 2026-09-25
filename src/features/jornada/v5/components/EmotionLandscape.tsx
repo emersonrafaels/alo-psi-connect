@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { EMOTION_FAMILIES, getEmotionLabel, getFamilyOf } from "../../config/emotion-taxonomy";
 import { BODY_REGION_OPTIONS, getBodyRegionLabel, getBodyZone } from "../bodyRegions";
 import type { BodyMapLayer, PickedEmotion } from "../types";
-import type { LandscapeBubble } from "../useV5Signals";
+import type { JourneyEmotionHistoryRow, LandscapeBubble } from "../useV5Signals";
 import { BodySilhouette } from "./BodySilhouette";
 
 type EmotionLandscapeProps = {
@@ -16,18 +16,48 @@ type EmotionLandscapeProps = {
   todayIds: string[];
   todayEmotions?: PickedEmotion[];
   bodyLayers?: BodyMapLayer[];
+  history?: JourneyEmotionHistoryRow[];
   isLoading?: boolean;
 };
 
 const occurrenceLabel = (count: number) => `${count} registro${count === 1 ? "" : "s"}`;
+const clampIntensity = (value: number | null | undefined) => Math.max(1, Math.min(5, Math.round(value ?? 3)));
 
-const linePoints = (selected: LandscapeBubble | undefined, today: PickedEmotion | undefined) => {
-  const first = Math.max(1, Math.min(5, Math.round(selected?.avg_intensity ?? today?.intensityBefore ?? 3)));
-  const last = today?.intensityBefore ?? selected?.avg_intensity ?? first;
-  return [
-    { x: 0, y: first, label: selected?.last_at ? "Histórico" : "Início" },
-    { x: 100, y: Math.max(1, Math.min(5, Math.round(last))), label: "Hoje" },
-  ];
+const formatShortDate = (date: string | null | undefined) => {
+  if (!date) return "Registro";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "Registro";
+  return parsed.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+};
+
+const linePoints = (
+  selected: LandscapeBubble | undefined,
+  today: PickedEmotion | undefined,
+  history: JourneyEmotionHistoryRow[]
+) => {
+  const selectedId = selected?.emotion_id ?? today?.emotionId;
+  const historical = selectedId
+    ? history
+        .filter((row) => row.emotion_id === selectedId)
+        .slice(-7)
+        .map((row) => ({ y: clampIntensity(row.intensity_before), label: formatShortDate(row.created_at) }))
+    : [];
+  const current = today ? [{ y: clampIntensity(today.intensityBefore), label: "Hoje" }] : [];
+  const source = [...historical, ...current];
+
+  if (source.length === 0) {
+    const fallback = clampIntensity(selected?.avg_intensity);
+    return [
+      { x: 0, y: fallback, label: "Média" },
+      { x: 100, y: fallback, label: "Atual" },
+    ];
+  }
+
+  if (source.length === 1) return [{ x: 50, ...source[0] }];
+  return source.map((point, index) => ({
+    ...point,
+    x: (index / (source.length - 1)) * 100,
+  }));
 };
 
 export const EmotionLandscape = ({
@@ -35,6 +65,7 @@ export const EmotionLandscape = ({
   todayIds,
   todayEmotions = [],
   bodyLayers = [],
+  history = [],
   isLoading,
 }: EmotionLandscapeProps) => {
   const [tab, setTab] = useState<"emotion" | "body">("emotion");
@@ -79,7 +110,7 @@ export const EmotionLandscape = ({
 
   const selected = items.find((item) => item.emotion_id === selectedEmotionId) ?? items[0];
   const selectedToday = todayEmotions.find((item) => item.emotionId === (selected?.emotion_id ?? selectedEmotionId));
-  const points = linePoints(selected, selectedToday);
+  const points = linePoints(selected, selectedToday, history);
   const path = points.map((point, index) => {
     const x = 32 + point.x * 4.2;
     const y = 178 - (point.y - 1) * 34;
