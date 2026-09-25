@@ -229,20 +229,21 @@ export const LearningResourceCard = ({
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {visibleAlternatives.map((option) => (
-                  <button
+                  <Button
                     key={option.id}
                     type="button"
+                    variant="outline"
                     onClick={() => onChoosePractice?.(option)}
-                    className="group flex min-h-[86px] items-start gap-3 rounded-2xl border border-border/70 bg-card p-4 text-left transition-colors hover:border-primary hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="group h-auto min-h-[86px] w-full justify-start whitespace-normal rounded-2xl border-border/70 bg-card p-4 text-left hover:border-primary hover:bg-primary/5"
                   >
                     <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
                       {option.icon ?? "♡"}
                     </span>
-                    <span className="min-w-0">
+                    <span className="min-w-0 flex-1">
                       <strong className="block text-sm text-foreground group-hover:text-primary">{option.title}</strong>
                       <span className="mt-1 line-clamp-2 block text-xs leading-relaxed text-muted-foreground">{option.description}</span>
                     </span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </CardContent>
