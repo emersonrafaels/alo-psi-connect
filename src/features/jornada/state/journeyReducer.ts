@@ -275,7 +275,11 @@ export const journeyReducer = (state: JourneyState, action: JourneyAction): Jour
       return touched({ showAlternatives: true });
 
     case "SELECT_PRACTICE":
-      return touched({ selectedPracticeId: action.practiceId, selectedDuration: null });
+      return touched({
+        selectedPracticeId: action.practiceId,
+        selectedDuration:
+          state.selectedPracticeId === action.practiceId ? state.selectedDuration : null,
+      });
 
     case "SELECT_DURATION":
       return touched({ selectedDuration: action.minutes });

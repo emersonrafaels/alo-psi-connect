@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.save_anonymous_journey_session(jsonb, jsonb);

@@ -75,4 +75,4 @@ export const getFamilyOf = (id: string | null | undefined): EmotionFamily | null
   const node = getEmotionNode(id);
   return node ? EMOTION_FAMILIES.find((family) => family.id === node.familyId) ?? null : null;
 };
-export const SELECTABLE_EMOTIONS: FlatEmotionNode[] = Object.values(flat).filter((node) => node.level === 3);
+export const SELECTABLE_EMOTIONS: FlatEmotionNode[] = Object.values(flat);

@@ -211,7 +211,13 @@ export const v5Reducer = (state: V5State, action: V5Action): V5State => {
 
     case "DECLINE_PAUSE":
       return touch({
-        regulation: { ...state.regulation, declined: true, accepted: false, playing: false },
+        regulation: {
+          ...state.regulation,
+          declined: true,
+          accepted: false,
+          playing: false,
+          completed: false,
+        },
       });
 
     case "START_PAUSE_PRACTICE":

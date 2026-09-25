@@ -53,9 +53,12 @@ export const persistSession = async (
 
   if (!focus) return { ok: false, error: "Nenhuma emoção registrada." };
 
-  const { data, error } = await supabase
+  const sessionId = crypto.randomUUID();
+
+  const { error } = await supabase
     .from("journey_sessions")
     .insert({
+      id: sessionId,
       user_id: userId,
       session_key: state.sessionId,
       tenant_id: tenantId ?? null,
@@ -108,14 +111,12 @@ export const persistSession = async (
         selection_basis: state.learning.selectionBasis,
       },
       completed_at: state.completedAt ?? new Date().toISOString(),
-    })
-    .select("id")
-    .single();
+    });
 
-  if (error || !data) return { ok: false, error: error?.message ?? "Falha ao salvar." };
+  if (error) return { ok: false, error: error.message };
 
   const rows = state.emotions.map((item, index) => ({
-    session_id: data.id,
+    session_id: sessionId,
     user_id: userId,
     emotion_id: item.emotionId,
     family_id: item.familyId,
@@ -127,7 +128,7 @@ export const persistSession = async (
   }));
 
   const { error: emotionsError } = await supabase.from("journey_session_emotions").insert(rows);
-  if (emotionsError) return { ok: true, id: data.id, error: emotionsError.message };
+  if (emotionsError) return { ok: true, id: sessionId, error: emotionsError.message };
 
-  return { ok: true, id: data.id };
+  return { ok: true, id: sessionId };
 };

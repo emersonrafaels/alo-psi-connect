@@ -52,8 +52,11 @@ Deno.serve(async (req) => {
 
     // Resolve paciente
     const { data: profile } = await admin
-      .from("profiles").select("id, nome, tenant_id").eq("user_id", userId).maybeSingle();
+      .from("profiles").select("id, nome, tenant_id, tipo_usuario").eq("user_id", userId).maybeSingle();
     if (!profile) return json({ error: "Perfil não encontrado" }, 404);
+    if (profile.tipo_usuario !== "paciente") {
+      return json({ error: "Acesso do Buddy disponível apenas para estudantes" }, 403);
+    }
 
     let { data: patient } = await admin
       .from("pacientes").select("id").eq("profile_id", profile.id).maybeSingle();

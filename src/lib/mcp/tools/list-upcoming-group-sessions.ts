@@ -22,12 +22,14 @@ export default defineTool({
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
     const cap = Math.min(Math.max(limit ?? 10, 1), 50);
-    const nowIso = new Date().toISOString();
+    const today = new Date().toISOString().slice(0, 10);
     const { data, error } = await supabase
       .from("group_sessions")
-      .select("id, title, description, start_at, duration_minutes, host_name, capacity")
-      .gte("start_at", nowIso)
-      .order("start_at", { ascending: true })
+      .select("id, title, description, session_date, start_time, duration_minutes, max_participants, current_registrations, professional:profissionais!group_sessions_professional_id_fkey(display_name)")
+      .gte("session_date", today)
+      .in("status", ["scheduled", "live"])
+      .order("session_date", { ascending: true })
+      .order("start_time", { ascending: true })
       .limit(cap);
     if (error) {
       return {

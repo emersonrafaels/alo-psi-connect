@@ -27,9 +27,8 @@ export default defineTool({
     );
     const cap = Math.min(Math.max(limit ?? 10, 1), 25);
     let q = supabase
-      .from("profiles")
-      .select("id, display_name, profissao, resumo, foto_perfil_url")
-      .eq("tipo_usuario", "profissional")
+      .from("profissionais")
+      .select("id, profile_id, display_name, profissao, resumo, foto_perfil_url")
       .eq("ativo", true)
       .limit(cap);
     if (query && query.trim()) {

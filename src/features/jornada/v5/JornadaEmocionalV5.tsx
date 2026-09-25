@@ -130,7 +130,7 @@ const JornadaEmocionalV5 = () => {
     showPause ||
     state.regulation.accepted ||
     state.regulation.playing ||
-    (state.regulation.completed && state.regulation.intensityAfter == null);
+    state.regulation.completed;
 
   useEffect(() => {
     if (showPause && !state.regulation.offered && pausePractice) {
@@ -295,7 +295,7 @@ const JornadaEmocionalV5 = () => {
             </div>
             )}
 
-            {(showPause || (state.regulation.completed && state.regulation.intensityAfter == null)) && (
+            {(showPause || state.regulation.completed) && (
               <div ref={pauseRef} className="scroll-mt-20">
                 <ImmediateRegulationCard
                   practice={pausePractice ?? null}

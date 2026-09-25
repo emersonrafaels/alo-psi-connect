@@ -5602,10 +5602,6 @@ export type Database = {
       }
       publish_scheduled_posts: { Args: never; Returns: undefined }
       refresh_institution_metrics: { Args: never; Returns: undefined }
-      save_anonymous_journey_session: {
-        Args: { _emotions: Json; _session: Json }
-        Returns: string
-      }
       user_belongs_to_institution: {
         Args: { _institution_id: string; _user_id: string }
         Returns: boolean
