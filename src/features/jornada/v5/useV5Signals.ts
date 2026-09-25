@@ -8,6 +8,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { getEmotionLabel } from "../config/emotion-taxonomy";
 import type { KnownPractice } from "./learningTrail";
 
+export interface JourneyEmotionHistoryRow {
+  emotion_id: string;
+  family_id: string | null;
+  intensity_before: number | null;
+  intensity_after: number | null;
+  created_at: string;
+  position: number | null;
+  label: string;
+}
+
 export interface LandscapeRow {
   emotion_id: string;
   family_id: string | null;
@@ -23,14 +33,16 @@ export interface LandscapeBubble extends LandscapeRow {
 /** Paisagem Emocional: frequência e intensidade média por emoção. */
 export const useEmotionLandscape = () => {
   const { user } = useAuth();
+  const userId = user?.id ?? null;
 
   const query = useQuery({
-    queryKey: ["jornada-v5", "landscape", user?.id ?? "anon"],
-    enabled: !!user?.id,
+    queryKey: ["jornada-v5", "landscape", userId ?? "anon"],
+    enabled: !!userId,
     staleTime: 1000 * 60,
     queryFn: async (): Promise<LandscapeBubble[]> => {
+      if (!userId) return [];
       const { data, error } = await supabase.rpc("journey_landscape", {
-        _user_id: user!.id,
+        _user_id: userId,
       });
       if (error) return [];
       return ((data ?? []) as unknown as LandscapeRow[]).map((row) => ({
@@ -45,17 +57,50 @@ export const useEmotionLandscape = () => {
   return { bubbles: query.data ?? [], isLoading: query.isLoading, refetch: query.refetch };
 };
 
+/** Histórico recente por emoção para desenhar a linha da Paisagem. */
+export const useJourneyEmotionHistory = () => {
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+
+  const query = useQuery({
+    queryKey: ["jornada-v5", "emotion-history", userId ?? "anon"],
+    enabled: !!userId,
+    staleTime: 1000 * 60,
+    queryFn: async (): Promise<JourneyEmotionHistoryRow[]> => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from("journey_session_emotions")
+        .select("emotion_id,family_id,intensity_before,intensity_after,created_at,position")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true })
+        .limit(80);
+      if (error) return [];
+      return ((data ?? []) as unknown as Omit<JourneyEmotionHistoryRow, "label">[]).map((row) => ({
+        ...row,
+        intensity_before: row.intensity_before == null ? null : Number(row.intensity_before),
+        intensity_after: row.intensity_after == null ? null : Number(row.intensity_after),
+        position: row.position == null ? null : Number(row.position),
+        label: getEmotionLabel(row.emotion_id),
+      }));
+    },
+  });
+
+  return { history: query.data ?? [], isLoading: query.isLoading };
+};
+
 /** Trilha: práticas que a pessoa já conheceu e o quanto ajudaram. */
 export const useKnownPractices = () => {
   const { user } = useAuth();
+  const userId = user?.id ?? null;
 
   const query = useQuery({
-    queryKey: ["jornada-v5", "known-practices", user?.id ?? "anon"],
-    enabled: !!user?.id,
+    queryKey: ["jornada-v5", "known-practices", userId ?? "anon"],
+    enabled: !!userId,
     staleTime: 1000 * 60 * 5,
     queryFn: async (): Promise<KnownPractice[]> => {
+      if (!userId) return [];
       const { data, error } = await supabase.rpc("journey_next_resource", {
-        _user_id: user!.id,
+        _user_id: userId,
       });
       if (error) return [];
       return ((data ?? []) as unknown as KnownPractice[]).map((row) => ({
