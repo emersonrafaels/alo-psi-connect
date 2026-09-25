@@ -41,7 +41,7 @@ import {
 import { clearDraft, loadDraft, persistSession, saveDraft } from "./repository";
 import { createV5State, phaseIndex, shouldOfferPause, v5Reducer } from "./reducer";
 import { MAX_EMOTIONS, type V5Phase } from "./types";
-import { useEmotionLandscape, useKnownPractices, emotionFrequency } from "./useV5Signals";
+import { useEmotionLandscape, useJourneyEmotionHistory, useKnownPractices, emotionFrequency } from "./useV5Signals";
 
 
 /** Jornada Emocional V5 — perceber, compreender, regular, agir, registro. */
@@ -68,6 +68,7 @@ const JornadaEmocionalV5 = () => {
   }, []);
 
   const { bubbles, isLoading: landscapeLoading, refetch } = useEmotionLandscape();
+  const { history, isLoading: historyLoading } = useJourneyEmotionHistory();
   const { known } = useKnownPractices();
 
   useEffect(() => {
@@ -424,7 +425,8 @@ const JornadaEmocionalV5 = () => {
               todayIds={state.emotions.map((item) => item.emotionId)}
               todayEmotions={state.emotions}
               bodyLayers={state.comprehension.bodyLayers}
-              isLoading={landscapeLoading}
+              history={history}
+              isLoading={landscapeLoading || historyLoading}
             />
           </div>
         )}
