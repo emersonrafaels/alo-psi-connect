@@ -38,7 +38,8 @@ export interface BodyMapLayer {
   color: string;
   intensity: Intensity;
   zoneIds: string[];
-  after?: "less" | "same" | "more" | "unsure" | null;
+  after?: "less" | "same" | "more" | "moved" | "unsure" | null;
+  movedRegionId?: string | null;
 }
 
 export interface ComprehensionState {

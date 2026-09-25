@@ -80,6 +80,7 @@ export const persistSession = async (
         body_layers: state.comprehension.bodyLayers.map((layer) => ({
           ...layer,
           after: layer.after ?? null,
+          movedRegionId: layer.movedRegionId ?? null,
         })),
         body_note: state.comprehension.bodyNote,
         body_map_status: state.comprehension.bodyMapStatus,

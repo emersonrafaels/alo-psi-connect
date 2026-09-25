@@ -14,6 +14,7 @@ import { JourneyGuide } from "./JourneyGuide";
 /** Fase Regular: um recurso da trilha de aprendizagem, com transparência da escolha. */
 export const LearningResourceCard = ({
   practice,
+  alternatives,
   learning,
   isNew,
   onSelectDuration,
@@ -23,10 +24,12 @@ export const LearningResourceCard = ({
   onToggleSilent,
   onSkip,
   onAnother,
+  onChoosePractice,
   onSetUtility,
   onNext,
 }: {
   practice: Practice | null;
+  alternatives?: Practice[];
   learning: LearningState;
   isNew: boolean;
   onSelectDuration: (minutes: number) => void;
@@ -36,9 +39,12 @@ export const LearningResourceCard = ({
   onToggleSilent: () => void;
   onSkip: () => void;
   onAnother: () => void;
+  onChoosePractice?: (practice: Practice) => void;
   onSetUtility: (utility: Intensity) => void;
   onNext: () => void;
 }) => {
+  void onSelectDuration;
+
   if (!practice) {
     return (
       <Card className="border-border/70">
@@ -55,6 +61,7 @@ export const LearningResourceCard = ({
   }
 
   const duration = learning.durationMinutes ?? practice.durations[0];
+  const visibleAlternatives = (alternatives ?? []).filter((item) => item.id !== practice.id).slice(0, 6);
 
   if (learning.playing) {
     return (
@@ -82,134 +89,167 @@ export const LearningResourceCard = ({
 
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
-      <Card className="border-border/70 shadow-sm">
-        <CardContent className="space-y-5 p-5 sm:p-8">
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-              {V5_COPY.regulate.eyebrow}
-            </p>
-            <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
-              {V5_COPY.regulate.title}
-            </h2>
-            <p className="max-w-2xl text-sm text-muted-foreground">
-              {V5_COPY.regulate.description}
-            </p>
-          </div>
-        <JourneyGuide title="O que significa regular uma emoção?" text="A proposta não é apagar o que você sente, mas ampliar repertório e escolha." />
-
-          <div className="space-y-4 rounded-2xl border border-border/70 bg-muted/25 p-4 sm:p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="space-y-1">
-                <span
-                  aria-hidden
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-lg text-primary"
-                >
-                  {practice.icon ?? "♡"}
-                </span>
-                <h3 className="text-lg font-semibold text-foreground">{practice.title}</h3>
-                <p className="max-w-xl text-sm text-muted-foreground">{practice.description}</p>
-              </div>
-              <Badge
-                variant="secondary"
-                className="shrink-0 rounded-full text-xs font-normal"
-              >
-                {isNew ? V5_COPY.regulate.newBadge : V5_COPY.regulate.knownBadge}
-              </Badge>
+      <div className="space-y-5">
+        <Card className="border-border/70 shadow-sm">
+          <CardContent className="space-y-5 p-5 sm:p-8">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                {V5_COPY.regulate.eyebrow}
+              </p>
+              <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
+                {V5_COPY.regulate.title}
+              </h2>
+              <p className="max-w-2xl text-sm text-muted-foreground">
+                {V5_COPY.regulate.description}
+              </p>
             </div>
+            <JourneyGuide title="O que significa regular uma emoção?" text="A proposta não é apagar o que você sente, mas ampliar repertório e escolha." />
 
-
-            <Alert className="border-primary/25 bg-card">
-              <Info className="h-4 w-4" />
-              <AlertDescription className="text-sm">
-                <strong className="text-foreground">{V5_COPY.regulate.whyLabel}</strong>{" "}
-                {learning.reason}
-              </AlertDescription>
-            </Alert>
-
-            {steps.length > 0 && (
-              <ol className="space-y-2">
-                {steps.map((step, i) => (
-                  <li
-                    key={step}
-                    className={cn(
-                      "flex items-start gap-3 rounded-2xl border p-3 text-sm",
-                      done
-                        ? "border-primary/30 bg-primary/5 text-foreground"
-                        : "border-border/70 bg-card text-muted-foreground"
-                    )}
+            <div className="space-y-4 rounded-2xl border border-border/70 bg-muted/25 p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <span
+                    aria-hidden
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-lg text-primary"
                   >
-                    <span
-                      aria-hidden
+                    {practice.icon ?? "♡"}
+                  </span>
+                  <h3 className="text-lg font-semibold text-foreground">{practice.title}</h3>
+                  <p className="max-w-xl text-sm text-muted-foreground">{practice.description}</p>
+                </div>
+                <Badge
+                  variant="secondary"
+                  className="shrink-0 rounded-full text-xs font-normal"
+                >
+                  {isNew ? V5_COPY.regulate.newBadge : V5_COPY.regulate.knownBadge}
+                </Badge>
+              </div>
+
+              <Alert className="border-primary/25 bg-card">
+                <Info className="h-4 w-4" />
+                <AlertDescription className="text-sm">
+                  <strong className="text-foreground">{V5_COPY.regulate.whyLabel}</strong>{" "}
+                  {learning.reason}
+                </AlertDescription>
+              </Alert>
+
+              {steps.length > 0 && (
+                <ol className="space-y-2">
+                  {steps.map((step, i) => (
+                    <li
+                      key={step}
                       className={cn(
-                        "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+                        "flex items-start gap-3 rounded-2xl border p-3 text-sm",
                         done
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-secondary-foreground"
+                          ? "border-primary/30 bg-primary/5 text-foreground"
+                          : "border-border/70 bg-card text-muted-foreground"
                       )}
                     >
-                      {done ? <Check className="h-3.5 w-3.5" /> : i + 1}
-                    </span>
-                    <span className="leading-snug">{step}</span>
-                  </li>
-                ))}
-              </ol>
-            )}
-
-            <div className="flex flex-wrap gap-2">
-              {done ? (
-                <>
-                  <Button disabled variant="secondary">
-                    <Check className="mr-2 h-4 w-4" /> {V5_COPY.regulate.practiced}
-                  </Button>
-                  <Button variant="outline" onClick={onNext}>
-                    {V5_COPY.regulate.continue}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button onClick={onStart}>
-                    <Sparkles className="mr-2 h-4 w-4" /> {V5_COPY.regulate.practice}
-                  </Button>
-                  <Button variant="outline" onClick={onSkip}>
-                    {V5_COPY.regulate.skip}
-                  </Button>
-                </>
-              )}
-              <Button variant="ghost" onClick={onAnother}>
-                {V5_COPY.regulate.another}
-              </Button>
-            </div>
-
-            {done && (
-              <div className="space-y-3 rounded-2xl border border-primary/25 bg-primary/5 p-4">
-                <p className="text-sm font-semibold text-foreground">
-                  {V5_COPY.regulate.utilityLabel}
-                </p>
-                <div
-                  className="flex flex-wrap gap-2"
-                  role="radiogroup"
-                  aria-label={V5_COPY.regulate.utilityLabel}
-                >
-                  {V5_COPY.regulate.utilityOptions.map((option) => (
-                    <Button
-                      key={option.value}
-                      type="button"
-                      role="radio"
-                      aria-checked={learning.utility === option.value}
-                      size="sm"
-                      variant={learning.utility === option.value ? "default" : "outline"}
-                      className="rounded-full"
-                      onClick={() => onSetUtility(option.value as Intensity)}
-                    >
-                      {option.label}
-                    </Button>
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+                          done
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-secondary-foreground"
+                        )}
+                      >
+                        {done ? <Check className="h-3.5 w-3.5" /> : i + 1}
+                      </span>
+                      <span className="leading-snug">{step}</span>
+                    </li>
                   ))}
-                </div>
+                </ol>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                {done ? (
+                  <>
+                    <Button disabled variant="secondary">
+                      <Check className="mr-2 h-4 w-4" /> {V5_COPY.regulate.practiced}
+                    </Button>
+                    <Button variant="outline" onClick={onNext}>
+                      {V5_COPY.regulate.continue}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button onClick={onStart}>
+                      <Sparkles className="mr-2 h-4 w-4" /> {V5_COPY.regulate.practice}
+                    </Button>
+                    <Button variant="outline" onClick={onSkip}>
+                      {V5_COPY.regulate.skip}
+                    </Button>
+                  </>
+                )}
+                <Button variant="ghost" onClick={onAnother}>
+                  {V5_COPY.regulate.another}
+                </Button>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+
+              {done && (
+                <div className="space-y-3 rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                  <p className="text-sm font-semibold text-foreground">
+                    {V5_COPY.regulate.utilityLabel}
+                  </p>
+                  <div
+                    className="flex flex-wrap gap-2"
+                    role="radiogroup"
+                    aria-label={V5_COPY.regulate.utilityLabel}
+                  >
+                    {V5_COPY.regulate.utilityOptions.map((option) => (
+                      <Button
+                        key={option.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={learning.utility === option.value}
+                        size="sm"
+                        variant={learning.utility === option.value ? "default" : "outline"}
+                        className="rounded-full"
+                        onClick={() => onSetUtility(option.value as Intensity)}
+                      >
+                        {option.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {visibleAlternatives.length > 0 && (
+          <Card className="border-border/70 shadow-sm">
+            <CardContent className="space-y-4 p-5 sm:p-6">
+              <div>
+                <h3 className="text-base font-bold text-foreground">Outras práticas disponíveis</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  A sugestão em destaque é só um ponto de partida. Você pode explorar outras opções agora.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {visibleAlternatives.map((option) => (
+                  <Button
+                    key={option.id}
+                    type="button"
+                    variant="outline"
+                    onClick={() => onChoosePractice?.(option)}
+                    className="group h-auto min-h-[86px] w-full justify-start whitespace-normal rounded-2xl border-border/70 bg-card p-4 text-left hover:border-primary hover:bg-primary/5"
+                  >
+                    <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                      {option.icon ?? "♡"}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <strong className="block text-sm text-foreground group-hover:text-primary">{option.title}</strong>
+                      <span className="mt-1 line-clamp-2 block text-xs leading-relaxed text-muted-foreground">{option.description}</span>
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       <Card className="h-max border-border/70 shadow-sm lg:sticky lg:top-24">
         <CardContent className="space-y-4 p-5 sm:p-6">
