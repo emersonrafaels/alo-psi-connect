@@ -55,7 +55,7 @@ export const persistSession = async (
 
   const sessionId = crypto.randomUUID();
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("journey_sessions")
     .insert({
       id: sessionId,

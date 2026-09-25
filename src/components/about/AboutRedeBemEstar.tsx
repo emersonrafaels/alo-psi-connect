@@ -218,6 +218,50 @@ const AboutRedeBemEstar = () => {
   </div>
 </section>
 
+      {/* ═══════ COMO ATUAMOS ═══════ */}
+      <section className="py-16 sm:py-20 lg:py-28 bg-[var(--rbe-card)] relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[var(--rbe-primary)] text-center mb-12 sm:mb-16 lg:mb-20">Como atuamos</h2>
+          <div className="flex flex-col md:flex-row justify-between items-start gap-10 sm:gap-12 relative">
+            <div className="absolute top-12 left-[10%] w-[80%] h-1 border-t-4 border-dotted border-[var(--rbe-card-border)] hidden md:block -z-10" />
+            {[
+              { n: 1, Icon: Heart, title: "Acolher", desc: "Recebemos o estudante sem julgamentos em um ambiente digital seguro e acolhedor." },
+              { n: 2, Icon: Map, title: "Mapear", desc: "Identificamos padrões e níveis de risco emocional via IA e escalas cientificamente validadas." },
+              { n: 3, Icon: TrendingUp, title: "Encaminhar", desc: "Direcionamos para o cuidado especializado de forma ágil e precisa, garantindo a continuidade." },
+            ].map(({ n, Icon, title, desc }) => (
+              <div key={n} className="flex flex-col items-center text-center flex-1 w-full">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-[var(--rbe-primary)] text-white rounded-full flex items-center justify-center mb-5 sm:mb-7 shadow-xl relative">
+                  <span className="absolute -top-2 -right-2 w-9 h-9 sm:w-10 sm:h-10 bg-[var(--rbe-secondary)] rounded-full flex items-center justify-center text-[var(--rbe-cta-bg)] font-black text-lg sm:text-xl border-4 border-[var(--rbe-card)]">{n}</span>
+                  <Icon className="w-8 h-8 sm:w-9 sm:h-9" />
+                </div>
+                <h4 className="text-lg sm:text-xl lg:text-2xl font-bold text-[var(--rbe-primary)] mb-2 sm:mb-3">{title}</h4>
+                <p className="text-sm sm:text-base text-[var(--rbe-text)] px-2 sm:px-4 max-w-xs">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════ CUIDADO QUE CONVERSA COM A REALIDADE ═══════ */}
+      <section className="py-16 sm:py-20 lg:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-20 items-center bg-[var(--rbe-lilac-light)] rounded-[32px] sm:rounded-[48px] lg:rounded-[64px] p-6 sm:p-10 lg:p-20 relative overflow-hidden">
+          <div className="relative order-2 lg:order-1 rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-2xl">
+            <video src={estudantesVideo} autoPlay muted loop playsInline className="w-full h-[280px] sm:h-[380px] lg:h-[500px] object-cover" />
+          </div>
+          <div className="order-1 lg:order-2">
+            <h2 className="text-2xl sm:text-3xl lg:text-5xl font-extrabold text-[var(--rbe-primary)] mb-6 sm:mb-7 lg:mb-8 leading-tight">Cuidado que conversa com a realidade universitária</h2>
+            <div className="space-y-4 sm:space-y-5">
+              {["Linguagem acessível e acolhedora", "Acesso mobile para rotinas intensas", "Indicadores com visão de progresso real"].map((text) => (
+                <div key={text} className="flex gap-3 sm:gap-4 items-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[var(--rbe-card)] rounded-full flex items-center justify-center shrink-0 shadow-sm"><CheckCheck className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--rbe-primary)]" /></div>
+                  <p className="text-sm sm:text-base lg:text-lg text-[var(--rbe-text)] font-medium">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ═══════ NOSSOS PRINCÍPIOS ═══════ */}
       <section className="py-16 sm:py-20 lg:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[var(--rbe-primary)] text-center mb-10 sm:mb-14 lg:mb-20">
@@ -263,6 +307,25 @@ const AboutRedeBemEstar = () => {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ═══════ IMPACTO ═══════ */}
+      <section className="py-16 sm:py-20 lg:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[var(--rbe-primary)] text-center mb-10 sm:mb-14 lg:mb-20">Impacto que queremos gerar</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+          {[
+            { v: "+90%", title: "Mais Permanência", desc: "Redução direta na evasão causada por questões emocionais." },
+            { v: "+85%", title: "Mais Pertencimento", desc: "Fortalecimento dos laços com a comunidade acadêmica." },
+            { v: "100%", title: "Mais Clareza", desc: "Visibilidade dos desafios emocionais institucionais." },
+            { v: "24/7", title: "Mais Acesso", desc: "Apoio emocional em qualquer horário, para todos." },
+          ].map(({ v, title, desc }) => (
+            <div key={title} className="bg-[var(--rbe-card)] p-5 sm:p-8 lg:p-10 rounded-[24px] sm:rounded-[32px] text-center shadow-sm border border-[var(--rbe-card-border)]">
+              <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-[var(--rbe-secondary)] mb-2 sm:mb-3">{v}</div>
+              <h6 className="font-extrabold text-[var(--rbe-primary)] mb-1.5 sm:mb-2 text-sm sm:text-base">{title}</h6>
+              <p className="text-[11px] sm:text-xs text-[var(--rbe-text-muted)]">{desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
