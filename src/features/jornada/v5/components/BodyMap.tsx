@@ -3,6 +3,7 @@ import { Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { VoiceInputButton } from "./VoiceInputButton";
 import {
   Accordion,
   AccordionContent,
@@ -141,6 +142,7 @@ export const BodyMap = ({ emotions, layers, note, onChange, onNote, onStatus }: 
           {active && <div className="mt-4 border-t border-border/70 pt-4"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-foreground">Intensidade de {active.label}</span><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Remover ${active.label}`} onClick={() => removeLayer(active)}><Trash2 className="h-4 w-4"/></Button></div><div className="mt-2 grid grid-cols-5 gap-1">{([1,2,3,4,5] as Intensity[]).map((value) => <Button key={value} size="icon" variant={active.intensity === value ? "default" : "outline"} className="h-8 w-full" onClick={() => update({ intensity: value })}>{value}</Button>)}</div></div>}
 
           <Textarea value={note} onChange={(event) => onNote(event.target.value)} placeholder="Algo mais que você percebe no corpo? (opcional)" rows={3} className="mt-4 resize-none text-xs"/>
+          <div className="mt-2"><VoiceInputButton currentValue={note} onChange={onNote} /></div>
           <div className="mt-3 flex flex-wrap gap-2"><Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => onStatus("no_clear_signals")}>Não percebo sinais claros</Button><Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => onStatus("skipped")}>Prefiro não mapear</Button><Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => { onChange([]); onNote(""); setActiveId(""); }}>Limpar mapa</Button></div>
         </aside>
       </div>

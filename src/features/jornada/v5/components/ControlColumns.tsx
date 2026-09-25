@@ -2,6 +2,7 @@ import { ArrowLeft, CircleDot, HelpCircle, Minus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { VoiceInputButton } from "./VoiceInputButton";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -72,6 +73,11 @@ export const ControlColumns = ({
                 placeholder={column.placeholder}
                 className="resize-none bg-card"
               />
+              <VoiceInputButton
+                currentValue={value[column.key as "direct" | "influence" | "none"]}
+                onChange={(t) => onChange(column.key as "direct" | "influence" | "none", t)}
+              />
+
             </div>
           );
         })}

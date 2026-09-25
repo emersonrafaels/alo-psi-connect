@@ -117,21 +117,6 @@ export const LearningResourceCard = ({
               </Badge>
             </div>
 
-            {practice.durations.length > 1 && (
-              <div className="flex flex-wrap gap-2">
-                {practice.durations.map((minutes) => (
-                  <Button
-                    key={minutes}
-                    size="sm"
-                    variant={duration === minutes ? "default" : "outline"}
-                    className="rounded-full"
-                    onClick={() => onSelectDuration(minutes)}
-                  >
-                    {minutes} min
-                  </Button>
-                ))}
-              </div>
-            )}
 
             <Alert className="border-primary/25 bg-card">
               <Info className="h-4 w-4" />

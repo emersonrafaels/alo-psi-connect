@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { VoiceInputButton } from "./VoiceInputButton";
 import {
   Accordion,
   AccordionContent,
@@ -156,6 +157,11 @@ export const ComprehensionDimensions = ({
               rows={7}
               className="resize-none bg-card"
             />
+            <VoiceInputButton
+              currentValue={value[current.key as DimensionKey]}
+              onChange={(t) => onChange(current.key as DimensionKey, t)}
+            />
+
 
             <div className="flex flex-wrap gap-2">
               <Button
