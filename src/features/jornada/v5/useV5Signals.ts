@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { getEmotionLabel } from "../config/emotion-taxonomy";
 import type { KnownPractice } from "./learningTrail";
+import type { BodyMapLayer } from "./types";
 
 export interface JourneyEmotionHistoryRow {
   emotion_id: string;
@@ -86,6 +87,58 @@ export const useJourneyEmotionHistory = () => {
   });
 
   return { history: query.data ?? [], isLoading: query.isLoading };
+};
+
+const isBodyMapLayer = (value: unknown): value is BodyMapLayer => {
+  if (!value || typeof value !== "object") return false;
+  const layer = value as Partial<BodyMapLayer>;
+  return (
+    typeof layer.id === "string" &&
+    typeof layer.sourceId === "string" &&
+    typeof layer.label === "string" &&
+    typeof layer.color === "string" &&
+    typeof layer.intensity === "number" &&
+    Array.isArray(layer.zoneIds) &&
+    layer.zoneIds.every((zoneId) => typeof zoneId === "string")
+  );
+};
+
+const readBodyLayers = (comprehension: unknown): BodyMapLayer[] => {
+  if (!comprehension || typeof comprehension !== "object" || Array.isArray(comprehension)) return [];
+  const bodyLayers = (comprehension as { body_layers?: unknown }).body_layers;
+  return Array.isArray(bodyLayers) ? bodyLayers.filter(isBodyMapLayer) : [];
+};
+
+/** Histórico corporal salvo nas sessões concluídas da própria pessoa. */
+export const useJourneyBodyHistory = () => {
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+
+  const query = useQuery({
+    queryKey: ["jornada-v5", "body-history", userId ?? "anon"],
+    enabled: !!userId,
+    staleTime: 1000 * 60,
+    queryFn: async (): Promise<BodyMapLayer[]> => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from("journey_sessions")
+        .select("id,comprehension,created_at")
+        .eq("user_id", userId)
+        .eq("status", "completed")
+        .order("created_at", { ascending: true })
+        .limit(80);
+      if (error) return [];
+
+      return (data ?? []).flatMap((session) =>
+        readBodyLayers(session.comprehension).map((layer, index) => ({
+          ...layer,
+          id: `${session.id}-${layer.id}-${index}`,
+        }))
+      );
+    },
+  });
+
+  return { bodyHistory: query.data ?? [], isLoading: query.isLoading };
 };
 
 /** Trilha: práticas que a pessoa já conheceu e o quanto ajudaram. */

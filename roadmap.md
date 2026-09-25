@@ -18,3 +18,4 @@
 - [x] Atualizar a Paisagem Emocional com corpo, emoções e padrões conforme referência
 - [x] Adicionar outras práticas disponíveis na etapa Regular Aprendizagem
 - [x] Incluir Mudou de lugar com seletor no check-out corporal
+- [x] Exibir frente e costas na Paisagem Emocional com marcações atuais e histórico corporal
