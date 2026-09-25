@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -370,9 +370,15 @@ export const useEmotionConfig = () => {
     }
   }, [user, defaultTypes, userConfigs, loading]);
 
-  const activeConfigs = userConfigs.filter(c => c.is_enabled);
-  const availableEmotions = defaultTypes.filter(
-    type => !userConfigs.some(c => c.emotion_type === type.emotion_type)
+  const activeConfigs = useMemo(
+    () => userConfigs.filter(c => c.is_enabled),
+    [userConfigs]
+  );
+  const availableEmotions = useMemo(
+    () => defaultTypes.filter(
+      type => !userConfigs.some(c => c.emotion_type === type.emotion_type)
+    ),
+    [defaultTypes, userConfigs]
   );
 
   return {
