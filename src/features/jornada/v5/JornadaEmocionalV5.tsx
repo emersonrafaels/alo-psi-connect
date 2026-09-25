@@ -422,6 +422,8 @@ const JornadaEmocionalV5 = () => {
             <EmotionLandscape
               bubbles={bubbles}
               todayIds={state.emotions.map((item) => item.emotionId)}
+              todayEmotions={state.emotions}
+              bodyLayers={state.comprehension.bodyLayers}
               isLoading={landscapeLoading}
             />
           </div>
