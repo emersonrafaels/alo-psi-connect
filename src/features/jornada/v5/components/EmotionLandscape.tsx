@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { EMOTION_FAMILIES, getEmotionLabel, getFamilyOf } from "../../config/emotion-taxonomy";
-import { BODY_REGION_OPTIONS, getBodyRegionLabel, getBodyZone } from "../bodyRegions";
+import { getBodyRegionLabel, getBodyZone } from "../bodyRegions";
 import type { BodyMapLayer, PickedEmotion } from "../types";
 import type { JourneyEmotionHistoryRow, LandscapeBubble } from "../useV5Signals";
 import { BodySilhouette } from "./BodySilhouette";
