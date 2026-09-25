@@ -241,9 +241,9 @@ export const EmotionLandscape = ({
                     <div>
                       <h4 className="flex items-center gap-2 text-base font-bold text-foreground">
                         <LineChart className="h-4 w-4 text-primary" />
-                        Intensidade de “{selected?.label ?? getEmotionLabel(selectedEmotionId)}” nos últimos registros
+                        Intensidade de “{selected?.label ?? getEmotionLabel(selectedEmotionId)}” nos registros recentes
                       </h4>
-                      <p className="mt-1 text-xs text-muted-foreground">A linha mostra uma emoção por vez, preservando a intensidade informada em cada registro.</p>
+                      <p className="mt-1 text-xs text-muted-foreground">A linha usa registros salvos quando existem e inclui o check-in atual antes do salvamento.</p>
                     </div>
                     <div className="w-full sm:w-48">
                       <label className="text-xs font-bold uppercase text-muted-foreground" htmlFor="landscape-emotion-select">Emoção</label>
@@ -268,11 +268,11 @@ export const EmotionLandscape = ({
                     ))}
                     <path d={areaPath} className="fill-primary/10" />
                     <path d={path} className="fill-none stroke-primary" strokeWidth="4" strokeLinecap="round" />
-                    {points.map((point) => {
+                    {points.map((point, index) => {
                       const x = 32 + point.x * 4.2;
                       const y = 178 - (point.y - 1) * 34;
                       return (
-                        <g key={point.label}>
+                        <g key={`${point.label}-${index}`}>
                           <circle cx={x} cy={y} r="6" className="fill-card stroke-primary" strokeWidth="4" />
                           <text x={x - 12} y={y - 12} className="fill-foreground text-[11px] font-bold">{point.y}/5</text>
                           <text x={x - 14} y="205" className="fill-muted-foreground text-[10px]">{point.label}</text>
