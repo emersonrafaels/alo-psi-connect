@@ -18,7 +18,16 @@ import type { Intensity } from "../../domain/types";
 import { BodySilhouette } from "./BodySilhouette";
 
 const SENSATIONS = ["Tensão", "Aperto", "Calor", "Frio", "Peso", "Agitação", "Leveza", "Expansão"];
-const COLORS = ["#6a25ad", "#ef4f9b", "#16b8c4", "#e5b43d", "#5aa47d", "#718fda", "#d85fb4", "#ef7a66"];
+const COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--teal))",
+  "hsl(var(--wellz-coral))",
+  "hsl(var(--success))",
+  "hsl(var(--accent-foreground))",
+  "hsl(var(--wellz-purple))",
+  "hsl(var(--wellz-text-title))",
+  "hsl(var(--muted-foreground))",
+];
 
 export const BodyMap = ({ emotions, layers, note, onChange, onNote, onStatus }: { emotions: PickedEmotion[]; layers: BodyMapLayer[]; note: string; onChange: (layers: BodyMapLayer[]) => void; onNote: (note: string) => void; onStatus: (status: "mapped" | "no_clear_signals" | "skipped") => void }) => {
   const [activeId, setActiveId] = useState(layers[0]?.id ?? "");

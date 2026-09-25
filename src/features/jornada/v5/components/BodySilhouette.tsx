@@ -29,7 +29,7 @@ export const BodySilhouette = ({
       ? {
           role: "button",
           tabIndex: 0,
-          "aria-label": `${zone.label}${isActive ? ", selecionado" : ""}`,
+          "aria-label": `${zone.label} - ${zone.sideLabel}${isActive ? ", selecionado" : ""}`,
           onClick: () => onToggleZone?.(zone.id),
           onKeyDown: (event: KeyboardEvent<SVGElement>) => {
             if (event.key === "Enter" || event.key === " ") onToggleZone?.(zone.id);
