@@ -16,6 +16,7 @@ type EmotionLandscapeProps = {
   todayIds: string[];
   todayEmotions?: PickedEmotion[];
   bodyLayers?: BodyMapLayer[];
+  bodyHistory?: BodyMapLayer[];
   history?: JourneyEmotionHistoryRow[];
   isLoading?: boolean;
 };
@@ -65,6 +66,7 @@ export const EmotionLandscape = ({
   todayIds,
   todayEmotions = [],
   bodyLayers = [],
+  bodyHistory = [],
   history = [],
   isLoading,
 }: EmotionLandscapeProps) => {
@@ -118,9 +120,10 @@ export const EmotionLandscape = ({
   }).join(" ");
   const areaPath = `${path} L452,178 L32,178 Z`;
 
+  const allBodyLayers = useMemo(() => [...bodyHistory, ...bodyLayers], [bodyHistory, bodyLayers]);
   const bodyRegionRows = useMemo(() => {
     const regionMap = new Map<string, { id: string; label: string; count: number; intensityTotal: number }>();
-    for (const layer of bodyLayers) {
+    for (const layer of allBodyLayers) {
       const ids = [...layer.zoneIds, ...(layer.movedRegionId ? [layer.movedRegionId] : [])];
       for (const id of ids) {
         const zone = getBodyZone(id);
@@ -133,14 +136,14 @@ export const EmotionLandscape = ({
       }
     }
     return [...regionMap.values()].sort((a, b) => b.count - a.count).slice(0, 8);
-  }, [bodyLayers]);
+  }, [allBodyLayers]);
   const bodyMax = Math.max(1, ...bodyRegionRows.map((item) => item.count));
-  const highlightedBodyLayers = bodyLayers.map((layer) =>
+  const highlightedBodyLayers = allBodyLayers.map((layer) =>
     layer.movedRegionId && !layer.zoneIds.includes(layer.movedRegionId)
       ? { ...layer, zoneIds: [...layer.zoneIds, layer.movedRegionId] }
       : layer
   );
-  const bodyPatterns = bodyLayers
+  const bodyPatterns = allBodyLayers
     .flatMap((layer) => {
       const zones = layer.zoneIds.slice(0, 2).map((id) => getBodyRegionLabel(id)).filter(Boolean);
       const moved = layer.movedRegionId ? getBodyRegionLabel(layer.movedRegionId) : null;
@@ -327,33 +330,41 @@ export const EmotionLandscape = ({
             </div>
           ) : (
             <div className="space-y-7">
-              {bodyLayers.length ? (
-                <>
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
-                    <div className="rounded-2xl border border-border/70 bg-gradient-to-br from-primary/5 via-card to-teal/10 p-5">
-                      <div className="grid grid-cols-2 gap-4">
-                        <BodySilhouette side="front" layers={highlightedBodyLayers} heightClassName="h-[300px]" />
-                        <BodySilhouette side="back" layers={highlightedBodyLayers} heightClassName="h-[300px]" />
-                      </div>
+              <>
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+                  <div className="rounded-2xl border border-border/70 bg-gradient-to-br from-primary/5 via-card to-teal/10 p-5">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                      <BodySilhouette side="front" layers={highlightedBodyLayers} heightClassName="h-[260px] sm:h-[300px]" />
+                      <BodySilhouette side="back" layers={highlightedBodyLayers} heightClassName="h-[260px] sm:h-[300px]" />
                     </div>
-                    <aside className="rounded-2xl border border-border/70 bg-card p-5">
-                      <h4 className="text-base font-bold text-foreground">Padrões que vêm aparecendo</h4>
-                      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                        No corpo, frequência e intensidade continuam separadas: a recorrência da região aparece sem transformar isso em diagnóstico.
-                      </p>
-                      <ul className="mt-4 space-y-2 text-xs leading-relaxed text-muted-foreground">
-                        {bodyPatterns.map(({ layer, label }, index) => (
-                          <li key={`${layer.id}-${label}-${index}`}>
-                            • <strong className="text-foreground">{layer.label}</strong> · {label}: intensidade típica {layer.intensity}/5
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {bodyLayers.slice(0, 4).map((layer) => <Badge key={layer.id} variant="secondary">{layer.label}</Badge>)}
-                      </div>
-                    </aside>
                   </div>
+                  <aside className="rounded-2xl border border-border/70 bg-card p-5">
+                    <h4 className="text-base font-bold text-foreground">Padrões que vêm aparecendo</h4>
+                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                      No corpo, frequência e intensidade continuam separadas: a recorrência da região aparece sem transformar isso em diagnóstico.
+                    </p>
+                    {bodyPatterns.length ? (
+                      <>
+                        <ul className="mt-4 space-y-2 text-xs leading-relaxed text-muted-foreground">
+                          {bodyPatterns.map(({ layer, label }, index) => (
+                            <li key={`${layer.id}-${label}-${index}`}>
+                              • <strong className="text-foreground">{layer.label}</strong> · {label}: intensidade típica {layer.intensity}/5
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {allBodyLayers.slice(0, 4).map((layer) => <Badge key={layer.id} variant="secondary">{layer.label}</Badge>)}
+                        </div>
+                      </>
+                    ) : (
+                      <p className="mt-4 text-sm text-muted-foreground">
+                        Seus destaques aparecerão sobre o corpo depois que você registrar o Mapa Corporal.
+                      </p>
+                    )}
+                  </aside>
+                </div>
 
+                {allBodyLayers.length > 0 && (
                   <section className="rounded-2xl border border-border/70 bg-gradient-to-br from-card to-teal/10 p-5">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
@@ -381,16 +392,8 @@ export const EmotionLandscape = ({
                     </div>
                     <p className="mt-5 text-xs text-muted-foreground">Uma mesma região pode reunir sensações diferentes; a relação sensação + região é preservada no histórico detalhado.</p>
                   </section>
-                </>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-border p-8 text-center">
-                  <h4 className="font-semibold text-foreground">Histórico corporal</h4>
-                  <p className="mt-2 text-sm text-muted-foreground">As regiões e sensações começam a aparecer aqui depois que você registra o Mapa Corporal.</p>
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    {BODY_REGION_OPTIONS.slice(0, 6).map((region) => <Badge key={region.id} variant="secondary">{region.label}</Badge>)}
-                  </div>
-                </div>
-              )}
+                )}
+              </>
             </div>
           )}
         </CardContent>
