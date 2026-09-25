@@ -13,8 +13,9 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { EmotionListFallback } from "../components/EmotionListFallback";
+import { getProtocol } from "../config/practice-protocols";
 import { getEmotionNode } from "../config/emotion-taxonomy";
-import { getPractice } from "../config/practices";
+import { getPractice, PRACTICES } from "../config/practices";
 import type { Intensity } from "../domain/types";
 import { ComprehensionDimensions } from "./components/ComprehensionDimensions";
 import { ControlColumns } from "./components/ControlColumns";
@@ -154,7 +155,7 @@ const JornadaEmocionalV5 = () => {
   }, [state.phase, known, peakIntensity, state.learning.durationMinutes, state.learning.rejectedIds]);
 
   useEffect(() => {
-    if (learningPick && state.learning.practiceId !== learningPick.practice.id) {
+    if (learningPick && !state.learning.practiceId) {
       dispatch({
         type: "SET_LEARNING",
         practiceId: learningPick.practice.id,
@@ -164,6 +165,16 @@ const JornadaEmocionalV5 = () => {
   }, [learningPick, state.learning.practiceId]);
 
   const learningPractice = getPractice(state.learning.practiceId ?? "");
+  const learningAlternatives = useMemo(
+    () =>
+      PRACTICES.filter(
+        (practice) =>
+          practice.status === "active" &&
+          !!getProtocol(practice.protocolId) &&
+          !state.learning.rejectedIds.includes(practice.id)
+      ),
+    [state.learning.rejectedIds]
+  );
 
   const focusLabel =
     state.focus.mode === "whole"
@@ -364,12 +375,14 @@ const JornadaEmocionalV5 = () => {
           <BodyCheckout
             layers={state.comprehension.bodyLayers}
             onChange={(layerId, after) => dispatch({ type: "SET_BODY_CHECKOUT", layerId, after })}
+            onMovedRegionChange={(layerId, movedRegionId) => dispatch({ type: "SET_BODY_MOVED_REGION", layerId, movedRegionId })}
             onBack={() => setBodyCheckout(false)}
             onNext={() => { setBodyCheckout(false); dispatch({ type: "GO_TO", phase: "act" }); }}
           />
         ) : state.phase === "regulate" && (
           <LearningResourceCard
             practice={learningPractice ?? null}
+            alternatives={learningAlternatives}
             learning={state.learning}
             isNew={learningPick?.isNew ?? true}
             onSelectDuration={(minutes) => dispatch({ type: "SET_LEARNING_DURATION", minutes })}
@@ -379,6 +392,7 @@ const JornadaEmocionalV5 = () => {
             onToggleSilent={() => dispatch({ type: "TOGGLE_LEARNING_SILENT" })}
             onSkip={() => dispatch({ type: "SKIP_LEARNING" })}
             onAnother={() => dispatch({ type: "REJECT_LEARNING" })}
+            onChoosePractice={(practice) => dispatch({ type: "SET_LEARNING", practiceId: practice.id, reason: "Você escolheu esta prática entre as opções disponíveis para este momento." })}
             onSetUtility={(utility) => dispatch({ type: "SET_LEARNING_UTILITY", utility })}
             onNext={() => state.learning.completed && state.comprehension.bodyLayers.length > 0 ? setBodyCheckout(true) : dispatch({ type: "GO_TO", phase: "act" })}
           />
