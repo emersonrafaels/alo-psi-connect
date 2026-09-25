@@ -156,6 +156,11 @@ export const ComprehensionDimensions = ({
               rows={7}
               className="resize-none bg-card"
             />
+            <VoiceInputButton
+              currentValue={value[current.key as DimensionKey]}
+              onChange={(t) => onChange(current.key as DimensionKey, t)}
+            />
+
 
             <div className="flex flex-wrap gap-2">
               <Button

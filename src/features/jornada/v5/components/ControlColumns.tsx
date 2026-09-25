@@ -72,6 +72,11 @@ export const ControlColumns = ({
                 placeholder={column.placeholder}
                 className="resize-none bg-card"
               />
+              <VoiceInputButton
+                currentValue={value[column.key as "direct" | "influence" | "none"]}
+                onChange={(t) => onChange(column.key as "direct" | "influence" | "none", t)}
+              />
+
             </div>
           );
         })}
