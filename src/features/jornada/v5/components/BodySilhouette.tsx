@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from "react";
 import { BODY_SILHOUETTE, BODY_ZONES, type BodySide, type BodyZone } from "../bodyRegions";
 import type { BodyMapLayer } from "../types";
 
@@ -30,7 +31,7 @@ export const BodySilhouette = ({
           tabIndex: 0,
           "aria-label": `${zone.label}${isActive ? ", selecionado" : ""}`,
           onClick: () => onToggleZone?.(zone.id),
-          onKeyDown: (event: React.KeyboardEvent<SVGElement>) => {
+          onKeyDown: (event: KeyboardEvent<SVGElement>) => {
             if (event.key === "Enter" || event.key === " ") onToggleZone?.(zone.id);
           },
           className: "cursor-pointer outline-none transition-all hover:stroke-primary focus:stroke-primary",

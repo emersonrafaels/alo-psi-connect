@@ -89,6 +89,7 @@ export type V5Action =
   | { type: "CLEAR_COMPREHENSION" }
   | { type: "SET_BODY_MAP"; bodyLayers: V5State["comprehension"]["bodyLayers"]; bodyNote?: string; status?: V5State["comprehension"]["bodyMapStatus"] }
   | { type: "SET_BODY_CHECKOUT"; layerId: string; after: NonNullable<V5State["comprehension"]["bodyLayers"][number]["after"]> }
+  | { type: "SET_BODY_MOVED_REGION"; layerId: string; movedRegionId: string }
   | { type: "SET_LEARNING"; practiceId: string; reason: string }
   | { type: "SET_LEARNING_DURATION"; minutes: number }
   | { type: "TOGGLE_LEARNING_SILENT" }
@@ -304,7 +305,23 @@ export const v5Reducer = (state: V5State, action: V5Action): V5State => {
         comprehension: {
           ...state.comprehension,
           bodyLayers: state.comprehension.bodyLayers.map((layer) =>
-            layer.id === action.layerId ? { ...layer, after: action.after } : layer
+            layer.id === action.layerId
+              ? {
+                  ...layer,
+                  after: action.after,
+                  movedRegionId: action.after === "moved" ? layer.movedRegionId ?? null : null,
+                }
+              : layer
+          ),
+        },
+      });
+
+    case "SET_BODY_MOVED_REGION":
+      return touch({
+        comprehension: {
+          ...state.comprehension,
+          bodyLayers: state.comprehension.bodyLayers.map((layer) =>
+            layer.id === action.layerId ? { ...layer, movedRegionId: action.movedRegionId } : layer
           ),
         },
       });
