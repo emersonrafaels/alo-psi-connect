@@ -13,8 +13,8 @@
 - [x] Trocar “Próxima Dimensão” por “Próxima Etapa” na etapa Corpo
 - [x] Refinar a página de Registro com a direção Zen aprovada
 - [x] Exibir nomes legíveis das emoções em todo o Registro
-- [ ] Validar o Registro em computador e celular
+- [x] Validar o Registro em computador e celular
 
-- [ ] Atualizar a Paisagem Emocional com corpo, emoções e padrões conforme referência
-- [ ] Adicionar outras práticas disponíveis na etapa Regular Aprendizagem
-- [ ] Incluir Mudou de lugar com seletor no check-out corporal
+- [x] Atualizar a Paisagem Emocional com corpo, emoções e padrões conforme referência
+- [x] Adicionar outras práticas disponíveis na etapa Regular Aprendizagem
+- [x] Incluir Mudou de lugar com seletor no check-out corporal
