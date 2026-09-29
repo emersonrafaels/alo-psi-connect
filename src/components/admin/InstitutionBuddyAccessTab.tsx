@@ -12,6 +12,7 @@ import {
   useInstitutionBuddyStudents,
   useSaveInstitutionBuddyAccess,
 } from '@/hooks/useInstitutionBuddyAccess';
+import { anonymizeStudentName, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
 
 interface Props {
   institutionId: string;
@@ -142,6 +143,10 @@ export function InstitutionBuddyAccessTab({ institutionId }: Props) {
 
   const [selectedViewers, setSelectedViewers] = useState<Set<string>>(new Set());
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
+  const studentIndexMap = useMemo(
+    () => buildAnonymizedStudentIndex(students.map((student) => student.patient_id)),
+    [students]
+  );
 
   useEffect(() => {
     setSelectedViewers(new Set(viewers.filter((v) => v.enabled).map((v) => v.user_id)));
@@ -197,8 +202,8 @@ export function InstitutionBuddyAccessTab({ institutionId }: Props) {
           description="De quais alunos o Buddy fica visível para os usuários liberados."
           items={students.map((s) => ({
             id: s.patient_id,
-            title: s.nome ?? s.email ?? s.patient_id,
-            subtitle: s.email,
+            title: anonymizeStudentName(studentIndexMap.get(s.patient_id) ?? 0),
+            subtitle: null,
           }))}
           selected={selectedStudents}
           onToggle={(id) => setSelectedStudents((prev) => toggle(prev, id))}
