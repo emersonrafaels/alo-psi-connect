@@ -447,6 +447,10 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
   const totalStudents = students.length;
 
+  const patientIndexMap = useMemo(() => {
+    return buildAnonymizedStudentIndex(students.map((student) => student.patientId));
+  }, [students]);
+
   // Students not yet triaged or pending
   const pendingStudents = useMemo(() => {
     let filtered = students.filter((s) => !s.lastTriageStatus || s.lastTriageStatus === 'pending');
@@ -543,10 +547,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
     });
     return map;
   }, [students, patientIndexMap]);
-
-  const patientIndexMap = useMemo(() => {
-    return buildAnonymizedStudentIndex(students.map((student) => student.patientId));
-  }, [students]);
 
   // Students grouped by risk level for detail modal
   const studentsByRisk = useMemo(() => {

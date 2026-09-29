@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,7 +12,6 @@ import { StudentTriageTab } from '@/components/institution/StudentTriageTab';
 import { InstitutionNotesTab } from '@/components/admin/InstitutionNotesTab';
 import { InstitutionBuddyAccessTab } from '@/components/admin/InstitutionBuddyAccessTab';
 import { anonymizeStudentName, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
-import { useMemo } from 'react';
 
 export default function AdminInstitutionPortal() {
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
