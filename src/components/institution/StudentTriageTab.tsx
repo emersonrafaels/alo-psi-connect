@@ -630,11 +630,15 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const handleBatchTriage = useCallback(async (data: { patientIds: string[]; priority: string; recommendedAction: string; notes: string; followUpDate?: string }) => {
     const entries = data.patientIds.map(id => {
       const s = patientDataMap.get(id);
-      return { patientId: id, riskLevel: s?.riskLevel || 'attention', studentName: s?.studentName };
+      return {
+        patientId: id,
+        riskLevel: s?.riskLevel || 'attention',
+        studentName: patientNameMap.get(id) ?? 'Aluno',
+      };
     });
     await batchCreateTriage.mutateAsync({ entries, priority: data.priority, recommendedAction: data.recommendedAction, notes: data.notes, followUpDate: data.followUpDate });
     setSelectedStudentIds(new Set());
-  }, [batchCreateTriage, patientDataMap]);
+  }, [batchCreateTriage, patientDataMap, patientNameMap]);
 
   const toggleStudentSelection = useCallback((patientId: string) => {
     setSelectedStudentIds(prev => {
