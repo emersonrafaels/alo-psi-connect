@@ -11,6 +11,8 @@ import { InstitutionWellbeingDashboard } from '@/components/institution/Institut
 import { StudentTriageTab } from '@/components/institution/StudentTriageTab';
 import { InstitutionNotesTab } from '@/components/admin/InstitutionNotesTab';
 import { InstitutionBuddyAccessTab } from '@/components/admin/InstitutionBuddyAccessTab';
+import { anonymizeStudentName, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
+import { useMemo } from 'react';
 
 export default function AdminInstitutionPortal() {
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
@@ -21,6 +23,10 @@ export default function AdminInstitutionPortal() {
   const selectedInstitution = institutions.find(i => i.id === selectedInstitutionId);
   const activeProfessionals = linkedProfessionals.filter((p: any) => p.profissionais.ativo);
   const activeStudents = linkedStudents.filter((s: any) => s.enrollment_status === 'enrolled');
+  const studentIndexMap = useMemo(
+    () => buildAnonymizedStudentIndex(linkedStudents.map((student: any) => student.patient_id)),
+    [linkedStudents]
+  );
 
   return (
     <div className="space-y-6">
@@ -207,7 +213,7 @@ export default function AdminInstitutionPortal() {
                       <div className="space-y-2 max-h-60 overflow-y-auto">
                         {linkedStudents.slice(0, 10).map((s: any) => (
                           <div key={s.patient_id} className="flex items-center justify-between text-sm p-2 rounded-md bg-muted/50">
-                            <span className="font-medium truncate">{s.pacientes.profiles.nome}</span>
+                            <span className="font-medium truncate">{anonymizeStudentName(studentIndexMap.get(s.patient_id) ?? 0)}</span>
                             <Badge variant={s.enrollment_status === 'enrolled' ? 'default' : 'secondary'} className="text-[10px]">
                               {s.enrollment_status === 'enrolled' ? 'Matriculado' : s.enrollment_status}
                             </Badge>

@@ -24,7 +24,7 @@ import {
   type AllowedBuddyStudent,
   type BuddyAttentionLevel,
 } from '@/hooks/useInstitutionBuddyAccess';
-import { useAnonymizationConfig, anonymizeStudentName } from '@/hooks/useAnonymizationConfig';
+import { anonymizeStudentName, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
 
 interface Props {
   institutionId: string;
@@ -69,7 +69,6 @@ function ScoreBar({ label, value }: { label: string; value: number | null }) {
 
 export function StudentBuddyPanel({ institutionId }: Props) {
   const { students, canView, isLoading } = useAllowedBuddyStudents(institutionId);
-  const { isAnonymized } = useAnonymizationConfig(institutionId);
   const [selected, setSelected] = useState<string | null>(null);
   const [term, setTerm] = useState('');
 
@@ -79,20 +78,23 @@ export function StudentBuddyPanel({ institutionId }: Props) {
 
   const { data, isLoading: loadingData } = useStudentBuddyData(selected);
 
+  const studentIndexMap = useMemo(
+    () => buildAnonymizedStudentIndex(students.map((student) => student.patient_id)),
+    [students]
+  );
+
   const displayName = (patientId: string) => {
-    const idx = students.findIndex((s) => s.patient_id === patientId);
-    const student = students[idx];
-    return isAnonymized ? anonymizeStudentName(Math.max(idx, 0)) : student?.nome ?? 'Aluno';
+    return anonymizeStudentName(studentIndexMap.get(patientId) ?? 0);
   };
 
   const filtered = useMemo(() => {
     const t = term.trim().toLowerCase();
     if (!t) return students;
-    return students.filter((s, idx) => {
-      const name = isAnonymized ? anonymizeStudentName(idx) : s.nome ?? '';
+    return students.filter((s) => {
+      const name = displayName(s.patient_id);
       return name.toLowerCase().includes(t);
     });
-  }, [students, term, isAnonymized]);
+  }, [students, term, studentIndexMap]);
 
   const attentionCount = students.filter((s) => s.attention === 'alto').length;
   const selectedStudent: AllowedBuddyStudent | undefined = students.find(

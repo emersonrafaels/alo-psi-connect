@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Search, Mail, Calendar, GraduationCap, ArrowLeft, Download, TrendingUp } from 'lucide-react';
+import { Search, Calendar, GraduationCap, ArrowLeft, Download, TrendingUp } from 'lucide-react';
 import { UserStorytellingModal } from '@/components/admin/UserStorytellingModal';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { format } from 'date-fns';
@@ -15,6 +15,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
+import { anonymizeInitials, anonymizeStudentName, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
 
 export default function InstitutionStudents() {
   const { linkedStudents, isLoading } = useInstitutionAccess();
@@ -23,6 +24,13 @@ export default function InstitutionStudents() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'enrolled' | 'graduated' | 'inactive'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'enrollment_date'>('name');
   const [selectedStudent, setSelectedStudent] = useState<{ userId?: string; profileId: string; patientName: string; name: string } | null>(null);
+
+  const studentIndexMap = useMemo(
+    () => buildAnonymizedStudentIndex(linkedStudents.map((student) => student.patient_id)),
+    [linkedStudents]
+  );
+  const getStudentIndex = (patientId: string) => studentIndexMap.get(patientId) ?? 0;
+  const getStudentName = (patientId: string) => anonymizeStudentName(getStudentIndex(patientId));
 
   if (isLoading) {
     return (
@@ -33,14 +41,14 @@ export default function InstitutionStudents() {
   }
 
   let filtered = linkedStudents.filter(s => {
-    const matchesSearch = s.pacientes.profiles.nome?.toLowerCase().includes(searchTerm.toLowerCase()) || s.pacientes.profiles.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = getStudentName(s.patient_id).toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || s.enrollment_status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const sorted = [...filtered].sort((a, b) => {
     switch (sortBy) {
-      case 'name': return (a.pacientes.profiles.nome || '').localeCompare(b.pacientes.profiles.nome || '');
+      case 'name': return getStudentIndex(a.patient_id) - getStudentIndex(b.patient_id);
       case 'enrollment_date': return new Date(b.enrollment_date || 0).getTime() - new Date(a.enrollment_date || 0).getTime();
       default: return 0;
     }
@@ -56,8 +64,7 @@ export default function InstitutionStudents() {
   const handleExportCSV = () => {
     if (filteredStudents.length === 0) return;
     const csvData = filteredStudents.map(s => ({
-      'Nome': s.pacientes.profiles.nome || '', 'Email': s.pacientes.profiles.email || '',
-      'Data de Nascimento': s.pacientes.profiles.data_nascimento ? format(new Date(s.pacientes.profiles.data_nascimento), 'dd/MM/yyyy') : '',
+      'Aluno': getStudentName(s.patient_id),
       'Status': getStatusBadge(s.enrollment_status).label, 'Data de Vínculo': s.enrollment_date ? format(new Date(s.enrollment_date), 'dd/MM/yyyy') : ''
     }));
     const headers = Object.keys(csvData[0]).join(',');
@@ -100,7 +107,7 @@ export default function InstitutionStudents() {
           <CardContent className="pt-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Buscar por nome ou email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" />
+              <Input placeholder="Buscar por Aluno #..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" />
             </div>
           </CardContent>
         </Card>
@@ -125,7 +132,7 @@ export default function InstitutionStudents() {
                 <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="name">Nome (A-Z)</SelectItem>
+                    <SelectItem value="name">Identificador do aluno</SelectItem>
                     <SelectItem value="enrollment_date">Data de Vínculo</SelectItem>
                   </SelectContent>
                 </Select>
@@ -138,15 +145,18 @@ export default function InstitutionStudents() {
         </Card>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredStudents.map((student) => (
+          {filteredStudents.map((student) => {
+            const studentIndex = getStudentIndex(student.patient_id);
+            const studentName = anonymizeStudentName(studentIndex);
+            return (
             <Card key={student.patient_id}>
               <CardHeader>
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16">
-                    <AvatarFallback className="bg-primary/10">{student.pacientes.profiles.nome?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10">{anonymizeInitials(studentIndex)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <CardTitle className="text-lg">{student.pacientes.profiles.nome}</CardTitle>
+                    <CardTitle className="text-lg">{studentName}</CardTitle>
                     {student.pacientes.eh_estudante && (
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <GraduationCap className="h-3 w-3" /><span>Estudante</span>
@@ -156,10 +166,6 @@ export default function InstitutionStudents() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="truncate">{student.pacientes.profiles.email}</span>
-                </div>
                 {student.enrollment_date && (
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -175,8 +181,8 @@ export default function InstitutionStudents() {
                       setSelectedStudent({
                         userId: student.pacientes.profiles.user_id || undefined,
                         profileId: student.pacientes.profile_id,
-                        patientName: student.pacientes.profiles.nome || '',
-                        name: student.pacientes.profiles.nome || '',
+                        patientName: studentName,
+                        name: studentName,
                       })
                     }
                   >
@@ -187,7 +193,7 @@ export default function InstitutionStudents() {
                 <Badge variant={getStatusBadge(student.enrollment_status).variant}>{getStatusBadge(student.enrollment_status).label}</Badge>
               </CardContent>
             </Card>
-          ))}
+          );})}
           {filteredStudents.length === 0 && (
             <Card className="col-span-full">
               <CardContent className="py-16 text-center">

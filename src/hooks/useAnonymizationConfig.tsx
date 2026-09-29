@@ -82,3 +82,13 @@ export function anonymizeStudentName(index: number): string {
 export function anonymizeInitials(index: number): string {
   return `A${index + 1}`;
 }
+
+/**
+ * Creates stable anonymous labels from opaque patient identifiers.
+ * Sorting the identifiers keeps the same label across institutional screens,
+ * regardless of the current filters or risk ordering.
+ */
+export function buildAnonymizedStudentIndex(patientIds: string[]): Map<string, number> {
+  const uniqueIds = Array.from(new Set(patientIds)).sort((a, b) => a.localeCompare(b));
+  return new Map(uniqueIds.map((patientId, index) => [patientId, index]));
+}

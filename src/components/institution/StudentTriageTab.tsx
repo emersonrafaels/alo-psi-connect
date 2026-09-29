@@ -28,7 +28,7 @@ import { QuickNotePopover } from './QuickNotePopover';
 import { ComparisonTooltip } from './ComparisonTooltip';
 import { DetailModal } from './DetailModal';
 import { useInstitutionNotes } from '@/hooks/useInstitutionNotes';
-import { useAnonymizationConfig, anonymizeStudentName, anonymizeInitials } from '@/hooks/useAnonymizationConfig';
+import { anonymizeStudentName, anonymizeInitials, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -372,7 +372,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const { notes: institutionNotes } = useInstitutionNotes(institutionId);
   const { data: triageRecords = [] } = useTriageRecords(institutionId);
   const { createTriage, updateTriageStatus, batchCreateTriage, addQuickNote } = useTriageActions(institutionId);
-  const { isAnonymized, loading: anonLoading } = useAnonymizationConfig(institutionId);
 
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [selectedStudent, setSelectedStudent] = useState<StudentRiskData | null>(null);
@@ -454,11 +453,14 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
     if (riskFilter !== 'all') filtered = filtered.filter((s) => s.riskLevel === riskFilter);
     if (debouncedSearch.trim()) {
       const term = debouncedSearch.toLowerCase();
-      filtered = filtered.filter((s) => s.studentName.toLowerCase().includes(term));
+      filtered = filtered.filter((s) => {
+        const index = patientIndexMap.get(s.patientId) ?? 0;
+        return anonymizeStudentName(index).toLowerCase().includes(term);
+      });
     }
     filtered.sort((a, b) => riskOrder.indexOf(a.riskLevel) - riskOrder.indexOf(b.riskLevel));
     return filtered;
-  }, [students, riskFilter, debouncedSearch]);
+  }, [students, riskFilter, debouncedSearch, patientIndexMap]);
 
   // Triage records by status
   const inProgressTriages = useMemo(() => {
@@ -537,15 +539,13 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const patientNameMap = useMemo(() => {
     const map = new Map<string, string>();
     students.forEach((s, idx) => {
-      map.set(s.patientId, isAnonymized ? anonymizeStudentName(idx) : s.studentName);
+      map.set(s.patientId, anonymizeStudentName(patientIndexMap.get(s.patientId) ?? idx));
     });
     return map;
-  }, [students, isAnonymized]);
+  }, [students, patientIndexMap]);
 
   const patientIndexMap = useMemo(() => {
-    const map = new Map<string, number>();
-    students.forEach((s, idx) => map.set(s.patientId, idx));
-    return map;
+    return buildAnonymizedStudentIndex(students.map((student) => student.patientId));
   }, [students]);
 
   // Students grouped by risk level for detail modal
@@ -656,7 +656,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const handleExport = useCallback((type: 'pending' | 'history' | 'full') => {
     if (type === 'pending') {
       const data = pendingStudents.map((s, idx) => ({
-        'Nome': isAnonymized ? anonymizeStudentName(patientIndexMap.get(s.patientId) ?? idx) : s.studentName,
+        'Aluno': anonymizeStudentName(patientIndexMap.get(s.patientId) ?? idx),
         'Nível de Risco': riskConfig[s.riskLevel].label,
         'Humor Médio': s.avgMood ?? '—',
         'Ansiedade Média': s.avgAnxiety ?? '—',
@@ -686,7 +686,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
       XLSX.writeFile(wb, `triagens-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     } else {
       const studentsData = students.map((s, idx) => ({
-        'Nome': isAnonymized ? anonymizeStudentName(idx) : s.studentName,
+        'Aluno': anonymizeStudentName(patientIndexMap.get(s.patientId) ?? idx),
         'Nível de Risco': riskConfig[s.riskLevel].label,
         'Humor': s.avgMood ?? '—',
         'Ansiedade': s.avgAnxiety ?? '—',
@@ -709,7 +709,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(triagesData), 'Triagens');
       XLSX.writeFile(wb, `relatorio-completo-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     }
-  }, [pendingStudents, students, triageRecords, patientNameMap, isAnonymized, patientIndexMap]);
+  }, [pendingStudents, students, triageRecords, patientNameMap, patientIndexMap]);
 
   if (isLoading) {
     return (
@@ -1198,8 +1198,8 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                     student.riskLevel === 'alert' ? 'border-l-orange-500' :
                     student.riskLevel === 'attention' ? 'border-l-yellow-500' :
                     student.riskLevel === 'healthy' ? 'border-l-green-500' : 'border-l-muted-foreground/40';
-                    const displayName = isAnonymized ? anonymizeStudentName(patientIndexMap.get(student.patientId) ?? 0) : student.studentName;
-                    const initials = isAnonymized ? anonymizeInitials(patientIndexMap.get(student.patientId) ?? 0) : student.studentName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
+                    const displayName = anonymizeStudentName(patientIndexMap.get(student.patientId) ?? 0);
+                    const initials = anonymizeInitials(patientIndexMap.get(student.patientId) ?? 0);
 
                     return (
                       <div key={student.patientId} className={`p-5 border-l-4 ${riskBorder} hover:bg-muted/30 transition-colors ${isCritical ? 'bg-red-50/30 dark:bg-red-950/10' : ''}`}>
@@ -1608,7 +1608,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
         <TriageDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          student={selectedStudent}
+          student={selectedStudent ? { ...selectedStudent, studentName: patientNameMap.get(selectedStudent.patientId) ?? 'Aluno' } : null}
           studentHistory={selectedStudentHistory}
           onSubmit={handleTriage} />
 
@@ -1617,7 +1617,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           onOpenChange={setBatchDialogOpen}
           students={pendingStudents.filter(s => selectedStudentIds.has(s.patientId))}
           onSubmit={handleBatchTriage}
-          isAnonymized={isAnonymized}
+          isAnonymized
           studentIndexMap={patientIndexMap}
         />
 
@@ -1625,7 +1625,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
         <StudentActivityModal
           open={activityModalOpen}
           onOpenChange={setActivityModalOpen}
-          studentName={isAnonymized ? anonymizeStudentName(patientIndexMap.get(activityModalStudent.patientId) ?? 0) : activityModalStudent.studentName}
+          studentName={anonymizeStudentName(patientIndexMap.get(activityModalStudent.patientId) ?? 0)}
           profileId={activityModalStudent.profileId}
           patientId={activityModalStudent.patientId}
           institutionId={institutionId}
@@ -1660,7 +1660,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   </TableHeader>
                   <TableBody>
                     {studentsByRisk[riskDetailLevel].map((s, idx) => {
-                      const displayName = isAnonymized ? anonymizeStudentName(patientIndexMap.get(s.patientId) ?? idx) : s.studentName;
+                      const displayName = anonymizeStudentName(patientIndexMap.get(s.patientId) ?? idx);
                       const prevLevel = prevRiskByStudent.get(s.patientId);
                       const changed = compareEnabled && prevLevel && prevLevel !== riskDetailLevel;
                       return (

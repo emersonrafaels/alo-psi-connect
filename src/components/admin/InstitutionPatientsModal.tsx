@@ -6,6 +6,8 @@ import { Trash2, Users } from 'lucide-react';
 import { useInstitutionPatients } from '@/hooks/useInstitutionPatients';
 import { EducationalInstitution } from '@/hooks/useInstitutions';
 import { useInstitutionAudit } from '@/hooks/useInstitutionAudit';
+import { anonymizeStudentName, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
+import { useMemo } from 'react';
 
 interface InstitutionPatientsModalProps {
   institution: EducationalInstitution | null;
@@ -22,6 +24,10 @@ export const InstitutionPatientsModal = ({
     institution?.id
   );
   const { logAction } = useInstitutionAudit(institution?.id);
+  const patientIndexMap = useMemo(
+    () => buildAnonymizedStudentIndex(patientInstitutions.map((item: any) => item.patient_id)),
+    [patientInstitutions]
+  );
 
   const handleRemovePatient = async (patientInstitutionId: string, patientData: any) => {
     await removePatient(patientInstitutionId);
@@ -84,10 +90,7 @@ export const InstitutionPatientsModal = ({
                     className="flex items-center justify-between p-3 border rounded-lg"
                   >
                     <div className="flex-1">
-                      <p className="font-medium">{pi.pacientes.profiles.nome}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {pi.pacientes.profiles.email}
-                      </p>
+                      <p className="font-medium">{anonymizeStudentName(patientIndexMap.get(pi.patient_id) ?? 0)}</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Vinculado em: {new Date(pi.created_at).toLocaleDateString('pt-BR')}
                       </p>
