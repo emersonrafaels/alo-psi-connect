@@ -6,6 +6,7 @@
 const KNOWN_ROUTES = [
   "/",
   "/sobre",
+  "/como-funciona",
   "/blog",
   "/profissionais",
   "/agendar",
