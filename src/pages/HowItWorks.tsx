@@ -94,12 +94,12 @@ const HowItWorks = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = "Como funciona | Rede Bem-Estar";
+    document.title = `Como funciona | ${tenant?.name || "Rede Bem-Estar"}`;
     const description = document.querySelector('meta[name="description"]');
     const previousDescription = description?.getAttribute("content") ?? "";
     description?.setAttribute("content", "Conheça a jornada contínua de cuidado da Rede Bem-Estar, com escalas, Diário Emocional, Buddy e apoio especializado.");
     return () => description?.setAttribute("content", previousDescription);
-  }, []);
+  }, [tenant?.name]);
 
   return (
     <div className="rbe-home-page min-h-screen overflow-x-hidden bg-[var(--rbe-surface-container-lowest)]">
