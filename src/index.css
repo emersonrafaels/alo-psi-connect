@@ -1188,6 +1188,76 @@ All colors MUST be HSL.
   background: linear-gradient(135deg, var(--rbe-primary) 0%, var(--rbe-primary-container) 100%);
 }
 
+/* Como funciona — faithful editorial sequence */
+.rbe-home-page.how-it-works-page {
+  --hiw-purple: 274 62% 33%;
+  --hiw-pink: 326 82% 75%;
+  --hiw-mint: 183 58% 78%;
+  --hiw-lilac: 283 58% 94%;
+  --hiw-paper: 280 30% 98%;
+  --hiw-shadow: 274 44% 24%;
+  --rbe-primary: hsl(var(--hiw-purple));
+  --rbe-primary-container: hsl(var(--hiw-purple));
+  --rbe-secondary-container: hsl(var(--hiw-pink));
+  --rbe-primary-fixed: hsl(var(--hiw-lilac));
+  --rbe-tertiary-fixed: hsl(var(--hiw-mint));
+  --rbe-surface: hsl(var(--hiw-paper));
+  font-family: 'Figtree', system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+.rbe-home-page.how-it-works-page h1,
+.rbe-home-page.how-it-works-page h2,
+.rbe-home-page.how-it-works-page h3,
+.rbe-home-page.how-it-works-page h4 {
+  font-family: 'Outfit', system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+.dark .rbe-home-page.how-it-works-page {
+  --hiw-purple: 274 72% 78%;
+  --hiw-pink: 326 78% 72%;
+  --hiw-mint: 183 48% 68%;
+  --hiw-lilac: 276 34% 19%;
+  --hiw-paper: 274 35% 9%;
+  --hiw-shadow: 274 80% 4%;
+}
+
+.how-it-works-page .hiw-panel-shadow {
+  box-shadow: 0 18px 48px -28px hsl(var(--hiw-shadow) / 0.35);
+}
+
+.how-it-works-page .hiw-interactive {
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.how-it-works-page .hiw-interactive:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 42px -24px hsl(var(--hiw-shadow) / 0.38);
+}
+
+.how-it-works-page .hiw-interactive:focus-visible {
+  outline: 3px solid hsl(var(--hiw-pink));
+  outline-offset: 4px;
+}
+
+.how-it-works-page .hiw-reveal {
+  animation: hiwReveal 650ms ease both;
+  animation-timeline: view();
+  animation-range: entry 8% cover 24%;
+}
+
+@keyframes hiwReveal {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .how-it-works-page .hiw-reveal { animation: none; }
+  .how-it-works-page .hiw-interactive { transition: none; }
+  .how-it-works-page .hiw-interactive:hover { transform: none; }
+}
+
 /* === Práticas: imersão === */
 @keyframes auroraDrift {
   0%, 100% { background-position: 20% 20%, 80% 80%; }

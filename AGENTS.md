@@ -5,3 +5,4 @@
 - Build the body's emotional landscape from user-scoped `journey_sessions.comprehension.body_layers`, merged with the current check-in, so historical and unsaved marks share one visualization.
 - Always anonymize students on institution-facing screens with stable `Aluno #N` labels derived from patient IDs; keep real identities out of search, exports, dialogs, and Buddy views to protect privacy.
 - Keep the public “Como funciona” narrative in `src/pages/HowItWorks.tsx`; it owns the six-section reference sequence and tenant-aware links.
+- Scope the “Como funciona” visual language under `.how-it-works-page`, using semantic HSL tokens and Outfit/Figtree so its reference-driven styling does not leak into other public pages.

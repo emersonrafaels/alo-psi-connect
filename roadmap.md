@@ -22,3 +22,4 @@
 - [x] Anonimizar alunos em todas as telas, janelas e exportações institucionais
 - [x] Criar a página pública “Como funciona” conforme as seis referências
 - [x] Adicionar “Como funciona” ao menu superior e ao sitemap
+- [x] Refinar UX/UI da página “Como funciona” conforme a sequência visual de referência

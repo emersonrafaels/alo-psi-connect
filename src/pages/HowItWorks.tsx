@@ -77,13 +77,13 @@ const toneClasses = {
 };
 
 const AccentTitle = ({ children, accent }: { children: React.ReactNode; accent: React.ReactNode }) => (
-  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.05] text-[var(--rbe-primary)]">
+  <h2 className="text-3xl font-extrabold leading-[1.04] text-[var(--rbe-primary)] sm:text-4xl lg:text-[3.25rem]">
     {children} <span className="text-[var(--rbe-secondary-container)]">{accent}</span>
   </h2>
 );
 
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
-  <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.22em] text-[var(--rbe-primary)]">{children}</p>
+  <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--rbe-primary)]">{children}</p>
 );
 
 const HowItWorks = () => {
@@ -102,39 +102,39 @@ const HowItWorks = () => {
   }, [tenant?.name]);
 
   return (
-    <div className="rbe-home-page min-h-screen overflow-x-hidden bg-[var(--rbe-surface-container-lowest)]">
+    <div className="rbe-home-page how-it-works-page min-h-screen overflow-x-hidden bg-[var(--rbe-surface-container-lowest)]">
       <Header />
 
       <main>
-        <section className="relative overflow-hidden py-12 sm:py-16 lg:py-20">
+        <section className="relative overflow-hidden py-10 sm:py-14 lg:min-h-[650px] lg:py-16">
           <div className="absolute inset-0 bg-[var(--rbe-primary-fixed)] opacity-20" aria-hidden="true" />
-          <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+          <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8">
             <div className="z-10">
               <Eyebrow>Dados para mais pessoas bem hoje e sempre</Eyebrow>
-              <h1 className="max-w-2xl text-4xl font-extrabold leading-[0.98] text-[var(--rbe-primary)] sm:text-6xl lg:text-7xl">
+              <h1 className="max-w-xl text-[2.75rem] font-extrabold leading-[0.96] text-[var(--rbe-primary)] sm:text-6xl lg:text-[4.6rem]">
                 Mensuração contínua da <span className="text-[var(--rbe-secondary-container)]">saúde mental</span>
               </h1>
               <p className="mt-6 max-w-lg text-base leading-relaxed text-[var(--rbe-on-surface-variant)] sm:text-lg">
                 Uma jornada de cuidado baseada em dados, para acompanhar o bem-estar ao longo do tempo.
               </p>
-              <Button asChild size="lg" className="mt-7 rounded-full px-7 shadow-lg">
+              <Button asChild size="lg" className="mt-7 rounded-full px-7 hiw-panel-shadow">
                 <Link to={path("/contato")}>Conheça nossa solução <ArrowRight /></Link>
               </Button>
             </div>
 
-            <div className="relative mx-auto min-h-[430px] w-full max-w-2xl sm:min-h-[560px]">
-              <div className="absolute inset-x-[10%] bottom-0 top-[5%] overflow-hidden rounded-[46%_54%_42%_58%/48%_42%_58%_52%] bg-[var(--rbe-tertiary-fixed)]">
+            <div className="relative mx-auto min-h-[390px] w-full max-w-2xl sm:min-h-[530px]">
+              <div className="absolute inset-x-[12%] bottom-0 top-[3%] overflow-hidden rounded-[46%_54%_42%_58%/48%_42%_58%_52%] bg-[var(--rbe-tertiary-fixed)]">
                 <img src={heroImage} alt="Estudante sorrindo durante sua jornada de bem-estar" width={1024} height={1280} className="h-full w-full object-cover object-top" />
               </div>
-              <div className="absolute left-0 top-[18%] w-36 rounded-lg bg-[var(--rbe-surface-container-lowest)] p-4 shadow-xl sm:w-40">
+              <div className="absolute left-0 top-[15%] w-36 rounded-lg bg-[var(--rbe-surface-container-lowest)] p-4 hiw-panel-shadow sm:w-44">
                 <BarChart3 className="mb-3 h-7 w-7 text-[var(--rbe-on-tertiary-fixed)]" />
                 <p className="text-sm font-bold leading-tight text-[var(--rbe-primary)]">Mais bem-estar ao longo do tempo</p>
               </div>
-              <div className="absolute right-0 top-[20%] w-36 rounded-lg bg-[var(--rbe-surface-container-lowest)] p-4 shadow-xl sm:w-40">
+              <div className="absolute right-0 top-[17%] w-36 rounded-lg bg-[var(--rbe-surface-container-lowest)] p-4 hiw-panel-shadow sm:w-44">
                 <Heart className="mb-3 h-7 w-7 text-[var(--rbe-secondary-container)]" />
                 <p className="text-sm font-bold leading-tight text-[var(--rbe-primary)]">Dados que geram cuidado real</p>
               </div>
-              <div className="absolute bottom-[8%] right-0 w-36 rounded-lg bg-[var(--rbe-surface-container-lowest)] p-4 shadow-xl sm:w-44">
+              <div className="absolute bottom-[6%] right-0 w-36 rounded-lg bg-[var(--rbe-surface-container-lowest)] p-4 hiw-panel-shadow sm:w-48">
                 <Users className="mb-3 h-7 w-7 text-[var(--rbe-on-tertiary-fixed)]" />
                 <p className="text-sm font-bold leading-tight text-[var(--rbe-primary)]">Ambientes mais saudáveis e acolhedores</p>
               </div>
@@ -142,8 +142,8 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="grid gap-6 rounded-lg bg-[var(--rbe-primary-fixed)] p-6 sm:p-8 lg:grid-cols-[1.05fr_1.95fr] lg:p-10">
+        <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
+          <div className="hiw-reveal grid gap-7 rounded-lg bg-[var(--rbe-primary-fixed)] p-6 sm:p-8 lg:grid-cols-[0.95fr_2.05fr] lg:p-10">
             <div className="lg:pr-6">
               <Eyebrow>Como funciona</Eyebrow>
               <AccentTitle accent="e apoio contínuo">Escalas validadas, Diário Emocional</AccentTitle>
@@ -155,7 +155,7 @@ const HowItWorks = () => {
                 { Icon: Pencil, title: "Diário Emocional", copy: "Registros rápidos e simples para captar emoções e padrões do dia a dia.", chip: "Visão contínua", tone: "pink" },
                 { title: "Buddy sempre por perto", copy: "Nosso assistente de bem-estar acompanha, engaja e incentiva a jornada ao longo do semestre.", chip: "Apoio constante", tone: "mint" },
               ].map((item) => (
-                <div key={item.title} className="flex min-h-64 flex-col rounded-lg bg-[var(--rbe-surface-container-lowest)] p-5 shadow-sm">
+                <div key={item.title} className="flex min-h-56 flex-col rounded-lg bg-[var(--rbe-surface-container-lowest)] p-5 hiw-panel-shadow">
                   {item.Icon ? <div className={`mb-5 flex h-12 w-12 items-center justify-center rounded-full ${toneClasses[item.tone]}`}><item.Icon /></div> : <BuddyCharacter size="md" className="mb-2 h-20 w-20 object-contain" />}
                   <h3 className="font-extrabold text-[var(--rbe-primary)]">{item.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{item.copy}</p>
@@ -166,7 +166,7 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+        <section className="hiw-reveal mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:px-8 lg:py-20">
           <div>
             <Eyebrow>Acompanhamento ao longo do tempo</Eyebrow>
             <AccentTitle accent="cada jornada">Inteligência que reconhece</AccentTitle>
@@ -177,7 +177,7 @@ const HowItWorks = () => {
               ))}
             </ul>
           </div>
-          <div className="rounded-lg border border-[var(--rbe-outline-variant)] bg-[var(--rbe-surface-container-lowest)] p-5 shadow-lg sm:p-7">
+          <div className="rounded-lg border border-[var(--rbe-outline-variant)] bg-[var(--rbe-surface-container-lowest)] p-5 hiw-panel-shadow sm:p-7">
             <div className="mb-7 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--rbe-secondary-fixed)] text-[var(--rbe-primary)]"><User /></div><div><p className="font-bold text-[var(--rbe-primary)]">Jornada individual</p><p className="text-xs text-[var(--rbe-on-surface-variant)]">Visão longitudinal e personalizada</p></div></div>
               <span className="rounded-full border border-[var(--rbe-outline-variant)] px-4 py-2 text-xs text-[var(--rbe-on-surface-variant)]">6 meses</span>
@@ -196,51 +196,50 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        <section className="bg-[var(--rbe-primary-fixed)] py-16 sm:py-20">
+        <section className="bg-[var(--rbe-primary-fixed)] py-14 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
               <div><Eyebrow>Uma jornada de cuidado contínua</Eyebrow><AccentTitle accent="em todas as fases do semestre">Ao lado de cada pessoa,</AccentTitle></div>
               <p className="max-w-xl leading-relaxed text-[var(--rbe-on-surface-variant)]">O Buddy se comunica de forma planejada e respeitosa ao longo do semestre, com mensagens que incentivam o autocuidado, o preenchimento das escalas e o engajamento com os recursos da instituição.</p>
             </div>
-            <div className="relative mt-12 grid gap-8 sm:grid-cols-5 sm:gap-3">
+            <div className="hiw-reveal relative mt-12 grid gap-5 sm:grid-cols-5 sm:gap-3">
               <div className="absolute left-[10%] right-[10%] top-10 hidden h-0.5 bg-[var(--rbe-tertiary-fixed)] sm:block" />
               {journeySteps.map(({ Icon, title, copy, tone }) => (
-                <div key={title} className="relative text-center">
-                  <div className={`relative z-10 mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full ${toneClasses[tone]}`}><Icon className="h-8 w-8" /></div>
-                  <h3 className="text-sm font-extrabold text-[var(--rbe-primary)]">{title}</h3>
-                  <p className="mt-2 text-xs leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p>
+                <div key={title} className="relative grid grid-cols-[4.5rem_1fr] items-center gap-4 text-left sm:block sm:text-center">
+                  <div className={`relative z-10 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full sm:mx-auto sm:mb-5 sm:h-20 sm:w-20 ${toneClasses[tone]}`}><Icon className="h-8 w-8" /></div>
+                  <div><h3 className="text-sm font-extrabold text-[var(--rbe-primary)]">{title}</h3><p className="mt-1 text-xs leading-relaxed text-[var(--rbe-on-surface-variant)] sm:mt-2">{copy}</p></div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
           <div className="grid gap-6 lg:grid-cols-2 lg:items-end"><div><Eyebrow>Exemplos de comunicações</Eyebrow><AccentTitle accent="acolhem e engajam">Mensagens que informam,</AccentTitle></div><p className="leading-relaxed text-[var(--rbe-on-surface-variant)]">O Buddy utiliza uma linguagem próxima e empática, comunicando-se de forma clara, respeitosa e no momento ideal.</p></div>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {messages.map(({ Icon, label, text, time, tone }) => (
-              <div key={label} className="relative min-h-64 rounded-lg bg-[var(--rbe-surface-container-low)] p-5 shadow-sm">
+              <div key={label} className="hiw-interactive relative min-h-56 rounded-lg border border-[var(--rbe-outline-variant)] bg-[var(--rbe-surface-container-lowest)] p-5 hiw-panel-shadow">
                 <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase ${toneClasses[tone]}`}><Icon className="h-3.5 w-3.5" />{label}</span>
                 <p className="mt-5 whitespace-pre-line text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{text}</p>
                 <div className="absolute bottom-3 left-3 flex items-end gap-2"><BuddyCharacter size="sm" className="h-12 w-12 object-contain" /><span className="mb-1 text-[10px] text-[var(--rbe-on-surface-variant)]">{time}</span></div>
               </div>
             ))}
           </div>
-          <div className="mt-10 grid items-center gap-8 rounded-lg bg-[var(--rbe-primary-fixed)] p-7 sm:p-10 lg:grid-cols-[1fr_1.25fr]">
+          <div className="hiw-reveal mt-10 grid items-center gap-8 rounded-lg bg-[var(--rbe-primary-fixed)] p-7 sm:p-10 lg:grid-cols-[0.9fr_1.1fr]">
             <div><Eyebrow>Mais participação, mais impacto</Eyebrow><AccentTitle accent="aumenta a adesão">A comunicação certa</AccentTitle><p className="mt-4 leading-relaxed text-[var(--rbe-on-surface-variant)]">Com lembretes no momento ideal e mensagens personalizadas, mais pessoas respondem às escalas, acessam os conteúdos e se mantêm engajadas ao longo do semestre.</p></div>
             <div className="grid items-end gap-5 sm:grid-cols-[1fr_auto]">
               <div className="flex h-44 items-end justify-center gap-5 border-b border-[var(--rbe-outline-variant)]"><span className="h-14 w-10 rounded-t bg-[var(--rbe-primary)] opacity-20" /><span className="h-20 w-10 rounded-t bg-[var(--rbe-primary)] opacity-35" /><span className="h-28 w-10 rounded-t bg-[var(--rbe-primary)] opacity-55" /><span className="h-40 w-10 rounded-t bg-[var(--rbe-primary)] opacity-75" /></div>
-              <div><strong className="text-5xl font-extrabold text-[var(--rbe-primary)]">+78%</strong><p className="mt-2 max-w-40 text-sm leading-snug text-[var(--rbe-on-surface-variant)]">de aumento na adesão às escalas com a comunicação do Buddy.</p></div>
+              <div><strong className="text-6xl font-extrabold text-[var(--rbe-primary)]">+78%</strong><p className="mt-2 max-w-44 text-sm font-semibold leading-snug text-[var(--rbe-on-surface-variant)]">de aumento na adesão às escalas com a comunicação do Buddy.</p></div>
             </div>
           </div>
         </section>
 
-        <section className="bg-[var(--rbe-surface-container-low)] py-16 sm:py-20">
+        <section className="bg-[var(--rbe-surface-container-low)] py-14 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-6 lg:grid-cols-2 lg:items-center"><div><Eyebrow>Nossas escalas validadas</Eyebrow><AccentTitle accent="visão mais clara">Avaliação completa,</AccentTitle></div><p className="max-w-xl text-lg leading-relaxed text-[var(--rbe-on-surface-variant)]">Selecionamos as principais escalas científicas para avaliar diferentes dimensões da saúde mental, com aplicação rápida e segura.</p></div>
             <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {scales.map(({ Icon, code, title, copy, tone }) => (
-                <Link to={path("/escalas")} key={code} className="group rounded-lg bg-[var(--rbe-surface-container-lowest)] p-6 shadow-sm transition-transform hover:-translate-y-1">
+                <Link to={path("/escalas")} key={code} className="hiw-interactive group rounded-lg border border-[var(--rbe-outline-variant)] bg-[var(--rbe-surface-container-lowest)] p-6">
                   <div className="flex items-start justify-between"><span className={`flex h-14 w-14 items-center justify-center rounded-full ${toneClasses[tone]}`}><Icon className="h-8 w-8" /></span><span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--rbe-primary-fixed)] text-[var(--rbe-primary)]"><ArrowRight /></span></div>
                   <h3 className="mt-5 text-2xl font-extrabold text-[var(--rbe-primary)]">{code}</h3><p className="font-bold text-[var(--rbe-primary)]">{title}</p><p className="mt-2 leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p>
                 </Link>
@@ -249,30 +248,30 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        <section className="py-16 sm:py-20">
+        <section className="py-14 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Eyebrow>Apoio para cada necessidade</Eyebrow>
             <AccentTitle accent="bem-estar real">Especialistas e programas para promover</AccentTitle>
             <p className="mt-3 text-lg text-[var(--rbe-on-surface-variant)]">Encaminhamos para o tipo de apoio ideal, de forma personalizada e integrada à sua instituição.</p>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {supports.map(({ Icon, title, copy, tone }) => (
-                <Link to={path("/biblioteca-apoios")} key={title} className="group flex min-h-64 flex-col rounded-lg bg-[var(--rbe-surface-container-lowest)] p-5 shadow-sm transition-transform hover:-translate-y-1">
+                <Link to={path("/biblioteca-apoios")} key={title} className="hiw-interactive group grid min-h-0 grid-cols-[3.5rem_1fr_auto] items-start gap-x-4 rounded-lg border border-[var(--rbe-outline-variant)] bg-[var(--rbe-surface-container-lowest)] p-5 sm:flex sm:min-h-56 sm:flex-col">
                   <span className={`flex h-14 w-14 items-center justify-center rounded-full ${toneClasses[tone]}`}><Icon className="h-8 w-8" /></span>
-                  <h3 className="mt-5 text-lg font-extrabold text-[var(--rbe-primary)]">{title}</h3><p className="mt-2 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p>
-                  <span className="mt-auto ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-[var(--rbe-primary-fixed)] text-[var(--rbe-primary)]"><ArrowRight /></span>
+                  <div className="sm:contents"><h3 className="text-lg font-extrabold text-[var(--rbe-primary)] sm:mt-5">{title}</h3><p className="col-start-2 mt-1 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)] sm:mt-2">{copy}</p></div>
+                  <span className="row-span-2 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--rbe-primary-fixed)] text-[var(--rbe-primary)] sm:mt-auto sm:ml-auto"><ArrowRight /></span>
                 </Link>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="bg-[var(--rbe-primary-fixed)] py-16 sm:py-20">
+        <section className="bg-[var(--rbe-primary-fixed)] py-14 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
               <div><Eyebrow>Dados para diferentes necessidades</Eyebrow><AccentTitle accent="o mesmo propósito">Duas perspectivas,</AccentTitle><p className="mt-5 max-w-md text-lg leading-relaxed text-[var(--rbe-on-surface-variant)]">Transformamos dados em informações úteis para o cuidado individual e para a gestão institucional, sempre com privacidade.</p></div>
               <div className="grid gap-4 sm:grid-cols-2">
                 {[{ Icon: User, title: "Leitura individual", copy: "A pessoa acessa apenas os seus próprios dados, de forma privada e segura, para acompanhar a sua jornada de bem-estar.", chip: "Visão individual e personalizada", tone: "pink" }, { Icon: BarChart3, title: "Visão institucional", copy: "A instituição acessa apenas dados agregados e anonimizados, com panoramas e tendências para apoiar decisões e ações de promoção da saúde mental.", chip: "Dados agregados e sem identificação", tone: "mint" }].map(({ Icon, title, copy, chip, tone }) => (
-                  <div key={title} className="rounded-lg bg-[var(--rbe-surface-container-lowest)] p-6 shadow-sm"><span className={`flex h-14 w-14 items-center justify-center rounded-full ${toneClasses[tone]}`}><Icon /></span><h3 className="mt-4 text-xl font-extrabold text-[var(--rbe-primary)]">{title}</h3><p className="mt-2 leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p><span className={`mt-5 inline-flex rounded-full px-4 py-2 text-xs font-bold ${toneClasses[tone]}`}>{chip}</span></div>
+                   <div key={title} className="rounded-lg border border-[var(--rbe-outline-variant)] bg-[var(--rbe-surface-container-lowest)] p-6 hiw-panel-shadow"><span className={`flex h-14 w-14 items-center justify-center rounded-full ${toneClasses[tone]}`}><Icon /></span><h3 className="mt-4 text-xl font-extrabold text-[var(--rbe-primary)]">{title}</h3><p className="mt-2 leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p><span className={`mt-5 inline-flex rounded-full px-4 py-2 text-xs font-bold ${toneClasses[tone]}`}>{chip}</span></div>
                 ))}
               </div>
             </div>
@@ -288,8 +287,8 @@ const HowItWorks = () => {
           </div>
         </section>
 
-        <section className="px-4 py-16 sm:px-6 lg:px-8">
-          <div className="relative mx-auto grid max-w-7xl items-center gap-10 overflow-hidden rounded-lg bg-[var(--rbe-primary-fixed)] p-7 sm:p-10 lg:grid-cols-[1fr_0.55fr_0.9fr] lg:p-12">
+        <section className="px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+          <div className="hiw-reveal relative mx-auto grid max-w-7xl items-center gap-10 overflow-hidden rounded-lg bg-[var(--rbe-primary-fixed)] p-7 sm:p-10 lg:grid-cols-[1fr_0.55fr_0.9fr] lg:p-12">
             <div><Eyebrow>Privacidade do estudante</Eyebrow><AccentTitle accent="">Confidencialidade em todas as etapas</AccentTitle><p className="mt-4 text-lg leading-relaxed text-[var(--rbe-on-surface-variant)]">As informações individuais são protegidas e acessíveis apenas à equipe autorizada, garantindo um ambiente seguro e de confiança.</p><Button asChild size="lg" className="mt-7 rounded-full"><Link to={path("/politica-privacidade")}>Saiba mais sobre nossa política <ArrowRight /></Link></Button></div>
             <div className="relative mx-auto flex h-52 w-44 items-center justify-center rounded-[48%_52%_55%_45%] bg-[var(--rbe-primary)] text-[var(--rbe-on-primary)] shadow-xl"><ShieldCheck className="h-36 w-36" /><LockKeyhole className="absolute h-16 w-16" /></div>
             <div className="space-y-4">{[{ Icon: LockKeyhole, text: "Dados individuais sempre sigilosos" }, { Icon: User, text: "Acesso restrito à equipe especializada" }, { Icon: ShieldCheck, text: "Comunicação segura e ética" }].map(({ Icon, text }) => <div key={text} className="flex items-center gap-4 rounded-lg bg-[var(--rbe-surface-container-lowest)] p-4 shadow-sm"><Icon className="h-7 w-7 shrink-0 text-[var(--rbe-primary)]" /><p className="font-bold text-[var(--rbe-primary)]">{text}</p></div>)}</div>
