@@ -20,3 +20,5 @@
 - [x] Incluir Mudou de lugar com seletor no check-out corporal
 - [x] Exibir frente e costas na Paisagem Emocional com marcações atuais e histórico corporal
 - [x] Anonimizar alunos em todas as telas, janelas e exportações institucionais
+- [x] Criar a página pública “Como funciona” conforme as seis referências
+- [x] Adicionar “Como funciona” ao menu superior e ao sitemap

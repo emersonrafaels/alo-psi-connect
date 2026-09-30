@@ -123,6 +123,7 @@ import InstitutionSupports from "@/pages/institution/InstitutionSupports";
 import BibliotecaApoios from "@/pages/apoios/BibliotecaApoios";
 import SupportLibraryAdmin from "@/pages/admin/SupportLibraryAdmin";
 import GerenciarApoios from "@/pages/GerenciarApoios";
+import HowItWorks from "@/pages/HowItWorks";
 import { RadarProtectedRoute } from "@/components/RadarProtectedRoute";
 import PublicRadar from "@/pages/public/PublicRadar";
 import PublicRadarResult from "@/pages/public/PublicRadarResult";
@@ -177,6 +178,7 @@ const AppWithShortcuts = () => {
       <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/sobre" element={<ModuleGuard module="about"><About /></ModuleGuard>} />
+      <Route path="/como-funciona" element={<HowItWorks />} />
           <Route path="/blog" element={<ModuleGuard module="blog"><Blog /></ModuleGuard>} />
           <Route path="/blog/:slug" element={<ModuleGuard module="blog"><BlogPost /></ModuleGuard>} />
       <Route path="/profissionais" element={<ModuleGuard module="professionals"><Professionals /></ModuleGuard>} />
@@ -278,6 +280,7 @@ const AppWithShortcuts = () => {
       {/* Rotas Medcos (duplicadas com prefixo /medcos) */}
       <Route path="/medcos" element={<Index />} />
       <Route path="/medcos/sobre" element={<ModuleGuard module="about"><About /></ModuleGuard>} />
+      <Route path="/medcos/como-funciona" element={<HowItWorks />} />
       <Route path="/medcos/blog" element={<ModuleGuard module="blog"><Blog /></ModuleGuard>} />
       <Route path="/medcos/blog/:slug" element={<ModuleGuard module="blog"><BlogPost /></ModuleGuard>} />
       <Route path="/medcos/profissionais" element={<ModuleGuard module="professionals"><Professionals /></ModuleGuard>} />
