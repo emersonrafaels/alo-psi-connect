@@ -9,19 +9,22 @@ import {
   Brain,
   CalendarDays,
   Check,
+  ChevronDown,
+  ClipboardList,
   Database,
   Flag,
   GraduationCap,
   Handshake,
   Heart,
   Leaf,
+  Lightbulb,
   LockKeyhole,
   MessageCircle,
   Moon,
   Pencil,
   Rocket,
   ShieldCheck,
-  Sparkles,
+  TrendingUp,
   User,
   Users,
   Zap,
@@ -35,16 +38,16 @@ import { buildTenantPath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
 import heroImage from "@/assets/como-funciona-hero.jpg";
 
 const journeySteps = [
-  { Icon: Rocket, title: "Início", copy: "Boas-vindas e orientações da jornada", tone: "primary" },
-  { Icon: CalendarDays, title: "Durante o semestre", copy: "Lembretes das escalas e conteúdos de apoio", tone: "pink" },
-  { Icon: MessageCircle, title: "Check-ins", copy: "Mensagens de cuidado e acompanhamento", tone: "mint" },
-  { Icon: Users, title: "Momentos críticos", copy: "Suporte extra em períodos de maior desafio", tone: "primary" },
-  { Icon: Flag, title: "Final do semestre", copy: "Fechamento e incentivo à continuidade", tone: "pink" },
+  { Icon: Rocket, title: "Início", copy: "Boas-vindas e orientações da jornada", tone: "primary", dot: "bg-[hsl(var(--hiw-purple))]" },
+  { Icon: CalendarDays, title: "Durante o semestre", copy: "Lembretes das escalas e conteúdos de apoio", tone: "pink", dot: "bg-[hsl(var(--hiw-pink))]" },
+  { Icon: MessageCircle, title: "Check-ins", copy: "Mensagens de cuidado e acompanhamento", tone: "mint", dot: "bg-[hsl(var(--hiw-mint-strong))]" },
+  { Icon: Users, title: "Momentos críticos", copy: "Suporte extra em períodos de maior desafio", tone: "primary", dot: "bg-[hsl(var(--hiw-violet))]" },
+  { Icon: Flag, title: "Final do semestre", copy: "Fechamento e incentivo à continuidade", tone: "pink", dot: "bg-[hsl(var(--hiw-pink))]" },
 ] as const;
 
 const messages = [
   { Icon: Bell, label: "Lembrete", text: "Oi! 👋\nEstá na hora de responder sua escala de bem-estar. É rapidinho e nos ajuda a cuidar melhor de você.", time: "10:00", tone: "pink" },
-  { Icon: BarChart3, label: "Check-in", text: "Como você tem se sentido esta semana?\n\nSua saúde emocional também importa. 💙", time: "14:22", tone: "mint" },
+  { Icon: BarChart3, label: "Check-in", text: "Como você tem se sentido esta semana?\n\nSua saúde mental também importa. 💙", time: "14:22", tone: "mint" },
   { Icon: Check, label: "Convite", text: "Temos um novo conteúdo para você: Técnicas simples para reduzir a ansiedade.\n\nQue tal conferir? ✨", time: "09:15", tone: "primary" },
   { Icon: Heart, label: "Cuidado", text: "Lembre-se: você não está sozinho nessa!\n\nEstamos aqui para apoiar a sua jornada. 💜", time: "16:40", tone: "pink" },
 ] as const;
@@ -70,20 +73,63 @@ const supports = [
   { Icon: Accessibility, title: "Acessibilidade", copy: "Recursos e adaptações para uma experiência acadêmica mais inclusiva.", tone: "mint" },
 ] as const;
 
+const securityItems = [
+  { Icon: LockKeyhole, title: "Anonimização de dados", copy: "As informações institucionais são sempre agregadas e sem identificação de pessoas.", tone: "primary" },
+  { Icon: ShieldCheck, title: "Conformidade com a LGPD", copy: "Seguimos integralmente a Lei Geral de Proteção de Dados, com políticas claras e atualizadas.", tone: "pink" },
+  { Icon: Database, title: "Infraestrutura segura", copy: "Dados protegidos com criptografia, controle de acesso e monitoramento contínuo.", tone: "mint" },
+  { Icon: Users, title: "Governança e ética", copy: "Processos, equipes e parceiros comprometidos com o uso responsável e ético dos dados.", tone: "primary" },
+] as const;
+
 const toneClasses = {
   primary: "bg-[var(--rbe-primary-fixed)] text-[var(--rbe-primary)]",
   pink: "bg-[var(--rbe-secondary-fixed)] text-[var(--rbe-secondary)]",
   mint: "bg-[var(--rbe-tertiary-fixed)] text-[var(--rbe-on-tertiary-fixed)]",
 };
 
-const AccentTitle = ({ children, accent }: { children: React.ReactNode; accent: React.ReactNode }) => (
-  <h2 className="text-3xl font-extrabold leading-[1.04] text-[var(--rbe-primary)] sm:text-4xl lg:text-[3.25rem]">
-    {children} <span className="text-[var(--rbe-secondary-container)]">{accent}</span>
+// Wellbeing trend points (viewBox 600×200); the curve is drawn through them so the markers sit on the line.
+const chartPoints: [number, number][] = [
+  [0, 112], [70, 84], [175, 106], [270, 128], [370, 100], [470, 78], [540, 76], [600, 30],
+];
+const chartMarkers = [70, 175, 270, 370, 470, 540, 600];
+
+const smoothPath = (points: [number, number][]) =>
+  points.reduce((d, [x, y], i) => {
+    if (i === 0) return `M${x} ${y}`;
+    const [x0, y0] = points[i - 2] ?? points[i - 1];
+    const [x1, y1] = points[i - 1];
+    const [x3, y3] = points[i + 1] ?? [x, y];
+    const c1 = [x1 + (x - x0) / 6, y1 + (y - y0) / 6];
+    const c2 = [x - (x3 - x1) / 6, y - (y3 - y1) / 6];
+    return `${d} C${c1[0]} ${c1[1]} ${c2[0]} ${c2[1]} ${x} ${y}`;
+  }, "");
+
+const chartLine = smoothPath(chartPoints);
+
+const AccentTitle = ({ children, accent, className = "" }: { children: React.ReactNode; accent?: React.ReactNode; className?: string }) => (
+  <h2 className={`text-3xl font-bold leading-[1.05] text-[var(--rbe-primary)] sm:text-4xl lg:text-[2.9rem] ${className}`}>
+    {children}
+    {accent ? <> <span className="text-[var(--rbe-secondary-container)]">{accent}</span></> : null}
   </h2>
 );
 
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
-  <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--rbe-primary)]">{children}</p>
+  <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[hsl(var(--hiw-violet))]">{children}</p>
+);
+
+const IconBadge = ({ Icon, tone, size = "md" }: { Icon: React.ElementType; tone: keyof typeof toneClasses; size?: "sm" | "md" | "lg" }) => {
+  const box = size === "lg" ? "h-[4.5rem] w-[4.5rem]" : size === "sm" ? "h-11 w-11" : "h-14 w-14";
+  const icon = size === "lg" ? "h-8 w-8" : size === "sm" ? "h-5 w-5" : "h-7 w-7";
+  return (
+    <span className={`flex shrink-0 items-center justify-center rounded-full ${box} ${toneClasses[tone]}`}>
+      <Icon className={icon} strokeWidth={1.75} />
+    </span>
+  );
+};
+
+const ArrowBubble = ({ className = "" }: { className?: string }) => (
+  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--rbe-primary-fixed)] text-[var(--rbe-primary)] transition-transform group-hover:translate-x-0.5 ${className}`}>
+    <ArrowRight className="h-4 w-4" />
+  </span>
 );
 
 const HowItWorks = () => {
@@ -102,196 +148,333 @@ const HowItWorks = () => {
   }, [tenant?.name]);
 
   return (
-    <div className="rbe-home-page how-it-works-page min-h-screen overflow-x-hidden bg-[var(--rbe-surface-container-lowest)]">
+    <div className="rbe-home-page how-it-works-page min-h-screen overflow-x-hidden">
       <Header />
 
       <main>
-        <section className="relative overflow-hidden py-10 sm:py-14 lg:min-h-[650px] lg:py-16">
-          <div className="absolute inset-0 bg-[var(--rbe-primary-fixed)] opacity-20" aria-hidden="true" />
-          <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8">
+        {/* Hero */}
+        <section className="hiw-hero-bg relative overflow-hidden pb-12 pt-10 sm:pb-16 sm:pt-14 lg:pb-20">
+          <svg viewBox="0 0 1440 600" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block" aria-hidden="true">
+            <path d="M560 600 C640 430 700 330 860 300 S1260 250 1440 150" fill="none" stroke="hsl(var(--hiw-pink))" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
+          </svg>
+          <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
             <div className="z-10">
-              <Eyebrow>Dados para mais pessoas bem hoje e sempre</Eyebrow>
-              <h1 className="max-w-xl text-[2.75rem] font-extrabold leading-[0.96] text-[var(--rbe-primary)] sm:text-6xl lg:text-[4.6rem]">
+              <Eyebrow>Dados para mais pessoas<br />bem hoje e sempre</Eyebrow>
+              <h1 className="max-w-xl text-[2.75rem] font-bold leading-[0.98] text-[var(--rbe-primary)] sm:text-6xl lg:text-[4.4rem]">
                 Mensuração contínua da <span className="text-[var(--rbe-secondary-container)]">saúde mental</span>
               </h1>
               <p className="mt-6 max-w-lg text-base leading-relaxed text-[var(--rbe-on-surface-variant)] sm:text-lg">
                 Uma jornada de cuidado baseada em dados, para acompanhar o bem-estar ao longo do tempo.
               </p>
-              <Button asChild size="lg" className="mt-7 rounded-full px-7 hiw-panel-shadow">
+              <Button asChild size="lg" className="hiw-cta mt-8 h-12 rounded-full px-7 text-base font-semibold">
                 <Link to={path("/contato")}>Conheça nossa solução <ArrowRight /></Link>
               </Button>
             </div>
 
-            <div className="relative mx-auto min-h-[390px] w-full max-w-2xl sm:min-h-[530px]">
-              <div className="absolute inset-x-[12%] bottom-0 top-[3%] overflow-hidden rounded-[46%_54%_42%_58%/48%_42%_58%_52%] bg-[var(--rbe-tertiary-fixed)]">
+            <div className="relative mx-auto h-[400px] w-full max-w-2xl sm:h-[520px]">
+              <div className="absolute inset-x-[8%] bottom-[2%] top-[6%] rounded-[58%_42%_50%_50%/50%_55%_45%_50%] bg-[var(--rbe-primary-fixed)] opacity-80" aria-hidden="true" />
+              <div className="absolute bottom-[10%] right-0 top-0 w-[45%] rounded-[50%_50%_45%_55%/55%_45%_55%_45%] bg-[var(--rbe-secondary-fixed)]" aria-hidden="true" />
+              <div className="absolute inset-x-[14%] bottom-0 top-[4%] overflow-hidden rounded-[46%_54%_42%_58%/48%_42%_58%_52%]">
                 <img src={heroImage} alt="Estudante sorrindo durante sua jornada de bem-estar" width={1024} height={1280} className="h-full w-full object-cover object-top" />
               </div>
-              <div className="absolute left-0 top-[15%] w-36 rounded-lg bg-[var(--rbe-surface-container-lowest)] p-4 hiw-panel-shadow sm:w-44">
-                <BarChart3 className="mb-3 h-7 w-7 text-[var(--rbe-on-tertiary-fixed)]" />
-                <p className="text-sm font-bold leading-tight text-[var(--rbe-primary)]">Mais bem-estar ao longo do tempo</p>
+              <div className="hiw-card absolute left-0 top-[12%] w-36 p-4 sm:w-40">
+                <BarChart3 className="mb-3 h-7 w-7 text-[var(--rbe-on-tertiary-fixed)]" strokeWidth={2.25} />
+                <p className="text-sm leading-tight text-[var(--rbe-primary)]">Mais <strong className="font-bold">bem-estar</strong> ao longo do tempo</p>
               </div>
-              <div className="absolute right-0 top-[17%] w-36 rounded-lg bg-[var(--rbe-surface-container-lowest)] p-4 hiw-panel-shadow sm:w-44">
-                <Heart className="mb-3 h-7 w-7 text-[var(--rbe-secondary-container)]" />
-                <p className="text-sm font-bold leading-tight text-[var(--rbe-primary)]">Dados que geram cuidado real</p>
+              <div className="hiw-card absolute right-0 top-[10%] w-36 p-4 sm:w-40">
+                <Heart className="mb-3 h-7 w-7 text-[var(--rbe-secondary-container)]" strokeWidth={2} />
+                <p className="text-sm leading-tight text-[var(--rbe-primary)]">Dados que geram cuidado real</p>
               </div>
-              <div className="absolute bottom-[6%] right-0 w-36 rounded-lg bg-[var(--rbe-surface-container-lowest)] p-4 hiw-panel-shadow sm:w-48">
-                <Users className="mb-3 h-7 w-7 text-[var(--rbe-on-tertiary-fixed)]" />
-                <p className="text-sm font-bold leading-tight text-[var(--rbe-primary)]">Ambientes mais saudáveis e acolhedores</p>
+              <div className="hiw-card absolute bottom-[8%] right-0 w-40 p-4 sm:w-44">
+                <Users className="mb-3 h-7 w-7 text-[var(--rbe-on-tertiary-fixed)]" strokeWidth={2} />
+                <p className="text-sm leading-tight text-[var(--rbe-primary)]">Ambientes mais saudáveis e acolhedores</p>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
-          <div className="hiw-reveal grid gap-7 rounded-lg bg-[var(--rbe-primary-fixed)] p-6 sm:p-8 lg:grid-cols-[0.95fr_2.05fr] lg:p-10">
-            <div className="lg:pr-6">
+        {/* Como funciona */}
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="hiw-panel hiw-reveal grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.9fr_2.1fr] lg:items-center lg:p-10">
+            <div className="lg:pr-4">
               <Eyebrow>Como funciona</Eyebrow>
-              <AccentTitle accent="e apoio contínuo">Escalas validadas, Diário Emocional</AccentTitle>
+              <AccentTitle accent="e apoio contínuo" className="lg:text-[2.4rem]">Escalas validadas, Diário Emocional</AccentTitle>
               <p className="mt-5 leading-relaxed text-[var(--rbe-on-surface-variant)]">Combinamos ciência, tecnologia e um acompanhamento próximo para entender como cada pessoa está ao longo do tempo.</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               {[
-                { Icon: BarChart3, title: "Escalas validadas", copy: "Aplicamos instrumentos científicos em momentos estratégicos do ano.", chip: "Momentos estratégicos", tone: "primary" },
-                { Icon: Pencil, title: "Diário Emocional", copy: "Registros rápidos e simples para captar emoções e padrões do dia a dia.", chip: "Visão contínua", tone: "pink" },
-                { title: "Buddy sempre por perto", copy: "Nosso assistente de bem-estar acompanha, engaja e incentiva a jornada ao longo do semestre.", chip: "Apoio constante", tone: "mint" },
+                { Icon: ClipboardList, title: "Escalas validadas", copy: "Aplicamos instrumentos científicos em momentos estratégicos do ano.", chip: "Momentos estratégicos", tone: "primary" as const },
+                { Icon: Pencil, title: "Diário Emocional", copy: "Registros rápidos e simples para captar emoções e padrões do dia a dia.", chip: "Visão contínua", tone: "pink" as const },
+                { Icon: null, title: "Buddy sempre por perto", copy: "Nosso assistente de bem-estar acompanha, engaja e incentiva a jornada ao longo do semestre.", chip: "Apoio constante", tone: "mint" as const },
               ].map((item) => (
-                <div key={item.title} className="flex min-h-56 flex-col rounded-lg bg-[var(--rbe-surface-container-lowest)] p-5 hiw-panel-shadow">
-                  {item.Icon ? <div className={`mb-5 flex h-12 w-12 items-center justify-center rounded-full ${toneClasses[item.tone]}`}><item.Icon /></div> : <BuddyCharacter size="md" className="mb-2 h-20 w-20 object-contain" />}
-                  <h3 className="font-extrabold text-[var(--rbe-primary)]">{item.title}</h3>
+                <div key={item.title} className="hiw-card flex min-h-60 flex-col p-5">
+                  {item.Icon ? (
+                    <div className="mb-5"><IconBadge Icon={item.Icon} tone={item.tone} /></div>
+                  ) : (
+                    <BuddyCharacter variant="arms" size="md" className="-mt-10 mb-1 h-24 w-24 self-center object-contain" />
+                  )}
+                  <h3 className="font-bold text-[var(--rbe-primary)]">{item.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{item.copy}</p>
-                  <span className={`mt-auto w-fit rounded-full px-3 py-1 text-[10px] font-bold ${toneClasses[item.tone]}`}>{item.chip}</span>
+                  <span className={`mt-auto w-fit rounded-full px-3 py-1.5 text-[11px] font-semibold ${toneClasses[item.tone]}`}>{item.chip}</span>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="hiw-reveal mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:px-8 lg:py-20">
+        {/* Inteligência */}
+        <section className="hiw-reveal mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:px-8 lg:py-16">
           <div>
             <Eyebrow>Acompanhamento ao longo do tempo</Eyebrow>
             <AccentTitle accent="cada jornada">Inteligência que reconhece</AccentTitle>
             <p className="mt-5 leading-relaxed text-[var(--rbe-on-surface-variant)]">Nossos algoritmos analisam as respostas de forma longitudinal, identificando mudanças, tendências e possíveis sinais de atenção, sempre respeitando o contexto de cada pessoa.</p>
             <ul className="mt-6 space-y-3 text-sm text-[var(--rbe-on-surface-variant)]">
-              {["Acompanha a evolução individual", "Identifica mudanças relevantes", "Gera insights para o cuidado proativo"].map((item, index) => (
-                <li key={item} className="flex items-center gap-3"><span className={`flex h-7 w-7 items-center justify-center rounded-full ${index === 1 ? toneClasses.pink : index === 2 ? toneClasses.mint : toneClasses.primary}`}><Check className="h-4 w-4" /></span>{item}</li>
+              {[
+                { Icon: TrendingUp, text: "Acompanha a evolução individual", tone: "primary" as const },
+                { Icon: Heart, text: "Identifica mudanças relevantes", tone: "pink" as const },
+                { Icon: Lightbulb, text: "Gera insights para o cuidado proativo", tone: "mint" as const },
+              ].map(({ Icon, text, tone }) => (
+                <li key={text} className="flex items-center gap-3">
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${toneClasses[tone]}`}><Icon className="h-4 w-4" /></span>
+                  {text}
+                </li>
               ))}
             </ul>
           </div>
-          <div className="rounded-lg border border-[var(--rbe-outline-variant)] bg-[var(--rbe-surface-container-lowest)] p-5 hiw-panel-shadow sm:p-7">
-            <div className="mb-7 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--rbe-secondary-fixed)] text-[var(--rbe-primary)]"><User /></div><div><p className="font-bold text-[var(--rbe-primary)]">Jornada individual</p><p className="text-xs text-[var(--rbe-on-surface-variant)]">Visão longitudinal e personalizada</p></div></div>
-              <span className="rounded-full border border-[var(--rbe-outline-variant)] px-4 py-2 text-xs text-[var(--rbe-on-surface-variant)]">6 meses</span>
+          <div className="hiw-card p-5 sm:p-7">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <img src={heroImage} alt="" className="h-11 w-11 rounded-full object-cover object-top" />
+                <div><p className="font-bold text-[var(--rbe-primary)]">Jornada individual</p><p className="text-xs text-[var(--rbe-on-surface-variant)]">Visão longitudinal e personalizada</p></div>
+              </div>
+              <span className="inline-flex items-center gap-2 rounded-xl border border-[var(--rbe-outline-variant)] px-4 py-2 text-xs text-[var(--rbe-on-surface-variant)]">6 meses <ChevronDown className="h-3.5 w-3.5" /></span>
             </div>
-            <div className="relative h-52 border-b border-l border-[var(--rbe-outline-variant)]">
-              <div className="absolute inset-x-0 top-1/3 border-t border-[var(--rbe-outline-variant)] opacity-50" />
-              <div className="absolute inset-x-0 top-2/3 border-t border-[var(--rbe-outline-variant)] opacity-50" />
-              <svg viewBox="0 0 600 180" className="absolute inset-0 h-full w-full overflow-visible text-[var(--rbe-primary)]" aria-label="Gráfico de tendência de bem-estar crescente">
-                <path d="M0 115 C55 72 95 70 145 98 S230 140 290 112 S385 77 440 82 S525 83 600 25" fill="none" stroke="currentColor" strokeWidth="4" />
-                <path d="M0 115 C55 72 95 70 145 98 S230 140 290 112 S385 77 440 82 S525 83 600 25 L600 180 L0 180 Z" fill="currentColor" opacity="0.08" />
-                {[['75','82'],['220','123'],['365','86'],['510','76'],['600','25']].map(([cx,cy]) => <circle key={cx} cx={cx} cy={cy} r="6" fill="var(--rbe-surface-container-lowest)" stroke="currentColor" strokeWidth="3" />)}
-              </svg>
-              <span className="absolute right-2 top-2 rounded-full bg-[var(--rbe-tertiary-fixed)] px-3 py-1 text-xs font-bold text-[var(--rbe-on-tertiary-fixed)]">↗ Tendência de melhora</span>
+            <div className="flex justify-end">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--rbe-tertiary-fixed)] px-3 py-1.5 text-xs font-semibold text-[var(--rbe-on-tertiary-fixed)]"><TrendingUp className="h-3.5 w-3.5" /> Tendência de melhora</span>
             </div>
-            <div className="mt-3 grid grid-cols-6 text-center text-xs text-[var(--rbe-on-surface-variant)]"><span>Jan</span><span>Fev</span><span>Mar</span><span>Abr</span><span>Mai</span><span>Jun</span></div>
+            <div className="mt-2 grid grid-cols-[3.5rem_1fr] gap-2">
+              <div className="relative h-52 text-[11px] text-[var(--rbe-on-surface-variant)]">
+                <span className="absolute -top-5 left-0">Bem-estar</span>
+                <span className="absolute top-[14%] -translate-y-1/2">Alto</span>
+                <span className="absolute top-1/2 -translate-y-1/2">Médio</span>
+                <span className="absolute top-[86%] -translate-y-1/2">Baixo</span>
+              </div>
+              <div className="relative h-52">
+                <svg viewBox="0 0 600 200" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible" role="img" aria-label="Gráfico de tendência de bem-estar crescente de janeiro a junho">
+                  <defs>
+                    <linearGradient id="hiw-line" x1="0" x2="1" y1="0" y2="0">
+                      <stop offset="0%" stopColor="hsl(var(--hiw-violet))" />
+                      <stop offset="45%" stopColor="hsl(var(--hiw-pink))" />
+                      <stop offset="100%" stopColor="hsl(var(--hiw-mint-strong))" />
+                    </linearGradient>
+                    <linearGradient id="hiw-area" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--hiw-mint))" stopOpacity="0.55" />
+                      <stop offset="100%" stopColor="hsl(var(--hiw-mint))" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  {[28, 100, 172].map((y) => <line key={y} x1="0" x2="600" y1={y} y2={y} stroke="hsl(var(--hiw-lilac-deep))" strokeDasharray="4 6" vectorEffect="non-scaling-stroke" />)}
+                  <path d={`${chartLine} L600 200 L0 200 Z`} fill="url(#hiw-area)" />
+                  <path d={chartLine} fill="none" stroke="url(#hiw-line)" strokeWidth="3.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                </svg>
+                {chartPoints.filter(([x]) => chartMarkers.includes(x)).map(([x, y]) => (
+                  <span key={x} className="absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] bg-[hsl(var(--hiw-card))]" style={{ left: `${(x / 600) * 100}%`, top: `${(y / 200) * 100}%`, borderColor: x < 220 ? "hsl(var(--hiw-violet))" : x < 400 ? "hsl(var(--hiw-pink))" : "hsl(var(--hiw-mint-strong))" }} />
+                ))}
+              </div>
+            </div>
+            <div className="ml-[4rem] mt-3 grid grid-cols-6 text-center text-xs text-[var(--rbe-on-surface-variant)]"><span>Jan</span><span>Fev</span><span>Mar</span><span>Abr</span><span>Mai</span><span>Jun</span></div>
           </div>
         </section>
 
-        <section className="bg-[var(--rbe-primary-fixed)] py-14 sm:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
+        {/* Jornada */}
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="hiw-panel hiw-reveal p-6 sm:p-10">
+            <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
               <div><Eyebrow>Uma jornada de cuidado contínua</Eyebrow><AccentTitle accent="em todas as fases do semestre">Ao lado de cada pessoa,</AccentTitle></div>
-              <p className="max-w-xl leading-relaxed text-[var(--rbe-on-surface-variant)]">O Buddy se comunica de forma planejada e respeitosa ao longo do semestre, com mensagens que incentivam o autocuidado, o preenchimento das escalas e o engajamento com os recursos da instituição.</p>
+              <p className="max-w-xl leading-relaxed text-[var(--rbe-on-surface-variant)] lg:pt-8">O Buddy se comunica de forma planejada e respeitosa ao longo do semestre, com mensagens que incentivam o autocuidado, o preenchimento das escalas e o engajamento com os recursos da instituição.</p>
             </div>
-            <div className="hiw-reveal relative mt-12 grid gap-5 sm:grid-cols-5 sm:gap-3">
-              <div className="absolute left-[10%] right-[10%] top-10 hidden h-0.5 bg-[var(--rbe-tertiary-fixed)] sm:block" />
-              {journeySteps.map(({ Icon, title, copy, tone }) => (
-                <div key={title} className="relative grid grid-cols-[4.5rem_1fr] items-center gap-4 text-left sm:block sm:text-center">
-                  <div className={`relative z-10 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full sm:mx-auto sm:mb-5 sm:h-20 sm:w-20 ${toneClasses[tone]}`}><Icon className="h-8 w-8" /></div>
-                  <div><h3 className="text-sm font-extrabold text-[var(--rbe-primary)]">{title}</h3><p className="mt-1 text-xs leading-relaxed text-[var(--rbe-on-surface-variant)] sm:mt-2">{copy}</p></div>
+            <div className="relative mt-12">
+              <div className="hiw-gradient-line absolute left-[10%] right-[10%] top-[6.125rem] hidden h-0.5 rounded-full sm:block" aria-hidden="true" />
+              <div className="hiw-gradient-line-vertical absolute bottom-6 left-[calc(2.25rem-1px)] top-6 w-0.5 rounded-full sm:hidden" aria-hidden="true" />
+              <ol className="relative grid gap-6 sm:grid-cols-5 sm:gap-3">
+                {journeySteps.map(({ Icon, title, copy, tone, dot }) => (
+                  <li key={title} className="grid grid-cols-[4.5rem_1fr] items-center gap-4 sm:flex sm:flex-col sm:items-center sm:text-center">
+                    <IconBadge Icon={Icon} tone={tone} size="lg" />
+                    <span className={`hidden h-3.5 w-3.5 rounded-full ring-4 ring-[hsl(var(--hiw-lilac))] sm:mt-5 sm:block ${dot}`} aria-hidden="true" />
+                    <div className="sm:mt-5"><h3 className="font-bold text-[var(--rbe-primary)]">{title}</h3><p className="mt-1 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p></div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        {/* Mensagens */}
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
+            <div><Eyebrow>Exemplos de comunicações</Eyebrow><AccentTitle accent="acolhem e engajam">Mensagens que informam,</AccentTitle></div>
+            <p className="max-w-xl leading-relaxed text-[var(--rbe-on-surface-variant)]">O Buddy utiliza uma linguagem próxima e empática, comunicando-se de forma clara, respeitosa e no momento ideal.</p>
+          </div>
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {messages.map(({ Icon, label, text, time, tone }) => (
+              <div key={label} className="hiw-card hiw-interactive flex flex-col items-center p-5 pb-6">
+                <span className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide ${toneClasses[tone]}`}><Icon className="h-3.5 w-3.5" />{label}</span>
+                <div className="relative mt-5 w-full pl-10">
+                  <div className="hiw-bubble min-h-36 px-4 pb-6 pt-4">
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{text}</p>
+                    <span className="absolute bottom-2 right-3 text-[10px] text-[var(--rbe-on-surface-variant)] opacity-70">{time}</span>
+                  </div>
+                  <span className="absolute -bottom-3 left-0 flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[hsl(var(--hiw-purple))] ring-4 ring-[hsl(var(--hiw-card))]">
+                    <BuddyCharacter variant="chat" size="sm" className="h-11 w-11 object-contain" />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Adesão */}
+          <div className="hiw-panel hiw-reveal mt-12 grid items-center gap-8 p-7 sm:p-10 lg:grid-cols-[0.9fr_1.1fr]">
+            <div><Eyebrow>Mais participação, mais impacto</Eyebrow><AccentTitle accent="aumenta a adesão">A comunicação certa</AccentTitle><p className="mt-4 leading-relaxed text-[var(--rbe-on-surface-variant)]">Com lembretes no momento ideal e mensagens personalizadas, mais pessoas respondem às escalas, acessam os conteúdos e se mantêm engajadas ao longo do semestre.</p></div>
+            <div className="hiw-card grid items-center gap-6 p-6 sm:grid-cols-[1fr_auto] sm:p-8">
+              <div className="relative h-48">
+                <svg viewBox="0 0 300 120" className="absolute inset-x-0 top-0 h-24 w-full overflow-visible" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="hiw-arrow" x1="0" x2="1" y1="0" y2="0">
+                      <stop offset="0%" stopColor="hsl(var(--hiw-mint))" />
+                      <stop offset="100%" stopColor="hsl(var(--hiw-violet))" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M10 95 C110 85 200 60 280 12" fill="none" stroke="url(#hiw-arrow)" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M262 10 L281 11 L276 29" fill="none" stroke="hsl(var(--hiw-violet))" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <div className="absolute inset-x-0 bottom-0 flex h-36 items-end justify-around px-2">
+                  {["h-[30%] opacity-40", "h-[48%] opacity-60", "h-[70%] opacity-80", "h-full"].map((bar) => (
+                    <span key={bar} className={`w-[16%] rounded-t-lg bg-gradient-to-t from-[hsl(var(--hiw-lilac-deep))] to-[hsl(var(--hiw-violet))] ${bar}`} />
+                  ))}
+                </div>
+              </div>
+              <div className="border-t border-[var(--rbe-outline-variant)] pt-6 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0">
+                <strong className="font-['Outfit'] text-6xl font-bold text-[var(--rbe-primary)]">+78%</strong>
+                <p className="mt-2 max-w-44 text-sm leading-snug text-[var(--rbe-on-surface-variant)]">de aumento na adesão às escalas com a comunicação do Buddy.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Escalas */}
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+          <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
+            <div><Eyebrow>Nossas escalas validadas</Eyebrow><AccentTitle accent="mais clara">Avaliação completa, visão</AccentTitle></div>
+            <p className="max-w-xl leading-relaxed text-[var(--rbe-on-surface-variant)]">Selecionamos as principais escalas científicas para avaliar diferentes dimensões da saúde mental, com aplicação rápida e segura.</p>
+          </div>
+          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {scales.map(({ Icon, code, title, copy, tone }) => (
+              <Link to={path("/escalas")} key={code} className="hiw-card hiw-interactive group p-6">
+                <div className="flex items-start justify-between"><IconBadge Icon={Icon} tone={tone} size="lg" /><ArrowBubble /></div>
+                <h3 className="mt-5 text-2xl font-bold text-[var(--rbe-primary)]">{code}</h3>
+                <p className="font-semibold text-[var(--rbe-primary)]">{title}</p>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Apoio */}
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+          <Eyebrow>Apoio para cada necessidade</Eyebrow>
+          <AccentTitle accent="bem-estar real" className="lg:text-[2.6rem]">Especialistas e programas para promover</AccentTitle>
+          <p className="mt-3 text-lg text-[var(--rbe-on-surface-variant)]">Encaminhamos para o tipo de apoio ideal, de forma personalizada e integrada à sua instituição.</p>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-[repeat(20,minmax(0,1fr))]">
+            {supports.map(({ Icon, title, copy, tone }, index) => (
+              <Link to={path("/biblioteca-apoios")} key={title} className={`hiw-card hiw-interactive group flex min-h-56 flex-col p-5 ${index < 5 ? "lg:col-span-4" : "lg:col-span-5"}`}>
+                <IconBadge Icon={Icon} tone={tone} size="lg" />
+                <h3 className="mt-5 text-lg font-bold text-[var(--rbe-primary)]">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p>
+                <ArrowBubble className="ml-auto mt-auto" />
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Duas perspectivas */}
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="hiw-panel hiw-reveal grid gap-8 p-7 sm:p-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+            <div><Eyebrow>Dados para diferentes necessidades</Eyebrow><AccentTitle accent="o mesmo propósito">Duas perspectivas,</AccentTitle><p className="mt-5 max-w-md text-lg leading-relaxed text-[var(--rbe-on-surface-variant)]">Transformamos dados em informações úteis para o cuidado individual e para a gestão institucional, sempre com privacidade.</p></div>
+            <div className="hiw-card grid gap-8 p-6 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-[var(--rbe-outline-variant)] sm:p-8">
+              {[
+                { Icon: User, title: "Leitura individual", copy: "A pessoa acessa apenas os seus próprios dados, de forma privada e segura, para acompanhar a sua jornada de bem-estar.", chip: "Visão individual e personalizada", tone: "pink" as const },
+                { Icon: BarChart3, title: "Visão institucional", copy: "A instituição acessa apenas dados agregados e anonimizados, com panoramas e tendências para apoiar decisões e ações de promoção da saúde mental.", chip: "Dados agregados e sem identificação", tone: "mint" as const },
+              ].map(({ Icon, title, copy, chip, tone }, index) => (
+                <div key={title} className={`flex flex-col ${index === 0 ? "sm:pr-8" : "sm:pl-8"}`}>
+                  <IconBadge Icon={Icon} tone={tone} size="lg" />
+                  <h3 className="mt-4 text-xl font-bold text-[var(--rbe-primary)]">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p>
+                  <span className={`mt-5 w-fit rounded-full px-4 py-2 text-xs font-semibold ${toneClasses[tone]}`}>{chip}</span>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-          <div className="grid gap-6 lg:grid-cols-2 lg:items-end"><div><Eyebrow>Exemplos de comunicações</Eyebrow><AccentTitle accent="acolhem e engajam">Mensagens que informam,</AccentTitle></div><p className="leading-relaxed text-[var(--rbe-on-surface-variant)]">O Buddy utiliza uma linguagem próxima e empática, comunicando-se de forma clara, respeitosa e no momento ideal.</p></div>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {messages.map(({ Icon, label, text, time, tone }) => (
-              <div key={label} className="hiw-interactive relative min-h-56 rounded-lg border border-[var(--rbe-outline-variant)] bg-[var(--rbe-surface-container-lowest)] p-5 hiw-panel-shadow">
-                <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase ${toneClasses[tone]}`}><Icon className="h-3.5 w-3.5" />{label}</span>
-                <p className="mt-5 whitespace-pre-line text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{text}</p>
-                <div className="absolute bottom-3 left-3 flex items-end gap-2"><BuddyCharacter size="sm" className="h-12 w-12 object-contain" /><span className="mb-1 text-[10px] text-[var(--rbe-on-surface-variant)]">{time}</span></div>
+        {/* Segurança */}
+        <section className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-8 lg:py-16">
+          <div><Eyebrow>Segurança em cada detalhe</Eyebrow><AccentTitle accent="sua confiança">Tecnologia, processos e pessoas a favor da</AccentTitle><p className="mt-5 max-w-lg text-lg leading-relaxed text-[var(--rbe-on-surface-variant)]">Adotamos as melhores práticas de segurança da informação e governança de dados, com foco na proteção, na ética e na transparência.</p></div>
+          <div className="grid gap-8 sm:grid-cols-2">
+            {securityItems.map(({ Icon, title, copy, tone }) => (
+              <div key={title} className="flex gap-4">
+                <IconBadge Icon={Icon} tone={tone} size="lg" />
+                <div><h3 className="max-w-[11rem] font-bold leading-tight text-[var(--rbe-primary)]">{title}</h3><p className="mt-2 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p></div>
               </div>
             ))}
           </div>
-          <div className="hiw-reveal mt-10 grid items-center gap-8 rounded-lg bg-[var(--rbe-primary-fixed)] p-7 sm:p-10 lg:grid-cols-[0.9fr_1.1fr]">
-            <div><Eyebrow>Mais participação, mais impacto</Eyebrow><AccentTitle accent="aumenta a adesão">A comunicação certa</AccentTitle><p className="mt-4 leading-relaxed text-[var(--rbe-on-surface-variant)]">Com lembretes no momento ideal e mensagens personalizadas, mais pessoas respondem às escalas, acessam os conteúdos e se mantêm engajadas ao longo do semestre.</p></div>
-            <div className="grid items-end gap-5 sm:grid-cols-[1fr_auto]">
-              <div className="flex h-44 items-end justify-center gap-5 border-b border-[var(--rbe-outline-variant)]"><span className="h-14 w-10 rounded-t bg-[var(--rbe-primary)] opacity-20" /><span className="h-20 w-10 rounded-t bg-[var(--rbe-primary)] opacity-35" /><span className="h-28 w-10 rounded-t bg-[var(--rbe-primary)] opacity-55" /><span className="h-40 w-10 rounded-t bg-[var(--rbe-primary)] opacity-75" /></div>
-              <div><strong className="text-6xl font-extrabold text-[var(--rbe-primary)]">+78%</strong><p className="mt-2 max-w-44 text-sm font-semibold leading-snug text-[var(--rbe-on-surface-variant)]">de aumento na adesão às escalas com a comunicação do Buddy.</p></div>
-            </div>
-          </div>
         </section>
 
-        <section className="bg-[var(--rbe-surface-container-low)] py-14 sm:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-6 lg:grid-cols-2 lg:items-center"><div><Eyebrow>Nossas escalas validadas</Eyebrow><AccentTitle accent="visão mais clara">Avaliação completa,</AccentTitle></div><p className="max-w-xl text-lg leading-relaxed text-[var(--rbe-on-surface-variant)]">Selecionamos as principais escalas científicas para avaliar diferentes dimensões da saúde mental, com aplicação rápida e segura.</p></div>
-            <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {scales.map(({ Icon, code, title, copy, tone }) => (
-                <Link to={path("/escalas")} key={code} className="hiw-interactive group rounded-lg border border-[var(--rbe-outline-variant)] bg-[var(--rbe-surface-container-lowest)] p-6">
-                  <div className="flex items-start justify-between"><span className={`flex h-14 w-14 items-center justify-center rounded-full ${toneClasses[tone]}`}><Icon className="h-8 w-8" /></span><span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--rbe-primary-fixed)] text-[var(--rbe-primary)]"><ArrowRight /></span></div>
-                  <h3 className="mt-5 text-2xl font-extrabold text-[var(--rbe-primary)]">{code}</h3><p className="font-bold text-[var(--rbe-primary)]">{title}</p><p className="mt-2 leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p>
-                </Link>
+        {/* Privacidade */}
+        <section className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6 sm:pb-20 lg:px-8">
+          <div className="hiw-panel hiw-reveal relative grid items-center gap-10 overflow-hidden p-7 sm:p-10 lg:grid-cols-[1.1fr_0.6fr_0.8fr] lg:gap-6 lg:p-12">
+            <div>
+              <Eyebrow>Privacidade do estudante</Eyebrow>
+              <AccentTitle accent="etapas">Confidencialidade em todas as</AccentTitle>
+              <p className="mt-4 max-w-lg leading-relaxed text-[var(--rbe-on-surface-variant)]">As informações individuais são protegidas e acessíveis apenas à equipe autorizada, garantindo um ambiente seguro e de confiança.</p>
+              <Button asChild size="lg" className="hiw-cta mt-7 h-12 rounded-full px-7 font-semibold">
+                <Link to={path("/politica-privacidade")}>Saiba mais sobre nossa política <ArrowRight /></Link>
+              </Button>
+            </div>
+
+            <svg viewBox="0 0 220 240" className="mx-auto h-56 w-auto drop-shadow-[0_24px_30px_hsl(var(--hiw-purple)/0.35)]" role="img" aria-label="Escudo com cadeado representando a proteção dos dados">
+              <defs>
+                <linearGradient id="hiw-shield" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--hiw-violet))" />
+                  <stop offset="100%" stopColor="hsl(268 68% 36%)" />
+                </linearGradient>
+                <linearGradient id="hiw-shield-edge" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(266 90% 82%)" />
+                  <stop offset="100%" stopColor="hsl(var(--hiw-violet))" />
+                </linearGradient>
+              </defs>
+              <path d="M4 52 L20 40 M2 72 L16 70 M28 22 L34 36" stroke="hsl(var(--hiw-pink))" strokeWidth="5" strokeLinecap="round" />
+              <path d="M120 16 L196 44 V112 C196 168 162 204 120 226 C78 204 44 168 44 112 V44 Z" fill="url(#hiw-shield-edge)" />
+              <path d="M120 30 L184 54 V112 C184 160 155 191 120 211 C85 191 56 160 56 112 V54 Z" fill="url(#hiw-shield)" />
+              <path d="M98 108 V92 a22 22 0 0 1 44 0 V108" fill="none" stroke="hsl(0 0% 100%)" strokeWidth="11" strokeLinecap="round" />
+              <rect x="86" y="104" width="68" height="56" rx="12" fill="hsl(0 0% 100%)" />
+              <circle cx="120" cy="126" r="7" fill="hsl(var(--hiw-purple))" />
+              <rect x="116.5" y="128" width="7" height="16" rx="3.5" fill="hsl(var(--hiw-purple))" />
+            </svg>
+
+            <div className="space-y-4">
+              {[
+                { Icon: LockKeyhole, text: "Dados individuais sempre sigilosos" },
+                { Icon: User, text: "Acesso restrito à equipe especializada" },
+                { Icon: ShieldCheck, text: "Comunicação segura e ética" },
+              ].map(({ Icon, text }) => (
+                <div key={text} className="relative">
+                  <span className="absolute right-full top-1/2 mr-2 hidden w-10 border-t-2 border-dashed border-[hsl(var(--hiw-violet)/0.45)] lg:block" aria-hidden="true" />
+                  <div className="hiw-card flex items-center gap-4 p-4">
+                    <IconBadge Icon={Icon} tone="primary" size="sm" />
+                    <p className="text-sm font-semibold text-[var(--rbe-primary)]">{text}</p>
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
-        </section>
-
-        <section className="py-14 sm:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <Eyebrow>Apoio para cada necessidade</Eyebrow>
-            <AccentTitle accent="bem-estar real">Especialistas e programas para promover</AccentTitle>
-            <p className="mt-3 text-lg text-[var(--rbe-on-surface-variant)]">Encaminhamos para o tipo de apoio ideal, de forma personalizada e integrada à sua instituição.</p>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {supports.map(({ Icon, title, copy, tone }) => (
-                <Link to={path("/biblioteca-apoios")} key={title} className="hiw-interactive group grid min-h-0 grid-cols-[3.5rem_1fr_auto] items-start gap-x-4 rounded-lg border border-[var(--rbe-outline-variant)] bg-[var(--rbe-surface-container-lowest)] p-5 sm:flex sm:min-h-56 sm:flex-col">
-                  <span className={`flex h-14 w-14 items-center justify-center rounded-full ${toneClasses[tone]}`}><Icon className="h-8 w-8" /></span>
-                  <div className="sm:contents"><h3 className="text-lg font-extrabold text-[var(--rbe-primary)] sm:mt-5">{title}</h3><p className="col-start-2 mt-1 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)] sm:mt-2">{copy}</p></div>
-                  <span className="row-span-2 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--rbe-primary-fixed)] text-[var(--rbe-primary)] sm:mt-auto sm:ml-auto"><ArrowRight /></span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-[var(--rbe-primary-fixed)] py-14 sm:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-              <div><Eyebrow>Dados para diferentes necessidades</Eyebrow><AccentTitle accent="o mesmo propósito">Duas perspectivas,</AccentTitle><p className="mt-5 max-w-md text-lg leading-relaxed text-[var(--rbe-on-surface-variant)]">Transformamos dados em informações úteis para o cuidado individual e para a gestão institucional, sempre com privacidade.</p></div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {[{ Icon: User, title: "Leitura individual", copy: "A pessoa acessa apenas os seus próprios dados, de forma privada e segura, para acompanhar a sua jornada de bem-estar.", chip: "Visão individual e personalizada", tone: "pink" }, { Icon: BarChart3, title: "Visão institucional", copy: "A instituição acessa apenas dados agregados e anonimizados, com panoramas e tendências para apoiar decisões e ações de promoção da saúde mental.", chip: "Dados agregados e sem identificação", tone: "mint" }].map(({ Icon, title, copy, chip, tone }) => (
-                   <div key={title} className="rounded-lg border border-[var(--rbe-outline-variant)] bg-[var(--rbe-surface-container-lowest)] p-6 hiw-panel-shadow"><span className={`flex h-14 w-14 items-center justify-center rounded-full ${toneClasses[tone]}`}><Icon /></span><h3 className="mt-4 text-xl font-extrabold text-[var(--rbe-primary)]">{title}</h3><p className="mt-2 leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p><span className={`mt-5 inline-flex rounded-full px-4 py-2 text-xs font-bold ${toneClasses[tone]}`}>{chip}</span></div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-16 grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-              <div><Eyebrow>Segurança em cada detalhe</Eyebrow><AccentTitle accent="sua confiança">Tecnologia, processos e pessoas a favor da</AccentTitle><p className="mt-5 max-w-lg text-lg leading-relaxed text-[var(--rbe-on-surface-variant)]">Adotamos as melhores práticas de segurança da informação e governança de dados, com foco na proteção, na ética e na transparência.</p></div>
-              <div className="grid gap-7 sm:grid-cols-2">
-                {[{ Icon: LockKeyhole, title: "Anonimização de dados", copy: "As informações institucionais são sempre agregadas e sem identificação de pessoas.", tone: "primary" }, { Icon: ShieldCheck, title: "Conformidade com a LGPD", copy: "Seguimos integralmente a Lei Geral de Proteção de Dados, com políticas claras e atualizadas.", tone: "pink" }, { Icon: Database, title: "Infraestrutura segura", copy: "Dados protegidos com criptografia, controle de acesso e monitoramento contínuo.", tone: "mint" }, { Icon: Users, title: "Governança e ética", copy: "Processos, equipes e parceiros comprometidos com o uso responsável e ético dos dados.", tone: "primary" }].map(({ Icon, title, copy, tone }) => (
-                  <div key={title} className="flex gap-4"><span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${toneClasses[tone]}`}><Icon /></span><div><h3 className="font-extrabold text-[var(--rbe-primary)]">{title}</h3><p className="mt-2 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{copy}</p></div></div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-          <div className="hiw-reveal relative mx-auto grid max-w-7xl items-center gap-10 overflow-hidden rounded-lg bg-[var(--rbe-primary-fixed)] p-7 sm:p-10 lg:grid-cols-[1fr_0.55fr_0.9fr] lg:p-12">
-            <div><Eyebrow>Privacidade do estudante</Eyebrow><AccentTitle accent="">Confidencialidade em todas as etapas</AccentTitle><p className="mt-4 text-lg leading-relaxed text-[var(--rbe-on-surface-variant)]">As informações individuais são protegidas e acessíveis apenas à equipe autorizada, garantindo um ambiente seguro e de confiança.</p><Button asChild size="lg" className="mt-7 rounded-full"><Link to={path("/politica-privacidade")}>Saiba mais sobre nossa política <ArrowRight /></Link></Button></div>
-            <div className="relative mx-auto flex h-52 w-44 items-center justify-center rounded-[48%_52%_55%_45%] bg-[var(--rbe-primary)] text-[var(--rbe-on-primary)] shadow-xl"><ShieldCheck className="h-36 w-36" /><LockKeyhole className="absolute h-16 w-16" /></div>
-            <div className="space-y-4">{[{ Icon: LockKeyhole, text: "Dados individuais sempre sigilosos" }, { Icon: User, text: "Acesso restrito à equipe especializada" }, { Icon: ShieldCheck, text: "Comunicação segura e ética" }].map(({ Icon, text }) => <div key={text} className="flex items-center gap-4 rounded-lg bg-[var(--rbe-surface-container-lowest)] p-4 shadow-sm"><Icon className="h-7 w-7 shrink-0 text-[var(--rbe-primary)]" /><p className="font-bold text-[var(--rbe-primary)]">{text}</p></div>)}</div>
           </div>
         </section>
       </main>
