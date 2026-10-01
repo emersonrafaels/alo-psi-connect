@@ -498,4 +498,4 @@ const DiarioHistorico = () => {
   );
 };
 
-export default DiarioHistorico;
+export default DiarioHistorico;   

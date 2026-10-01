@@ -142,7 +142,6 @@ export default function GroupSessions() {
         </div>
 
         <HowItWorksSection />
-        <SessionsStats />
         <SessionsTestimonials />
         <PastSessionsSection />
         <SessionsFAQ />

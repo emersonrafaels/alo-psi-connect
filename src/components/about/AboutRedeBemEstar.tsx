@@ -27,11 +27,646 @@ const AboutRedeBemEstar = () => {
     window.scrollTo(0, 0);
   };
 
+const BuddyHeroComposition = () => {
+  const cardClass = `
+    bg-[var(--rbe-card)]
+    border border-[var(--rbe-card-border)]
+    shadow-[0_14px_34px_rgba(73,43,123,0.10)]
+  `;
+
+  return (
+    <div className="w-full min-w-0">
+      {/* =========================================================
+          DESKTOP / TABLET GRANDE
+      ========================================================= */}
+      <div className="hidden lg:flex w-full justify-end">
+        <div className="relative w-full max-w-[650px]">
+          {/* Glow */}
+          <div
+            className="
+              absolute
+              left-1/2
+              top-1/2
+              -translate-x-1/2
+              -translate-y-1/2
+              w-[400px]
+              h-[400px]
+              rounded-full
+              bg-[var(--rbe-lilac-light)]/20
+              blur-3xl
+              pointer-events-none
+            "
+          />
+
+          <div
+            className="
+              relative z-10
+              grid
+              grid-cols-[1fr_1.25fr_1fr]
+              grid-rows-[145px_185px_185px_150px]
+              gap-x-6
+              gap-y-5
+              items-center
+            "
+          >
+            {/* ═════ META ═════ */}
+            <div
+              className={`
+                ${cardClass}
+                col-start-2 row-start-1
+                justify-self-center self-end
+                w-[200px]
+                rounded-[24px]
+                p-4
+                -rotate-[2deg]
+              `}
+            >
+              <div className="flex items-start gap-3 mb-3">
+                <div
+                  className="
+                    w-9 h-9
+                    shrink-0
+                    rounded-xl
+                    bg-[var(--rbe-secondary)]/15
+                    flex items-center justify-center
+                  "
+                >
+                  <Target className="w-4 h-4 text-[var(--rbe-secondary)]" />
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-[var(--rbe-text)] leading-tight">
+                    Meta de bem-estar
+                  </p>
+
+                  <p className="text-[10px] leading-relaxed text-[var(--rbe-text-muted)] mt-1">
+                    Respire fundo, você está indo bem!
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-[10px] font-bold text-[var(--rbe-secondary)] mb-2">
+                3/5 dias
+              </p>
+
+              <div className="h-[6px] bg-[var(--rbe-surface-variant)] rounded-full overflow-hidden">
+                <div className="w-[60%] h-full bg-[var(--rbe-secondary)] rounded-full" />
+              </div>
+            </div>
+
+            {/* ═════ CHECK-IN ═════ */}
+            <div
+              className={`
+                ${cardClass}
+                relative
+                col-start-1 row-start-2
+                justify-self-end
+                w-[205px]
+                rounded-[24px]
+                p-4
+                -rotate-[1deg]
+              `}
+            >
+              <p className="text-[10px] font-black uppercase tracking-wider text-[var(--rbe-text-muted)] mb-3">
+                Check-in diário
+              </p>
+
+              <div className="flex items-center justify-center gap-4">
+                <div className="w-8 h-8 rounded-full bg-[var(--rbe-lilac-light)] flex items-center justify-center text-sm">
+                  😌
+                </div>
+
+                <div
+                  className="
+                    w-11 h-11
+                    rounded-full
+                    bg-[var(--rbe-card)]
+                    ring-4 ring-[var(--rbe-secondary)]
+                    flex items-center justify-center
+                    text-lg
+                  "
+                >
+                  😊
+                </div>
+
+                <div className="w-8 h-8 rounded-full bg-[var(--rbe-lilac-light)] flex items-center justify-center text-sm">
+                  😍
+                </div>
+              </div>
+
+              <div
+                className="
+                  absolute
+                  bottom-0 left-0 right-0
+                  h-[6px]
+                  bg-[var(--rbe-secondary)]
+                  rounded-b-[24px]
+                "
+              />
+            </div>
+
+            {/* ═════ DASHBOARD ═════ */}
+            <div
+              className="
+                col-start-3 row-start-2
+                justify-self-start
+                w-[215px]
+                rounded-[24px]
+                p-5
+                bg-gradient-to-br
+                from-[#35127c]
+                via-[#5420b7]
+                to-[#7430df]
+                border border-white/10
+                shadow-[0_18px_44px_rgba(79,33,166,0.25)]
+                rotate-[2deg]
+              "
+            >
+              <div className="flex justify-between items-center mb-4">
+                <BarChart3 className="w-5 h-5 text-[#59e1d5]" />
+
+                <span className="text-[8px] font-bold text-white bg-white/15 rounded-md px-2 py-1">
+                  LIVE
+                </span>
+              </div>
+
+              <p className="text-[10px] text-white/75">
+                Engajamento Institucional
+              </p>
+
+              <p className="text-[28px] leading-none font-black text-white mt-1">
+                87.4%
+              </p>
+
+              <div className="mt-4 h-[6px] bg-white/15 rounded-full overflow-hidden">
+                <div className="w-[87%] h-full bg-[#59e1d5] rounded-full" />
+              </div>
+            </div>
+
+            {/* ═════ BUDDY CENTRAL ═════ */}
+            <div
+              className="
+                col-start-2
+                row-start-2
+                row-span-2
+                self-center
+                justify-self-center
+                z-20
+                w-[300px]
+                pointer-events-none
+              "
+            >
+              <img
+                src={rightSideImage}
+                alt="Buddy, assistente virtual da Rede Bem-Estar"
+                className="
+                  block
+                  w-full
+                  h-auto
+                  object-contain
+                  drop-shadow-[0_28px_40px_rgba(83,30,190,0.30)]
+                "
+              />
+            </div>
+
+            {/* ═════ CONVERSAR ═════ */}
+            <div
+              className={`
+                ${cardClass}
+                col-start-1 row-start-3
+                justify-self-end
+                w-[195px]
+                rounded-[24px]
+                p-4
+              `}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className="
+                    w-10 h-10
+                    shrink-0
+                    rounded-xl
+                    bg-[var(--rbe-lilac-light)]
+                    flex items-center justify-center
+                  "
+                >
+                  <Heart className="w-5 h-5 text-[var(--rbe-primary)]" />
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-[var(--rbe-text)]">
+                    Precisa conversar?
+                  </p>
+
+                  <p className="text-[10px] text-[var(--rbe-text-muted)] mt-1">
+                    Estamos aqui por você.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                className="
+                  rounded-xl
+                  bg-[var(--rbe-lilac-light)]
+                  py-2
+                  text-center
+                  text-[10px]
+                  font-bold
+                  text-[var(--rbe-primary)]
+                "
+              >
+                Falar com Buddy
+              </div>
+            </div>
+
+            {/* ═════ BUDDY CARD ═════ */}
+            <div
+              className={`
+                ${cardClass}
+                col-start-3 row-start-3
+                justify-self-start
+                w-[210px]
+                rounded-[24px]
+                p-4
+                rotate-[1deg]
+              `}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className="
+                    w-10 h-10
+                    shrink-0
+                    rounded-xl
+                    bg-[var(--rbe-secondary)]
+                    flex items-center justify-center
+                  "
+                >
+                  <Bot className="w-5 h-5 text-[var(--rbe-primary)]" />
+                </div>
+
+                <div>
+                  <p className="text-sm font-extrabold text-[var(--rbe-primary)]">
+                    Buddy
+                  </p>
+
+                  <p className="text-[10px] text-[var(--rbe-text-muted)]">
+                    Inteligência Ativa
+                  </p>
+                </div>
+              </div>
+
+              <div
+                className="
+                  rounded-xl
+                  bg-[var(--rbe-surface-variant)]
+                  px-3
+                  py-2.5
+                  border-l-[3px]
+                  border-[var(--rbe-secondary)]
+                "
+              >
+                <p className="text-[11px] italic leading-relaxed text-[var(--rbe-text)]">
+                  “Estou aqui para ouvir você agora.”
+                </p>
+              </div>
+            </div>
+
+            {/* ═════ RECURSOS ═════ */}
+            <div
+              className={`
+                ${cardClass}
+                col-start-2 row-start-4
+                justify-self-center self-start
+                w-[200px]
+                rounded-[24px]
+                p-4
+                rotate-[2deg]
+              `}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className="
+                    w-9 h-9
+                    shrink-0
+                    rounded-xl
+                    bg-[var(--rbe-lilac-light)]
+                    flex items-center justify-center
+                  "
+                >
+                  <Ear className="w-4 h-4 text-[var(--rbe-primary)]" />
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-[var(--rbe-text)]">
+                    Recursos de apoio
+                  </p>
+
+                  <p className="text-[10px] leading-relaxed text-[var(--rbe-text-muted)] mt-1">
+                    Conteúdos e ferramentas para cuidar de você.
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-3 text-[10px] font-bold text-[var(--rbe-primary)]">
+                Explorar recursos →
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* =========================================================
+          MOBILE / TABLET
+      ========================================================= */}
+      <div className="lg:hidden w-full max-w-[460px] mx-auto px-2 sm:px-4">
+        <div
+          className="
+            relative
+            grid
+            grid-cols-2
+            gap-3
+            sm:gap-4
+            items-start
+          "
+        >
+          {/* META */}
+          <div
+            className={`
+              ${cardClass}
+              col-span-2
+              justify-self-center
+              w-[200px]
+              rounded-[22px]
+              p-4
+              -rotate-[2deg]
+            `}
+          >
+            <div className="flex gap-3 items-start mb-3">
+              <div className="w-9 h-9 shrink-0 rounded-xl bg-[var(--rbe-secondary)]/15 flex items-center justify-center">
+                <Target className="w-4 h-4 text-[var(--rbe-secondary)]" />
+              </div>
+
+              <div>
+                <p className="text-xs font-bold text-[var(--rbe-text)]">
+                  Meta de bem-estar
+                </p>
+
+                <p className="text-[10px] text-[var(--rbe-text-muted)] mt-1">
+                  Respire fundo, você está indo bem!
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-[10px] font-bold text-[var(--rbe-secondary)]">
+                3/5 dias
+              </span>
+            </div>
+
+            <div className="h-[6px] rounded-full bg-[var(--rbe-surface-variant)] overflow-hidden">
+              <div className="w-[60%] h-full rounded-full bg-[var(--rbe-secondary)]" />
+            </div>
+          </div>
+
+          {/* BUDDY MOBILE */}
+          <div
+            className="
+              col-span-2
+              relative
+              flex
+              items-center
+              justify-center
+              h-[260px]
+              sm:h-[310px]
+              my-2
+            "
+          >
+            <div
+              className="
+                absolute
+                w-[240px]
+                h-[240px]
+                rounded-full
+                bg-[var(--rbe-lilac-light)]/30
+                blur-3xl
+              "
+            />
+
+            <img
+              src={rightSideImage}
+              alt="Buddy, assistente virtual da Rede Bem-Estar"
+              className="
+                relative
+                z-10
+                w-[210px]
+                sm:w-[250px]
+                h-auto
+                object-contain
+                drop-shadow-[0_22px_32px_rgba(83,30,190,0.28)]
+              "
+            />
+          </div>
+
+          {/* CHECK-IN */}
+          <div
+            className={`
+              ${cardClass}
+              relative
+              col-span-1
+              rounded-[20px]
+              p-3.5
+              min-h-[128px]
+            `}
+          >
+            <p className="text-[9px] font-black uppercase tracking-wide text-[var(--rbe-text-muted)] mb-4">
+              Check-in
+            </p>
+
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-[var(--rbe-lilac-light)] flex items-center justify-center text-xs">
+                😌
+              </div>
+
+              <div
+                className="
+                  w-10 h-10
+                  rounded-full
+                  bg-[var(--rbe-card)]
+                  ring-[3px]
+                  ring-[var(--rbe-secondary)]
+                  flex items-center justify-center
+                  text-base
+                "
+              >
+                😊
+              </div>
+
+              <div className="w-7 h-7 rounded-full bg-[var(--rbe-lilac-light)] flex items-center justify-center text-xs">
+                😍
+              </div>
+            </div>
+
+            <div className="absolute bottom-0 left-0 right-0 h-[5px] bg-[var(--rbe-secondary)] rounded-b-[20px]" />
+          </div>
+
+          {/* DASHBOARD */}
+          <div
+            className="
+              col-span-1
+              rounded-[20px]
+              p-4
+              min-h-[128px]
+              bg-gradient-to-br
+              from-[#35127c]
+              via-[#5420b7]
+              to-[#7430df]
+              border border-white/10
+              shadow-[0_16px_36px_rgba(79,33,166,0.24)]
+            "
+          >
+            <div className="flex justify-between items-center mb-3">
+              <BarChart3 className="w-4 h-4 text-[#59e1d5]" />
+
+              <span className="text-[7px] text-white bg-white/15 rounded px-1.5 py-1">
+                LIVE
+              </span>
+            </div>
+
+            <p className="text-[8px] text-white/70 leading-tight">
+              Engajamento
+            </p>
+
+            <p className="text-xl font-black text-white mt-1">
+              87.4%
+            </p>
+
+            <div className="mt-3 h-[5px] rounded-full bg-white/15">
+              <div className="w-[87%] h-full rounded-full bg-[#59e1d5]" />
+            </div>
+          </div>
+
+          {/* CONVERSAR */}
+          <div
+            className={`
+              ${cardClass}
+              col-span-1
+              rounded-[20px]
+              p-3.5
+              min-h-[145px]
+            `}
+          >
+            <div className="flex flex-col gap-2">
+              <div className="w-9 h-9 rounded-xl bg-[var(--rbe-lilac-light)] flex items-center justify-center">
+                <Heart className="w-4 h-4 text-[var(--rbe-primary)]" />
+              </div>
+
+              <div>
+                <p className="text-[11px] font-bold text-[var(--rbe-text)]">
+                  Precisa conversar?
+                </p>
+
+                <p className="text-[9px] text-[var(--rbe-text-muted)] mt-1">
+                  Estamos aqui por você.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 rounded-lg py-2 text-center text-[9px] font-bold bg-[var(--rbe-lilac-light)] text-[var(--rbe-primary)]">
+              Falar com Buddy
+            </div>
+          </div>
+
+          {/* BUDDY CARD */}
+          <div
+            className={`
+              ${cardClass}
+              col-span-1
+              rounded-[20px]
+              p-3.5
+              min-h-[145px]
+            `}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-9 h-9 shrink-0 rounded-xl bg-[var(--rbe-secondary)] flex items-center justify-center">
+                <Bot className="w-4 h-4 text-[var(--rbe-primary)]" />
+              </div>
+
+              <div>
+                <p className="text-xs font-bold text-[var(--rbe-primary)]">
+                  Buddy
+                </p>
+
+                <p className="text-[8px] text-[var(--rbe-text-muted)]">
+                  Inteligência Ativa
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-[var(--rbe-surface-variant)] px-3 py-2 border-l-[3px] border-[var(--rbe-secondary)]">
+              <p className="text-[9px] italic text-[var(--rbe-text)]">
+                “Estou aqui para ouvir você.”
+              </p>
+            </div>
+          </div>
+
+          {/* RECURSOS */}
+          <div
+            className={`
+              ${cardClass}
+              col-span-2
+              justify-self-center
+              w-full
+              max-w-[270px]
+              rounded-[20px]
+              p-4
+              mt-1
+            `}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[var(--rbe-lilac-light)] flex items-center justify-center shrink-0">
+                <Ear className="w-4 h-4 text-[var(--rbe-primary)]" />
+              </div>
+
+              <div>
+                <p className="text-xs font-bold text-[var(--rbe-text)]">
+                  Recursos de apoio
+                </p>
+
+                <p className="text-[9px] text-[var(--rbe-text-muted)] mt-1">
+                  Conteúdos e ferramentas para cuidar de você.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-[9px] font-bold text-[var(--rbe-primary)] mt-3">
+              Explorar recursos →
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
   return (
     <div className="rbe-about-page bg-[var(--rbe-bg)] text-[var(--rbe-text)] overflow-x-hidden">
       {/* ═══════ HERO ═══════ */}
-      <header className="pt-12 pb-16 sm:pt-20 sm:pb-24 lg:pt-28 lg:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 lg:gap-20 items-center">
-        <div className="z-10">
+      <header
+  className="
+    pt-12 pb-16
+    sm:pt-20 sm:pb-24
+    lg:pt-28 lg:pb-32
+    px-4 sm:px-6 lg:px-8
+    max-w-[1400px]
+    mx-auto
+    grid
+    grid-cols-1
+    lg:grid-cols-[0.9fr_1.1fr]
+    gap-10
+    lg:gap-8
+    items-center
+  "
+>        <div className="relative z-10 min-w-0">
           <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-[var(--rbe-lilac-light)] text-[var(--rbe-primary)] text-[10px] sm:text-xs font-bold mb-5 sm:mb-6">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--rbe-primary)] opacity-75" />
@@ -63,13 +698,8 @@ const AboutRedeBemEstar = () => {
         </div>
 
         {/* Composition of floating cards */}
-        <div className="relative w-full h-[360px] sm:h-[480px] lg:h-[600px] flex items-center justify-center overflow-hidden">
-          <img 
-            src={rightSideImage} 
-            alt="Composição de cards flutuantes da plataforma" 
-            className="w-full h-full object-contain max-w-[280px] sm:max-w-md lg:max-w-xl"
-          />
-        </div>
+{/* Composition of floating cards */}
+<BuddyHeroComposition />
       </header>
 
       {/* ═══════ POR QUE EXISTIMOS ═══════ */}
@@ -112,16 +742,19 @@ const AboutRedeBemEstar = () => {
             Construir uma cultura universitária em que saúde emocional, permanência e desenvolvimento caminhem juntos.
           </p>
         </div>
-        <div className="bg-[var(--rbe-cta-bg)] p-6 sm:p-10 lg:p-12 rbe-rounded-huge shadow-2xl relative overflow-hidden">
-          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rbe-organic-shape-2 rotate-45" />
-          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-5 sm:mb-7">
-            <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-          </div>
-          <h3 className="text-xl sm:text-2xl font-extrabold text-white mb-3 sm:mb-4">Propósito</h3>
-          <p className="text-sm sm:text-base text-white/80 leading-relaxed">
-            Transformar cuidado emocional em presença real, dados úteis e ações contínuas.
-          </p>
-        </div>
+        <div className="bg-[var(--rbe-card)] p-6 sm:p-10 lg:p-12 rbe-rounded-huge border border-[var(--rbe-card-border)] hover:border-[var(--rbe-primary)]/20 transition-all group">
+  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[var(--rbe-lilac-light)] rounded-2xl flex items-center justify-center mb-5 sm:mb-7 group-hover:bg-[var(--rbe-primary)] transition-colors">
+    <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-[var(--rbe-primary)] group-hover:text-white transition-colors" />
+  </div>
+
+  <h3 className="text-xl sm:text-2xl font-extrabold text-[var(--rbe-primary)] mb-3 sm:mb-4">
+    Propósito
+  </h3>
+
+  <p className="text-sm sm:text-base text-[var(--rbe-text)] leading-relaxed">
+    Transformar cuidado emocional em presença real, dados úteis e ações contínuas.
+  </p>
+</div>
       </section>
 
       {/* ═══════ O QUE FAZEMOS ═══════ */}

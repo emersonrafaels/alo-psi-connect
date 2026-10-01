@@ -190,7 +190,7 @@ const MoodAnalytics = () => {
               <EmotionScatterCard entries={periodEntries} configs={enabledConfigs} />
 
               {/* Distribution + Tags */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Distribuição do Humor</CardTitle>
@@ -238,7 +238,7 @@ const MoodAnalytics = () => {
                     </CardContent>
                   </Card>
                 )}
-              </div>
+              </div> */}
 
               {/* AI Insights */}
               <AIInsightsCard

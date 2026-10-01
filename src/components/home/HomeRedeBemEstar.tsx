@@ -182,44 +182,7 @@ const HomeRedeBemEstar = () => {
         </div>
       </header>
 
-      {/* ═════════ DESAFIOS DIÁRIOS ═════════ */}
-      <section className="py-16 sm:py-20 lg:py-24" style={{ background: "var(--rbe-surface-container-low)" }}>
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
-            <h2 className="text-[10px] sm:text-xs font-black tracking-[0.2em] uppercase mb-3 sm:mb-4"
-                style={{ color: "var(--rbe-secondary)" }}>
-              Desafios Diários
-            </h2>
-            <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4 sm:mb-6"
-                style={{ color: "var(--rbe-primary)" }}>
-              A tradução sensível das dores invisíveis.
-            </h3>
-            <p className="text-base sm:text-lg max-w-2xl mx-auto"
-               style={{ color: "var(--rbe-on-surface-variant)" }}>
-              Não são apenas prazos. É a busca por pertencimento, o medo do futuro
-              e o peso das expectativas.
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-8">
-            {[
-              { Icon: Clock, title: "Pressão Cronológica", desc: "O peso do tempo e a sensação constante de estar atrasado para a vida.", bg: "var(--rbe-secondary-fixed)", fg: "var(--rbe-on-secondary-fixed)" },
-              { Icon: Users, title: "Isolamento Social", desc: "A solidão no meio da multidão e a busca por conexões genuínas.", bg: "var(--rbe-tertiary-fixed)", fg: "var(--rbe-on-tertiary-fixed)" },
-              { Icon: Brain, title: "Erosão Cognitiva", desc: "O cansaço mental que impede o foco e a clareza nas decisões.", bg: "var(--rbe-primary-fixed)", fg: "var(--rbe-on-primary-fixed)" },
-              { Icon: EyeOff, title: "Invisibilidade", desc: "O medo de não ser notado ou validado em suas lutas diárias.", bg: "var(--rbe-surface-container)", fg: "var(--rbe-primary)" },
-            ].map(({ Icon, title, desc, bg, fg }) => (
-              <div key={title} className="p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm hover:shadow-md transition-all group"
-                   style={{ background: "var(--rbe-surface-container-lowest)" }}>
-                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-5 sm:mb-6 group-hover:scale-110 transition-transform"
-                     style={{ background: bg, color: fg }}>
-                  <Icon className="w-5 h-5" />
-                </div>
-                <h4 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3" style={{ color: "var(--rbe-primary)" }}>{title}</h4>
-                <p className="text-sm leading-relaxed" style={{ color: "var(--rbe-on-surface-variant)" }}>{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      
 
       {/* ═════════ METODOLOGIA AME ═════════ */}
       <section id="metodologia-ame" className="py-16 sm:py-20 lg:py-24 relative overflow-hidden"
