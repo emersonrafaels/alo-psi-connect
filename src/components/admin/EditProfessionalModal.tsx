@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { Upload, ExternalLink, Loader2 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ProfessionalTenantsEditor } from '@/components/admin/ProfessionalTenantsEditor'
+import { ScheduleManager } from '@/components/ScheduleManager'
 
 interface Professional {
   id: number
@@ -198,10 +199,11 @@ export const EditProfessionalModal = ({
               </Avatar>
               
               <Tabs defaultValue="upload" className="w-80">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="upload">Upload</TabsTrigger>
                 <TabsTrigger value="url">URL</TabsTrigger>
                 <TabsTrigger value="tenants">Sites</TabsTrigger>
+                <TabsTrigger value="agenda">Agenda</TabsTrigger>
               </TabsList>
                 
                 <TabsContent value="upload" className="space-y-4">
@@ -257,6 +259,10 @@ export const EditProfessionalModal = ({
                     });
                   }}
                 />
+              </TabsContent>
+
+              <TabsContent value="agenda">
+                <ScheduleManager professionalId={professional.id} />
               </TabsContent>
             </Tabs>
           </div>

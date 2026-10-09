@@ -11,8 +11,9 @@ import { StatsCard } from "@/components/admin/StatsCard";
 import { EditProfessionalModal } from "@/components/admin/EditProfessionalModal";
 import { ImageAssociationModal } from "@/components/admin/ImageAssociationModal";
 import { UnavailabilityManager } from "@/components/admin/UnavailabilityManager";
+import { ScheduleManager } from "@/components/ScheduleManager";
 import { DuplicateDetectionModal } from "@/components/admin/DuplicateDetectionModal";
-import { Eye, Mail, Phone, User, CheckCircle, XCircle, Search, DollarSign, Clock, Users, UserCheck, UserX, Edit, Images, Calendar, Trash2, UserX2 } from "lucide-react";
+import { Eye, Mail, Phone, User, CheckCircle, XCircle, Search, DollarSign, Clock, Users, UserCheck, UserX, Edit, Images, Calendar, CalendarClock, Trash2, UserX2 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -50,6 +51,7 @@ const Professionals = () => {
   const [imageAssociationOpen, setImageAssociationOpen] = useState(false);
   const [unavailabilityModalOpen, setUnavailabilityModalOpen] = useState(false);
   const [selectedProfessionalForUnavailability, setSelectedProfessionalForUnavailability] = useState<Professional | null>(null);
+  const [scheduleProfessional, setScheduleProfessional] = useState<Professional | null>(null);
   const [deletingProfessional, setDeletingProfessional] = useState<Professional | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletionReason, setDeletionReason] = useState("");
@@ -489,6 +491,15 @@ const Professionals = () => {
                       <Calendar className="h-4 w-4 mr-1" />
                       Bloqueios
                     </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setScheduleProfessional(professional)}
+                    >
+                      <CalendarClock className="h-4 w-4 mr-1" />
+                      Agenda
+                    </Button>
                     
                     <Dialog>
                       <DialogTrigger asChild>
@@ -636,6 +647,20 @@ const Professionals = () => {
                 professionalId={selectedProfessionalForUnavailability.id}
                 professionalName={selectedProfessionalForUnavailability.display_name}
               />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Schedule Management Modal */}
+        <Dialog open={!!scheduleProfessional} onOpenChange={(open) => !open && setScheduleProfessional(null)}>
+          <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                Agenda de {scheduleProfessional?.display_name}
+              </DialogTitle>
+            </DialogHeader>
+            {scheduleProfessional && (
+              <ScheduleManager professionalId={scheduleProfessional.id} />
             )}
           </DialogContent>
         </Dialog>
