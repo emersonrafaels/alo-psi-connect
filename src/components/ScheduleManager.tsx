@@ -288,6 +288,7 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
                   </Badge>
                 </div>
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => handleDeleteClick(schedule)}
@@ -400,6 +401,7 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professionalId
 
           <div className="flex justify-end pt-4">
             <Button 
+              type="button"
               onClick={addSchedule}
               disabled={saving || !newSchedule.day || !newSchedule.start_time || !newSchedule.end_time}
               size="lg"
