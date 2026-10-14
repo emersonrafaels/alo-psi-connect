@@ -26,6 +26,7 @@ import { useDuplicateDetection, DuplicateMatch } from '@/hooks/useDuplicateDetec
 
 interface Professional {
   id: number;
+  user_id: number;
   display_name: string;
   email_secundario?: string;
   telefone?: string;
@@ -660,7 +661,7 @@ const Professionals = () => {
               </DialogTitle>
             </DialogHeader>
             {scheduleProfessional && (
-              <ScheduleManager professionalId={scheduleProfessional.id} />
+              <ScheduleManager professionalId={scheduleProfessional.user_id} />
             )}
           </DialogContent>
         </Dialog>
