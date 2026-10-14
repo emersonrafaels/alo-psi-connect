@@ -210,7 +210,7 @@ const HowItWorks = () => {
                   {item.Icon ? (
                     <div className="mb-5"><IconBadge Icon={item.Icon} tone={item.tone} /></div>
                   ) : (
-                    <BuddyCharacter variant="arms" size="md" className="-mt-10 mb-1 h-24 w-24 self-center object-contain" />
+                    <BuddyCharacter variant="face" size="md" className="-mt-10 mb-1 h-24 w-24 self-center object-contain" />
                   )}
                   <h3 className="font-bold text-[var(--rbe-primary)]">{item.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{item.copy}</p>
