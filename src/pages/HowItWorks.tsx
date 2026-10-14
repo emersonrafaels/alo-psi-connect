@@ -159,7 +159,6 @@ const HowItWorks = () => {
           </svg>
           <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
             <div className="z-10">
-              <Eyebrow>Dados para mais pessoas<br />bem hoje e sempre</Eyebrow>
               <h1 className="max-w-xl text-[2.75rem] font-bold leading-[0.98] text-[var(--rbe-primary)] sm:text-6xl lg:text-[4.4rem]">
                 Mensuração contínua da <span className="text-[var(--rbe-secondary-container)]">saúde mental</span>
               </h1>
@@ -211,7 +210,7 @@ const HowItWorks = () => {
                   {item.Icon ? (
                     <div className="mb-5"><IconBadge Icon={item.Icon} tone={item.tone} /></div>
                   ) : (
-                    <BuddyCharacter variant="arms" size="md" className="-mt-10 mb-1 h-24 w-24 self-center object-contain" />
+                    <BuddyCharacter variant="face" size="md" className="-mt-10 mb-1 h-24 w-24 self-center object-contain" />
                   )}
                   <h3 className="font-bold text-[var(--rbe-primary)]">{item.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-[var(--rbe-on-surface-variant)]">{item.copy}</p>
