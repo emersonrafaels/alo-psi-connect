@@ -14,6 +14,7 @@ import { ScheduleManager } from '@/components/ScheduleManager'
 
 interface Professional {
   id: number
+  user_id: number
   display_name: string
   email_secundario?: string
   telefone?: string
@@ -262,7 +263,7 @@ export const EditProfessionalModal = ({
               </TabsContent>
 
               <TabsContent value="agenda">
-                <ScheduleManager professionalId={professional.id} />
+                <ScheduleManager professionalId={professional.user_id} />
               </TabsContent>
             </Tabs>
           </div>
