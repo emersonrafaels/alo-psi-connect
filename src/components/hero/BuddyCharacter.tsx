@@ -5,8 +5,9 @@ import buddyChat from '@/assets/buddy-chat.png';
 import buddyArms from '@/assets/buddy/buddy-arms.png';
 import buddyThink from '@/assets/buddy/buddy-think.png';
 import buddyLGPD from '@/assets/buddy/buddy-lgpd.png';
+import buddyFace from '@/assets/buddy/buddy-face.png';
 
-export type BuddyVariant = 'default' | 'main' | 'chat' | 'placeholder' | 'arms' | 'think' |'lgpd';
+export type BuddyVariant = 'default' | 'main' | 'chat' | 'placeholder' | 'arms' | 'think' | 'lgpd' | 'face';
 
 interface BuddyProps {
   size?: 'sm' | 'md' | 'lg';
@@ -30,7 +31,8 @@ const variantMap: Record<BuddyVariant, string> = {
   placeholder: buddyGif,
   arms : buddyArms,
   think : buddyThink,
-  lgpd : buddyLGPD
+  lgpd : buddyLGPD,
+  face : buddyFace
 
 };
 
