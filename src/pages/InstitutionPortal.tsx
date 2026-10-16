@@ -319,6 +319,13 @@ export default function InstitutionPortal() {
               Cupons
             </TabsTrigger>
             <Link
+              to={buildTenantPath(tenant?.slug, '/portal-institucional/alunos')}
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs md:text-sm py-2 px-3 md:px-4 shrink-0 font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Users className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
+              Alunos
+            </Link>
+            <Link
               to={buildTenantPath(tenant?.slug, '/portal-institucional/apoios')}
               className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs md:text-sm py-2 px-3 md:px-4 shrink-0 font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
