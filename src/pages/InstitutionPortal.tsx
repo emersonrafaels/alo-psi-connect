@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { DemoDataBadge } from '@/components/institutional/DemoDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -169,6 +170,7 @@ export default function InstitutionPortal() {
             <div className="flex-1">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-3xl md:text-4xl font-bold">Portal Institucional</h1>
+                <DemoDataBadge institutionId={userInstitutions[0]?.institution_id} />
                 <div className="flex items-center gap-2">
                   <Button asChild size="sm" variant="outline" className="gap-2">
                     <Link to={buildTenantPath(tenant?.slug, '/portal-institucional/radar')}>
