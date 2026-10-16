@@ -1198,6 +1198,7 @@ export type Database = {
           has_partnership: boolean
           id: string
           is_active: boolean
+          is_demo: boolean
           logo_url: string | null
           name: string
           type: string
@@ -1214,6 +1215,7 @@ export type Database = {
           has_partnership?: boolean
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           logo_url?: string | null
           name: string
           type: string
@@ -1230,6 +1232,7 @@ export type Database = {
           has_partnership?: boolean
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           logo_url?: string | null
           name?: string
           type?: string
