@@ -19,7 +19,7 @@ export const DemoDataBadge = ({ institutionId }: { institutionId?: string }) => 
   });
   if (!isDemo) return null;
   return (
-    <Badge variant="outline" className="gap-1 border-warning text-warning" title="Todos os números desta instituição são fictícios">
+    <Badge variant="outline" className="gap-1 border-primary text-primary" title="Todos os números desta instituição são fictícios">
       <FlaskConical className="h-3.5 w-3.5" /> Dados demonstrativos
     </Badge>
   );
