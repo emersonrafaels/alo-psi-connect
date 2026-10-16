@@ -44,8 +44,9 @@ export const useAcademicStructure = (institutionId?: string) => {
 
   const setLevels = useMutation({
     mutationFn: async (levels: AcademicLevel[]) => {
-      const { error } = await db.from('educational_institutions').update({ academic_hierarchy_levels: levels }).eq('id', institutionId);
+      const { data, error } = await db.from('educational_institutions').update({ academic_hierarchy_levels: levels }).eq('id', institutionId).select('id');
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Você não tem permissão para atualizar esta instituição');
     },
     onSuccess: () => { inv('academic-levels'); toast.success('Modelo atualizado'); },
     onError: onErr,
