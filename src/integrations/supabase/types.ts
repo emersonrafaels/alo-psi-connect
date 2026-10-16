@@ -1188,6 +1188,7 @@ export type Database = {
       }
       educational_institutions: {
         Row: {
+          academic_hierarchy_levels: string[]
           anonymize_students: boolean | null
           benchmark_opt_in: boolean
           can_manage_coupons: boolean
@@ -1203,6 +1204,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          academic_hierarchy_levels?: string[]
           anonymize_students?: boolean | null
           benchmark_opt_in?: boolean
           can_manage_coupons?: boolean
@@ -1218,6 +1220,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          academic_hierarchy_levels?: string[]
           anonymize_students?: boolean | null
           benchmark_opt_in?: boolean
           can_manage_coupons?: boolean
@@ -1888,6 +1891,61 @@ export type Database = {
           reason?: string | null
         }
         Relationships: []
+      }
+      institution_academic_units: {
+        Row: {
+          created_at: string
+          id: string
+          institution_id: string
+          level: string
+          name: string
+          parent_id: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          institution_id: string
+          level: string
+          name: string
+          parent_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          institution_id?: string
+          level?: string
+          name?: string
+          parent_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_academic_units_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_academic_units_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_academic_units_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "institution_academic_units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       institution_audit_log: {
         Row: {
@@ -3383,6 +3441,55 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_institution_placements: {
+        Row: {
+          class_unit_id: string
+          created_at: string
+          id: string
+          institution_id: string
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          class_unit_id: string
+          created_at?: string
+          id?: string
+          institution_id: string
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          class_unit_id?: string
+          created_at?: string
+          id?: string
+          institution_id?: string
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_institution_placements_class_unit_id_fkey"
+            columns: ["class_unit_id"]
+            isOneToOne: false
+            referencedRelation: "institution_academic_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_institution_placements_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_institution_placements_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
             referencedColumns: ["id"]
           },
         ]
