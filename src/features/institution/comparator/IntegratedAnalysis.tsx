@@ -96,6 +96,8 @@ export function IntegratedAnalysis(props: {
   if (network != null) allVals.push(network);
   const lo = allVals.length ? Math.floor(Math.min(...allVals) - 3) : inst.min, hi = allVals.length ? Math.ceil(Math.max(...allVals) + 3) : inst.max;
   const mx = (v: number) => { const p = ((v - lo) / (hi - lo || 1)) * 100; return inst.higherIsBetter ? p : 100 - p; };
+  const mapTicks = Array.from({ length: 5 }, (_, i) => lo + ((hi - lo) / 4) * i);
+  const unitTag = dotUnits.map((u) => u.split(/\s+/).map((w) => w[0]?.toUpperCase() ?? '').join('')).join(' – ');
   const unitColor = (i: number) => (i === 0 ? 'hsl(var(--primary))' : `hsl(var(--chart-${(i % 4) + 2}))`);
 
   const evo = semesters.map((s) => ({ sem: s, a: sA(inst.code, s).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, stat(inst.code, s, gFilter(g)).avg])), rede: stat(inst.code, s).avg, cov: popA ? Math.round((sA(inst.code, s).n / popA) * 100) : 0 }));
