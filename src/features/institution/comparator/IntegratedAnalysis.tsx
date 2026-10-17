@@ -271,7 +271,7 @@ export function IntegratedAnalysis(props: {
           const dDiffPct = dDiff == null ? null : (Math.abs(dDiff) / dSpan) * 100;
           const dSize = dDiffPct == null ? '—' : dDiffPct < 2 ? 'Praticamente iguais' : dDiffPct < 5 ? 'Diferença pequena' : dDiffPct < 10 ? 'Diferença moderada' : 'Diferença grande';
           const dAFav = dDiff != null && dBetter(dDiff) > 0;
-          const [dAX, dRX] = spreadPair(dDir(dA.avg), dDir(dRef.avg));
+          const dAX = dDir(dA.avg), dRX = dAX;
           const dHead = dDiff == null ? 'Ainda não há registros suficientes para comparar este recorte.'
             : dDiffPct! < 2 ? `${labelA} e ${groups[0] ? gLabel(groups[0]) : 'a média da rede'} estão em um patamar muito parecido.`
             : `${labelA} está em situação ${dAFav ? 'mais' : 'menos'} favorável que ${groups[0] ? gLabel(groups[0]) : 'a média da rede'}.`;
@@ -508,7 +508,7 @@ export function IntegratedAnalysis(props: {
               const tLine = (k: string, t: number | null) => t == null ? '' : `${k}: ${Math.abs(t) < 0.5 ? 'ficou estável' : better(t) > 0 ? 'melhorou' : 'piorou'} ${fmt(Math.abs(t))} pontos desde ${first}.`;
               const cLine = (k: string, n: number, pop: number) => `${k}: ${n.toLocaleString('pt-BR')} respostas (${pop ? Math.round((n / pop) * 100) : 0}% do grupo) · confiança ${conf(n, pop).toLowerCase()}.`;
               const cA = conf(a.n, popA);
-              const [aX, rX] = spreadPair(dirPos(a.avg), dirPos(ref.avg));
+              const aX = dirPos(a.avg), rX = aX;
               return (<>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary">O que os números dizem · {current} <Hint t="Resumo automático da comparação entre A e a referência." /></p>
