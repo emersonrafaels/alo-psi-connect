@@ -2195,6 +2195,36 @@ export type Database = {
           },
         ]
       }
+      institution_demo_scale_responses: {
+        Row: {
+          created_at: string
+          id: string
+          institution_id: string
+          patient_id: string
+          raw_score: number
+          scale_code: string
+          taken_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          institution_id: string
+          patient_id: string
+          raw_score: number
+          scale_code: string
+          taken_at: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          institution_id?: string
+          patient_id?: string
+          raw_score?: number
+          scale_code?: string
+          taken_at?: string
+        }
+        Relationships: []
+      }
       institution_link_requests: {
         Row: {
           created_at: string | null
