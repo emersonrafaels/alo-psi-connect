@@ -31,11 +31,6 @@ const diaryBands = (p: DiaryParam): Band[] => p.key === 'avg_sleep_hours'
   ? [{ label: 'Pouco', from: 0, to: 6, tone: 'bad' }, { label: 'Adequado', from: 6, to: 8, tone: 'good' }, { label: 'Longo', from: 8, to: 12, tone: 'mid' }]
   : [{ label: 'Baixo', from: 1, to: 2, tone: p.better === 'up' ? 'bad' : 'good' }, { label: 'Intermediário', from: 2, to: 3.5, tone: 'mid' }, { label: 'Alto', from: 3.5, to: 5, tone: p.better === 'up' ? 'good' : 'bad' }];
 const diaryBandOf = (p: DiaryParam, v: number | null) => { if (v == null) return null; const b = diaryBands(p); return b.find((x) => v <= x.to + 0.001) ?? b[b.length - 1]; };
-const spreadPair = (x: number, y: number, minGap = 4): [number, number] => {
-  if (Math.abs(x - y) >= minGap) return [x, y];
-  const mid = (x + y) / 2;
-  return [Math.max(2, mid - minGap / 2), Math.min(98, mid + minGap / 2)];
-};
 
 export function IntegratedAnalysis(props: {
   instruments: readonly Inst[]; semesters: string[]; current: string | null; setSemester: (s: string) => void;
@@ -219,17 +214,17 @@ export function IntegratedAnalysis(props: {
                 ...(groups.length ? groups.map((g, i) => ({ k: LETTERS[i], v: stat(inst.code, current, gFilter(g)).avg, color: gColor(i) })) : [{ k: 'R', v: ref.avg, color: 'hsl(var(--muted-foreground))' }])]
                 .filter((m) => m.v != null).map((m) => ({ ...m, p: pos(m.v) })).sort((x, y) => x.p - y.p);
               // spread labels
-              const lab: number[] = [];
-              markers.forEach((m, i) => { lab[i] = i && m.p - lab[i - 1] < 4 ? lab[i - 1] + 4 : m.p; });
+              const lv: number[] = [];
+              markers.forEach((m, i) => { lv[i] = markers.slice(0, i).filter((o) => Math.abs(o.p - m.p) < 5).length; });
               const rows = [{ k: 'A', color: 'hsl(var(--primary))', label: labelA, v: a.avg },
                 ...(groups.length ? groups.map((g, i) => ({ k: LETTERS[i], color: gColor(i), label: gLabel(g), v: stat(inst.code, current, gFilter(g)).avg })) : [{ k: 'Rede', color: 'hsl(var(--foreground))', label: 'média geral', v: ref.avg }])];
               return (
                 <div>
                   <p className="text-sm"><span className="font-bold">Como interpretar os valores</span> <span className="text-xs text-muted-foreground">Faixas de referência usadas em rastreamento populacional — não são diagnóstico individual.</span></p>
-                  <div className="relative mt-12">
+                  <div className="relative mt-24">
                     {markers.map((m, i) => (
                       <div key={m.k}>
-                        <div className="absolute -top-9 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap text-xs font-bold" style={{ left: `${Math.min(97, lab[i])}%`, color: m.color }}>
+                        <div className="absolute flex -translate-x-1/2 items-center gap-1 whitespace-nowrap text-xs font-bold" style={{ left: `${Math.max(3, Math.min(97, m.p))}%`, top: `${-(36 + lv[i] * 22)}px`, color: m.color }}>
                           <span className="flex h-4 w-4 items-center justify-center rounded-full text-[9px] text-primary-foreground" style={{ background: m.color }}>{m.k === 'R' ? 'R' : m.k}</span>{fmt(m.v)}
                         </div>
                         <div className="absolute -top-4 h-7 w-px" style={{ left: `${m.p}%`, background: m.color }} />
@@ -276,7 +271,7 @@ export function IntegratedAnalysis(props: {
           const dDiffPct = dDiff == null ? null : (Math.abs(dDiff) / dSpan) * 100;
           const dSize = dDiffPct == null ? '—' : dDiffPct < 2 ? 'Praticamente iguais' : dDiffPct < 5 ? 'Diferença pequena' : dDiffPct < 10 ? 'Diferença moderada' : 'Diferença grande';
           const dAFav = dDiff != null && dBetter(dDiff) > 0;
-          const [dAX, dRX] = spreadPair(dDir(dA.avg), dDir(dRef.avg));
+          const dAX = dDir(dA.avg), dRX = dAX;
           const dHead = dDiff == null ? 'Ainda não há registros suficientes para comparar este recorte.'
             : dDiffPct! < 2 ? `${labelA} e ${groups[0] ? gLabel(groups[0]) : 'a média da rede'} estão em um patamar muito parecido.`
             : `${labelA} está em situação ${dAFav ? 'mais' : 'menos'} favorável que ${groups[0] ? gLabel(groups[0]) : 'a média da rede'}.`;
@@ -285,8 +280,8 @@ export function IntegratedAnalysis(props: {
             ...groups.map((g, i) => ({ k: LETTERS[i], v: dStat(p.key, current, g.unit).avg, color: gColor(i) })),
             ...(groups.length ? [] : [{ k: 'R', v: dRef.avg, color: 'hsl(var(--muted-foreground))' }])]
             .filter((m) => m.v != null).map((m) => ({ ...m, p: dPos(m.v) })).sort((x, y) => x.p - y.p);
-          const lab: number[] = [];
-          markers.forEach((m, i) => { lab[i] = i && m.p - lab[i - 1] < 4 ? lab[i - 1] + 4 : m.p; });
+          const lv: number[] = [];
+          markers.forEach((m, i) => { lv[i] = markers.slice(0, i).filter((o) => Math.abs(o.p - m.p) < 5).length; });
           const dNet = dStat(p.key, current).avg;
           const dTicks = Array.from({ length: 5 }, (_, i) => p.min + (dSpan / 4) * i);
           const evoD = sems.map((s) => ({ sem: s, a: dStat(p.key, s, unit).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, dStat(p.key, s, g.unit).avg])) }));
@@ -332,10 +327,10 @@ export function IntegratedAnalysis(props: {
                 </div>
                 <div>
                   <p className="text-sm"><span className="font-bold">Como interpretar os valores</span> <span className="text-xs text-muted-foreground">Faixas de leitura para a escala de {p.min} a {p.max} do Diário.</span></p>
-                  <div className="relative mt-12">
+                  <div className="relative mt-24">
                     {markers.map((m, i) => (
                       <div key={m.k}>
-                        <div className="absolute -top-9 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap text-xs font-bold" style={{ left: `${Math.min(97, lab[i])}%`, color: m.color }}>
+                        <div className="absolute flex -translate-x-1/2 items-center gap-1 whitespace-nowrap text-xs font-bold" style={{ left: `${Math.max(3, Math.min(97, m.p))}%`, top: `${-(36 + lv[i] * 22)}px`, color: m.color }}>
                           <span className="flex h-4 w-4 items-center justify-center rounded-full text-[9px] text-primary-foreground" style={{ background: m.color }}>{m.k}</span>{fmt(m.v, p.d)}
                         </div>
                         <div className="absolute -top-4 h-7 w-px" style={{ left: `${m.p}%`, background: m.color }} />
@@ -368,19 +363,19 @@ export function IntegratedAnalysis(props: {
                 <div className="relative pb-2 pt-14">
                   <div className="h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--accent) / .7), hsl(var(--muted) / .4), hsl(var(--primary) / .4))' }} />
                   {dA.avg != null && (
-                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dAX}%`, top: 8 }}>
+                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dAX}%`, top: 4 }}>
                       <span className="text-[11px] font-bold text-primary">A · {fmt(dA.avg, p.d)}</span>
                       <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow">A</span>
                       <span className="h-5 border-l border-dashed border-primary" />
                     </div>
                   )}
                   {dRef.avg != null && (
-                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dRX}%`, top: 44 }}>
+                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dRX}%`, top: 72 }}>
                       <span className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-primary-foreground shadow ring-2 ring-background" style={{ background: dRefColor }}>{dRefLabel === 'Rede' ? 'R' : 'B'}</span>
                       <span className="mt-0.5 text-[11px] font-bold" style={{ color: dRefColor }}>{dRefLabel} · {fmt(dRef.avg, p.d)}</span>
                     </div>
                   )}
-                  <div className="mt-10 flex justify-between text-xs font-bold">
+                  <div className="mt-14 flex justify-between text-xs font-bold">
                     <span className="text-accent-foreground">← Pior · {p.better === 'up' ? p.min : p.max}</span>
                     <span className="text-primary">{p.better === 'up' ? p.max : p.min} · Melhor →</span>
                   </div>
@@ -513,7 +508,7 @@ export function IntegratedAnalysis(props: {
               const tLine = (k: string, t: number | null) => t == null ? '' : `${k}: ${Math.abs(t) < 0.5 ? 'ficou estável' : better(t) > 0 ? 'melhorou' : 'piorou'} ${fmt(Math.abs(t))} pontos desde ${first}.`;
               const cLine = (k: string, n: number, pop: number) => `${k}: ${n.toLocaleString('pt-BR')} respostas (${pop ? Math.round((n / pop) * 100) : 0}% do grupo) · confiança ${conf(n, pop).toLowerCase()}.`;
               const cA = conf(a.n, popA);
-              const [aX, rX] = spreadPair(dirPos(a.avg), dirPos(ref.avg));
+              const aX = dirPos(a.avg), rX = aX;
               return (<>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary">O que os números dizem · {current} <Hint t="Resumo automático da comparação entre A e a referência." /></p>
@@ -524,19 +519,19 @@ export function IntegratedAnalysis(props: {
                 <div className="relative pb-2 pt-14">
                   <div className="h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--accent) / .7), hsl(var(--muted) / .4), hsl(var(--primary) / .4))' }} />
                   {a.avg != null && (
-                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${aX}%`, top: 8 }}>
+                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${aX}%`, top: 4 }}>
                       <span className="text-[11px] font-bold text-primary">A · {fmt(a.avg)}</span>
                       <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow">A</span>
                       <span className="h-5 border-l border-dashed border-primary" />
                     </div>
                   )}
                   {ref.avg != null && (
-                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${rX}%`, top: 44 }}>
+                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${rX}%`, top: 72 }}>
                       <span className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-primary-foreground shadow ring-2 ring-background" style={{ background: bColor }}>{bK === 'Rede' ? 'R' : 'B'}</span>
                       <span className="mt-0.5 text-[11px] font-bold" style={{ color: bColor }}>{bK} · {fmt(ref.avg)}</span>
                     </div>
                   )}
-                  <div className="mt-10 flex justify-between text-xs font-bold">
+                  <div className="mt-14 flex justify-between text-xs font-bold">
                     <span className="text-accent-foreground">← Pior · {inst.higherIsBetter ? inst.min : inst.max}</span>
                     <span className="text-primary">{inst.higherIsBetter ? inst.max : inst.min} · Melhor →</span>
                   </div>
