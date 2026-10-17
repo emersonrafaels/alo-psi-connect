@@ -521,28 +521,44 @@ const HeatMap = ({ inst, units, courses, stat, network }: {
   inst: Instrument; units: string[]; courses: string[]; network: number | null;
   stat: (f: (r: ScaleRow) => boolean) => { n: number; avg: number | null };
 }) => {
+  const span = inst.max - inst.min || 1;
   const cell = (s: { n: number; avg: number | null }) => {
-    if (s.avg == null) return { cls: 'bg-muted text-muted-foreground', text: 'n<10' };
+    if (s.avg == null) return { style: { backgroundImage: 'repeating-linear-gradient(45deg, hsl(var(--muted)), hsl(var(--muted)) 4px, hsl(var(--background)) 4px, hsl(var(--background)) 8px)' }, text: 'n<10' };
     const diff = network == null ? 0 : s.avg - network;
     const good = inst.higherIsBetter ? diff > 0 : diff < 0;
-    const cls = Math.abs(diff) < 1 ? 'bg-secondary' : good ? 'bg-primary/15' : 'bg-destructive/15';
-    return { cls, text: fmt(s.avg) };
+    const k = Math.min(1, Math.abs(diff) / (span * 0.08));
+    const tok = good ? '--primary' : '--destructive';
+    return { style: { background: `hsl(var(${tok}) / ${0.08 + k * 0.5})` }, text: fmt(s.avg) };
   };
   return (
-    <table className="w-full text-sm border-separate border-spacing-1">
-      <thead><tr><th />{courses.map((c) => <th key={c} className="text-xs font-medium text-muted-foreground">{c}</th>)}<th className="text-xs">Total</th></tr></thead>
-      <tbody>
-        {units.map((u) => (
-          <tr key={u}>
-            <td className="text-xs font-medium pr-2">{u}</td>
-            {[...courses, '__total'].map((c) => {
-              const s = stat((r) => r.unit === u && (c === '__total' || r.course === c));
-              const v = cell(s);
-              return <td key={c} className={`rounded-md p-2 text-center ${v.cls}`}><div className="font-semibold">{v.text}</div><div className="text-[10px] text-muted-foreground">n={s.n}</div></td>;
-            })}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="space-y-3">
+      <table className="w-full text-sm border-separate border-spacing-1.5">
+        <thead><tr><th />{courses.map((c) => <th key={c} className="text-xs font-medium text-muted-foreground">{c}</th>)}<th className="text-xs">Total</th></tr></thead>
+        <tbody>
+          {units.map((u) => (
+            <tr key={u}>
+              <td className="text-xs font-semibold pr-2 whitespace-nowrap">{u}</td>
+              {[...courses, '__total'].map((c) => {
+                const s = stat((r) => r.unit === u && (c === '__total' || r.course === c));
+                const v = cell(s);
+                return (
+                  <td key={c} style={v.style} className={`rounded-lg p-2.5 text-center transition-transform hover:scale-105 ${c === '__total' ? 'ring-1 ring-border' : ''}`}>
+                    <div className="text-base font-bold tabular-nums">{v.text}</div>
+                    <div className="text-[10px] text-muted-foreground">n={s.n}</div>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <span>Menos favorável</span>
+        <div className="h-2.5 w-40 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--destructive) / .55), hsl(var(--muted)), hsl(var(--primary) / .55))' }} />
+        <span>Mais favorável</span>
+        <span className="ml-3 inline-block h-3 w-5 rounded" style={{ backgroundImage: 'repeating-linear-gradient(45deg, hsl(var(--muted)), hsl(var(--muted)) 3px, hsl(var(--background)) 3px, hsl(var(--background)) 6px)' }} />
+        <span>Grupo protegido (n &lt; {MIN_GROUP})</span>
+      </div>
+    </div>
   );
 };
