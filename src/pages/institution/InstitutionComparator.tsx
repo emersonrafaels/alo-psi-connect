@@ -273,7 +273,7 @@ export default function InstitutionComparator() {
                 <CardHeader className="flex flex-row items-start justify-between gap-2">
                   <div>
                     <CardTitle>Indicadores por instrumento</CardTitle>
-                    <CardDescription>Média do recorte em {current ?? '—'} · variação desde {previous ?? 'a coleta anterior'}. A cor indica se a mudança é favorável.</CardDescription>
+                    <CardDescription>Média das últimas 3 coletas ({semesters.join(', ')}) · variação de {current ?? '—'} desde {previous ?? 'a coleta anterior'}. A cor indica se a mudança é favorável.</CardDescription>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => setView('integrated')}>Abrir Análise integrada</Button>
                 </CardHeader>
@@ -287,6 +287,8 @@ export default function InstitutionComparator() {
                         const unavailable = 'unavailable' in inst;
                         const now = unavailable ? { n: 0, avg: 0 } : stat(inst.code, current);
                         const prev = unavailable ? { n: 0, avg: null } : stat(inst.code, previous);
+                        const series = unavailable ? [] : semesters.map((s) => stat(inst.code, s).avg).filter((v): v is number => v != null);
+                        const mean3 = unavailable ? 0 : series.length ? series.reduce((a, b) => a + b, 0) / series.length : null;
                         const delta = now.avg != null && prev.avg != null ? now.avg - prev.avg : null;
                         const t = trendOf(inst, delta);
                         const tone = t.label === 'Favorável' ? 'good' : t.label === 'Desfavorável' ? 'bad' : 'flat';
@@ -306,8 +308,8 @@ export default function InstitutionComparator() {
                               <div className="font-semibold">{inst.label}</div>
                               <div className="text-xs text-muted-foreground">{inst.short} · n={now.n.toLocaleString('pt-BR')}{unavailable && ' · ainda não disponível'}</div>
                             </td>
-                            <td className="pr-4 text-2xl font-bold tabular-nums">{fmt(now.avg)}</td>
-                            <td className="pr-4"><ScalePosition inst={inst} value={now.avg} /></td>
+                            <td className="pr-4 text-2xl font-bold tabular-nums">{fmt(mean3)}</td>
+                            <td className="pr-4"><ScalePosition inst={inst} value={mean3} /></td>
                             <td className="pr-4"><TrendPill inst={inst} delta={delta} unavailable={unavailable} /></td>
                             <td>{unavailable ? <span className="text-xs text-muted-foreground">—</span> : <Sparkline values={semesters.map((s) => stat(inst.code, s).avg)} labels={semesters} tone={tone} />}</td>
                           </tr>
