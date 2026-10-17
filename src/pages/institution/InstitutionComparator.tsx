@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Users, Activity, NotebookPen, ClipboardCheck, Info, BarChart3, LayoutDashboard, GitCompare, MapPin, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { ArrowLeft, Users, Activity, NotebookPen, ClipboardCheck, Info, BarChart3, LayoutDashboard, GitCompare, MapPin, ArrowUpRight, ArrowDownRight, Minus, PanelLeft } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
@@ -114,6 +113,7 @@ export default function InstitutionComparator() {
   const [semester, setSemester] = useState<string | null>(null);
   const [compareA, setCompareA] = useState<string | null>(null);
   const [compareB, setCompareB] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
   const [view, setView] = useState<'overview' | 'integrated'>('overview');
   const [lineScale, setLineScale] = useState<string>('WHO5');
 
@@ -141,7 +141,8 @@ export default function InstitutionComparator() {
   const current = semester ?? semesters[semesters.length - 1] ?? null;
   const previous = current ? semesters[semesters.indexOf(current) - 1] ?? null : null;
   const units = useMemo(() => Object.keys(d?.units_population ?? {}).sort(), [d]);
-  const inUnit = (r: { unit: string }) => unitFilter === 'all' || r.unit === unitFilter;
+  const effUnit = view === 'integrated' ? 'all' : unitFilter;
+  const inUnit = (r: { unit: string }) => effUnit === 'all' || r.unit === effUnit;
 
   const stat = (code: string, sem: string | null, filter: (r: ScaleRow) => boolean = () => true) => {
     if (!d || !sem) return { n: 0, avg: null as number | null };
@@ -150,7 +151,7 @@ export default function InstitutionComparator() {
     return { n: m.n, avg: m.avg == null ? null : m.avg * inst.factor };
   };
 
-  const population = unitFilter === 'all' ? d?.population ?? 0 : d?.units_population[unitFilter] ?? 0;
+  const population = effUnit === 'all' ? d?.population ?? 0 : d?.units_population[unitFilter] ?? 0;
   const who = stat('WHO5', current), whoPrev = stat('WHO5', previous);
   const coverage = population ? Math.round((who.n / population) * 100) : 0;
   const coveragePrev = population ? Math.round((whoPrev.n / population) * 100) : 0;
@@ -185,75 +186,66 @@ export default function InstitutionComparator() {
   const b = compareB ?? recortes[1] ?? null;
 
   return (
-    <SidebarProvider>
+    <>
       <div className="min-h-screen flex w-full bg-muted/30">
-        <Sidebar collapsible="icon">
-          <SidebarHeader className="border-b">
-            <div className="flex items-center gap-2 px-1 py-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"><BarChart3 className="h-4 w-4" /></div>
-              <div className="min-w-0 group-data-[collapsible=icon]:hidden">
+        <aside className={`sticky top-0 flex h-screen shrink-0 flex-col border-r bg-background transition-all ${collapsed ? 'w-16' : 'w-60'}`}>
+          <div className="flex items-center gap-2 border-b px-3 py-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"><BarChart3 className="h-4 w-4" /></div>
+            {!collapsed && (
+              <div className="min-w-0">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Comparador</p>
                 <p className="truncate text-sm font-semibold">{instQ.data?.educational_institutions?.name ?? 'Instituição'}</p>
               </div>
-            </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Leituras</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {([['overview', 'Visão Geral', LayoutDashboard], ['integrated', 'Análise Integrada', GitCompare]] as const).map(([k, l, I]) => (
-                    <SidebarMenuItem key={k}>
-                      <SidebarMenuButton isActive={view === k} onClick={() => setView(k)} tooltip={l}><I className="h-4 w-4" /><span>{l}</span></SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-              <SidebarGroupLabel>Recorte</SidebarGroupLabel>
-              <SidebarGroupContent className="space-y-1 px-2">
-                {[['all', 'Toda a rede'], ...units.map((u) => [u, u])].map(([v, l]) => (
-                  <button key={v} onClick={() => setUnitFilter(v)}
-                    className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors ${unitFilter === v ? 'bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
-                    <MapPin className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{l}</span>
-                  </button>
-                ))}
-              </SidebarGroupContent>
-            </SidebarGroup>
-            <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-              <SidebarGroupLabel>Coleta semestral</SidebarGroupLabel>
-              <SidebarGroupContent className="grid grid-cols-3 gap-1 px-2">
-                {semesters.map((s) => (
-                  <button key={s} onClick={() => setSemester(s)}
-                    className={`rounded-md py-1.5 text-xs font-medium ${s === current ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>{s}</button>
-                ))}
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-          <SidebarFooter className="border-t">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Voltar ao Portal Institucional">
-                  <Link to={backTo}><ArrowLeft className="h-4 w-4" /><span>Voltar ao Portal Institucional</span></Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarFooter>
-        </Sidebar>
+            )}
+          </div>
+          <nav className="flex-1 space-y-1 p-2">
+            {!collapsed && <p className="px-2 pb-1 pt-2 text-xs text-muted-foreground">Leituras</p>}
+            {([['overview', 'Visão Geral', LayoutDashboard], ['integrated', 'Análise Integrada', GitCompare]] as const).map(([k, l, I]) => (
+              <button key={k} onClick={() => setView(k)} title={l}
+                className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm transition-colors ${view === k ? 'bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'} ${collapsed ? 'justify-center' : ''}`}>
+                <I className="h-4 w-4 shrink-0" />{!collapsed && <span>{l}</span>}
+              </button>
+            ))}
+          </nav>
+          <div className="border-t p-2">
+            <Link to={backTo} title="Voltar ao Portal Institucional"
+              className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center' : ''}`}>
+              <ArrowLeft className="h-4 w-4 shrink-0" />{!collapsed && <span>Voltar ao Portal Institucional</span>}
+            </Link>
+          </div>
+        </aside>
 
         <div className="flex flex-1 flex-col min-w-0">
           <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur">
-            <SidebarTrigger />
-            <span className="text-sm text-muted-foreground">{view === 'overview' ? 'Visão geral' : 'Análise integrada'} · {unitFilter === 'all' ? 'Toda a rede' : unitFilter}</span>
+            <Button variant="ghost" size="icon" onClick={() => setCollapsed((c) => !c)} aria-label="Recolher menu"><PanelLeft className="h-4 w-4" /></Button>
+            <span className="text-sm text-muted-foreground">{view === 'overview' ? `Visão geral · ${unitFilter === 'all' ? 'Toda a rede' : unitFilter}` : 'Análise integrada'}</span>
             <Button asChild variant="outline" size="sm" className="ml-auto"><Link to={backTo}><ArrowLeft className="h-4 w-4 mr-1" />Portal Institucional</Link></Button>
           </header>
           <main className="flex-1 space-y-6 p-4 md:p-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">{view === 'overview' ? 'Como está o bem-estar da sua população' : 'Análise integrada entre recortes'}</h1>
               <p className="mt-1 max-w-2xl text-muted-foreground">
                 Leitura coletiva e descritiva da coleta {current ?? '—'}, comparada à coleta anterior. Nenhum resultado individual é exibido.
               </p>
+            </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {view === 'overview' && (
+                  <Select value={unitFilter} onValueChange={setUnitFilter}>
+                    <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toda a rede</SelectItem>
+                      {units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
+                <div className="flex rounded-md border bg-background p-0.5">
+                  {semesters.map((sm) => (
+                    <button key={sm} onClick={() => setSemester(sm)}
+                      className={`rounded px-3 py-1.5 text-sm ${sm === current ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{sm}</button>
+                  ))}
+                </div>
+              </div>
             </div>
 
         {dataQ.isLoading || instQ.isLoading ? (
@@ -490,7 +482,7 @@ export default function InstitutionComparator() {
           </main>
         </div>
       </div>
-    </SidebarProvider>
+    </>
   );
 }
 
