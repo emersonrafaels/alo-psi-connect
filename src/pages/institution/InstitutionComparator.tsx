@@ -17,7 +17,7 @@ import Footer from '@/components/ui/footer';
 
 type ScaleRow = { sem: string; scale_code: string; unit: string; course: string; n: number; avg: number };
 type DiaryRow = { sem: string; unit: string; participants: number; avg_mood: number };
-type Payload = { population: number; activated: number; units_population: Record<string, number>; scales: ScaleRow[]; diary: DiaryRow[] };
+type Payload = { any_scale?: { sem: string; unit: string; n: number }[]; population: number; activated: number; units_population: Record<string, number>; scales: ScaleRow[]; diary: DiaryRow[] };
 
 export const MIN_GROUP = 10;
 
@@ -128,7 +128,7 @@ export default function InstitutionComparator() {
   const coverage = population ? Math.round((who.n / population) * 100) : 0;
   const coveragePrev = population ? Math.round((whoPrev.n / population) * 100) : 0;
   const diaryNow = (d?.diary ?? []).filter((r) => r.sem === current && inUnit(r)).reduce((s, r) => s + r.participants, 0);
-  const anyScale = (d?.scales ?? []).filter((r) => r.sem === current && inUnit(r)).reduce((m, r) => Math.max(m, r.n), 0);
+  const anyScale = (d?.any_scale ?? []).filter((r) => r.sem === current && inUnit(r)).reduce((m, r) => m + r.n, 0);
 
   const courses = useMemo(() => [...new Set((d?.scales ?? []).map((r) => r.course))].sort(), [d]);
 
