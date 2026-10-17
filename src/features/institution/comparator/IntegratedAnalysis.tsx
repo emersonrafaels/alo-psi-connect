@@ -13,7 +13,6 @@ type Stat = { n: number; avg: number | null };
 type Filter = (r: Row) => boolean;
 
 const fmt = (v: number | null | undefined, d = 1) => (v == null || Number.isNaN(v) ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }));
-const semMonth = (s: string) => (s.endsWith('.1') ? `jun/${s.slice(0, 4)}` : `nov/${s.slice(0, 4)}`);
 const Hint = ({ t }: { t: string }) => (
   <Tooltip><TooltipTrigger asChild><Info className="inline h-3.5 w-3.5 cursor-help text-muted-foreground" /></TooltipTrigger><TooltipContent className="max-w-xs text-xs">{t}</TooltipContent></Tooltip>
 );
@@ -106,7 +105,7 @@ export function IntegratedAnalysis(props: {
     <div className="space-y-6">
       {/* Filtros */}
       <section className="rounded-2xl bg-card/60 p-4 ring-1 ring-border space-y-3">
-        <p className="text-sm"><span className="font-semibold">Filtros</span> <span className="text-muted-foreground">Defina o recorte, a comparação e o período. Tudo abaixo segue esses filtros.</span></p>
+        <p className="text-sm"><span className="font-semibold">Filtros</span> <span className="text-muted-foreground">Defina o recorte e a comparação. A coleta semestral é escolhida no topo da página.</span></p>
         <Card><CardContent className="space-y-4 p-4">
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex items-center gap-2 pr-2"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">A</span><div><p className="text-sm font-semibold">Recorte <Hint t="Grupo principal analisado em toda a página." /></p><p className="text-[11px] text-muted-foreground">Filtra toda a página</p></div></div>
@@ -142,15 +141,6 @@ export function IntegratedAnalysis(props: {
             );
           })}
           {groups.length > 0 && groups.length < LETTERS.length && <Button variant="outline" size="sm" onClick={() => addGroup('custom')}>+ Adicionar comparação</Button>}
-        </CardContent></Card>
-        <Card><CardContent className="flex flex-wrap items-center gap-3 p-3">
-          <CalendarDays className="h-4 w-4 text-primary" /><div><p className="text-sm font-semibold">Coleta semestral</p><p className="text-[11px] text-muted-foreground">define os números abaixo</p></div>
-          <div className="flex rounded-lg bg-muted p-1">
-            {semesters.map((s) => (
-              <button key={s} onClick={() => setSemester(s)} className={`rounded-md px-4 py-1 text-center text-xs ${current === s ? 'bg-background font-bold shadow-sm' : 'text-muted-foreground'}`}>
-                {s}<span className="block text-[10px] font-normal text-muted-foreground">{semMonth(s)}</span></button>
-            ))}
-          </div>
         </CardContent></Card>
       </section>
 
