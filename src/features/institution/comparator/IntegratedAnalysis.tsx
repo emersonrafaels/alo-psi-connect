@@ -276,6 +276,7 @@ export function IntegratedAnalysis(props: {
           const dDiffPct = dDiff == null ? null : (Math.abs(dDiff) / dSpan) * 100;
           const dSize = dDiffPct == null ? '—' : dDiffPct < 2 ? 'Praticamente iguais' : dDiffPct < 5 ? 'Diferença pequena' : dDiffPct < 10 ? 'Diferença moderada' : 'Diferença grande';
           const dAFav = dDiff != null && dBetter(dDiff) > 0;
+          const [dAX, dRX] = spreadPair(dDir(dA.avg), dDir(dRef.avg));
           const dHead = dDiff == null ? 'Ainda não há registros suficientes para comparar este recorte.'
             : dDiffPct! < 2 ? `${labelA} e ${groups[0] ? gLabel(groups[0]) : 'a média da rede'} estão em um patamar muito parecido.`
             : `${labelA} está em situação ${dAFav ? 'mais' : 'menos'} favorável que ${groups[0] ? gLabel(groups[0]) : 'a média da rede'}.`;
@@ -367,14 +368,14 @@ export function IntegratedAnalysis(props: {
                 <div className="relative pb-2 pt-14">
                   <div className="h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--accent) / .7), hsl(var(--muted) / .4), hsl(var(--primary) / .4))' }} />
                   {dA.avg != null && (
-                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dDir(dA.avg)}%`, top: 8 }}>
+                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dAX}%`, top: 8 }}>
                       <span className="text-[11px] font-bold text-primary">A · {fmt(dA.avg, p.d)}</span>
                       <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow">A</span>
                       <span className="h-5 border-l border-dashed border-primary" />
                     </div>
                   )}
                   {dRef.avg != null && (
-                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dDir(dRef.avg)}%`, top: 44 }}>
+                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dRX}%`, top: 44 }}>
                       <span className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-primary-foreground shadow ring-2 ring-background" style={{ background: dRefColor }}>{dRefLabel === 'Rede' ? 'R' : 'B'}</span>
                       <span className="mt-0.5 text-[11px] font-bold" style={{ color: dRefColor }}>{dRefLabel} · {fmt(dRef.avg, p.d)}</span>
                     </div>
@@ -512,6 +513,7 @@ export function IntegratedAnalysis(props: {
               const tLine = (k: string, t: number | null) => t == null ? '' : `${k}: ${Math.abs(t) < 0.5 ? 'ficou estável' : better(t) > 0 ? 'melhorou' : 'piorou'} ${fmt(Math.abs(t))} pontos desde ${first}.`;
               const cLine = (k: string, n: number, pop: number) => `${k}: ${n.toLocaleString('pt-BR')} respostas (${pop ? Math.round((n / pop) * 100) : 0}% do grupo) · confiança ${conf(n, pop).toLowerCase()}.`;
               const cA = conf(a.n, popA);
+              const [aX, rX] = spreadPair(dirPos(a.avg), dirPos(ref.avg));
               return (<>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary">O que os números dizem · {current} <Hint t="Resumo automático da comparação entre A e a referência." /></p>
@@ -522,14 +524,14 @@ export function IntegratedAnalysis(props: {
                 <div className="relative pb-2 pt-14">
                   <div className="h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--accent) / .7), hsl(var(--muted) / .4), hsl(var(--primary) / .4))' }} />
                   {a.avg != null && (
-                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dirPos(a.avg)}%`, top: 8 }}>
+                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${aX}%`, top: 8 }}>
                       <span className="text-[11px] font-bold text-primary">A · {fmt(a.avg)}</span>
                       <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow">A</span>
                       <span className="h-5 border-l border-dashed border-primary" />
                     </div>
                   )}
                   {ref.avg != null && (
-                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dirPos(ref.avg)}%`, top: 44 }}>
+                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${rX}%`, top: 44 }}>
                       <span className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-primary-foreground shadow ring-2 ring-background" style={{ background: bColor }}>{bK === 'Rede' ? 'R' : 'B'}</span>
                       <span className="mt-0.5 text-[11px] font-bold" style={{ color: bColor }}>{bK} · {fmt(ref.avg)}</span>
                     </div>
