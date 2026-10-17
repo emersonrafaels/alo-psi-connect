@@ -353,6 +353,13 @@ export function IntegratedAnalysis(props: {
                 ))}
               </div>
             </div>
+            <div className="grid grid-cols-[140px_1fr_60px] items-end gap-3 px-2 text-[11px] tabular-nums text-muted-foreground">
+              <span />
+              <div className="relative h-4">
+                {mapTicks.map((t) => <span key={t} className="absolute -translate-x-1/2" style={{ left: `${mx(t)}%` }}>{Math.round(t)}</span>)}
+              </div>
+              <span className="whitespace-nowrap text-right">{unitTag}</span>
+            </div>
             <div className="space-y-1">
               {[...rowsMap, '__all'].map((rk) => {
                 const pts = (mapBy === 'course' ? dotUnits : [rk === '__all' ? null : rk]).map((u, i) => {
