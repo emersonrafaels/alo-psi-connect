@@ -298,7 +298,7 @@ export function IntegratedAnalysis(props: {
                 <h3 className="max-w-3xl text-2xl font-bold leading-snug">{head}</h3>
                 <p className="text-sm text-muted-foreground">Em {current}, A marcou {fmt(a.avg)} e {bK} marcou {fmt(ref.avg)}.{meaning && ` Isso significa ${meaning}`}{diff != null && `, uma diferença de ${fmt(Math.abs(diff))} pontos (${fmt(diffPct, 0)}% da escala).`}</p>
                 <div className="relative pb-2 pt-14">
-                  <div className="h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--chart-4, var(--accent))) / .45), hsl(var(--background)), hsl(var(--primary) / .4))' }} />
+                  <div className="h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--accent) / .7), hsl(var(--muted) / .4), hsl(var(--primary) / .4))' }} />
                   {a.avg != null && (
                     <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dirPos(a.avg)}%`, top: 8 }}>
                       <span className="text-[11px] font-bold text-primary">A · {fmt(a.avg)}</span>
