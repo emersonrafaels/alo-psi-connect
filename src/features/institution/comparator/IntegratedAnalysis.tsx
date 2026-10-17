@@ -128,7 +128,7 @@ export function IntegratedAnalysis(props: {
           {groups.map((g, i) => {
             const pg = gPop(g), ng = stat(inst.code, current, gFilter(g)).n;
             return (
-              <div key={i} className="flex flex-wrap items-end gap-3 rounded-xl border p-3" style={{ background: `${gColor(i).replace(')', ' / .07)')}`, borderColor: gColor(i).replace(')', ' / .35)') }}>
+              <div key={i} className="flex flex-wrap items-end gap-3 rounded-xl border p-3" style={{ background: `hsl(var(--chart-${(i % 4) + 2}) / .07)`, borderColor: `hsl(var(--chart-${(i % 4) + 2}) / .35)` }}>
                 <div className="flex items-center gap-2 pr-2"><span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-primary-foreground" style={{ background: gColor(i) }}>{LETTERS[i]}</span><div><p className="text-sm font-semibold">Grupo comparado</p><p className="text-[11px] text-muted-foreground">ajuste qualquer nível</p></div></div>
                 <Field label="Unidade"><Select value={g.unit} onValueChange={(v) => updGroup(i, { unit: v })}><SelectTrigger className="w-44 bg-background"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Toda a rede</SelectItem>{units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent></Select></Field>
                 <Field label="Curso"><Select value={g.course} onValueChange={(v) => updGroup(i, { course: v })}><SelectTrigger className="w-44 bg-background"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os cursos</SelectItem>{courses.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></Field>
