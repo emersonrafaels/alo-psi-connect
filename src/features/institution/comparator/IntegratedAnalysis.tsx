@@ -31,6 +31,11 @@ const diaryBands = (p: DiaryParam): Band[] => p.key === 'avg_sleep_hours'
   ? [{ label: 'Pouco', from: 0, to: 6, tone: 'bad' }, { label: 'Adequado', from: 6, to: 8, tone: 'good' }, { label: 'Longo', from: 8, to: 12, tone: 'mid' }]
   : [{ label: 'Baixo', from: 1, to: 2, tone: p.better === 'up' ? 'bad' : 'good' }, { label: 'Intermediário', from: 2, to: 3.5, tone: 'mid' }, { label: 'Alto', from: 3.5, to: 5, tone: p.better === 'up' ? 'good' : 'bad' }];
 const diaryBandOf = (p: DiaryParam, v: number | null) => { if (v == null) return null; const b = diaryBands(p); return b.find((x) => v <= x.to + 0.001) ?? b[b.length - 1]; };
+const spreadPair = (x: number, y: number, minGap = 7): [number, number] => {
+  if (Math.abs(x - y) >= minGap) return [x, y];
+  const mid = (x + y) / 2;
+  return [Math.max(3, mid - minGap / 2), Math.min(97, mid + minGap / 2)];
+};
 
 export function IntegratedAnalysis(props: {
   instruments: readonly Inst[]; semesters: string[]; current: string | null; setSemester: (s: string) => void;
