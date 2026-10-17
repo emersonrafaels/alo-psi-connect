@@ -249,52 +249,226 @@ export function IntegratedAnalysis(props: {
         </>)}
 
         {tab === 'diary' && (() => {
-          const params: { key: string; label: string; max: number; unit: string; better: 'up' | 'down'; d: number }[] = [
-            { key: 'avg_general', label: 'Bem-estar geral', max: 5, unit: '/ 5', better: 'up', d: 2 },
-            { key: 'avg_mood', label: 'Humor', max: 5, unit: '/ 5', better: 'up', d: 2 },
-            { key: 'avg_energy', label: 'Energia', max: 5, unit: '/ 5', better: 'up', d: 2 },
-            { key: 'avg_anxiety', label: 'Ansiedade', max: 5, unit: '/ 5', better: 'down', d: 2 },
-            { key: 'avg_stress', label: 'Estresse', max: 5, unit: '/ 5', better: 'down', d: 2 },
-            { key: 'avg_sleep_quality', label: 'Qualidade do sono', max: 5, unit: '/ 5', better: 'up', d: 2 },
-            { key: 'avg_sleep_hours', label: 'Horas de sono', max: 12, unit: 'h', better: 'up', d: 1 },
-          ];
+          const p = DIARY_PARAMS.find((x) => x.key === diaryParam) ?? DIARY_PARAMS[1];
           const sems = Array.from(new Set(props.diary.map((r) => r.sem))).sort();
-          const prevSem = sems[sems.indexOf(current) - 1];
+          const prevSem = sems[sems.indexOf(current ?? '') - 1] ?? null;
+          const firstSem = sems[0] ?? null;
+          const dStat = (key: string, sem: string | null, unitF?: string) => {
+            const rows = props.diary.filter((r) => r.sem === sem && (!unitF || unitF === 'all' || r.unit === unitF));
+            let sw = 0, sn = 0;
+            rows.forEach((r: any) => { const v = r[key]; if (v != null && r.participants > 0) { sw += Number(v) * r.participants; sn += r.participants; } });
+            return { n: sn, avg: sn ? sw / sn : null };
+          };
+          const dA = dStat(p.key, current, unit), dAFirst = dStat(p.key, firstSem, unit);
+          const dRef = groups[0] ? dStat(p.key, current, groups[0].unit) : dStat(p.key, current);
+          const dRefLabel = groups[0] ? 'B' : 'Rede';
+          const dRefColor = groups[0] ? gColor(0) : 'hsl(var(--muted-foreground))';
+          const dSpan = p.max - p.min || 1;
+          const dPos = (v: number | null) => (v == null ? 0 : Math.max(0, Math.min(100, ((v - p.min) / dSpan) * 100)));
+          const dDir = (v: number | null) => (p.better === 'up' ? dPos(v) : 100 - dPos(v));
+          const dBetter = (v: number) => (p.better === 'up' ? v : -v);
+          const dDiff = dA.avg != null && dRef.avg != null ? dA.avg - dRef.avg : null;
+          const dDiffPct = dDiff == null ? null : (Math.abs(dDiff) / dSpan) * 100;
+          const dSize = dDiffPct == null ? '—' : dDiffPct < 2 ? 'Praticamente iguais' : dDiffPct < 5 ? 'Diferença pequena' : dDiffPct < 10 ? 'Diferença moderada' : 'Diferença grande';
+          const dAFav = dDiff != null && dBetter(dDiff) > 0;
+          const dHead = dDiff == null ? 'Ainda não há registros suficientes para comparar este recorte.'
+            : dDiffPct! < 2 ? `${labelA} e ${groups[0] ? gLabel(groups[0]) : 'a média da rede'} estão em um patamar muito parecido.`
+            : `${labelA} está em situação ${dAFav ? 'mais' : 'menos'} favorável que ${groups[0] ? gLabel(groups[0]) : 'a média da rede'}.`;
+          const bands = diaryBands(p);
+          const markers = [{ k: 'A', v: dA.avg, color: 'hsl(var(--primary))' },
+            ...groups.map((g, i) => ({ k: LETTERS[i], v: dStat(p.key, current, g.unit).avg, color: gColor(i) })),
+            ...(groups.length ? [] : [{ k: 'R', v: dRef.avg, color: 'hsl(var(--muted-foreground))' }])]
+            .filter((m) => m.v != null).map((m) => ({ ...m, p: dPos(m.v) })).sort((x, y) => x.p - y.p);
+          const lab: number[] = [];
+          markers.forEach((m, i) => { lab[i] = i && m.p - lab[i - 1] < 7 ? lab[i - 1] + 7 : m.p; });
+          const dNet = dStat(p.key, current).avg;
+          const dTicks = Array.from({ length: 5 }, (_, i) => p.min + (dSpan / 4) * i);
+          const evoD = sems.map((s) => ({ sem: s, a: dStat(p.key, s, unit).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, dStat(p.key, s, g.unit).avg])) }));
           return (
             <div className="space-y-4">
-              {units.map((u) => {
-                const di = props.diary.find((r) => r.sem === current && r.unit === u) as Record<string, any> | undefined;
-                const pv = prevSem ? (props.diary.find((r) => r.sem === prevSem && r.unit === u) as Record<string, any> | undefined) : undefined;
-                const pop = (props as any).unitsPopulation?.[u];
-                return (
-                  <Card key={u}><CardContent className="space-y-3 p-4">
-                    <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <p className="font-semibold">{u}</p>
-                      <p className="text-xs text-muted-foreground">{di ? `${di.participants} participantes${di.entries ? ` · ${Number(di.entries).toLocaleString('pt-BR')} registros` : ''}${pop ? ` · adesão ${Math.round((di.participants / pop) * 100)}%` : ''} · ${current}` : 'Grupo protegido (n < 10)'}</p>
+              <p className="text-xs text-muted-foreground">Indicadores · média do <span className="font-semibold text-primary">grupo A</span> e variação no período · o diário é agregado por unidade (o filtro de curso não se aplica)</p>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
+                {DIARY_PARAMS.map((dp) => {
+                  const v = dStat(dp.key, current, unit).avg, pv = dStat(dp.key, prevSem, unit).avg;
+                  const dv = v != null && pv != null ? v - pv : null;
+                  const b = diaryBandOf(dp, v);
+                  const series = sems.map((s) => dStat(dp.key, s, unit).avg);
+                  return (
+                    <button key={dp.key} onClick={() => setDiaryParam(dp.key)} className={`rounded-xl border bg-card p-3 text-left transition hover:shadow-md ${diaryParam === dp.key ? 'border-primary ring-2 ring-primary/30' : ''}`}>
+                      <div className="flex justify-between text-[11px]"><span className="font-bold text-primary">Diário</span>
+                        {dv != null && <span className={`rounded px-1 font-semibold ${(dp.better === 'up' ? dv : -dv) > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{dv >= 0 ? '+' : '−'}{fmt(Math.abs(dv), 2)}</span>}</div>
+                      <p className="mt-0.5 line-clamp-2 min-h-[2rem] text-xs font-medium">{dp.label}</p>
+                      <div className="mt-1 flex items-end justify-between gap-1">
+                        <span className="text-xl font-bold tabular-nums">{fmt(v, dp.d)}</span>
+                        <MiniLine values={series} />
+                      </div>
+                      <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground"><span>A · {current}</span>{b && <span className={`rounded px-1.5 py-0.5 font-semibold ${TONE_CLASS[b.tone]}`}>{b.label}</span>}</div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <Card><CardContent className="space-y-5 p-6">
+                <div className="flex flex-wrap justify-between gap-3 border-b pb-5">
+                  <div>
+                    <h3 className="text-xl font-bold">Diário · {p.label}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">{p.desc}</p>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                      <span className="rounded-md bg-muted px-2.5 py-1">Faixa {p.min}–{p.max}</span>
+                      <span className="rounded-md bg-muted px-2.5 py-1">{p.better === 'up' ? '↑ maior é mais favorável' : '↓ menor é mais favorável'}</span>
+                      <span className="rounded-md bg-muted px-2.5 py-1">Registro contínuo</span>
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      {params.map((p) => {
-                        const v = di?.[p.key] != null ? Number(di[p.key]) : null;
-                        const pvv = pv?.[p.key] != null ? Number(pv[p.key]) : null;
-                        const delta = v != null && pvv != null ? v - pvv : null;
-                        const good = delta == null || delta === 0 ? null : (delta > 0) === (p.better === 'up');
-                        return (
-                          <div key={p.key} className="rounded-lg border bg-card p-3">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="font-medium text-primary">Diário</span>
-                              {delta != null && <span className={`rounded px-1.5 font-semibold ${good ? 'bg-primary/10 text-primary' : good === false ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>{delta > 0 ? '+' : ''}{fmt(delta, 2)}</span>}
-                            </div>
-                            <p className="text-sm font-semibold">{p.label}</p>
-                            <p className="mt-1 text-2xl font-bold tabular-nums">{v != null ? fmt(v, p.d) : '—'}<span className="ml-1 text-xs font-normal text-muted-foreground">{v != null ? p.unit : 'sem dados suficientes'}</span></p>
-                            <div className="mt-2 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${v != null ? Math.min(100, (v / p.max) * 100) : 0}%` }} /></div>
-                            <p className="mt-1 text-[11px] text-muted-foreground">{p.better === 'up' ? '↑ maior é mais favorável' : '↓ menor é mais favorável'}</p>
-                          </div>
-                        );
-                      })}
+                  </div>
+                  <div className="space-y-1.5 text-right text-xs">
+                    <p className="text-muted-foreground">Período <Hint t="Agregado dos registros do diário no semestre selecionado." /></p>
+                    <p className="text-sm font-bold">Período em análise: {current}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm"><span className="font-bold">Como interpretar os valores</span> <span className="text-xs text-muted-foreground">Faixas de leitura para a escala de {p.min} a {p.max} do Diário.</span></p>
+                  <div className="relative mt-12">
+                    {markers.map((m, i) => (
+                      <div key={m.k}>
+                        <div className="absolute -top-9 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap text-xs font-bold" style={{ left: `${Math.min(97, lab[i])}%`, color: m.color }}>
+                          <span className="flex h-4 w-4 items-center justify-center rounded-full text-[9px] text-primary-foreground" style={{ background: m.color }}>{m.k}</span>{fmt(m.v, p.d)}
+                        </div>
+                        <div className="absolute -top-4 h-7 w-px" style={{ left: `${m.p}%`, background: m.color }} />
+                      </div>
+                    ))}
+                    <div className="flex h-3.5 gap-0.5 overflow-hidden rounded-full">
+                      {bands.map((b) => <div key={b.label} style={{ width: `${((b.to - b.from) / dSpan) * 100}%`, background: TONE_BAR[b.tone] }} />)}
                     </div>
-                  </CardContent></Card>
-                );
-              })}
+                    <div className="mt-1.5 flex">
+                      {bands.map((b) => <div key={b.label} style={{ width: `${((b.to - b.from) / dSpan) * 100}%` }} className="text-[11px] leading-tight"><p className={`font-bold ${TONE_TEXT[b.tone]}`}>{b.label}</p><p className="text-muted-foreground">{b.from}–{b.to}</p></div>)}
+                    </div>
+                  </div>
+                  <div className="mt-3 space-y-1.5">
+                    {[{ k: 'A', color: 'hsl(var(--primary))', label: labelA, v: dA.avg },
+                      ...groups.map((g, i) => ({ k: LETTERS[i], color: gColor(i), label: gLabel(g), v: dStat(p.key, current, g.unit).avg })),
+                      ...(groups.length ? [] : [{ k: 'Rede', color: 'hsl(var(--foreground))', label: 'média geral', v: dRef.avg }])].map((r) => { const bd = diaryBandOf(p, r.v); return (
+                      <p key={r.k} className="text-xs"><b style={{ color: r.color }}>{r.k}</b> ({r.label}) está na faixa {bd ? <span className={`rounded px-1.5 py-0.5 font-semibold ${TONE_CLASS[bd.tone]}`}>{bd.label}</span> : '—'}{bd && ` (${bd.from}–${bd.to})`}.</p>
+                    ); })}
+                  </div>
+                </div>
+              </CardContent></Card>
+
+              <Card><CardContent className="space-y-5 p-6">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary">O que os números dizem · {current} <Hint t="Resumo automático da comparação entre A e a referência." /></p>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">{dSize}</span>
+                </div>
+                <h3 className="max-w-3xl text-2xl font-bold leading-snug">{dHead}</h3>
+                <p className="text-sm text-muted-foreground">Em {current}, A marcou {fmt(dA.avg, p.d)} e {dRefLabel} marcou {fmt(dRef.avg, p.d)}{dDiff != null && `, uma diferença de ${fmt(Math.abs(dDiff), 2)} pontos (${fmt(dDiffPct, 0)}% da escala).`}</p>
+                <div className="relative pb-2 pt-14">
+                  <div className="h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--accent) / .7), hsl(var(--muted) / .4), hsl(var(--primary) / .4))' }} />
+                  {dA.avg != null && (
+                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dDir(dA.avg)}%`, top: 8 }}>
+                      <span className="text-[11px] font-bold text-primary">A · {fmt(dA.avg, p.d)}</span>
+                      <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow">A</span>
+                      <span className="h-5 border-l border-dashed border-primary" />
+                    </div>
+                  )}
+                  {dRef.avg != null && (
+                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dDir(dRef.avg)}%`, top: 44 }}>
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-primary-foreground shadow ring-2 ring-background" style={{ background: dRefColor }}>{dRefLabel === 'Rede' ? 'R' : 'B'}</span>
+                      <span className="mt-0.5 text-[11px] font-bold" style={{ color: dRefColor }}>{dRefLabel} · {fmt(dRef.avg, p.d)}</span>
+                    </div>
+                  )}
+                  <div className="mt-10 flex justify-between text-xs font-bold">
+                    <span className="text-accent-foreground">← Pior · {p.better === 'up' ? p.min : p.max}</span>
+                    <span className="text-primary">{p.better === 'up' ? p.max : p.min} · Melhor →</span>
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <MiniCard title="Tamanho da diferença" hint="Diferença entre A e a referência, relativa à amplitude da escala." value={dSize}
+                    lines={[dDiff == null ? '—' : `${fmt(Math.abs(dDiff), 2)} pontos de diferença, ou ${fmt(dDiffPct, 0)}% da escala.`, dDiff == null ? '' : dDiffPct! < 2 ? 'Os grupos estão no mesmo nível.' : `${dAFav ? 'A' : dRefLabel} está do lado mais favorável.`]} />
+                  <MiniCard title="Tendência no tempo" hint="Mudança desde a primeira coleta disponível." value={dA.avg != null && dAFirst.avg != null ? (Math.abs(dA.avg - dAFirst.avg) < 0.1 ? 'Estável' : dBetter(dA.avg - dAFirst.avg) > 0 ? 'Evolução' : 'Piora') : '—'} valueClass="text-foreground"
+                    lines={[dA.avg != null && dAFirst.avg != null ? `A: ${dBetter(dA.avg - dAFirst.avg) >= 0 ? 'melhorou' : 'piorou'} ${fmt(Math.abs(dA.avg - dAFirst.avg), 2)} pontos desde ${firstSem}.` : '']} />
+                  <MiniCard title="Participação" hint="Estudantes do recorte que registraram o diário no período." value={dA.n.toLocaleString('pt-BR')}
+                    lines={[`A: ${dA.n.toLocaleString('pt-BR')} participantes (${popA ? Math.round((dA.n / popA) * 100) : 0}% do grupo).`]} />
+                </div>
+                <p className="flex gap-2 border-t pt-4 text-xs text-muted-foreground"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  Como ler: este indicador vai de {p.min} a {p.max} e quanto {p.better === 'up' ? 'maior' : 'menor'}, melhor. A régua já está orientada para que a direita seja sempre o lado mais favorável. As médias representam apenas quem registrou o diário no período.</p>
+              </CardContent></Card>
+
+              <Card><CardContent className="space-y-4 p-5">
+                <div><h3 className="font-bold">Mapa por unidade · {current}</h3><p className="text-xs text-muted-foreground">Mais à direita = mais favorável · rede {fmt(dNet, p.d)}</p></div>
+                <div className="grid grid-cols-[140px_1fr_60px] items-end gap-3 px-2 text-[11px] tabular-nums text-muted-foreground">
+                  <span />
+                  <div className="relative h-4">{dTicks.map((t) => <span key={t} className="absolute -translate-x-1/2" style={{ left: `${dDir(t)}%` }}>{fmt(t, 0)}</span>)}</div>
+                  <span className="text-right">vs rede</span>
+                </div>
+                <div className="space-y-1">
+                  {units.map((u) => {
+                    const v = dStat(p.key, current, u).avg;
+                    const isSel = unit === u;
+                    const dv = v != null && dNet != null ? v - dNet : null;
+                    return (
+                      <div key={u} className={`grid grid-cols-[140px_1fr_60px] items-center gap-3 rounded-lg px-2 py-3 ${isSel ? 'bg-primary/5' : ''}`}>
+                        <button className="text-left text-sm hover:text-primary" onClick={() => setUnit(u)}>{u} ›</button>
+                        <div className="relative h-14">
+                          <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
+                          {dTicks.map((t) => <div key={t} className="absolute top-0 h-14 w-px border-l border-dashed border-border/70" style={{ left: `${dDir(t)}%` }} />)}
+                          {dNet != null && <div className="absolute top-0 h-14 w-px bg-foreground/30" style={{ left: `${dDir(dNet)}%` }} />}
+                          {v != null && (
+                            <button title={`${u} · ${fmt(v, p.d)}`} onClick={() => setUnit(u)} className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${dDir(v)}%` }}>
+                              <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-primary">{fmt(v, p.d)}</span>
+                              <span className="block h-4 w-4 rounded-full border-2 border-background shadow" style={{ background: 'hsl(var(--primary))' }} />
+                            </button>
+                          )}
+                        </div>
+                        <span className="text-right text-xs font-semibold tabular-nums text-muted-foreground">{dv == null ? '' : `${dv >= 0 ? '+' : '−'}${fmt(Math.abs(dv), 2)}`}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] text-muted-foreground">Clique em um ponto para analisar aquela unidade (vira o grupo A). Unidades com menos de 10 participantes não aparecem.</p>
+              </CardContent></Card>
+
+              <Card><CardContent className="space-y-4 p-5">
+                <div><h3 className="font-bold">Como evoluiu ao longo das coletas?</h3><p className="text-xs text-muted-foreground">Diário · {p.label} · média por semestre</p></div>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={evoD} margin={{ top: 36, right: 32, left: 0, bottom: 28 }}>
+                      <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
+                      {current && <ReferenceArea x1={current} x2={current} fill="hsl(var(--primary))" fillOpacity={0.08} />}
+                      <XAxis dataKey="sem" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" padding={{ left: 48, right: 48 }} />
+                      <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" domain={[(m: number) => m - dSpan * 0.06, (m: number) => m + dSpan * 0.06]} tickFormatter={(v: number) => fmt(v, p.d)} />
+                      <RTooltip formatter={(v: any) => fmt(v, p.d)} contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
+                      {(() => {
+                        const keys = ['a', ...groups.map((_, i) => `g${i}`)];
+                        const pill = (key: string, color: string) => (pp: any) => {
+                          const { x, y, value, index } = pp;
+                          if (value == null || x == null || y == null) return null;
+                          const row: any = (evoD as any[])[index] ?? {};
+                          const vals = keys.map((k) => ({ k, v: row[k] })).filter((o) => o.v != null).sort((m, n) => n.v - m.v);
+                          const rank = vals.findIndex((o) => o.k === key);
+                          const above = rank === 0;
+                          const step = above ? 0 : rank - 1;
+                          const txt = fmt(value, p.d);
+                          const w = txt.length * 6.6 + 12;
+                          const cy = above ? y - 20 : y + 20 + step * 20;
+                          return (
+                            <g pointerEvents="none">
+                              <rect x={x - w / 2} y={cy - 9} width={w} height={18} rx={9} fill="hsl(var(--background))" stroke={color} strokeWidth={1.25} />
+                              <text x={x} y={cy + 4} textAnchor="middle" fontSize={11} fontWeight={800} fill={color}>{txt}</text>
+                            </g>
+                          );
+                        };
+                        return [
+                          <Line key="a" type="linear" dataKey="a" name="A" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 6, fill: 'hsl(var(--background))', strokeWidth: 3 }} isAnimationActive={false}
+                            activeDot={{ r: 8, onClick: (_: any, pp: any) => pp?.payload?.sem && setSemester(pp.payload.sem) }}>
+                            <LabelList dataKey="a" content={pill('a', 'hsl(var(--primary))')} />
+                          </Line>,
+                          ...groups.map((g, i) => <Line key={i} type="linear" dataKey={`g${i}`} name={LETTERS[i]} stroke={gColor(i)} strokeWidth={2.5} dot={{ r: 5, fill: 'hsl(var(--background))', strokeWidth: 2.5 }} isAnimationActive={false}><LabelList dataKey={`g${i}`} content={pill(`g${i}`, gColor(i))} /></Line>),
+                        ];
+                      })()}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="text-xs text-muted-foreground"><span className="font-semibold text-primary">— A · {labelA}</span>{groups.map((g, i) => <span key={i}> · <span className="font-semibold" style={{ color: gColor(i) }}>— {LETTERS[i]} · {gLabel(g)}</span></span>)} · Clique em um ponto para sincronizar o período.</p>
+              </CardContent></Card>
+              <p className="flex items-center gap-2 text-[11px] text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" />Grupos com menos de 10 participantes não são exibidos. As médias do diário representam apenas quem registrou no período.</p>
             </div>
           );
         })()}
