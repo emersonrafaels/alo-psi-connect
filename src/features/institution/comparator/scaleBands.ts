@@ -37,3 +37,6 @@ export const TONE_CLASS: Record<Band['tone'], string> = {
 export const TONE_BAR: Record<Band['tone'], string> = {
   bad: 'hsl(var(--destructive) / .55)', mid: 'hsl(var(--chart-4, var(--accent)) / .6)', ok: 'hsl(var(--primary) / .45)', good: 'hsl(var(--primary) / .75)',
 };
+export const TONE_TEXT: Record<Band['tone'], string> = {
+  bad: 'text-destructive', mid: 'text-accent-foreground', ok: 'text-primary', good: 'text-primary',
+};

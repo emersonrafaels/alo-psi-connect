@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SCALE_BANDS, bandOf, TONE_CLASS, TONE_BAR } from './scaleBands';
+import { SCALE_BANDS, bandOf, TONE_CLASS, TONE_BAR, TONE_TEXT } from './scaleBands';
 
 type Row = { sem: string; scale_code: string; unit: string; course: string; n: number; avg: number };
 type Inst = { code: string; label: string; short: string; min: number; max: number; higherIsBetter: boolean };
@@ -184,38 +184,60 @@ export function IntegratedAnalysis(props: {
             })}
           </div>
 
-          <Card><CardContent className="space-y-4 p-5">
-            <div className="flex flex-wrap justify-between gap-3">
+          <Card><CardContent className="space-y-5 p-6">
+            <div className="flex flex-wrap justify-between gap-3 border-b pb-5">
               <div>
-                <h3 className="text-lg font-bold">{inst.short} · {inst.label}</h3>
-                <p className="text-xs text-muted-foreground">{SCALE_BANDS[inst.code]?.description}</p>
-                <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
-                  <span className="rounded border px-2 py-0.5">Faixa {inst.min}–{inst.max}</span>
-                  <span className="rounded border px-2 py-0.5">{inst.higherIsBetter ? '↑ maior é mais favorável' : '↓ menor é mais favorável'}</span>
-                  <span className="rounded border px-2 py-0.5">Coleta semestral</span>
+                <h3 className="text-xl font-bold">{inst.short} · {inst.label}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{SCALE_BANDS[inst.code]?.description}</p>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                  <span className="rounded-md bg-muted px-2.5 py-1">Faixa {inst.min}–{inst.max}</span>
+                  <span className="rounded-md bg-muted px-2.5 py-1">{inst.higherIsBetter ? '↑ maior é mais favorável' : '↓ menor é mais favorável'}</span>
+                  <span className="rounded-md bg-muted px-2.5 py-1">Coleta semestral · próxima {current ? (current.endsWith('.1') ? `${current.slice(0, 4)}.2` : `${Number(current.slice(0, 4)) + 1}.1`) : '—'}</span>
                 </div>
               </div>
-              <div className="text-right text-xs"><p className="text-muted-foreground">Coleta semestral</p><p className="font-semibold">Período em análise: {current}</p></div>
+              <div className="space-y-1.5 text-right text-xs">
+                <p className="text-muted-foreground">Coleta semestral <Hint t="Os instrumentos são aplicados uma vez por semestre." /></p>
+                <p className="text-sm font-bold">Período em análise: {current}</p>
+                <button disabled title="Em breve" className="inline-flex items-center gap-1 font-semibold text-primary disabled:cursor-not-allowed"><CalendarDays className="h-3.5 w-3.5" />Ver calendário de coletas</button>
+              </div>
             </div>
-            <div>
-              <p className="mb-6 text-xs"><span className="font-semibold">Como interpretar os valores</span> <span className="text-muted-foreground">Faixas de referência usadas em rastreamento populacional — não são diagnóstico individual.</span></p>
-              <div className="relative">
-                {[{ v: a.avg, l: 'A', cls: 'bg-primary text-primary-foreground' }, { v: ref.avg, l: refLabel === 'B' ? 'B' : 'R', cls: 'bg-muted-foreground text-background' }].map((m) => m.v != null && (
-                  <div key={m.l} className="absolute -top-6 -translate-x-1/2 flex flex-col items-center" style={{ left: `${pos(m.v)}%` }}>
-                    <span className={`flex items-center gap-1 rounded-full px-1.5 text-[10px] font-bold ${m.cls}`}>{m.l} {fmt(m.v)}</span>
-                    <span className="h-4 w-px bg-foreground/60" />
+            {(() => {
+              const bands = SCALE_BANDS[inst.code]?.bands ?? [];
+              const markers = [{ k: 'A', v: a.avg, color: 'hsl(var(--primary))' },
+                ...(groups.length ? groups.map((g, i) => ({ k: LETTERS[i], v: stat(inst.code, current, gFilter(g)).avg, color: gColor(i) })) : [{ k: 'R', v: ref.avg, color: 'hsl(var(--muted-foreground))' }])]
+                .filter((m) => m.v != null).map((m) => ({ ...m, p: pos(m.v) })).sort((x, y) => x.p - y.p);
+              // spread labels
+              const lab: number[] = [];
+              markers.forEach((m, i) => { lab[i] = i && m.p - lab[i - 1] < 7 ? lab[i - 1] + 7 : m.p; });
+              const rows = [{ k: 'A', color: 'hsl(var(--primary))', label: labelA, v: a.avg },
+                ...(groups.length ? groups.map((g, i) => ({ k: LETTERS[i], color: gColor(i), label: gLabel(g), v: stat(inst.code, current, gFilter(g)).avg })) : [{ k: 'Rede', color: 'hsl(var(--foreground))', label: 'média geral', v: ref.avg }])];
+              return (
+                <div>
+                  <p className="text-sm"><span className="font-bold">Como interpretar os valores</span> <span className="text-xs text-muted-foreground">Faixas de referência usadas em rastreamento populacional — não são diagnóstico individual.</span></p>
+                  <div className="relative mt-12">
+                    {markers.map((m, i) => (
+                      <div key={m.k}>
+                        <div className="absolute -top-9 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap text-xs font-bold" style={{ left: `${Math.min(97, lab[i])}%`, color: m.color }}>
+                          <span className="flex h-4 w-4 items-center justify-center rounded-full text-[9px] text-primary-foreground" style={{ background: m.color }}>{m.k === 'R' ? 'R' : m.k}</span>{fmt(m.v)}
+                        </div>
+                        <div className="absolute -top-4 h-7 w-px" style={{ left: `${m.p}%`, background: m.color }} />
+                      </div>
+                    ))}
+                    <div className="flex h-3.5 gap-0.5 overflow-hidden rounded-full">
+                      {bands.map((b) => <div key={b.label} style={{ width: `${((b.to - b.from + 1) / (span + 1)) * 100}%`, background: TONE_BAR[b.tone] }} />)}
+                    </div>
+                    <div className="mt-1.5 flex">
+                      {bands.map((b) => <div key={b.label} style={{ width: `${((b.to - b.from + 1) / (span + 1)) * 100}%` }} className="text-[11px] leading-tight"><p className={`font-bold ${TONE_TEXT[b.tone]}`}>{b.label}</p><p className="text-muted-foreground">{b.from}–{b.to}</p></div>)}
+                    </div>
                   </div>
-                ))}
-                <div className="flex h-2.5 overflow-hidden rounded-full">
-                  {(SCALE_BANDS[inst.code]?.bands ?? []).map((b) => <div key={b.label} style={{ width: `${((b.to - b.from + 1) / (span + 1)) * 100}%`, background: TONE_BAR[b.tone] }} />)}
+                  <div className="mt-3 space-y-1.5">
+                    {rows.map((r) => { const bd = bandOf(inst.code, r.v); return (
+                      <p key={r.k} className="text-xs"><b style={{ color: r.color }}>{r.k}</b> ({r.label}) está na faixa {bd ? <span className={`rounded px-1.5 py-0.5 font-semibold ${TONE_CLASS[bd.tone]}`}>{bd.label}</span> : '—'}{bd && ` (${bd.from}–${bd.to})`}.</p>
+                    ); })}
+                  </div>
                 </div>
-                <div className="mt-1 flex">
-                  {(SCALE_BANDS[inst.code]?.bands ?? []).map((b) => <div key={b.label} style={{ width: `${((b.to - b.from + 1) / (span + 1)) * 100}%` }} className="text-[10px]"><p className="font-semibold">{b.label}</p><p className="text-muted-foreground">{b.from}–{b.to}</p></div>)}
-                </div>
-              </div>
-              <p className="mt-2 text-xs"><b className="text-primary">A</b> ({labelA}) está na faixa {aBand ? <span className={`rounded px-1.5 font-semibold ${TONE_CLASS[aBand.tone]}`}>{aBand.label}</span> : '—'}{aBand && ` (${aBand.from}–${aBand.to})`}.</p>
-              <p className="text-xs"><b>{fB ? `B (${labelB})` : 'Rede (média geral)'}</b> está na faixa {refBand ? <span className={`rounded px-1.5 font-semibold ${TONE_CLASS[refBand.tone]}`}>{refBand.label}</span> : '—'}{refBand && ` (${refBand.from}–${refBand.to})`}.</p>
-            </div>
+              );
+            })()}
           </CardContent></Card>
         </>)}
 
