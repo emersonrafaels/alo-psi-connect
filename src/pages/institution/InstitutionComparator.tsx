@@ -562,6 +562,7 @@ const HeatMap = ({ inst, units, courses, stat, network }: {
         <span>Mais favorável</span>
         <span className="ml-3 inline-block h-3 w-5 rounded" style={{ backgroundImage: 'repeating-linear-gradient(45deg, hsl(var(--muted)), hsl(var(--muted)) 3px, hsl(var(--background)) 3px, hsl(var(--background)) 6px)' }} />
         <span>Grupo protegido (n &lt; {MIN_GROUP})</span>
+        <span className="ml-3 inline-flex items-center gap-1"><span className="rounded bg-muted px-1.5 py-0.5 font-semibold text-foreground">n</span>= número de estudantes que responderam à escala naquele grupo (unidade × curso). Média calculada sobre essas respostas.</span>
       </div>
     </div>
   );
