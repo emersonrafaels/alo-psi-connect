@@ -53,11 +53,11 @@ const trendOf = (inst: Instrument, delta: number | null) => {
 const Sparkline = ({ values, labels, tone }: { values: (number | null)[]; labels: string[]; tone: 'good' | 'bad' | 'flat' }) => {
   const pts = values.map((v, i) => ({ v, i })).filter((p) => p.v != null) as { v: number; i: number }[];
   if (pts.length < 2) return <span className="text-xs text-muted-foreground">—</span>;
-  const W = 120, H = 44;
+  const W = 132, H = 56;
   const lo = Math.min(...pts.map((p) => p.v)), hi = Math.max(...pts.map((p) => p.v));
   const pad = (hi - lo || 1) * 0.25;
-  const y = (v: number) => 6 + (1 - (v - (lo - pad)) / (hi - lo + 2 * pad || 1)) * (H - 18);
-  const x = (i: number) => 8 + i * ((W - 30) / Math.max(values.length - 1, 1));
+  const y = (v: number) => 18 + (1 - (v - (lo - pad)) / (hi - lo + 2 * pad || 1)) * (H - 30);
+  const x = (i: number) => 16 + i * ((W - 32) / Math.max(values.length - 1, 1));
   const color = tone === 'good' ? 'hsl(var(--primary))' : tone === 'bad' ? 'hsl(var(--destructive))' : 'hsl(var(--muted-foreground))';
   const id = `sp-${Math.random().toString(36).slice(2, 8)}`;
   const line = pts.map((p) => `${x(p.i)},${y(p.v)}`).join(' ');
@@ -68,7 +68,7 @@ const Sparkline = ({ values, labels, tone }: { values: (number | null)[]; labels
       <polygon fill={`url(#${id})`} points={`${x(pts[0].i)},${H - 10} ${line} ${x(last.i)},${H - 10}`} />
       <polyline fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={line} />
       {pts.map((p) => <circle key={p.i} cx={x(p.i)} cy={y(p.v)} r={p === last ? 4.5 : 2.5} fill={p === last ? color : 'hsl(var(--background))'} stroke={color} strokeWidth="2" />)}
-      <text x={x(last.i) + 7} y={y(last.v) + 4} fontSize="10" fontWeight="700" fill={color}>{fmt(last.v)}</text>
+      {pts.map((p) => <text key={`v${p.i}`} x={x(p.i)} y={y(p.v) - 7} fontSize="9" fontWeight={p === last ? 700 : 600} textAnchor="middle" fill={p === last ? color : 'hsl(var(--foreground))'}>{fmt(p.v)}</text>)}
       {labels.map((l, i) => <text key={l} x={x(i)} y={H - 1} fontSize="8" textAnchor="middle" fill="hsl(var(--muted-foreground))">{l.slice(2)}</text>)}
     </svg>
   );
@@ -291,7 +291,17 @@ export default function InstitutionComparator() {
                         const t = trendOf(inst, delta);
                         const tone = t.label === 'Favorável' ? 'good' : t.label === 'Desfavorável' ? 'bad' : 'flat';
                         return (
-                          <tr key={inst.code} className="border-t transition-colors hover:bg-muted/40">
+                          <tr
+                            key={inst.code}
+                            className={`border-t transition-colors ${unavailable ? '' : 'cursor-pointer hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none'}`}
+                            {...(unavailable ? {} : {
+                              role: 'button',
+                              tabIndex: 0,
+                              'aria-label': `Ver ${inst.label} na Análise Integrada`,
+                              onClick: () => { setLineScale(inst.code); setView('integrated'); window.scrollTo(0, 0); },
+                              onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLineScale(inst.code); setView('integrated'); window.scrollTo(0, 0); } },
+                            })}
+                          >
                             <td className="py-4 pr-4">
                               <div className="font-semibold">{inst.label}</div>
                               <div className="text-xs text-muted-foreground">{inst.short} · n={now.n.toLocaleString('pt-BR')}{unavailable && ' · ainda não disponível'}</div>
