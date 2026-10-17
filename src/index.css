@@ -1395,3 +1395,22 @@ All colors MUST be HSL.
   height: 100dvh !important;
   margin: 0 !important;
 }
+
+/* Comparador institucional: tipografia mais viva e forte (escopada) */
+.comparator-page {
+  font-family: 'Plus Jakarta Sans', 'Figtree', system-ui, sans-serif;
+  color: hsl(var(--foreground));
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+}
+.comparator-page h1, .comparator-page h2, .comparator-page h3 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.comparator-page .font-semibold { font-weight: 700; }
+.comparator-page .font-bold { font-weight: 800; }
+.comparator-page .font-medium { font-weight: 600; }
+.comparator-page .tabular-nums { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.comparator-page .text-xl.font-bold, .comparator-page .text-2xl.font-bold, .comparator-page .text-3xl.font-bold { font-weight: 800; }
+.comparator-page .text-muted-foreground { color: hsl(var(--foreground) / 0.62); }
+.comparator-page .uppercase { letter-spacing: 0.08em; }
