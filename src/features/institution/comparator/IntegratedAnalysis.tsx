@@ -372,7 +372,7 @@ export function IntegratedAnalysis(props: {
                         <button key={String(p.u)} title={`${p.u ?? 'Toda a rede'} · ${fmt(p.v)}`}
                           onClick={() => { if (p.u) setUnit(p.u); if (mapBy === 'course') setCourse(rk === '__all' ? 'all' : rk); }}
                           className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${mx(p.v)}%` }}>
-                          <span className="absolute left-1/2 top-1 -translate-x-1/2 text-[10px] font-semibold" style={{ color: unitColor(p.i) }}>{fmt(p.v)}</span>
+                          <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-semibold" style={{ color: unitColor(p.i) }}>{fmt(p.v)}</span>
                           <span className="block h-4 w-4 rounded-full border-2 border-background shadow" style={{ background: mapBy === 'course' ? unitColor(p.i) : 'hsl(var(--primary))' }} />
                         </button>
                       ))}
