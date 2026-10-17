@@ -437,19 +437,42 @@ export function IntegratedAnalysis(props: {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-80">
+              <div className="h-96">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={evo} margin={{ top: 24, right: 24, left: 0, bottom: 0 }}>
+                  <LineChart data={evo} margin={{ top: 36, right: 32, left: 0, bottom: 28 }}>
                     <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
                     {current && <ReferenceArea x1={current} x2={current} fill="hsl(var(--primary))" fillOpacity={0.08} />}
-                    <XAxis dataKey="sem" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" padding={{ left: 40, right: 40 }} />
-                    <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" domain={chartTab === 'cov' ? [0, 100] : ['auto', 'auto']} />
+                    <XAxis dataKey="sem" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" padding={{ left: 48, right: 48 }} />
+                    <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" domain={chartTab === 'cov' ? [0, 100] : [(m: number) => m - (inst.max - inst.min) * 0.04, (m: number) => m + (inst.max - inst.min) * 0.04]} tickFormatter={(v: number) => fmt(v)} />
                     <RTooltip formatter={(v: any) => fmt(v)} contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
-                    <Line type="linear" dataKey={chartTab === 'cov' ? 'cov' : 'a'} name="A" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 6, fill: 'hsl(var(--background))', strokeWidth: 3 }}
-                      activeDot={{ r: 8, onClick: (_: any, p: any) => p?.payload?.sem && setSemester(p.payload.sem) }}>
-                      <LabelList dataKey={chartTab === 'cov' ? 'cov' : 'a'} position="top" fontSize={11} fontWeight={700} fill="hsl(var(--primary))" formatter={(v: any) => (chartTab === 'cov' ? `${v}%` : fmt(v))} />
-                    </Line>
-                    {chartTab === 'evo' && groups.map((g, i) => <Line key={i} type="linear" dataKey={`g${i}`} name={LETTERS[i]} stroke={gColor(i)} strokeWidth={2.5} dot={{ r: 5 }}><LabelList dataKey={`g${i}`} position="bottom" fontSize={10} fill={gColor(i)} formatter={(v: any) => fmt(v)} /></Line>)}
+                    {(() => {
+                      const keys = chartTab === 'cov' ? ['cov'] : ['a', ...groups.map((_, i) => `g${i}`)];
+                      const pill = (key: string, color: string, suffix = '') => (p: any) => {
+                        const { x, y, value, index } = p;
+                        if (value == null || x == null || y == null) return null;
+                        const row: any = (evo as any[])[index] ?? {};
+                        const vals = keys.map((k) => ({ k, v: row[k] })).filter((o) => o.v != null).sort((m, n) => n.v - m.v);
+                        const rank = vals.findIndex((o) => o.k === key);
+                        const above = rank === 0;
+                        const step = above ? 0 : rank - 1;
+                        const txt = `${fmt(value)}${suffix}`;
+                        const w = txt.length * 6.6 + 12;
+                        const cy = above ? y - 20 : y + 20 + step * 20;
+                        return (
+                          <g pointerEvents="none">
+                            <rect x={x - w / 2} y={cy - 9} width={w} height={18} rx={9} fill="hsl(var(--background))" stroke={color} strokeWidth={1.25} />
+                            <text x={x} y={cy + 4} textAnchor="middle" fontSize={11} fontWeight={800} fill={color}>{txt}</text>
+                          </g>
+                        );
+                      };
+                      return [
+                        <Line key="a" type="linear" dataKey={chartTab === 'cov' ? 'cov' : 'a'} name="A" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 6, fill: 'hsl(var(--background))', strokeWidth: 3 }} isAnimationActive={false}
+                          activeDot={{ r: 8, onClick: (_: any, p: any) => p?.payload?.sem && setSemester(p.payload.sem) }}>
+                          <LabelList dataKey={chartTab === 'cov' ? 'cov' : 'a'} content={pill(chartTab === 'cov' ? 'cov' : 'a', 'hsl(var(--primary))', chartTab === 'cov' ? '%' : '')} />
+                        </Line>,
+                        ...(chartTab === 'evo' ? groups.map((g, i) => <Line key={i} type="linear" dataKey={`g${i}`} name={LETTERS[i]} stroke={gColor(i)} strokeWidth={2.5} dot={{ r: 5, fill: 'hsl(var(--background))', strokeWidth: 2.5 }} isAnimationActive={false}><LabelList dataKey={`g${i}`} content={pill(`g${i}`, gColor(i))} /></Line>) : []),
+                      ];
+                    })()}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
