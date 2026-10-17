@@ -96,6 +96,8 @@ export function IntegratedAnalysis(props: {
   if (network != null) allVals.push(network);
   const lo = allVals.length ? Math.floor(Math.min(...allVals) - 3) : inst.min, hi = allVals.length ? Math.ceil(Math.max(...allVals) + 3) : inst.max;
   const mx = (v: number) => { const p = ((v - lo) / (hi - lo || 1)) * 100; return inst.higherIsBetter ? p : 100 - p; };
+  const mapTicks = Array.from({ length: 5 }, (_, i) => lo + ((hi - lo) / 4) * i);
+  const unitTag = dotUnits.map((u) => u.split(/\s+/).map((w) => w[0]?.toUpperCase() ?? '').join('')).join(' – ');
   const unitColor = (i: number) => (i === 0 ? 'hsl(var(--primary))' : `hsl(var(--chart-${(i % 4) + 2}))`);
 
   const evo = semesters.map((s) => ({ sem: s, a: sA(inst.code, s).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, stat(inst.code, s, gFilter(g)).avg])), rede: stat(inst.code, s).avg, cov: popA ? Math.round((sA(inst.code, s).n / popA) * 100) : 0 }));
@@ -351,6 +353,13 @@ export function IntegratedAnalysis(props: {
                 ))}
               </div>
             </div>
+            <div className="grid grid-cols-[140px_1fr_60px] items-end gap-3 px-2 text-[11px] tabular-nums text-muted-foreground">
+              <span />
+              <div className="relative h-4">
+                {mapTicks.map((t) => <span key={t} className="absolute -translate-x-1/2" style={{ left: `${mx(t)}%` }}>{Math.round(t)}</span>)}
+              </div>
+              <span className="whitespace-nowrap text-right">{unitTag}</span>
+            </div>
             <div className="space-y-1">
               {[...rowsMap, '__all'].map((rk) => {
                 const pts = (mapBy === 'course' ? dotUnits : [rk === '__all' ? null : rk]).map((u, i) => {
@@ -366,6 +375,7 @@ export function IntegratedAnalysis(props: {
                       {rk === '__all' ? (mapBy === 'course' ? 'Todos os cursos' : 'Toda a rede') : rk} ›</button>
                     <div className="relative h-14">
                       <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
+                      {mapTicks.map((t) => <div key={t} className="absolute top-0 h-14 w-px border-l border-dashed border-border/70" style={{ left: `${mx(t)}%` }} />)}
                       {network != null && <div className="absolute top-0 h-14 w-px bg-foreground/30" style={{ left: `${mx(network)}%` }} />}
                       {vals.length > 1 && <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-muted-foreground/30" style={{ left: `${Math.min(...vals.map(mx))}%`, width: `${Math.abs(mx(Math.max(...vals)) - mx(Math.min(...vals)))}%` }} />}
                       {pts.map((p) => p.v != null && (
