@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Users, Activity, NotebookPen, ClipboardCheck, Info, BarChart3, LayoutDashboard, GitCompare, MapPin, ArrowUpRight, ArrowDownRight, Minus, PanelLeft } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend } from 'recharts';
+import { IntegratedAnalysis } from '@/features/institution/comparator/IntegratedAnalysis';
 import { supabase } from '@/integrations/supabase/client';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
@@ -382,114 +383,9 @@ export default function InstitutionComparator() {
               </div>
             </div>
         ) : (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Evolução comparada</CardTitle>
-                  <CardDescription>Escolha dois recortes e um instrumento para ver a trajetória nas coletas.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <RecSelect value={a} onChange={setCompareA} options={recortes} label={recLabel} />
-                    <span className="text-muted-foreground">vs</span>
-                    <RecSelect value={b} onChange={setCompareB} options={recortes} label={recLabel} />
-                    <div className="ml-auto flex flex-wrap gap-1">
-                      {INSTRUMENTS.filter((i) => !('unavailable' in i)).map((i) => (
-                        <button key={i.code} onClick={() => setLineScale(i.code)}
-                          className={`rounded-full px-2.5 py-1 text-xs ${lineScale === i.code ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>{i.short}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={semesters.map((s) => ({ sem: s, a: stat(lineScale, s, recFilter(a)).avg, b: stat(lineScale, s, recFilter(b)).avg, rede: stat(lineScale, s).avg }))}>
-                        <defs>
-                          <linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} /><stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} /></linearGradient>
-                          <linearGradient id="gb" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="hsl(var(--chart-2))" stopOpacity={0.35} /><stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0} /></linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                        <XAxis dataKey="sem" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                        <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" domain={['auto', 'auto']} />
-                        <RTooltip formatter={(v: any) => fmt(v)} contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
-                        <Legend />
-                        <Area type="monotone" dataKey="a" name={a ? recLabel(a) : 'A'} stroke="hsl(var(--primary))" strokeWidth={3} fill="url(#ga)" dot={{ r: 5 }} activeDot={{ r: 7 }} />
-                        <Area type="monotone" dataKey="b" name={b ? recLabel(b) : 'B'} stroke="hsl(var(--chart-2))" strokeWidth={3} fill="url(#gb)" dot={{ r: 5 }} activeDot={{ r: 7 }} />
-                        <Area type="monotone" dataKey="rede" name="Rede" stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth={2} fill="none" dot={false} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader><CardTitle>Todos os instrumentos</CardTitle><CardDescription>{a ? recLabel(a) : '—'} vs {b ? recLabel(b) : '—'} em cada coleta.</CardDescription></CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="text-left text-xs text-muted-foreground">
-                      <tr><th className="py-2">Instrumento</th>{semesters.map((s) => <th key={s} colSpan={2}>{s}</th>)}<th>Diferença atual</th></tr>
-                      <tr><th />{semesters.map((s) => [<th key={s + 'a'} className="text-primary">{a ? recLabel(a) : '—'}</th>, <th key={s + 'b'}>{b ? recLabel(b) : '—'}</th>])}<th /></tr>
-                    </thead>
-                    <tbody>
-                      {INSTRUMENTS.map((inst) => {
-                        const un = 'unavailable' in inst;
-                        const get = (k: string | null, s: string) => (un ? { n: 0, avg: 0 } : stat(inst.code, s, recFilter(k)));
-                        const ca = current ? get(a, current) : null, cb = current ? get(b, current) : null;
-                        const diff = ca?.avg != null && cb?.avg != null ? ca.avg - cb.avg : null;
-                        const span = inst.max - inst.min;
-                        const t = trendOf(inst, diff);
-                        return (
-                          <tr key={inst.code} className="border-t">
-                            <td className="py-3 font-medium">{inst.short}</td>
-                            {semesters.map((s) => {
-                              const x = get(a, s), y = get(b, s);
-                              return [
-                                <td key={s + 'a'} className="font-semibold">{fmt(x.avg)}<span className="block text-[10px] font-normal text-muted-foreground">n={x.n}</span></td>,
-                                <td key={s + 'b'}>{fmt(y.avg)}<span className="block text-[10px] text-muted-foreground">n={y.n}</span></td>,
-                              ];
-                            })}
-                            <td className="w-44">
-                              {diff == null || un ? '—' : (
-                                <div className="flex items-center gap-2">
-                                  <div className="relative h-2 w-24 rounded-full bg-muted">
-                                    <div className="absolute top-0 h-2 w-px bg-foreground/40" style={{ left: '50%' }} />
-                                    <div className={`absolute top-0 h-2 rounded-full ${t.label === 'Desfavorável' ? 'bg-destructive' : t.label === 'Favorável' ? 'bg-primary' : 'bg-muted-foreground'}`}
-                                      style={{ left: diff >= 0 ? '50%' : `${50 - Math.min(50, (Math.abs(diff) / span) * 400)}%`, width: `${Math.min(50, (Math.abs(diff) / span) * 400)}%` }} />
-                                  </div>
-                                  <span className="text-xs font-semibold tabular-nums">{diff >= 0 ? '+' : '−'}{fmt(Math.abs(diff))}</span>
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader><CardTitle>Escalas × Diário emocional por unidade</CardTitle><CardDescription>Cruza bem-estar (WHO-5), estresse (PSS-10) e participação/humor no Diário.</CardDescription></CardHeader>
-                <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {units.map((u) => {
-                    const di = (d?.diary ?? []).find((r) => r.sem === current && r.unit === u);
-                    const f = (r: ScaleRow) => r.unit === u;
-                    const w5 = stat('WHO5', current, f).avg, ps = stat('PSS10', current, f).avg;
-                    return (
-                      <div key={u} className="rounded-xl border bg-card p-4 space-y-3">
-                        <p className="font-semibold">{u}</p>
-                        {[['WHO-5', w5, 100, true], ['PSS-10', ps, 40, false], ['Humor no Diário', di ? di.avg_mood : null, 5, true]].map(([l, v, max, good]) => (
-                          <div key={l as string}>
-                            <div className="flex justify-between text-xs"><span className="text-muted-foreground">{l}</span><span className="font-semibold">{fmt(v as number | null, l === 'Humor no Diário' ? 2 : 1)}</span></div>
-                            <div className="h-2 rounded-full bg-muted"><div className={`h-2 rounded-full ${good ? 'bg-primary' : 'bg-destructive/70'}`} style={{ width: `${v == null ? 0 : ((v as number) / (max as number)) * 100}%` }} /></div>
-                          </div>
-                        ))}
-                        <p className="text-xs text-muted-foreground">{di ? `${di.participants} participantes no Diário` : 'Diário: grupo protegido'}</p>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            </div>
+            <IntegratedAnalysis instruments={INSTRUMENTS} semesters={semesters} current={current} setSemester={setSemester}
+              units={units} courses={courses} population={d?.population ?? 0} unitsPopulation={d?.units_population ?? {}}
+              scale={lineScale} setScale={setLineScale} stat={stat} diary={d?.diary ?? []} />
         )}
           </main>
         </div>
