@@ -361,18 +361,18 @@ export function IntegratedAnalysis(props: {
                 const gap = vals.length > 1 ? Math.max(...vals) - Math.min(...vals) : null;
                 const isSel = (mapBy === 'course' ? course === rk || (rk === '__all' && course === 'all') : unit === rk || (rk === '__all' && unit === 'all'));
                 return (
-                  <div key={rk} className={`grid grid-cols-[140px_1fr_60px] items-center gap-3 rounded-lg px-2 py-2 ${isSel ? 'bg-primary/5' : ''}`}>
+                  <div key={rk} className={`grid grid-cols-[140px_1fr_60px] items-center gap-3 rounded-lg px-2 py-3 ${isSel ? 'bg-primary/5' : ''}`}>
                     <button className={`text-left text-sm ${rk === '__all' ? 'font-bold' : ''} hover:text-primary`} onClick={() => (mapBy === 'course' ? setCourse(rk === '__all' ? 'all' : rk) : setUnit(rk === '__all' ? 'all' : rk))}>
                       {rk === '__all' ? (mapBy === 'course' ? 'Todos os cursos' : 'Toda a rede') : rk} ›</button>
-                    <div className="relative h-8">
+                    <div className="relative h-14">
                       <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
-                      {network != null && <div className="absolute top-0 h-8 w-px bg-foreground/30" style={{ left: `${mx(network)}%` }} />}
+                      {network != null && <div className="absolute top-0 h-14 w-px bg-foreground/30" style={{ left: `${mx(network)}%` }} />}
                       {vals.length > 1 && <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-muted-foreground/30" style={{ left: `${Math.min(...vals.map(mx))}%`, width: `${Math.abs(mx(Math.max(...vals)) - mx(Math.min(...vals)))}%` }} />}
                       {pts.map((p) => p.v != null && (
                         <button key={String(p.u)} title={`${p.u ?? 'Toda a rede'} · ${fmt(p.v)}`}
                           onClick={() => { if (p.u) setUnit(p.u); if (mapBy === 'course') setCourse(rk === '__all' ? 'all' : rk); }}
                           className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${mx(p.v)}%` }}>
-                          <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold" style={{ color: unitColor(p.i) }}>{fmt(p.v)}</span>
+                          <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-semibold" style={{ color: unitColor(p.i) }}>{fmt(p.v)}</span>
                           <span className="block h-4 w-4 rounded-full border-2 border-background shadow" style={{ background: mapBy === 'course' ? unitColor(p.i) : 'hsl(var(--primary))' }} />
                         </button>
                       ))}
