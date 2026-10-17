@@ -409,10 +409,10 @@ export function IntegratedAnalysis(props: {
                         <div className="relative h-14">
                           <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
                           {dTicks.map((t) => <div key={t} className="absolute top-0 h-14 w-px border-l border-dashed border-border/70" style={{ left: `${dDir(t)}%` }} />)}
-                          {dNet != null && <div className="absolute top-0 h-14 w-px bg-foreground/30" style={{ left: `${dDir(dNet)}%` }} />}
+                          {dNet != null && <div className="absolute top-0 h-14 w-px bg-foreground/15" style={{ left: `${dDir(dNet)}%` }} />}
                           {v != null && (
                             <button title={`${u} · ${fmt(v, p.d)}`} onClick={() => setUnit(u)} className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${dDir(v)}%` }}>
-                              <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-primary">{fmt(v, p.d)}</span>
+                              <span className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-primary/40 bg-background px-1.5 py-px text-[10px] font-semibold text-primary shadow-sm">{fmt(v, p.d)}</span>
                               <span className="block h-4 w-4 rounded-full border-2 border-background shadow" style={{ background: 'hsl(var(--primary))' }} />
                             </button>
                           )}
@@ -591,13 +591,13 @@ export function IntegratedAnalysis(props: {
                     <div className="relative h-14">
                       <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
                       {mapTicks.map((t) => <div key={t} className="absolute top-0 h-14 w-px border-l border-dashed border-border/70" style={{ left: `${mx(t)}%` }} />)}
-                      {network != null && <div className="absolute top-0 h-14 w-px bg-foreground/30" style={{ left: `${mx(network)}%` }} />}
+                      {network != null && <div className="absolute top-0 h-14 w-px bg-foreground/15" style={{ left: `${mx(network)}%` }} />}
                       {vals.length > 1 && <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-muted-foreground/30" style={{ left: `${Math.min(...vals.map(mx))}%`, width: `${Math.abs(mx(Math.max(...vals)) - mx(Math.min(...vals)))}%` }} />}
                       {pts.map((p) => p.v != null && (
                         <button key={String(p.u)} title={`${p.u ?? 'Toda a rede'} · ${fmt(p.v)}`}
                           onClick={() => { if (p.u) setUnit(p.u); if (mapBy === 'course') setCourse(rk === '__all' ? 'all' : rk); }}
                           className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${mx(p.v)}%` }}>
-                          <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-semibold" style={{ color: unitColor(p.i) }}>{fmt(p.v)}</span>
+                          <span className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border bg-background px-1.5 py-px text-[10px] font-semibold shadow-sm" style={{ color: unitColor(p.i), borderColor: unitColor(p.i) }}>{fmt(p.v)}</span>
                           <span className="block h-4 w-4 rounded-full border-2 border-background shadow" style={{ background: mapBy === 'course' ? unitColor(p.i) : 'hsl(var(--primary))' }} />
                         </button>
                       ))}
