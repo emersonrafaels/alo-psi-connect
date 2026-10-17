@@ -18,7 +18,6 @@ const Hint = ({ t }: { t: string }) => (
   <Tooltip><TooltipTrigger asChild><Info className="inline h-3.5 w-3.5 cursor-help text-muted-foreground" /></TooltipTrigger><TooltipContent className="max-w-xs text-xs">{t}</TooltipContent></Tooltip>
 );
 
-type CompareMode = 'none' | 'unit' | 'course' | 'custom';
 
 export function IntegratedAnalysis(props: {
   instruments: readonly Inst[]; semesters: string[]; current: string | null; setSemester: (s: string) => void;
@@ -30,8 +29,7 @@ export function IntegratedAnalysis(props: {
   const { instruments, semesters, current, setSemester, units, courses, stat, scale, setScale } = props;
   const [unit, setUnit] = useState('all');
   const [course, setCourse] = useState('all');
-  const [mode, setMode] = useState<CompareMode>('none');
-  const [customB, setCustomB] = useState<string>('');
+  const [groups, setGroups] = useState<{ unit: string; course: string }[]>([]);
   const [tab, setTab] = useState<'scales' | 'diary' | 'part'>('scales');
   const [mapBy, setMapBy] = useState<'course' | 'unit'>('course');
   const [chartTab, setChartTab] = useState<'evo' | 'dist' | 'cov'>('evo');
@@ -46,17 +44,21 @@ export function IntegratedAnalysis(props: {
   const labelA = `${course === 'all' ? 'Todos os cursos' : course} · ${unit === 'all' ? 'Toda a rede' : unit}`;
 
   // Comparison group B
-  let fB: Filter | null = null, labelB = '';
-  if (mode === 'unit') {
-    const other = units.find((u) => u !== unit) ?? null;
-    if (other) { fB = (r) => r.unit === other && (course === 'all' || r.course === course); labelB = `${course === 'all' ? 'Todos os cursos' : course} · ${other}`; }
-  } else if (mode === 'course') {
-    const other = courses.find((c) => c !== course) ?? null;
-    if (other) { fB = (r) => r.course === other && (unit === 'all' || r.unit === unit); labelB = `${other} · ${unit === 'all' ? 'Toda a rede' : unit}`; }
-  } else if (mode === 'custom' && customB) {
-    const [k, v] = customB.split(':');
-    fB = k === 'unit' ? (r) => r.unit === v : (r) => r.course === v; labelB = v;
-  }
+  const LETTERS = ['B', 'C', 'D', 'E', 'F'];
+  const gColor = (i: number) => `hsl(var(--chart-${(i % 4) + 2}))`;
+  const gLabel = (g: { unit: string; course: string }) => `${g.course === 'all' ? 'Todos os cursos' : g.course} · ${g.unit === 'all' ? 'Toda a rede' : g.unit}`;
+  const gFilter = (g: { unit: string; course: string }): Filter => (r) => (g.unit === 'all' || r.unit === g.unit) && (g.course === 'all' || r.course === g.course);
+  const gPop = (g: { unit: string }) => (g.unit === 'all' ? props.population : props.unitsPopulation[g.unit] ?? 0);
+  const addGroup = (kind: 'unit' | 'course' | 'custom') => {
+    if (groups.length >= LETTERS.length) return;
+    const used = (k: 'unit' | 'course', v: string) => [unit, ...groups.map((g) => g.unit)].includes(v) && k === 'unit' || [course, ...groups.map((g) => g.course)].includes(v) && k === 'course';
+    if (kind === 'unit') setGroups([...groups, { unit: units.find((u) => !used('unit', u)) ?? units[0] ?? 'all', course }]);
+    else if (kind === 'course') setGroups([...groups, { unit, course: courses.find((c) => !used('course', c)) ?? courses[0] ?? 'all' }]);
+    else setGroups([...groups, { unit: 'all', course: 'all' }]);
+  };
+  const updGroup = (i: number, patch: Partial<{ unit: string; course: string }>) => setGroups(groups.map((g, j) => (j === i ? { ...g, ...patch } : g)));
+  const fB: Filter | null = groups[0] ? gFilter(groups[0]) : null;
+  const labelB = groups[0] ? gLabel(groups[0]) : '';
 
   const sA = (code: string, s: string | null) => (unavailable(instruments.find((i) => i.code === code)!) ? { n: 0, avg: null } : stat(code, s, fA));
   const a = sA(inst.code, current), aPrev = sA(inst.code, prev), aFirst = sA(inst.code, first);
@@ -96,7 +98,7 @@ export function IntegratedAnalysis(props: {
   const mx = (v: number) => { const p = ((v - lo) / (hi - lo || 1)) * 100; return inst.higherIsBetter ? p : 100 - p; };
   const unitColor = (i: number) => (i === 0 ? 'hsl(var(--primary))' : `hsl(var(--chart-${(i % 4) + 2}))`);
 
-  const evo = semesters.map((s) => ({ sem: s, a: sA(inst.code, s).avg, b: fB ? stat(inst.code, s, fB).avg : null, rede: stat(inst.code, s).avg, cov: popA ? Math.round((sA(inst.code, s).n / popA) * 100) : 0 }));
+  const evo = semesters.map((s) => ({ sem: s, a: sA(inst.code, s).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, stat(inst.code, s, gFilter(g)).avg])), rede: stat(inst.code, s).avg, cov: popA ? Math.round((sA(inst.code, s).n / popA) * 100) : 0 }));
 
   return (
     <div className="space-y-6">
@@ -111,21 +113,33 @@ export function IntegratedAnalysis(props: {
             <Field label="Turno"><Select disabled value="all"><SelectTrigger className="w-40" title="Em breve"><SelectValue placeholder="Todos os turnos" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os turnos</SelectItem></SelectContent></Select></Field>
             <Field label="Turma"><Select disabled value="all"><SelectTrigger className="w-40" title="Em breve"><SelectValue placeholder="Todas as turmas" /></SelectTrigger><SelectContent><SelectItem value="all">Todas as turmas</SelectItem></SelectContent></Select></Field>
             <div className="ml-auto text-right"><p className="text-sm font-bold">{popA.toLocaleString('pt-BR')} estudantes</p><p className="text-[11px] text-muted-foreground">{a.n.toLocaleString('pt-BR')} respondentes · {current ?? '—'}</p></div>
-            <Button variant="outline" size="sm" onClick={() => { setUnit('all'); setCourse('all'); setMode('none'); }}>Limpar</Button>
+            <Button variant="outline" size="sm" onClick={() => { setUnit('all'); setCourse('all'); setGroups([]); }}>Limpar</Button>
           </div>
           <div className="flex flex-wrap items-center gap-2 border-t pt-3">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-chart-2 text-xs font-bold text-primary-foreground">B</span>
             <span className="mr-2 text-sm font-semibold">Comparar com</span>
-            {([['none', 'Sem comparação'], ['unit', 'Outra unidade'], ['course', 'Outro curso'], ['shift', 'Outro turno'], ['class', 'Outra turma'], ['custom', 'Personalizado']] as const).map(([k, l]) => {
-              const dis = k === 'shift' || k === 'class';
-              return <button key={k} disabled={dis} title={dis ? 'Em breve' : undefined} onClick={() => setMode(k as CompareMode)}
-                className={`rounded-full border px-3 py-1 text-xs transition ${mode === k ? 'border-primary bg-primary/10 font-semibold text-primary' : 'text-muted-foreground hover:text-foreground'} disabled:cursor-not-allowed disabled:opacity-40`}>{l}</button>;
+            <button onClick={() => setGroups([])} className={`rounded-full border px-3 py-1 text-xs ${groups.length === 0 ? 'border-primary bg-primary/10 font-semibold text-primary' : 'text-muted-foreground hover:text-foreground'}`}>Sem comparação</button>
+            {([['unit', 'Outra unidade'], ['course', 'Outro curso'], ['shift', 'Outro turno'], ['class', 'Outra turma'], ['custom', 'Personalizado']] as const).map(([k, l]) => {
+              const dis = k === 'shift' || k === 'class' || groups.length >= LETTERS.length;
+              return <button key={k} disabled={dis} title={k === 'shift' || k === 'class' ? 'Em breve' : undefined} onClick={() => addGroup(k as 'unit' | 'course' | 'custom')}
+                className="rounded-full border px-3 py-1 text-xs text-muted-foreground transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40">+ {l}</button>;
             })}
-            {mode === 'custom' && (
-              <Select value={customB} onValueChange={setCustomB}><SelectTrigger className="h-8 w-52"><SelectValue placeholder="Escolha o grupo B" /></SelectTrigger>
-                <SelectContent>{units.map((u) => <SelectItem key={u} value={`unit:${u}`}>Unidade · {u}</SelectItem>)}{courses.map((c) => <SelectItem key={c} value={`course:${c}`}>Curso · {c}</SelectItem>)}</SelectContent></Select>
-            )}
           </div>
+          {groups.map((g, i) => {
+            const pg = gPop(g), ng = stat(inst.code, current, gFilter(g)).n;
+            return (
+              <div key={i} className="flex flex-wrap items-end gap-3 rounded-xl border p-3" style={{ background: `${gColor(i).replace(')', ' / .07)')}`, borderColor: gColor(i).replace(')', ' / .35)') }}>
+                <div className="flex items-center gap-2 pr-2"><span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-primary-foreground" style={{ background: gColor(i) }}>{LETTERS[i]}</span><div><p className="text-sm font-semibold">Grupo comparado</p><p className="text-[11px] text-muted-foreground">ajuste qualquer nível</p></div></div>
+                <Field label="Unidade"><Select value={g.unit} onValueChange={(v) => updGroup(i, { unit: v })}><SelectTrigger className="w-44 bg-background"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Toda a rede</SelectItem>{units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent></Select></Field>
+                <Field label="Curso"><Select value={g.course} onValueChange={(v) => updGroup(i, { course: v })}><SelectTrigger className="w-44 bg-background"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os cursos</SelectItem>{courses.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></Field>
+                <Field label="Turno"><Select disabled value="all"><SelectTrigger className="w-40 bg-background" title="Em breve"><SelectValue placeholder="Todos os turnos" /></SelectTrigger><SelectContent><SelectItem value="all">Todos os turnos</SelectItem></SelectContent></Select></Field>
+                <Field label="Turma"><Select disabled value="all"><SelectTrigger className="w-40 bg-background" title="Em breve"><SelectValue placeholder="Todas as turmas" /></SelectTrigger><SelectContent><SelectItem value="all">Todas as turmas</SelectItem></SelectContent></Select></Field>
+                <div className="ml-auto text-right"><p className="text-sm font-bold" style={{ color: gColor(i) }}>{pg.toLocaleString('pt-BR')} estudantes</p><p className="text-[11px] text-muted-foreground">{ng.toLocaleString('pt-BR')} respondentes · {current}</p></div>
+                <Button variant="ghost" size="sm" onClick={() => setGroups(groups.filter((_, j) => j !== i))} aria-label={`Remover grupo ${LETTERS[i]}`}>Remover</Button>
+              </div>
+            );
+          })}
+          {groups.length > 0 && groups.length < LETTERS.length && <Button variant="outline" size="sm" onClick={() => addGroup('custom')}>+ Adicionar comparação</Button>}
         </CardContent></Card>
         <Card><CardContent className="flex flex-wrap items-center gap-3 p-3">
           <CalendarDays className="h-4 w-4 text-primary" /><div><p className="text-sm font-semibold">Coleta semestral</p><p className="text-[11px] text-muted-foreground">define os números abaixo</p></div>
@@ -246,6 +260,7 @@ export function IntegratedAnalysis(props: {
               <div className="h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--destructive) / .35), hsl(var(--muted)), hsl(var(--primary) / .45))' }} />
               {a.avg != null && <Marker left={dirPos(a.avg)} label={`A · ${fmt(a.avg)}`} top cls="bg-primary" />}
               {ref.avg != null && <Marker left={dirPos(ref.avg)} label={`${fB ? 'B' : 'Rede'} · ${fmt(ref.avg)}`} cls="bg-muted-foreground" />}
+              {groups.slice(1).map((g, i) => { const v = stat(inst.code, current, gFilter(g)).avg; return v != null && <Marker key={i} left={dirPos(v)} label={`${LETTERS[i + 1]} · ${fmt(v)}`} cls="bg-muted-foreground" />; })}
               <div className="mt-6 flex justify-between text-[11px] font-semibold"><span className="text-destructive">← Pior · {inst.higherIsBetter ? inst.min : inst.max}</span><span className="text-primary">{inst.higherIsBetter ? inst.max : inst.min} · Melhor →</span></div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
@@ -353,8 +368,8 @@ export function IntegratedAnalysis(props: {
               <Button variant="outline" size="sm" onClick={() => setAsTable((x) => !x)}>{asTable ? 'Ver gráfico' : 'Ver em tabela'}</Button>
             </div>
             {asTable ? (
-              <table className="w-full text-sm"><thead className="text-left text-xs text-muted-foreground"><tr><th className="py-2">Coleta</th><th>A</th>{fB && <th>B</th>}<th>Rede</th><th>Cobertura A</th></tr></thead>
-                <tbody>{evo.map((e) => <tr key={e.sem} className="border-t"><td className="py-2">{e.sem}</td><td className="font-semibold">{fmt(e.a)}</td>{fB && <td>{fmt(e.b)}</td>}<td>{fmt(e.rede)}</td><td>{e.cov}%</td></tr>)}</tbody></table>
+              <table className="w-full text-sm"><thead className="text-left text-xs text-muted-foreground"><tr><th className="py-2">Coleta</th><th>A</th>{groups.map((_, i) => <th key={i}>{LETTERS[i]}</th>)}<th>Rede</th><th>Cobertura A</th></tr></thead>
+                <tbody>{evo.map((e) => <tr key={e.sem} className="border-t"><td className="py-2">{e.sem}</td><td className="font-semibold">{fmt(e.a)}</td>{groups.map((_, i) => <td key={i}>{fmt((e as any)[`g${i}`])}</td>)}<td>{fmt(e.rede)}</td><td>{e.cov}%</td></tr>)}</tbody></table>
             ) : chartTab === 'dist' ? (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -378,12 +393,12 @@ export function IntegratedAnalysis(props: {
                       activeDot={{ r: 8, onClick: (_: any, p: any) => p?.payload?.sem && setSemester(p.payload.sem) }}>
                       <LabelList dataKey={chartTab === 'cov' ? 'cov' : 'a'} position="top" fontSize={11} fontWeight={700} fill="hsl(var(--primary))" formatter={(v: any) => (chartTab === 'cov' ? `${v}%` : fmt(v))} />
                     </Line>
-                    {chartTab === 'evo' && fB && <Line type="linear" dataKey="b" name="B" stroke="hsl(var(--chart-2))" strokeWidth={2.5} dot={{ r: 5 }} />}
+                    {chartTab === 'evo' && groups.map((g, i) => <Line key={i} type="linear" dataKey={`g${i}`} name={LETTERS[i]} stroke={gColor(i)} strokeWidth={2.5} dot={{ r: 5 }}><LabelList dataKey={`g${i}`} position="bottom" fontSize={10} fill={gColor(i)} formatter={(v: any) => fmt(v)} /></Line>)}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             )}
-            <p className="text-xs text-muted-foreground"><span className="font-semibold text-primary">— A · {labelA}</span>{fB && <> · <span className="font-semibold">— B · {labelB}</span></>} · Clique em um ponto para sincronizar o período.</p>
+            <p className="text-xs text-muted-foreground"><span className="font-semibold text-primary">— A · {labelA}</span>{groups.map((g, i) => <span key={i}> · <span className="font-semibold" style={{ color: gColor(i) }}>— {LETTERS[i]} · {gLabel(g)}</span></span>)} · Clique em um ponto para sincronizar o período.</p>
           </CardContent></Card>
           <p className="flex items-center gap-2 text-[11px] text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" />Grupos com menos de 10 respondentes não são exibidos. Diferenças são descritivas e não indicam causa. Escalas diferentes não são comparáveis entre si.</p>
         </section>
