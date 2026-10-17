@@ -1,19 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Users, Activity, NotebookPen, ClipboardCheck, Info } from 'lucide-react';
+import { ArrowLeft, Users, Activity, NotebookPen, ClipboardCheck, Info, BarChart3, LayoutDashboard, GitCompare, MapPin, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Header from '@/components/ui/header';
-import Footer from '@/components/ui/footer';
 
 type ScaleRow = { sem: string; scale_code: string; unit: string; course: string; n: number; avg: number };
 type DiaryRow = { sem: string; unit: string; participants: number; avg_mood: number };
@@ -52,32 +51,58 @@ const trendOf = (inst: Instrument, delta: number | null) => {
     : { label: 'Desfavorável', cls: 'bg-destructive/10 text-destructive' };
 };
 
-const Sparkline = ({ values }: { values: (number | null)[] }) => {
+const Sparkline = ({ values, labels, tone }: { values: (number | null)[]; labels: string[]; tone: 'good' | 'bad' | 'flat' }) => {
   const pts = values.map((v, i) => ({ v, i })).filter((p) => p.v != null) as { v: number; i: number }[];
   if (pts.length < 2) return <span className="text-xs text-muted-foreground">—</span>;
+  const W = 120, H = 44;
   const lo = Math.min(...pts.map((p) => p.v)), hi = Math.max(...pts.map((p) => p.v));
-  const y = (v: number) => 20 - ((v - lo) / (hi - lo || 1)) * 16;
-  const x = (i: number) => 4 + i * (52 / Math.max(values.length - 1, 1));
+  const pad = (hi - lo || 1) * 0.25;
+  const y = (v: number) => 6 + (1 - (v - (lo - pad)) / (hi - lo + 2 * pad || 1)) * (H - 18);
+  const x = (i: number) => 8 + i * ((W - 30) / Math.max(values.length - 1, 1));
+  const color = tone === 'good' ? 'hsl(var(--primary))' : tone === 'bad' ? 'hsl(var(--destructive))' : 'hsl(var(--muted-foreground))';
+  const id = `sp-${Math.random().toString(36).slice(2, 8)}`;
+  const line = pts.map((p) => `${x(p.i)},${y(p.v)}`).join(' ');
+  const last = pts[pts.length - 1];
   return (
-    <svg width="60" height="24" className="text-primary" aria-hidden>
-      <polyline fill="none" stroke="currentColor" strokeWidth="1.5" points={pts.map((p) => `${x(p.i)},${y(p.v)}`).join(' ')} />
-      {pts.map((p) => <circle key={p.i} cx={x(p.i)} cy={y(p.v)} r="2" fill="currentColor" />)}
+    <svg width={W} height={H} aria-hidden>
+      <defs><linearGradient id={id} x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.35" /><stop offset="100%" stopColor={color} stopOpacity="0" /></linearGradient></defs>
+      <polygon fill={`url(#${id})`} points={`${x(pts[0].i)},${H - 10} ${line} ${x(last.i)},${H - 10}`} />
+      <polyline fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={line} />
+      {pts.map((p) => <circle key={p.i} cx={x(p.i)} cy={y(p.v)} r={p === last ? 4.5 : 2.5} fill={p === last ? color : 'hsl(var(--background))'} stroke={color} strokeWidth="2" />)}
+      <text x={x(last.i) + 7} y={y(last.v) + 4} fontSize="10" fontWeight="700" fill={color}>{fmt(last.v)}</text>
+      {labels.map((l, i) => <text key={l} x={x(i)} y={H - 1} fontSize="8" textAnchor="middle" fill="hsl(var(--muted-foreground))">{l.slice(2)}</text>)}
     </svg>
   );
 };
 
 const ScalePosition = ({ inst, value }: { inst: Instrument; value: number | null }) => {
-  const pct = value == null ? 0 : ((value - inst.min) / (inst.max - inst.min)) * 100;
+  const pct = value == null ? 0 : Math.max(0, Math.min(100, ((value - inst.min) / (inst.max - inst.min)) * 100));
+  const grad = inst.higherIsBetter
+    ? 'linear-gradient(90deg, hsl(var(--destructive) / .55), hsl(var(--chart-4, var(--accent)) / .5), hsl(var(--primary) / .75))'
+    : 'linear-gradient(90deg, hsl(var(--primary) / .75), hsl(var(--chart-4, var(--accent)) / .5), hsl(var(--destructive) / .55))';
   return (
-    <div className="w-40">
-      <div className="relative h-1.5 rounded-full bg-muted">
-        {value != null && <div className="absolute -top-1 h-3.5 w-1 rounded bg-primary" style={{ left: `calc(${pct}% - 2px)` }} />}
+    <div className="w-48">
+      <div className="relative h-2.5 rounded-full" style={{ background: grad }}>
+        {value != null && (
+          <div className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-background bg-foreground shadow-md" style={{ left: `${pct}%` }} />
+        )}
       </div>
-      <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
-        <span>{inst.min}</span>
-        <span>{inst.higherIsBetter ? 'menor bem-estar · maior' : 'menos sintomas · mais'}</span>
-        <span>{inst.max}</span>
+      <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
+        <span>{inst.min} · {inst.higherIsBetter ? 'menor bem-estar' : 'menos sintomas'}</span>
+        <span>{inst.higherIsBetter ? 'maior' : 'mais'} · {inst.max}</span>
       </div>
+    </div>
+  );
+};
+
+const TrendPill = ({ inst, delta, unavailable }: { inst: Instrument; delta: number | null; unavailable?: boolean }) => {
+  if (unavailable) return <span className="inline-flex rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">Sem dados</span>;
+  const t = trendOf(inst, delta);
+  const Arrow = delta == null || t.label === 'Estável' ? Minus : delta > 0 ? ArrowUpRight : ArrowDownRight;
+  return (
+    <div className="flex flex-col items-start gap-1">
+      <span className="text-sm font-semibold tabular-nums">{delta == null ? '—' : `${delta >= 0 ? '+' : '−'}${fmt(Math.abs(delta))} pts`}</span>
+      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${t.cls}`}><Arrow className="h-3 w-3" />{t.label}</span>
     </div>
   );
 };
@@ -89,6 +114,8 @@ export default function InstitutionComparator() {
   const [semester, setSemester] = useState<string | null>(null);
   const [compareA, setCompareA] = useState<string | null>(null);
   const [compareB, setCompareB] = useState<string | null>(null);
+  const [view, setView] = useState<'overview' | 'integrated'>('overview');
+  const [lineScale, setLineScale] = useState<string>('WHO5');
 
   const { userInstitutions, isLoading: instLoading } = useInstitutionAccess();
   const instQ = { isLoading: instLoading, data: userInstitutions[0] as any };
@@ -158,68 +185,109 @@ export default function InstitutionComparator() {
   const b = compareB ?? recortes[1] ?? null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto px-4 py-8 space-y-6">
-        <Button asChild variant="ghost" size="sm"><Link to={backTo}><ArrowLeft className="h-4 w-4 mr-2" />Voltar ao Portal Institucional</Link></Button>
-
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">Comparador · {instQ.data?.educational_institutions?.name ?? 'Instituição'}</p>
-            <h1 className="text-3xl font-bold">Como está o bem-estar da sua população</h1>
-            <p className="text-muted-foreground max-w-2xl mt-1">
-              Leitura coletiva e descritiva da coleta {current ?? '—'}, comparada à coleta anterior. Nenhum resultado individual é exibido.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Select value={unitFilter} onValueChange={setUnitFilter}>
-              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toda a rede</SelectItem>
-                {units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <div className="flex rounded-md border p-0.5">
-              {semesters.map((s) => (
-                <button key={s} onClick={() => setSemester(s)}
-                  className={`px-3 py-1.5 text-sm rounded ${s === current ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{s}</button>
-              ))}
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-muted/30">
+        <Sidebar collapsible="icon">
+          <SidebarHeader className="border-b">
+            <div className="flex items-center gap-2 px-1 py-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"><BarChart3 className="h-4 w-4" /></div>
+              <div className="min-w-0 group-data-[collapsible=icon]:hidden">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Comparador</p>
+                <p className="truncate text-sm font-semibold">{instQ.data?.educational_institutions?.name ?? 'Instituição'}</p>
+              </div>
             </div>
-          </div>
-        </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Leituras</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {([['overview', 'Visão Geral', LayoutDashboard], ['integrated', 'Análise Integrada', GitCompare]] as const).map(([k, l, I]) => (
+                    <SidebarMenuItem key={k}>
+                      <SidebarMenuButton isActive={view === k} onClick={() => setView(k)} tooltip={l}><I className="h-4 w-4" /><span>{l}</span></SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+              <SidebarGroupLabel>Recorte</SidebarGroupLabel>
+              <SidebarGroupContent className="space-y-1 px-2">
+                {[['all', 'Toda a rede'], ...units.map((u) => [u, u])].map(([v, l]) => (
+                  <button key={v} onClick={() => setUnitFilter(v)}
+                    className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors ${unitFilter === v ? 'bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
+                    <MapPin className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{l}</span>
+                  </button>
+                ))}
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+              <SidebarGroupLabel>Coleta semestral</SidebarGroupLabel>
+              <SidebarGroupContent className="grid grid-cols-3 gap-1 px-2">
+                {semesters.map((s) => (
+                  <button key={s} onClick={() => setSemester(s)}
+                    className={`rounded-md py-1.5 text-xs font-medium ${s === current ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>{s}</button>
+                ))}
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter className="border-t">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Voltar ao Portal Institucional">
+                  <Link to={backTo}><ArrowLeft className="h-4 w-4" /><span>Voltar ao Portal Institucional</span></Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+        </Sidebar>
+
+        <div className="flex flex-1 flex-col min-w-0">
+          <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur">
+            <SidebarTrigger />
+            <span className="text-sm text-muted-foreground">{view === 'overview' ? 'Visão geral' : 'Análise integrada'} · {unitFilter === 'all' ? 'Toda a rede' : unitFilter}</span>
+            <Button asChild variant="outline" size="sm" className="ml-auto"><Link to={backTo}><ArrowLeft className="h-4 w-4 mr-1" />Portal Institucional</Link></Button>
+          </header>
+          <main className="flex-1 space-y-6 p-4 md:p-8">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">{view === 'overview' ? 'Como está o bem-estar da sua população' : 'Análise integrada entre recortes'}</h1>
+              <p className="mt-1 max-w-2xl text-muted-foreground">
+                Leitura coletiva e descritiva da coleta {current ?? '—'}, comparada à coleta anterior. Nenhum resultado individual é exibido.
+              </p>
+            </div>
 
         {dataQ.isLoading || instQ.isLoading ? (
           <div className="grid gap-4 md:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-32" />)}</div>
         ) : dataQ.error ? (
           <Card><CardContent className="py-10 text-center text-muted-foreground">Não foi possível carregar o comparador.</CardContent></Card>
-        ) : (
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-              <TabsTrigger value="integrated">Análise Integrada</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="overview" className="space-y-6">
+        ) : view === 'overview' ? (
+            <div className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Kpi icon={Users} title="População no recorte" value={`${population.toLocaleString('pt-BR')}`} unit="estudantes"
+                  progress={population ? ((d?.activated ?? 0) / population) * 100 : 0}
                   hint={`${(d?.activated ?? 0).toLocaleString('pt-BR')} ativaram o acesso à plataforma`} />
-                <Kpi icon={ClipboardCheck} title="Cobertura WHO-5" value={`${coverage}%`}
+                <Kpi icon={ClipboardCheck} title="Cobertura WHO-5" value={`${coverage}%`} progress={coverage}
                   badge={previous ? `${coverage - coveragePrev >= 0 ? '+' : ''}${coverage - coveragePrev} p.p.` : undefined}
                   hint={`${who.n.toLocaleString('pt-BR')} respondentes em ${current ?? '—'}`} />
                 <Kpi icon={NotebookPen} title="Diário emocional" value={diaryNow.toLocaleString('pt-BR')} unit="participantes"
+                  progress={population ? (diaryNow / population) * 100 : 0}
                   hint={`${population ? Math.round((diaryNow / population) * 100) : 0}% dos estudantes`} />
-                <Kpi icon={Activity} title="Responderam ao menos 1 escala" value={anyScale.toLocaleString('pt-BR')} unit="estudantes"
+                <Kpi icon={Activity} title="Ao menos 1 escala" value={anyScale.toLocaleString('pt-BR')} unit="estudantes"
+                  progress={population ? (anyScale / population) * 100 : 0}
                   hint={`${population ? Math.round((anyScale / population) * 100) : 0}% da população`} />
               </div>
 
               <Card>
-                <CardHeader>
-                  <CardTitle>Indicadores por instrumento</CardTitle>
-                  <CardDescription>Média do recorte em {current ?? '—'} · variação desde {previous ?? 'a coleta anterior'}. A cor indica se a mudança é favorável.</CardDescription>
+                <CardHeader className="flex flex-row items-start justify-between gap-2">
+                  <div>
+                    <CardTitle>Indicadores por instrumento</CardTitle>
+                    <CardDescription>Média do recorte em {current ?? '—'} · variação desde {previous ?? 'a coleta anterior'}. A cor indica se a mudança é favorável.</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setView('integrated')}>Abrir Análise integrada</Button>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="text-left text-xs text-muted-foreground">
+                    <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
                       <tr><th className="py-2">Instrumento</th><th>Média</th><th>Posição na escala</th><th>Variação</th><th>3 coletas</th></tr>
                     </thead>
                     <tbody>
@@ -228,20 +296,18 @@ export default function InstitutionComparator() {
                         const now = unavailable ? { n: 0, avg: 0 } : stat(inst.code, current);
                         const prev = unavailable ? { n: 0, avg: null } : stat(inst.code, previous);
                         const delta = now.avg != null && prev.avg != null ? now.avg - prev.avg : null;
-                        const t = trendOf(inst, unavailable ? null : delta);
+                        const t = trendOf(inst, delta);
+                        const tone = t.label === 'Favorável' ? 'good' : t.label === 'Desfavorável' ? 'bad' : 'flat';
                         return (
-                          <tr key={inst.code} className="border-t">
-                            <td className="py-3">
-                              <div className="font-medium">{inst.label}</div>
+                          <tr key={inst.code} className="border-t transition-colors hover:bg-muted/40">
+                            <td className="py-4 pr-4">
+                              <div className="font-semibold">{inst.label}</div>
                               <div className="text-xs text-muted-foreground">{inst.short} · n={now.n.toLocaleString('pt-BR')}{unavailable && ' · ainda não disponível'}</div>
                             </td>
-                            <td className="text-lg font-semibold">{fmt(now.avg)}</td>
-                            <td><ScalePosition inst={inst} value={now.avg} /></td>
-                            <td>
-                              <div className="text-xs">{delta == null ? '—' : `${delta >= 0 ? '+' : '−'}${fmt(Math.abs(delta))} pts`}</div>
-                              <span className={`text-[11px] px-2 py-0.5 rounded-full ${t.cls}`}>{unavailable ? 'Sem dados' : t.label}</span>
-                            </td>
-                            <td><Sparkline values={unavailable ? [] : semesters.map((s) => stat(inst.code, s).avg)} /></td>
+                            <td className="pr-4 text-2xl font-bold tabular-nums">{fmt(now.avg)}</td>
+                            <td className="pr-4"><ScalePosition inst={inst} value={now.avg} /></td>
+                            <td className="pr-4"><TrendPill inst={inst} delta={delta} unavailable={unavailable} /></td>
+                            <td>{unavailable ? <span className="text-xs text-muted-foreground">—</span> : <Sparkline values={semesters.map((s) => stat(inst.code, s).avg)} labels={semesters} tone={tone} />}</td>
                           </tr>
                         );
                       })}
@@ -251,17 +317,19 @@ export default function InstitutionComparator() {
                 </CardContent>
               </Card>
 
-              <div className="grid gap-6 lg:grid-cols-3">
-                <Card className="lg:col-span-2">
+              <div className="grid gap-6 xl:grid-cols-3">
+                <Card className="xl:col-span-2">
                   <CardHeader className="flex flex-row items-start justify-between gap-2">
                     <div>
                       <CardTitle>Mapa de unidades e cursos</CardTitle>
-                      <CardDescription>Cor relativa à média da rede. Grupos com menos de {MIN_GROUP} respondentes ficam protegidos.</CardDescription>
+                      <CardDescription>Cor relativa à média da rede ({fmt(stat(mapScale, current).avg)}). Grupos com menos de {MIN_GROUP} respondentes ficam protegidos.</CardDescription>
                     </div>
-                    <Select value={mapScale} onValueChange={setMapScale}>
-                      <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                      <SelectContent>{INSTRUMENTS.map((i) => <SelectItem key={i.code} value={i.code}>{i.short}</SelectItem>)}</SelectContent>
-                    </Select>
+                    <div className="flex flex-wrap gap-1">
+                      {INSTRUMENTS.map((i) => (
+                        <button key={i.code} onClick={() => setMapScale(i.code)}
+                          className={`rounded-full px-2.5 py-1 text-xs ${mapScale === i.code ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>{i.short}</button>
+                      ))}
+                    </div>
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
                     <HeatMap inst={INSTRUMENTS.find((i) => i.code === mapScale)!} units={unitFilter === 'all' ? units : [unitFilter]}
@@ -276,9 +344,9 @@ export default function InstitutionComparator() {
                     <CardContent className="space-y-2 text-sm">
                       {attention.length === 0 ? <p className="text-muted-foreground">Nenhuma mudança desfavorável relevante neste recorte.</p> :
                         attention.map((x) => (
-                          <div key={x.label + x.inst.code} className="flex justify-between rounded-md bg-destructive/5 p-2">
-                            <span>{x.label} · {x.inst.short}</span>
-                            <span className="text-destructive">{x.delta > 0 ? '+' : '−'}{fmt(Math.abs(x.delta))}</span>
+                          <div key={x.label + x.inst.code} className="flex items-center justify-between rounded-lg border-l-4 border-destructive bg-destructive/5 p-2.5">
+                            <span><span className="font-medium">{x.label}</span> · {x.inst.short}</span>
+                            <span className="inline-flex items-center gap-1 font-semibold text-destructive"><ArrowDownRight className="h-3.5 w-3.5" />{x.delta > 0 ? '+' : '−'}{fmt(Math.abs(x.delta))}</span>
                           </div>
                         ))}
                     </CardContent>
@@ -292,12 +360,14 @@ export default function InstitutionComparator() {
                         ['Responderam ao menos 1 escala', anyScale],
                         ['Responderam ao WHO-5', who.n],
                         ['Registraram no Diário', diaryNow],
-                      ].filter(([, v]) => v != null).map(([l, v]) => {
+                      ].filter(([, v]) => v != null).map(([l, v], idx) => {
                         const pct = population ? Math.round(((v as number) / population) * 100) : 0;
                         return (
                           <div key={l as string}>
-                            <div className="flex justify-between text-xs"><span>{l}</span><span>{(v as number).toLocaleString('pt-BR')} · {pct}%</span></div>
-                            <div className="h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
+                            <div className="mb-1 flex justify-between text-xs"><span>{l}</span><span className="font-semibold tabular-nums">{(v as number).toLocaleString('pt-BR')} <span className="text-primary">· {pct}%</span></span></div>
+                            <div className="h-3 rounded-full bg-muted">
+                              <div className="h-3 rounded-full" style={{ width: `${pct}%`, background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / ${1 - idx * 0.15}))` }} />
+                            </div>
                           </div>
                         );
                       })}
@@ -306,68 +376,85 @@ export default function InstitutionComparator() {
                   </Card>
                 </div>
               </div>
-            </TabsContent>
-
-            <TabsContent value="integrated" className="space-y-6">
+            </div>
+        ) : (
+            <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Análise integrada</CardTitle>
-                  <CardDescription>Compare dois recortes (unidades ou cursos) em todos os instrumentos e ao longo das coletas.</CardDescription>
+                  <CardTitle>Evolução comparada</CardTitle>
+                  <CardDescription>Escolha dois recortes e um instrumento para ver a trajetória nas coletas.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <RecSelect value={a} onChange={setCompareA} options={recortes} label={recLabel} />
                     <span className="text-muted-foreground">vs</span>
                     <RecSelect value={b} onChange={setCompareB} options={recortes} label={recLabel} />
+                    <div className="ml-auto flex flex-wrap gap-1">
+                      {INSTRUMENTS.filter((i) => !('unavailable' in i)).map((i) => (
+                        <button key={i.code} onClick={() => setLineScale(i.code)}
+                          className={`rounded-full px-2.5 py-1 text-xs ${lineScale === i.code ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>{i.short}</button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="text-left text-xs text-muted-foreground">
-                        <tr><th className="py-2">Instrumento</th>{semesters.map((s) => <th key={s} colSpan={2}>{s}</th>)}<th>Diferença atual</th></tr>
-                        <tr><th />{semesters.map((s) => [<th key={s + 'a'}>{a ? recLabel(a) : '—'}</th>, <th key={s + 'b'}>{b ? recLabel(b) : '—'}</th>])}<th /></tr>
-                      </thead>
-                      <tbody>
-                        {INSTRUMENTS.map((inst) => {
-                          const un = 'unavailable' in inst;
-                          const get = (k: string | null, s: string) => (un ? { n: 0, avg: 0 } : stat(inst.code, s, recFilter(k)));
-                          const ca = current ? get(a, current) : null, cb = current ? get(b, current) : null;
-                          const diff = ca?.avg != null && cb?.avg != null ? ca.avg - cb.avg : null;
-                          return (
-                            <tr key={inst.code} className="border-t">
-                              <td className="py-3 font-medium">{inst.short}</td>
-                              {semesters.map((s) => {
-                                const x = get(a, s), y = get(b, s);
-                                return [
-                                  <td key={s + 'a'}>{fmt(x.avg)}<span className="block text-[10px] text-muted-foreground">n={x.n}</span></td>,
-                                  <td key={s + 'b'}>{fmt(y.avg)}<span className="block text-[10px] text-muted-foreground">n={y.n}</span></td>,
-                                ];
-                              })}
-                              <td>{diff == null || un ? '—' : <Badge variant="outline" className={trendOf(inst, diff).cls}>{diff >= 0 ? '+' : '−'}{fmt(Math.abs(diff))}</Badge>}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={semesters.map((s) => ({ sem: s, a: stat(lineScale, s, recFilter(a)).avg, b: stat(lineScale, s, recFilter(b)).avg, rede: stat(lineScale, s).avg }))}>
+                        <defs>
+                          <linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} /><stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} /></linearGradient>
+                          <linearGradient id="gb" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="hsl(var(--chart-2))" stopOpacity={0.35} /><stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0} /></linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                        <XAxis dataKey="sem" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                        <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" domain={['auto', 'auto']} />
+                        <RTooltip formatter={(v: any) => fmt(v)} contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
+                        <Legend />
+                        <Area type="monotone" dataKey="a" name={a ? recLabel(a) : 'A'} stroke="hsl(var(--primary))" strokeWidth={3} fill="url(#ga)" dot={{ r: 5 }} activeDot={{ r: 7 }} />
+                        <Area type="monotone" dataKey="b" name={b ? recLabel(b) : 'B'} stroke="hsl(var(--chart-2))" strokeWidth={3} fill="url(#gb)" dot={{ r: 5 }} activeDot={{ r: 7 }} />
+                        <Area type="monotone" dataKey="rede" name="Rede" stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth={2} fill="none" dot={false} />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader><CardTitle>Escalas × Diário emocional por unidade</CardTitle><CardDescription>Cruza bem-estar (WHO-5), estresse (PSS-10) e a participação/humor médio no Diário.</CardDescription></CardHeader>
+                <CardHeader><CardTitle>Todos os instrumentos</CardTitle><CardDescription>{a ? recLabel(a) : '—'} vs {b ? recLabel(b) : '—'} em cada coleta.</CardDescription></CardHeader>
                 <CardContent className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="text-left text-xs text-muted-foreground"><tr><th className="py-2">Unidade</th><th>WHO-5</th><th>PSS-10</th><th>Participantes no Diário</th><th>Humor médio (1–5)</th></tr></thead>
+                    <thead className="text-left text-xs text-muted-foreground">
+                      <tr><th className="py-2">Instrumento</th>{semesters.map((s) => <th key={s} colSpan={2}>{s}</th>)}<th>Diferença atual</th></tr>
+                      <tr><th />{semesters.map((s) => [<th key={s + 'a'} className="text-primary">{a ? recLabel(a) : '—'}</th>, <th key={s + 'b'}>{b ? recLabel(b) : '—'}</th>])}<th /></tr>
+                    </thead>
                     <tbody>
-                      {units.map((u) => {
-                        const di = (d?.diary ?? []).find((r) => r.sem === current && r.unit === u);
-                        const f = (r: ScaleRow) => r.unit === u;
+                      {INSTRUMENTS.map((inst) => {
+                        const un = 'unavailable' in inst;
+                        const get = (k: string | null, s: string) => (un ? { n: 0, avg: 0 } : stat(inst.code, s, recFilter(k)));
+                        const ca = current ? get(a, current) : null, cb = current ? get(b, current) : null;
+                        const diff = ca?.avg != null && cb?.avg != null ? ca.avg - cb.avg : null;
+                        const span = inst.max - inst.min;
+                        const t = trendOf(inst, diff);
                         return (
-                          <tr key={u} className="border-t">
-                            <td className="py-3 font-medium">{u}</td>
-                            <td>{fmt(stat('WHO5', current, f).avg)}</td>
-                            <td>{fmt(stat('PSS10', current, f).avg)}</td>
-                            <td>{di && di.participants >= MIN_GROUP ? di.participants : 'Protegido'}</td>
-                            <td>{di && di.participants >= MIN_GROUP ? fmt(di.avg_mood, 2) : '—'}</td>
+                          <tr key={inst.code} className="border-t">
+                            <td className="py-3 font-medium">{inst.short}</td>
+                            {semesters.map((s) => {
+                              const x = get(a, s), y = get(b, s);
+                              return [
+                                <td key={s + 'a'} className="font-semibold">{fmt(x.avg)}<span className="block text-[10px] font-normal text-muted-foreground">n={x.n}</span></td>,
+                                <td key={s + 'b'}>{fmt(y.avg)}<span className="block text-[10px] text-muted-foreground">n={y.n}</span></td>,
+                              ];
+                            })}
+                            <td className="w-44">
+                              {diff == null || un ? '—' : (
+                                <div className="flex items-center gap-2">
+                                  <div className="relative h-2 w-24 rounded-full bg-muted">
+                                    <div className="absolute top-0 h-2 w-px bg-foreground/40" style={{ left: '50%' }} />
+                                    <div className={`absolute top-0 h-2 rounded-full ${t.label === 'Desfavorável' ? 'bg-destructive' : t.label === 'Favorável' ? 'bg-primary' : 'bg-muted-foreground'}`}
+                                      style={{ left: diff >= 0 ? '50%' : `${50 - Math.min(50, (Math.abs(diff) / span) * 400)}%`, width: `${Math.min(50, (Math.abs(diff) / span) * 400)}%` }} />
+                                  </div>
+                                  <span className="text-xs font-semibold tabular-nums">{diff >= 0 ? '+' : '−'}{fmt(Math.abs(diff))}</span>
+                                </div>
+                              )}
+                            </td>
                           </tr>
                         );
                       })}
@@ -375,26 +462,53 @@ export default function InstitutionComparator() {
                   </table>
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
+
+              <Card>
+                <CardHeader><CardTitle>Escalas × Diário emocional por unidade</CardTitle><CardDescription>Cruza bem-estar (WHO-5), estresse (PSS-10) e participação/humor no Diário.</CardDescription></CardHeader>
+                <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {units.map((u) => {
+                    const di = (d?.diary ?? []).find((r) => r.sem === current && r.unit === u);
+                    const f = (r: ScaleRow) => r.unit === u;
+                    const w5 = stat('WHO5', current, f).avg, ps = stat('PSS10', current, f).avg;
+                    return (
+                      <div key={u} className="rounded-xl border bg-card p-4 space-y-3">
+                        <p className="font-semibold">{u}</p>
+                        {[['WHO-5', w5, 100, true], ['PSS-10', ps, 40, false], ['Humor no Diário', di ? di.avg_mood : null, 5, true]].map(([l, v, max, good]) => (
+                          <div key={l as string}>
+                            <div className="flex justify-between text-xs"><span className="text-muted-foreground">{l}</span><span className="font-semibold">{fmt(v as number | null, l === 'Humor no Diário' ? 2 : 1)}</span></div>
+                            <div className="h-2 rounded-full bg-muted"><div className={`h-2 rounded-full ${good ? 'bg-primary' : 'bg-destructive/70'}`} style={{ width: `${v == null ? 0 : ((v as number) / (max as number)) * 100}%` }} /></div>
+                          </div>
+                        ))}
+                        <p className="text-xs text-muted-foreground">{di ? `${di.participants} participantes no Diário` : 'Diário: grupo protegido'}</p>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            </div>
         )}
-      </main>
-      <Footer />
-    </div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }
 
-const Kpi = ({ icon: Icon, title, value, unit, hint, badge }: { icon: any; title: string; value: string; unit?: string; hint: string; badge?: string }) => (
-  <Card>
+const Kpi = ({ icon: Icon, title, value, unit, hint, badge, progress }: { icon: any; title: string; value: string; unit?: string; hint: string; badge?: string; progress?: number }) => (
+  <Card className="relative overflow-hidden">
+    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary to-primary/30" />
     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" />
+      <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+      <div className="rounded-lg bg-primary/10 p-2"><Icon className="h-4 w-4 text-primary" /></div>
     </CardHeader>
-    <CardContent>
-      <div className="flex items-baseline gap-2"><span className="text-3xl font-bold">{value}</span>{unit && <span className="text-sm text-muted-foreground">{unit}</span>}{badge && <Badge variant="secondary">{badge}</Badge>}</div>
-      <p className="text-xs text-muted-foreground mt-1">{hint}</p>
+    <CardContent className="space-y-2">
+      <div className="flex items-baseline gap-2"><span className="text-4xl font-bold tracking-tight tabular-nums">{value}</span>{unit && <span className="text-sm text-muted-foreground">{unit}</span>}{badge && <Badge className="bg-primary/10 text-primary hover:bg-primary/10">{badge}</Badge>}</div>
+      {progress != null && <div className="h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${Math.min(100, progress)}%` }} /></div>}
+      <p className="text-xs text-muted-foreground">{hint}</p>
     </CardContent>
   </Card>
 );
+
 
 const RecSelect = ({ value, onChange, options, label }: { value: string | null; onChange: (v: string) => void; options: string[]; label: (k: string) => string }) => (
   <Select value={value ?? undefined} onValueChange={onChange}>
