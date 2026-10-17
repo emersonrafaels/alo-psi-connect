@@ -31,10 +31,10 @@ const diaryBands = (p: DiaryParam): Band[] => p.key === 'avg_sleep_hours'
   ? [{ label: 'Pouco', from: 0, to: 6, tone: 'bad' }, { label: 'Adequado', from: 6, to: 8, tone: 'good' }, { label: 'Longo', from: 8, to: 12, tone: 'mid' }]
   : [{ label: 'Baixo', from: 1, to: 2, tone: p.better === 'up' ? 'bad' : 'good' }, { label: 'Intermediário', from: 2, to: 3.5, tone: 'mid' }, { label: 'Alto', from: 3.5, to: 5, tone: p.better === 'up' ? 'good' : 'bad' }];
 const diaryBandOf = (p: DiaryParam, v: number | null) => { if (v == null) return null; const b = diaryBands(p); return b.find((x) => v <= x.to + 0.001) ?? b[b.length - 1]; };
-const spreadPair = (x: number, y: number, minGap = 7): [number, number] => {
+const spreadPair = (x: number, y: number, minGap = 4): [number, number] => {
   if (Math.abs(x - y) >= minGap) return [x, y];
   const mid = (x + y) / 2;
-  return [Math.max(3, mid - minGap / 2), Math.min(97, mid + minGap / 2)];
+  return [Math.max(2, mid - minGap / 2), Math.min(98, mid + minGap / 2)];
 };
 
 export function IntegratedAnalysis(props: {
@@ -220,7 +220,7 @@ export function IntegratedAnalysis(props: {
                 .filter((m) => m.v != null).map((m) => ({ ...m, p: pos(m.v) })).sort((x, y) => x.p - y.p);
               // spread labels
               const lab: number[] = [];
-              markers.forEach((m, i) => { lab[i] = i && m.p - lab[i - 1] < 7 ? lab[i - 1] + 7 : m.p; });
+              markers.forEach((m, i) => { lab[i] = i && m.p - lab[i - 1] < 4 ? lab[i - 1] + 4 : m.p; });
               const rows = [{ k: 'A', color: 'hsl(var(--primary))', label: labelA, v: a.avg },
                 ...(groups.length ? groups.map((g, i) => ({ k: LETTERS[i], color: gColor(i), label: gLabel(g), v: stat(inst.code, current, gFilter(g)).avg })) : [{ k: 'Rede', color: 'hsl(var(--foreground))', label: 'média geral', v: ref.avg }])];
               return (
@@ -286,7 +286,7 @@ export function IntegratedAnalysis(props: {
             ...(groups.length ? [] : [{ k: 'R', v: dRef.avg, color: 'hsl(var(--muted-foreground))' }])]
             .filter((m) => m.v != null).map((m) => ({ ...m, p: dPos(m.v) })).sort((x, y) => x.p - y.p);
           const lab: number[] = [];
-          markers.forEach((m, i) => { lab[i] = i && m.p - lab[i - 1] < 7 ? lab[i - 1] + 7 : m.p; });
+          markers.forEach((m, i) => { lab[i] = i && m.p - lab[i - 1] < 4 ? lab[i - 1] + 4 : m.p; });
           const dNet = dStat(p.key, current).avg;
           const dTicks = Array.from({ length: 5 }, (_, i) => p.min + (dSpan / 4) * i);
           const evoD = sems.map((s) => ({ sem: s, a: dStat(p.key, s, unit).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, dStat(p.key, s, g.unit).avg])) }));
