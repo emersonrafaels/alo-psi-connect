@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SCALE_BANDS, bandOf, TONE_CLASS, TONE_BAR, TONE_TEXT } from './scaleBands';
+import { SCALE_BANDS, bandOf, TONE_CLASS, TONE_BAR, TONE_TEXT, type Band } from './scaleBands';
 
 type Row = { sem: string; scale_code: string; unit: string; course: string; n: number; avg: number };
 type Inst = { code: string; label: string; short: string; min: number; max: number; higherIsBetter: boolean };
@@ -33,6 +33,7 @@ export function IntegratedAnalysis(props: {
   const [mapBy, setMapBy] = useState<'course' | 'unit'>('course');
   const [chartTab, setChartTab] = useState<'evo' | 'dist' | 'cov'>('evo');
   const [asTable, setAsTable] = useState(false);
+  const [diaryParam, setDiaryParam] = useState('avg_mood');
 
   const inst = instruments.find((i) => i.code === scale) ?? instruments[0];
   const unavailable = (i: Inst) => 'unavailable' in i;
