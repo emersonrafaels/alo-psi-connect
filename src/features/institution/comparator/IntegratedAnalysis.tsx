@@ -412,7 +412,7 @@ export function IntegratedAnalysis(props: {
                           {dNet != null && <div className="absolute top-0 h-14 w-px bg-foreground/30" style={{ left: `${dDir(dNet)}%` }} />}
                           {v != null && (
                             <button title={`${u} · ${fmt(v, p.d)}`} onClick={() => setUnit(u)} className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${dDir(v)}%` }}>
-                              <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-primary">{fmt(v, p.d)}</span>
+                              <span className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-primary/40 bg-background px-1.5 py-px text-[10px] font-semibold text-primary shadow-sm">{fmt(v, p.d)}</span>
                               <span className="block h-4 w-4 rounded-full border-2 border-background shadow" style={{ background: 'hsl(var(--primary))' }} />
                             </button>
                           )}
