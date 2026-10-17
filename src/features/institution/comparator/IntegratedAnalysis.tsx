@@ -361,7 +361,7 @@ export function IntegratedAnalysis(props: {
                 const gap = vals.length > 1 ? Math.max(...vals) - Math.min(...vals) : null;
                 const isSel = (mapBy === 'course' ? course === rk || (rk === '__all' && course === 'all') : unit === rk || (rk === '__all' && unit === 'all'));
                 return (
-                  <div key={rk} className={`grid grid-cols-[140px_1fr_60px] items-center gap-3 rounded-lg px-2 py-2 ${isSel ? 'bg-primary/5' : ''}`}>
+                  <div key={rk} className={`grid grid-cols-[140px_1fr_60px] items-center gap-3 rounded-lg px-2 py-3 ${isSel ? 'bg-primary/5' : ''}`}>
                     <button className={`text-left text-sm ${rk === '__all' ? 'font-bold' : ''} hover:text-primary`} onClick={() => (mapBy === 'course' ? setCourse(rk === '__all' ? 'all' : rk) : setUnit(rk === '__all' ? 'all' : rk))}>
                       {rk === '__all' ? (mapBy === 'course' ? 'Todos os cursos' : 'Toda a rede') : rk} ›</button>
                     <div className="relative h-14">
