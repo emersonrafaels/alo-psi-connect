@@ -243,20 +243,56 @@ export function IntegratedAnalysis(props: {
           </CardContent></Card>
         </>)}
 
-        {tab === 'diary' && (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {units.map((u) => {
-              const di = props.diary.find((r) => r.sem === current && r.unit === u);
-              return (
-                <Card key={u}><CardContent className="space-y-2 p-4">
-                  <p className="font-semibold">{u}</p>
-                  <p className="text-3xl font-bold tabular-nums">{di ? fmt(di.avg_mood, 2) : '—'}<span className="text-sm font-normal text-muted-foreground"> / 5 humor médio</span></p>
-                  <p className="text-xs text-muted-foreground">{di ? `${di.participants} participantes no Diário em ${current}` : 'Grupo protegido (n < 10)'}</p>
-                </CardContent></Card>
-              );
-            })}
-          </div>
-        )}
+        {tab === 'diary' && (() => {
+          const params: { key: string; label: string; max: number; unit: string; better: 'up' | 'down'; d: number }[] = [
+            { key: 'avg_general', label: 'Bem-estar geral', max: 5, unit: '/ 5', better: 'up', d: 2 },
+            { key: 'avg_mood', label: 'Humor', max: 5, unit: '/ 5', better: 'up', d: 2 },
+            { key: 'avg_energy', label: 'Energia', max: 5, unit: '/ 5', better: 'up', d: 2 },
+            { key: 'avg_anxiety', label: 'Ansiedade', max: 5, unit: '/ 5', better: 'down', d: 2 },
+            { key: 'avg_stress', label: 'Estresse', max: 5, unit: '/ 5', better: 'down', d: 2 },
+            { key: 'avg_sleep_quality', label: 'Qualidade do sono', max: 5, unit: '/ 5', better: 'up', d: 2 },
+            { key: 'avg_sleep_hours', label: 'Horas de sono', max: 12, unit: 'h', better: 'up', d: 1 },
+          ];
+          const sems = Array.from(new Set(props.diary.map((r) => r.sem))).sort();
+          const prevSem = sems[sems.indexOf(current) - 1];
+          return (
+            <div className="space-y-4">
+              {units.map((u) => {
+                const di = props.diary.find((r) => r.sem === current && r.unit === u) as Record<string, any> | undefined;
+                const pv = prevSem ? (props.diary.find((r) => r.sem === prevSem && r.unit === u) as Record<string, any> | undefined) : undefined;
+                const pop = (props as any).unitsPopulation?.[u];
+                return (
+                  <Card key={u}><CardContent className="space-y-3 p-4">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <p className="font-semibold">{u}</p>
+                      <p className="text-xs text-muted-foreground">{di ? `${di.participants} participantes${di.entries ? ` · ${Number(di.entries).toLocaleString('pt-BR')} registros` : ''}${pop ? ` · adesão ${Math.round((di.participants / pop) * 100)}%` : ''} · ${current}` : 'Grupo protegido (n < 10)'}</p>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      {params.map((p) => {
+                        const v = di?.[p.key] != null ? Number(di[p.key]) : null;
+                        const pvv = pv?.[p.key] != null ? Number(pv[p.key]) : null;
+                        const delta = v != null && pvv != null ? v - pvv : null;
+                        const good = delta == null || delta === 0 ? null : (delta > 0) === (p.better === 'up');
+                        return (
+                          <div key={p.key} className="rounded-lg border bg-card p-3">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-medium text-primary">Diário</span>
+                              {delta != null && <span className={`rounded px-1.5 font-semibold ${good ? 'bg-primary/10 text-primary' : good === false ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>{delta > 0 ? '+' : ''}{fmt(delta, 2)}</span>}
+                            </div>
+                            <p className="text-sm font-semibold">{p.label}</p>
+                            <p className="mt-1 text-2xl font-bold tabular-nums">{v != null ? fmt(v, p.d) : '—'}<span className="ml-1 text-xs font-normal text-muted-foreground">{v != null ? p.unit : 'sem dados suficientes'}</span></p>
+                            <div className="mt-2 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${v != null ? Math.min(100, (v / p.max) * 100) : 0}%` }} /></div>
+                            <p className="mt-1 text-[11px] text-muted-foreground">{p.better === 'up' ? '↑ maior é mais favorável' : '↓ menor é mais favorável'}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent></Card>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {tab === 'part' && (
           <Card><CardContent className="space-y-3 p-5">
