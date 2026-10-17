@@ -220,7 +220,7 @@ export function IntegratedAnalysis(props: {
                 .filter((m) => m.v != null).map((m) => ({ ...m, p: pos(m.v) })).sort((x, y) => x.p - y.p);
               // spread labels
               const lab: number[] = [];
-              markers.forEach((m, i) => { lab[i] = i && m.p - lab[i - 1] < 7 ? lab[i - 1] + 7 : m.p; });
+              markers.forEach((m, i) => { lab[i] = i && m.p - lab[i - 1] < 4 ? lab[i - 1] + 4 : m.p; });
               const rows = [{ k: 'A', color: 'hsl(var(--primary))', label: labelA, v: a.avg },
                 ...(groups.length ? groups.map((g, i) => ({ k: LETTERS[i], color: gColor(i), label: gLabel(g), v: stat(inst.code, current, gFilter(g)).avg })) : [{ k: 'Rede', color: 'hsl(var(--foreground))', label: 'média geral', v: ref.avg }])];
               return (
@@ -286,7 +286,7 @@ export function IntegratedAnalysis(props: {
             ...(groups.length ? [] : [{ k: 'R', v: dRef.avg, color: 'hsl(var(--muted-foreground))' }])]
             .filter((m) => m.v != null).map((m) => ({ ...m, p: dPos(m.v) })).sort((x, y) => x.p - y.p);
           const lab: number[] = [];
-          markers.forEach((m, i) => { lab[i] = i && m.p - lab[i - 1] < 7 ? lab[i - 1] + 7 : m.p; });
+          markers.forEach((m, i) => { lab[i] = i && m.p - lab[i - 1] < 4 ? lab[i - 1] + 4 : m.p; });
           const dNet = dStat(p.key, current).avg;
           const dTicks = Array.from({ length: 5 }, (_, i) => p.min + (dSpan / 4) * i);
           const evoD = sems.map((s) => ({ sem: s, a: dStat(p.key, s, unit).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, dStat(p.key, s, g.unit).avg])) }));
