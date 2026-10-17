@@ -375,6 +375,7 @@ export function IntegratedAnalysis(props: {
                       {rk === '__all' ? (mapBy === 'course' ? 'Todos os cursos' : 'Toda a rede') : rk} ›</button>
                     <div className="relative h-14">
                       <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
+                      {mapTicks.map((t) => <div key={t} className="absolute top-0 h-14 w-px border-l border-dashed border-border/70" style={{ left: `${mx(t)}%` }} />)}
                       {network != null && <div className="absolute top-0 h-14 w-px bg-foreground/30" style={{ left: `${mx(network)}%` }} />}
                       {vals.length > 1 && <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-muted-foreground/30" style={{ left: `${Math.min(...vals.map(mx))}%`, width: `${Math.abs(mx(Math.max(...vals)) - mx(Math.min(...vals)))}%` }} />}
                       {pts.map((p) => p.v != null && (
