@@ -364,9 +364,9 @@ export function IntegratedAnalysis(props: {
                   <div key={rk} className={`grid grid-cols-[140px_1fr_60px] items-center gap-3 rounded-lg px-2 py-2 ${isSel ? 'bg-primary/5' : ''}`}>
                     <button className={`text-left text-sm ${rk === '__all' ? 'font-bold' : ''} hover:text-primary`} onClick={() => (mapBy === 'course' ? setCourse(rk === '__all' ? 'all' : rk) : setUnit(rk === '__all' ? 'all' : rk))}>
                       {rk === '__all' ? (mapBy === 'course' ? 'Todos os cursos' : 'Toda a rede') : rk} ›</button>
-                    <div className="relative h-8">
+                    <div className="relative h-14">
                       <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
-                      {network != null && <div className="absolute top-0 h-8 w-px bg-foreground/30" style={{ left: `${mx(network)}%` }} />}
+                      {network != null && <div className="absolute top-0 h-14 w-px bg-foreground/30" style={{ left: `${mx(network)}%` }} />}
                       {vals.length > 1 && <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-muted-foreground/30" style={{ left: `${Math.min(...vals.map(mx))}%`, width: `${Math.abs(mx(Math.max(...vals)) - mx(Math.min(...vals)))}%` }} />}
                       {pts.map((p) => p.v != null && (
                         <button key={String(p.u)} title={`${p.u ?? 'Toda a rede'} · ${fmt(p.v)}`}
