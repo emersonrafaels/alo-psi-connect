@@ -17,6 +17,20 @@ const Hint = ({ t }: { t: string }) => (
   <Tooltip><TooltipTrigger asChild><Info className="inline h-3.5 w-3.5 cursor-help text-muted-foreground" /></TooltipTrigger><TooltipContent className="max-w-xs text-xs">{t}</TooltipContent></Tooltip>
 );
 
+type DiaryParam = { key: string; label: string; desc: string; min: number; max: number; unit: string; better: 'up' | 'down'; d: number };
+const DIARY_PARAMS: DiaryParam[] = [
+  { key: 'avg_general', label: 'Bem-estar geral', desc: 'Média do bem-estar geral registrado no Diário emocional.', min: 1, max: 5, unit: '/ 5', better: 'up', d: 2 },
+  { key: 'avg_mood', label: 'Humor', desc: 'Registro voluntário de 1 a 5 no Diário emocional. A média representa apenas quem registrou no período.', min: 1, max: 5, unit: '/ 5', better: 'up', d: 2 },
+  { key: 'avg_energy', label: 'Energia', desc: 'Disposição e energia relatadas no Diário emocional.', min: 1, max: 5, unit: '/ 5', better: 'up', d: 2 },
+  { key: 'avg_anxiety', label: 'Ansiedade', desc: 'Nível de ansiedade relatado no Diário emocional.', min: 1, max: 5, unit: '/ 5', better: 'down', d: 2 },
+  { key: 'avg_stress', label: 'Estresse', desc: 'Nível de estresse relatado no Diário emocional.', min: 1, max: 5, unit: '/ 5', better: 'down', d: 2 },
+  { key: 'avg_sleep_quality', label: 'Qualidade do sono', desc: 'Qualidade do sono percebida, registrada no Diário emocional.', min: 1, max: 5, unit: '/ 5', better: 'up', d: 2 },
+  { key: 'avg_sleep_hours', label: 'Horas de sono', desc: 'Horas de sono por noite, registradas no Diário emocional.', min: 0, max: 12, unit: 'h', better: 'up', d: 1 },
+];
+const diaryBands = (p: DiaryParam): Band[] => p.key === 'avg_sleep_hours'
+  ? [{ label: 'Pouco', from: 0, to: 6, tone: 'bad' }, { label: 'Adequado', from: 6, to: 8, tone: 'good' }, { label: 'Longo', from: 8, to: 12, tone: 'mid' }]
+  : [{ label: 'Baixo', from: 1, to: 2, tone: p.better === 'up' ? 'bad' : 'good' }, { label: 'Intermediário', from: 2, to: 3.5, tone: 'mid' }, { label: 'Alto', from: 3.5, to: 5, tone: p.better === 'up' ? 'good' : 'bad' }];
+const diaryBandOf = (p: DiaryParam, v: number | null) => { if (v == null) return null; const b = diaryBands(p); return b.find((x) => v <= x.to + 0.001) ?? b[b.length - 1]; };
 
 export function IntegratedAnalysis(props: {
   instruments: readonly Inst[]; semesters: string[]; current: string | null; setSemester: (s: string) => void;
