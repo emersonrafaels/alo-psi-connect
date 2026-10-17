@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Users, Activity, NotebookPen, ClipboardCheck, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,8 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import Header from '@/components/ui/header';
+import Footer from '@/components/ui/footer';
 
 type ScaleRow = { sem: string; scale_code: string; unit: string; course: string; n: number; avg: number };
 type DiaryRow = { sem: string; unit: string; participants: number; avg_mood: number };
@@ -83,7 +83,6 @@ const ScalePosition = ({ inst, value }: { inst: Instrument; value: number | null
 };
 
 export default function InstitutionComparator() {
-  const { user } = useAuth();
   const { tenant } = useTenant();
   const [unitFilter, setUnitFilter] = useState('all');
   const [mapScale, setMapScale] = useState<string>('WHO5');
@@ -91,21 +90,8 @@ export default function InstitutionComparator() {
   const [compareA, setCompareA] = useState<string | null>(null);
   const [compareB, setCompareB] = useState<string | null>(null);
 
-  const instQ = useQuery({
-    queryKey: ['comparator-institution', user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('institution_users')
-        .select('institution_id, educational_institutions(name)')
-        .eq('user_id', user!.id)
-        .eq('is_active', true)
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return data as { institution_id: string; educational_institutions: { name: string } } | null;
-    },
-  });
+  const { userInstitutions, isLoading: instLoading } = useInstitutionAccess();
+  const instQ = { isLoading: instLoading, data: userInstitutions[0] as any };
   const institutionId = instQ.data?.institution_id;
 
   const dataQ = useQuery({
