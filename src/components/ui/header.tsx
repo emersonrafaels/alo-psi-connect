@@ -55,7 +55,6 @@ const Header = () => {
 
   const allNavigation = [
     { name: "Home", href: buildTenantPath(tenantSlug, '/'), module: null },
-    { name: "Sobre", href: buildTenantPath(tenantSlug, '/sobre'), module: 'about' as const },
     { name: "Profissionais", href: buildTenantPath(tenantSlug, '/profissionais'), module: 'professionals' as const },
     { name: "Práticas", href: buildTenantPath(tenantSlug, '/praticas'), module: null },
     { name: "Como funciona", href: buildTenantPath(tenantSlug, '/como-funciona'), module: null },
