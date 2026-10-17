@@ -188,7 +188,7 @@ export default function InstitutionComparator() {
 
   return (
     <>
-      <div className="min-h-screen flex w-full bg-muted/30">
+      <div className="comparator-page min-h-screen flex w-full bg-muted/30">
         <aside className={`sticky top-0 flex h-screen shrink-0 flex-col border-r bg-background transition-all ${collapsed ? 'w-16' : 'w-60'}`}>
           <div className="flex items-center gap-2 border-b px-3 py-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"><BarChart3 className="h-4 w-4" /></div>
