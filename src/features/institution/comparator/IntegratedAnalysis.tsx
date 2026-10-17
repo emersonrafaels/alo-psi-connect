@@ -271,30 +271,64 @@ export function IntegratedAnalysis(props: {
       {tab === 'scales' && (
         <section className="rounded-2xl bg-card/60 p-4 ring-1 ring-border space-y-3">
           <p className="text-sm"><span className="font-semibold">O que os números dizem</span> <span className="text-muted-foreground">Resumo do comparativo em linguagem simples.</span></p>
-          <Card><CardContent className="space-y-5 p-5">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">O que os números dizem · {current}</p>
-              <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold">{sizeLabel}</span>
-            </div>
-            <h3 className="text-2xl font-bold leading-snug">{headline}</h3>
-            <p className="text-sm text-muted-foreground">Em {current}, A marcou {fmt(a.avg)} e {fB ? 'B' : 'a rede'} marcou {fmt(ref.avg)}{diff != null && ` — uma diferença de ${fmt(Math.abs(diff))} pontos`}.</p>
-            <div className="relative pt-6 pb-6">
-              <div className="h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--destructive) / .35), hsl(var(--muted)), hsl(var(--primary) / .45))' }} />
-              {a.avg != null && <Marker left={dirPos(a.avg)} label={`A · ${fmt(a.avg)}`} top cls="bg-primary" />}
-              {ref.avg != null && <Marker left={dirPos(ref.avg)} label={`${fB ? 'B' : 'Rede'} · ${fmt(ref.avg)}`} cls="bg-muted-foreground" />}
-              {groups.slice(1).map((g, i) => { const v = stat(inst.code, current, gFilter(g)).avg; return v != null && <Marker key={i} left={dirPos(v)} label={`${LETTERS[i + 1]} · ${fmt(v)}`} cls="bg-muted-foreground" />; })}
-              <div className="mt-6 flex justify-between text-[11px] font-semibold"><span className="text-destructive">← Pior · {inst.higherIsBetter ? inst.min : inst.max}</span><span className="text-primary">{inst.higherIsBetter ? inst.max : inst.min} · Melhor →</span></div>
-            </div>
-            <div className="grid gap-3 md:grid-cols-3">
-              <MiniCard title="Tamanho da diferença" hint="Diferença entre A e a referência, relativa à amplitude da escala." value={sizeLabel}
-                lines={[diff == null ? '—' : `${fmt(Math.abs(diff))} pontos de diferença, ou ${fmt(diffPct, 0)}% da escala.`]} />
-              <MiniCard title="Tendência no tempo" hint="Mudança desde a primeira coleta disponível." value={a.avg != null && aFirst.avg != null ? (Math.abs(a.avg - aFirst.avg) < 0.5 ? 'Estável' : better(a.avg - aFirst.avg) > 0 ? 'Evolução' : 'Piora') : '—'}
-                lines={[a.avg != null && aFirst.avg != null ? `A: ${better(a.avg - aFirst.avg) >= 0 ? 'melhorou' : 'piorou'} ${fmt(Math.abs(a.avg - aFirst.avg))} pontos desde ${first}.` : '—',
-                  ref.avg != null && refFirst.avg != null ? `${fB ? 'B' : 'Rede'}: ${better(ref.avg - refFirst.avg) >= 0 ? 'melhorou' : 'piorou'} ${fmt(Math.abs(ref.avg - refFirst.avg))} pontos desde ${first}.` : '']} />
-              <MiniCard title="Confiança na leitura" hint="Considera número de respostas e cobertura do grupo." value={conf(a.n, popA)}
-                lines={[`A: ${a.n.toLocaleString('pt-BR')} respostas (${popA ? Math.round((a.n / popA) * 100) : 0}% do grupo).`, `${fB ? 'B' : 'Rede'}: ${ref.n.toLocaleString('pt-BR')} respostas.`]} />
-            </div>
-            <p className="flex gap-2 text-[11px] text-muted-foreground"><Info className="h-3.5 w-3.5 shrink-0" />A régua está orientada para que a direita seja sempre o lado mais favorável. As diferenças descrevem grupos, não pessoas, e não indicam causa.</p>
+          <Card><CardContent className="space-y-5 p-6">
+            {(() => {
+              const MEAN: Record<string, string> = { WHO5: 'bem-estar', PSS10: 'estresse', GAD7: 'sintomas de ansiedade', PHQ9: 'sintomas depressivos', ISI: 'sintomas de insônia', MHCSF: 'saúde mental positiva', IQOL: 'qualidade de vida' };
+              const bK = groups.length ? 'B' : 'Rede';
+              const bName = groups.length ? labelB : 'a média da rede';
+              const bColor = groups.length ? gColor(0) : 'hsl(var(--muted-foreground))';
+              const popB = groups.length ? gPop(groups[0]) : props.population;
+              const aFav = diff != null && better(diff) > 0;
+              const term = MEAN[inst.code] ?? 'resultado';
+              const meaning = diff == null || diffPct! < 2 ? null : `${(aFav === inst.higherIsBetter) ? 'mais' : 'menos'} ${term} em A`;
+              const head = diff == null ? 'Ainda não há respostas suficientes para comparar este recorte.'
+                : diffPct! < 2 ? `${labelA} e ${bName} estão em um patamar muito parecido.`
+                  : `${labelA} está em situação ${aFav ? 'mais' : 'menos'} favorável que ${bName}.`;
+              const trend = (v: number | null, f: Stat) => v == null || f.avg == null ? null : v - f.avg;
+              const tA = trend(a.avg, aFirst), tB = trend(ref.avg, refFirst);
+              const tLabel = tA == null ? '—' : Math.abs(tA) < 0.5 ? 'Estável' : better(tA) > 0 ? 'Evolução' : 'Piora';
+              const tLine = (k: string, t: number | null) => t == null ? '' : `${k}: ${Math.abs(t) < 0.5 ? 'ficou estável' : better(t) > 0 ? 'melhorou' : 'piorou'} ${fmt(Math.abs(t))} pontos desde ${first}.`;
+              const cLine = (k: string, n: number, pop: number) => `${k}: ${n.toLocaleString('pt-BR')} respostas (${pop ? Math.round((n / pop) * 100) : 0}% do grupo) · confiança ${conf(n, pop).toLowerCase()}.`;
+              const cA = conf(a.n, popA);
+              return (<>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary">O que os números dizem · {current} <Hint t="Resumo automático da comparação entre A e a referência." /></p>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">{sizeLabel}</span>
+                </div>
+                <h3 className="max-w-3xl text-2xl font-bold leading-snug">{head}</h3>
+                <p className="text-sm text-muted-foreground">Em {current}, A marcou {fmt(a.avg)} e {bK} marcou {fmt(ref.avg)}.{meaning && ` Isso significa ${meaning}`}{diff != null && `, uma diferença de ${fmt(Math.abs(diff))} pontos (${fmt(diffPct, 0)}% da escala).`}</p>
+                <div className="relative pb-2 pt-14">
+                  <div className="h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--chart-4, var(--accent))) / .45), hsl(var(--background)), hsl(var(--primary) / .4))' }} />
+                  {a.avg != null && (
+                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dirPos(a.avg)}%`, top: 8 }}>
+                      <span className="text-[11px] font-bold text-primary">A · {fmt(a.avg)}</span>
+                      <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow">A</span>
+                      <span className="h-5 border-l border-dashed border-primary" />
+                    </div>
+                  )}
+                  {ref.avg != null && (
+                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${dirPos(ref.avg)}%`, top: 44 }}>
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-primary-foreground shadow ring-2 ring-background" style={{ background: bColor }}>{bK === 'Rede' ? 'R' : 'B'}</span>
+                      <span className="mt-0.5 text-[11px] font-bold" style={{ color: bColor }}>{bK} · {fmt(ref.avg)}</span>
+                    </div>
+                  )}
+                  <div className="mt-10 flex justify-between text-xs font-bold">
+                    <span className="text-accent-foreground">← Pior · {inst.higherIsBetter ? inst.min : inst.max}</span>
+                    <span className="text-primary">{inst.higherIsBetter ? inst.max : inst.min} · Melhor →</span>
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <MiniCard title="Tamanho da diferença" hint="Diferença entre A e a referência, relativa à amplitude da escala." value={sizeLabel}
+                    lines={[diff == null ? '—' : `${fmt(Math.abs(diff))} pontos de diferença, ou ${fmt(diffPct, 0)}% da escala.`, diff == null ? '' : diffPct! < 2 ? 'Os grupos estão no mesmo nível.' : `${aFav ? 'A' : bK} está do lado mais favorável.`]} />
+                  <MiniCard title="Tendência no tempo" hint="Mudança desde a primeira coleta disponível." value={tLabel} valueClass="text-foreground"
+                    lines={[tLine('A', tA), tLine(bK, tB)]} />
+                  <MiniCard title="Confiança na leitura" hint="Considera número de respostas e cobertura do grupo." value={cA}
+                    lines={[cLine('A', a.n, popA), cLine(bK, ref.n, popB)]} />
+                </div>
+                <p className="flex gap-2 border-t pt-4 text-xs text-muted-foreground"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  Como ler: este indicador vai de {inst.min} a {inst.max} e quanto {inst.higherIsBetter ? 'maior' : 'menor'}, melhor ({inst.higherIsBetter ? 'mais' : 'menos'} {term}). A régua já está orientada para que a direita seja sempre o lado mais favorável. As diferenças descrevem grupos, não pessoas, e não indicam causa.</p>
+              </>);
+            })()}
           </CardContent></Card>
         </section>
       )}
@@ -441,10 +475,10 @@ const Marker = ({ left, label, top, cls }: { left: number; label: string; top?: 
   </div>
 );
 
-const MiniCard = ({ title, hint, value, lines }: { title: string; hint: string; value: string; lines: string[] }) => (
+const MiniCard = ({ title, hint, value, lines, valueClass = 'text-primary' }: { title: string; hint: string; value: string; lines: string[]; valueClass?: string }) => (
   <div className="rounded-xl bg-muted/50 p-4">
     <p className="text-xs text-muted-foreground">{title} <Hint t={hint} /></p>
-    <p className="mt-1 text-xl font-bold text-primary">{value}</p>
+    <p className={`mt-1 text-xl font-bold ${valueClass}`}>{value}</p>
     {lines.filter(Boolean).map((l) => <p key={l} className="text-xs text-muted-foreground">{l}</p>)}
   </div>
 );
