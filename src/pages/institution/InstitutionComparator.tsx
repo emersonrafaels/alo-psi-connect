@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 type ScaleRow = { sem: string; scale_code: string; unit: string; course: string; n: number; avg: number };
 type DiaryRow = { sem: string; unit: string; participants: number; avg_mood: number };
-type Payload = { any_scale?: { sem: string; unit: string; n: number }[]; population: number; activated: number; units_population: Record<string, number>; scales: ScaleRow[]; diary: DiaryRow[] };
+type Payload = { any_scale?: { sem: string; unit: string; n: number }[]; population: number; activated: number; units_population: Record<string, number>; unit_course_population?: { unit: string; course: string; c: number }[]; scales: ScaleRow[]; diary: DiaryRow[] };
 
 export const MIN_GROUP = 10;
 
@@ -384,7 +384,7 @@ export default function InstitutionComparator() {
             </div>
         ) : (
             <IntegratedAnalysis instruments={INSTRUMENTS} semesters={semesters} current={current} setSemester={setSemester}
-              units={units} courses={courses} population={d?.population ?? 0} unitsPopulation={d?.units_population ?? {}}
+              units={units} courses={courses} population={d?.population ?? 0} unitsPopulation={d?.units_population ?? {}} unitCoursePopulation={d?.unit_course_population ?? []}
               scale={lineScale} setScale={setLineScale} stat={stat} diary={d?.diary ?? []} />
         )}
           </main>

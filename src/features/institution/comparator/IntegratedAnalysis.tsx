@@ -35,6 +35,7 @@ const diaryBandOf = (p: DiaryParam, v: number | null) => { if (v == null) return
 export function IntegratedAnalysis(props: {
   instruments: readonly Inst[]; semesters: string[]; current: string | null; setSemester: (s: string) => void;
   units: string[]; courses: string[]; population: number; unitsPopulation: Record<string, number>;
+  unitCoursePopulation: { unit: string; course: string; c: number }[];
   scale: string; setScale: (s: string) => void;
   stat: (code: string, sem: string | null, f?: Filter) => Stat;
   diary: { sem: string; unit: string; participants: number; avg_mood: number }[];
@@ -62,7 +63,14 @@ export function IntegratedAnalysis(props: {
   const gColor = (i: number) => `hsl(var(--chart-${(i % 4) + 2}))`;
   const gLabel = (g: { unit: string; course: string }) => `${g.course === 'all' ? 'Todos os cursos' : g.course} · ${g.unit === 'all' ? 'Toda a rede' : g.unit}`;
   const gFilter = (g: { unit: string; course: string }): Filter => (r) => (g.unit === 'all' || r.unit === g.unit) && (g.course === 'all' || r.course === g.course);
-  const gPop = (g: { unit: string }) => (g.unit === 'all' ? props.population : props.unitsPopulation[g.unit] ?? 0);
+  const popFor = (u: string, c: string) => {
+    if (u === 'all' && c === 'all') return props.population;
+    if (c === 'all') return props.unitsPopulation[u] ?? 0;
+    return props.unitCoursePopulation
+      .filter((r) => (u === 'all' || r.unit === u) && r.course === c)
+      .reduce((s, r) => s + r.c, 0);
+  };
+  const gPop = (g: { unit: string; course: string }) => popFor(g.unit, g.course);
   const addGroup = (kind: 'unit' | 'course' | 'custom') => {
     if (groups.length >= LETTERS.length) return;
     const used = (k: 'unit' | 'course', v: string) => [unit, ...groups.map((g) => g.unit)].includes(v) && k === 'unit' || [course, ...groups.map((g) => g.course)].includes(v) && k === 'course';
@@ -79,7 +87,7 @@ export function IntegratedAnalysis(props: {
   const ref = fB ? stat(inst.code, current, fB) : unavailable(inst) ? { n: 0, avg: null } : stat(inst.code, current);
   const refLabel = fB ? 'B' : 'Rede';
   const refFirst = fB ? stat(inst.code, first, fB) : stat(inst.code, first);
-  const popA = unit === 'all' ? props.population : props.unitsPopulation[unit] ?? 0;
+  const popA = popFor(unit, course);
   const span = inst.max - inst.min || 1;
   const better = (v: number) => (inst.higherIsBetter ? v : -v);
 
