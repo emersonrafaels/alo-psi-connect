@@ -177,18 +177,20 @@ export function IntegratedAnalysis(props: {
         </div>
 
         {tab === 'scales' && (<>
-          <p className="text-xs text-muted-foreground">Instrumentos · média do <span className="font-semibold text-primary">grupo A</span> e variação no período</p>
+          <p className="text-xs text-muted-foreground">Instrumentos · média do <span className="font-semibold text-primary">grupo A</span> e variação entre a primeira e a última das {Math.min(3, semesters.length)} coletas do mini gráfico</p>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             {instruments.map((i) => {
-              const v = sA(i.code, current).avg, p = sA(i.code, prev).avg;
-              const dv = v != null && p != null ? v - p : null;
+              const v = sA(i.code, current).avg;
               const b = bandOf(i.code, v);
               const miniSemesters = semesters.slice(-3);
               const series = miniSemesters.map((s) => sA(i.code, s).avg);
+              const sPts = series.flatMap((x, k) => (x == null ? [] : [{ v: x, s: miniSemesters[k] }]));
+              const dv = sPts.length > 1 ? sPts[sPts.length - 1].v - sPts[0].v : null;
+              const dRange = sPts.length > 1 ? `última − primeira coleta (${sPts[0].s} → ${sPts[sPts.length - 1].s})` : '';
               return (
                 <button key={i.code} onClick={() => setScale(i.code)} className={`rounded-xl border bg-card p-3 text-left transition hover:shadow-md ${scale === i.code ? 'border-primary ring-2 ring-primary/30' : ''}`}>
                   <div className="flex justify-between text-[11px]"><span className="font-bold text-primary">{i.short}</span>
-                    {dv != null && <span className={`rounded px-1 font-semibold ${(i.higherIsBetter ? dv : -dv) > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{dv >= 0 ? '+' : '−'}{fmt(Math.abs(dv))}</span>}</div>
+                    {dv != null && <span title={dRange} className={`rounded px-1 font-semibold ${(i.higherIsBetter ? dv : -dv) > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{dv >= 0 ? '+' : '−'}{fmt(Math.abs(dv))}</span>}</div>
                   <p className="mt-0.5 line-clamp-2 min-h-[2rem] text-xs font-medium">{i.label}</p>
                   <div className="mt-1">
                     <span className="text-xl font-bold tabular-nums">{fmt(v)}</span>
@@ -260,7 +262,6 @@ export function IntegratedAnalysis(props: {
         {tab === 'diary' && (() => {
           const p = DIARY_PARAMS.find((x) => x.key === diaryParam) ?? DIARY_PARAMS[1];
           const sems = Array.from(new Set(props.diary.map((r) => r.sem))).sort();
-          const prevSem = sems[sems.indexOf(current ?? '') - 1] ?? null;
           const firstSem = sems[0] ?? null;
           const dStat = (key: string, sem: string | null, unitF?: string) => {
             const rows = props.diary.filter((r) => r.sem === sem && (!unitF || unitF === 'all' || r.unit === unitF));
@@ -296,18 +297,20 @@ export function IntegratedAnalysis(props: {
           const evoD = sems.map((s) => ({ sem: s, a: dStat(p.key, s, unit).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, dStat(p.key, s, g.unit).avg])) }));
           return (
             <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">Indicadores · média do <span className="font-semibold text-primary">grupo A</span> e variação no período · o diário é agregado por unidade (o filtro de curso não se aplica)</p>
+              <p className="text-xs text-muted-foreground">Indicadores · média do <span className="font-semibold text-primary">grupo A</span> e variação entre a primeira e a última das {Math.min(3, sems.length)} coletas do mini gráfico · o diário é agregado por unidade (o filtro de curso não se aplica)</p>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
                 {DIARY_PARAMS.map((dp) => {
-                  const v = dStat(dp.key, current, unit).avg, pv = dStat(dp.key, prevSem, unit).avg;
-                  const dv = v != null && pv != null ? v - pv : null;
+                  const v = dStat(dp.key, current, unit).avg;
                   const b = diaryBandOf(dp, v);
                   const miniSemesters = sems.slice(-3);
                   const series = miniSemesters.map((s) => dStat(dp.key, s, unit).avg);
+                  const sPts = series.flatMap((x, k) => (x == null ? [] : [{ v: x, s: miniSemesters[k] }]));
+                  const dv = sPts.length > 1 ? sPts[sPts.length - 1].v - sPts[0].v : null;
+                  const dRange = sPts.length > 1 ? `última − primeira coleta (${sPts[0].s} → ${sPts[sPts.length - 1].s})` : '';
                   return (
                     <button key={dp.key} onClick={() => setDiaryParam(dp.key)} className={`rounded-xl border bg-card p-3 text-left transition hover:shadow-md ${diaryParam === dp.key ? 'border-primary ring-2 ring-primary/30' : ''}`}>
                       <div className="flex justify-between text-[11px]"><span className="font-bold text-primary">Diário</span>
-                        {dv != null && <span className={`rounded px-1 font-semibold ${(dp.better === 'up' ? dv : -dv) > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{dv >= 0 ? '+' : '−'}{fmt(Math.abs(dv), 2)}</span>}</div>
+                        {dv != null && <span title={dRange} className={`rounded px-1 font-semibold ${(dp.better === 'up' ? dv : -dv) > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{dv >= 0 ? '+' : '−'}{fmt(Math.abs(dv), 2)}</span>}</div>
                       <p className="mt-0.5 line-clamp-2 min-h-[2rem] text-xs font-medium">{dp.label}</p>
                       <div className="mt-1">
                         <span className="text-xl font-bold tabular-nums">{fmt(v, dp.d)}</span>
