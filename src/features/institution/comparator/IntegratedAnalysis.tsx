@@ -35,6 +35,7 @@ const diaryBandOf = (p: DiaryParam, v: number | null) => { if (v == null) return
 export function IntegratedAnalysis(props: {
   instruments: readonly Inst[]; semesters: string[]; current: string | null; setSemester: (s: string) => void;
   units: string[]; courses: string[]; population: number; unitsPopulation: Record<string, number>;
+  unitCoursePopulation: { unit: string; course: string; c: number }[];
   scale: string; setScale: (s: string) => void;
   stat: (code: string, sem: string | null, f?: Filter) => Stat;
   diary: { sem: string; unit: string; participants: number; avg_mood: number }[];
