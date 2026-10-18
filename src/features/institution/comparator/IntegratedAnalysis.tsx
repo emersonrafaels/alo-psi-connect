@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Info, CalendarDays, ShieldCheck } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ReferenceArea, LabelList, BarChart, Bar } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
@@ -183,16 +183,17 @@ export function IntegratedAnalysis(props: {
               const v = sA(i.code, current).avg, p = sA(i.code, prev).avg;
               const dv = v != null && p != null ? v - p : null;
               const b = bandOf(i.code, v);
-              const series = semesters.map((s) => sA(i.code, s).avg);
+              const miniSemesters = semesters.slice(-3);
+              const series = miniSemesters.map((s) => sA(i.code, s).avg);
               return (
                 <button key={i.code} onClick={() => setScale(i.code)} className={`rounded-xl border bg-card p-3 text-left transition hover:shadow-md ${scale === i.code ? 'border-primary ring-2 ring-primary/30' : ''}`}>
                   <div className="flex justify-between text-[11px]"><span className="font-bold text-primary">{i.short}</span>
                     {dv != null && <span className={`rounded px-1 font-semibold ${(i.higherIsBetter ? dv : -dv) > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{dv >= 0 ? '+' : '−'}{fmt(Math.abs(dv))}</span>}</div>
                   <p className="mt-0.5 line-clamp-2 min-h-[2rem] text-xs font-medium">{i.label}</p>
-                  <div className="mt-1 flex items-end justify-between gap-1">
+                  <div className="mt-1">
                     <span className="text-xl font-bold tabular-nums">{fmt(v)}</span>
-                    <MiniLine values={series} />
                   </div>
+                  <MiniLine values={series} labels={miniSemesters} />
                   <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground"><span>A · {current}</span>{b && <span className={`rounded px-1.5 py-0.5 font-semibold ${TONE_CLASS[b.tone]}`}>{b.label}</span>}</div>
                 </button>
               );
@@ -301,16 +302,17 @@ export function IntegratedAnalysis(props: {
                   const v = dStat(dp.key, current, unit).avg, pv = dStat(dp.key, prevSem, unit).avg;
                   const dv = v != null && pv != null ? v - pv : null;
                   const b = diaryBandOf(dp, v);
-                  const series = sems.map((s) => dStat(dp.key, s, unit).avg);
+                  const miniSemesters = sems.slice(-3);
+                  const series = miniSemesters.map((s) => dStat(dp.key, s, unit).avg);
                   return (
                     <button key={dp.key} onClick={() => setDiaryParam(dp.key)} className={`rounded-xl border bg-card p-3 text-left transition hover:shadow-md ${diaryParam === dp.key ? 'border-primary ring-2 ring-primary/30' : ''}`}>
                       <div className="flex justify-between text-[11px]"><span className="font-bold text-primary">Diário</span>
                         {dv != null && <span className={`rounded px-1 font-semibold ${(dp.better === 'up' ? dv : -dv) > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{dv >= 0 ? '+' : '−'}{fmt(Math.abs(dv), 2)}</span>}</div>
                       <p className="mt-0.5 line-clamp-2 min-h-[2rem] text-xs font-medium">{dp.label}</p>
-                      <div className="mt-1 flex items-end justify-between gap-1">
+                      <div className="mt-1">
                         <span className="text-xl font-bold tabular-nums">{fmt(v, dp.d)}</span>
-                        <MiniLine values={series} />
                       </div>
+                      <MiniLine values={series} labels={miniSemesters} decimals={dp.d} />
                       <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground"><span>A · {current}</span>{b && <span className={`rounded px-1.5 py-0.5 font-semibold ${TONE_CLASS[b.tone]}`}>{b.label}</span>}</div>
                     </button>
                   );
@@ -741,17 +743,25 @@ const MiniCard = ({ title, hint, value, lines, valueClass = 'text-primary' }: { 
   </div>
 );
 
-const MiniLine = ({ values }: { values: (number | null)[] }) => {
-  const pts = values.map((v, i) => ({ v, i })).filter((p) => p.v != null) as { v: number; i: number }[];
-  if (pts.length < 2) return null;
-  const W = 64, H = 26, lo = Math.min(...pts.map((p) => p.v)), hi = Math.max(...pts.map((p) => p.v));
-  const x = (i: number) => 3 + i * ((W - 6) / Math.max(values.length - 1, 1));
-  const y = (v: number) => 3 + (1 - (v - lo) / (hi - lo || 1)) * (H - 6);
+const MiniLine = ({ values, labels, decimals = 1 }: { values: (number | null)[]; labels: string[]; decimals?: number }) => {
+  const id = useId();
+  const pts = values.flatMap((v, i) => v == null ? [] : [{ v, i }]);
+  if (!pts.length) return <div className="h-[76px]" />;
+  const W = 160, H = 76, lo = Math.min(...pts.map((p) => p.v)), hi = Math.max(...pts.map((p) => p.v));
+  const x = (i: number) => values.length === 1 ? W / 2 : 24 + i * ((W - 48) / (values.length - 1));
+  const y = (v: number) => 27 + (hi === lo ? 0.5 : 1 - (v - lo) / (hi - lo)) * 26;
   const last = pts[pts.length - 1];
+  const line = pts.map((p) => `${x(p.i)},${y(p.v)}`).join(' ');
   return (
-    <svg width={W} height={H} aria-hidden>
-      <polyline fill="none" stroke="hsl(var(--primary))" strokeWidth="1.8" points={pts.map((p) => `${x(p.i)},${y(p.v)}`).join(' ')} />
-      <circle cx={x(last.i)} cy={y(last.v)} r="2.5" fill="hsl(var(--primary))" />
+    <svg viewBox={`0 0 ${W} ${H}`} className="mt-1 h-[76px] w-full" role="img" aria-label={pts.map((p) => `${labels[p.i]}: ${fmt(p.v, decimals)}`).join('; ')}>
+      <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.25" /><stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" /></linearGradient></defs>
+      {pts.length > 1 && <polygon fill={`url(#${id})`} points={`${x(pts[0].i)},60 ${line} ${x(last.i)},60`} />}
+      <polyline fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={line} />
+      {pts.map((p) => <g key={p.i}>
+        <circle cx={x(p.i)} cy={y(p.v)} r={p === last ? 4 : 3} fill={p === last ? 'hsl(var(--primary))' : 'hsl(var(--card))'} stroke="hsl(var(--primary))" strokeWidth="2" />
+        <text x={x(p.i)} y={y(p.v) - 10} textAnchor="middle" fontSize="11" fontWeight="700" fill="hsl(var(--foreground))">{fmt(p.v, decimals)}</text>
+      </g>)}
+      {labels.map((label, i) => <text key={label} x={x(i)} y={H - 3} textAnchor="middle" fontSize="10" fill="hsl(var(--muted-foreground))">{label.slice(2)}</text>)}
     </svg>
   );
 };
