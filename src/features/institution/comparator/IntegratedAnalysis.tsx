@@ -190,7 +190,7 @@ export function IntegratedAnalysis(props: {
               return (
                 <button key={i.code} onClick={() => setScale(i.code)} className={`rounded-xl border bg-card p-3 text-left transition hover:shadow-md ${scale === i.code ? 'border-primary ring-2 ring-primary/30' : ''}`}>
                   <div className="flex justify-between text-[11px]"><span className="font-bold text-primary">{i.short}</span>
-                    {dv != null && <span className={`rounded px-1 font-semibold ${(i.higherIsBetter ? dv : -dv) > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{dv >= 0 ? '+' : '−'}{fmt(Math.abs(dv))}</span>}</div>
+                    {dv != null && <span title={dRange} className={`rounded px-1 font-semibold ${(i.higherIsBetter ? dv : -dv) > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{dv >= 0 ? '+' : '−'}{fmt(Math.abs(dv))}</span>}</div>
                   <p className="mt-0.5 line-clamp-2 min-h-[2rem] text-xs font-medium">{i.label}</p>
                   <div className="mt-1">
                     <span className="text-xl font-bold tabular-nums">{fmt(v)}</span>
@@ -311,7 +311,7 @@ export function IntegratedAnalysis(props: {
                   return (
                     <button key={dp.key} onClick={() => setDiaryParam(dp.key)} className={`rounded-xl border bg-card p-3 text-left transition hover:shadow-md ${diaryParam === dp.key ? 'border-primary ring-2 ring-primary/30' : ''}`}>
                       <div className="flex justify-between text-[11px]"><span className="font-bold text-primary">Diário</span>
-                        {dv != null && <span className={`rounded px-1 font-semibold ${(dp.better === 'up' ? dv : -dv) > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{dv >= 0 ? '+' : '−'}{fmt(Math.abs(dv), 2)}</span>}</div>
+                        {dv != null && <span title={dRange} className={`rounded px-1 font-semibold ${(dp.better === 'up' ? dv : -dv) > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{dv >= 0 ? '+' : '−'}{fmt(Math.abs(dv), 2)}</span>}</div>
                       <p className="mt-0.5 line-clamp-2 min-h-[2rem] text-xs font-medium">{dp.label}</p>
                       <div className="mt-1">
                         <span className="text-xl font-bold tabular-nums">{fmt(v, dp.d)}</span>
