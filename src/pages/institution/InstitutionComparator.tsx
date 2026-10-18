@@ -118,6 +118,12 @@ export default function InstitutionComparator() {
   const [view, setView] = useState<'overview' | 'integrated'>('overview');
   const [lineScale, setLineScale] = useState<string>('WHO5');
 
+  const changeView = (next: 'overview' | 'integrated') => {
+    setView(next);
+    window.scrollTo(0, 0);
+  };
+
+
   const { userInstitutions, isLoading: instLoading } = useInstitutionAccess();
   const instQ = { isLoading: instLoading, data: userInstitutions[0] as any };
   const institutionId = instQ.data?.institution_id;
@@ -202,7 +208,7 @@ export default function InstitutionComparator() {
           <nav className="flex-1 space-y-1 p-2">
             {!collapsed && <p className="px-2 pb-1 pt-2 text-xs text-muted-foreground">Leituras</p>}
             {([['overview', 'Visão Geral', LayoutDashboard], ['integrated', 'Análise Integrada', GitCompare]] as const).map(([k, l, I]) => (
-              <button key={k} onClick={() => setView(k)} title={l}
+              <button key={k} onClick={() => changeView(k)} title={l}
                 className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm transition-colors ${view === k ? 'bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'} ${collapsed ? 'justify-center' : ''}`}>
                 <I className="h-4 w-4 shrink-0" />{!collapsed && <span>{l}</span>}
               </button>
@@ -276,7 +282,7 @@ export default function InstitutionComparator() {
                     <CardTitle>Indicadores por instrumento</CardTitle>
                     <CardDescription>Média das últimas 3 coletas ({semesters.join(', ')}) · variação de {current ?? '—'} desde {previous ?? 'a coleta anterior'}. A cor indica se a mudança é favorável.</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setView('integrated')}>Abrir Análise integrada</Button>
+                  <Button variant="outline" size="sm" onClick={() => changeView('integrated')}>Abrir Análise integrada</Button>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -301,8 +307,8 @@ export default function InstitutionComparator() {
                               role: 'button',
                               tabIndex: 0,
                               'aria-label': `Ver ${inst.label} na Análise Integrada`,
-                              onClick: () => { setLineScale(inst.code); setView('integrated'); window.scrollTo(0, 0); },
-                              onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLineScale(inst.code); setView('integrated'); window.scrollTo(0, 0); } },
+                              onClick: () => { setLineScale(inst.code); changeView('integrated'); },
+                              onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLineScale(inst.code); changeView('integrated'); } },
                             })}
                           >
                             <td className="py-4 pr-4">
