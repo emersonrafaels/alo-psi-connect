@@ -177,7 +177,7 @@ export function IntegratedAnalysis(props: {
         </div>
 
         {tab === 'scales' && (<>
-          <p className="text-xs text-muted-foreground">Instrumentos · média do <span className="font-semibold text-primary">grupo A</span> e variação no período</p>
+          <p className="text-xs text-muted-foreground">Instrumentos · média do <span className="font-semibold text-primary">grupo A</span> e variação entre a primeira e a última das {Math.min(3, semesters.length)} coletas do mini gráfico</p>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             {instruments.map((i) => {
               const v = sA(i.code, current).avg;
@@ -298,7 +298,7 @@ export function IntegratedAnalysis(props: {
           const evoD = sems.map((s) => ({ sem: s, a: dStat(p.key, s, unit).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, dStat(p.key, s, g.unit).avg])) }));
           return (
             <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">Indicadores · média do <span className="font-semibold text-primary">grupo A</span> e variação no período · o diário é agregado por unidade (o filtro de curso não se aplica)</p>
+              <p className="text-xs text-muted-foreground">Indicadores · média do <span className="font-semibold text-primary">grupo A</span> e variação entre a primeira e a última das {Math.min(3, sems.length)} coletas do mini gráfico · o diário é agregado por unidade (o filtro de curso não se aplica)</p>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
                 {DIARY_PARAMS.map((dp) => {
                   const v = dStat(dp.key, current, unit).avg;
