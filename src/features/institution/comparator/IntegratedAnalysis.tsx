@@ -262,7 +262,6 @@ export function IntegratedAnalysis(props: {
         {tab === 'diary' && (() => {
           const p = DIARY_PARAMS.find((x) => x.key === diaryParam) ?? DIARY_PARAMS[1];
           const sems = Array.from(new Set(props.diary.map((r) => r.sem))).sort();
-          const prevSem = sems[sems.indexOf(current ?? '') - 1] ?? null;
           const firstSem = sems[0] ?? null;
           const dStat = (key: string, sem: string | null, unitF?: string) => {
             const rows = props.diary.filter((r) => r.sem === sem && (!unitF || unitF === 'all' || r.unit === unitF));
