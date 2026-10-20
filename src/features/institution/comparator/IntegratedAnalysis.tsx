@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Info, CalendarDays, ShieldCheck } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ReferenceArea, LabelList, BarChart, Bar } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
@@ -49,6 +49,16 @@ export function IntegratedAnalysis(props: {
   const [chartTab, setChartTab] = useState<'evo' | 'dist' | 'cov'>('evo');
   const [asTable, setAsTable] = useState(false);
   const [diaryParam, setDiaryParam] = useState('avg_mood');
+  const filtersRef = useRef<HTMLElement>(null);
+  const [pinned, setPinned] = useState(false);
+  useEffect(() => {
+    const el = filtersRef.current;
+    if (!el) return;
+    // Mostra o resumo só depois que os filtros saem por cima da tela (abaixo do cabeçalho fixo de 56px).
+    const io = new IntersectionObserver(([e]) => setPinned(!e.isIntersecting && e.boundingClientRect.top < 0), { rootMargin: '-56px 0px 0px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   const inst = instruments.find((i) => i.code === scale) ?? instruments[0];
   const unavailable = (i: Inst) => 'unavailable' in i;
@@ -124,10 +134,31 @@ export function IntegratedAnalysis(props: {
 
   const evo = semesters.map((s) => ({ sem: s, a: sA(inst.code, s).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, stat(inst.code, s, gFilter(g)).avg])), rede: stat(inst.code, s).avg, cov: popA ? Math.round((sA(inst.code, s).n / popA) * 100) : 0 }));
 
+  const testLabel = tab === 'scales' ? `Escalas científicas · ${inst.short} (${inst.label})` : tab === 'diary' ? `Diário emocional · ${(DIARY_PARAMS.find((x) => x.key === diaryParam) ?? DIARY_PARAMS[1]).label}` : 'Participação';
+  const summary = [{ k: 'A', color: 'hsl(var(--primary))', label: labelA }, ...groups.map((g, i) => ({ k: LETTERS[i], color: gColor(i), label: gLabel(g) }))];
+
   return (
     <div className="space-y-6">
+      {/* Resumo fixo: lembra recortes e instrumento enquanto a página rola */}
+      <div className="sticky top-16 z-[9] -mb-6 h-0">
+        <div aria-hidden={!pinned} className={`flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border bg-background/95 px-4 py-2.5 text-xs shadow-md backdrop-blur transition-all duration-200 ${pinned ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-2 opacity-0'}`}>
+          {summary.map((s) => (
+            <span key={s.k} className="flex min-w-0 items-center gap-1.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-primary-foreground" style={{ background: s.color }}>{s.k}</span>
+              <span className="truncate font-medium">{s.label}</span>
+            </span>
+          ))}
+          {!groups.length && <span className="text-muted-foreground">vs média da rede</span>}
+          <span className="hidden h-4 w-px bg-border sm:block" />
+          <span className="font-semibold text-primary">{testLabel}</span>
+          <span className="text-muted-foreground">· {current ?? '—'}</span>
+          <Button variant="ghost" size="sm" className="ml-auto h-7 px-2 text-xs" tabIndex={pinned ? 0 : -1}
+            onClick={() => filtersRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Ajustar filtros</Button>
+        </div>
+      </div>
+
       {/* Filtros */}
-      <section className="rounded-2xl bg-card/60 p-4 ring-1 ring-border space-y-3">
+      <section ref={filtersRef} className="scroll-mt-20 rounded-2xl bg-card/60 p-4 ring-1 ring-border space-y-3">
         <p className="text-sm"><span className="font-semibold">Filtros</span> <span className="text-muted-foreground">Defina o recorte e a comparação. A coleta semestral é escolhida no topo da página.</span></p>
         <Card><CardContent className="space-y-4 p-4">
           <div className="flex flex-wrap items-end gap-3">
