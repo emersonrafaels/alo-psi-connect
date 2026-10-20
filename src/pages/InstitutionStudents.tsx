@@ -15,10 +15,28 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AcademicStructureManager } from '@/components/institutional/AcademicStructureManager';
+import { PlacementSelect } from '@/components/institutional/PlacementSelect';
+import { useAcademicStructure } from '@/hooks/useAcademicStructure';
+import { AcademicLevel, LEVEL_LABELS, buildPath } from '@/features/academic/hierarchy';
 import { anonymizeInitials, anonymizeStudentName, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
 
 export default function InstitutionStudents() {
-  const { linkedStudents, isLoading } = useInstitutionAccess();
+  const { linkedStudents, userInstitutions, isLoading } = useInstitutionAccess();
+  const institutionId = userInstitutions[0]?.institution_id as string | undefined;
+  const academic = useAcademicStructure(institutionId);
+  const [placementFilter, setPlacementFilter] = useState<Partial<Record<AcademicLevel, string>>>({});
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [assignTarget, setAssignTarget] = useState<string[] | null>(null);
+  const [assignSel, setAssignSel] = useState<Partial<Record<AcademicLevel, string>>>({});
+  const pathOf = (patientId: string) => {
+    const cls = academic.placements.get(patientId);
+    return cls ? buildPath(cls, academic.units, academic.levels) : [];
+  };
+  const toggle = (id: string) => setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const { tenant } = useTenant();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'enrolled' | 'graduated' | 'inactive'>('all');
@@ -43,7 +61,9 @@ export default function InstitutionStudents() {
   let filtered = linkedStudents.filter(s => {
     const matchesSearch = getStudentName(s.patient_id).toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || s.enrollment_status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const path = pathOf(s.patient_id);
+    const matchesPlacement = Object.values(placementFilter).every((id) => !id || path.some((u) => u.id === id));
+    return matchesSearch && matchesStatus && matchesPlacement;
   });
 
   const sorted = [...filtered].sort((a, b) => {
@@ -65,6 +85,7 @@ export default function InstitutionStudents() {
     if (filteredStudents.length === 0) return;
     const csvData = filteredStudents.map(s => ({
       'Aluno': getStudentName(s.patient_id),
+      ...Object.fromEntries(academic.levels.map((l) => [LEVEL_LABELS[l], pathOf(s.patient_id).find((u) => u.level === l)?.name ?? ''])),
       'Status': getStatusBadge(s.enrollment_status).label, 'Data de Vínculo': s.enrollment_date ? format(new Date(s.enrollment_date), 'dd/MM/yyyy') : ''
     }));
     const headers = Object.keys(csvData[0]).join(',');
@@ -103,6 +124,13 @@ export default function InstitutionStudents() {
           </Button>
         </div>
 
+        <Tabs defaultValue="students">
+        <TabsList className="mb-6">
+          <TabsTrigger value="students">Alunos</TabsTrigger>
+          <TabsTrigger value="structure">Estrutura acadêmica</TabsTrigger>
+        </TabsList>
+        <TabsContent value="structure"><AcademicStructureManager institutionId={institutionId} /></TabsContent>
+        <TabsContent value="students">
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="relative">
@@ -141,8 +169,21 @@ export default function InstitutionStudents() {
                 <Button variant="outline" className="w-full" onClick={handleExportCSV}><Download className="h-4 w-4 mr-2" />Exportar CSV</Button>
               </div>
             </div>
+            <div className="mt-4 border-t pt-4">
+              <p className="text-sm font-medium mb-2">Filtrar por estrutura acadêmica</p>
+              <PlacementSelect levels={academic.levels} units={academic.units} onChange={setPlacementFilter} />
+            </div>
           </CardContent>
         </Card>
+
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => setSelectedIds(selectedIds.size === filteredStudents.length ? new Set() : new Set(filteredStudents.map((s) => s.patient_id)))}>
+            {selectedIds.size === filteredStudents.length && filteredStudents.length > 0 ? 'Limpar seleção' : 'Selecionar todos'}
+          </Button>
+          {selectedIds.size > 0 && (
+            <Button size="sm" onClick={() => setAssignTarget([...selectedIds])}>Vincular {selectedIds.size} selecionado(s)</Button>
+          )}
+        </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredStudents.map((student) => {
@@ -152,6 +193,7 @@ export default function InstitutionStudents() {
             <Card key={student.patient_id}>
               <CardHeader>
                 <div className="flex items-center gap-4">
+                  <Checkbox checked={selectedIds.has(student.patient_id)} onCheckedChange={() => toggle(student.patient_id)} aria-label={`Selecionar ${studentName}`} />
                   <Avatar className="h-16 w-16">
                     <AvatarFallback className="bg-primary/10">{anonymizeInitials(studentIndex)}</AvatarFallback>
                   </Avatar>
@@ -172,7 +214,11 @@ export default function InstitutionStudents() {
                     <span>Vinculado: {format(new Date(student.enrollment_date), 'dd/MM/yyyy')}</span>
                   </div>
                 )}
+                <p className="text-sm text-muted-foreground">
+                  {pathOf(student.patient_id).map((u) => u.name).join(' › ') || 'Sem turma vinculada'}
+                </p>
                 <div className="flex gap-2 mt-4">
+                  <Button variant="outline" size="sm" onClick={() => setAssignTarget([student.patient_id])}>Vincular</Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -215,8 +261,32 @@ export default function InstitutionStudents() {
             </Card>
           )}
         </div>
+        </TabsContent>
+        </Tabs>
       </div>
       <Footer />
+
+      <Dialog open={!!assignTarget} onOpenChange={(o) => !o && setAssignTarget(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Vincular {assignTarget?.length === 1 ? getStudentName(assignTarget[0]) : `${assignTarget?.length} alunos`}</DialogTitle>
+          </DialogHeader>
+          {academic.units.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Cadastre a estrutura na aba "Estrutura acadêmica" primeiro.</p>
+          ) : (
+            <PlacementSelect
+              levels={academic.levels}
+              units={academic.units}
+              initialClassId={assignTarget?.length === 1 ? academic.placements.get(assignTarget[0]) : null}
+              onChange={setAssignSel}
+            />
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" onClick={() => { academic.assign.mutate({ patientIds: assignTarget!, classId: null }); setAssignTarget(null); }}>Remover vínculo</Button>
+            <Button disabled={!assignSel.class} onClick={() => { academic.assign.mutate({ patientIds: assignTarget!, classId: assignSel.class! }); setAssignTarget(null); setSelectedIds(new Set()); }}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {selectedStudent && (
         <UserStorytellingModal

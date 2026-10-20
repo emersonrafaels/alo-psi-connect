@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { DemoDataBadge } from '@/components/institutional/DemoDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -169,6 +170,7 @@ export default function InstitutionPortal() {
             <div className="flex-1">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-3xl md:text-4xl font-bold">Portal Institucional</h1>
+                <DemoDataBadge institutionId={userInstitutions[0]?.institution_id} />
                 <div className="flex items-center gap-2">
                   <Button asChild size="sm" variant="outline" className="gap-2">
                     <Link to={buildTenantPath(tenant?.slug, '/portal-institucional/radar')}>
@@ -319,11 +321,25 @@ export default function InstitutionPortal() {
               Cupons
             </TabsTrigger>
             <Link
+              to={buildTenantPath(tenant?.slug, '/portal-institucional/alunos')}
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs md:text-sm py-2 px-3 md:px-4 shrink-0 font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Users className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
+              Alunos
+            </Link>
+            <Link
               to={buildTenantPath(tenant?.slug, '/portal-institucional/apoios')}
               className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs md:text-sm py-2 px-3 md:px-4 shrink-0 font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <HeartHandshake className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Apoios
+            </Link>
+            <Link
+              to={buildTenantPath(tenant?.slug, '/portal-institucional/comparador')}
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs md:text-sm py-2 px-3 md:px-4 shrink-0 font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <BarChart3 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
+              Comparador
             </Link>
             <TabsTrigger value="metrics" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
               <BarChart3 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />

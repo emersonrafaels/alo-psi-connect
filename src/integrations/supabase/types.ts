@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
@@ -1188,6 +1188,7 @@ export type Database = {
       }
       educational_institutions: {
         Row: {
+          academic_hierarchy_levels: string[]
           anonymize_students: boolean | null
           benchmark_opt_in: boolean
           can_manage_coupons: boolean
@@ -1197,12 +1198,14 @@ export type Database = {
           has_partnership: boolean
           id: string
           is_active: boolean
+          is_demo: boolean
           logo_url: string | null
           name: string
           type: string
           updated_at: string
         }
         Insert: {
+          academic_hierarchy_levels?: string[]
           anonymize_students?: boolean | null
           benchmark_opt_in?: boolean
           can_manage_coupons?: boolean
@@ -1212,12 +1215,14 @@ export type Database = {
           has_partnership?: boolean
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           logo_url?: string | null
           name: string
           type: string
           updated_at?: string
         }
         Update: {
+          academic_hierarchy_levels?: string[]
           anonymize_students?: boolean | null
           benchmark_opt_in?: boolean
           can_manage_coupons?: boolean
@@ -1227,6 +1232,7 @@ export type Database = {
           has_partnership?: boolean
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           logo_url?: string | null
           name?: string
           type?: string
@@ -1889,6 +1895,61 @@ export type Database = {
         }
         Relationships: []
       }
+      institution_academic_units: {
+        Row: {
+          created_at: string
+          id: string
+          institution_id: string
+          level: string
+          name: string
+          parent_id: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          institution_id: string
+          level: string
+          name: string
+          parent_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          institution_id?: string
+          level?: string
+          name?: string
+          parent_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_academic_units_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_academic_units_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_academic_units_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "institution_academic_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_audit_log: {
         Row: {
           action_type: string
@@ -2133,6 +2194,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      institution_demo_scale_responses: {
+        Row: {
+          created_at: string
+          id: string
+          institution_id: string
+          patient_id: string
+          raw_score: number
+          scale_code: string
+          taken_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          institution_id: string
+          patient_id: string
+          raw_score: number
+          scale_code: string
+          taken_at: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          institution_id?: string
+          patient_id?: string
+          raw_score?: number
+          scale_code?: string
+          taken_at?: string
+        }
+        Relationships: []
       }
       institution_link_requests: {
         Row: {
@@ -3383,6 +3474,55 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_institution_placements: {
+        Row: {
+          class_unit_id: string
+          created_at: string
+          id: string
+          institution_id: string
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          class_unit_id: string
+          created_at?: string
+          id?: string
+          institution_id: string
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          class_unit_id?: string
+          created_at?: string
+          id?: string
+          institution_id?: string
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_institution_placements_class_unit_id_fkey"
+            columns: ["class_unit_id"]
+            isOneToOne: false
+            referencedRelation: "institution_academic_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_institution_placements_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_institution_placements_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
             referencedColumns: ["id"]
           },
         ]
@@ -5268,6 +5408,10 @@ export type Database = {
           message: string
           severity: string
         }[]
+      }
+      get_institution_comparator: {
+        Args: { p_institution_id: string }
+        Returns: Json
       }
       get_institution_engagement_metrics: {
         Args: { p_institution_id: string }
