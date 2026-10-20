@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Info, CalendarDays, ShieldCheck } from 'lucide-react';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ReferenceArea, LabelList, BarChart, Bar } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ReferenceArea, LabelList, BarChart, Bar, Cell } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -63,7 +63,6 @@ export function IntegratedAnalysis(props: {
   const inst = instruments.find((i) => i.code === scale) ?? instruments[0];
   const unavailable = (i: Inst) => 'unavailable' in i;
   const prev = current ? semesters[semesters.indexOf(current) - 1] ?? null : null;
-  const first = semesters[0] ?? null;
 
   const fA: Filter = (r) => (unit === 'all' || r.unit === unit) && (course === 'all' || r.course === course);
   const labelA = `${course === 'all' ? 'Todos os cursos' : course} · ${unit === 'all' ? 'Toda a rede' : unit}`;
@@ -90,30 +89,15 @@ export function IntegratedAnalysis(props: {
   };
   const updGroup = (i: number, patch: Partial<{ unit: string; course: string }>) => setGroups(groups.map((g, j) => (j === i ? { ...g, ...patch } : g)));
   const fB: Filter | null = groups[0] ? gFilter(groups[0]) : null;
-  const labelB = groups[0] ? gLabel(groups[0]) : '';
 
   const sA = (code: string, s: string | null) => (unavailable(instruments.find((i) => i.code === code)!) ? { n: 0, avg: null } : stat(code, s, fA));
-  const a = sA(inst.code, current), aPrev = sA(inst.code, prev), aFirst = sA(inst.code, first);
+  const a = sA(inst.code, current), aPrev = sA(inst.code, prev);
   const ref = fB ? stat(inst.code, current, fB) : unavailable(inst) ? { n: 0, avg: null } : stat(inst.code, current);
-  const refLabel = fB ? 'B' : 'Rede';
-  const refFirst = fB ? stat(inst.code, first, fB) : stat(inst.code, first);
   const popA = popFor(unit, course);
   const span = inst.max - inst.min || 1;
-  const better = (v: number) => (inst.higherIsBetter ? v : -v);
-
-  const diff = a.avg != null && ref.avg != null ? a.avg - ref.avg : null;
-  const diffPct = diff == null ? null : (Math.abs(diff) / span) * 100;
-  const sizeLabel = diffPct == null ? '—' : diffPct < 2 ? 'Praticamente iguais' : diffPct < 5 ? 'Diferença pequena' : diffPct < 10 ? 'Diferença moderada' : 'Diferença grande';
-  const conf = (n: number, pop: number) => (n < 10 ? 'Insuficiente' : n < 30 || (pop && n / pop < 0.2) ? 'Baixa' : n / Math.max(pop, 1) < 0.4 ? 'Moderada' : 'Alta');
-  const aBand = bandOf(inst.code, a.avg), refBand = bandOf(inst.code, ref.avg);
-
-  const headline = diff == null
-    ? 'Ainda não há respostas suficientes para comparar este recorte.'
-    : diffPct! < 2 ? `${labelA} e ${fB ? labelB : 'a média da rede'} estão em um patamar muito parecido.`
-      : `${labelA} está ${better(diff) > 0 ? 'mais favorável' : 'menos favorável'} que ${fB ? labelB : 'a média da rede'}.`;
+  const aBand = bandOf(inst.code, a.avg);
 
   const pos = (v: number | null) => (v == null ? 0 : Math.max(0, Math.min(100, ((v - inst.min) / span) * 100)));
-  const dirPos = (v: number | null) => (inst.higherIsBetter ? pos(v) : 100 - pos(v));
 
   // Map data
   const rowsMap = mapBy === 'course' ? courses : units;
@@ -132,7 +116,11 @@ export function IntegratedAnalysis(props: {
   const unitTag = dotUnits.map((u) => u.split(/\s+/).map((w) => w[0]?.toUpperCase() ?? '').join('')).join(' – ');
   const unitColor = (i: number) => (i === 0 ? 'hsl(var(--primary))' : `hsl(var(--chart-${(i % 4) + 2}))`);
 
-  const evo = semesters.map((s) => ({ sem: s, a: sA(inst.code, s).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, stat(inst.code, s, gFilter(g)).avg])), rede: stat(inst.code, s).avg, cov: popA ? Math.round((sA(inst.code, s).n / popA) * 100) : 0 }));
+  const evo = semesters.map((s) => ({ sem: s, a: sA(inst.code, s).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, stat(inst.code, s, gFilter(g)).avg])), rede: stat(inst.code, s).avg, cov: popA ? Math.round((sA(inst.code, s).n / popA) * 100) : 0,
+    ...Object.fromEntries(groups.map((g, i) => { const pg = gPop(g); return [`cov_g${i}`, pg ? Math.round((stat(inst.code, s, gFilter(g)).n / pg) * 100) : 0]; })) }));
+  // Distribuição: uma barra por grupo em análise (A + comparados), sem as demais unidades.
+  const dist = [{ k: 'A', label: labelA, color: 'hsl(var(--primary))', ...a },
+    ...groups.map((g, i) => ({ k: LETTERS[i], label: gLabel(g), color: gColor(i), ...(unavailable(inst) ? { n: 0, avg: null } : stat(inst.code, current, gFilter(g))) }))];
 
   const testLabel = tab === 'scales' ? `Escalas científicas · ${inst.short} (${inst.label})` : tab === 'diary' ? `Diário emocional · ${(DIARY_PARAMS.find((x) => x.key === diaryParam) ?? DIARY_PARAMS[1]).label}` : 'Participação';
   const summary = [{ k: 'A', color: 'hsl(var(--primary))', label: labelA }, ...groups.map((g, i) => ({ k: LETTERS[i], color: gColor(i), label: gLabel(g) }))];
@@ -529,73 +517,6 @@ export function IntegratedAnalysis(props: {
         )}
       </section>
 
-      {/* O que os números dizem */}
-      {tab === 'scales' && (
-        <section className="rounded-2xl bg-card/60 p-4 ring-1 ring-border space-y-3">
-          <p className="text-sm"><span className="font-semibold">O que os números dizem</span> <span className="text-muted-foreground">Resumo do comparativo em linguagem simples.</span></p>
-          <Card><CardContent className="space-y-5 p-6">
-            {(() => {
-              const MEAN: Record<string, string> = { WHO5: 'bem-estar', PSS10: 'estresse', GAD7: 'sintomas de ansiedade', PHQ9: 'sintomas depressivos', ISI: 'sintomas de insônia', MHCSF: 'saúde mental positiva', IQOL: 'qualidade de vida' };
-              const bK = groups.length ? 'B' : 'Rede';
-              const bName = groups.length ? labelB : 'a média da rede';
-              const bColor = groups.length ? gColor(0) : 'hsl(var(--muted-foreground))';
-              const popB = groups.length ? gPop(groups[0]) : props.population;
-              const aFav = diff != null && better(diff) > 0;
-              const term = MEAN[inst.code] ?? 'resultado';
-              const meaning = diff == null || diffPct! < 2 ? null : `${(aFav === inst.higherIsBetter) ? 'mais' : 'menos'} ${term} em A`;
-              const head = diff == null ? 'Ainda não há respostas suficientes para comparar este recorte.'
-                : diffPct! < 2 ? `${labelA} e ${bName} estão em um patamar muito parecido.`
-                  : `${labelA} está em situação ${aFav ? 'mais' : 'menos'} favorável que ${bName}.`;
-              const trend = (v: number | null, f: Stat) => v == null || f.avg == null ? null : v - f.avg;
-              const tA = trend(a.avg, aFirst), tB = trend(ref.avg, refFirst);
-              const tLabel = tA == null ? '—' : Math.abs(tA) < 0.5 ? 'Estável' : better(tA) > 0 ? 'Evolução' : 'Piora';
-              const tLine = (k: string, t: number | null) => t == null ? '' : `${k}: ${Math.abs(t) < 0.5 ? 'ficou estável' : better(t) > 0 ? 'melhorou' : 'piorou'} ${fmt(Math.abs(t))} pontos desde ${first}.`;
-              const cLine = (k: string, n: number, pop: number) => `${k}: ${n.toLocaleString('pt-BR')} respostas (${pop ? Math.round((n / pop) * 100) : 0}% do grupo) · confiança ${conf(n, pop).toLowerCase()}.`;
-              const cA = conf(a.n, popA);
-              const aX = dirPos(a.avg), rX = aX;
-              return (<>
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary">O que os números dizem · {current} <Hint t="Resumo automático da comparação entre A e a referência." /></p>
-                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">{sizeLabel}</span>
-                </div>
-                <h3 className="max-w-3xl text-2xl font-bold leading-snug">{head}</h3>
-                <p className="text-sm text-muted-foreground">Em {current}, A marcou {fmt(a.avg)} e {bK} marcou {fmt(ref.avg)}.{meaning && ` Isso significa ${meaning}`}{diff != null && `, uma diferença de ${fmt(Math.abs(diff))} pontos (${fmt(diffPct, 0)}% da escala).`}</p>
-                <div className="relative pb-2 pt-14">
-                  <div className="h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg, hsl(var(--accent) / .7), hsl(var(--muted) / .4), hsl(var(--primary) / .4))' }} />
-                  {a.avg != null && (
-                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${aX}%`, top: 4 }}>
-                      <span className="text-[11px] font-bold text-primary">A · {fmt(a.avg)}</span>
-                      <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow">A</span>
-                      <span className="h-5 border-l border-dashed border-primary" />
-                    </div>
-                  )}
-                  {ref.avg != null && (
-                    <div className="absolute flex -translate-x-1/2 flex-col items-center" style={{ left: `${rX}%`, top: 72 }}>
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-primary-foreground shadow ring-2 ring-background" style={{ background: bColor }}>{bK === 'Rede' ? 'R' : 'B'}</span>
-                      <span className="mt-0.5 text-[11px] font-bold" style={{ color: bColor }}>{bK} · {fmt(ref.avg)}</span>
-                    </div>
-                  )}
-                  <div className="mt-14 flex justify-between text-xs font-bold">
-                    <span className="text-accent-foreground">← Pior · {inst.higherIsBetter ? inst.min : inst.max}</span>
-                    <span className="text-primary">{inst.higherIsBetter ? inst.max : inst.min} · Melhor →</span>
-                  </div>
-                </div>
-                <div className="grid gap-3 md:grid-cols-3">
-                  <MiniCard title="Tamanho da diferença" hint="Diferença entre A e a referência, relativa à amplitude da escala." value={sizeLabel}
-                    lines={[diff == null ? '—' : `${fmt(Math.abs(diff))} pontos de diferença, ou ${fmt(diffPct, 0)}% da escala.`, diff == null ? '' : diffPct! < 2 ? 'Os grupos estão no mesmo nível.' : `${aFav ? 'A' : bK} está do lado mais favorável.`]} />
-                  <MiniCard title="Tendência no tempo" hint="Mudança desde a primeira coleta disponível." value={tLabel} valueClass="text-foreground"
-                    lines={[tLine('A', tA), tLine(bK, tB)]} />
-                  <MiniCard title="Confiança na leitura" hint="Considera número de respostas e cobertura do grupo." value={cA}
-                    lines={[cLine('A', a.n, popA), cLine(bK, ref.n, popB)]} />
-                </div>
-                <p className="flex gap-2 border-t pt-4 text-xs text-muted-foreground"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                  Como ler: este indicador vai de {inst.min} a {inst.max} e quanto {inst.higherIsBetter ? 'maior' : 'menor'}, melhor ({inst.higherIsBetter ? 'mais' : 'menos'} {term}). A régua já está orientada para que a direita seja sempre o lado mais favorável. As diferenças descrevem grupos, não pessoas, e não indicam causa.</p>
-              </>);
-            })()}
-          </CardContent></Card>
-        </section>
-      )}
-
       {/* Detalhamento */}
       {tab === 'scales' && (
         <section className="rounded-2xl bg-card/60 p-4 ring-1 ring-border space-y-4">
@@ -748,10 +669,20 @@ export function IntegratedAnalysis(props: {
             ) : chartTab === 'dist' ? (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={units.map((u) => ({ k: u, v: stat(inst.code, current, (r) => r.unit === u && (course === 'all' || r.course === course)).avg }))}>
+                  <BarChart data={dist} margin={{ top: 16 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                    <XAxis dataKey="k" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" /><YAxis domain={[inst.min, inst.max]} tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                    <Bar dataKey="v" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]}><LabelList dataKey="v" position="top" fontSize={11} formatter={(v: any) => fmt(v)} /></Bar>
+                    <XAxis dataKey="k" interval={0} stroke="hsl(var(--muted-foreground))"
+                      tick={({ x, y, payload, index }: any) => <text x={x} y={y + 14} textAnchor="middle" fontSize={12} fontWeight={700} fill={dist[index]?.color}>{payload.value}</text>} />
+                    <YAxis domain={[inst.min, inst.max]} tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                    <RTooltip cursor={{ fill: 'hsl(var(--muted) / .4)' }} content={({ active, payload }: any) => {
+                      if (!active || !payload?.length) return null;
+                      const r = payload[0].payload as (typeof dist)[number];
+                      return <div className="rounded-lg border bg-popover p-2.5 text-xs shadow-md"><p className="font-semibold" style={{ color: r.color }}>{r.k} · {r.label}</p><p>{fmt(r.avg)} · {r.n.toLocaleString('pt-BR')} respondentes</p></div>;
+                    }} />
+                    <Bar dataKey="avg" radius={[6, 6, 0, 0]} maxBarSize={120} isAnimationActive={false}>
+                      {dist.map((r) => <Cell key={r.k} fill={r.color} />)}
+                      <LabelList dataKey="avg" position="top" fontSize={11} formatter={(v: any) => fmt(v)} />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -765,7 +696,8 @@ export function IntegratedAnalysis(props: {
                     <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" domain={chartTab === 'cov' ? [0, 100] : [(m: number) => m - (inst.max - inst.min) * 0.04, (m: number) => m + (inst.max - inst.min) * 0.04]} tickFormatter={(v: number) => fmt(v)} />
                     <RTooltip formatter={(v: any) => fmt(v)} contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
                     {(() => {
-                      const keys = chartTab === 'cov' ? ['cov'] : ['a', ...groups.map((_, i) => `g${i}`)];
+                      const gKey = (i: number) => (chartTab === 'cov' ? `cov_g${i}` : `g${i}`);
+                      const keys = [chartTab === 'cov' ? 'cov' : 'a', ...groups.map((_, i) => gKey(i))];
                       const pill = (key: string, color: string, suffix = '') => (p: any) => {
                         const { x, y, value, index } = p;
                         if (value == null || x == null || y == null) return null;
@@ -789,7 +721,7 @@ export function IntegratedAnalysis(props: {
                           activeDot={{ r: 8, onClick: (_: any, p: any) => p?.payload?.sem && setSemester(p.payload.sem) }}>
                           <LabelList dataKey={chartTab === 'cov' ? 'cov' : 'a'} content={pill(chartTab === 'cov' ? 'cov' : 'a', 'hsl(var(--primary))', chartTab === 'cov' ? '%' : '')} />
                         </Line>,
-                        ...(chartTab === 'evo' ? groups.map((g, i) => <Line key={i} type="linear" dataKey={`g${i}`} name={LETTERS[i]} stroke={gColor(i)} strokeWidth={2.5} dot={{ r: 5, fill: 'hsl(var(--background))', strokeWidth: 2.5 }} isAnimationActive={false}><LabelList dataKey={`g${i}`} content={pill(`g${i}`, gColor(i))} /></Line>) : []),
+                        ...groups.map((g, i) => <Line key={i} type="linear" dataKey={gKey(i)} name={LETTERS[i]} stroke={gColor(i)} strokeWidth={2.5} dot={{ r: 5, fill: 'hsl(var(--background))', strokeWidth: 2.5 }} isAnimationActive={false}><LabelList dataKey={gKey(i)} content={pill(gKey(i), gColor(i), chartTab === 'cov' ? '%' : '')} /></Line>),
                       ];
                     })()}
                   </LineChart>
