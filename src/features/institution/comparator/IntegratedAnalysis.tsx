@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Info, CalendarDays, ShieldCheck } from 'lucide-react';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ReferenceArea, LabelList, BarChart, Bar, Cell } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ReferenceArea, LabelList, BarChart, Bar } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -46,7 +46,7 @@ export function IntegratedAnalysis(props: {
   const [groups, setGroups] = useState<{ unit: string; course: string }[]>([]);
   const [tab, setTab] = useState<'scales' | 'diary' | 'part'>('scales');
   const [mapBy, setMapBy] = useState<'course' | 'unit'>('course');
-  const [chartTab, setChartTab] = useState<'evo' | 'dist' | 'cov'>('evo');
+  const [chartTab, setChartTab] = useState<'evo' | 'cov'>('evo');
   const [asTable, setAsTable] = useState(false);
   const [diaryParam, setDiaryParam] = useState('avg_mood');
   const filtersRef = useRef<HTMLElement>(null);
@@ -118,9 +118,6 @@ export function IntegratedAnalysis(props: {
 
   const evo = semesters.map((s) => ({ sem: s, a: sA(inst.code, s).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, stat(inst.code, s, gFilter(g)).avg])), rede: stat(inst.code, s).avg, cov: popA ? Math.round((sA(inst.code, s).n / popA) * 100) : 0,
     ...Object.fromEntries(groups.map((g, i) => { const pg = gPop(g); return [`cov_g${i}`, pg ? Math.round((stat(inst.code, s, gFilter(g)).n / pg) * 100) : 0]; })) }));
-  // Distribuição: uma barra por grupo em análise (A + comparados), sem as demais unidades.
-  const dist = [{ k: 'A', label: labelA, color: 'hsl(var(--primary))', ...a },
-    ...groups.map((g, i) => ({ k: LETTERS[i], label: gLabel(g), color: gColor(i), ...(unavailable(inst) ? { n: 0, avg: null } : stat(inst.code, current, gFilter(g))) }))];
 
   const testLabel = tab === 'scales' ? `Escalas científicas · ${inst.short} (${inst.label})` : tab === 'diary' ? `Diário emocional · ${(DIARY_PARAMS.find((x) => x.key === diaryParam) ?? DIARY_PARAMS[1]).label}` : 'Participação';
   const summary = [{ k: 'A', color: 'hsl(var(--primary))', label: labelA }, ...groups.map((g, i) => ({ k: LETTERS[i], color: gColor(i), label: gLabel(g) }))];
@@ -657,35 +654,26 @@ export function IntegratedAnalysis(props: {
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div><h3 className="font-bold">Como evoluiu ao longo das coletas?</h3><p className="text-xs text-muted-foreground">{inst.short} · {inst.label} · média por semestre</p></div>
               <div className="flex rounded-lg bg-muted p-0.5 text-xs">
-                {([['evo', 'Evolução'], ['dist', 'Distribuição'], ['cov', 'Cobertura']] as const).map(([k, l]) => (
+                {([['evo', 'Evolução'], ['cov', 'Cobertura']] as const).map(([k, l]) => (
                   <button key={k} onClick={() => setChartTab(k)} className={`rounded-md px-3 py-1 ${chartTab === k ? 'bg-background font-semibold shadow-sm' : 'text-muted-foreground'}`}>{l}</button>
                 ))}
               </div>
               <Button variant="outline" size="sm" onClick={() => setAsTable((x) => !x)}>{asTable ? 'Ver gráfico' : 'Ver em tabela'}</Button>
             </div>
+            {!asTable && (
+              <div className="flex gap-2.5 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <div className="space-y-0.5">
+                  <p className="font-semibold">{chartTab === 'evo' ? 'O que a Evolução mostra' : 'O que a Cobertura mostra'}</p>
+                  <p className="text-muted-foreground">{chartTab === 'evo'
+                    ? `A média de ${inst.short} de cada grupo (A${groups.length ? ' e comparados' : ''}) em cada coleta semestral. Use para ver se o grupo está melhorando, piorando ou estável — ${inst.higherIsBetter ? 'aqui, valores maiores são mais favoráveis' : 'aqui, valores menores são mais favoráveis'}.`
+                    : 'A porcentagem de estudantes de cada grupo que respondeu ao instrumento em cada coleta (respondentes ÷ estudantes do grupo). Coberturas baixas tornam as médias menos representativas — leia a Evolução junto com este gráfico.'}</p>
+                </div>
+              </div>
+            )}
             {asTable ? (
               <table className="w-full text-sm"><thead className="text-left text-xs text-muted-foreground"><tr><th className="py-2">Coleta</th><th>A</th>{groups.map((_, i) => <th key={i}>{LETTERS[i]}</th>)}<th>Rede</th><th>Cobertura A</th></tr></thead>
                 <tbody>{evo.map((e) => <tr key={e.sem} className="border-t"><td className="py-2">{e.sem}</td><td className="font-semibold">{fmt(e.a)}</td>{groups.map((_, i) => <td key={i}>{fmt((e as any)[`g${i}`])}</td>)}<td>{fmt(e.rede)}</td><td>{e.cov}%</td></tr>)}</tbody></table>
-            ) : chartTab === 'dist' ? (
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dist} margin={{ top: 16 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                    <XAxis dataKey="k" interval={0} stroke="hsl(var(--muted-foreground))"
-                      tick={({ x, y, payload, index }: any) => <text x={x} y={y + 14} textAnchor="middle" fontSize={12} fontWeight={700} fill={dist[index]?.color}>{payload.value}</text>} />
-                    <YAxis domain={[inst.min, inst.max]} tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                    <RTooltip cursor={{ fill: 'hsl(var(--muted) / .4)' }} content={({ active, payload }: any) => {
-                      if (!active || !payload?.length) return null;
-                      const r = payload[0].payload as (typeof dist)[number];
-                      return <div className="rounded-lg border bg-popover p-2.5 text-xs shadow-md"><p className="font-semibold" style={{ color: r.color }}>{r.k} · {r.label}</p><p>{fmt(r.avg)} · {r.n.toLocaleString('pt-BR')} respondentes</p></div>;
-                    }} />
-                    <Bar dataKey="avg" radius={[6, 6, 0, 0]} maxBarSize={120} isAnimationActive={false}>
-                      {dist.map((r) => <Cell key={r.k} fill={r.color} />)}
-                      <LabelList dataKey="avg" position="top" fontSize={11} formatter={(v: any) => fmt(v)} />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
             ) : (
               <div className="h-96">
                 <ResponsiveContainer width="100%" height="100%">
