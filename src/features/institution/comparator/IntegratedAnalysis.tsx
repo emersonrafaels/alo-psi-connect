@@ -117,7 +117,7 @@ export function IntegratedAnalysis(props: {
   const network = unavailable(inst) ? null : stat(inst.code, current).avg;
   if (network != null) allVals.push(network);
   const lo = allVals.length ? Math.floor(Math.min(...allVals) - 3) : inst.min, hi = allVals.length ? Math.ceil(Math.max(...allVals) + 3) : inst.max;
-  const mx = (v: number) => { const p = ((v - lo) / (hi - lo || 1)) * 100; return inst.higherIsBetter ? p : 100 - p; };
+  const mx = (v: number) => ((v - lo) / (hi - lo || 1)) * 100;
   const mapTicks = Array.from({ length: 5 }, (_, i) => lo + ((hi - lo) / 4) * i);
   const unitTag = dotUnits.map((u) => u.split(/\s+/).map((w) => w[0]?.toUpperCase() ?? '').join('')).join(' – ');
   const unitColor = (i: number) => (i === 0 ? 'hsl(var(--primary))' : `hsl(var(--chart-${(i % 4) + 2}))`);
@@ -571,7 +571,7 @@ export function IntegratedAnalysis(props: {
           <p className="text-sm"><span className="font-semibold">Detalhamento</span> <span className="text-muted-foreground">Mapa por grupo, detalhe do recorte e evolução no tempo.</span></p>
           <Card><CardContent className="space-y-4 p-5">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <div><h3 className="font-bold">Mapa por {mapBy === 'course' ? 'curso' : 'unidade'} · {current}</h3><p className="text-xs text-muted-foreground">Mais à direita = mais favorável · rede {fmt(network)}</p></div>
+              <div><h3 className="font-bold">Mapa por {mapBy === 'course' ? 'curso' : 'unidade'} · {current}</h3><p className="text-xs text-muted-foreground">Mais à {inst.higherIsBetter ? 'direita' : 'esquerda'} = mais favorável · rede {fmt(network)}</p></div>
               {mapBy === 'course' && <div className="flex flex-wrap gap-3 text-xs">{dotUnits.map((u, i) => <span key={u} className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full" style={{ background: unitColor(i) }} />{u}</span>)}<span className="flex items-center gap-1"><span className="h-3 w-px bg-foreground/50" />Rede</span></div>}
             </div>
             <div className="flex items-center gap-2 text-xs">
