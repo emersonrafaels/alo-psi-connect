@@ -567,7 +567,7 @@ export const HiddenMoodDiaryPrototypeHistory = () => {
                           <Sparkles className="h-4 w-4 text-[#5d35c3]" />
 
                           <p className="text-sm font-semibold text-[#112c6b]">
-                            Análise Medcos Track
+                            Análise Bem Estar
                           </p>
 
                           <span

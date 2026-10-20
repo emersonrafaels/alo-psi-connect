@@ -3,7 +3,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TriageRecord } from '@/hooks/useStudentTriage';
 import { ClipboardCheck, Clock, CheckCircle2, TrendingUp, Maximize2 } from 'lucide-react';
-import { ComparisonTooltip } from './ComparisonTooltip';
 import { DetailModal } from './DetailModal';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -11,31 +10,10 @@ import { ptBR } from 'date-fns/locale';
 interface TriageMetricsDashboardProps {
   triageRecords: TriageRecord[];
   periodDays?: number;
-  compareEnabled?: boolean;
 }
 
-function DeltaIndicator({ current, previous, invertBetter, label, periodLabel }: { current: number; previous: number; invertBetter?: boolean; label?: string; periodLabel?: string }) {
-  const delta = current - previous;
-  if (delta === 0) return <span className="text-[10px] text-muted-foreground ml-1">(=)</span>;
-  const isPositive = delta > 0;
-  const isBetter = invertBetter ? !isPositive : isPositive;
-  return (
-    <ComparisonTooltip
-      currentValue={current}
-      previousValue={previous}
-      label={label || 'Comparativo'}
-      periodLabel={periodLabel}
-      invertBetter={invertBetter}
-      format={(v) => String(Math.round(v * 10) / 10)}
-    >
-      <span className={`text-[10px] ml-1 inline-flex items-center gap-0.5 cursor-help ${isBetter ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-        {isPositive ? '+' : ''}{delta}
-      </span>
-    </ComparisonTooltip>
-  );
-}
 
-export function TriageMetricsDashboard({ triageRecords, periodDays = 15, compareEnabled = false }: TriageMetricsDashboardProps) {
+export function TriageMetricsDashboard({ triageRecords, periodDays = 15 }: TriageMetricsDashboardProps) {
   const [detailModal, setDetailModal] = useState<'triages' | 'resolution' | 'rate' | 'weekly' | null>(null);
 
   const metrics = useMemo(() => {
@@ -46,16 +24,8 @@ export function TriageMetricsDashboard({ triageRecords, periodDays = 15, compare
     currentStart.setDate(currentStart.getDate() - periodDays);
     currentStart.setHours(0, 0, 0, 0);
 
-    // Previous period
-    const prevStart = new Date(now);
-    prevStart.setDate(prevStart.getDate() - periodDays * 2);
-    prevStart.setHours(0, 0, 0, 0);
 
     const currentRecords = triageRecords.filter(t => new Date(t.created_at) >= currentStart);
-    const prevRecords = triageRecords.filter(t => {
-      const d = new Date(t.created_at);
-      return d >= prevStart && d < currentStart;
-    });
 
     const resolved = triageRecords.filter(t => t.status === 'resolved' && t.resolved_at);
 
@@ -97,7 +67,6 @@ export function TriageMetricsDashboard({ triageRecords, periodDays = 15, compare
 
     return {
       currentCount: currentRecords.length,
-      prevCount: prevRecords.length,
       avgResolutionDays,
       resolutionRate,
       weeklyData,
@@ -135,7 +104,6 @@ export function TriageMetricsDashboard({ triageRecords, periodDays = 15, compare
             <div>
               <p className="text-lg font-bold">
                 {metrics.currentCount}
-                {compareEnabled && <DeltaIndicator current={metrics.currentCount} previous={metrics.prevCount} label="Triagens no período" />}
               </p>
               <p className="text-[11px] text-muted-foreground">Triagens ({periodDays}d)</p>
             </div>
@@ -224,12 +192,6 @@ export function TriageMetricsDashboard({ triageRecords, periodDays = 15, compare
               <p className="text-xs text-muted-foreground">Resolvidos</p>
             </div>
           </div>
-          {compareEnabled && (
-            <div className="text-sm text-muted-foreground">
-              Período anterior: <strong>{metrics.prevCount}</strong> triagens.
-              Variação: <strong>{metrics.currentCount - metrics.prevCount > 0 ? '+' : ''}{metrics.currentCount - metrics.prevCount}</strong>.
-            </div>
-          )}
         </div>
       </DetailModal>
 

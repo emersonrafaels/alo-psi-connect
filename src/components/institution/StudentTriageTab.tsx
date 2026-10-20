@@ -11,11 +11,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play, ChevronRight, ArrowUp, ArrowDown, GitCompareArrows, Maximize2, BookOpen, Users } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play, ChevronRight, Maximize2, BookOpen, Users } from 'lucide-react';
 import { subDays } from 'date-fns';
 import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
@@ -25,7 +23,6 @@ import { StudentActivityModal } from './StudentActivityModal';
 import { BatchTriageDialog } from './BatchTriageDialog';
 import { TriageMetricsDashboard } from './TriageMetricsDashboard';
 import { QuickNotePopover } from './QuickNotePopover';
-import { ComparisonTooltip } from './ComparisonTooltip';
 import { DetailModal } from './DetailModal';
 import { useInstitutionNotes } from '@/hooks/useInstitutionNotes';
 import { anonymizeStudentName, anonymizeInitials, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
@@ -362,12 +359,9 @@ function FollowUpIndicator({ date }: {date: string;}) {
 
 export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const [analysisPeriod, setAnalysisPeriod] = useTriagePeriod();
-  const [compareEnabled, setCompareEnabled] = useState(false);
-  const [comparePeriod, setComparePeriod] = useState<number>(15);
   const { data: students = [], isLoading } = useStudentTriageData(
     institutionId,
-    analysisPeriod,
-    compareEnabled ? comparePeriod : null
+    analysisPeriod
   );
   const { notes: institutionNotes } = useInstitutionNotes(institutionId);
   const { data: triageRecords = [] } = useTriageRecords(institutionId);
@@ -398,52 +392,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
     return c;
   }, [students]);
 
-  // Compute previous period risk counts for comparison
-  const prevCounts = useMemo(() => {
-    const c: Record<RiskLevel, number> = { critical: 0, alert: 0, attention: 0, healthy: 0, no_data: 0 };
-    students.forEach((s) => {
-      // Determine what the previous period risk level would have been
-      if (s.prevAvgMood === null && s.prevEntryCount === 0) {
-        c.no_data++;
-      } else if (
-        (s.prevAvgMood !== null && s.prevAvgMood <= 1.5) ||
-        (s.prevAvgAnxiety !== null && s.prevAvgAnxiety >= 4.5)
-      ) {
-        c.critical++;
-      } else if (
-        (s.prevAvgMood !== null && s.prevAvgMood <= 2.5) ||
-        (s.prevAvgAnxiety !== null && s.prevAvgAnxiety >= 3.5) ||
-        (s.prevAvgEnergy !== null && s.prevAvgEnergy <= 1.5)
-      ) {
-        c.alert++;
-      } else if (
-        (s.prevAvgMood !== null && s.prevAvgMood <= 3.0) ||
-        (s.prevAvgAnxiety !== null && s.prevAvgAnxiety >= 3.0) ||
-        (s.prevAvgSleep !== null && s.prevAvgSleep <= 2.0)
-      ) {
-        c.attention++;
-      } else {
-        c.healthy++;
-      }
-    });
-    return c;
-  }, [students]);
-
-  // Previous period class averages for comparison
-  const prevClassAverages = useMemo(() => {
-    const withData = students.filter((s) => s.prevEntryCount > 0);
-    if (withData.length === 0) return { mood: null, anxiety: null, energy: null, sleep: null };
-    const avg = (vals: (number | null)[]) => {
-      const valid = vals.filter((v): v is number => v != null);
-      return valid.length > 0 ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
-    };
-    return {
-      mood: avg(withData.map((s) => s.prevAvgMood)),
-      anxiety: avg(withData.map((s) => s.prevAvgAnxiety)),
-      energy: avg(withData.map((s) => s.prevAvgEnergy)),
-      sleep: avg(withData.map((s) => s.prevAvgSleep))
-    };
-  }, [students]);
 
   const totalStudents = students.length;
 
@@ -554,39 +502,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
     students.forEach((s) => groups[s.riskLevel].push(s));
     return groups;
   }, [students]);
-
-  // Compute previous risk level for each student (for comparison in modal)
-  const prevRiskByStudent = useMemo(() => {
-    const map = new Map<string, RiskLevel>();
-    students.forEach((s) => {
-      if (s.prevAvgMood === null && s.prevEntryCount === 0) {
-        map.set(s.patientId, 'no_data');
-      } else if ((s.prevAvgMood !== null && s.prevAvgMood <= 1.5) || (s.prevAvgAnxiety !== null && s.prevAvgAnxiety >= 4.5)) {
-        map.set(s.patientId, 'critical');
-      } else if ((s.prevAvgMood !== null && s.prevAvgMood <= 2.5) || (s.prevAvgAnxiety !== null && s.prevAvgAnxiety >= 3.5) || (s.prevAvgEnergy !== null && s.prevAvgEnergy <= 1.5)) {
-        map.set(s.patientId, 'alert');
-      } else if ((s.prevAvgMood !== null && s.prevAvgMood <= 3.0) || (s.prevAvgAnxiety !== null && s.prevAvgAnxiety >= 3.0) || (s.prevAvgSleep !== null && s.prevAvgSleep <= 2.0)) {
-        map.set(s.patientId, 'attention');
-      } else {
-        map.set(s.patientId, 'healthy');
-      }
-    });
-    return map;
-  }, [students]);
-
-  // Period date labels
-  const periodLabelsComputed = useMemo(() => {
-    const now = new Date();
-    const currentStart = new Date(now);
-    currentStart.setDate(currentStart.getDate() - analysisPeriod);
-    const prevEnd = new Date(currentStart);
-    const prevStart = new Date(prevEnd);
-    prevStart.setDate(prevStart.getDate() - comparePeriod);
-    return {
-      currentLabel: `${format(currentStart, 'dd/MM', { locale: ptBR })} — ${format(now, 'dd/MM', { locale: ptBR })}`,
-      prevLabel: `${format(prevStart, 'dd/MM', { locale: ptBR })} — ${format(prevEnd, 'dd/MM', { locale: ptBR })}`,
-    };
-  }, [analysisPeriod, comparePeriod]);
 
   // Class averages detail data (min, max, median)
   const classAvgDetail = useMemo(() => {
@@ -745,8 +660,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             const config = riskConfig[level];
             const Icon = config.icon;
             const count = counts[level];
-            const prevCount = prevCounts[level];
-            const delta = count - prevCount;
             const pct = totalStudents > 0 ? count / totalStudents * 100 : 0;
             const tooltip = riskTooltips[level];
             const isSelected = riskFilter === level;
@@ -779,23 +692,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                     <div>
                       <p className="text-2xl font-bold tracking-tight">
                         {count}
-                        {compareEnabled && delta !== 0 && (
-                          <ComparisonTooltip
-                            currentValue={count}
-                            previousValue={prevCount}
-                            label={`Alunos ${config.label}`}
-                            periodLabel={`Comparativo: ${periodLabelsComputed.prevLabel}`}
-                            invertBetter={true}
-                            format={(v) => String(Math.round(v))}
-                          >
-                            <span className={`text-xs font-medium ml-1 cursor-help ${delta > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                              ({delta > 0 ? '+' : ''}{delta})
-                            </span>
-                          </ComparisonTooltip>
-                        )}
-                        {compareEnabled && delta === 0 && prevCount > 0 && (
-                          <span className="text-xs font-medium ml-1 text-muted-foreground">(=)</span>
-                        )}
                       </p>
                       <p className={`text-xs font-semibold mt-0.5 ${config.labelColor}`}>{config.label}</p>
                     </div>
@@ -814,57 +710,21 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             {classAverages.mood != null && (
               <span className="flex items-center gap-1">
                 <Activity className="h-3 w-3" />Humor: {classAverages.mood.toFixed(1)}
-                {compareEnabled && prevClassAverages.mood != null && (() => {
-                  const d = classAverages.mood! - prevClassAverages.mood!;
-                  if (Math.abs(d) < 0.05) return <span className="text-muted-foreground/60">(=)</span>;
-                  return (
-                    <ComparisonTooltip currentValue={classAverages.mood!} previousValue={prevClassAverages.mood!} label="Humor da turma" periodLabel={`Comparativo: ${periodLabelsComputed.prevLabel}`}>
-                      <span className={`cursor-help ${d > 0 ? 'text-green-600' : 'text-red-600'}`}>({d > 0 ? '+' : ''}{d.toFixed(1)})</span>
-                    </ComparisonTooltip>
-                  );
-                })()}
               </span>
             )}
             {classAverages.anxiety != null && (
               <span className="flex items-center gap-1">
                 <Brain className="h-3 w-3" />Ansiedade: {classAverages.anxiety.toFixed(1)}
-                {compareEnabled && prevClassAverages.anxiety != null && (() => {
-                  const d = classAverages.anxiety! - prevClassAverages.anxiety!;
-                  if (Math.abs(d) < 0.05) return <span className="text-muted-foreground/60">(=)</span>;
-                  return (
-                    <ComparisonTooltip currentValue={classAverages.anxiety!} previousValue={prevClassAverages.anxiety!} label="Ansiedade da turma" periodLabel={`Comparativo: ${periodLabelsComputed.prevLabel}`} invertBetter>
-                      <span className={`cursor-help ${d < 0 ? 'text-green-600' : 'text-red-600'}`}>({d > 0 ? '+' : ''}{d.toFixed(1)})</span>
-                    </ComparisonTooltip>
-                  );
-                })()}
               </span>
             )}
             {classAverages.energy != null && (
               <span className="flex items-center gap-1">
                 <Zap className="h-3 w-3" />Energia: {classAverages.energy.toFixed(1)}
-                {compareEnabled && prevClassAverages.energy != null && (() => {
-                  const d = classAverages.energy! - prevClassAverages.energy!;
-                  if (Math.abs(d) < 0.05) return <span className="text-muted-foreground/60">(=)</span>;
-                  return (
-                    <ComparisonTooltip currentValue={classAverages.energy!} previousValue={prevClassAverages.energy!} label="Energia da turma" periodLabel={`Comparativo: ${periodLabelsComputed.prevLabel}`}>
-                      <span className={`cursor-help ${d > 0 ? 'text-green-600' : 'text-red-600'}`}>({d > 0 ? '+' : ''}{d.toFixed(1)})</span>
-                    </ComparisonTooltip>
-                  );
-                })()}
               </span>
             )}
             {classAverages.sleep != null && (
               <span className="flex items-center gap-1">
                 <Moon className="h-3 w-3" />Sono: {classAverages.sleep.toFixed(1)}
-                {compareEnabled && prevClassAverages.sleep != null && (() => {
-                  const d = classAverages.sleep! - prevClassAverages.sleep!;
-                  if (Math.abs(d) < 0.05) return <span className="text-muted-foreground/60">(=)</span>;
-                  return (
-                    <ComparisonTooltip currentValue={classAverages.sleep!} previousValue={prevClassAverages.sleep!} label="Sono da turma" periodLabel={`Comparativo: ${periodLabelsComputed.prevLabel}`}>
-                      <span className={`cursor-help ${d > 0 ? 'text-green-600' : 'text-red-600'}`}>({d > 0 ? '+' : ''}{d.toFixed(1)})</span>
-                    </ComparisonTooltip>
-                  );
-                })()}
               </span>
             )}
             <button
@@ -947,7 +807,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
         )}
 
         {/* Triage Metrics Dashboard */}
-        <TriageMetricsDashboard triageRecords={triageRecords} periodDays={analysisPeriod} compareEnabled={compareEnabled} />
+        <TriageMetricsDashboard triageRecords={triageRecords} periodDays={analysisPeriod} />
 
         {/* Contexto Institucional */}
         {(() => {
@@ -1032,40 +892,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 border rounded-md px-3 py-1.5 bg-muted/30">
-            <Switch
-              id="compare-toggle"
-              checked={compareEnabled}
-              onCheckedChange={setCompareEnabled}
-              className="scale-90"
-            />
-            <MetricTooltip title="📊 Comparar períodos" description="Ativa a comparação com um período anterior para identificar tendências de melhora ou piora nos indicadores.">
-              <Label htmlFor="compare-toggle" className="text-xs font-medium cursor-pointer flex items-center gap-1">
-                <GitCompareArrows className="h-3.5 w-3.5" />
-                Comparar
-              </Label>
-            </MetricTooltip>
-          </div>
-
-          {compareEnabled && (
-            <div className="flex flex-col gap-1">
-              <Select value={String(comparePeriod)} onValueChange={(v) => setComparePeriod(Number(v))}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">vs Última semana (7d)</SelectItem>
-                  <SelectItem value="15">vs Quinzena (15d)</SelectItem>
-                  <SelectItem value="30">vs Último mês (30d)</SelectItem>
-                  <SelectItem value="60">vs 2 meses (60d)</SelectItem>
-                  <SelectItem value="90">vs Trimestre (90d)</SelectItem>
-                </SelectContent>
-              </Select>
-              <span className="text-[11px] text-muted-foreground ml-1">
-                {format(subDays(new Date(), analysisPeriod + comparePeriod), 'dd/MM')} – {format(subDays(new Date(), analysisPeriod), 'dd/MM')}
-              </span>
-            </div>
-          )}
 
           <Select value={riskFilter} onValueChange={setRiskFilter}>
             <SelectTrigger className="w-[180px]">
@@ -1097,29 +923,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           </DropdownMenu>
         </div>
 
-        {/* Period comparison banner */}
-        {compareEnabled && (
-          <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted/40 border border-border/50 text-xs text-muted-foreground">
-            <GitCompareArrows className="h-4 w-4 shrink-0 text-primary/70" />
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span>
-                <span className="font-semibold text-foreground">Período atual:</span>{' '}
-                {format((() => { const d = new Date(); d.setDate(d.getDate() - analysisPeriod); return d; })(), 'dd/MM', { locale: ptBR })}
-                {' — '}
-                {format(new Date(), 'dd/MM', { locale: ptBR })}
-                {' '}({analysisPeriod}d)
-              </span>
-              <span className="text-muted-foreground/50">vs.</span>
-              <span>
-                <span className="font-semibold text-foreground">Comparativo:</span>{' '}
-                {format((() => { const d = new Date(); d.setDate(d.getDate() - analysisPeriod - comparePeriod); return d; })(), 'dd/MM', { locale: ptBR })}
-                {' — '}
-                {format((() => { const d = new Date(); d.setDate(d.getDate() - analysisPeriod); return d; })(), 'dd/MM', { locale: ptBR })}
-                {' '}({comparePeriod}d)
-              </span>
-            </div>
-          </div>
-        )}
 
         {/* Sub-tabs for triage workflow */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -1273,16 +1076,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                   <span className="flex items-center gap-1 text-muted-foreground"><Activity className="h-3 w-3" />Humor</span>
                                   <span className="font-medium flex items-center gap-0.5">
                                     {student.avgMood?.toFixed(1) ?? '—'}
-                                    {compareEnabled && student.avgMood != null && student.prevAvgMood != null && (() => {
-                                      const d = student.avgMood! - student.prevAvgMood!;
-                                      if (Math.abs(d) < 0.15) return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
-                                      const arrow = d > 0 ? <ArrowUp className="h-2.5 w-2.5 text-green-500" /> : <ArrowDown className="h-2.5 w-2.5 text-red-500" />;
-                                      return (
-                                        <ComparisonTooltip currentValue={student.avgMood!} previousValue={student.prevAvgMood!} label="Humor" periodLabel={periodLabelsComputed.prevLabel}>
-                                          <span className="cursor-help">{arrow}</span>
-                                        </ComparisonTooltip>
-                                      );
-                                    })()}
                                     {classAverages.mood != null && student.avgMood != null && (
                                       <MetricTooltip title="👥 Média da turma" description={`Média da turma: ${classAverages.mood.toFixed(1)}. ${student.avgMood >= classAverages.mood ? 'Acima' : 'Abaixo'} da média.`}>
                                         <span className={`inline-block h-2 w-2 rounded-full cursor-help ml-0.5 ${student.avgMood >= classAverages.mood ? 'bg-green-500' : 'bg-red-500'}`} />
@@ -1299,16 +1092,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                   <span className="flex items-center gap-1 text-muted-foreground"><Brain className="h-3 w-3" />Ansiedade</span>
                                   <span className="font-medium flex items-center gap-0.5">
                                     {student.avgAnxiety?.toFixed(1) ?? '—'}
-                                    {compareEnabled && student.avgAnxiety != null && student.prevAvgAnxiety != null && (() => {
-                                      const d = student.avgAnxiety! - student.prevAvgAnxiety!;
-                                      if (Math.abs(d) < 0.15) return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
-                                      const arrow = d < 0 ? <ArrowDown className="h-2.5 w-2.5 text-green-500" /> : <ArrowUp className="h-2.5 w-2.5 text-red-500" />;
-                                      return (
-                                        <ComparisonTooltip currentValue={student.avgAnxiety!} previousValue={student.prevAvgAnxiety!} label="Ansiedade" periodLabel={periodLabelsComputed.prevLabel} invertBetter>
-                                          <span className="cursor-help">{arrow}</span>
-                                        </ComparisonTooltip>
-                                      );
-                                    })()}
                                     {classAverages.anxiety != null && student.avgAnxiety != null && (
                                       <MetricTooltip title="👥 Média da turma" description={`Média da turma: ${classAverages.anxiety.toFixed(1)}. ${student.avgAnxiety <= classAverages.anxiety ? 'Melhor' : 'Pior'} que a média.`}>
                                         <span className={`inline-block h-2 w-2 rounded-full cursor-help ml-0.5 ${student.avgAnxiety <= classAverages.anxiety ? 'bg-green-500' : 'bg-red-500'}`} />
@@ -1325,16 +1108,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                   <span className="flex items-center gap-1 text-muted-foreground"><Zap className="h-3 w-3" />Energia</span>
                                   <span className="font-medium flex items-center gap-0.5">
                                     {student.avgEnergy?.toFixed(1) ?? '—'}
-                                    {compareEnabled && student.avgEnergy != null && student.prevAvgEnergy != null && (() => {
-                                      const d = student.avgEnergy! - student.prevAvgEnergy!;
-                                      if (Math.abs(d) < 0.15) return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
-                                      const arrow = d > 0 ? <ArrowUp className="h-2.5 w-2.5 text-green-500" /> : <ArrowDown className="h-2.5 w-2.5 text-red-500" />;
-                                      return (
-                                        <ComparisonTooltip currentValue={student.avgEnergy!} previousValue={student.prevAvgEnergy!} label="Energia" periodLabel={periodLabelsComputed.prevLabel}>
-                                          <span className="cursor-help">{arrow}</span>
-                                        </ComparisonTooltip>
-                                      );
-                                    })()}
                                     {classAverages.energy != null && student.avgEnergy != null && (
                                       <MetricTooltip title="👥 Média da turma" description={`Média da turma: ${classAverages.energy.toFixed(1)}. ${student.avgEnergy >= classAverages.energy ? 'Acima' : 'Abaixo'} da média.`}>
                                         <span className={`inline-block h-2 w-2 rounded-full cursor-help ml-0.5 ${student.avgEnergy >= classAverages.energy ? 'bg-green-500' : 'bg-red-500'}`} />
@@ -1351,16 +1124,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                                   <span className="flex items-center gap-1 text-muted-foreground"><Moon className="h-3 w-3" />Sono</span>
                                   <span className="font-medium flex items-center gap-0.5">
                                     {student.avgSleep?.toFixed(1) ?? '—'}
-                                    {compareEnabled && student.avgSleep != null && student.prevAvgSleep != null && (() => {
-                                      const d = student.avgSleep! - student.prevAvgSleep!;
-                                      if (Math.abs(d) < 0.15) return <Minus className="h-2.5 w-2.5 text-muted-foreground/40" />;
-                                      const arrow = d > 0 ? <ArrowUp className="h-2.5 w-2.5 text-green-500" /> : <ArrowDown className="h-2.5 w-2.5 text-red-500" />;
-                                      return (
-                                        <ComparisonTooltip currentValue={student.avgSleep!} previousValue={student.prevAvgSleep!} label="Sono" periodLabel={periodLabelsComputed.prevLabel}>
-                                          <span className="cursor-help">{arrow}</span>
-                                        </ComparisonTooltip>
-                                      );
-                                    })()}
                                     {classAverages.sleep != null && student.avgSleep != null && (
                                       <MetricTooltip title="👥 Média da turma" description={`Média da turma: ${classAverages.sleep.toFixed(1)}. ${student.avgSleep >= classAverages.sleep ? 'Acima' : 'Abaixo'} da média.`}>
                                         <span className={`inline-block h-2 w-2 rounded-full cursor-help ml-0.5 ${student.avgSleep >= classAverages.sleep ? 'bg-green-500' : 'bg-red-500'}`} />
@@ -1659,14 +1422,11 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                       <TableHead>Ansiedade</TableHead>
                       <TableHead>Energia</TableHead>
                       <TableHead>Sono</TableHead>
-                      {compareEnabled && <TableHead>Nível anterior</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {studentsByRisk[riskDetailLevel].map((s, idx) => {
                       const displayName = anonymizeStudentName(patientIndexMap.get(s.patientId) ?? idx);
-                      const prevLevel = prevRiskByStudent.get(s.patientId);
-                      const changed = compareEnabled && prevLevel && prevLevel !== riskDetailLevel;
                       return (
                         <TableRow key={s.patientId}>
                           <TableCell className="font-medium">{displayName}</TableCell>
@@ -1674,16 +1434,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                           <TableCell>{s.avgAnxiety?.toFixed(1) ?? '—'}</TableCell>
                           <TableCell>{s.avgEnergy?.toFixed(1) ?? '—'}</TableCell>
                           <TableCell>{s.avgSleep?.toFixed(1) ?? '—'}</TableCell>
-                          {compareEnabled && (
-                            <TableCell>
-                              {prevLevel && (
-                                <Badge className={`text-xs ${riskConfig[prevLevel].color}`}>
-                                  {riskConfig[prevLevel].label}
-                                </Badge>
-                              )}
-                              {changed && <span className="text-[10px] text-muted-foreground ml-1">→ mudou</span>}
-                            </TableCell>
-                          )}
                         </TableRow>
                       );
                     })}
@@ -1712,19 +1462,16 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   <TableHead>Mediana</TableHead>
                   <TableHead>Mín</TableHead>
                   <TableHead>Máx</TableHead>
-                  {compareEnabled && <TableHead>Anterior</TableHead>}
-                  {compareEnabled && <TableHead>Variação</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {([
-                  { key: 'mood' as const, label: '😊 Humor', prev: prevClassAverages.mood },
-                  { key: 'anxiety' as const, label: '😰 Ansiedade', prev: prevClassAverages.anxiety },
-                  { key: 'energy' as const, label: '⚡ Energia', prev: prevClassAverages.energy },
-                  { key: 'sleep' as const, label: '🌙 Sono', prev: prevClassAverages.sleep },
-                ]).map(({ key, label, prev }) => {
+                  { key: 'mood' as const, label: '😊 Humor' },
+                  { key: 'anxiety' as const, label: '😰 Ansiedade' },
+                  { key: 'energy' as const, label: '⚡ Energia' },
+                  { key: 'sleep' as const, label: '🌙 Sono' },
+                ]).map(({ key, label }) => {
                   const detail = classAvgDetail[key];
-                  const delta = detail && prev != null ? detail.avg - prev : null;
                   return (
                     <TableRow key={key}>
                       <TableCell className="font-medium">{label}</TableCell>
@@ -1732,16 +1479,6 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                       <TableCell>{detail?.median.toFixed(1) ?? '—'}</TableCell>
                       <TableCell>{detail?.min.toFixed(1) ?? '—'}</TableCell>
                       <TableCell>{detail?.max.toFixed(1) ?? '—'}</TableCell>
-                      {compareEnabled && <TableCell>{prev?.toFixed(1) ?? '—'}</TableCell>}
-                      {compareEnabled && (
-                        <TableCell>
-                          {delta != null ? (
-                            <span className={delta > 0 ? (key === 'anxiety' ? 'text-red-600' : 'text-green-600') : delta < 0 ? (key === 'anxiety' ? 'text-green-600' : 'text-red-600') : 'text-muted-foreground'}>
-                              {delta > 0 ? '+' : ''}{delta.toFixed(1)}
-                            </span>
-                          ) : '—'}
-                        </TableCell>
-                      )}
                     </TableRow>
                   );
                 })}
