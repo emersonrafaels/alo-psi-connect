@@ -626,9 +626,20 @@ export function IntegratedAnalysis(props: {
           </CardContent></Card>
 
           <Card className="border-t-4 border-t-primary"><CardContent className="space-y-4 p-5">
-            <p className="flex items-center gap-2 text-xs"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">A</span>{unit === 'all' ? 'Toda a rede' : unit}</p>
-            <h3 className="text-xl font-bold">{course === 'all' ? 'Todos os cursos' : course}</h3>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+              {[{ k: 'A', color: 'hsl(var(--primary))', unit, course }, ...groups.map((g, i) => ({ k: LETTERS[i], color: gColor(i), unit: g.unit, course: g.course }))].map((s) => (
+                <span key={s.k} className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-primary-foreground" style={{ background: s.color }}>{s.k}</span>
+                  {s.unit === 'all' ? 'Toda a rede' : s.unit}{groups.length > 0 && <span className="text-muted-foreground">· {s.course === 'all' ? 'Todos os cursos' : s.course}</span>}
+                </span>
+              ))}
+            </div>
+            <h3 className="text-xl font-bold">{(() => {
+              const cs = new Set([course, ...groups.map((g) => g.course)]);
+              return cs.size > 1 ? 'Comparação entre recortes' : course === 'all' ? 'Todos os cursos' : course;
+            })()}</h3>
             <div className="flex flex-wrap items-baseline gap-2">
+              {groups.length > 0 && <span className="text-sm font-bold text-primary">A ·</span>}
               <span className="text-4xl font-bold tabular-nums">{fmt(a.avg)}</span><span className="text-sm text-muted-foreground">/ {inst.max}</span>
               {a.avg != null && aPrev.avg != null && <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">{a.avg - aPrev.avg >= 0 ? '+' : '−'}{fmt(Math.abs(a.avg - aPrev.avg))} vs {prev}</span>}
               {aBand && <span className={`rounded px-2 py-0.5 text-xs font-semibold ${TONE_CLASS[aBand.tone]}`}>Faixa: {aBand.label}</span>}
@@ -638,18 +649,55 @@ export function IntegratedAnalysis(props: {
               <div><p className="text-[11px] text-muted-foreground">Cobertura <Hint t="Respondentes ÷ estudantes do recorte." /></p><p className="font-bold">{popA ? Math.round((a.n / popA) * 100) : 0}%</p></div>
               <div><p className="text-[11px] text-muted-foreground">vs rede <Hint t="Diferença em relação à média da rede." /></p><p className="font-bold">{a.avg != null && network != null ? `${a.avg - network >= 0 ? '+' : '−'}${fmt(Math.abs(a.avg - network))}` : '—'}</p></div>
             </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold">Média por {mapBy === 'course' && course === 'all' ? 'curso' : 'unidade'} neste recorte</p>
-              <div className="h-32">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={(course === 'all' ? courses.map((c) => ({ k: c, v: stat(inst.code, current, (r) => (unit === 'all' || r.unit === unit) && r.course === c).avg })) : units.map((u) => ({ k: u, v: stat(inst.code, current, (r) => r.unit === u && r.course === course).avg })))}>
-                    <XAxis dataKey="k" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis hide domain={[inst.min, inst.max]} />
-                    <Bar dataKey="v" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}><LabelList dataKey="v" position="top" fontSize={10} formatter={(v: any) => fmt(v)} /></Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+            {(() => {
+              // Categorias seguem o recorte A; cada série (A, grupos comparados ou rede) aplica o próprio filtro na outra dimensão.
+              const byCourse = course === 'all';
+              const series = [{ key: 'a', k: 'A', label: labelA, color: 'hsl(var(--primary))', unit, course },
+                ...(groups.length ? groups.map((g, i) => ({ key: `g${i}`, k: LETTERS[i], label: gLabel(g), color: gColor(i), unit: g.unit, course: g.course }))
+                  : [{ key: 'rede', k: 'Rede', label: 'média geral', color: 'hsl(var(--muted-foreground))', unit: 'all', course: 'all' }])];
+              const data = (byCourse ? courses : units).map((cat) => ({ k: cat, ...Object.fromEntries(series.flatMap((s) => {
+                const st = unavailable(inst) ? { n: 0, avg: null } : stat(inst.code, current, (r) => byCourse ? (s.unit === 'all' || r.unit === s.unit) && r.course === cat : r.unit === cat && (s.course === 'all' || r.course === s.course));
+                return [[s.key, st.avg], [`${s.key}_n`, st.n], [`${s.key}_pop`, byCourse ? popFor(s.unit, cat) : popFor(cat, s.course)]];
+              })) }));
+              const tip = ({ active, payload, label }: any) => {
+                if (!active || !payload?.length) return null;
+                const row = payload[0].payload;
+                return (
+                  <div className="space-y-1.5 rounded-lg border bg-popover p-2.5 text-xs shadow-md">
+                    <p className="font-semibold">{label}</p>
+                    {series.map((s) => {
+                      const n = row[`${s.key}_n`] as number, pop = row[`${s.key}_pop`] as number;
+                      return (
+                        <div key={s.key}>
+                          <p className="font-semibold" style={{ color: s.color }}>{s.k} · {fmt(row[s.key])}</p>
+                          <p className="text-muted-foreground">{n.toLocaleString('pt-BR')} respondentes · cobertura {pop ? `${Math.round((n / pop) * 100)}%` : '—'}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              };
+              return (
+                <div>
+                  <p className="mb-2 text-xs font-semibold">Média por {byCourse ? 'curso' : 'unidade'} neste recorte</p>
+                  <div className="h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data} barGap={2} margin={{ top: 16 }}>
+                        <XAxis dataKey="k" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                        <YAxis hide domain={[inst.min, inst.max]} />
+                        <RTooltip content={tip} cursor={{ fill: 'hsl(var(--muted) / .4)' }} />
+                        {series.map((s) => (
+                          <Bar key={s.key} dataKey={s.key} name={s.k} fill={s.color} radius={[4, 4, 0, 0]} isAnimationActive={false}>
+                            <LabelList dataKey={s.key} position="top" fontSize={10} fill={s.color} formatter={(v: any) => fmt(v)} />
+                          </Bar>
+                        ))}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{series.map((s, i) => <span key={s.key}>{i > 0 && ' · '}<span className="font-semibold" style={{ color: s.color }}>■ {s.k} · {s.label}</span></span>)}</p>
+                </div>
+              );
+            })()}
             <Button variant="outline" className="w-full" disabled title="Em breve">Registrar investigação sobre este grupo</Button>
           </CardContent></Card>
 
