@@ -287,7 +287,7 @@ const MoodHistory = () => {
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <Badge variant="outline" className={meta.badgeClass}>
                                           <Sparkles className="h-3 w-3 mr-1" />
-                                          {meta.emoji} Análise Medcos Track: {meta.label}
+                                          {meta.emoji} Análise Bem Estar: {meta.label}
                                         </Badge>
                                         <span className="text-xs text-muted-foreground">
                                           via {analysis.source === 'evolution_api' ? 'Diário Emocional - WhatsApp' : analysis.source}
