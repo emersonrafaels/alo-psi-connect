@@ -167,23 +167,6 @@ export default function InstitutionComparator() {
 
   const courses = useMemo(() => [...new Set((d?.scales ?? []).map((r) => r.course))].sort(), [d]);
 
-  const attention = useMemo(() => {
-    if (!d || !current || !previous) return [];
-    const out: { label: string; inst: Instrument; delta: number }[] = [];
-    for (const inst of INSTRUMENTS) {
-      if ('unavailable' in inst) continue;
-      for (const c of courses) {
-        const a = stat(inst.code, current, (r) => r.course === c);
-        const b = stat(inst.code, previous, (r) => r.course === c);
-        if (a.avg == null || b.avg == null) continue;
-        const delta = a.avg - b.avg;
-        if (trendOf(inst, delta).label === 'Desfavorável') out.push({ label: c, inst, delta });
-      }
-    }
-    return out.sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta)).slice(0, 4);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [d, current, previous, courses, unitFilter]);
-
   const backTo = buildTenantPath(tenant?.slug, '/portal-institucional');
   const recortes = [...units.map((u) => `unit:${u}`), ...courses.map((c) => `course:${c}`)];
   const recLabel = (k: string) => k.split(':').slice(1).join(':');
@@ -350,18 +333,6 @@ export default function InstitutionComparator() {
                 </Card>
 
                 <div className="space-y-6">
-                  <Card>
-                    <CardHeader><CardTitle>Pede atenção</CardTitle><CardDescription>Maiores mudanças desfavoráveis entre cursos.</CardDescription></CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                      {attention.length === 0 ? <p className="text-muted-foreground">Nenhuma mudança desfavorável relevante neste recorte.</p> :
-                        attention.map((x) => (
-                          <div key={x.label + x.inst.code} className="flex items-center justify-between rounded-lg border-l-4 border-destructive bg-destructive/5 p-2.5">
-                            <span><span className="font-medium">{x.label}</span> · {x.inst.short}</span>
-                            <span className="inline-flex items-center gap-1 font-semibold text-destructive"><ArrowDownRight className="h-3.5 w-3.5" />{x.delta > 0 ? '+' : '−'}{fmt(Math.abs(x.delta))}</span>
-                          </div>
-                        ))}
-                    </CardContent>
-                  </Card>
                   <Card>
                     <CardHeader><CardTitle>Participação</CardTitle><CardDescription>Quem chega à leitura · {current ?? '—'}</CardDescription></CardHeader>
                     <CardContent className="space-y-3">

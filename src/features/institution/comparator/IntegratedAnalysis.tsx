@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Info, CalendarDays, ShieldCheck } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ReferenceArea, LabelList, BarChart, Bar } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
@@ -49,6 +49,16 @@ export function IntegratedAnalysis(props: {
   const [chartTab, setChartTab] = useState<'evo' | 'dist' | 'cov'>('evo');
   const [asTable, setAsTable] = useState(false);
   const [diaryParam, setDiaryParam] = useState('avg_mood');
+  const filtersRef = useRef<HTMLElement>(null);
+  const [pinned, setPinned] = useState(false);
+  useEffect(() => {
+    const el = filtersRef.current;
+    if (!el) return;
+    // Mostra o resumo só depois que os filtros saem por cima da tela (abaixo do cabeçalho fixo de 56px).
+    const io = new IntersectionObserver(([e]) => setPinned(!e.isIntersecting && e.boundingClientRect.top < 0), { rootMargin: '-56px 0px 0px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   const inst = instruments.find((i) => i.code === scale) ?? instruments[0];
   const unavailable = (i: Inst) => 'unavailable' in i;
@@ -117,17 +127,38 @@ export function IntegratedAnalysis(props: {
   const network = unavailable(inst) ? null : stat(inst.code, current).avg;
   if (network != null) allVals.push(network);
   const lo = allVals.length ? Math.floor(Math.min(...allVals) - 3) : inst.min, hi = allVals.length ? Math.ceil(Math.max(...allVals) + 3) : inst.max;
-  const mx = (v: number) => { const p = ((v - lo) / (hi - lo || 1)) * 100; return inst.higherIsBetter ? p : 100 - p; };
+  const mx = (v: number) => ((v - lo) / (hi - lo || 1)) * 100;
   const mapTicks = Array.from({ length: 5 }, (_, i) => lo + ((hi - lo) / 4) * i);
   const unitTag = dotUnits.map((u) => u.split(/\s+/).map((w) => w[0]?.toUpperCase() ?? '').join('')).join(' – ');
   const unitColor = (i: number) => (i === 0 ? 'hsl(var(--primary))' : `hsl(var(--chart-${(i % 4) + 2}))`);
 
   const evo = semesters.map((s) => ({ sem: s, a: sA(inst.code, s).avg, ...Object.fromEntries(groups.map((g, i) => [`g${i}`, stat(inst.code, s, gFilter(g)).avg])), rede: stat(inst.code, s).avg, cov: popA ? Math.round((sA(inst.code, s).n / popA) * 100) : 0 }));
 
+  const testLabel = tab === 'scales' ? `Escalas científicas · ${inst.short} (${inst.label})` : tab === 'diary' ? `Diário emocional · ${(DIARY_PARAMS.find((x) => x.key === diaryParam) ?? DIARY_PARAMS[1]).label}` : 'Participação';
+  const summary = [{ k: 'A', color: 'hsl(var(--primary))', label: labelA }, ...groups.map((g, i) => ({ k: LETTERS[i], color: gColor(i), label: gLabel(g) }))];
+
   return (
     <div className="space-y-6">
+      {/* Resumo fixo: lembra recortes e instrumento enquanto a página rola */}
+      <div className="sticky top-16 z-[9] -mb-6 h-0">
+        <div aria-hidden={!pinned} className={`flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border bg-background/95 px-4 py-2.5 text-xs shadow-md backdrop-blur transition-all duration-200 ${pinned ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-2 opacity-0'}`}>
+          {summary.map((s) => (
+            <span key={s.k} className="flex min-w-0 items-center gap-1.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-primary-foreground" style={{ background: s.color }}>{s.k}</span>
+              <span className="truncate font-medium">{s.label}</span>
+            </span>
+          ))}
+          {!groups.length && <span className="text-muted-foreground">vs média da rede</span>}
+          <span className="hidden h-4 w-px bg-border sm:block" />
+          <span className="font-semibold text-primary">{testLabel}</span>
+          <span className="text-muted-foreground">· {current ?? '—'}</span>
+          <Button variant="ghost" size="sm" className="ml-auto h-7 px-2 text-xs" tabIndex={pinned ? 0 : -1}
+            onClick={() => filtersRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Ajustar filtros</Button>
+        </div>
+      </div>
+
       {/* Filtros */}
-      <section className="rounded-2xl bg-card/60 p-4 ring-1 ring-border space-y-3">
+      <section ref={filtersRef} className="scroll-mt-20 rounded-2xl bg-card/60 p-4 ring-1 ring-border space-y-3">
         <p className="text-sm"><span className="font-semibold">Filtros</span> <span className="text-muted-foreground">Defina o recorte e a comparação. A coleta semestral é escolhida no topo da página.</span></p>
         <Card><CardContent className="space-y-4 p-4">
           <div className="flex flex-wrap items-end gap-3">
@@ -571,7 +602,7 @@ export function IntegratedAnalysis(props: {
           <p className="text-sm"><span className="font-semibold">Detalhamento</span> <span className="text-muted-foreground">Mapa por grupo, detalhe do recorte e evolução no tempo.</span></p>
           <Card><CardContent className="space-y-4 p-5">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <div><h3 className="font-bold">Mapa por {mapBy === 'course' ? 'curso' : 'unidade'} · {current}</h3><p className="text-xs text-muted-foreground">Mais à direita = mais favorável · rede {fmt(network)}</p></div>
+              <div><h3 className="font-bold">Mapa por {mapBy === 'course' ? 'curso' : 'unidade'} · {current}</h3><p className="text-xs text-muted-foreground">Mais à {inst.higherIsBetter ? 'direita' : 'esquerda'} = mais favorável · rede {fmt(network)}</p></div>
               {mapBy === 'course' && <div className="flex flex-wrap gap-3 text-xs">{dotUnits.map((u, i) => <span key={u} className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full" style={{ background: unitColor(i) }} />{u}</span>)}<span className="flex items-center gap-1"><span className="h-3 w-px bg-foreground/50" />Rede</span></div>}
             </div>
             <div className="flex items-center gap-2 text-xs">
@@ -626,9 +657,20 @@ export function IntegratedAnalysis(props: {
           </CardContent></Card>
 
           <Card className="border-t-4 border-t-primary"><CardContent className="space-y-4 p-5">
-            <p className="flex items-center gap-2 text-xs"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">A</span>{unit === 'all' ? 'Toda a rede' : unit}</p>
-            <h3 className="text-xl font-bold">{course === 'all' ? 'Todos os cursos' : course}</h3>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+              {[{ k: 'A', color: 'hsl(var(--primary))', unit, course }, ...groups.map((g, i) => ({ k: LETTERS[i], color: gColor(i), unit: g.unit, course: g.course }))].map((s) => (
+                <span key={s.k} className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-primary-foreground" style={{ background: s.color }}>{s.k}</span>
+                  {s.unit === 'all' ? 'Toda a rede' : s.unit}{groups.length > 0 && <span className="text-muted-foreground">· {s.course === 'all' ? 'Todos os cursos' : s.course}</span>}
+                </span>
+              ))}
+            </div>
+            <h3 className="text-xl font-bold">{(() => {
+              const cs = new Set([course, ...groups.map((g) => g.course)]);
+              return cs.size > 1 ? 'Comparação entre recortes' : course === 'all' ? 'Todos os cursos' : course;
+            })()}</h3>
             <div className="flex flex-wrap items-baseline gap-2">
+              {groups.length > 0 && <span className="text-sm font-bold text-primary">A ·</span>}
               <span className="text-4xl font-bold tabular-nums">{fmt(a.avg)}</span><span className="text-sm text-muted-foreground">/ {inst.max}</span>
               {a.avg != null && aPrev.avg != null && <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">{a.avg - aPrev.avg >= 0 ? '+' : '−'}{fmt(Math.abs(a.avg - aPrev.avg))} vs {prev}</span>}
               {aBand && <span className={`rounded px-2 py-0.5 text-xs font-semibold ${TONE_CLASS[aBand.tone]}`}>Faixa: {aBand.label}</span>}
@@ -638,18 +680,55 @@ export function IntegratedAnalysis(props: {
               <div><p className="text-[11px] text-muted-foreground">Cobertura <Hint t="Respondentes ÷ estudantes do recorte." /></p><p className="font-bold">{popA ? Math.round((a.n / popA) * 100) : 0}%</p></div>
               <div><p className="text-[11px] text-muted-foreground">vs rede <Hint t="Diferença em relação à média da rede." /></p><p className="font-bold">{a.avg != null && network != null ? `${a.avg - network >= 0 ? '+' : '−'}${fmt(Math.abs(a.avg - network))}` : '—'}</p></div>
             </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold">Média por {mapBy === 'course' && course === 'all' ? 'curso' : 'unidade'} neste recorte</p>
-              <div className="h-32">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={(course === 'all' ? courses.map((c) => ({ k: c, v: stat(inst.code, current, (r) => (unit === 'all' || r.unit === unit) && r.course === c).avg })) : units.map((u) => ({ k: u, v: stat(inst.code, current, (r) => r.unit === u && r.course === course).avg })))}>
-                    <XAxis dataKey="k" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis hide domain={[inst.min, inst.max]} />
-                    <Bar dataKey="v" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}><LabelList dataKey="v" position="top" fontSize={10} formatter={(v: any) => fmt(v)} /></Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+            {(() => {
+              // Categorias seguem o recorte A; cada série (A, grupos comparados ou rede) aplica o próprio filtro na outra dimensão.
+              const byCourse = course === 'all';
+              const series = [{ key: 'a', k: 'A', label: labelA, color: 'hsl(var(--primary))', unit, course },
+                ...(groups.length ? groups.map((g, i) => ({ key: `g${i}`, k: LETTERS[i], label: gLabel(g), color: gColor(i), unit: g.unit, course: g.course }))
+                  : [{ key: 'rede', k: 'Rede', label: 'média geral', color: 'hsl(var(--muted-foreground))', unit: 'all', course: 'all' }])];
+              const data = (byCourse ? courses : units).map((cat) => ({ k: cat, ...Object.fromEntries(series.flatMap((s) => {
+                const st = unavailable(inst) ? { n: 0, avg: null } : stat(inst.code, current, (r) => byCourse ? (s.unit === 'all' || r.unit === s.unit) && r.course === cat : r.unit === cat && (s.course === 'all' || r.course === s.course));
+                return [[s.key, st.avg], [`${s.key}_n`, st.n], [`${s.key}_pop`, byCourse ? popFor(s.unit, cat) : popFor(cat, s.course)]];
+              })) }));
+              const tip = ({ active, payload, label }: any) => {
+                if (!active || !payload?.length) return null;
+                const row = payload[0].payload;
+                return (
+                  <div className="space-y-1.5 rounded-lg border bg-popover p-2.5 text-xs shadow-md">
+                    <p className="font-semibold">{label}</p>
+                    {series.map((s) => {
+                      const n = row[`${s.key}_n`] as number, pop = row[`${s.key}_pop`] as number;
+                      return (
+                        <div key={s.key}>
+                          <p className="font-semibold" style={{ color: s.color }}>{s.k} · {fmt(row[s.key])}</p>
+                          <p className="text-muted-foreground">{n.toLocaleString('pt-BR')} respondentes · cobertura {pop ? `${Math.round((n / pop) * 100)}%` : '—'}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              };
+              return (
+                <div>
+                  <p className="mb-2 text-xs font-semibold">Média por {byCourse ? 'curso' : 'unidade'} neste recorte</p>
+                  <div className="h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data} barGap={2} margin={{ top: 16 }}>
+                        <XAxis dataKey="k" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                        <YAxis hide domain={[inst.min, inst.max]} />
+                        <RTooltip content={tip} cursor={{ fill: 'hsl(var(--muted) / .4)' }} />
+                        {series.map((s) => (
+                          <Bar key={s.key} dataKey={s.key} name={s.k} fill={s.color} radius={[4, 4, 0, 0]} isAnimationActive={false}>
+                            <LabelList dataKey={s.key} position="top" fontSize={10} fill={s.color} formatter={(v: any) => fmt(v)} />
+                          </Bar>
+                        ))}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{series.map((s, i) => <span key={s.key}>{i > 0 && ' · '}<span className="font-semibold" style={{ color: s.color }}>■ {s.k} · {s.label}</span></span>)}</p>
+                </div>
+              );
+            })()}
             <Button variant="outline" className="w-full" disabled title="Em breve">Registrar investigação sobre este grupo</Button>
           </CardContent></Card>
 
