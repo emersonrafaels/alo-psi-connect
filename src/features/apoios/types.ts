@@ -16,6 +16,7 @@ export interface SupportCatalogRow {
   provider: string | null;
   cta_label: string | null;
   cta_route: string | null;
+  cta_whatsapp_message?: string | null;
   featured: boolean;
   is_active: boolean;
   sort_order: number;
@@ -62,6 +63,7 @@ export interface SupportItem {
   contactValue?: string | null;
   ctaLabel?: string | null;
   ctaRoute?: string | null;
+  ctaWhatsappMessage?: string | null;
   featured: boolean;
 }
 
@@ -109,6 +111,7 @@ export const catalogToItem = (row: SupportCatalogRow): SupportItem => ({
   provider: row.provider,
   ctaLabel: row.cta_label,
   ctaRoute: row.cta_route,
+  ctaWhatsappMessage: row.cta_whatsapp_message ?? null,
   featured: row.featured,
 });
 
