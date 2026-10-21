@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Criar D/E/F na mesma unidade de A/B/C, com dados diferentes e padrões correspondentes
+- [ ] Disponibilizar D/E/F no cadastro de acesso administrativo e validar regras dos históricos
+
 - [x] Criar três perfis sintéticos Afya A/B/C, vínculos e 18 respostas demonstrativas por aluno
 - [x] Implementar atribuição de email/senha e preparação de histórico no admin > Dados Demo
 - [x] Bloquear mensagens dos casos; validar testes e rejeição de sessão inválida
