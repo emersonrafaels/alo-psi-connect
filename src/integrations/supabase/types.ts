@@ -4557,6 +4557,74 @@ export type Database = {
         }
         Relationships: []
       }
+      synthetic_student_cases: {
+        Row: {
+          case_key: string
+          created_at: string
+          credentials_assigned: boolean
+          id: string
+          institution_id: string
+          notifications_blocked: boolean
+          patient_id: string | null
+          profile_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          case_key: string
+          created_at?: string
+          credentials_assigned?: boolean
+          id?: string
+          institution_id: string
+          notifications_blocked?: boolean
+          patient_id?: string | null
+          profile_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          case_key?: string
+          created_at?: string
+          credentials_assigned?: boolean
+          id?: string
+          institution_id?: string
+          notifications_blocked?: boolean
+          patient_id?: string | null
+          profile_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "synthetic_student_cases_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "synthetic_student_cases_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "synthetic_student_cases_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "synthetic_student_cases_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_configurations: {
         Row: {
           category: string
