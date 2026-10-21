@@ -4429,6 +4429,7 @@ export type Database = {
           created_at: string
           cta_label: string | null
           cta_route: string | null
+          cta_whatsapp_message: string | null
           description: string
           details: string | null
           featured: boolean
@@ -4451,6 +4452,7 @@ export type Database = {
           created_at?: string
           cta_label?: string | null
           cta_route?: string | null
+          cta_whatsapp_message?: string | null
           description?: string
           details?: string | null
           featured?: boolean
@@ -4473,6 +4475,7 @@ export type Database = {
           created_at?: string
           cta_label?: string | null
           cta_route?: string | null
+          cta_whatsapp_message?: string | null
           description?: string
           details?: string | null
           featured?: boolean
