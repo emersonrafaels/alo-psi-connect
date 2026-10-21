@@ -455,22 +455,17 @@ const BibliotecaApoios = () => {
                   ))}
                 </div>
 
-                <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-2">
+                <div className="flex flex-col sm:flex-row gap-2 pt-2">
                   {selected.ctaWhatsappMessage ? (
-                    <>
-                      <Button asChild className="flex-1">
-                        <a
-                          href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(selected.ctaWhatsappMessage)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {selected.ctaLabel || "Ver horários"}
-                        </a>
-                      </Button>
-                      <p className="w-full text-xs text-muted-foreground">
-                        Abre o WhatsApp da {platformName} com a mensagem pronta.
-                      </p>
-                    </>
+                    <Button asChild className="flex-1">
+                      <a
+                        href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(selected.ctaWhatsappMessage)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {selected.ctaLabel || "Ver horários"}
+                      </a>
+                    </Button>
                   ) : selected.ctaRoute ? (
                     isKnownRoute(selected.ctaRoute) ? (
                       <Button asChild className="flex-1">
