@@ -1,5 +1,10 @@
 # Roadmap
 
+- [ ] Criar três casos sintéticos Afya A/B/C com históricos coerentes e identificação demo
+- [ ] Permitir atribuir email e senha desses casos no painel admin
+- [ ] Bloquear notificações reais para os casos de demonstração e validar permissões
+- [ ] Verificar casos criados, testes e fluxo de acesso; registrar limitações de verificação
+
 - [x] Ampliar o gerador demo para carga institucional completa e repetível
 - [x] Criar e popular a EBMSP com 100 novos alunos e 8 profissionais
 - [x] Criar e vincular o administrador institucional informado
