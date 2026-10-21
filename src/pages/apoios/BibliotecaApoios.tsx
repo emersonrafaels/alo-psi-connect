@@ -496,6 +496,11 @@ const BibliotecaApoios = () => {
                       : "Adicionar ao meu plano"}
                   </Button>
                 </div>
+                {selected.ctaWhatsappMessage && (
+                  <p className="text-xs text-muted-foreground">
+                    Abre o WhatsApp da {platformName} com a mensagem pronta.
+                  </p>
+                )}
               </div>
             </>
           )}
