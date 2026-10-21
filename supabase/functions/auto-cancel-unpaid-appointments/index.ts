@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { getBccEmails } from "../_shared/get-bcc-emails.ts";
+import { isStudyNotificationBlocked } from "../_shared/study-notifications.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -90,6 +91,9 @@ serve(async (req) => {
 
           // Send cancellation email
           try {
+            if (await isStudyNotificationBlocked(supabaseClient, { appointmentId: appointment.id, email: appointment.email_paciente })) {
+              return { success: true, appointmentId: appointment.id, skipped: 'synthetic_demo' };
+            }
             const professionalName = (appointment.profissionais as any)?.display_name || 'Profissional';
             const appointmentDate = new Date(appointment.data_consulta).toLocaleDateString('pt-BR');
             const appointmentTime = appointment.horario;
