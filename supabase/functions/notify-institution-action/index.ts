@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@4.0.0";
 import { getBccEmails } from "../_shared/get-bcc-emails.ts";
+import { isStudyNotificationBlocked } from "../_shared/study-notifications.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -65,6 +66,12 @@ serve(async (req) => {
 
     const body: NotifyRequest = await req.json();
     const { action_type, institution_id, metadata } = body;
+
+    const { data: institutionSafety, error: safetyError } = await supabase.from('educational_institutions').select('is_demo').eq('id', institution_id).maybeSingle();
+    if (safetyError) throw new Error('Notification safety check failed');
+    if (institutionSafety?.is_demo || await isStudyNotificationBlocked(supabase, { userId: user.id, patientId: metadata?.patient_id })) {
+      return Response.json({ success: true, sent: 0, skipped: 'synthetic_demo' }, { headers: corsHeaders });
+    }
 
     if (!action_type || !institution_id) {
       return new Response(JSON.stringify({ error: 'Missing action_type or institution_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
