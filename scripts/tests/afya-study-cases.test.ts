@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CASES, canManageCases, moodAt, scoredAnswers } from './cases';
+import { CASES, canManageCases, moodAt, scoredAnswers } from '../../supabase/functions/afya-study-cases/cases';
 
 describe('Afya study rules',()=>{
   it('creates exactly student cases A, B and C',()=>{expect(CASES.map(c=>c.key)).toEqual(['A','B','C']);});
