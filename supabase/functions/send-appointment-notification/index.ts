@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
 import { getBccEmails } from "../_shared/get-bcc-emails.ts";
+import { isStudyNotificationBlocked } from "../_shared/study-notifications.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -45,6 +46,10 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    if (await isStudyNotificationBlocked(supabase, { appointmentId: agendamento.id, email: agendamento.email_paciente })) {
+      return Response.json({ success: true, sent: 0, skipped: 'synthetic_demo' }, { headers: corsHeaders });
+    }
 
     // Buscar tenant_id do profissional através de professional_tenants
     let adminEmail = 'redebemestar1@gmail.com'; // fallback padrão

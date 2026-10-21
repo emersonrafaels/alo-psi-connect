@@ -1,5 +1,13 @@
 # Roadmap
 
+- [x] Criar D/E/F na mesma unidade de A/B/C, com dados diferentes e padrões correspondentes
+- [x] Disponibilizar D/E/F no cadastro de acesso administrativo e validar regras dos históricos
+
+- [x] Criar três perfis sintéticos Afya A/B/C, vínculos e 18 respostas demonstrativas por aluno
+- [x] Implementar atribuição de email/senha e preparação de histórico no admin > Dados Demo
+- [x] Bloquear mensagens dos casos; validar testes e rejeição de sessão inválida
+- [ ] Verificar atribuição e login completos: Supabase externo sem sessão administrativa disponível; históricos individuais serão preparados na primeira atribuição de acesso
+
 - [x] Ampliar o gerador demo para carga institucional completa e repetível
 - [x] Criar e popular a EBMSP com 100 novos alunos e 8 profissionais
 - [x] Criar e vincular o administrador institucional informado

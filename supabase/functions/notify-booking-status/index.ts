@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { isStudyNotificationBlocked } from '../_shared/study-notifications.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,6 +52,10 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+    if (await isStudyNotificationBlocked(supabase, { appointmentId: notificationData.agendamento?.id, email: notificationData.paciente?.email })) {
+      return Response.json({ success: true, sent: 0, skipped: 'synthetic_demo' }, { headers: corsHeaders });
+    }
 
     // Get webhook URL from system configuration
     const { data: config } = await supabase

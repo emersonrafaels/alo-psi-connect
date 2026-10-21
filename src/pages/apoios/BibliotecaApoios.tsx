@@ -40,7 +40,8 @@ import {
 } from "@/features/apoios/types";
 import { useStudentSupportLibrary, useSupportUserLists } from "@/hooks/useSupportLibrary";
 import DataLoadError from "@/components/system/DataLoadError";
-import { getBasePath, getTenantSlugFromPath } from "@/utils/tenantHelpers";
+import { getBasePath, getTenantDisplayName, getTenantSlugFromPath } from "@/utils/tenantHelpers";
+import { useTenant } from "@/hooks/useTenant";
 
 type ViewTab = "all" | "platform" | "institution" | "favorites" | "plan" | "history";
 
@@ -78,6 +79,9 @@ const QUIZ = [
 const BibliotecaApoios = () => {
   const location = useLocation();
   const basePath = getBasePath(getTenantSlugFromPath(location.pathname));
+  const { tenant } = useTenant();
+  const platformName = getTenantDisplayName(tenant);
+  const whatsappNumber = (tenant?.contact_whatsapp || "5511956850046").replace(/\D/g, "");
   const fromPortal = (location.state as { from?: string } | null)?.from === 'institution-portal';
   const { items, institutionName, hasInstitution, isLoading, isError, refetch } =
     useStudentSupportLibrary();
@@ -452,7 +456,17 @@ const BibliotecaApoios = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                  {selected.ctaRoute ? (
+                  {selected.ctaWhatsappMessage ? (
+                    <Button asChild className="flex-1">
+                      <a
+                        href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(selected.ctaWhatsappMessage)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {selected.ctaLabel || "Ver horários"}
+                      </a>
+                    </Button>
+                  ) : selected.ctaRoute ? (
                     isKnownRoute(selected.ctaRoute) ? (
                       <Button asChild className="flex-1">
                         <Link to={`${basePath}${selected.ctaRoute}`}>
@@ -482,6 +496,11 @@ const BibliotecaApoios = () => {
                       : "Adicionar ao meu plano"}
                   </Button>
                 </div>
+                {selected.ctaWhatsappMessage && (
+                  <p className="text-xs text-muted-foreground">
+                    Abre o WhatsApp da {platformName} com a mensagem pronta.
+                  </p>
+                )}
               </div>
             </>
           )}
