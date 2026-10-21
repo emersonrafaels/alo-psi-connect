@@ -15,6 +15,9 @@ const definitions = [
   { key:'A', title:'Estudante A', description:'Bons indicadores, rotina equilibrada e práticas voluntárias.' },
   { key:'B', title:'Estudante B', description:'Oscilações de bem-estar e melhora com apoios pertinentes.' },
   { key:'C', title:'Estudante C', description:'Maior necessidade de acompanhamento, com atenção simulada.' },
+  { key:'D', title:'Estudante D', description:'Padrão A · Contagem. Bons indicadores e práticas voluntárias, com dados próprios.' },
+  { key:'E', title:'Estudante E', description:'Padrão B · Montes Claros. Oscilações e recuperação com apoios, com dados próprios.' },
+  { key:'F', title:'Estudante F', description:'Padrão C · Itajubá. Maior necessidade de acompanhamento simulado, com dados próprios.' },
 ];
 type CaseRow = {case_key:string; credentials_assigned:boolean; profiles:{email:string}|null};
 const credentials = z.object({email:z.string().trim().email().max(255),password:z.string().min(12).max(128).regex(/[a-z]/).regex(/[A-Z]/).regex(/[0-9]/)});
@@ -45,7 +48,7 @@ export function AfyaStudyCases() {
   };
   return <section aria-labelledby="afya-cases-title" className="space-y-4 border-b border-border pb-6">
     <div className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-primary"/><h2 id="afya-cases-title" className="text-xl font-bold">Afya · Estudos de caso</h2><Badge variant="outline">Dados sintéticos</Badge></div>
-    <Alert><AlertDescription>Casos fictícios A, B e C. Notificações institucionais e mensagens de agendamento são bloqueadas. Nenhum contato de emergência foi cadastrado. A primeira atribuição de acesso prepara 45 dias de diário, três coletas das seis escalas, jornadas e práticas.</AlertDescription></Alert>
+    <Alert><AlertDescription>Casos fictícios A, B, C, D, E e F. Notificações institucionais e mensagens de agendamento são bloqueadas. Nenhum contato de emergência foi cadastrado. A primeira atribuição de acesso prepara 45 dias de diário, três coletas das seis escalas, jornadas e práticas.</AlertDescription></Alert>
     {query.isPending?<Loader2 className="h-5 w-5 animate-spin"/>:query.isError?<Alert variant="destructive"><AlertDescription>Não foi possível carregar os casos. <Button variant="link" onClick={()=>query.refetch()}>Tentar novamente</Button></AlertDescription></Alert>:<div className="grid gap-4 md:grid-cols-3">{definitions.map(def=>{
       const row = query.data?.find(r=>r.case_key===def.key);
       return <article key={def.key} className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
