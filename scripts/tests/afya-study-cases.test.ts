@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { CASES, canManageCases, moodAt, scoredAnswers } from '../../supabase/functions/afya-study-cases/cases';
+import { isStudyNotificationBlocked } from '../../supabase/functions/_shared/study-notifications';
 
 describe('Afya study rules',()=>{
   it('creates exactly student cases A, B and C',()=>{expect(CASES.map(c=>c.key)).toEqual(['A','B','C']);});
@@ -13,4 +14,13 @@ describe('Afya study rules',()=>{
   });
   it('gives B a recovery after the evaluation period',()=>{expect(moodAt('B',0).anxiety).toBeLessThan(moodAt('B',20).anxiety);});
   it('keeps C a simulated high-need case',()=>{expect(moodAt('C',1)).toEqual({mood:2,anxiety:5,energy:2,sleep:2});});
+  it('blocks notification when a synthetic account is found',async()=>{
+    const chain = {select:()=>chain,eq:()=>chain,limit:async()=>({data:[{id:'demo'}],error:null})};
+    const admin = {from:()=>chain};
+    expect(await isStudyNotificationBlocked(admin as never,{userId:'student-c'})).toBe(true);
+  });
+  it('fails closed if the safety registry is unavailable',async()=>{
+    const chain = {select:()=>chain,eq:()=>chain,limit:async()=>({data:null,error:{message:'unavailable'}})};
+    await expect(isStudyNotificationBlocked({from:()=>chain} as never,{userId:'student-c'})).rejects.toThrow('Notification safety check failed');
+  });
 });

@@ -102,7 +102,11 @@ Deno.serve(async req => {
     check(await admin.from('profiles').update({email,user_id:row.user_id}).eq('id',row.profile_id));
     check(await admin.from('user_tenants').upsert({user_id:row.profile_id,tenant_id:TENANT_ID,is_primary:true},{onConflict:'user_id,tenant_id'}));
     check(await admin.from('institution_buddy_students').upsert({institution_id:AFYA_ID,patient_id:row.patient_id,granted_by:auth.user.id},{onConflict:'institution_id,patient_id'}));
-    if(!row.credentials_assigned) await populate(admin,row,caseKey,auth.user.id);
+    if(!row.credentials_assigned) {
+      await populate(admin,row,caseKey,auth.user.id);
+      // Real-shaped responses now belong to a synthetic Auth account; don't count the provisional aggregate rows twice.
+      check(await admin.from('institution_demo_scale_responses').delete().eq('patient_id',row.patient_id).eq('institution_id',AFYA_ID));
+    }
     check(await admin.from('synthetic_student_cases').update({credentials_assigned:true}).eq('id',row.id));
     return json({success:true});
   } catch { return json({error:'Não foi possível concluir o caso. Nenhuma senha é exibida ou armazenada no cadastro de casos.'},500); }
