@@ -32,6 +32,7 @@ import {
 import { useDemoData, DemoDataParams } from "@/hooks/useDemoData";
 import { useInstitutions } from "@/hooks/useInstitutions";
 import { useTenant } from "@/hooks/useTenant";
+import { AfyaStudyCases } from "@/components/admin/AfyaStudyCases";
 
 const TENANT_OPTIONS = [
   { id: "3a9ae5ec-50a9-4674-b808-7735e5f0afb5", name: "Medcos" },
@@ -126,6 +127,7 @@ const DemoData = () => {
       </div>
 
       {/* Create New Institution Form */}
+      <AfyaStudyCases />
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">

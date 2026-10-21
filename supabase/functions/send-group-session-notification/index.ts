@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getBccEmails } from "../_shared/get-bcc-emails.ts";
+import { isStudyNotificationBlocked } from "../_shared/study-notifications.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -44,6 +45,10 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    if (await isStudyNotificationBlocked(supabase, { email: body.user_email })) {
+      return Response.json({ success: true, sent: 0, skipped: 'synthetic_demo' }, { headers: corsHeaders });
+    }
 
     // Fetch session data with tenant info
     const { data: session, error: sessionError } = await supabase
@@ -214,6 +219,7 @@ const handler = async (req: Request): Promise<Response> => {
           .in("user_id", userIds);
 
         for (const profile of profiles || []) {
+          if (await isStudyNotificationBlocked(supabase, { email: profile.email })) continue;
           const html = buildCancellationEmail({
             tenantName, tenantLogo, primaryColor,
             participantName: profile.nome || "Participante",
