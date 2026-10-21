@@ -1,21 +1,23 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
-import { AFYA_ID, TENANT_ID, CASES, canManageCases, moodAt, scoredAnswers } from './cases.ts';
+import { AFYA_ID, TENANT_ID, CASES, canManageCases, moodAt, scoredAnswers, patternOf } from './cases.ts';
 
 const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('list') }).strict(),
-  z.object({ action: z.literal('assign'), caseKey: z.enum(['A','B','C']), email: z.string().trim().toLowerCase().email().max(255), password: z.string().min(12).max(128).regex(/[a-z]/).regex(/[A-Z]/).regex(/[0-9]/) }).strict(),
+  z.object({ action: z.literal('assign'), caseKey: z.enum(['A','B','C','D','E','F']), email: z.string().trim().toLowerCase().email().max(255), password: z.string().min(12).max(128).regex(/[a-z]/).regex(/[A-Z]/).regex(/[0-9]/) }).strict(),
 ]);
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 const check = (result: { error: unknown }) => { if (result.error) throw new Error('Não foi possível concluir os dados do caso. Tente novamente.'); };
 const ago = (days: number) => { const date = new Date(); date.setUTCDate(date.getUTCDate() - days); return date.toISOString().slice(0,10); };
 
 async function populate(admin: ReturnType<typeof createClient>, row: any, key: string, caller: string) {
-  const journal = key === 'A' ? 'Organizei meus estudos e reservei tempo para caminhar e praticar respiração.' : key === 'B' ? 'As avaliações trouxeram tensão. Estou reorganizando a rotina e experimentando apoios para cuidar do sono.' : 'A sobrecarga tem dificultado o descanso. Neste caso fictício, quero conhecer as opções de acompanhamento.';
+  const pattern = patternOf(key);
+  const variant = ['D','E','F'].includes(key);
+  const journal = key === 'D' ? 'Mantive a rotina de caminhada e encontrei colegas após os estudos. A respiração ajudou a encerrar o dia.' : key === 'E' ? 'O estágio e as entregas aumentaram a tensão. Retomei pausas e apoio dos colegas para recuperar meu descanso.' : key === 'F' ? 'Tenho sentido cansaço e dificuldade para dormir. Nesta demonstração, quero simular a busca de acompanhamento.' : key === 'A' ? 'Organizei meus estudos e reservei tempo para caminhar e praticar respiração.' : key === 'B' ? 'As avaliações trouxeram tensão. Estou reorganizando a rotina e experimentando apoios para cuidar do sono.' : 'A sobrecarga tem dificultado o descanso. Neste caso fictício, quero conhecer as opções de acompanhamento.';
   check(await admin.from('mood_entries').upsert(Array.from({length:45},(_,day) => {
     const m = moodAt(key,day);
-    return { user_id:row.user_id,profile_id:row.profile_id,tenant_id:TENANT_ID,date:ago(day),mood_score:m.mood,anxiety_level:m.anxiety,energy_level:m.energy,sleep_quality:m.sleep,sleep_hours:key==='C'?5:key==='B'&&day>=12?6:8,journal_text:`[DEMO-AFYA-${key}] ${journal}`,tags:['demonstração','caso-sintético'],emotion_values:{calma:6-m.anxiety},created_at:`${ago(day)}T12:00:00Z` };
+    return { user_id:row.user_id,profile_id:row.profile_id,tenant_id:TENANT_ID,date:ago(day),mood_score:m.mood,anxiety_level:m.anxiety,energy_level:m.energy,sleep_quality:m.sleep,sleep_hours:variant?(pattern==='C'?4.5+day%2:pattern==='B'&&day>=10?5.5+day%2:7.5+day%2):pattern==='C'?5:pattern==='B'&&day>=12?6:8,journal_text:`[DEMO-AFYA-${key}] ${journal}`,tags:['demonstração','caso-sintético'],emotion_values:{calma:6-m.anxiety},created_at:`${ago(day)}T12:00:00Z` };
   }),{onConflict:'user_id,date'}));
   const { data: scales, error } = await admin.from('emotional_scales').select('*,emotional_scale_items(id)').eq('active',true);
   if (error) throw new Error('Não foi possível carregar as escalas.');
@@ -36,18 +38,18 @@ async function populate(admin: ReturnType<typeof createClient>, row: any, key: s
   }
   const triage = await admin.from('student_triage').select('id').eq('patient_id',row.patient_id).eq('institution_id',AFYA_ID).limit(1);
   check(triage);
-  if (!triage.data?.length) check(await admin.from('student_triage').insert({patient_id:row.patient_id,institution_id:AFYA_ID,triaged_by:caller,status:key==='A'?'resolved':'in_progress',risk_level:key==='A'?'low':key==='B'?'medium':'high',priority:key==='C'?'high':key==='B'?'medium':'low',recommended_action:key==='A'?'Manter rotina e atividades voluntárias':key==='B'?'Oferecer apoios e acompanhar evolução':'Simular acolhimento; não enviar mensagens reais',notes:`[DEMO-AFYA-${key}] Caso inteiramente sintético. Alertas externos bloqueados.`}));
+  if (!triage.data?.length) check(await admin.from('student_triage').insert({patient_id:row.patient_id,institution_id:AFYA_ID,triaged_by:caller,status:pattern==='A'?'resolved':'in_progress',risk_level:pattern==='A'?'low':pattern==='B'?'medium':'high',priority:pattern==='C'?'high':pattern==='B'?'medium':'low',recommended_action:pattern==='A'?'Manter rotina e atividades voluntárias':pattern==='B'?'Oferecer apoios e acompanhar evolução':'Simular acolhimento; não enviar mensagens reais',notes:`[DEMO-AFYA-${key}] Caso inteiramente sintético. Alertas externos bloqueados.`}));
   const {data: practices} = await admin.from('praticas').select('id').eq('ativo',true).limit(3);
   const existingPractice = await admin.from('praticas_checkouts').select('id').eq('user_id',row.user_id).limit(1);
   check(existingPractice);
-  if (!existingPractice.data?.length && practices?.length) check(await admin.from('praticas_checkouts').insert(Array.from({length:key==='A'?8:key==='B'?5:2},(_,i)=>({user_id:row.user_id,pratica_id:practices[i%practices.length].id,estado:key==='C'?'reflexivo':'calmo',nota:`[DEMO-AFYA-${key}] Prática fictícia de autocuidado.`,duracao_segundos:300,created_at:`${ago(i*4+1)}T19:00:00Z`}))));
+  if (!existingPractice.data?.length && practices?.length) check(await admin.from('praticas_checkouts').insert(Array.from({length:variant?(pattern==='A'?9:pattern==='B'?6:3):pattern==='A'?8:pattern==='B'?5:2},(_,i)=>({user_id:row.user_id,pratica_id:practices[i%practices.length].id,estado:pattern==='C'?'reflexivo':'calmo',nota:`[DEMO-AFYA-${key}] ${variant?'Pausa e reflexão demonstrativas após os estudos.':'Prática fictícia de autocuidado.'}`,duracao_segundos:variant?240+i%3*60:300,created_at:`${ago(i*4+1)}T19:00:00Z`}))));
   const journeys = await admin.from('journey_sessions').select('id').eq('user_id',row.user_id).limit(1);
   check(journeys);
   if (!journeys.data?.length) {
-    for (const days of [28,14,2]) {
-      const result = await admin.from('journey_sessions').insert({user_id:row.user_id,tenant_id:TENANT_ID,session_key:`demo-afya-${key}-${days}`,family_id:key==='A'?'alegria':'medo',emotion_id:key==='A'?'confiante':'preocupado',intensity_before:key==='A'?3:key==='B'?4:5,intensity_after:key==='A'?2:3,practice_id:'respiracao-lenta-ritmada',duration_minutes:5,phase:'record',status:'completed',focus_mode:'guided',comprehension:{source:journal,body:'Tensão nos ombros',thoughts:'Como equilibrar estudos e descanso?'},action:{next_step:key==='C'?'Explorar acompanhamento em simulação':'Organizar rotina e manter autocuidado'},created_at:`${ago(days)}T20:00:00Z`,completed_at:`${ago(days)}T20:05:00Z`}).select('id').single();
+    for (const days of (variant?[31,16,3]:[28,14,2])) {
+      const result = await admin.from('journey_sessions').insert({user_id:row.user_id,tenant_id:TENANT_ID,session_key:`demo-afya-${key}-${days}`,family_id:pattern==='A'?'alegria':'medo',emotion_id:pattern==='A'?'confiante':'preocupado',intensity_before:pattern==='A'?3:pattern==='B'?4:5,intensity_after:pattern==='A'?2:3,practice_id:'respiracao-lenta-ritmada',duration_minutes:5,phase:'record',status:'completed',focus_mode:'guided',comprehension:{source:journal,body:variant?'Tensão na nuca e no peito':'Tensão nos ombros',thoughts:variant?'Como criar pausas entre estágio, estudos e descanso?':'Como equilibrar estudos e descanso?'},action:{next_step:pattern==='C'?'Explorar acompanhamento em simulação':'Organizar rotina e manter autocuidado'},created_at:`${ago(days)}T20:00:00Z`,completed_at:`${ago(days)}T20:05:00Z`}).select('id').single();
       check(result);
-      if (result.data) check(await admin.from('journey_session_emotions').insert({session_id:result.data.id,user_id:row.user_id,emotion_id:key==='A'?'confiante':'preocupado',family_id:key==='A'?'alegria':'medo',emotion_level:3,intensity_before:key==='A'?3:5,intensity_after:3,is_focus:true,position:0,created_at:`${ago(days)}T20:00:00Z`}));
+      if (result.data) check(await admin.from('journey_session_emotions').insert({session_id:result.data.id,user_id:row.user_id,emotion_id:pattern==='A'?'confiante':'preocupado',family_id:pattern==='A'?'alegria':'medo',emotion_level:3,intensity_before:pattern==='A'?3:5,intensity_after:3,is_focus:true,position:0,created_at:`${ago(days)}T20:00:00Z`}));
     }
   }
 }
