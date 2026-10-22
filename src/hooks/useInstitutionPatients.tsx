@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchAllPaged, fetchInChunks } from '@/lib/supabasePaging';
 import { useToast } from '@/hooks/use-toast';
 
 export interface PatientInstitution {
@@ -38,7 +39,11 @@ export const useInstitutionPatients = (institutionId?: string) => {
         query = query.eq('institution_id', institutionId);
       }
       
-      const { data, error } = await query;
+      let data: any[] = [];
+      let error: any = null;
+      try {
+        data = await fetchAllPaged((f, t) => query.order('id').range(f, t));
+      } catch (e) { error = e; }
       
       if (error) {
         console.error('[useInstitutionPatients] Error fetching patients:', {

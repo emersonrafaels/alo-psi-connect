@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchAllPaged, fetchInChunks } from '@/lib/supabasePaging';
 
 interface DailyEntry {
   date: string;
@@ -77,10 +78,10 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
       }
 
       // Buscar alunos vinculados à instituição
-      const { data: students } = await supabase
+      const students: any[] = await fetchAllPaged((f, t) => supabase
         .from('patient_institutions')
-        .select('pacientes!inner(profile_id)')
-        .eq('institution_id', institutionId);
+        .select('id, pacientes!inner(profile_id)')
+        .eq('institution_id', institutionId).order('id').range(f, t));
 
       const totalStudentsLinked = students?.length || 0;
 
@@ -129,21 +130,21 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
       });
 
       // Buscar mood entries com data do período atual
-      const { data: entriesWithDate } = await supabase
+      const entriesWithDate = (await fetchInChunks(profileIds, (c, f, t) => supabase
         .from('mood_entries')
-        .select('date, mood_score, anxiety_level, sleep_quality, energy_level, profile_id')
-        .in('profile_id', profileIds)
+        .select('id, date, mood_score, anxiety_level, sleep_quality, energy_level, profile_id')
+        .in('profile_id', c)
         .gte('date', startDate.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0])
-        .order('date', { ascending: true });
+        .order('id').range(f, t))).sort((a: any, b: any) => a.date.localeCompare(b.date));
 
       // Buscar mood entries do período anterior para comparação
-      const { data: previousPeriodEntries } = await supabase
+      const previousPeriodEntries = await fetchInChunks(profileIds, (c, f, t) => supabase
         .from('mood_entries')
-        .select('mood_score')
-        .in('profile_id', profileIds)
+        .select('id, mood_score')
+        .in('profile_id', c)
         .gte('date', previousStartDate.toISOString().split('T')[0])
-        .lt('date', startDate.toISOString().split('T')[0]);
+        .lt('date', startDate.toISOString().split('T')[0]).order('id').range(f, t));
 
       const entries = entriesWithDate || [];
       const previousEntries = previousPeriodEntries || [];
