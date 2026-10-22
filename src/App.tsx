@@ -122,6 +122,7 @@ import RadarAccess from "@/pages/admin/RadarAccess";
 import InstitutionRadar from "@/pages/institution/InstitutionRadar";
 import InstitutionSupports from "@/pages/institution/InstitutionSupports";
 import InstitutionComparator from "@/pages/institution/InstitutionComparator";
+import InstitutionTriage from "@/pages/institution/InstitutionTriage";
 import BibliotecaApoios from "@/pages/apoios/BibliotecaApoios";
 import SupportLibraryAdmin from "@/pages/admin/SupportLibraryAdmin";
 import GerenciarApoios from "@/pages/GerenciarApoios";
@@ -340,6 +341,8 @@ const AppWithShortcuts = () => {
       
       <Route path="/portal-institucional/comparador" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionComparator /></ProtectedRoute>} />
       <Route path="/medcos/portal-institucional/comparador" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionComparator /></ProtectedRoute>} />
+      <Route path="/portal-institucional/triagem" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionTriage /></ProtectedRoute>} />
+      <Route path="/medcos/portal-institucional/triagem" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionTriage /></ProtectedRoute>} />
       <Route 
         path="/portal-institucional/apoios" 
         element={

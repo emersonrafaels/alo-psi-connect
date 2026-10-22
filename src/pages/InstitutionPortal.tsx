@@ -353,10 +353,13 @@ export default function InstitutionPortal() {
               <Heart className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Diário Emocional
             </TabsTrigger>
-            <TabsTrigger value="triage" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
+            <Link
+              to={buildTenantPath(tenant?.slug, '/portal-institucional/triagem')}
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs md:text-sm py-2 px-3 md:px-4 shrink-0 font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <ClipboardList className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Triagem
-            </TabsTrigger>
+            </Link>
             <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
               <StickyNote className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Notas
