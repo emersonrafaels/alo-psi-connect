@@ -32,9 +32,17 @@ import { ptBR } from 'date-fns/locale';
 import { useDebounce } from '@/hooks/useDebounce';
 import * as XLSX from 'xlsx';
 import { useTriagePeriod } from '@/hooks/useTriagePeriod';
+import { buildPriorities, buildActions } from '@/features/triage/priorities';
+import { TriageSummary, TriagePriorities, TriageFollowUps, ViewHeader } from '@/features/triage/TriageViews';
+
+export type TriageView = 'resumo' | 'prioridades' | 'followups' | 'fila' | 'metricas';
 
 interface StudentTriageTabProps {
   institutionId: string;
+  view?: TriageView;
+  initialRisk?: string | null;
+  initialTab?: string | null;
+  onNavigate?: (view: TriageView, params?: { risk?: string; tab?: string }) => void;
 }
 
 const riskConfig: Record<RiskLevel, {label: string;color: string;labelColor: string;icon: typeof AlertTriangle;cardBg: string;progressColor: string;}> = {
@@ -358,7 +366,7 @@ function FollowUpIndicator({ date }: {date: string;}) {
 
 }
 
-export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
+export function StudentTriageTab({ institutionId, view, initialRisk, initialTab, onNavigate }: StudentTriageTabProps) {
   const [analysisPeriod, setAnalysisPeriod] = useTriagePeriod();
   const { data: students = [], isLoading } = useStudentTriageData(
     institutionId,
@@ -475,6 +483,53 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
       document.getElementById('triage-queue')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }, []);
+
+  // Apply filters coming from the summary/priority views
+  useEffect(() => {
+    if (view !== 'fila') return;
+    setRiskFilter(initialRisk || 'all');
+    if (initialTab) setActiveTab(initialTab);
+  }, [view, initialRisk, initialTab]);
+
+  const overduePatientIds = useMemo(() => {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return new Set(inProgressTriages.filter((t) => t.follow_up_date && new Date(t.follow_up_date) < today).map((t) => t.patient_id));
+  }, [inProgressTriages]);
+
+  const pendingByRisk = useMemo(() => {
+    const c: Record<RiskLevel, number> = { critical: 0, alert: 0, attention: 0, healthy: 0, no_data: 0 };
+    students.forEach((s) => { if (!s.lastTriageStatus || s.lastTriageStatus === 'pending') c[s.riskLevel]++; });
+    return c;
+  }, [students]);
+
+  const keywordStudentCount = useMemo(() => students.filter((s) => s.criticalKeywordFlag).length, [students]);
+
+  const priorityItems = useMemo(() => buildPriorities(
+    students.map((s) => ({ ...s, criticalSeverity: s.criticalKeywordFlag?.severity ?? null, overdueFollowUp: overduePatientIds.has(s.patientId) })),
+    analysisPeriod,
+  ), [students, overduePatientIds, analysisPeriod]);
+
+  const triageActions = useMemo(() => buildActions({
+    criticalPending: pendingByRisk.critical,
+    overdueFollowUps: overdueFollowUpCount,
+    keywordStudents: keywordStudentCount,
+    noData: counts.no_data,
+  }), [pendingByRisk, overdueFollowUpCount, keywordStudentCount, counts]);
+
+  const followUpRows = useMemo(() => inProgressTriages
+    .filter((t) => t.follow_up_date)
+    .map((t) => ({ id: t.id, patientId: t.patient_id, followUpDate: t.follow_up_date as string, status: t.status, action: t.recommended_action ? (actionLabels[t.recommended_action] || t.recommended_action) : null })),
+  [inProgressTriages]);
+
+  const nav = (v: TriageView, params?: { risk?: string; tab?: string }) => {
+    if (onNavigate) onNavigate(v, params);
+    else {
+      if (params?.risk) setRiskFilter(params.risk);
+      if (params?.tab) setActiveTab(params.tab);
+    }
+  };
+  const showLegacy = !view;
+  const showView = (v: TriageView) => !view || view === v;
 
 
   const filteredResolvedTriages = useMemo(() => {
@@ -681,6 +736,55 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   return (
     <TooltipProvider delayDuration={200}>
       <div className="space-y-6">
+        {view === 'resumo' && (
+          <>
+            <ViewHeader title="Resumo" description="Quantos alunos estão em cada nível de risco e o que fazer primeiro. Clique em um nível para ver os alunos." />
+            <TriageSummary
+              counts={counts}
+              pendingByRisk={pendingByRisk}
+              total={totalStudents}
+              periodDays={analysisPeriod}
+              overdueFollowUps={overdueFollowUpCount}
+              actions={triageActions}
+              onOpenRisk={(r) => nav('fila', { risk: r, tab: 'para_triar' })}
+              onAction={(a) => {
+                if (a === 'critical') nav('fila', { risk: 'critical', tab: 'para_triar' });
+                else if (a === 'followups') nav('followups');
+                else if (a === 'keywords') nav('prioridades');
+                else nav('fila', { risk: 'no_data', tab: 'para_triar' });
+              }}
+            />
+          </>
+        )}
+
+        {view === 'prioridades' && (
+          <>
+            <ViewHeader title="Prioridades" description="Os alunos mais urgentes, em ordem, com o motivo em linguagem simples." />
+            <TriagePriorities
+              items={priorityItems}
+              nameOf={(id) => patientNameMap.get(id) ?? 'Aluno'}
+              onTriage={(s) => { setSelectedStudent(s); setDialogOpen(true); }}
+              onHistory={(s) => handleOpenActivity(s)}
+            />
+          </>
+        )}
+
+        {view === 'followups' && (
+          <>
+            <ViewHeader title="Follow-ups" description="Acompanhamentos vencidos e os que vencem nos próximos 7 dias." />
+            <TriageFollowUps
+              rows={followUpRows}
+              nameOf={(id) => patientNameMap.get(id) ?? 'Aluno'}
+              onResolve={(id) => setResolveDialogTriage(triageRecords.find((t) => t.id === id) ?? null)}
+              onContact={(pid) => handleOpenActivityByPatientId(pid)}
+            />
+          </>
+        )}
+
+        {view === 'fila' && <ViewHeader title="Fila de triagem" description="Todos os alunos por status de triagem. Use os filtros para focar em um nível de risco." />}
+        {view === 'metricas' && <ViewHeader title="Métricas" description="Como a equipe está triando: volume, tempo até resolução e prioridades no período." />}
+
+        {showLegacy && (<>
         {/* Summary cards — redesigned */}
         <div id="triage-risk" className="scroll-mt-20 grid grid-cols-2 md:grid-cols-5 gap-3">
           {riskOrder.map((level) => {
@@ -833,13 +937,16 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             </AlertDescription>
           </Alert>
         )}
+        </>)}
 
         {/* Triage Metrics Dashboard */}
+        {showView('metricas') && (<>
         <div id="triage-metrics" className="scroll-mt-20" />
         <TriageMetricsDashboard triageRecords={triageRecords} periodDays={analysisPeriod} />
+        </>)}
 
         {/* Contexto Institucional */}
-        {(() => {
+        {(showLegacy || view === 'resumo') && (() => {
           const today = new Date().toISOString().split('T')[0];
           const activeTriageNotes = institutionNotes.filter((n) => {
             if (!n.start_date && !n.end_date) return n.is_pinned;
@@ -861,6 +968,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
         })()}
 
+        {showView('fila') && (<>
         {/* Risk legend */}
         <Collapsible open={legendOpen} onOpenChange={setLegendOpen}>
           <CollapsibleTrigger asChild>
@@ -1413,6 +1521,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             </Card>
           </TabsContent>
         </Tabs>
+        </>)}
 
         <TriageDialog
           open={dialogOpen}
