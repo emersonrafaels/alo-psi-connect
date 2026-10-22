@@ -4957,6 +4957,36 @@ export type Database = {
         }
         Relationships: []
       }
+      triage_critical_terms: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          severity: string
+          term: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          severity?: string
+          term: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          severity?: string
+          term?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_booking_tracking: {
         Row: {
           booking_data: Json | null
@@ -5484,6 +5514,15 @@ export type Database = {
         Args: { p_institution_id: string }
         Returns: Json
       }
+      get_institution_critical_flags: {
+        Args: { p_institution_id: string; p_since: string }
+        Returns: {
+          hits: number
+          last_date: string
+          max_severity: string
+          patient_id: string
+        }[]
+      }
       get_institution_engagement_metrics: {
         Args: { p_institution_id: string }
         Returns: Json
@@ -5827,6 +5866,7 @@ export type Database = {
           sessions: number
         }[]
       }
+      normalize_pt_text: { Args: { t: string }; Returns: string }
       normalize_specialties: {
         Args: { raw_specialties: string[] }
         Returns: string[]
