@@ -158,7 +158,7 @@ async function ensureProfessionals(admin: any, institutionId: string) {
         profile_id: profileId, user_id: 880000 + index, user_login: `ebmsp.prof.${index + 1}`, user_email: email,
         display_name: `Profissional Demo EBMSP ${index + 1}`, first_name: "Profissional", profissao: "Psicólogo(a)",
         crp_crm: `CRP 03/${String(900001 + index)}`, preco_consulta: 120 + index * 10,
-        resumo: `${MARKER} Especialista em ${specialties[index]}.`, servicos_normalizados: [specialties[index]],
+        resumo: `Especialista em ${specialties[index]}.`, servicos_normalizados: [specialties[index]],
         ativo: true, em_destaque: index < 3, ordem_destaque: index < 3 ? index + 1 : null,
       }).select("id").single();
       if (error) throw error;
@@ -290,7 +290,7 @@ async function seedStudentActivities(admin: any, institutionId: string, student:
   const practiceRows = Array.from({ length: 3 + index % 4 }, (_, activityIndex) => ({
     pratica_id: practices?.[(index + activityIndex) % Math.max(practices?.length || 1, 1)]?.id,
     user_id: student.userId, estado: ["calmo", "leve", "reflexivo", "energizado"][(index + activityIndex) % 4],
-    nota: `${MARKER} Prática concluída durante a rotina acadêmica.`, duracao_segundos: 120 + ((index + activityIndex) % 8) * 60,
+    nota: `Prática concluída durante a rotina acadêmica.`, duracao_segundos: 120 + ((index + activityIndex) % 8) * 60,
     created_at: timestampAgo((index * 3 + activityIndex * 7) % 30, 19),
   })).filter(row => row.pratica_id);
   if (practiceRows.length) await admin.from("praticas_checkouts").insert(practiceRows);
@@ -319,11 +319,11 @@ async function seedStudentActivities(admin: any, institutionId: string, student:
     patient_id: student.patientId, institution_id: institutionId, triaged_by: grantedBy,
     status: triage.status, risk_level: triage.risk, priority: triage.priority,
     recommended_action: triage.risk === "low" ? "Manter acompanhamento preventivo" : triage.risk === "medium" ? "Monitorar evolução e oferecer práticas" : "Oferecer acolhimento psicológico",
-    notes: `${MARKER} Triagem demonstrativa baseada no histórico recente.`, created_at: triageCreated, updated_at: triageCreated,
+    notes: `Triagem demonstrativa baseada no histórico recente.`, created_at: triageCreated, updated_at: triageCreated,
     resolved_at: triage.status === "resolved" ? timestampAgo(index % 4, 15) : null,
     follow_up_date: triage.status !== "resolved" ? dateAgo(-((index % 10) + 1)) : null,
     resolution_type: triage.status === "resolved" ? "monitoring_completed" : null,
-    resolution_notes: triage.status === "resolved" ? `${MARKER} Evolução estável após acompanhamento.` : null,
+    resolution_notes: triage.status === "resolved" ? `Evolução estável após acompanhamento.` : null,
   });
   if (triageError) throw triageError;
 }
@@ -331,10 +331,10 @@ async function seedStudentActivities(admin: any, institutionId: string, student:
 async function seedInstitutionalExtras(admin: any, institutionId: string) {
   const { data: professionals } = await admin.from("professional_institutions").select("professional_id,profissionais(display_name,preco_consulta)").eq("institution_id", institutionId);
   const { data: students } = await admin.from("patient_institutions").select("patient_id,pacientes(profile_id,profiles(user_id,nome,email))").eq("institution_id", institutionId);
-  await admin.from("institution_coupons").delete().eq("institution_id", institutionId).ilike("description", `%${MARKER}%`);
+  await admin.from("institution_coupons").delete().eq("institution_id", institutionId).in("code", ["EBMSP-CUIDADO", "EBMSP-PRIMEIRA"]);
   await admin.from("institution_coupons").insert([
-    { institution_id: institutionId, tenant_id: TENANT_ID, code: "EBMSP-CUIDADO", name: "Cuidado EBMSP", description: `${MARKER} 20% de desconto para estudantes`, discount_type: "percentage", discount_value: 20, target_audience: "all", is_active: true, valid_from: new Date().toISOString(), valid_until: `${new Date().getUTCFullYear() + 1}-12-31T23:59:59Z`, maximum_uses: 1000, uses_per_user: 2 },
-    { institution_id: institutionId, tenant_id: TENANT_ID, code: "EBMSP-PRIMEIRA", name: "Primeiro acolhimento", description: `${MARKER} Desconto fixo no primeiro acolhimento`, discount_type: "fixed_amount", discount_value: 40, target_audience: "all", is_active: true, valid_from: new Date().toISOString(), valid_until: `${new Date().getUTCFullYear() + 1}-12-31T23:59:59Z`, maximum_uses: 500, uses_per_user: 1 },
+    { institution_id: institutionId, tenant_id: TENANT_ID, code: "EBMSP-CUIDADO", name: "Cuidado EBMSP", description: `20% de desconto para estudantes`, discount_type: "percentage", discount_value: 20, target_audience: "all", is_active: true, valid_from: new Date().toISOString(), valid_until: `${new Date().getUTCFullYear() + 1}-12-31T23:59:59Z`, maximum_uses: 1000, uses_per_user: 2 },
+    { institution_id: institutionId, tenant_id: TENANT_ID, code: "EBMSP-PRIMEIRA", name: "Primeiro acolhimento", description: `Desconto fixo no primeiro acolhimento`, discount_type: "fixed_amount", discount_value: 40, target_audience: "all", is_active: true, valid_from: new Date().toISOString(), valid_until: `${new Date().getUTCFullYear() + 1}-12-31T23:59:59Z`, maximum_uses: 500, uses_per_user: 1 },
   ]);
   const appointments = [];
   for (let index = 0; index < 80; index++) {
@@ -347,7 +347,7 @@ async function seedInstitutionalExtras(admin: any, institutionId: string) {
       user_id: profile.user_id, professional_id: professional.professional_id, tenant_id: TENANT_ID,
       data_consulta: past ? dateAgo((index % 29) + 1) : dateAgo(-((index % 25) + 1)), horario: `${String(8 + index % 10).padStart(2, "0")}:00:00`,
       valor: professional.profissionais?.preco_consulta || 150, status: past ? "realizado" : index % 3 === 0 ? "pendente" : "confirmado",
-      nome_paciente: profile.nome, email_paciente: profile.email, telefone_paciente: "(71) 90000-0000", observacoes: `${MARKER} Consulta demonstrativa`,
+      nome_paciente: profile.nome, email_paciente: profile.email, telefone_paciente: "(71) 90000-0000", observacoes: `Consulta demonstrativa`,
       payment_status: past ? "paid" : "pending_payment",
     });
   }
@@ -359,7 +359,7 @@ async function seedInstitutionalExtras(admin: any, institutionId: string) {
     { title: "Sono e aprendizagem", day: 4, status: "scheduled" },
     { title: "Estratégias para períodos de avaliação", day: -7, status: "scheduled" },
   ].map((session, index) => ({
-    tenant_id: TENANT_ID, title: session.title, description: `${MARKER} Encontro de demonstração para estudantes da EBMSP.`,
+    tenant_id: TENANT_ID, title: session.title, description: `Encontro de demonstração para estudantes da EBMSP.`,
     session_type: ["roda_conversa", "palestra", "workshop"][index], session_date: dateAgo(session.day), start_time: `${18 + index}:00:00`, duration_minutes: 60,
     organizer_type: "institution", institution_id: institutionId, max_participants: 100, current_registrations: 0,
     is_free: true, price: 0, audience_type: "institutions", allowed_institution_ids: [institutionId], status: session.status,
@@ -430,18 +430,18 @@ Deno.serve(async (req) => {
         const index = Number(match[1]) - 1;
         const student = { ...studentIdentity(index), profileId: patient.profile_id, userId: profile.user_id, patientId: link.patient_id, created: false, pattern: patterns[index % patterns.length] };
         await seedMoodAndBuddy(admin, institutionId, student, index);
-        await admin.from("student_triage").delete().eq("institution_id", institutionId).eq("patient_id", link.patient_id).ilike("notes", `%${MARKER}%`);
+        await admin.from("student_triage").delete().eq("institution_id", institutionId).eq("patient_id", link.patient_id).ilike("notes", "Triagem demonstrativa%");
         const triage = riskFor(student.pattern);
         const triageCreated = timestampAgo(2 + index % 26, 10);
         const { error: triageError } = await admin.from("student_triage").insert({
           patient_id: student.patientId, institution_id: institutionId, triaged_by: callerId,
           status: triage.status, risk_level: triage.risk, priority: triage.priority,
           recommended_action: triage.risk === "low" ? "Manter acompanhamento preventivo" : triage.risk === "medium" ? "Monitorar evolução e oferecer práticas" : "Oferecer acolhimento psicológico",
-          notes: `${MARKER} Triagem demonstrativa baseada no histórico recente.`, created_at: triageCreated, updated_at: triageCreated,
+          notes: `Triagem demonstrativa baseada no histórico recente.`, created_at: triageCreated, updated_at: triageCreated,
           resolved_at: triage.status === "resolved" ? timestampAgo(index % 4, 15) : null,
           follow_up_date: triage.status !== "resolved" ? dateAgo(-((index % 10) + 1)) : null,
           resolution_type: triage.status === "resolved" ? "monitoring_completed" : null,
-          resolution_notes: triage.status === "resolved" ? `${MARKER} Evolução estável após acompanhamento.` : null,
+          resolution_notes: triage.status === "resolved" ? `Evolução estável após acompanhamento.` : null,
         });
         if (triageError) throw triageError;
         repaired++;
