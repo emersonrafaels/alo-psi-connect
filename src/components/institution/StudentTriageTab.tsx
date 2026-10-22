@@ -33,6 +33,8 @@ import { useDebounce } from '@/hooks/useDebounce';
 import * as XLSX from 'xlsx';
 import { useTriagePeriod } from '@/hooks/useTriagePeriod';
 import { buildPriorities, buildActions } from '@/features/triage/priorities';
+import { TriageFunnel } from '@/features/triage/TriageFunnel';
+import { Layers } from 'lucide-react';
 import { TriageSummary, TriagePriorities, TriageFollowUps, ViewHeader } from '@/features/triage/TriageViews';
 
 export type TriageView = 'resumo' | 'prioridades' | 'followups' | 'fila' | 'metricas';
@@ -753,6 +755,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
               </SelectContent>
             </Select>
             <span className="text-xs text-muted-foreground">{format(subDays(new Date(), analysisPeriod), 'dd/MM')} – {format(new Date(), 'dd/MM')} · Atualizado às {format(new Date(), 'HH:mm')}</span>
+            <Button variant="outline" size="sm" className="ml-auto h-8 gap-1" onClick={() => setFunnelOpen((o) => !o)} aria-expanded={funnelOpen}><Layers className="h-4 w-4" />Como funciona a triagem</Button>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground"><Info className="h-4 w-4" />Como a criticidade é calculada</Button>
