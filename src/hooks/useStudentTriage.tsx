@@ -310,12 +310,13 @@ export function useTriageRecords(institutionId: string | null) {
     queryKey: ['triage-records', institutionId],
     queryFn: async () => {
       if (!institutionId) return [];
-      const { data, error } = await supabase
+      const data = await fetchAllPaged<any>((from, to) => supabase
         .from('student_triage' as any)
         .select('*')
         .eq('institution_id', institutionId)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
+        .order('created_at', { ascending: false })
+        .order('id')
+        .range(from, to) as any);
 
       const records = (data || []) as unknown as TriageRecord[];
 
