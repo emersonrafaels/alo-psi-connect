@@ -736,6 +736,32 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
   return (
     <TooltipProvider delayDuration={200}>
       <div className="space-y-6">
+        {view && view !== 'fila' && (
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card px-4 py-2 text-sm">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Período analisado</span>
+            <Select value={String(analysisPeriod)} onValueChange={(v) => setAnalysisPeriod(Number(v))}>
+              <SelectTrigger className="h-8 w-[170px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Última semana (7d)</SelectItem>
+                <SelectItem value="15">Quinzena (15d)</SelectItem>
+                <SelectItem value="30">Último mês (30d)</SelectItem>
+                <SelectItem value="60">2 meses (60d)</SelectItem>
+                <SelectItem value="90">Trimestre (90d)</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-muted-foreground">{format(subDays(new Date(), analysisPeriod), 'dd/MM')} – {format(new Date(), 'dd/MM')} · Atualizado às {format(new Date(), 'HH:mm')}</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="ml-auto h-8 gap-1 text-muted-foreground"><Info className="h-4 w-4" />Como a criticidade é calculada</Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="end" className="max-w-sm space-y-1.5 p-3 text-xs">
+                {riskOrder.map((l) => <p key={l}><strong>{riskConfig[l].label}:</strong> {riskLegend[l]}</p>)}
+                <p><strong>Palavras críticas:</strong> termos graves no diário levam a Crítico; termos moderados sobem um nível. O texto do aluno nunca é exibido.</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
         {view === 'resumo' && (
           <>
             <ViewHeader title="Resumo" description="Quantos alunos estão em cada nível de risco e o que fazer primeiro. Clique em um nível para ver os alunos." />
