@@ -126,11 +126,19 @@ function round1(v: number | null): number | null {
   return v !== null ? Math.round(v * 10) / 10 : null;
 }
 
-export function useStudentTriageData(institutionId: string | null, periodDays: number = 15, comparePeriodDays?: number | null) {
-  return useQuery({
-    queryKey: ['student-triage-data', institutionId, periodDays, comparePeriodDays ?? null],
-    queryFn: async (): Promise<StudentRiskData[]> => {
-      if (!institutionId) return [];
+export interface StudentRiskResult {
+  students: StudentRiskData[];
+  /** Raw mood entries fetched for the period (date, profile_id, scores). */
+  entries: any[];
+}
+
+export async function fetchStudentRiskData(
+  institutionId: string | null,
+  periodDays: number = 15,
+  comparePeriodDays?: number | null,
+): Promise<StudentRiskResult> {
+  const entries: any[] = [];
+  if (!institutionId) return { students: [], entries };
 
       // 1. Get students linked to institution
       const students = await fetchAllPaged<any>((from, to) => supabase
@@ -141,7 +149,7 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
         .order('patient_id')
         .range(from, to) as any);
 
-      if (!students || students.length === 0) return [];
+      if (!students || students.length === 0) return { students: [], entries };
 
       // 2. Get profile_ids for mood_entries lookup
       const profileIds = students.map((s: any) => s.pacientes.profile_id).filter(Boolean);
@@ -161,6 +169,7 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
         .order('id')
         .range(from, to) as any);
       moodEntries.sort((a: any, b: any) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+      entries.push(...(moodEntries || []));
 
       // 4. Get latest triage records
       const patientIds = students.map((s: any) => s.patient_id);
@@ -300,7 +309,14 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
           prevEntryCount: comparePeriodDays ? prevEntries.length : 0,
         };
       });
-    },
+
+  return { students, entries };
+}
+
+export function useStudentTriageData(institutionId: string | null, periodDays: number = 15, comparePeriodDays?: number | null) {
+  return useQuery({
+    queryKey: ['student-triage-data', institutionId, periodDays, comparePeriodDays ?? null],
+    queryFn: async () => (await fetchStudentRiskData(institutionId, periodDays, comparePeriodDays)).students,
     enabled: !!institutionId,
   });
 }
