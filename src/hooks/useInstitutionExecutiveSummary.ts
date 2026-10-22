@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchAllPaged, fetchInChunks } from '@/lib/supabasePaging';
+import { fetchAllPaged } from '@/lib/supabasePaging';
+import { fetchStudentRiskData } from '@/hooks/useStudentTriage';
 
 export interface AlertItem {
   id: string;
@@ -26,56 +27,43 @@ export interface ExecutiveSummary {
 
 async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
   const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 86400000);
-  const twoWeekAgo = new Date(now.getTime() - 14 * 86400000);
+  const weekAgoDate = new Date(now.getTime() - 7 * 86400000);
+  const twoWeekAgoDate = new Date(now.getTime() - 14 * 86400000);
+  const weekAgo = weekAgoDate.toISOString().slice(0, 10);
+  const twoWeekAgo = twoWeekAgoDate.toISOString().slice(0, 10);
 
-  const linked = await fetchAllPaged((f, t) => supabase
-    .from('patient_institutions')
-    .select('patient_id')
-    .eq('institution_id', institutionId).order('id').range(f, t));
-
-  const pacienteIds = (linked || []).map((l: any) => l.patient_id);
-
-  // Map pacientes.id -> profiles.id, since mood_entries.profile_id references profiles.id
-  const { data: pacientes } = pacienteIds.length
-    ? { data: await fetchInChunks(pacienteIds, (c, f, t) => supabase.from('pacientes').select('id, profile_id').in('id', c).order('id').range(f, t)) }
-    : { data: [] as any[] };
-
-  const profileIds = (pacientes || [])
-    .map((p: any) => p.profile_id)
-    .filter(Boolean);
-
-  const safeProfileIds = profileIds.length ? profileIds : ['00000000-0000-0000-0000-000000000000'];
-  const totalStudents = pacienteIds.length;
-
-  const [{ data: entriesWeek }, { data: entriesPrev }, { data: triages }] = await Promise.all([
-    fetchInChunks(safeProfileIds, (c, f, t) => supabase
-      .from('mood_entries')
-      .select('id,profile_id,date')
-      .in('profile_id', c)
-      .gte('date', weekAgo.toISOString().slice(0, 10)).order('id').range(f, t)).then((data) => ({ data })),
-    fetchInChunks(safeProfileIds, (c, f, t) => supabase
-      .from('mood_entries')
-      .select('id,profile_id,date')
-      .in('profile_id', c)
-      .gte('date', twoWeekAgo.toISOString().slice(0, 10))
-      .lt('date', weekAgo.toISOString().slice(0, 10)).order('id').range(f, t)).then((data) => ({ data })),
+  const [risk, linked, triages] = await Promise.all([
+    fetchStudentRiskData(institutionId, 15),
     fetchAllPaged((f, t) => supabase
-      .from('student_triage')
+      .from('patient_institutions')
+      .select('patient_id')
+      .eq('institution_id', institutionId).order('id').range(f, t)),
+    fetchAllPaged((f, t) => supabase
+      .from('student_triage' as any)
       .select('id,status,risk_level,priority,created_at,resolved_at,patient_id')
       .eq('institution_id', institutionId)
-      .order('id').range(f, t)).then((data) => ({ data })),
+      .order('id').range(f, t) as any),
   ]);
 
-  const activeSet = new Set((entriesWeek || []).map((e: any) => e.profile_id));
-  const prevSet = new Set((entriesPrev || []).map((e: any) => e.profile_id));
+  const entries = risk.entries || [];
+  const totalStudents = (linked || []).length;
+
+  const activeSet = new Set(entries.filter((e: any) => e.date >= weekAgo).map((e: any) => e.profile_id));
+  const prevSet = new Set(entries.filter((e: any) => e.date >= twoWeekAgo && e.date < weekAgo).map((e: any) => e.profile_id));
 
   const sparkline: number[] = Array(7).fill(0);
-  (entriesWeek || []).forEach((e: any) => {
+  entries.forEach((e: any) => {
+    if (e.date < weekAgo) return;
     const d = new Date(e.date + 'T00:00:00');
     const idx = 6 - Math.min(6, Math.floor((now.getTime() - d.getTime()) / 86400000));
     if (idx >= 0 && idx < 7) sparkline[idx]++;
   });
+
+  // Same definition as the "Para triar" queue: students classified as Em Risco
+  // (mood-derived risk + critical keyword escalation) without a triage in progress.
+  const criticalPending = risk.students.filter(
+    (s) => s.riskLevel === 'critical' && (!s.lastTriageStatus || s.lastTriageStatus === 'pending'),
+  ).length;
 
   const HIGH_RISK = ['alto', 'critico', 'crítico', 'high', 'critical'];
   const sortedTriages = [...(triages || [])].sort((a: any, b: any) =>
@@ -85,7 +73,6 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
   const openCritical = sortedTriages.filter(
     (t: any) => t.status !== 'resolved' && HIGH_RISK.includes(String(t.risk_level).toLowerCase()),
   );
-  const criticalOpen = openCritical.length;
 
   const RISK_PT: Record<string, string> = {
     high: 'alto', critical: 'Em Risco', medium: 'moderado', low: 'baixo',
@@ -128,7 +115,7 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
     activeStudentsPrevWeek: prevSet.size,
     sparkline,
     engagementRate: totalStudents > 0 ? activeSet.size / totalStudents : 0,
-    criticalOpen,
+    criticalOpen: criticalPending,
     resolutionRate: totalTriage > 0 ? resolvedTriage / totalTriage : 0,
     totalTriage,
     resolvedTriage,
