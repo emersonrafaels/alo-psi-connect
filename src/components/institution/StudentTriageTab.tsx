@@ -655,7 +655,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
     <TooltipProvider delayDuration={200}>
       <div className="space-y-6">
         {/* Summary cards — redesigned */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div id="triage-risk" className="scroll-mt-20 grid grid-cols-2 md:grid-cols-5 gap-3">
           {riskOrder.map((level) => {
             const config = riskConfig[level];
             const Icon = config.icon;
@@ -738,6 +738,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           </div>
         )}
 
+        <div id="triage-followups" className="scroll-mt-20" />
         {/* Stratified attention banner */}
         {(riskCounts.critical + riskCounts.alert + riskCounts.attention) > 0 && (() => {
           const openTotal = riskCounts.critical + riskCounts.alert + riskCounts.attention;
@@ -807,6 +808,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
         )}
 
         {/* Triage Metrics Dashboard */}
+        <div id="triage-metrics" className="scroll-mt-20" />
         <TriageMetricsDashboard triageRecords={triageRecords} periodDays={analysisPeriod} />
 
         {/* Contexto Institucional */}
