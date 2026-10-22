@@ -13,6 +13,7 @@ import { useGlobalCacheShortcut } from "@/hooks/useGlobalCacheShortcut";
 import { useContext, useEffect, useState } from "react";
 import WhatsAppFloat from "@/components/ui/whatsapp-float";
 import ScrollToTopButton from "@/components/ui/scroll-to-top-button";
+import ScrollToTopOnPortalNavigation from "@/components/ui/scroll-to-top-on-navigation";
 import { FirstLoginWelcome } from "@/components/FirstLoginWelcome";
 import { DomainRedirect } from "@/components/DomainRedirect";
 import { ModuleGuard } from "@/components/ModuleGuard";
@@ -515,6 +516,7 @@ const App: React.FC = () => {
                 <AppWithShortcuts />
                 <WhatsAppFloat />
                 <ScrollToTopButton />
+                <ScrollToTopOnPortalNavigation />
               </AuthProvider>
             </TenantProvider>
           </BrowserRouter>
