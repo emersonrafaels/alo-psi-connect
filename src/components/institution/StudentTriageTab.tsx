@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -376,6 +376,25 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const [legendOpen, setLegendOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('para_triar');
+  const [pageSize, setPageSize] = useState(25);
+  const [visibleCount, setVisibleCount] = useState(25);
+  useEffect(() => { setVisibleCount(pageSize); }, [pageSize, activeTab, searchTerm, riskFilter]);
+  const renderPager = (total: number) => (
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t px-5 py-3 text-xs text-muted-foreground">
+      <span>Exibindo {Math.min(visibleCount, total)} de {total}</span>
+      <div className="flex items-center gap-2">
+        <span>Mostrar</span>
+        <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+          <SelectTrigger className="h-8 w-[84px]"><SelectValue /></SelectTrigger>
+          <SelectContent>{[10, 25, 50, 100].map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
+        </Select>
+        <span>por vez</span>
+        {visibleCount < total && (
+          <Button size="sm" variant="outline" onClick={() => setVisibleCount((c) => c + pageSize)}>Ver mais</Button>
+        )}
+      </div>
+    </div>
+  );
   const [activityModalStudent, setActivityModalStudent] = useState<StudentRiskData | null>(null);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
@@ -1000,7 +1019,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   </div>
                 )}
                 <div className="divide-y">
-                  {pendingStudents.map((student) => {
+                  {pendingStudents.slice(0, visibleCount).map((student) => {
                     const config = riskConfig[student.riskLevel];
                     const isCritical = student.riskLevel === 'critical';
                     const riskBorder = student.riskLevel === 'critical' ? 'border-l-red-500' :
@@ -1143,6 +1162,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                       </div>);
 
                   })}
+                  {pendingStudents.length > visibleCount || pendingStudents.length > 10 ? renderPager(pendingStudents.length) : null}
                   {pendingStudents.length === 0 &&
                   <div className="p-8 text-center text-muted-foreground text-sm">
                       <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-500/60" />
@@ -1172,7 +1192,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   </div> :
 
                 <div className="divide-y">
-                    {inProgressTriages.map((t) => {
+                    {inProgressTriages.slice(0, visibleCount).map((t) => {
                     const priorityBorder = t.priority === 'urgent' ? 'border-l-red-500' :
                     t.priority === 'high' ? 'border-l-orange-500' :
                     t.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500';
@@ -1224,6 +1244,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   })}
                   </div>
                 }
+                {inProgressTriages.length > 10 && renderPager(inProgressTriages.length)}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1261,7 +1282,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   </div> :
 
                 <div className="divide-y">
-                    {filteredResolvedTriages.map((t) =>
+                    {filteredResolvedTriages.slice(0, visibleCount).map((t) =>
                   <div key={t.id} className="p-4 hover:bg-muted/30 transition-colors">
                         <div className="flex items-center justify-between gap-4">
                           <div className="space-y-1 flex-1 min-w-0">
@@ -1302,6 +1323,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   )}
                   </div>
                 }
+                {filteredResolvedTriages.length > 10 && renderPager(filteredResolvedTriages.length)}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1339,7 +1361,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   </div> :
 
                 <div className="divide-y">
-                    {filteredAllTriages.map((t) => {
+                    {filteredAllTriages.slice(0, visibleCount).map((t) => {
                     const priorityBorder = t.priority === 'urgent' ? 'border-l-red-500' :
                     t.priority === 'high' ? 'border-l-orange-500' :
                     t.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500';
@@ -1369,6 +1391,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   })}
                   </div>
                 }
+                {filteredAllTriages.length > 10 && renderPager(filteredAllTriages.length)}
               </CardContent>
             </Card>
           </TabsContent>
