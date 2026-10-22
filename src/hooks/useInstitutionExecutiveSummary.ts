@@ -21,6 +21,7 @@ export interface ExecutiveSummary {
   totalTriage: number;
   resolvedTriage: number;
   alerts: AlertItem[];
+  criticalTriageAlerts: AlertItem[];
 }
 
 async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
@@ -59,12 +60,11 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
       .in('profile_id', c)
       .gte('date', twoWeekAgo.toISOString().slice(0, 10))
       .lt('date', weekAgo.toISOString().slice(0, 10)).order('id').range(f, t)).then((data) => ({ data })),
-    supabase
+    fetchAllPaged((f, t) => supabase
       .from('student_triage')
       .select('id,status,risk_level,priority,created_at,resolved_at,patient_id')
       .eq('institution_id', institutionId)
-      .order('created_at', { ascending: false })
-      .limit(200),
+      .order('id').range(f, t)).then((data) => ({ data })),
   ]);
 
   const activeSet = new Set((entriesWeek || []).map((e: any) => e.profile_id));
@@ -77,17 +77,19 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
     if (idx >= 0 && idx < 7) sparkline[idx]++;
   });
 
-  const totalTriage = (triages || []).length;
-  const resolvedTriage = (triages || []).filter((t: any) => t.status === 'resolved').length;
-  const criticalOpen = (triages || []).filter(
-    (t: any) =>
-      t.status !== 'resolved' &&
-      ['alto', 'critico', 'crítico', 'high', 'critical'].includes(String(t.risk_level).toLowerCase())
-  ).length;
+  const HIGH_RISK = ['alto', 'critico', 'crítico', 'high', 'critical'];
+  const sortedTriages = [...(triages || [])].sort((a: any, b: any) =>
+    String(b.created_at).localeCompare(String(a.created_at)));
+  const totalTriage = sortedTriages.length;
+  const resolvedTriage = sortedTriages.filter((t: any) => t.status === 'resolved').length;
+  const openCritical = sortedTriages.filter(
+    (t: any) => t.status !== 'resolved' && HIGH_RISK.includes(String(t.risk_level).toLowerCase()),
+  );
+  const criticalOpen = openCritical.length;
 
   const RISK_PT: Record<string, string> = {
-    high: 'alto', critical: 'crítico', medium: 'moderado', low: 'baixo',
-    alto: 'alto', critico: 'crítico', 'crítico': 'crítico', moderado: 'moderado', baixo: 'baixo',
+    high: 'alto', critical: 'Em Risco', medium: 'moderado', low: 'baixo',
+    alto: 'alto', critico: 'Em Risco', 'crítico': 'Em Risco', moderado: 'moderado', baixo: 'baixo',
   };
   const PRIORITY_PT: Record<string, string> = {
     high: 'Alta', critical: 'Crítica', medium: 'Média', low: 'Baixa',
@@ -96,21 +98,17 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
   const humanizeRisk = (r?: string | null) => RISK_PT[String(r || '').toLowerCase()] || 'não informado';
   const humanizePriority = (p?: string | null) => PRIORITY_PT[String(p || '').toLowerCase()] || 'não definida';
 
-  const alerts: AlertItem[] = [];
-  (triages || []).slice(0, 5).forEach((t: any) => {
-    if (t.status !== 'resolved') {
-      alerts.push({
-        id: `tri-${t.id}`,
-        type: 'triage',
-        title: `Triagem em aberto — risco ${humanizeRisk(t.risk_level)}`,
-        subtitle: `Prioridade: ${humanizePriority(t.priority)}`,
-        timestamp: t.created_at,
-        severity: ['alto', 'critico', 'crítico', 'high', 'critical'].includes(String(t.risk_level).toLowerCase())
-          ? 'high'
-          : 'medium',
-      });
-    }
+  const toAlert = (t: any): AlertItem => ({
+    id: `tri-${t.id}`,
+    type: 'triage',
+    title: `Triagem em aberto — risco ${humanizeRisk(t.risk_level)}`,
+    subtitle: `Prioridade: ${humanizePriority(t.priority)}`,
+    timestamp: t.created_at,
+    severity: HIGH_RISK.includes(String(t.risk_level).toLowerCase()) ? 'high' : 'medium',
   });
+  const criticalTriageAlerts = openCritical.map(toAlert);
+
+  const alerts: AlertItem[] = criticalTriageAlerts.slice(0, 5);
 
   // Ausência prolongada: alunos que estavam ativos na semana anterior à retrasada e não têm registro há 14+ dias
   const absentIds = Array.from(prevSet).filter((id) => !activeSet.has(id)).slice(0, 5);
@@ -135,6 +133,7 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
     totalTriage,
     resolvedTriage,
     alerts: alerts.slice(0, 10),
+    criticalTriageAlerts,
   };
 }
 
