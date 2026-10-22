@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Search, Calendar, GraduationCap, ArrowLeft, Download, TrendingUp } from 'lucide-react';
-import { UserStorytellingModal } from '@/components/admin/UserStorytellingModal';
+import { StudentTimelineModal } from '@/components/institution/StudentTimelineModal';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -41,7 +41,7 @@ export default function InstitutionStudents() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'enrolled' | 'graduated' | 'inactive'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'enrollment_date'>('name');
-  const [selectedStudent, setSelectedStudent] = useState<{ userId?: string; profileId: string; patientName: string; name: string } | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<{ patientId: string; name: string } | null>(null);
 
   const studentIndexMap = useMemo(
     () => buildAnonymizedStudentIndex(linkedStudents.map((student) => student.patient_id)),
@@ -224,12 +224,7 @@ export default function InstitutionStudents() {
                     size="sm"
                     className="flex-1"
                     onClick={() =>
-                      setSelectedStudent({
-                        userId: student.pacientes.profiles.user_id || undefined,
-                        profileId: student.pacientes.profile_id,
-                        patientName: studentName,
-                        name: studentName,
-                      })
+                      setSelectedStudent({ patientId: student.patient_id, name: studentName })
                     }
                   >
                     <TrendingUp className="h-4 w-4 mr-1" />
@@ -289,14 +284,12 @@ export default function InstitutionStudents() {
       </Dialog>
 
       {selectedStudent && (
-        <UserStorytellingModal
+        <StudentTimelineModal
           open={!!selectedStudent}
           onOpenChange={(open) => !open && setSelectedStudent(null)}
-          userId={selectedStudent.userId}
-          profileId={selectedStudent.profileId}
-          patientName={selectedStudent.patientName}
-          userName={selectedStudent.name}
-          userType="patient"
+          institutionId={institutionId}
+          patientId={selectedStudent.patientId}
+          studentName={selectedStudent.name}
         />
       )}
     </div>
