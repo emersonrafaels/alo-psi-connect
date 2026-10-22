@@ -34,7 +34,7 @@ export function priorityReasons(s: PriorityInput, periodDays: number): string[] 
   const r: string[] = [];
   if (s.criticalSeverity === 'grave') r.push('Termo grave no diário');
   else if (s.criticalSeverity === 'moderate') r.push('Termo de atenção no diário');
-  if (s.riskLevel === 'critical') r.push(isPending(s) ? 'Crítico e ainda não triado' : 'Crítico em acompanhamento');
+  if (s.riskLevel === 'critical') r.push(isPending(s) ? 'Em Risco e ainda não triado' : 'Em Risco em acompanhamento');
   else if (s.riskLevel === 'alert') r.push(isPending(s) ? 'Em alerta e ainda não triado' : 'Em alerta');
   if (s.overdueFollowUp) r.push('Follow-up vencido');
   if (s.moodTrend != null && s.moodTrend < -15) r.push(`Humor caiu ${Math.round(-s.moodTrend)}% em ${periodDays} dias`);

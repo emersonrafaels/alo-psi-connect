@@ -33,6 +33,8 @@ import { useDebounce } from '@/hooks/useDebounce';
 import * as XLSX from 'xlsx';
 import { useTriagePeriod } from '@/hooks/useTriagePeriod';
 import { buildPriorities, buildActions } from '@/features/triage/priorities';
+import { TriageFunnel } from '@/features/triage/TriageFunnel';
+import { Layers } from 'lucide-react';
 import { TriageSummary, TriagePriorities, TriageFollowUps, ViewHeader } from '@/features/triage/TriageViews';
 
 export type TriageView = 'resumo' | 'prioridades' | 'followups' | 'fila' | 'metricas';
@@ -46,7 +48,7 @@ interface StudentTriageTabProps {
 }
 
 const riskConfig: Record<RiskLevel, {label: string;color: string;labelColor: string;icon: typeof AlertTriangle;cardBg: string;progressColor: string;}> = {
-  critical: { label: 'Crítico', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', labelColor: 'text-red-700 dark:text-red-400', icon: AlertTriangle, cardBg: 'border-red-200 dark:border-red-900/50 bg-red-50/40 dark:bg-red-950/20', progressColor: '[&>div]:bg-red-500' },
+  critical: { label: 'Em Risco', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', labelColor: 'text-red-700 dark:text-red-400', icon: AlertTriangle, cardBg: 'border-red-200 dark:border-red-900/50 bg-red-50/40 dark:bg-red-950/20', progressColor: '[&>div]:bg-red-500' },
   alert: { label: 'Alerta', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', labelColor: 'text-orange-700 dark:text-orange-400', icon: AlertCircle, cardBg: 'border-orange-200 dark:border-orange-900/50 bg-orange-50/40 dark:bg-orange-950/20', progressColor: '[&>div]:bg-orange-500' },
   attention: { label: 'Atenção', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', labelColor: 'text-yellow-700 dark:text-yellow-400', icon: Eye, cardBg: 'border-yellow-200 dark:border-yellow-900/50 bg-yellow-50/30 dark:bg-yellow-950/20', progressColor: '[&>div]:bg-yellow-500' },
   healthy: { label: 'Saudável', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', labelColor: 'text-green-700 dark:text-green-400', icon: Heart, cardBg: 'border-green-200 dark:border-green-900/50 bg-green-50/30 dark:bg-green-950/20', progressColor: '[&>div]:bg-green-500' },
@@ -63,7 +65,7 @@ const riskLegend: Record<RiskLevel, string> = {
 
 const riskTooltips: Record<RiskLevel, {title: string;description: string;}> = {
   critical: {
-    title: '🔴 Nível Crítico',
+    title: '🔴 Nível Em Risco',
     description: 'Alunos com humor muito baixo (≤1.5), ansiedade muito alta (≥4.5) ou queda brusca no humor (>40%). Necessitam atenção imediata.'
   },
   alert: {
@@ -303,7 +305,7 @@ function MetricSparkline({ student }: { student: StudentRiskData }) {
     <div className="flex items-center gap-1">
       <MetricTooltip
         title={`📊 Evolução: ${config.label}`}
-        description={`Mini-gráfico mostrando a evolução de ${config.label.toLowerCase()} no período. Verde=saudável, amarelo=atenção, laranja=alerta, vermelho=crítico.`}
+        description={`Mini-gráfico mostrando a evolução de ${config.label.toLowerCase()} no período. Verde=saudável, amarelo=atenção, laranja=alerta, vermelho=em risco.`}
       >
         <svg width={width} height={height} className="shrink-0 cursor-help">
           {data.slice(1).map((val, i) => {
@@ -529,6 +531,8 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
     }
   };
   const showLegacy = !view;
+  const [funnelOpen, setFunnelOpen] = useState(true);
+  useEffect(() => { setFunnelOpen(view === 'resumo'); }, [view]);
   const showView = (v: TriageView) => !view || view === v;
 
 
@@ -716,7 +720,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <LoadingCards labels={["Crítico", "Alerta", "Atenção", "Estável"]} />
+        <LoadingCards labels={["Em Risco", "Alerta", "Atenção", "Estável"]} />
         <LoadingSection label="Carregando dados da triagem..." />
       </div>);
 
@@ -751,15 +755,38 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
               </SelectContent>
             </Select>
             <span className="text-xs text-muted-foreground">{format(subDays(new Date(), analysisPeriod), 'dd/MM')} – {format(new Date(), 'dd/MM')} · Atualizado às {format(new Date(), 'HH:mm')}</span>
+            <Button variant="outline" size="sm" className="ml-auto h-8 gap-1" onClick={() => setFunnelOpen((o) => !o)} aria-expanded={funnelOpen}><Layers className="h-4 w-4" />Como funciona a triagem</Button>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" className="ml-auto h-8 gap-1 text-muted-foreground"><Info className="h-4 w-4" />Como a criticidade é calculada</Button>
+                <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground"><Info className="h-4 w-4" />Como a criticidade é calculada</Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" align="end" className="max-w-sm space-y-1.5 p-3 text-xs">
                 {riskOrder.map((l) => <p key={l}><strong>{riskConfig[l].label}:</strong> {riskLegend[l]}</p>)}
-                <p><strong>Palavras críticas:</strong> termos graves no diário levam a Crítico; termos moderados sobem um nível. O texto do aluno nunca é exibido.</p>
+                <p><strong>Palavras críticas:</strong> termos graves no diário levam a Em Risco; termos moderados sobem um nível. O texto do aluno nunca é exibido.</p>
               </TooltipContent>
             </Tooltip>
+          </div>
+        )}
+        {view && (view === 'resumo' || funnelOpen) && (
+          <div className={view === 'resumo' ? 'order-none' : ''}>
+            <TriageFunnel
+              open={view === 'resumo' ? funnelOpen : true}
+              onOpenChange={setFunnelOpen}
+              onNavigate={nav}
+              counts={{
+                total: totalStudents,
+                withData: totalStudents - counts.no_data,
+                atRisk: counts.critical,
+                alert: counts.alert,
+                attention: counts.attention,
+                healthy: counts.healthy,
+                priorities: priorityItems.length,
+                pending: pendingByRisk.critical + pendingByRisk.alert + pendingByRisk.attention,
+                inFollowUp: inProgressTriages.length,
+                overdue: overdueFollowUpCount,
+                resolved: resolvedTriages.length,
+              }}
+            />
           </div>
         )}
         {view === 'resumo' && (
@@ -911,7 +938,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
                     {riskCounts.critical > 0 && (
                       <span className="inline-flex items-center gap-1.5">
                         <span className="h-2 w-2 rounded-full bg-red-500" />
-                        <strong className="text-red-700 dark:text-red-300">{riskCounts.critical} crítico{riskCounts.critical > 1 ? 's' : ''}</strong>
+                        <strong className="text-red-700 dark:text-red-300">{riskCounts.critical} em risco</strong>
                         <span className="text-muted-foreground">— ação imediata (contato urgente)</span>
                       </span>
                     )}
@@ -938,7 +965,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
                         className="h-7 text-xs"
                         onClick={() => { setRiskFilter('critical'); setActiveTab('para_triar'); }}
                       >
-                        Começar pelos críticos
+                        Começar pelos alunos em risco
                         <ChevronRight className="h-3 w-3 ml-1" />
                       </Button>
                     </div>
@@ -1062,7 +1089,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os níveis</SelectItem>
-              <SelectItem value="critical">Crítico</SelectItem>
+              <SelectItem value="critical">Em Risco</SelectItem>
               <SelectItem value="alert">Alerta</SelectItem>
               <SelectItem value="attention">Atenção</SelectItem>
               <SelectItem value="healthy">Saudável</SelectItem>
