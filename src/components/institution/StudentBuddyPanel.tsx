@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { LoadingBar, LoadingSection } from "@/components/ui/loading-bar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -104,8 +105,7 @@ export function StudentBuddyPanel({ institutionId }: Props) {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-10 w-72" />
-        <Skeleton className="h-48 w-full" />
+        <LoadingSection label="Carregando Buddy..." />
       </div>
     );
   }
