@@ -234,7 +234,7 @@ export async function fetchStudentRiskData(
       }
 
       // 5. Calculate risk for each student
-      return students.map((s: any) => {
+      const riskStudents = students.map((s: any) => {
         const profileId = s.pacientes.profile_id;
         const entries = currentByProfile.get(profileId) || [];
         const prevEntries = prevByProfile.get(profileId) || [];
@@ -310,7 +310,7 @@ export async function fetchStudentRiskData(
         };
       });
 
-  return { students, entries };
+  return { students: riskStudents, entries };
 }
 
 export function useStudentTriageData(institutionId: string | null, periodDays: number = 15, comparePeriodDays?: number | null) {
