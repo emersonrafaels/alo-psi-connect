@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -632,11 +633,10 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">Carregando dados de triagem...</p>
-        </CardContent>
-      </Card>);
+      <div className="space-y-4">
+        <LoadingCards labels={["Crítico", "Alerta", "Atenção", "Estável"]} />
+        <LoadingSection label="Carregando dados da triagem..." />
+      </div>);
 
   }
 

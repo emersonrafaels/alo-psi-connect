@@ -1,4 +1,5 @@
 import React from "react";
+import { PortalTopLoadingBar } from "@/components/ui/loading-bar";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -520,6 +521,7 @@ const App: React.FC = () => {
                 <WhatsAppFloat />
                 <ScrollToTopButton />
                 <ScrollToTopOnPortalNavigation />
+                <PortalTopLoadingBar />
               </AuthProvider>
             </TenantProvider>
           </BrowserRouter>

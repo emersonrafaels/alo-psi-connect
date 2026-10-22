@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -63,7 +64,7 @@ export function StudentTimelineModal({ open, onOpenChange, institutionId, patien
         </div>
 
         {isLoading ? (
-          <div className="space-y-3">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
+          <LoadingBar className="py-8" label="Carregando histórico..." />
         ) : error ? (
           <p className="py-8 text-center text-sm text-destructive">Não foi possível carregar o histórico.</p>
         ) : items.length === 0 ? (
