@@ -462,6 +462,11 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
   const { data: summary, isLoading } = useInstitutionExecutiveSummary(institutionId);
   const [briefEnabled, setBriefEnabled] = useState(false);
   const [openKpi, setOpenKpi] = useState<KpiKey | null>(null);
+  const navigate = useNavigate();
+  const { tenant } = useTenant();
+
+  const triageQueueUrl = `${buildTenantPath(tenant?.slug ?? '', '/portal-institucional/triagem')}?view=fila&risk=critical&tab=para_triar`;
+  const goToRiskQueue = () => navigate(triageQueueUrl);
 
   const goToTriage = () => {
     onNavigateToTriage?.();
