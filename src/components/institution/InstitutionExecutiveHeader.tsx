@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -482,11 +483,7 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
 
   if (isLoading || !summary) {
     return (
-      <div className="grid gap-3 md:grid-cols-4 mb-6">
-        {[0, 1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-28 rounded-lg" />
-        ))}
-      </div>
+      <LoadingCards className="mb-6" />
     );
   }
 

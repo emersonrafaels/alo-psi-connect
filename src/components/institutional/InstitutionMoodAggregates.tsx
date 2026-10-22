@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -70,7 +71,7 @@ export function InstitutionMoodAggregates({ institutionId }: InstitutionMoodAggr
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Carregando…</p>
+          <LoadingBar label="Carregando indicadores..." />
         ) : !data?.available ? (
           <div className="text-center py-6 space-y-2">
             <Lock className="h-8 w-8 text-muted-foreground mx-auto" />
