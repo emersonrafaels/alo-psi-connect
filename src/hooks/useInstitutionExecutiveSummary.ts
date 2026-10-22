@@ -133,6 +133,7 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
     totalTriage,
     resolvedTriage,
     alerts: alerts.slice(0, 10),
+    criticalTriageAlerts,
   };
 }
 

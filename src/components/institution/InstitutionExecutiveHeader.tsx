@@ -279,7 +279,7 @@ function KpiDetailDialog({
   onGoTriage: () => void;
 }) {
   if (!kpi) return null;
-  const criticalTriages = summary.alerts.filter((a) => a.type === 'triage');
+  const criticalTriages = (summary.criticalTriageAlerts ?? []).slice(0, 20);
   const delta = summary.activeStudentsWeek - summary.activeStudentsPrevWeek;
   const engagementPct = Math.round(summary.engagementRate * 100);
   const engagementTotal =
@@ -364,8 +364,8 @@ function KpiDetailDialog({
       ),
     },
     critical: {
-      title: 'Alertas críticos abertos',
-      description: 'Triagens de risco alto ou crítico que ainda não foram resolvidas.',
+      title: 'Alertas Em Risco abertos',
+      description: 'Triagens Em Risco ou em Alerta que ainda não foram resolvidas.',
       body: (
         <div className="space-y-5">
           {criticalTriages.length === 0 ? (
@@ -376,12 +376,12 @@ function KpiDetailDialog({
               <div>
                 <p className="text-base font-semibold">Tudo tranquilo por aqui</p>
                 <p className="text-sm text-muted-foreground max-w-sm">
-                  Nenhuma triagem crítica em aberto no momento. Continue acompanhando os indicadores.
+                  Nenhuma triagem Em Risco em aberto no momento. Continue acompanhando os indicadores.
                 </p>
               </div>
             </div>
           ) : (
-            <ul className="space-y-2.5">
+            <ul className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
               {criticalTriages.map((a) => (
                 <li key={a.id} className="flex items-start gap-3 p-3.5 rounded-lg border bg-card/50">
                   <Badge
@@ -511,7 +511,7 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
         />
         <KpiCard
           icon={AlertTriangle}
-          label="Alertas críticos abertos"
+          label="Alertas Em Risco abertos"
           value={String(summary.criticalOpen)}
           hint="triagens de alto/crítico não resolvidas"
           tone={summary.criticalOpen > 0 ? 'danger' : 'success'}
