@@ -1,3 +1,4 @@
+import { fetchAllPaged, fetchInChunks } from '@/lib/supabasePaging';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
