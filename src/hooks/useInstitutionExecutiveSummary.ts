@@ -88,8 +88,8 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
   const criticalOpen = openCritical.length;
 
   const RISK_PT: Record<string, string> = {
-    high: 'alto', critical: 'crítico', medium: 'moderado', low: 'baixo',
-    alto: 'alto', critico: 'crítico', 'crítico': 'crítico', moderado: 'moderado', baixo: 'baixo',
+    high: 'alto', critical: 'Em Risco', medium: 'moderado', low: 'baixo',
+    alto: 'alto', critico: 'Em Risco', 'crítico': 'Em Risco', moderado: 'moderado', baixo: 'baixo',
   };
   const PRIORITY_PT: Record<string, string> = {
     high: 'Alta', critical: 'Crítica', medium: 'Média', low: 'Baixa',
