@@ -1162,6 +1162,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                       </div>);
 
                   })}
+                  {pendingStudents.length > visibleCount || pendingStudents.length > 10 ? renderPager(pendingStudents.length) : null}
                   {pendingStudents.length === 0 &&
                   <div className="p-8 text-center text-muted-foreground text-sm">
                       <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-500/60" />
@@ -1243,6 +1244,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   })}
                   </div>
                 }
+                {inProgressTriages.length > 10 && renderPager(inProgressTriages.length)}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1321,6 +1323,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   )}
                   </div>
                 }
+                {filteredResolvedTriages.length > 10 && renderPager(filteredResolvedTriages.length)}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1388,6 +1391,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   })}
                   </div>
                 }
+                {filteredAllTriages.length > 10 && renderPager(filteredAllTriages.length)}
               </CardContent>
             </Card>
           </TabsContent>
