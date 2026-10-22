@@ -516,6 +516,7 @@ const App: React.FC = () => {
                 <AppWithShortcuts />
                 <WhatsAppFloat />
                 <ScrollToTopButton />
+                <ScrollToTopOnPortalNavigation />
               </AuthProvider>
             </TenantProvider>
           </BrowserRouter>
