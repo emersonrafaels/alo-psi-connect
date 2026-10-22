@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchAllPaged, fetchInChunks } from '@/lib/supabasePaging';
 
 export interface AlertItem {
   id: string;
@@ -27,16 +28,16 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
   const weekAgo = new Date(now.getTime() - 7 * 86400000);
   const twoWeekAgo = new Date(now.getTime() - 14 * 86400000);
 
-  const { data: linked } = await supabase
+  const linked = await fetchAllPaged((f, t) => supabase
     .from('patient_institutions')
     .select('patient_id')
-    .eq('institution_id', institutionId);
+    .eq('institution_id', institutionId).order('id').range(f, t));
 
   const pacienteIds = (linked || []).map((l: any) => l.patient_id);
 
   // Map pacientes.id -> profiles.id, since mood_entries.profile_id references profiles.id
   const { data: pacientes } = pacienteIds.length
-    ? await supabase.from('pacientes').select('id, profile_id').in('id', pacienteIds)
+    ? { data: await fetchInChunks(pacienteIds, (c, f, t) => supabase.from('pacientes').select('id, profile_id').in('id', c).order('id').range(f, t)) }
     : { data: [] as any[] };
 
   const profileIds = (pacientes || [])
@@ -47,17 +48,17 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
   const totalStudents = pacienteIds.length;
 
   const [{ data: entriesWeek }, { data: entriesPrev }, { data: triages }] = await Promise.all([
-    supabase
+    fetchInChunks(safeProfileIds, (c, f, t) => supabase
       .from('mood_entries')
       .select('id,profile_id,date')
-      .in('profile_id', safeProfileIds)
-      .gte('date', weekAgo.toISOString().slice(0, 10)),
-    supabase
+      .in('profile_id', c)
+      .gte('date', weekAgo.toISOString().slice(0, 10)).order('id').range(f, t)).then((data) => ({ data })),
+    fetchInChunks(safeProfileIds, (c, f, t) => supabase
       .from('mood_entries')
       .select('id,profile_id,date')
-      .in('profile_id', safeProfileIds)
+      .in('profile_id', c)
       .gte('date', twoWeekAgo.toISOString().slice(0, 10))
-      .lt('date', weekAgo.toISOString().slice(0, 10)),
+      .lt('date', weekAgo.toISOString().slice(0, 10)).order('id').range(f, t)).then((data) => ({ data })),
     supabase
       .from('student_triage')
       .select('id,status,risk_level,priority,created_at,resolved_at,patient_id')
