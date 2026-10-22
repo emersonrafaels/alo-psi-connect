@@ -469,6 +469,14 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
     }).length;
   }, [inProgressTriages]);
 
+  const goToOverdueFollowUps = useCallback(() => {
+    setActiveTab('em_andamento');
+    requestAnimationFrame(() => {
+      document.getElementById('triage-queue')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, []);
+
+
   const filteredResolvedTriages = useMemo(() => {
     if (historyPeriod === 'all') return resolvedTriages;
     const cutoff = new Date();
@@ -819,7 +827,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
               <span>
                 <span className="font-semibold">{overdueFollowUpCount} {overdueFollowUpCount === 1 ? 'triagem' : 'triagens'} com follow-up vencido.</span>
               </span>
-              <Button variant="ghost" size="sm" className="text-orange-700 hover:text-orange-900 h-7 text-xs" onClick={() => setActiveTab('em_andamento')}>
+              <Button variant="ghost" size="sm" className="text-orange-700 hover:text-orange-900 h-7 text-xs" onClick={goToOverdueFollowUps}>
                 Ver <ChevronRight className="h-3 w-3 ml-1" />
               </Button>
             </AlertDescription>
