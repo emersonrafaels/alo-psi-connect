@@ -216,6 +216,11 @@ const adminMenuGroups = [
         url: '/admin/demo-data',
         icon: Database,
         requiredRole: 'super_admin' as const
+      },
+      {
+        title: 'Palavras críticas',
+        url: '/admin/palavras-criticas',
+        icon: ShieldCheck,
       }
     ]
   }

@@ -1052,6 +1052,15 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                             <button type="button" onClick={() => handleOpenActivity(student)} className="font-semibold text-base truncate text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{displayName}</button>
                             <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
                             <TrendBadge trend={student.moodTrend} />
+                            {student.criticalKeywordFlag && (
+                              <Badge
+                                variant={student.criticalKeywordFlag.severity === 'grave' ? 'destructive' : 'secondary'}
+                                className="shrink-0"
+                                title={`${student.criticalKeywordFlag.hits} registro(s) com termos críticos · último em ${new Date(student.criticalKeywordFlag.lastDate + 'T12:00:00').toLocaleDateString('pt-BR')}`}
+                              >
+                                Palavra crítica no diário · {student.criticalKeywordFlag.hits}
+                              </Badge>
+                            )}
                             {(() => {
                               const engagementRate = analysisPeriod > 0 ? (student.entryCount / analysisPeriod) * 100 : 0;
                               const engagementColor = student.entryCount === 0

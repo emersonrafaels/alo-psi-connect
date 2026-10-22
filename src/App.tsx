@@ -102,6 +102,7 @@ import AdminTests from "@/pages/admin/Tests";
 import GoogleCalendarTests from "@/pages/admin/GoogleCalendarTests";
 import GroupSessionsAdmin from "@/pages/admin/GroupSessionsAdmin";
 import DemoData from "@/pages/admin/DemoData";
+import CriticalTerms from "@/pages/admin/CriticalTerms";
 import AIManagement from "@/pages/admin/AIManagement";
 import AdminInstitutionPortal from "@/pages/admin/AdminInstitutionPortal";
 import PatientsFullView from "@/pages/admin/PatientsFullView";
@@ -441,6 +442,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/encontros" element={<AdminLayout><GroupSessionsAdmin /></AdminLayout>} />
       <Route path="/admin/tests" element={<AdminLayout><AdminTests /></AdminLayout>} />
       <Route path="/admin/demo-data" element={<AdminLayout><DemoData /></AdminLayout>} />
+      <Route path="/admin/palavras-criticas" element={<AdminLayout><CriticalTerms /></AdminLayout>} />
       <Route path="/admin/pacientes-completo" element={<AdminLayout><PatientsFullView /></AdminLayout>} />
       <Route path="/admin/biblioteca-apoios" element={<ProtectedRoute requiredRole="admin"><AdminLayout><SupportLibraryAdmin /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/praticas" element={<ProtectedRoute requiredRole="admin"><AdminLayout><PraticasAdmin /></AdminLayout></ProtectedRoute>} />
