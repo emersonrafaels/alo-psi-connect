@@ -77,15 +77,32 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         previousStartDate.setDate(previousStartDate.getDate() - days);
       }
 
-      // Buscar alunos vinculados à instituição
-      const students: any[] = await fetchAllPaged((f, t) => supabase
-        .from('patient_institutions')
-        .select('id, pacientes!inner(profile_id)')
-        .eq('institution_id', institutionId).order('id').range(f, t));
+      const toDay = (d: Date) => d.toISOString().split('T')[0];
+      const startDateStr = toDay(startDate);
+      const endDateStr = toDay(endDate);
 
-      const totalStudentsLinked = students?.length || 0;
+      // Números agregados calculados no banco + notas, em paralelo
+      const [summaryRes, notesRes] = await Promise.all([
+        (supabase.rpc as any)('get_institution_wellbeing_summary', {
+          p_institution_id: institutionId,
+          p_start: startDateStr,
+          p_end: endDateStr,
+          p_prev_start: toDay(previousStartDate),
+        }),
+        supabase
+          .from('institution_notes')
+          .select('id, title, content, note_type, start_date, end_date, is_pinned')
+          .eq('institution_id', institutionId)
+          .or(`start_date.is.null,start_date.lte.${endDateStr}`)
+          .or(`end_date.is.null,end_date.gte.${startDateStr}`),
+      ]);
+      if (summaryRes.error) throw summaryRes.error;
+      const s: any = summaryRes.data || {};
 
-      if (!students || students.length === 0) {
+      const totalStudentsLinked = Number(s.total_students || 0);
+      const students = { length: totalStudentsLinked };
+
+      if (totalStudentsLinked === 0) {
         return {
           avg_mood_score: null,
           avg_anxiety_level: null,
@@ -95,11 +112,7 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
           students_with_entries: 0,
           students_with_low_mood: 0,
           mood_trend: 'stable',
-          period_comparison: {
-            current_avg: 0,
-            previous_avg: 0,
-            change_percent: 0,
-          },
+          period_comparison: { current_avg: 0, previous_avg: 0, change_percent: 0 },
           daily_entries: [],
           insights: [],
           hasDataInPeriod: false,
@@ -108,20 +121,7 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         };
       }
 
-      const profileIds = students.map(s => s.pacientes.profile_id);
-
-      // Buscar notas da instituição que se sobrepõem ao período
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = endDate.toISOString().split('T')[0];
-
-      const { data: notesData } = await supabase
-        .from('institution_notes')
-        .select('id, title, content, note_type, start_date, end_date, is_pinned')
-        .eq('institution_id', institutionId)
-        .or(`start_date.is.null,start_date.lte.${endDateStr}`)
-        .or(`end_date.is.null,end_date.gte.${startDateStr}`);
-
-      const activeNotes: ActiveInstitutionNote[] = (notesData || []).filter(n => {
+      const activeNotes: ActiveInstitutionNote[] = (notesRes.data || []).filter((n: any) => {
         if (!n.start_date && !n.end_date) return true;
         if (n.start_date && n.end_date) return n.start_date <= endDateStr && n.end_date >= startDateStr;
         if (n.start_date) return n.start_date <= endDateStr;
@@ -129,123 +129,37 @@ export const useInstitutionWellbeing = (institutionId: string | undefined, days:
         return true;
       });
 
-      // Buscar mood entries com data do período atual
-      const entriesWithDate = (await fetchInChunks(profileIds, (c, f, t) => supabase
-        .from('mood_entries')
-        .select('id, date, mood_score, anxiety_level, sleep_quality, energy_level, profile_id')
-        .in('profile_id', c)
-        .gte('date', startDate.toISOString().split('T')[0])
-        .lte('date', endDate.toISOString().split('T')[0])
-        .order('id').range(f, t))).sort((a: any, b: any) => a.date.localeCompare(b.date));
+      const num = (v: any) => (v === null || v === undefined ? null : Number(v));
+      const totalEntries = Number(s.total_entries || 0);
+      const uniqueStudents = Number(s.students_with_entries || 0);
+      const lowMoodStudents = Number(s.low_mood_students || 0);
+      const avgMood = num(s.avg_mood);
+      const avgAnxiety = num(s.avg_anxiety);
+      const avgSleep = num(s.avg_sleep);
+      const avgEnergy = num(s.avg_energy);
 
-      // Buscar mood entries do período anterior para comparação
-      const previousPeriodEntries = await fetchInChunks(profileIds, (c, f, t) => supabase
-        .from('mood_entries')
-        .select('id, mood_score')
-        .in('profile_id', c)
-        .gte('date', previousStartDate.toISOString().split('T')[0])
-        .lt('date', startDate.toISOString().split('T')[0]).order('id').range(f, t));
-
-      const entries = entriesWithDate || [];
-      const previousEntries = previousPeriodEntries || [];
-
-      const totalEntries = entries.length;
-      const uniqueStudents = new Set(entries.map(e => e.profile_id)).size;
-
-      // If no entries in current period, check if there's data in other periods
       let availableDataRange: { oldest: string; newest: string } | undefined;
-      if (totalEntries === 0) {
-        const { data: allTimeRange } = await supabase
-          .from('mood_entries')
-          .select('date')
-          .in('profile_id', profileIds)
-          .order('date', { ascending: true });
-
-        if (allTimeRange && allTimeRange.length > 0) {
-          availableDataRange = {
-            oldest: allTimeRange[0].date,
-            newest: allTimeRange[allTimeRange.length - 1].date,
-          };
-        }
+      if (totalEntries === 0 && s.oldest && s.newest) {
+        availableDataRange = { oldest: s.oldest, newest: s.newest };
       }
-      
-      // Calcular médias com tratamento de nulls
-      const moodEntries = entries.filter(e => e.mood_score !== null);
-      const anxietyEntries = entries.filter(e => e.anxiety_level !== null);
-      const sleepEntries = entries.filter(e => e.sleep_quality !== null);
-      const energyEntries = entries.filter(e => e.energy_level !== null);
 
-      const avgMood = moodEntries.length > 0
-        ? moodEntries.reduce((sum, e) => sum + (e.mood_score || 0), 0) / moodEntries.length
-        : null;
-      
-      const avgAnxiety = anxietyEntries.length > 0
-        ? anxietyEntries.reduce((sum, e) => sum + (e.anxiety_level || 0), 0) / anxietyEntries.length
-        : null;
-      
-      const avgSleep = sleepEntries.length > 0
-        ? sleepEntries.reduce((sum, e) => sum + (e.sleep_quality || 0), 0) / sleepEntries.length
-        : null;
-
-      const avgEnergy = energyEntries.length > 0
-        ? energyEntries.reduce((sum, e) => sum + (e.energy_level || 0), 0) / energyEntries.length
-        : null;
-
-      // Contar alunos com humor baixo (<=3)
-      const lowMoodStudents = new Set(
-        entries.filter(e => e.mood_score !== null && e.mood_score <= 3).map(e => e.profile_id)
-      ).size;
-
-      // Calcular tendência
       const currentAvg = avgMood || 0;
-      const prevMoodEntries = previousEntries.filter(e => e.mood_score !== null);
-      const previousAvg = prevMoodEntries.length > 0
-        ? prevMoodEntries.reduce((sum, e) => sum + (e.mood_score || 0), 0) / prevMoodEntries.length
-        : 0;
+      const previousAvg = num(s.prev_avg_mood) || 0;
 
       let trend: 'up' | 'down' | 'stable' = 'stable';
       const changePercent = previousAvg > 0 ? ((currentAvg - previousAvg) / previousAvg) * 100 : 0;
-      
       if (changePercent > 5) trend = 'up';
       else if (changePercent < -5) trend = 'down';
 
-      // Agrupar entries por dia para gráficos
-      const dailyMap = new Map<string, {
-        moods: number[];
-        anxieties: number[];
-        sleeps: number[];
-        energies: number[];
-      }>();
-
-      entries.forEach(e => {
-        // Validar que a data existe e é válida
-        if (!e.date || typeof e.date !== 'string') return;
-        
-        const dateStr = e.date;
-        if (!dailyMap.has(dateStr)) {
-          dailyMap.set(dateStr, { moods: [], anxieties: [], sleeps: [], energies: [] });
-        }
-        const dayData = dailyMap.get(dateStr)!;
-        if (e.mood_score !== null) dayData.moods.push(e.mood_score);
-        if (e.anxiety_level !== null) dayData.anxieties.push(e.anxiety_level);
-        if (e.sleep_quality !== null) dayData.sleeps.push(e.sleep_quality);
-        if (e.energy_level !== null) dayData.energies.push(e.energy_level);
-      });
-
-      const calcAvg = (arr: number[]) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
-
-      const dailyEntries: DailyEntry[] = Array.from(dailyMap.entries())
-        .filter(([date]) => {
-          // Validar formato de data YYYY-MM-DD
-          return /^\d{4}-\d{2}-\d{2}$/.test(date);
-        })
-        .map(([date, data]) => ({
-          date,
-          avg_mood: calcAvg(data.moods),
-          avg_anxiety: calcAvg(data.anxieties),
-          avg_sleep: calcAvg(data.sleeps),
-          avg_energy: calcAvg(data.energies),
-          entries_count: Math.max(data.moods.length, data.anxieties.length, data.sleeps.length, data.energies.length),
+      const dailyEntries: DailyEntry[] = ((s.daily || []) as any[])
+        .filter((d) => typeof d.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.date))
+        .map((d) => ({
+          date: d.date,
+          avg_mood: num(d.avg_mood),
+          avg_anxiety: num(d.avg_anxiety),
+          avg_sleep: num(d.avg_sleep),
+          avg_energy: num(d.avg_energy),
+          entries_count: Number(d.entries_count || 0),
         }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
