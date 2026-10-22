@@ -1421,18 +1421,18 @@ All colors MUST be HSL.
   30% { transform: rotate(-8deg) scale(1.1); }
   60% { transform: rotate(6deg) scale(1.1); }
 }
-body.institution-portal main .rounded-lg.border:not([role="dialog"]):not(table *):not([role="dialog"] *) {
+body.institution-portal #root .rounded-lg.border:not([role="dialog"]):not(table *):not([role="dialog"] *) {
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
-body.institution-portal main .rounded-lg.border:not([role="dialog"]):not(table *):not([role="dialog"] *):hover {
+body.institution-portal #root .rounded-lg.border:not([role="dialog"]):not(table *):not([role="dialog"] *):hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 24px -12px hsl(var(--primary) / 0.35);
   border-color: hsl(var(--primary) / 0.4);
 }
-body.institution-portal main .rounded-lg.border:not(table *):not([role="dialog"] *):hover svg {
+body.institution-portal #root .rounded-lg.border:not(table *):not([role="dialog"] *):hover svg {
   animation: portal-icon-wiggle 450ms ease-in-out;
 }
 @media (prefers-reduced-motion: reduce) {
-  body.institution-portal main .rounded-lg.border:hover { transform: none; }
-  body.institution-portal main .rounded-lg.border:hover svg { animation: none; }
+  body.institution-portal #root .rounded-lg.border:hover { transform: none; }
+  body.institution-portal #root .rounded-lg.border:hover svg { animation: none; }
 }
