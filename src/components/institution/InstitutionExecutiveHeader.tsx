@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useInstitutionExecutiveSummary, type ExecutiveSummary } from '@/hooks/useInstitutionExecutiveSummary';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
-import { Sparkles, Users, AlertTriangle, CheckCircle2, Activity, RefreshCw, ArrowRight, ArrowUp, ArrowDown, ArrowRight as ArrowRightIcon, CheckCircle } from 'lucide-react';
+import { Sparkles, Users, AlertTriangle, CheckCircle2, Activity, RefreshCw, ArrowRight, ArrowUp, ArrowDown, ArrowRight as ArrowRightIcon } from 'lucide-react';
 
 interface Props {
   institutionId: string;
