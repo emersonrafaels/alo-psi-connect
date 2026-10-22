@@ -10,3 +10,4 @@
 - Keep the public “Como funciona” narrative in `src/pages/HowItWorks.tsx`; it owns the six-section reference sequence and tenant-aware links.
 - Scope the “Como funciona” visual language under `.how-it-works-page`, using semantic HSL tokens and Outfit/Figtree so its reference-driven styling does not leak into other public pages.- Feed the institutional Comparador only from the `get_institution_comparator` aggregate RPC and hide groups with fewer than 10 respondents, so no individual student data reaches the page.
 - Keep the Comparador's Análise Integrada in `src/features/institution/comparator/` with scale interpretation bands in `scaleBands.ts`, so the page file stays small and bands have one source.
+- Keep the Alunos page's Estrutura acadêmica tab in `src/features/academic/structure/` and show only aggregate student counts there (tree, detail panel, CSV), so the hierarchy view never exposes student identities.

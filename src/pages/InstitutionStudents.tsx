@@ -129,7 +129,7 @@ export default function InstitutionStudents() {
           <TabsTrigger value="students">Alunos</TabsTrigger>
           <TabsTrigger value="structure">Estrutura acadêmica</TabsTrigger>
         </TabsList>
-        <TabsContent value="structure"><AcademicStructureManager institutionId={institutionId} /></TabsContent>
+        <TabsContent value="structure"><AcademicStructureManager institutionId={institutionId} totalStudents={linkedStudents.length} /></TabsContent>
         <TabsContent value="students">
         <Card className="mb-6">
           <CardContent className="pt-6">
