@@ -392,7 +392,7 @@ function KpiDetailDialog({
                         : 'border-amber-500/40 text-amber-600 dark:text-amber-400 shrink-0'
                     }
                   >
-                    {a.severity === 'high' ? 'Alto' : 'Médio'}
+                    {a.severity === 'high' ? 'Em Risco' : 'Alerta'}
                   </Badge>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium leading-snug">{a.title}</p>
@@ -513,7 +513,7 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
           icon={AlertTriangle}
           label="Alertas Em Risco abertos"
           value={String(summary.criticalOpen)}
-          hint="triagens de alto/crítico não resolvidas"
+          hint="triagens Em Risco ou em Alerta não resolvidas"
           tone={summary.criticalOpen > 0 ? 'danger' : 'success'}
           extra={
             summary.criticalOpen > 0 ? (
