@@ -33,9 +33,19 @@ export const useAcademicStructure = (institutionId?: string) => {
     queryKey: ['academic-placements', institutionId],
     enabled,
     queryFn: async () => {
-      const { data, error } = await db.from('patient_institution_placements').select('patient_id, class_unit_id').eq('institution_id', institutionId);
-      if (error) throw error;
-      return new Map<string, string>((data || []).map((p: any) => [p.patient_id, p.class_unit_id]));
+      const all: any[] = [];
+      const PAGE = 1000;
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await db.from('patient_institution_placements')
+          .select('patient_id, class_unit_id')
+          .eq('institution_id', institutionId)
+          .order('patient_id')
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        all.push(...(data || []));
+        if (!data || data.length < PAGE) break;
+      }
+      return new Map<string, string>(all.map((p: any) => [p.patient_id, p.class_unit_id]));
     },
   });
 

@@ -1,5 +1,7 @@
+import { fetchAllPaged, fetchInChunks } from '@/lib/supabasePaging';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { escalateRisk, type CriticalSeverity } from '@/features/triage/criticalTerms';
 
 // Fire-and-forget notification helper
 function notifyInstitutionAction(action_type: string, institution_id: string, metadata: Record<string, any>) {
@@ -10,12 +12,19 @@ function notifyInstitutionAction(action_type: string, institution_id: string, me
 
 export type RiskLevel = 'critical' | 'alert' | 'attention' | 'healthy' | 'no_data';
 
+export interface CriticalKeywordFlag {
+  severity: CriticalSeverity;
+  hits: number;
+  lastDate: string;
+}
+
 export interface StudentRiskData {
   patientId: string;
   studentName: string;
   profileId: string | null;
   userId: string | null;
   riskLevel: RiskLevel;
+  criticalKeywordFlag?: CriticalKeywordFlag | null;
   avgMood: number | null;
   avgAnxiety: number | null;
   avgEnergy: number | null;
@@ -117,21 +126,30 @@ function round1(v: number | null): number | null {
   return v !== null ? Math.round(v * 10) / 10 : null;
 }
 
-export function useStudentTriageData(institutionId: string | null, periodDays: number = 15, comparePeriodDays?: number | null) {
-  return useQuery({
-    queryKey: ['student-triage-data', institutionId, periodDays, comparePeriodDays ?? null],
-    queryFn: async (): Promise<StudentRiskData[]> => {
-      if (!institutionId) return [];
+export interface StudentRiskResult {
+  students: StudentRiskData[];
+  /** Raw mood entries fetched for the period (date, profile_id, scores). */
+  entries: any[];
+}
+
+export async function fetchStudentRiskData(
+  institutionId: string | null,
+  periodDays: number = 15,
+  comparePeriodDays?: number | null,
+): Promise<StudentRiskResult> {
+  const entries: any[] = [];
+  if (!institutionId) return { students: [], entries };
 
       // 1. Get students linked to institution
-      const { data: students, error: studentsError } = await supabase
+      const students = await fetchAllPaged<any>((from, to) => supabase
         .from('patient_institutions')
         .select('patient_id, pacientes!inner(id, profile_id, profiles!inner(nome, user_id))')
         .eq('institution_id', institutionId)
-        .eq('enrollment_status', 'enrolled');
+        .eq('enrollment_status', 'enrolled')
+        .order('patient_id')
+        .range(from, to) as any);
 
-      if (studentsError) throw studentsError;
-      if (!students || students.length === 0) return [];
+      if (!students || students.length === 0) return { students: [], entries };
 
       // 2. Get profile_ids for mood_entries lookup
       const profileIds = students.map((s: any) => s.pacientes.profile_id).filter(Boolean);
@@ -142,21 +160,27 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
       lookbackDate.setDate(lookbackDate.getDate() - totalLookback);
       const dateStr = lookbackDate.toISOString().split('T')[0];
 
-      const { data: moodEntries } = await supabase
+      const moodEntries = await fetchInChunks<any>(profileIds, (chunk, from, to) => supabase
         .from('mood_entries')
-        .select('profile_id, mood_score, anxiety_level, energy_level, sleep_quality, sleep_hours, date')
-        .in('profile_id', profileIds)
+        .select('id, profile_id, mood_score, anxiety_level, energy_level, sleep_quality, sleep_hours, date')
+        .in('profile_id', chunk)
         .gte('date', dateStr)
-        .order('date', { ascending: true });
+        .order('date', { ascending: true })
+        .order('id')
+        .range(from, to) as any);
+      moodEntries.sort((a: any, b: any) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+      entries.push(...(moodEntries || []));
 
       // 4. Get latest triage records
       const patientIds = students.map((s: any) => s.patient_id);
-      const { data: triageRecords } = await supabase
+      const triageRecords = await fetchInChunks<any>(patientIds, (chunk, from, to) => supabase
         .from('student_triage' as any)
         .select('*')
         .eq('institution_id', institutionId)
-        .in('patient_id', patientIds)
-        .order('created_at', { ascending: false });
+        .in('patient_id', chunk)
+        .order('created_at', { ascending: false })
+        .range(from, to) as any);
+      triageRecords.sort((a: any, b: any) => (a.created_at < b.created_at ? 1 : -1));
 
       // Split entries into current and previous period
       const currentCutoff = new Date();
@@ -195,8 +219,22 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
         }
       });
 
+      // Critical keywords in diaries (server-side; returns only flags, never text)
+      const flagsByPatient = new Map<string, CriticalKeywordFlag>();
+      try {
+        const { data: flags } = await (supabase.rpc as any)('get_institution_critical_flags', {
+          p_institution_id: institutionId,
+          p_since: currentCutoffStr,
+        });
+        (flags || []).forEach((f: any) => flagsByPatient.set(f.patient_id, {
+          severity: f.max_severity, hits: f.hits, lastDate: f.last_date,
+        }));
+      } catch (err) {
+        console.warn('Critical keyword flags unavailable:', err);
+      }
+
       // 5. Calculate risk for each student
-      return students.map((s: any) => {
+      const riskStudents = students.map((s: any) => {
         const profileId = s.pacientes.profile_id;
         const entries = currentByProfile.get(profileId) || [];
         const prevEntries = prevByProfile.get(profileId) || [];
@@ -249,7 +287,8 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
           studentName: s.pacientes.profiles.nome || 'Sem nome',
           profileId: s.pacientes.profile_id || null,
           userId: s.pacientes.profiles.user_id || null,
-          riskLevel: calculateRiskLevel(avgMood, avgAnxiety, avgEnergy, avgSleep, moodTrend),
+          riskLevel: escalateRisk(calculateRiskLevel(avgMood, avgAnxiety, avgEnergy, avgSleep, moodTrend), flagsByPatient.get(s.patient_id)?.severity),
+          criticalKeywordFlag: flagsByPatient.get(s.patient_id) || null,
           avgMood: round1(avgMood),
           avgAnxiety: round1(avgAnxiety),
           avgEnergy: round1(avgEnergy),
@@ -270,7 +309,14 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
           prevEntryCount: comparePeriodDays ? prevEntries.length : 0,
         };
       });
-    },
+
+  return { students: riskStudents, entries };
+}
+
+export function useStudentTriageData(institutionId: string | null, periodDays: number = 15, comparePeriodDays?: number | null) {
+  return useQuery({
+    queryKey: ['student-triage-data', institutionId, periodDays, comparePeriodDays ?? null],
+    queryFn: async () => (await fetchStudentRiskData(institutionId, periodDays, comparePeriodDays)).students,
     enabled: !!institutionId,
   });
 }
@@ -280,12 +326,13 @@ export function useTriageRecords(institutionId: string | null) {
     queryKey: ['triage-records', institutionId],
     queryFn: async () => {
       if (!institutionId) return [];
-      const { data, error } = await supabase
+      const data = await fetchAllPaged<any>((from, to) => supabase
         .from('student_triage' as any)
         .select('*')
         .eq('institution_id', institutionId)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
+        .order('created_at', { ascending: false })
+        .order('id')
+        .range(from, to) as any);
 
       const records = (data || []) as unknown as TriageRecord[];
 

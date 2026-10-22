@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -31,13 +32,23 @@ import { ptBR } from 'date-fns/locale';
 import { useDebounce } from '@/hooks/useDebounce';
 import * as XLSX from 'xlsx';
 import { useTriagePeriod } from '@/hooks/useTriagePeriod';
+import { buildPriorities, buildActions } from '@/features/triage/priorities';
+import { TriageFunnel } from '@/features/triage/TriageFunnel';
+import { Layers } from 'lucide-react';
+import { TriageSummary, TriagePriorities, TriageFollowUps, ViewHeader } from '@/features/triage/TriageViews';
+
+export type TriageView = 'resumo' | 'prioridades' | 'followups' | 'fila' | 'metricas';
 
 interface StudentTriageTabProps {
   institutionId: string;
+  view?: TriageView;
+  initialRisk?: string | null;
+  initialTab?: string | null;
+  onNavigate?: (view: TriageView, params?: { risk?: string; tab?: string }) => void;
 }
 
 const riskConfig: Record<RiskLevel, {label: string;color: string;labelColor: string;icon: typeof AlertTriangle;cardBg: string;progressColor: string;}> = {
-  critical: { label: 'Crítico', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', labelColor: 'text-red-700 dark:text-red-400', icon: AlertTriangle, cardBg: 'border-red-200 dark:border-red-900/50 bg-red-50/40 dark:bg-red-950/20', progressColor: '[&>div]:bg-red-500' },
+  critical: { label: 'Em Risco', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', labelColor: 'text-red-700 dark:text-red-400', icon: AlertTriangle, cardBg: 'border-red-200 dark:border-red-900/50 bg-red-50/40 dark:bg-red-950/20', progressColor: '[&>div]:bg-red-500' },
   alert: { label: 'Alerta', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', labelColor: 'text-orange-700 dark:text-orange-400', icon: AlertCircle, cardBg: 'border-orange-200 dark:border-orange-900/50 bg-orange-50/40 dark:bg-orange-950/20', progressColor: '[&>div]:bg-orange-500' },
   attention: { label: 'Atenção', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', labelColor: 'text-yellow-700 dark:text-yellow-400', icon: Eye, cardBg: 'border-yellow-200 dark:border-yellow-900/50 bg-yellow-50/30 dark:bg-yellow-950/20', progressColor: '[&>div]:bg-yellow-500' },
   healthy: { label: 'Saudável', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', labelColor: 'text-green-700 dark:text-green-400', icon: Heart, cardBg: 'border-green-200 dark:border-green-900/50 bg-green-50/30 dark:bg-green-950/20', progressColor: '[&>div]:bg-green-500' },
@@ -54,7 +65,7 @@ const riskLegend: Record<RiskLevel, string> = {
 
 const riskTooltips: Record<RiskLevel, {title: string;description: string;}> = {
   critical: {
-    title: '🔴 Nível Crítico',
+    title: '🔴 Nível Em Risco',
     description: 'Alunos com humor muito baixo (≤1.5), ansiedade muito alta (≥4.5) ou queda brusca no humor (>40%). Necessitam atenção imediata.'
   },
   alert: {
@@ -294,7 +305,7 @@ function MetricSparkline({ student }: { student: StudentRiskData }) {
     <div className="flex items-center gap-1">
       <MetricTooltip
         title={`📊 Evolução: ${config.label}`}
-        description={`Mini-gráfico mostrando a evolução de ${config.label.toLowerCase()} no período. Verde=saudável, amarelo=atenção, laranja=alerta, vermelho=crítico.`}
+        description={`Mini-gráfico mostrando a evolução de ${config.label.toLowerCase()} no período. Verde=saudável, amarelo=atenção, laranja=alerta, vermelho=em risco.`}
       >
         <svg width={width} height={height} className="shrink-0 cursor-help">
           {data.slice(1).map((val, i) => {
@@ -357,7 +368,7 @@ function FollowUpIndicator({ date }: {date: string;}) {
 
 }
 
-export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
+export function StudentTriageTab({ institutionId, view, initialRisk, initialTab, onNavigate }: StudentTriageTabProps) {
   const [analysisPeriod, setAnalysisPeriod] = useTriagePeriod();
   const { data: students = [], isLoading } = useStudentTriageData(
     institutionId,
@@ -375,6 +386,25 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   const [legendOpen, setLegendOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('para_triar');
+  const [pageSize, setPageSize] = useState(25);
+  const [visibleCount, setVisibleCount] = useState(25);
+  useEffect(() => { setVisibleCount(pageSize); }, [pageSize, activeTab, searchTerm, riskFilter]);
+  const renderPager = (total: number) => (
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t px-5 py-3 text-xs text-muted-foreground">
+      <span>Exibindo {Math.min(visibleCount, total)} de {total}</span>
+      <div className="flex items-center gap-2">
+        <span>Mostrar</span>
+        <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+          <SelectTrigger className="h-8 w-[84px]"><SelectValue /></SelectTrigger>
+          <SelectContent>{[10, 25, 50, 100].map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
+        </Select>
+        <span>por vez</span>
+        {visibleCount < total && (
+          <Button size="sm" variant="outline" onClick={() => setVisibleCount((c) => c + pageSize)}>Ver mais</Button>
+        )}
+      </div>
+    </div>
+  );
   const [activityModalStudent, setActivityModalStudent] = useState<StudentRiskData | null>(null);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
@@ -448,6 +478,63 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
       return new Date(t.follow_up_date) < today;
     }).length;
   }, [inProgressTriages]);
+
+  const goToOverdueFollowUps = useCallback(() => {
+    setActiveTab('em_andamento');
+    requestAnimationFrame(() => {
+      document.getElementById('triage-queue')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, []);
+
+  // Apply filters coming from the summary/priority views
+  useEffect(() => {
+    if (view !== 'fila') return;
+    setRiskFilter(initialRisk || 'all');
+    if (initialTab) setActiveTab(initialTab);
+  }, [view, initialRisk, initialTab]);
+
+  const overduePatientIds = useMemo(() => {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return new Set(inProgressTriages.filter((t) => t.follow_up_date && new Date(t.follow_up_date) < today).map((t) => t.patient_id));
+  }, [inProgressTriages]);
+
+  const pendingByRisk = useMemo(() => {
+    const c: Record<RiskLevel, number> = { critical: 0, alert: 0, attention: 0, healthy: 0, no_data: 0 };
+    students.forEach((s) => { if (!s.lastTriageStatus || s.lastTriageStatus === 'pending') c[s.riskLevel]++; });
+    return c;
+  }, [students]);
+
+  const keywordStudentCount = useMemo(() => students.filter((s) => s.criticalKeywordFlag).length, [students]);
+
+  const priorityItems = useMemo(() => buildPriorities(
+    students.map((s) => ({ ...s, criticalSeverity: s.criticalKeywordFlag?.severity ?? null, overdueFollowUp: overduePatientIds.has(s.patientId) })),
+    analysisPeriod,
+  ), [students, overduePatientIds, analysisPeriod]);
+
+  const triageActions = useMemo(() => buildActions({
+    criticalPending: pendingByRisk.critical,
+    overdueFollowUps: overdueFollowUpCount,
+    keywordStudents: keywordStudentCount,
+    noData: counts.no_data,
+  }), [pendingByRisk, overdueFollowUpCount, keywordStudentCount, counts]);
+
+  const followUpRows = useMemo(() => inProgressTriages
+    .filter((t) => t.follow_up_date)
+    .map((t) => ({ id: t.id, patientId: t.patient_id, followUpDate: t.follow_up_date as string, status: t.status, action: t.recommended_action ? (actionLabels[t.recommended_action] || t.recommended_action) : null })),
+  [inProgressTriages]);
+
+  const nav = (v: TriageView, params?: { risk?: string; tab?: string }) => {
+    if (onNavigate) onNavigate(v, params);
+    else {
+      if (params?.risk) setRiskFilter(params.risk);
+      if (params?.tab) setActiveTab(params.tab);
+    }
+  };
+  const showLegacy = !view;
+  const [funnelOpen, setFunnelOpen] = useState(true);
+  useEffect(() => { setFunnelOpen(view === 'resumo'); }, [view]);
+  const showView = (v: TriageView) => !view || view === v;
+
 
   const filteredResolvedTriages = useMemo(() => {
     if (historyPeriod === 'all') return resolvedTriages;
@@ -632,11 +719,10 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">Carregando dados de triagem...</p>
-        </CardContent>
-      </Card>);
+      <div className="space-y-4">
+        <LoadingCards labels={["Em Risco", "Alerta", "Atenção", "Estável"]} />
+        <LoadingSection label="Carregando dados da triagem..." />
+      </div>);
 
   }
 
@@ -654,8 +740,106 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
   return (
     <TooltipProvider delayDuration={200}>
       <div className="space-y-6">
+        {view && view !== 'fila' && (
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card px-4 py-2 text-sm">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Período analisado</span>
+            <Select value={String(analysisPeriod)} onValueChange={(v) => setAnalysisPeriod(Number(v))}>
+              <SelectTrigger className="h-8 w-[170px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Última semana (7d)</SelectItem>
+                <SelectItem value="15">Quinzena (15d)</SelectItem>
+                <SelectItem value="30">Último mês (30d)</SelectItem>
+                <SelectItem value="60">2 meses (60d)</SelectItem>
+                <SelectItem value="90">Trimestre (90d)</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-muted-foreground">{format(subDays(new Date(), analysisPeriod), 'dd/MM')} – {format(new Date(), 'dd/MM')} · Atualizado às {format(new Date(), 'HH:mm')}</span>
+            <Button variant="outline" size="sm" className="ml-auto h-8 gap-1" onClick={() => setFunnelOpen((o) => !o)} aria-expanded={funnelOpen}><Layers className="h-4 w-4" />Como funciona a triagem</Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground"><Info className="h-4 w-4" />Como a criticidade é calculada</Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="end" className="max-w-sm space-y-1.5 p-3 text-xs">
+                {riskOrder.map((l) => <p key={l}><strong>{riskConfig[l].label}:</strong> {riskLegend[l]}</p>)}
+                <p><strong>Palavras críticas:</strong> termos graves no diário levam a Em Risco; termos moderados sobem um nível. O texto do aluno nunca é exibido.</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        {view && (view === 'resumo' || funnelOpen) && (
+          <div className={view === 'resumo' ? 'order-none' : ''}>
+            <TriageFunnel
+              open={view === 'resumo' ? funnelOpen : true}
+              onOpenChange={setFunnelOpen}
+              onNavigate={nav}
+              counts={{
+                total: totalStudents,
+                withData: totalStudents - counts.no_data,
+                atRisk: counts.critical,
+                alert: counts.alert,
+                attention: counts.attention,
+                healthy: counts.healthy,
+                priorities: priorityItems.length,
+                pending: pendingByRisk.critical + pendingByRisk.alert + pendingByRisk.attention,
+                inFollowUp: inProgressTriages.length,
+                overdue: overdueFollowUpCount,
+                resolved: resolvedTriages.length,
+              }}
+            />
+          </div>
+        )}
+        {view === 'resumo' && (
+          <>
+            <ViewHeader title="Resumo" description="Quantos alunos estão em cada nível de risco e o que fazer primeiro. Clique em um nível para ver os alunos." />
+            <TriageSummary
+              counts={counts}
+              pendingByRisk={pendingByRisk}
+              total={totalStudents}
+              periodDays={analysisPeriod}
+              overdueFollowUps={overdueFollowUpCount}
+              actions={triageActions}
+              onOpenRisk={(r) => nav('fila', { risk: r, tab: 'para_triar' })}
+              onAction={(a) => {
+                if (a === 'critical') nav('fila', { risk: 'critical', tab: 'para_triar' });
+                else if (a === 'followups') nav('followups');
+                else if (a === 'keywords') nav('prioridades');
+                else nav('fila', { risk: 'no_data', tab: 'para_triar' });
+              }}
+            />
+          </>
+        )}
+
+        {view === 'prioridades' && (
+          <>
+            <ViewHeader title="Prioridades" description="Os alunos mais urgentes, em ordem, com o motivo em linguagem simples." />
+            <TriagePriorities
+              items={priorityItems}
+              nameOf={(id) => patientNameMap.get(id) ?? 'Aluno'}
+              onTriage={(s) => { setSelectedStudent(s); setDialogOpen(true); }}
+              onHistory={(s) => handleOpenActivity(s)}
+            />
+          </>
+        )}
+
+        {view === 'followups' && (
+          <>
+            <ViewHeader title="Follow-ups" description="Acompanhamentos vencidos e os que vencem nos próximos 7 dias." />
+            <TriageFollowUps
+              rows={followUpRows}
+              nameOf={(id) => patientNameMap.get(id) ?? 'Aluno'}
+              onResolve={(id) => setResolveDialogTriage(triageRecords.find((t) => t.id === id) ?? null)}
+              onContact={(pid) => handleOpenActivityByPatientId(pid)}
+            />
+          </>
+        )}
+
+        {view === 'fila' && <ViewHeader title="Fila de triagem" description="Todos os alunos por status de triagem. Use os filtros para focar em um nível de risco." />}
+        {view === 'metricas' && <ViewHeader title="Métricas" description="Como a equipe está triando: volume, tempo até resolução e prioridades no período." />}
+
+        {showLegacy && (<>
         {/* Summary cards — redesigned */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div id="triage-risk" className="scroll-mt-20 grid grid-cols-2 md:grid-cols-5 gap-3">
           {riskOrder.map((level) => {
             const config = riskConfig[level];
             const Icon = config.icon;
@@ -738,6 +922,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
           </div>
         )}
 
+        <div id="triage-followups" className="scroll-mt-20" />
         {/* Stratified attention banner */}
         {(riskCounts.critical + riskCounts.alert + riskCounts.attention) > 0 && (() => {
           const openTotal = riskCounts.critical + riskCounts.alert + riskCounts.attention;
@@ -753,7 +938,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                     {riskCounts.critical > 0 && (
                       <span className="inline-flex items-center gap-1.5">
                         <span className="h-2 w-2 rounded-full bg-red-500" />
-                        <strong className="text-red-700 dark:text-red-300">{riskCounts.critical} crítico{riskCounts.critical > 1 ? 's' : ''}</strong>
+                        <strong className="text-red-700 dark:text-red-300">{riskCounts.critical} em risco</strong>
                         <span className="text-muted-foreground">— ação imediata (contato urgente)</span>
                       </span>
                     )}
@@ -780,7 +965,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                         className="h-7 text-xs"
                         onClick={() => { setRiskFilter('critical'); setActiveTab('para_triar'); }}
                       >
-                        Começar pelos críticos
+                        Começar pelos alunos em risco
                         <ChevronRight className="h-3 w-3 ml-1" />
                       </Button>
                     </div>
@@ -799,18 +984,22 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
               <span>
                 <span className="font-semibold">{overdueFollowUpCount} {overdueFollowUpCount === 1 ? 'triagem' : 'triagens'} com follow-up vencido.</span>
               </span>
-              <Button variant="ghost" size="sm" className="text-orange-700 hover:text-orange-900 h-7 text-xs" onClick={() => setActiveTab('em_andamento')}>
+              <Button variant="ghost" size="sm" className="text-orange-700 hover:text-orange-900 h-7 text-xs" onClick={goToOverdueFollowUps}>
                 Ver <ChevronRight className="h-3 w-3 ml-1" />
               </Button>
             </AlertDescription>
           </Alert>
         )}
+        </>)}
 
         {/* Triage Metrics Dashboard */}
+        {showView('metricas') && (<>
+        <div id="triage-metrics" className="scroll-mt-20" />
         <TriageMetricsDashboard triageRecords={triageRecords} periodDays={analysisPeriod} />
+        </>)}
 
         {/* Contexto Institucional */}
-        {(() => {
+        {(showLegacy || view === 'resumo') && (() => {
           const today = new Date().toISOString().split('T')[0];
           const activeTriageNotes = institutionNotes.filter((n) => {
             if (!n.start_date && !n.end_date) return n.is_pinned;
@@ -832,6 +1021,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
 
         })()}
 
+        {showView('fila') && (<>
         {/* Risk legend */}
         <Collapsible open={legendOpen} onOpenChange={setLegendOpen}>
           <CollapsibleTrigger asChild>
@@ -863,7 +1053,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
         </Collapsible>
 
         {/* Filters + search + period selector + export */}
-        <div className="flex flex-wrap gap-3 items-center">
+        <div id="triage-queue" className="scroll-mt-20 flex flex-wrap gap-3 items-center">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -899,7 +1089,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os níveis</SelectItem>
-              <SelectItem value="critical">Crítico</SelectItem>
+              <SelectItem value="critical">Em Risco</SelectItem>
               <SelectItem value="alert">Alerta</SelectItem>
               <SelectItem value="attention">Atenção</SelectItem>
               <SelectItem value="healthy">Saudável</SelectItem>
@@ -998,7 +1188,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   </div>
                 )}
                 <div className="divide-y">
-                  {pendingStudents.map((student) => {
+                  {pendingStudents.slice(0, visibleCount).map((student) => {
                     const config = riskConfig[student.riskLevel];
                     const isCritical = student.riskLevel === 'critical';
                     const riskBorder = student.riskLevel === 'critical' ? 'border-l-red-500' :
@@ -1023,6 +1213,15 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                             <button type="button" onClick={() => handleOpenActivity(student)} className="font-semibold text-base truncate text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{displayName}</button>
                             <Badge className={`shrink-0 ${config.color}`}>{config.label}</Badge>
                             <TrendBadge trend={student.moodTrend} />
+                            {student.criticalKeywordFlag && (
+                              <Badge
+                                variant={student.criticalKeywordFlag.severity === 'grave' ? 'destructive' : 'secondary'}
+                                className="shrink-0"
+                                title={`${student.criticalKeywordFlag.hits} registro(s) com termos críticos · último em ${new Date(student.criticalKeywordFlag.lastDate + 'T12:00:00').toLocaleDateString('pt-BR')}`}
+                              >
+                                Palavra crítica no diário · {student.criticalKeywordFlag.hits}
+                              </Badge>
+                            )}
                             {(() => {
                               const engagementRate = analysisPeriod > 0 ? (student.entryCount / analysisPeriod) * 100 : 0;
                               const engagementColor = student.entryCount === 0
@@ -1141,6 +1340,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                       </div>);
 
                   })}
+                  {pendingStudents.length > visibleCount || pendingStudents.length > 10 ? renderPager(pendingStudents.length) : null}
                   {pendingStudents.length === 0 &&
                   <div className="p-8 text-center text-muted-foreground text-sm">
                       <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-500/60" />
@@ -1170,7 +1370,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   </div> :
 
                 <div className="divide-y">
-                    {inProgressTriages.map((t) => {
+                    {inProgressTriages.slice(0, visibleCount).map((t) => {
                     const priorityBorder = t.priority === 'urgent' ? 'border-l-red-500' :
                     t.priority === 'high' ? 'border-l-orange-500' :
                     t.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500';
@@ -1222,6 +1422,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   })}
                   </div>
                 }
+                {inProgressTriages.length > 10 && renderPager(inProgressTriages.length)}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1259,7 +1460,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   </div> :
 
                 <div className="divide-y">
-                    {filteredResolvedTriages.map((t) =>
+                    {filteredResolvedTriages.slice(0, visibleCount).map((t) =>
                   <div key={t.id} className="p-4 hover:bg-muted/30 transition-colors">
                         <div className="flex items-center justify-between gap-4">
                           <div className="space-y-1 flex-1 min-w-0">
@@ -1300,6 +1501,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   )}
                   </div>
                 }
+                {filteredResolvedTriages.length > 10 && renderPager(filteredResolvedTriages.length)}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1337,7 +1539,7 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   </div> :
 
                 <div className="divide-y">
-                    {filteredAllTriages.map((t) => {
+                    {filteredAllTriages.slice(0, visibleCount).map((t) => {
                     const priorityBorder = t.priority === 'urgent' ? 'border-l-red-500' :
                     t.priority === 'high' ? 'border-l-orange-500' :
                     t.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500';
@@ -1367,10 +1569,12 @@ export function StudentTriageTab({ institutionId }: StudentTriageTabProps) {
                   })}
                   </div>
                 }
+                {filteredAllTriages.length > 10 && renderPager(filteredAllTriages.length)}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+        </>)}
 
         <TriageDialog
           open={dialogOpen}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { DemoDataBadge } from '@/components/institutional/DemoDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -97,8 +98,8 @@ export default function InstitutionPortal() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-screen px-6">
+        <LoadingBar className="max-w-sm" label="Carregando portal institucional..." />
       </div>
     );
   }
@@ -353,10 +354,13 @@ export default function InstitutionPortal() {
               <Heart className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Diário Emocional
             </TabsTrigger>
-            <TabsTrigger value="triage" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
+            <Link
+              to={buildTenantPath(tenant?.slug, '/portal-institucional/triagem')}
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs md:text-sm py-2 px-3 md:px-4 shrink-0 font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <ClipboardList className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Triagem
-            </TabsTrigger>
+            </Link>
             <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
               <StickyNote className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
               Notas

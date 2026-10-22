@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { InstitutionMoodAggregates } from '@/components/institutional/InstitutionMoodAggregates';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -106,12 +107,8 @@ export const InstitutionWellbeingDashboard = ({ institutionId, onNavigateToTriag
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-24 w-full" />
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
-        </div>
+        <LoadingSection label="Carregando bem-estar..." />
+        <LoadingCards />
       </div>
     );
   }

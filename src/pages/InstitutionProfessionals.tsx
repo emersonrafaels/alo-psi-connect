@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LoadingBar, LoadingSection } from "@/components/ui/loading-bar";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -35,8 +36,8 @@ export default function InstitutionProfessionals() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-screen px-6">
+        <LoadingBar className="max-w-sm" label="Carregando profissionais..." />
       </div>
     );
   }

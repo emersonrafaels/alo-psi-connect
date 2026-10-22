@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { LoadingBar, LoadingSection } from "@/components/ui/loading-bar";
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -238,10 +239,7 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
 
       {(forceQuery.isFetching || (cachedQuery.isLoading && !showInvite)) && !raw && (
         <div className="space-y-4">
-          <Skeleton className="h-40 rounded-xl" />
-          <div className="grid gap-4 md:grid-cols-2">
-            {[0,1,2,3].map(i => <Skeleton key={i} className="h-56 rounded-xl" />)}
-          </div>
+          <LoadingSection label="Carregando análise do Buddy..." />
         </div>
       )}
 

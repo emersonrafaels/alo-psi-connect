@@ -29,7 +29,7 @@ interface TriageDialogProps {
 }
 
 const riskLabels: Record<string, { label: string; color: string }> = {
-  critical: { label: 'Crítico', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  critical: { label: 'Em Risco', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   alert: { label: 'Alerta', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
   attention: { label: 'Atenção', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
   healthy: { label: 'Saudável', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },

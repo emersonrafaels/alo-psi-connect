@@ -1,4 +1,5 @@
 import React from "react";
+import { PortalTopLoadingBar } from "@/components/ui/loading-bar";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -101,6 +102,7 @@ import AdminTests from "@/pages/admin/Tests";
 import GoogleCalendarTests from "@/pages/admin/GoogleCalendarTests";
 import GroupSessionsAdmin from "@/pages/admin/GroupSessionsAdmin";
 import DemoData from "@/pages/admin/DemoData";
+import CriticalTerms from "@/pages/admin/CriticalTerms";
 import AIManagement from "@/pages/admin/AIManagement";
 import AdminInstitutionPortal from "@/pages/admin/AdminInstitutionPortal";
 import PatientsFullView from "@/pages/admin/PatientsFullView";
@@ -122,6 +124,7 @@ import RadarAccess from "@/pages/admin/RadarAccess";
 import InstitutionRadar from "@/pages/institution/InstitutionRadar";
 import InstitutionSupports from "@/pages/institution/InstitutionSupports";
 import InstitutionComparator from "@/pages/institution/InstitutionComparator";
+import InstitutionTriage from "@/pages/institution/InstitutionTriage";
 import BibliotecaApoios from "@/pages/apoios/BibliotecaApoios";
 import SupportLibraryAdmin from "@/pages/admin/SupportLibraryAdmin";
 import GerenciarApoios from "@/pages/GerenciarApoios";
@@ -340,6 +343,8 @@ const AppWithShortcuts = () => {
       
       <Route path="/portal-institucional/comparador" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionComparator /></ProtectedRoute>} />
       <Route path="/medcos/portal-institucional/comparador" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionComparator /></ProtectedRoute>} />
+      <Route path="/portal-institucional/triagem" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionTriage /></ProtectedRoute>} />
+      <Route path="/medcos/portal-institucional/triagem" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionTriage /></ProtectedRoute>} />
       <Route 
         path="/portal-institucional/apoios" 
         element={
@@ -437,6 +442,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/encontros" element={<AdminLayout><GroupSessionsAdmin /></AdminLayout>} />
       <Route path="/admin/tests" element={<AdminLayout><AdminTests /></AdminLayout>} />
       <Route path="/admin/demo-data" element={<AdminLayout><DemoData /></AdminLayout>} />
+      <Route path="/admin/palavras-criticas" element={<AdminLayout><CriticalTerms /></AdminLayout>} />
       <Route path="/admin/pacientes-completo" element={<AdminLayout><PatientsFullView /></AdminLayout>} />
       <Route path="/admin/biblioteca-apoios" element={<ProtectedRoute requiredRole="admin"><AdminLayout><SupportLibraryAdmin /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/praticas" element={<ProtectedRoute requiredRole="admin"><AdminLayout><PraticasAdmin /></AdminLayout></ProtectedRoute>} />
@@ -517,6 +523,7 @@ const App: React.FC = () => {
                 <WhatsAppFloat />
                 <ScrollToTopButton />
                 <ScrollToTopOnPortalNavigation />
+                <PortalTopLoadingBar />
               </AuthProvider>
             </TenantProvider>
           </BrowserRouter>

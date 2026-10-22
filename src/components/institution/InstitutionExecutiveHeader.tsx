@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +9,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useInstitutionExecutiveSummary, type ExecutiveSummary } from '@/hooks/useInstitutionExecutiveSummary';
-import { Sparkles, Users, AlertTriangle, CheckCircle2, Activity, RefreshCw, ArrowRight, ArrowUp, ArrowDown, ArrowRight as ArrowRightIcon, CheckCircle } from 'lucide-react';
+import { useTenant } from '@/hooks/useTenant';
+import { buildTenantPath } from '@/utils/tenantHelpers';
+import { Sparkles, Users, AlertTriangle, CheckCircle2, Activity, RefreshCw, ArrowRight, ArrowUp, ArrowDown, ArrowRight as ArrowRightIcon } from 'lucide-react';
 
 interface Props {
   institutionId: string;
@@ -278,7 +282,6 @@ function KpiDetailDialog({
   onGoTriage: () => void;
 }) {
   if (!kpi) return null;
-  const criticalTriages = summary.alerts.filter((a) => a.type === 'triage');
   const delta = summary.activeStudentsWeek - summary.activeStudentsPrevWeek;
   const engagementPct = Math.round(summary.engagementRate * 100);
   const engagementTotal =
@@ -363,44 +366,22 @@ function KpiDetailDialog({
       ),
     },
     critical: {
-      title: 'Alertas críticos abertos',
-      description: 'Triagens de risco alto ou crítico que ainda não foram resolvidas.',
+      title: 'Para triar — Em Risco',
+      description: 'Alunos classificados como Em Risco que ainda aguardam triagem.',
       body: (
         <div className="space-y-5">
-          {criticalTriages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
-              <div className="p-3 rounded-full bg-emerald-500/10">
-                <CheckCircle className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-base font-semibold">Tudo tranquilo por aqui</p>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  Nenhuma triagem crítica em aberto no momento. Continue acompanhando os indicadores.
-                </p>
-              </div>
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-full bg-rose-500/10">
+              <AlertTriangle className="h-8 w-8 text-rose-600 dark:text-rose-400" />
             </div>
-          ) : (
-            <ul className="space-y-2.5">
-              {criticalTriages.map((a) => (
-                <li key={a.id} className="flex items-start gap-3 p-3.5 rounded-lg border bg-card/50">
-                  <Badge
-                    variant="outline"
-                    className={
-                      a.severity === 'high'
-                        ? 'border-rose-500/40 text-rose-600 dark:text-rose-400 shrink-0'
-                        : 'border-amber-500/40 text-amber-600 dark:text-amber-400 shrink-0'
-                    }
-                  >
-                    {a.severity === 'high' ? 'Alto' : 'Médio'}
-                  </Badge>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium leading-snug">{a.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{a.subtitle}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+            <div>
+              <p className="text-3xl font-bold leading-none">{summary.criticalOpen}</p>
+              <p className="text-sm text-muted-foreground mt-1">alunos Em Risco aguardando triagem</p>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Mesma classificação da fila "Para triar" na Triagem: risco derivado do diário emocional dos últimos 15 dias, incluindo alertas de palavras críticas.
+          </p>
           <Button className="w-full" onClick={onGoTriage}>
             Abrir triagem <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
@@ -458,6 +439,11 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
   const { data: summary, isLoading } = useInstitutionExecutiveSummary(institutionId);
   const [briefEnabled, setBriefEnabled] = useState(false);
   const [openKpi, setOpenKpi] = useState<KpiKey | null>(null);
+  const navigate = useNavigate();
+  const { tenant } = useTenant();
+
+  const triageQueueUrl = `${buildTenantPath(tenant?.slug ?? '', '/portal-institucional/triagem')}?view=fila&risk=critical&tab=para_triar`;
+  const goToRiskQueue = () => navigate(triageQueueUrl);
 
   const goToTriage = () => {
     onNavigateToTriage?.();
@@ -482,11 +468,7 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
 
   if (isLoading || !summary) {
     return (
-      <div className="grid gap-3 md:grid-cols-4 mb-6">
-        {[0, 1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-28 rounded-lg" />
-        ))}
-      </div>
+      <LoadingCards className="mb-6" />
     );
   }
 
@@ -514,16 +496,16 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
         />
         <KpiCard
           icon={AlertTriangle}
-          label="Alertas críticos abertos"
+          label="Para triar — Em Risco"
           value={String(summary.criticalOpen)}
-          hint="triagens de alto/crítico não resolvidas"
+          hint="alunos Em Risco aguardando triagem"
           tone={summary.criticalOpen > 0 ? 'danger' : 'success'}
           extra={
             summary.criticalOpen > 0 ? (
               <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400">Ver</span>
             ) : null
           }
-          onClick={() => setOpenKpi('critical')}
+          onClick={goToRiskQueue}
         />
         <KpiCard
           icon={CheckCircle2}

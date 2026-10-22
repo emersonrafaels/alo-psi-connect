@@ -20,10 +20,17 @@ export async function fetchInChunks<T = any>(
   build: (chunk: string[], from: number, to: number) => PromiseLike<{ data: T[] | null; error: any }>,
   chunkSize = 150,
 ): Promise<T[]> {
-  const out: T[] = [];
-  for (let i = 0; i < ids.length; i += chunkSize) {
-    const chunk = ids.slice(i, i + chunkSize);
-    out.push(...(await fetchAllPaged<T>((f, t) => build(chunk, f, t))));
-  }
-  return out;
+  const chunks: string[][] = [];
+  for (let i = 0; i < ids.length; i += chunkSize) chunks.push(ids.slice(i, i + chunkSize));
+  // Run up to 4 chunks concurrently; keep result order stable.
+  const results: T[][] = new Array(chunks.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < chunks.length) {
+      const idx = next++;
+      results[idx] = await fetchAllPaged<T>((f, t) => build(chunks[idx], f, t));
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(4, chunks.length) }, worker));
+  return results.flat();
 }

@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -322,7 +323,7 @@ export function StudentActivityModal({
 
           <div className="mt-3 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 180px)' }}>
             {isLoading ? (
-              <div className="py-8 text-center text-muted-foreground text-sm">Carregando...</div>
+              <LoadingBar className="py-8" label="Carregando atividades..." />
             ) : (
               <>
                 <TabsContent value="diario" className="mt-0">
