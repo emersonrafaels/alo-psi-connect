@@ -1,6 +1,7 @@
 import { fetchAllPaged, fetchInChunks } from '@/lib/supabasePaging';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { escalateRisk, type CriticalSeverity } from '@/features/triage/criticalTerms';
 
 // Fire-and-forget notification helper
 function notifyInstitutionAction(action_type: string, institution_id: string, metadata: Record<string, any>) {
@@ -11,12 +12,19 @@ function notifyInstitutionAction(action_type: string, institution_id: string, me
 
 export type RiskLevel = 'critical' | 'alert' | 'attention' | 'healthy' | 'no_data';
 
+export interface CriticalKeywordFlag {
+  severity: CriticalSeverity;
+  hits: number;
+  lastDate: string;
+}
+
 export interface StudentRiskData {
   patientId: string;
   studentName: string;
   profileId: string | null;
   userId: string | null;
   riskLevel: RiskLevel;
+  criticalKeywordFlag?: CriticalKeywordFlag | null;
   avgMood: number | null;
   avgAnxiety: number | null;
   avgEnergy: number | null;
@@ -202,6 +210,20 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
         }
       });
 
+      // Critical keywords in diaries (server-side; returns only flags, never text)
+      const flagsByPatient = new Map<string, CriticalKeywordFlag>();
+      try {
+        const { data: flags } = await (supabase.rpc as any)('get_institution_critical_flags', {
+          p_institution_id: institutionId,
+          p_since: currentCutoffStr,
+        });
+        (flags || []).forEach((f: any) => flagsByPatient.set(f.patient_id, {
+          severity: f.max_severity, hits: f.hits, lastDate: f.last_date,
+        }));
+      } catch (err) {
+        console.warn('Critical keyword flags unavailable:', err);
+      }
+
       // 5. Calculate risk for each student
       return students.map((s: any) => {
         const profileId = s.pacientes.profile_id;
@@ -256,7 +278,8 @@ export function useStudentTriageData(institutionId: string | null, periodDays: n
           studentName: s.pacientes.profiles.nome || 'Sem nome',
           profileId: s.pacientes.profile_id || null,
           userId: s.pacientes.profiles.user_id || null,
-          riskLevel: calculateRiskLevel(avgMood, avgAnxiety, avgEnergy, avgSleep, moodTrend),
+          riskLevel: escalateRisk(calculateRiskLevel(avgMood, avgAnxiety, avgEnergy, avgSleep, moodTrend), flagsByPatient.get(s.patient_id)?.severity),
+          criticalKeywordFlag: flagsByPatient.get(s.patient_id) || null,
           avgMood: round1(avgMood),
           avgAnxiety: round1(avgAnxiety),
           avgEnergy: round1(avgEnergy),
