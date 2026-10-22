@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchAllPaged, fetchInChunks } from '@/lib/supabasePaging';
 import { useAuth } from './useAuth';
 import { useTenant } from './useTenant';
 import { useLocation } from 'react-router-dom';
@@ -133,7 +134,8 @@ export const useInstitutionAccess = () => {
       const institutionIds = userInstitutions.map(ui => ui.institution_id);
       console.log('   Institution IDs:', institutionIds);
 
-      const { data, error } = await supabase
+      let data: any[] = []; let error: any = null;
+      try { data = await fetchAllPaged((f, t) => supabase
         .from('patient_institutions')
         .select(`
           patient_id,
@@ -151,7 +153,7 @@ export const useInstitutionAccess = () => {
             )
           )
         `)
-        .in('institution_id', institutionIds);
+        .in('institution_id', institutionIds).order('id').range(f, t)); } catch (e) { error = e; }
 
       if (error) {
         console.error('❌ [useInstitutionAccess] Error fetching students:', error);

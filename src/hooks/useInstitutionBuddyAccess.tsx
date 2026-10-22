@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchAllPaged, fetchInChunks } from '@/lib/supabasePaging';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
@@ -75,10 +76,11 @@ export const useInstitutionBuddyStudents = (institutionId: string | null) => {
     enabled: !!institutionId,
     queryFn: async (): Promise<BuddyAccessStudent[]> => {
       const [{ data: links, error: linksError }, { data: grants, error: grantsError }] = await Promise.all([
-        supabase
+        fetchAllPaged((f, t) => supabase
           .from('patient_institutions')
-          .select('patient_id, pacientes!inner(id, profiles!inner(nome, email))')
-          .eq('institution_id', institutionId!),
+          .select('id, patient_id, pacientes!inner(id, profiles!inner(nome, email))')
+          .eq('institution_id', institutionId!).order('id').range(f, t))
+          .then((data) => ({ data, error: null as any }), (error) => ({ data: null, error })),
         supabase
           .from('institution_buddy_students' as any)
           .select('patient_id')
