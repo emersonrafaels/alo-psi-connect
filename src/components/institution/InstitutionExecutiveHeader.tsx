@@ -528,7 +528,7 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
               <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400">Ver</span>
             ) : null
           }
-          onClick={() => setOpenKpi('critical')}
+          onClick={goToRiskQueue}
         />
         <KpiCard
           icon={CheckCircle2}
