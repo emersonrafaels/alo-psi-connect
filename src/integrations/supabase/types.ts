@@ -5535,6 +5535,15 @@ export type Database = {
           title: string
         }[]
       }
+      get_institution_wellbeing_summary: {
+        Args: {
+          p_end: string
+          p_institution_id: string
+          p_prev_start: string
+          p_start: string
+        }
+        Returns: Json
+      }
       get_mood_entries_profile_ids_for_institution_admin: {
         Args: { _user_id: string }
         Returns: {
