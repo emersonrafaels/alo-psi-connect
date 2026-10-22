@@ -210,7 +210,7 @@ export function StudentBuddyPanel({ institutionId }: Props) {
 
         <div className="space-y-6">
           {loadingData ? (
-            <Skeleton className="h-64 w-full" />
+            <LoadingSection label="Carregando dados do aluno..." />
           ) : !insight && !portrait ? (
             <Card>
               <CardContent className="py-12 text-center space-y-2">
