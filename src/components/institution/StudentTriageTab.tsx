@@ -529,6 +529,8 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
     }
   };
   const showLegacy = !view;
+  const [funnelOpen, setFunnelOpen] = useState(true);
+  useEffect(() => { setFunnelOpen(view === 'resumo'); }, [view]);
   const showView = (v: TriageView) => !view || view === v;
 
 
@@ -753,13 +755,35 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
             <span className="text-xs text-muted-foreground">{format(subDays(new Date(), analysisPeriod), 'dd/MM')} – {format(new Date(), 'dd/MM')} · Atualizado às {format(new Date(), 'HH:mm')}</span>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" className="ml-auto h-8 gap-1 text-muted-foreground"><Info className="h-4 w-4" />Como a criticidade é calculada</Button>
+                <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground"><Info className="h-4 w-4" />Como a criticidade é calculada</Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" align="end" className="max-w-sm space-y-1.5 p-3 text-xs">
                 {riskOrder.map((l) => <p key={l}><strong>{riskConfig[l].label}:</strong> {riskLegend[l]}</p>)}
                 <p><strong>Palavras críticas:</strong> termos graves no diário levam a Em Risco; termos moderados sobem um nível. O texto do aluno nunca é exibido.</p>
               </TooltipContent>
             </Tooltip>
+          </div>
+        )}
+        {view && (view === 'resumo' || funnelOpen) && (
+          <div className={view === 'resumo' ? 'order-none' : ''}>
+            <TriageFunnel
+              open={view === 'resumo' ? funnelOpen : true}
+              onOpenChange={setFunnelOpen}
+              onNavigate={nav}
+              counts={{
+                total: totalStudents,
+                withData: totalStudents - counts.no_data,
+                atRisk: counts.critical,
+                alert: counts.alert,
+                attention: counts.attention,
+                healthy: counts.healthy,
+                priorities: priorityItems.length,
+                pending: pendingByRisk.critical + pendingByRisk.alert + pendingByRisk.attention,
+                inFollowUp: inProgressTriages.length,
+                overdue: overdueFollowUpCount,
+                resolved: resolvedTriages.length,
+              }}
+            />
           </div>
         )}
         {view === 'resumo' && (
