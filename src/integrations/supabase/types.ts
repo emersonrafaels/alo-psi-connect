@@ -5524,6 +5524,17 @@ export type Database = {
           professional_id: number
         }[]
       }
+      get_institution_student_timeline: {
+        Args: { _days?: number; _institution_id: string; _patient_id: string }
+        Returns: {
+          detail: string
+          id: string
+          kind: string
+          level: string
+          occurred_at: string
+          title: string
+        }[]
+      }
       get_mood_entries_profile_ids_for_institution_admin: {
         Args: { _user_id: string }
         Returns: {
