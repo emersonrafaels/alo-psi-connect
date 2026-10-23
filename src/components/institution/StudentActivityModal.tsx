@@ -487,7 +487,7 @@ function TriageHistoryTab({ history }: { history: StudentTriageHistory[] }) {
   );
 }
 
-/** Record counter beside a tab label; the dash keeps layout stable while data loads. */
+/** Record counter beside a tab label; a placeholder keeps the layout stable while data loads. */
 function TabCount({ value, loading }: { value: number; loading: boolean }) {
   if (loading) return <span className="h-4 w-4 rounded-full bg-muted-foreground/10 animate-pulse" aria-hidden />;
   return (
