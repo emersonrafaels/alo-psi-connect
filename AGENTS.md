@@ -2,6 +2,7 @@
 
 - Manage Afya study-case credentials only through the admin-authorized `afya-study-cases` function and a protected synthetic-case registry; server-side registry checks suppress outbound notifications independently of user-editable metadata.
 - Derive follow-on study-case behavior from its baseline pattern while generating distinct histories per case key, so new demonstration accounts preserve the intended scenario without copying identical data.
+- Define pending Afya demonstration refreshes in `scripts/afya-pending-storytelling.ts` with tested score trajectories and transactional synthetic-only guards, so diary, practice and scale histories stay coherent without altering protected study cases or sending notifications.
 
 - Keep body-region definitions in `src/features/jornada/v5/bodyRegions.ts` so maps, checkout selectors, summaries, and the emotional landscape share one canonical catalogue.
 - Build emotional-landscape trends from user-scoped `journey_session_emotions` rows, while keeping aggregate frequency sourced from `journey_landscape`, because intensity history and frequency are distinct measures.
