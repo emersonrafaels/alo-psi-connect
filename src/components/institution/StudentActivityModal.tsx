@@ -178,12 +178,12 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Sentimentos predominantes</p>
           <p className="text-[11px] text-muted-foreground mb-2">
-            Média das notas que o aluno deu a cada sentimento nos últimos 30 dias (1 = muito baixo, 5 = muito alto) e em quantos registros ele apareceu.
+            Média das notas que o aluno deu a cada sentimento nos últimos 30 dias (1 = muito baixo, 5 = muito alto).
           </p>
           <div className="flex flex-wrap gap-2">
             {topEmotions.map(e => (
               <Badge key={e.emotion} variant="secondary" className="text-xs">
-                {getEmotionDisplayName(e.emotion)} · média {e.average.toFixed(1).replace('.', ',')} · {e.count} {e.count === 1 ? 'registro' : 'registros'}
+                {getEmotionDisplayName(e.emotion)} · média {e.average.toFixed(1).replace('.', ',')}
               </Badge>
             ))}
           </div>
@@ -393,7 +393,7 @@ export function StudentActivityModal({
               <DialogTitle className="text-lg">{studentName}</DialogTitle>
               <div className="flex items-center gap-2 mt-1">
                 <Badge className={`text-xs ${riskColors[riskLevel]}`}>{riskLabels[riskLevel]}</Badge>
-                <span className="text-xs text-muted-foreground">{entryCount} {entryCount === 1 ? 'registro' : 'registros'} nos últimos {periodDays} dias</span>
+                <span className="text-xs text-muted-foreground">Últimos {periodDays} dias</span>
               </div>
             </div>
           </div>
