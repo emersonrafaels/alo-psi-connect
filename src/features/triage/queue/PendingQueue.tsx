@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { QuickNotePopover } from '@/components/institution/QuickNotePopover';
+import { QuickNotePopover, type QuickNoteHistoryItem } from '@/components/institution/QuickNotePopover';
 import type { RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import {
   HIGHER_IS_WORSE, METRIC_KEYS, METRIC_LABEL, PENDING_SORT_LABEL, metricBand, metricValue, riskDrivers, riskReasons,
@@ -82,6 +82,7 @@ interface PendingQueueProps {
   onQuickNote: (student: StudentRiskData, note: string) => Promise<void>;
   /** Internal team notes per student; they never move the student out of the queue. */
   noteCountOf: (patientId: string) => number;
+  notesOf?: (patientId: string) => QuickNoteHistoryItem[];
   onOpenNotes: (student: StudentRiskData) => void;
   footer?: ReactNode;
 }
@@ -213,6 +214,7 @@ export function PendingQueue(props: PendingQueueProps) {
                 onOpenHistory={() => props.onOpenHistory(student)}
                 onQuickNote={(note) => props.onQuickNote(student, note)}
                 noteCount={props.noteCountOf(student.patientId)}
+                notes={props.notesOf?.(student.patientId) ?? []}
                 onOpenNotes={() => props.onOpenNotes(student)}
               />
             ))}
@@ -270,10 +272,11 @@ interface PendingRowProps {
   onOpenHistory: () => void;
   onQuickNote: (note: string) => Promise<void>;
   noteCount: number;
+  notes: QuickNoteHistoryItem[];
   onOpenNotes: () => void;
 }
 
-function PendingRow({ student, name, periodDays, classAverages, trendMetric, selected, onToggleSelect, onTriage, onOpenHistory, onQuickNote, noteCount, onOpenNotes }: PendingRowProps) {
+function PendingRow({ student, name, periodDays, classAverages, trendMetric, selected, onToggleSelect, onTriage, onOpenHistory, onQuickNote, noteCount, notes, onOpenNotes }: PendingRowProps) {
   const meta = RISK_META[student.riskLevel];
   const reasons = riskReasons(student);
   const driverKeys = new Set(riskDrivers(student).filter((d) => d.band !== 'attention').map((d) => d.key));
@@ -326,7 +329,7 @@ function PendingRow({ student, name, periodDays, classAverages, trendMetric, sel
           </TooltipTrigger>
           <TooltipContent className="text-xs">Ver histórico</TooltipContent>
         </Tooltip>
-        <QuickNotePopover riskLevel={student.riskLevel} subjectName={name} reasons={reasons} onSave={onQuickNote} />
+        <QuickNotePopover riskLevel={student.riskLevel} subjectName={name} reasons={reasons} onSave={onQuickNote} history={notes} />
         <Button size="sm" className="h-8 px-4" onClick={onTriage}>Triar</Button>
       </div>
 
