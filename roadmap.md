@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] Diferenciar os dez alunos Afya Em Risco para triar com histórias, diários, práticas e escalas coerentes
-- [ ] Verificar variedade, coerência e preservação da fila e dos casos A–F
+- [x] Diferenciar os dez alunos Afya Em Risco para triar com histórias, diários, práticas e escalas coerentes
+- [x] Verificar variedade, coerência e preservação da fila e dos casos A–F por consulta e 15 testes; conferência na tela autenticada indisponível no Supabase externo
 
 - [x] Criar D/E/F na mesma unidade de A/B/C, com dados diferentes e padrões correspondentes
 - [x] Disponibilizar D/E/F no cadastro de acesso administrativo e validar regras dos históricos
