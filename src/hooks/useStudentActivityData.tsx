@@ -16,7 +16,10 @@ export interface MoodEntry {
 
 export interface TopEmotion {
   emotion: string;
+  /** Number of entries where this emotion was rated. */
   count: number;
+  /** Average 1–5 score across those entries. */
+  average: number;
 }
 
 export interface StudentTriageHistory {
