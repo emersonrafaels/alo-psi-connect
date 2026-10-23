@@ -487,6 +487,16 @@ function TriageHistoryTab({ history }: { history: StudentTriageHistory[] }) {
   );
 }
 
+/** Record counter beside a tab label; a placeholder keeps the layout stable while data loads. */
+function TabCount({ value, loading }: { value: number; loading: boolean }) {
+  if (loading) return <span className="h-4 w-4 rounded-full bg-muted-foreground/10 animate-pulse" aria-hidden />;
+  return (
+    <span className="rounded-full bg-muted-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-muted-foreground">
+      {value}
+    </span>
+  );
+}
+
 export function StudentActivityModal({
   open,
   onOpenChange,
@@ -515,6 +525,11 @@ export function StudentActivityModal({
   const anonNumber = studentName.match(/#(\d+)/)?.[1];
   const initials = anonNumber ? `A${anonNumber}` : studentName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
+  const diaryCount = data?.moodEntries.length ?? 0;
+  const triageCount = data?.triageHistory.length ?? 0;
+  const practiceCount = timeline.filter(i => i.kind === 'practice').length;
+  const scaleCount = timeline.filter(i => i.kind === 'scale').length;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
@@ -534,22 +549,26 @@ export function StudentActivityModal({
         </DialogHeader>
 
         <Tabs defaultValue="diario" className="flex-1 min-h-0">
-          <TabsList className="w-full justify-start">
+          <TabsList className="w-full h-auto flex-wrap justify-start gap-0.5">
             <TabsTrigger value="diario" className="gap-1.5 text-xs">
               <BookOpen className="h-3.5 w-3.5" />
               Diário Emocional
-            </TabsTrigger>
-            <TabsTrigger value="triagens" className="gap-1.5 text-xs">
-              <ClipboardCheck className="h-3.5 w-3.5" />
-              Histórico de Triagens
-            </TabsTrigger>
-            <TabsTrigger value="praticas" className="gap-1.5 text-xs">
-              <Leaf className="h-3.5 w-3.5" />
-              Práticas
+              <TabCount value={diaryCount} loading={isLoading} />
             </TabsTrigger>
             <TabsTrigger value="escalas" className="gap-1.5 text-xs">
               <ClipboardList className="h-3.5 w-3.5" />
               Escalas
+              <TabCount value={scaleCount} loading={timelineLoading} />
+            </TabsTrigger>
+            <TabsTrigger value="praticas" className="gap-1.5 text-xs">
+              <Leaf className="h-3.5 w-3.5" />
+              Práticas
+              <TabCount value={practiceCount} loading={timelineLoading} />
+            </TabsTrigger>
+            <TabsTrigger value="triagens" className="gap-1.5 text-xs">
+              <ClipboardCheck className="h-3.5 w-3.5" />
+              Histórico de Triagens
+              <TabCount value={triageCount} loading={isLoading} />
             </TabsTrigger>
           </TabsList>
 
@@ -561,14 +580,14 @@ export function StudentActivityModal({
                 <TabsContent value="diario" className="mt-0">
                   <EmotionDiaryTab entries={data?.moodEntries || []} topEmotions={data?.topEmotions || []} lastTriageDate={data?.triageHistory?.[0]?.created_at} />
                 </TabsContent>
-                <TabsContent value="triagens" className="mt-0">
-                  <TriageHistoryTab history={data?.triageHistory || []} />
+                <TabsContent value="escalas" className="mt-0">
+                  {timelineLoading ? <LoadingBar className="py-8" label="Carregando escalas..." /> : <ActivityListTab items={timeline} kind="scale" empty="Nenhuma escala respondida nos últimos 90 dias." />}
                 </TabsContent>
                 <TabsContent value="praticas" className="mt-0">
                   {timelineLoading ? <LoadingBar className="py-8" label="Carregando práticas..." /> : <ActivityListTab items={timeline} kind="practice" empty="Nenhuma prática nos últimos 90 dias." />}
                 </TabsContent>
-                <TabsContent value="escalas" className="mt-0">
-                  {timelineLoading ? <LoadingBar className="py-8" label="Carregando escalas..." /> : <ActivityListTab items={timeline} kind="scale" empty="Nenhuma escala respondida nos últimos 90 dias." />}
+                <TabsContent value="triagens" className="mt-0">
+                  <TriageHistoryTab history={data?.triageHistory || []} />
                 </TabsContent>
               </>
             )}
