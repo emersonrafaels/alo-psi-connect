@@ -14,3 +14,4 @@
 - Compute institutional portal wellbeing numbers in the `get_institution_wellbeing_summary` RPC instead of downloading raw mood entries, so large institutions load fast and only aggregates leave the database.
 - Detect triage critical keywords only in the `get_institution_critical_flags` RPC (returns severity/count/date, never diary text) and apply escalation via `src/features/triage/criticalTerms.ts`, so institutions never see student writing.
 - Keep compact and expanded student-history charts in the same MoodTrendChart with shared sentiment selection, so maximizing preserves the visible series and their values.
+- Build student-history series through trendSeries: merge equivalent sentiment labels, prefer available legacy scores with dynamic fallback, and assign non-repeating theme-aware color tokens to prevent duplicate legends.

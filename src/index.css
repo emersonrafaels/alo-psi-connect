@@ -123,6 +123,17 @@ All colors MUST be HSL.
     --chart-3: 38 92% 50%;
     --chart-4: 200 80% 50%;
     --chart-5: 330 62% 55%;
+    --chart-6: 8 76% 48%;
+    --chart-7: 174 72% 33%;
+    --chart-8: 230 68% 52%;
+    --chart-9: 70 72% 33%;
+    --chart-10: 305 66% 42%;
+    --chart-11: 22 83% 39%;
+    --chart-12: 190 80% 31%;
+    --trend-hue-origin: 19;
+    --trend-hue-step: 137.508;
+    --trend-saturation: 68%;
+    --trend-lightness: 42%;
 
     --coupon-from: 160 84% 39%;       /* Emerald */
     --coupon-to: 142 71% 45%;         /* Green */
@@ -205,6 +216,14 @@ All colors MUST be HSL.
     --chart-3: 38 92% 60%;
     --chart-4: 200 80% 65%;
     --chart-5: 330 62% 70%;
+    --chart-6: 8 76% 66%;
+    --chart-7: 174 72% 53%;
+    --chart-8: 230 68% 72%;
+    --chart-9: 70 72% 53%;
+    --chart-10: 305 66% 65%;
+    --chart-11: 22 83% 63%;
+    --chart-12: 190 80% 56%;
+    --trend-lightness: 66%;
   }
 }
 

@@ -15,6 +15,7 @@ import { Activity, Brain, Zap, Moon, BookOpen, ClipboardCheck, Heart, AlertTrian
 import { useMoodEntryAnalyses, RISK_LEVEL_META } from '@/hooks/useMoodEntryAnalyses';
 import { getEmotionDisplayName } from '@/utils/emotionFormatters';
 import { reconcileRisk, EntryRisk } from '@/features/triage/entryRisk';
+import { buildTrendSeries } from '@/features/triage/trendSeries';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Leaf, ClipboardList } from 'lucide-react';
@@ -114,22 +115,8 @@ function MoodScoreDisplay({ value, label, icon: Icon, higherIsWorse }: { value: 
 }
 
 /** Fixed 1–5 scale trend; the reader picks which sentiments to plot, one or several at once. */
-type TrendSeries = { key: string; label: string; getValue: (e: MoodEntry) => number | null };
-
 export function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
-  const seriesOptions: TrendSeries[] = [
-    { key: 'mood_score', label: 'Humor', getValue: (e) => e.mood_score },
-    { key: 'anxiety_level', label: 'Ansiedade', getValue: (e) => e.anxiety_level },
-    { key: 'energy_level', label: 'Energia', getValue: (e) => e.energy_level },
-    { key: 'sleep_quality', label: 'Sono', getValue: (e) => e.sleep_quality },
-  ];
-  const emotionKeys = new Set<string>();
-  entries.forEach((e) => {
-    if (e.emotion_values) Object.keys(e.emotion_values).forEach((k) => emotionKeys.add(k));
-  });
-  Array.from(emotionKeys).forEach((k) =>
-    seriesOptions.push({ key: `emo:${k}`, label: getEmotionDisplayName(k), getValue: (e) => e.emotion_values?.[k] ?? null }),
-  );
+  const seriesOptions = buildTrendSeries(entries);
 
   const [selected, setSelected] = useState<string[]>(['mood_score']);
   const [maximized, setMaximized] = useState(false);
@@ -142,7 +129,7 @@ export function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
 
   const dates = entries.map((e) => e.date).reverse(); // ascending
   const n = dates.length;
-  const colorOf = (key: string) => `hsl(var(--chart-${(seriesOptions.findIndex((s) => s.key === key) % 5) + 1}))`;
+  const colorOf = (key: string) => `hsl(${seriesOptions.find((s) => s.key === key)?.colorToken ?? 'var(--foreground)'})`;
 
   // One line per selected sentiment, plotted on the shared ascending date axis.
   const seriesData = active.map((s) => {
@@ -197,7 +184,7 @@ export function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
               className={`inline-flex h-auto items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
                 on ? 'border-transparent font-medium' : 'border-border text-muted-foreground hover:bg-muted/60'
               }`}
-              style={on ? { backgroundColor: `hsl(var(--chart-${(seriesOptions.findIndex((o) => o.key === s.key) % 5) + 1}) / 0.15)` } : undefined}
+              style={on ? { backgroundColor: `hsl(${s.colorToken} / 0.15)` } : undefined}
             >
               <span
                 className="h-2 w-2 shrink-0 rounded-full"
