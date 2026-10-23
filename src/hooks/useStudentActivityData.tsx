@@ -1,3 +1,4 @@
+import { buildTrendSeries } from '@/features/triage/trendSeries';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -102,20 +103,14 @@ export function useStudentActivityData(
         emotion_values: e.emotion_values as Record<string, number> | null,
       }));
 
-      // Average 1–5 score per emotion across entries, plus how many entries rated it
-      const emotionSums = new Map<string, { sum: number; n: number }>();
-      moodEntries.forEach(entry => {
-        if (entry.emotion_values && typeof entry.emotion_values === 'object') {
-          Object.entries(entry.emotion_values).forEach(([emotion, value]) => {
-            if (typeof value === 'number' && value > 0) {
-              const cur = emotionSums.get(emotion) || { sum: 0, n: 0 };
-              emotionSums.set(emotion, { sum: cur.sum + value, n: cur.n + 1 });
-            }
-          });
-        }
-      });
-      const topEmotions: TopEmotion[] = Array.from(emotionSums.entries())
-        .map(([emotion, { sum, n }]) => ({ emotion, count: n, average: sum / n }))
+      // Average 1–5 score per sentiment using the same unified series as the chart
+      // (legacy columns first, dynamic emotion_values as fallback) so numbers match.
+      const topEmotions: TopEmotion[] = buildTrendSeries(moodEntries)
+        .map((series) => {
+          const values = moodEntries.map(series.getValue).filter((v): v is number => v !== null);
+          return { emotion: series.label, count: values.length, average: values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0 };
+        })
+        .filter((e) => e.count > 0)
         .sort((a, b) => b.average - a.average)
         .slice(0, 5);
 
