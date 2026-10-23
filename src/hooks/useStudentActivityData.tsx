@@ -1,3 +1,4 @@
+import { buildTrendSeries } from '@/features/triage/trendSeries';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,7 +17,10 @@ export interface MoodEntry {
 
 export interface TopEmotion {
   emotion: string;
+  /** Number of entries where this emotion was rated. */
   count: number;
+  /** Average 1–5 score across those entries. */
+  average: number;
 }
 
 export interface StudentTriageHistory {
@@ -99,21 +103,16 @@ export function useStudentActivityData(
         emotion_values: e.emotion_values as Record<string, number> | null,
       }));
 
-      // Calculate top emotions from aggregated emotion_values
-      const emotionCounts = new Map<string, number>();
-      moodEntries.forEach(entry => {
-        if (entry.emotion_values && typeof entry.emotion_values === 'object') {
-          Object.entries(entry.emotion_values).forEach(([emotion, value]) => {
-            if (typeof value === 'number' && value > 0) {
-              emotionCounts.set(emotion, (emotionCounts.get(emotion) || 0) + value);
-            }
-          });
-        }
-      });
-      const topEmotions: TopEmotion[] = Array.from(emotionCounts.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([emotion, count]) => ({ emotion, count }));
+      // Average 1–5 score per sentiment using the same unified series as the chart
+      // (legacy columns first, dynamic emotion_values as fallback) so numbers match.
+      const topEmotions: TopEmotion[] = buildTrendSeries(moodEntries)
+        .map((series) => {
+          const values = moodEntries.map(series.getValue).filter((v): v is number => v !== null);
+          return { emotion: series.label, count: values.length, average: values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0 };
+        })
+        .filter((e) => e.count > 0)
+        .sort((a, b) => b.average - a.average)
+        .slice(0, 5);
 
       // Process triage history
       const triageData = (triageResult.data || []) as any[];

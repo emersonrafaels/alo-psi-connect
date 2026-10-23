@@ -1,16 +1,54 @@
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useStudentActivityData, MoodEntry, TopEmotion, StudentTriageHistory } from '@/hooks/useStudentActivityData';
 import { RiskLevel } from '@/hooks/useStudentTriage';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Activity, Brain, Zap, Moon, BookOpen, ClipboardCheck, Heart, AlertTriangle, CheckCircle2, Play, Clock, Sparkles } from 'lucide-react';
+import { Activity, Brain, Zap, Moon, BookOpen, ClipboardCheck, Heart, AlertTriangle, CheckCircle2, Play, Clock, Sparkles, Maximize2 } from 'lucide-react';
 import { useMoodEntryAnalyses, RISK_LEVEL_META } from '@/hooks/useMoodEntryAnalyses';
 import { getEmotionDisplayName } from '@/utils/emotionFormatters';
+import { reconcileRisk, EntryRisk } from '@/features/triage/entryRisk';
+import { buildTrendSeries } from '@/features/triage/trendSeries';
+import { sentimentBand, SENTIMENT_BAND_STYLES, SENTIMENT_BAND_DOTS, SENTIMENT_BAND_LEGEND, SENTIMENT_BAND_HINT, SentimentBand } from '@/features/triage/sentimentBands';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Leaf, ClipboardList } from 'lucide-react';
+
+interface TimelineItem { id: string; kind: string; occurred_at: string; title: string; detail: string | null; level: string | null }
+const LEVEL_LABEL: Record<string, string> = { healthy: 'Estável', attention: 'Atenção', alert: 'Alerta', critical: 'Em Risco' };
+
+function ActivityListTab({ items, kind, empty }: { items: TimelineItem[]; kind: 'practice' | 'scale'; empty: string }) {
+  const list = items.filter((i) => i.kind === kind);
+  const Icon = kind === 'practice' ? Leaf : ClipboardList;
+  if (list.length === 0) {
+    return <div className="py-8 text-center text-muted-foreground text-sm"><Icon className="h-8 w-8 mx-auto mb-2 opacity-40" />{empty}</div>;
+  }
+  return (
+    <div className="space-y-2">
+      <p className="text-[11px] text-muted-foreground">Últimos 90 dias · {list.length} {list.length === 1 ? 'registro' : 'registros'}. Apenas datas e indicadores.</p>
+      {list.map((i) => (
+        <div key={i.id} className="p-3 rounded-lg border bg-muted/20 flex items-start justify-between gap-2">
+          <div className="flex gap-2 min-w-0">
+            <Icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-medium truncate">{i.title}</p>
+              {i.detail && <p className="text-[11px] text-muted-foreground">{i.detail}</p>}
+              <p className="text-[11px] text-muted-foreground">{format(new Date(i.occurred_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+            </div>
+          </div>
+          {i.level && <Badge variant="outline" className="text-[10px] shrink-0">{LEVEL_LABEL[i.level] ?? i.level}</Badge>}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /** Internal markers on synthetic/demo entries (e.g. `demo_sintetico`) are not meaningful to the team. */
 const isInternalTag = (tag: string) => /^demo[_-]?/i.test(tag.trim());
@@ -40,7 +78,7 @@ const riskLabels: Record<RiskLevel, string> = {
   critical: 'Em Risco',
   alert: 'Alerta',
   attention: 'Atenção',
-  healthy: 'Saudável',
+  healthy: 'Estável',
   no_data: 'Sem Dados',
 };
 
@@ -77,50 +115,180 @@ function MoodScoreDisplay({ value, label, icon: Icon, higherIsWorse }: { value: 
   );
 }
 
-const moodColor = (v: number) => (v <= 2 ? '#ef4444' : v <= 3 ? '#eab308' : '#22c55e');
+/** Fixed 1–5 scale trend; the reader picks which sentiments to plot, one or several at once. */
+export function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
+  const seriesOptions = buildTrendSeries(entries);
 
-/** Mood over the fetched window on a fixed 1–5 scale, so a flat series still reads as "always low/high". */
-function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
-  const points = entries
-    .filter((e) => e.mood_score != null)
-    .map((e) => ({ date: e.date, value: e.mood_score as number }))
-    .reverse();
-  if (points.length < 2) return null;
+  const [selected, setSelected] = useState<string[]>(['mood_score']);
+  const [maximized, setMaximized] = useState(false);
+  // At least one sentiment stays on the chart: the last active one cannot be turned off.
+  const toggle = (key: string) =>
+    setSelected((prev) => (prev.includes(key) ? (prev.length > 1 ? prev.filter((k) => k !== key) : prev) : [...prev, key]));
 
-  const w = 560, h = 96, left = 22, right = 8, top = 8, bottom = 18;
-  const x = (i: number) => left + (i * (w - left - right)) / (points.length - 1);
-  const y = (v: number) => top + ((5 - v) / 4) * (h - top - bottom);
-  const avg = points.reduce((acc, p) => acc + p.value, 0) / points.length;
-  const first = points[0], last = points[points.length - 1];
+  if (entries.length < 2) return null;
+  const active = seriesOptions.filter((s) => selected.includes(s.key));
 
-  return (
-    <div>
-      <div className="mb-2 flex items-baseline justify-between gap-2">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Evolução do humor (30 dias)</p>
-        <p className="text-xs text-muted-foreground">
-          Média <span className="font-semibold tabular-nums" style={{ color: moodColor(avg) }}>{avg.toFixed(1)}</span>
-          {' · '}último <span className="font-semibold tabular-nums" style={{ color: moodColor(last.value) }}>{last.value.toFixed(1)}</span>
-        </p>
+  const dates = entries.map((e) => e.date).reverse(); // ascending
+  const n = dates.length;
+  const colorOf = (key: string) => `hsl(${seriesOptions.find((s) => s.key === key)?.colorToken ?? 'var(--foreground)'})`;
+
+  // One line per selected sentiment, plotted on the shared ascending date axis.
+  const seriesData = active.map((s) => {
+    const values = entries.map((e) => s.getValue(e)).reverse();
+    const pts = values.map((v, i) => ({ v, i })).filter((p): p is { v: number; i: number } => p.v != null);
+    const vals = pts.map((p) => p.v);
+    return {
+      ...s,
+      pts,
+      avg: vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null,
+      last: vals.length ? vals[vals.length - 1] : null,
+    };
+  });
+
+  // X-axis date markers: first, last and evenly spaced in between (deduped by label).
+  const tickCount = Math.min(6, n);
+  const tickIndexes: number[] = [];
+  const seenDates = new Set<string>();
+  for (let k = 0; k < tickCount; k++) {
+    const i = Math.round((k * (n - 1)) / Math.max(1, tickCount - 1));
+    const label = format(new Date(dates[i] + 'T12:00:00'), 'dd/MM');
+    if (!seenDates.has(label)) {
+      seenDates.add(label);
+      tickIndexes.push(i);
+    }
+  }
+
+  const renderControls = () => (
+    <>
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          {seriesData.filter((s) => s.avg != null).map((s) => (
+            <p key={s.key} className="text-xs text-muted-foreground">
+              {s.label} · média{' '}
+              <span className="font-semibold tabular-nums" style={{ color: colorOf(s.key) }}>{s.avg?.toFixed(1)}</span>
+              {' · '}último{' '}
+              <span className="font-semibold tabular-nums" style={{ color: colorOf(s.key) }}>{s.last?.toFixed(1)}</span>
+            </p>
+          ))}
+        </div>
+      <div className="mb-2 flex flex-wrap gap-1.5">
+        {seriesOptions.map((s) => {
+          const on = selected.includes(s.key);
+          return (
+            <Button
+              key={s.key}
+              type="button"
+              onClick={() => toggle(s.key)}
+              aria-pressed={on}
+              variant="outline"
+              size="sm"
+              title={on ? 'Ocultar do gráfico' : 'Mostrar no gráfico'}
+              className={`inline-flex h-auto items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+                on ? 'border-transparent font-medium' : 'border-border text-muted-foreground hover:bg-muted/60'
+              }`}
+              style={on ? { backgroundColor: `hsl(${s.colorToken} / 0.15)` } : undefined}
+            >
+              <span
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: colorOf(s.key), opacity: on ? 1 : 0.4 }}
+              />
+              {s.label}
+            </Button>
+          );
+        })}
       </div>
-      <svg viewBox={`0 0 ${w} ${h}`} className="h-auto w-full" role="img" aria-label={`Humor de ${first.value.toFixed(1)} para ${last.value.toFixed(1)} em ${points.length} registros; média ${avg.toFixed(1)} numa escala de 1 a 5`}>
-        {[1, 3, 5].map((v) => (
+    </>
+  );
+
+  const renderChart = (expanded: boolean) => {
+    const w = expanded ? Math.max(900, n * 64) : 560;
+    const top = expanded ? 30 + active.length * 22 : 8;
+    const h = expanded ? 380 + top : 104;
+    const left = expanded ? 48 : 22, right = expanded ? 32 : 8, bottom = expanded ? 44 : 18;
+    const x = (i: number) => left + (i * (w - left - right)) / (n - 1);
+    const y = (v: number) => top + ((5 - v) / 4) * (h - top - bottom);
+    const labelPositions = new Map<number, number[]>();
+    return (
+      <div className="overflow-x-auto rounded-lg border-border" tabIndex={expanded ? 0 : undefined} aria-label={expanded ? 'Gráfico ampliado dos sentimentos' : undefined}>
+      <svg viewBox={`0 0 ${w} ${h}`} style={expanded ? { minWidth: w } : undefined} className="h-auto w-full" role="img" aria-label={`Evolução de ${active.map((s) => s.label).join(', ')} nos últimos 30 dias, numa escala de 1 a 5`}>
+        {(expanded ? [1, 2, 3, 4, 5] : [1, 3, 5]).map((v) => (
           <g key={v}>
             <line x1={left} x2={w - right} y1={y(v)} y2={y(v)} className="stroke-border" strokeDasharray={v === 3 ? '3 4' : undefined} />
             <text x={left - 6} y={y(v)} dy="0.35em" textAnchor="end" className="fill-muted-foreground text-[10px]">{v}</text>
           </g>
         ))}
-        <polyline
-          points={points.map((p, i) => `${x(i)},${y(p.value)}`).join(' ')}
-          fill="none" className="stroke-muted-foreground" strokeOpacity={0.6} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"
-        />
-        {points.map((p, i) => (
-          <circle key={i} cx={x(i)} cy={y(p.value)} r={3.5} fill={moodColor(p.value)} className="stroke-background" strokeWidth={1.5}>
-            <title>{format(new Date(p.date + 'T12:00:00'), "dd 'de' MMM", { locale: ptBR })}: {p.value.toFixed(1)}</title>
-          </circle>
+        {seriesData.filter((s) => s.pts.length >= 2).map((s) => (
+          <polyline
+            key={s.key}
+            points={s.pts.map((p) => `${x(p.i)},${y(p.v)}`).join(' ')}
+            fill="none" stroke={colorOf(s.key)} strokeOpacity={0.75} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"
+          />
         ))}
-        <text x={left} y={h - 4} className="fill-muted-foreground text-[10px]">{format(new Date(first.date + 'T12:00:00'), 'dd/MM')}</text>
-        <text x={w - right} y={h - 4} textAnchor="end" className="fill-muted-foreground text-[10px]">{format(new Date(last.date + 'T12:00:00'), 'dd/MM')}</text>
+        {seriesData.map((s) =>
+          s.pts.map((p) => (
+            <circle key={`${s.key}-${p.i}`} cx={x(p.i)} cy={y(p.v)} r={expanded ? 4 : 3} fill={colorOf(s.key)} className="stroke-background" strokeWidth={1.5}>
+              <title>{s.label}: {format(new Date(dates[p.i] + 'T12:00:00'), "dd 'de' MMM", { locale: ptBR })} — {p.v.toFixed(1)}</title>
+            </circle>
+          )),
+        )}
+        {expanded && seriesData.flatMap((s) => s.pts.map((p) => {
+          const used = labelPositions.get(p.i) ?? [];
+          let labelY = y(p.v) - 16;
+          while (used.some((previous) => Math.abs(previous - labelY) < 22)) labelY -= 22;
+          labelPositions.set(p.i, [...used, labelY]);
+          return (
+            <g key={`label-${s.key}-${p.i}`}>
+              <line x1={x(p.i)} x2={x(p.i)} y1={y(p.v) - 5} y2={labelY + 9} stroke={colorOf(s.key)} strokeOpacity={0.3} />
+              <rect x={x(p.i) - 20} y={labelY - 10} width={40} height={20} rx={4} className="fill-background" stroke={colorOf(s.key)} strokeOpacity={0.35} />
+              <text x={x(p.i)} y={labelY} dy="0.35em" textAnchor="middle" fill={colorOf(s.key)} className="text-[12px] font-semibold">
+                {p.v.toFixed(1).replace('.', ',')}
+              </text>
+            </g>
+          );
+        }))}
+        {(expanded ? Array.from({ length: n }, (_, i) => i) : tickIndexes).map((i) => (
+          <g key={i}>
+            <line x1={x(i)} x2={x(i)} y1={h - bottom} y2={h - bottom + 3} className="stroke-border" />
+            <text
+              x={x(i)}
+              y={h - (expanded ? 18 : 4)}
+              textAnchor={i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'}
+              className={`fill-muted-foreground ${expanded ? 'text-[12px]' : 'text-[10px]'}`}
+            >
+              {format(new Date(dates[i] + 'T12:00:00'), 'dd/MM')}
+            </text>
+          </g>
+        ))}
       </svg>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Evolução dos sentimentos (30 dias)</p>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label="Maximizar gráfico" onClick={() => setMaximized(true)} className="h-8 w-8 shrink-0">
+              <Maximize2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Maximizar gráfico</TooltipContent>
+        </Tooltip>
+      </div>
+      {renderControls()}
+      {renderChart(false)}
+      <Dialog open={maximized} onOpenChange={setMaximized}>
+        <DialogContent className="flex max-h-[95dvh] w-[96vw] max-w-[1440px] flex-col overflow-hidden">
+          <DialogHeader className="pr-8">
+            <DialogTitle>Evolução dos sentimentos (30 dias)</DialogTitle>
+          </DialogHeader>
+          <div className="min-h-0 space-y-4 overflow-y-auto">
+            {renderControls()}
+            {renderChart(true)}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -143,12 +311,31 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
       {/* Top Emotions */}
       {topEmotions.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Sentimentos predominantes</p>
+          <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Sentimentos predominantes</p>
+          <p className="text-[11px] text-muted-foreground mb-2">
+            Média das notas que o aluno deu a cada sentimento nos últimos 30 dias (1 = muito baixo, 5 = muito alto).
+          </p>
           <div className="flex flex-wrap gap-2">
-            {topEmotions.map(e => (
-              <Badge key={e.emotion} variant="secondary" className="text-xs">
-                {getEmotionDisplayName(e.emotion)} ({e.count})
-              </Badge>
+            {topEmotions.map(e => {
+              const band = sentimentBand(e.emotion, e.average);
+              return (
+                <Badge
+                  key={e.emotion}
+                  variant="secondary"
+                  title={SENTIMENT_BAND_HINT[band]}
+                  className={`text-xs ${SENTIMENT_BAND_STYLES[band]}`}
+                >
+                  {getEmotionDisplayName(e.emotion)} · média {e.average.toFixed(1).replace('.', ',')}
+                </Badge>
+              );
+            })}
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+            {(['good', 'medium', 'bad'] as SentimentBand[]).map(band => (
+              <span key={band} className="inline-flex items-center gap-1.5">
+                <span className={`h-2 w-2 shrink-0 rounded-full ${SENTIMENT_BAND_DOTS[band]}`} />
+                {SENTIMENT_BAND_LEGEND[band]}
+              </span>
             ))}
           </div>
         </div>
@@ -211,7 +398,9 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
         <div className="space-y-2">
           {entries.slice(0, 14).map(entry => {
             const analysis = analysesMap?.get(entry.id);
-            const meta = analysis?.risk_level ? RISK_LEVEL_META[analysis.risk_level] : null;
+            const level = reconcileRisk(analysis?.risk_level as EntryRisk | undefined, entry.mood_score, entry.anxiety_level);
+            const meta = analysis && level ? RISK_LEVEL_META[level] : null;
+            const buddyMsg = analysis?.buddy_message && !/^\s*\[DEMO-/i.test(analysis.buddy_message) ? analysis.buddy_message : null;
             return (
             <div key={entry.id} className="p-3 rounded-lg border bg-muted/20 space-y-1.5">
               <div className="flex items-center justify-between gap-2">
@@ -239,9 +428,9 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
               {entry.journal_text && (
                 <p className="text-xs text-muted-foreground italic line-clamp-2">"{entry.journal_text}"</p>
               )}
-              {analysis?.buddy_message && (
+              {buddyMsg && (
                 <p className="text-xs text-muted-foreground italic border-l-2 border-primary/40 pl-2 mt-1">
-                  <Sparkles className="h-2.5 w-2.5 inline mr-1" />{analysis.buddy_message}
+                  <Sparkles className="h-2.5 w-2.5 inline mr-1" />{buddyMsg}
                 </p>
               )}
             </div>
@@ -315,6 +504,16 @@ function TriageHistoryTab({ history }: { history: StudentTriageHistory[] }) {
   );
 }
 
+/** Record counter beside a tab label; a placeholder keeps the layout stable while data loads. */
+function TabCount({ value, loading }: { value: number; loading: boolean }) {
+  if (loading) return <span className="h-4 w-4 rounded-full bg-muted-foreground/10 animate-pulse" aria-hidden />;
+  return (
+    <span className="rounded-full bg-muted-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-muted-foreground">
+      {value}
+    </span>
+  );
+}
+
 export function StudentActivityModal({
   open,
   onOpenChange,
@@ -327,10 +526,26 @@ export function StudentActivityModal({
   periodDays,
 }: StudentActivityModalProps) {
   const { data, isLoading } = useStudentActivityData(profileId, patientId, institutionId, open);
+  const { data: timeline = [], isLoading: timelineLoading } = useQuery({
+    queryKey: ['student-timeline', institutionId, patientId],
+    enabled: open && !!institutionId && !!patientId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)('get_institution_student_timeline', {
+        _institution_id: institutionId, _patient_id: patientId, _days: 90,
+      });
+      if (error) throw error;
+      return (data ?? []) as TimelineItem[];
+    },
+  });
 
   // Anonymized names are "Aluno #N"; show "AN" like the rest of the portal instead of the "A#" initials.
   const anonNumber = studentName.match(/#(\d+)/)?.[1];
   const initials = anonNumber ? `A${anonNumber}` : studentName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+
+  const diaryCount = data?.moodEntries.length ?? 0;
+  const triageCount = data?.triageHistory.length ?? 0;
+  const practiceCount = timeline.filter(i => i.kind === 'practice').length;
+  const scaleCount = timeline.filter(i => i.kind === 'scale').length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -344,21 +559,33 @@ export function StudentActivityModal({
               <DialogTitle className="text-lg">{studentName}</DialogTitle>
               <div className="flex items-center gap-2 mt-1">
                 <Badge className={`text-xs ${riskColors[riskLevel]}`}>{riskLabels[riskLevel]}</Badge>
-                <span className="text-xs text-muted-foreground">{entryCount} {entryCount === 1 ? 'registro' : 'registros'} nos últimos {periodDays} dias</span>
+                <span className="text-xs text-muted-foreground">Últimos {periodDays} dias</span>
               </div>
             </div>
           </div>
         </DialogHeader>
 
         <Tabs defaultValue="diario" className="flex-1 min-h-0">
-          <TabsList className="w-full justify-start">
+          <TabsList className="w-full h-auto flex-wrap justify-start gap-0.5">
             <TabsTrigger value="diario" className="gap-1.5 text-xs">
               <BookOpen className="h-3.5 w-3.5" />
               Diário Emocional
+              <TabCount value={diaryCount} loading={isLoading} />
+            </TabsTrigger>
+            <TabsTrigger value="escalas" className="gap-1.5 text-xs">
+              <ClipboardList className="h-3.5 w-3.5" />
+              Escalas
+              <TabCount value={scaleCount} loading={timelineLoading} />
+            </TabsTrigger>
+            <TabsTrigger value="praticas" className="gap-1.5 text-xs">
+              <Leaf className="h-3.5 w-3.5" />
+              Práticas
+              <TabCount value={practiceCount} loading={timelineLoading} />
             </TabsTrigger>
             <TabsTrigger value="triagens" className="gap-1.5 text-xs">
               <ClipboardCheck className="h-3.5 w-3.5" />
               Histórico de Triagens
+              <TabCount value={triageCount} loading={isLoading} />
             </TabsTrigger>
           </TabsList>
 
@@ -369,6 +596,12 @@ export function StudentActivityModal({
               <>
                 <TabsContent value="diario" className="mt-0">
                   <EmotionDiaryTab entries={data?.moodEntries || []} topEmotions={data?.topEmotions || []} lastTriageDate={data?.triageHistory?.[0]?.created_at} />
+                </TabsContent>
+                <TabsContent value="escalas" className="mt-0">
+                  {timelineLoading ? <LoadingBar className="py-8" label="Carregando escalas..." /> : <ActivityListTab items={timeline} kind="scale" empty="Nenhuma escala respondida nos últimos 90 dias." />}
+                </TabsContent>
+                <TabsContent value="praticas" className="mt-0">
+                  {timelineLoading ? <LoadingBar className="py-8" label="Carregando práticas..." /> : <ActivityListTab items={timeline} kind="practice" empty="Nenhuma prática nos últimos 90 dias." />}
                 </TabsContent>
                 <TabsContent value="triagens" className="mt-0">
                   <TriageHistoryTab history={data?.triageHistory || []} />
