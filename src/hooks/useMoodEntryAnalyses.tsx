@@ -48,5 +48,5 @@ export const RISK_LEVEL_META: Record<MoodAnalysisRiskLevel, { label: string; bad
   healthy:   { label: 'Estável',   badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-800', emoji: '🟢' },
   attention: { label: 'Atenção',   badgeClass: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-950 dark:text-yellow-200 dark:border-yellow-800',     emoji: '🟡' },
   alert:     { label: 'Alerta',    badgeClass: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-950 dark:text-orange-200 dark:border-orange-800',     emoji: '🟠' },
-  critical:  { label: 'Crítico',   badgeClass: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-950 dark:text-red-200 dark:border-red-800',                       emoji: '🔴' },
+  critical:  { label: 'Em Risco',   badgeClass: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-950 dark:text-red-200 dark:border-red-800',                       emoji: '🔴' },
 };
