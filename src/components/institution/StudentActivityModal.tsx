@@ -10,6 +10,10 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Activity, Brain, Zap, Moon, BookOpen, ClipboardCheck, Heart, AlertTriangle, CheckCircle2, Play, Clock, Sparkles } from 'lucide-react';
 import { useMoodEntryAnalyses, RISK_LEVEL_META } from '@/hooks/useMoodEntryAnalyses';
+import { getEmotionDisplayName } from '@/utils/emotionFormatters';
+
+/** Internal markers on synthetic/demo entries (e.g. `demo_sintetico`) are not meaningful to the team. */
+const isInternalTag = (tag: string) => /^demo[_-]?/i.test(tag.trim());
 
 interface StudentActivityModalProps {
   open: boolean;
@@ -20,6 +24,8 @@ interface StudentActivityModalProps {
   institutionId: string;
   riskLevel: RiskLevel;
   entryCount: number;
+  /** Period the triage `entryCount` was computed over. */
+  periodDays: number;
 }
 
 const riskColors: Record<RiskLevel, string> = {
@@ -31,7 +37,7 @@ const riskColors: Record<RiskLevel, string> = {
 };
 
 const riskLabels: Record<RiskLevel, string> = {
-  critical: 'Crítico',
+  critical: 'Em Risco',
   alert: 'Alerta',
   attention: 'Atenção',
   healthy: 'Saudável',
@@ -58,14 +64,63 @@ const statusConfig: Record<string, { label: string; icon: typeof CheckCircle2; c
   resolved: { label: 'Resolvido', icon: CheckCircle2, color: 'text-green-600' },
 };
 
-function MoodScoreDisplay({ value, label, icon: Icon }: { value: number | null; label: string; icon: typeof Activity }) {
+function MoodScoreDisplay({ value, label, icon: Icon, higherIsWorse }: { value: number | null; label: string; icon: typeof Activity; higherIsWorse?: boolean }) {
   if (value === null) return null;
-  const color = value <= 2 ? 'text-red-500' : value <= 3 ? 'text-yellow-500' : 'text-green-500';
+  const score = higherIsWorse ? 6 - value : value;
+  const color = score <= 2 ? 'text-red-500' : score <= 3 ? 'text-yellow-500' : 'text-green-500';
   return (
     <div className="flex items-center gap-1.5 text-xs">
       <Icon className={`h-3.5 w-3.5 ${color}`} />
       <span className="text-muted-foreground">{label}:</span>
       <span className={`font-semibold ${color}`}>{value.toFixed(1)}</span>
+    </div>
+  );
+}
+
+const moodColor = (v: number) => (v <= 2 ? '#ef4444' : v <= 3 ? '#eab308' : '#22c55e');
+
+/** Mood over the fetched window on a fixed 1–5 scale, so a flat series still reads as "always low/high". */
+function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
+  const points = entries
+    .filter((e) => e.mood_score != null)
+    .map((e) => ({ date: e.date, value: e.mood_score as number }))
+    .reverse();
+  if (points.length < 2) return null;
+
+  const w = 560, h = 96, left = 22, right = 8, top = 8, bottom = 18;
+  const x = (i: number) => left + (i * (w - left - right)) / (points.length - 1);
+  const y = (v: number) => top + ((5 - v) / 4) * (h - top - bottom);
+  const avg = points.reduce((acc, p) => acc + p.value, 0) / points.length;
+  const first = points[0], last = points[points.length - 1];
+
+  return (
+    <div>
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Evolução do humor (30 dias)</p>
+        <p className="text-xs text-muted-foreground">
+          Média <span className="font-semibold tabular-nums" style={{ color: moodColor(avg) }}>{avg.toFixed(1)}</span>
+          {' · '}último <span className="font-semibold tabular-nums" style={{ color: moodColor(last.value) }}>{last.value.toFixed(1)}</span>
+        </p>
+      </div>
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-auto w-full" role="img" aria-label={`Humor de ${first.value.toFixed(1)} para ${last.value.toFixed(1)} em ${points.length} registros; média ${avg.toFixed(1)} numa escala de 1 a 5`}>
+        {[1, 3, 5].map((v) => (
+          <g key={v}>
+            <line x1={left} x2={w - right} y1={y(v)} y2={y(v)} className="stroke-border" strokeDasharray={v === 3 ? '3 4' : undefined} />
+            <text x={left - 6} y={y(v)} dy="0.35em" textAnchor="end" className="fill-muted-foreground text-[10px]">{v}</text>
+          </g>
+        ))}
+        <polyline
+          points={points.map((p, i) => `${x(i)},${y(p.value)}`).join(' ')}
+          fill="none" className="stroke-muted-foreground" strokeOpacity={0.6} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"
+        />
+        {points.map((p, i) => (
+          <circle key={i} cx={x(i)} cy={y(p.value)} r={3.5} fill={moodColor(p.value)} className="stroke-background" strokeWidth={1.5}>
+            <title>{format(new Date(p.date + 'T12:00:00'), "dd 'de' MMM", { locale: ptBR })}: {p.value.toFixed(1)}</title>
+          </circle>
+        ))}
+        <text x={left} y={h - 4} className="fill-muted-foreground text-[10px]">{format(new Date(first.date + 'T12:00:00'), 'dd/MM')}</text>
+        <text x={w - right} y={h - 4} textAnchor="end" className="fill-muted-foreground text-[10px]">{format(new Date(last.date + 'T12:00:00'), 'dd/MM')}</text>
+      </svg>
     </div>
   );
 }
@@ -82,15 +137,6 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
     );
   }
 
-  // Sparkline
-  const moodData = entries.filter(e => e.mood_score != null).reverse().map(e => e.mood_score!);
-  const sparkWidth = 200;
-  const sparkHeight = 40;
-  const sparkPoints = moodData.length >= 2
-    ? moodData.map((v, i) => `${(i / (moodData.length - 1)) * sparkWidth},${sparkHeight - ((v - 1) / 4) * sparkHeight}`).join(' ')
-    : null;
-  const lastMood = moodData.length > 0 ? moodData[moodData.length - 1] : 3;
-  const sparkColor = lastMood <= 2 ? '#ef4444' : lastMood <= 3 ? '#eab308' : '#22c55e';
 
   return (
     <div className="space-y-4">
@@ -100,23 +146,15 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
           <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Sentimentos predominantes</p>
           <div className="flex flex-wrap gap-2">
             {topEmotions.map(e => (
-              <Badge key={e.emotion} variant="secondary" className="text-xs capitalize">
-                {e.emotion} ({e.count})
+              <Badge key={e.emotion} variant="secondary" className="text-xs">
+                {getEmotionDisplayName(e.emotion)} ({e.count})
               </Badge>
             ))}
           </div>
         </div>
       )}
 
-      {/* Mood Sparkline */}
-      {sparkPoints && (
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Evolução do humor (30 dias)</p>
-          <svg width={sparkWidth} height={sparkHeight} className="w-full max-w-[200px]">
-            <polyline points={sparkPoints} fill="none" stroke={sparkColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-      )}
+      <MoodTrendChart entries={entries} />
 
       {/* Before vs After Triage Comparison */}
       {lastTriageDate && entries.length >= 2 && (() => {
@@ -187,13 +225,13 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
               </div>
               <div className="flex flex-wrap gap-3">
                 <MoodScoreDisplay value={entry.mood_score} label="Humor" icon={Activity} />
-                <MoodScoreDisplay value={entry.anxiety_level} label="Ansiedade" icon={Brain} />
+                <MoodScoreDisplay value={entry.anxiety_level} label="Ansiedade" icon={Brain} higherIsWorse />
                 <MoodScoreDisplay value={entry.energy_level} label="Energia" icon={Zap} />
                 <MoodScoreDisplay value={entry.sleep_quality} label="Sono" icon={Moon} />
               </div>
-              {entry.tags && entry.tags.length > 0 && (
+              {entry.tags && entry.tags.some((tag) => !isInternalTag(tag)) && (
                 <div className="flex flex-wrap gap-1">
-                  {entry.tags.map((tag, i) => (
+                  {entry.tags.filter((tag) => !isInternalTag(tag)).map((tag, i) => (
                     <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">{tag}</Badge>
                   ))}
                 </div>
@@ -286,10 +324,13 @@ export function StudentActivityModal({
   institutionId,
   riskLevel,
   entryCount,
+  periodDays,
 }: StudentActivityModalProps) {
   const { data, isLoading } = useStudentActivityData(profileId, patientId, institutionId, open);
 
-  const initials = studentName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+  // Anonymized names are "Aluno #N"; show "AN" like the rest of the portal instead of the "A#" initials.
+  const anonNumber = studentName.match(/#(\d+)/)?.[1];
+  const initials = anonNumber ? `A${anonNumber}` : studentName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -303,7 +344,7 @@ export function StudentActivityModal({
               <DialogTitle className="text-lg">{studentName}</DialogTitle>
               <div className="flex items-center gap-2 mt-1">
                 <Badge className={`text-xs ${riskColors[riskLevel]}`}>{riskLabels[riskLevel]}</Badge>
-                <span className="text-xs text-muted-foreground">{entryCount} registros (14 dias)</span>
+                <span className="text-xs text-muted-foreground">{entryCount} {entryCount === 1 ? 'registro' : 'registros'} nos últimos {periodDays} dias</span>
               </div>
             </div>
           </div>

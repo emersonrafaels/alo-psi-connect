@@ -29,10 +29,11 @@ export default function InstitutionTriage() {
     const next = new URLSearchParams({ view: v });
     if (extra?.risk) next.set('risk', extra.risk);
     if (extra?.tab) next.set('tab', extra.tab);
-    setParams(next);
+    // Filter changes within a view replace the entry, so Back leaves the view instead of stepping through filters.
+    setParams(next, { replace: v === view });
   };
 
-  useEffect(() => { window.scrollTo(0, 0); }, [view, params]);
+  useEffect(() => { window.scrollTo(0, 0); }, [view]);
 
   return (
     <div className="min-h-screen flex w-full bg-muted/30">
