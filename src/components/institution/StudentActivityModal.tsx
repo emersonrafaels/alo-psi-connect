@@ -11,6 +11,39 @@ import { ptBR } from 'date-fns/locale';
 import { Activity, Brain, Zap, Moon, BookOpen, ClipboardCheck, Heart, AlertTriangle, CheckCircle2, Play, Clock, Sparkles } from 'lucide-react';
 import { useMoodEntryAnalyses, RISK_LEVEL_META } from '@/hooks/useMoodEntryAnalyses';
 import { getEmotionDisplayName } from '@/utils/emotionFormatters';
+import { reconcileRisk, EntryRisk } from '@/features/triage/entryRisk';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Leaf, ClipboardList } from 'lucide-react';
+
+interface TimelineItem { id: string; kind: string; occurred_at: string; title: string; detail: string | null; level: string | null }
+const LEVEL_LABEL: Record<string, string> = { healthy: 'Estável', attention: 'Atenção', alert: 'Alerta', critical: 'Em Risco' };
+
+function ActivityListTab({ items, kind, empty }: { items: TimelineItem[]; kind: 'practice' | 'scale'; empty: string }) {
+  const list = items.filter((i) => i.kind === kind);
+  const Icon = kind === 'practice' ? Leaf : ClipboardList;
+  if (list.length === 0) {
+    return <div className="py-8 text-center text-muted-foreground text-sm"><Icon className="h-8 w-8 mx-auto mb-2 opacity-40" />{empty}</div>;
+  }
+  return (
+    <div className="space-y-2">
+      <p className="text-[11px] text-muted-foreground">Últimos 90 dias · {list.length} {list.length === 1 ? 'registro' : 'registros'}. Apenas datas e indicadores.</p>
+      {list.map((i) => (
+        <div key={i.id} className="p-3 rounded-lg border bg-muted/20 flex items-start justify-between gap-2">
+          <div className="flex gap-2 min-w-0">
+            <Icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-medium truncate">{i.title}</p>
+              {i.detail && <p className="text-[11px] text-muted-foreground">{i.detail}</p>}
+              <p className="text-[11px] text-muted-foreground">{format(new Date(i.occurred_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+            </div>
+          </div>
+          {i.level && <Badge variant="outline" className="text-[10px] shrink-0">{LEVEL_LABEL[i.level] ?? i.level}</Badge>}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /** Internal markers on synthetic/demo entries (e.g. `demo_sintetico`) are not meaningful to the team. */
 const isInternalTag = (tag: string) => /^demo[_-]?/i.test(tag.trim());
@@ -40,7 +73,7 @@ const riskLabels: Record<RiskLevel, string> = {
   critical: 'Em Risco',
   alert: 'Alerta',
   attention: 'Atenção',
-  healthy: 'Saudável',
+  healthy: 'Estável',
   no_data: 'Sem Dados',
 };
 
@@ -143,11 +176,14 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
       {/* Top Emotions */}
       {topEmotions.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Sentimentos predominantes</p>
+          <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Sentimentos predominantes</p>
+          <p className="text-[11px] text-muted-foreground mb-2">
+            Média das notas que o aluno deu a cada sentimento nos últimos 30 dias (1 = muito baixo, 5 = muito alto) e em quantos registros ele apareceu.
+          </p>
           <div className="flex flex-wrap gap-2">
             {topEmotions.map(e => (
               <Badge key={e.emotion} variant="secondary" className="text-xs">
-                {getEmotionDisplayName(e.emotion)} ({e.count})
+                {getEmotionDisplayName(e.emotion)} · média {e.average.toFixed(1).replace('.', ',')} · {e.count} {e.count === 1 ? 'registro' : 'registros'}
               </Badge>
             ))}
           </div>
@@ -211,7 +247,9 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
         <div className="space-y-2">
           {entries.slice(0, 14).map(entry => {
             const analysis = analysesMap?.get(entry.id);
-            const meta = analysis?.risk_level ? RISK_LEVEL_META[analysis.risk_level] : null;
+            const level = reconcileRisk(analysis?.risk_level as EntryRisk | undefined, entry.mood_score, entry.anxiety_level);
+            const meta = analysis && level ? RISK_LEVEL_META[level] : null;
+            const buddyMsg = analysis?.buddy_message && !/^\s*\[DEMO-/i.test(analysis.buddy_message) ? analysis.buddy_message : null;
             return (
             <div key={entry.id} className="p-3 rounded-lg border bg-muted/20 space-y-1.5">
               <div className="flex items-center justify-between gap-2">
@@ -239,9 +277,9 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
               {entry.journal_text && (
                 <p className="text-xs text-muted-foreground italic line-clamp-2">"{entry.journal_text}"</p>
               )}
-              {analysis?.buddy_message && (
+              {buddyMsg && (
                 <p className="text-xs text-muted-foreground italic border-l-2 border-primary/40 pl-2 mt-1">
-                  <Sparkles className="h-2.5 w-2.5 inline mr-1" />{analysis.buddy_message}
+                  <Sparkles className="h-2.5 w-2.5 inline mr-1" />{buddyMsg}
                 </p>
               )}
             </div>
@@ -327,6 +365,17 @@ export function StudentActivityModal({
   periodDays,
 }: StudentActivityModalProps) {
   const { data, isLoading } = useStudentActivityData(profileId, patientId, institutionId, open);
+  const { data: timeline = [], isLoading: timelineLoading } = useQuery({
+    queryKey: ['student-timeline', institutionId, patientId],
+    enabled: open && !!institutionId && !!patientId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)('get_institution_student_timeline', {
+        _institution_id: institutionId, _patient_id: patientId, _days: 90,
+      });
+      if (error) throw error;
+      return (data ?? []) as TimelineItem[];
+    },
+  });
 
   // Anonymized names are "Aluno #N"; show "AN" like the rest of the portal instead of the "A#" initials.
   const anonNumber = studentName.match(/#(\d+)/)?.[1];
@@ -360,6 +409,14 @@ export function StudentActivityModal({
               <ClipboardCheck className="h-3.5 w-3.5" />
               Histórico de Triagens
             </TabsTrigger>
+            <TabsTrigger value="praticas" className="gap-1.5 text-xs">
+              <Leaf className="h-3.5 w-3.5" />
+              Práticas
+            </TabsTrigger>
+            <TabsTrigger value="escalas" className="gap-1.5 text-xs">
+              <ClipboardList className="h-3.5 w-3.5" />
+              Escalas
+            </TabsTrigger>
           </TabsList>
 
           <div className="mt-3 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 180px)' }}>
@@ -372,6 +429,12 @@ export function StudentActivityModal({
                 </TabsContent>
                 <TabsContent value="triagens" className="mt-0">
                   <TriageHistoryTab history={data?.triageHistory || []} />
+                </TabsContent>
+                <TabsContent value="praticas" className="mt-0">
+                  {timelineLoading ? <LoadingBar className="py-8" label="Carregando práticas..." /> : <ActivityListTab items={timeline} kind="practice" empty="Nenhuma prática nos últimos 90 dias." />}
+                </TabsContent>
+                <TabsContent value="escalas" className="mt-0">
+                  {timelineLoading ? <LoadingBar className="py-8" label="Carregando escalas..." /> : <ActivityListTab items={timeline} kind="scale" empty="Nenhuma escala respondida nos últimos 90 dias." />}
                 </TabsContent>
               </>
             )}

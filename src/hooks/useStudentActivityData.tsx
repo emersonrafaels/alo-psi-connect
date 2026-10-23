@@ -16,7 +16,10 @@ export interface MoodEntry {
 
 export interface TopEmotion {
   emotion: string;
+  /** Number of entries where this emotion was rated. */
   count: number;
+  /** Average 1–5 score across those entries. */
+  average: number;
 }
 
 export interface StudentTriageHistory {
@@ -99,21 +102,22 @@ export function useStudentActivityData(
         emotion_values: e.emotion_values as Record<string, number> | null,
       }));
 
-      // Calculate top emotions from aggregated emotion_values
-      const emotionCounts = new Map<string, number>();
+      // Average 1–5 score per emotion across entries, plus how many entries rated it
+      const emotionSums = new Map<string, { sum: number; n: number }>();
       moodEntries.forEach(entry => {
         if (entry.emotion_values && typeof entry.emotion_values === 'object') {
           Object.entries(entry.emotion_values).forEach(([emotion, value]) => {
             if (typeof value === 'number' && value > 0) {
-              emotionCounts.set(emotion, (emotionCounts.get(emotion) || 0) + value);
+              const cur = emotionSums.get(emotion) || { sum: 0, n: 0 };
+              emotionSums.set(emotion, { sum: cur.sum + value, n: cur.n + 1 });
             }
           });
         }
       });
-      const topEmotions: TopEmotion[] = Array.from(emotionCounts.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([emotion, count]) => ({ emotion, count }));
+      const topEmotions: TopEmotion[] = Array.from(emotionSums.entries())
+        .map(([emotion, { sum, n }]) => ({ emotion, count: n, average: sum / n }))
+        .sort((a, b) => b.average - a.average)
+        .slice(0, 5);
 
       // Process triage history
       const triageData = (triageResult.data || []) as any[];
