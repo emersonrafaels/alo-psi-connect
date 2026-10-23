@@ -220,7 +220,7 @@ export function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
     const y = (v: number) => top + ((5 - v) / 4) * (h - top - bottom);
     const labelPositions = new Map<number, number[]>();
     return (
-      <div className="overflow-x-auto rounded-lg border-border" tabIndex={expanded ? 0 : undefined} aria-label={expanded ? 'Graphique des sentiments' : undefined}>
+      <div className="overflow-x-auto rounded-lg border-border" tabIndex={expanded ? 0 : undefined} aria-label={expanded ? 'Gráfico ampliado dos sentimentos' : undefined}>
       <svg viewBox={`0 0 ${w} ${h}`} style={expanded ? { minWidth: w } : undefined} className="h-auto w-full" role="img" aria-label={`Evolução de ${active.map((s) => s.label).join(', ')} nos últimos 30 dias, numa escala de 1 a 5`}>
         {(expanded ? [1, 2, 3, 4, 5] : [1, 3, 5]).map((v) => (
           <g key={v}>
