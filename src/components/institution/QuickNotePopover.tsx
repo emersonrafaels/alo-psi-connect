@@ -4,9 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Check, FileText, Pencil, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import { applyTemplate, getTemplatesForRisk, riskLevelLabel, type TriageNoteTemplate } from '@/lib/triageNoteTemplates';
 
+export interface QuickNoteHistoryItem {
+  id: string;
+  note: string;
+  created_at: string;
+  author_name?: string;
+  risk_level: string | null;
+}
+
 interface QuickNotePopoverProps {
+  /** Previous notes for this student, newest first. */
+  history?: QuickNoteHistoryItem[];
   onSave: (note: string) => Promise<void>;
   riskLevel?: string | null;
   /** Anonymized label shown in the header, e.g. "Aluno #52". */
@@ -18,7 +29,7 @@ interface QuickNotePopoverProps {
 /** A placeholder to replace ("(canal e horário)") or a field left open at the end of a line ("Combinado com o aluno: "). */
 const BLANK = /\([^)\n]+\)|[:?] $/m;
 
-export function QuickNotePopover({ onSave, riskLevel, subjectName, reasons = [] }: QuickNotePopoverProps) {
+export function QuickNotePopover({ onSave, history = [], riskLevel, subjectName, reasons = [] }: QuickNotePopoverProps) {
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
@@ -31,7 +42,10 @@ export function QuickNotePopover({ onSave, riskLevel, subjectName, reasons = [] 
     try {
       await onSave(note.trim());
       setNote('');
-      setOpen(false);
+      toast.success('Nota salva no histórico');
+    } catch (err) {
+      console.error('Erro ao salvar nota', err);
+      toast.error('Não foi possível salvar a nota. Tente novamente.');
     } finally {
       setSaving(false);
     }
@@ -133,12 +147,34 @@ export function QuickNotePopover({ onSave, riskLevel, subjectName, reasons = [] 
             className="min-h-[120px] text-sm leading-relaxed"
             aria-label="Nota"
           />
+
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Histórico de notas ({history.length})
+            </p>
+            {history.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Nenhuma nota registrada ainda.</p>
+            ) : (
+              <ul className="space-y-2">
+                {history.map((h) => (
+                  <li key={h.id} className="rounded-md border bg-muted/40 px-2.5 py-2">
+                    <p className="mb-1 text-[11px] text-muted-foreground">
+                      {new Date(h.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                      {h.author_name ? ` · ${h.author_name}` : ''}
+                      {h.risk_level ? ` · ${riskLevelLabel(h.risk_level)}` : ''}
+                    </p>
+                    <p className="whitespace-pre-wrap text-xs leading-relaxed">{h.note}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         <div className="flex shrink-0 items-center justify-between gap-2 border-t px-4 py-3">
           <span className="text-[11px] text-muted-foreground">Ctrl+Enter para salvar</span>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Fechar</Button>
             <Button size="sm" onClick={handleSave} disabled={saving || !note.trim()}>
               {saving ? 'Salvando…' : 'Salvar nota'}
             </Button>

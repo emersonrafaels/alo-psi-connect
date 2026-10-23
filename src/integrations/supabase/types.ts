@@ -4422,6 +4422,39 @@ export type Database = {
           },
         ]
       }
+      student_triage_notes: {
+        Row: {
+          author_id: string
+          created_at: string
+          id: string
+          institution_id: string
+          note: string
+          patient_id: string
+          risk_level: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          id?: string
+          institution_id: string
+          note: string
+          patient_id: string
+          risk_level?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          id?: string
+          institution_id?: string
+          note?: string
+          patient_id?: string
+          risk_level?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       support_catalog: {
         Row: {
           access_type: string

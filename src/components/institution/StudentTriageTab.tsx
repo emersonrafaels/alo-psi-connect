@@ -934,6 +934,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
               onTriage={(s) => { setSelectedStudent(s); setDialogOpen(true); }}
               onOpenHistory={(s) => handleOpenActivity(s)}
               noteCountOf={(id) => noteCounts.get(id) ?? 0}
+              notesOf={(id) => triageNotes.filter((n) => n.patient_id === id)}
               onOpenNotes={(s) => handleOpenActivity(s, 'notas')}
               onQuickNote={async (s, note) => { await addQuickNote.mutateAsync({ patientId: s.patientId, note, riskLevel: s.riskLevel }); }}
               footer={pendingStudents.length > 10 ? renderPager(pendingStudents.length) : null}
