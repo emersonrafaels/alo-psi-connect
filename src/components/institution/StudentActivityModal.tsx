@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useStudentActivityData, MoodEntry, TopEmotion, StudentTriageHistory } from '@/hooks/useStudentActivityData';
-import { RiskLevel } from '@/hooks/useStudentTriage';
+import { RiskLevel, useTriageNotes, type TriageNote } from '@/hooks/useStudentTriage';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Activity, Brain, Zap, Moon, BookOpen, ClipboardCheck, Heart, AlertTriangle, CheckCircle2, Play, Clock, Sparkles, Maximize2 } from 'lucide-react';
@@ -19,7 +19,7 @@ import { buildTrendSeries } from '@/features/triage/trendSeries';
 import { sentimentBand, SENTIMENT_BAND_STYLES, SENTIMENT_BAND_DOTS, SENTIMENT_BAND_LEGEND, SENTIMENT_BAND_HINT, SentimentBand } from '@/features/triage/sentimentBands';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Leaf, ClipboardList } from 'lucide-react';
+import { Leaf, ClipboardList, MessageSquare } from 'lucide-react';
 
 interface TimelineItem { id: string; kind: string; occurred_at: string; title: string; detail: string | null; level: string | null }
 const LEVEL_LABEL: Record<string, string> = { healthy: 'Estável', attention: 'Atenção', alert: 'Alerta', critical: 'Em Risco' };
@@ -64,7 +64,10 @@ interface StudentActivityModalProps {
   entryCount: number;
   /** Period the triage `entryCount` was computed over. */
   periodDays: number;
+  initialTab?: ActivityTab;
 }
+
+export type ActivityTab = 'diario' | 'escalas' | 'praticas' | 'notas' | 'triagens';
 
 const riskColors: Record<RiskLevel, string> = {
   critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
@@ -504,6 +507,35 @@ function TriageHistoryTab({ history }: { history: StudentTriageHistory[] }) {
   );
 }
 
+function TeamNotesTab({ notes }: { notes: TriageNote[] }) {
+  if (notes.length === 0) {
+    return (
+      <div className="py-8 text-center text-muted-foreground text-sm">
+        <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-40" />
+        Nenhuma nota da equipe para este aluno.
+        <p className="mt-1 text-xs">Use “Nota rápida” na fila para registrar observações internas.</p>
+      </div>
+    );
+  }
+  return (
+    <ul className="space-y-2">
+      {notes.map((n) => (
+        <li key={n.id} className="rounded-lg border bg-muted/20 p-3 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{n.author_name ?? 'Equipe'}</span>
+            <span>·</span>
+            <span>{format(new Date(n.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+            {n.risk_level && riskLabels[n.risk_level as RiskLevel] && (
+              <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-normal">Nível na época: {riskLabels[n.risk_level as RiskLevel]}</Badge>
+            )}
+          </div>
+          <p className="whitespace-pre-line text-sm leading-relaxed">{n.note}</p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** Record counter beside a tab label; a placeholder keeps the layout stable while data loads. */
 function TabCount({ value, loading }: { value: number; loading: boolean }) {
   if (loading) return <span className="h-4 w-4 rounded-full bg-muted-foreground/10 animate-pulse" aria-hidden />;
@@ -524,8 +556,11 @@ export function StudentActivityModal({
   riskLevel,
   entryCount,
   periodDays,
+  initialTab = 'diario',
 }: StudentActivityModalProps) {
   const { data, isLoading } = useStudentActivityData(profileId, patientId, institutionId, open);
+  const { data: allNotes = [], isLoading: notesLoading } = useTriageNotes(institutionId);
+  const notes = allNotes.filter((n) => n.patient_id === patientId);
   const { data: timeline = [], isLoading: timelineLoading } = useQuery({
     queryKey: ['student-timeline', institutionId, patientId],
     enabled: open && !!institutionId && !!patientId,
@@ -565,7 +600,7 @@ export function StudentActivityModal({
           </div>
         </DialogHeader>
 
-        <Tabs defaultValue="diario" className="flex-1 min-h-0">
+        <Tabs defaultValue={initialTab} className="flex-1 min-h-0">
           <TabsList className="w-full h-auto flex-wrap justify-start gap-0.5">
             <TabsTrigger value="diario" className="gap-1.5 text-xs">
               <BookOpen className="h-3.5 w-3.5" />
@@ -581,6 +616,11 @@ export function StudentActivityModal({
               <Leaf className="h-3.5 w-3.5" />
               Práticas
               <TabCount value={practiceCount} loading={timelineLoading} />
+            </TabsTrigger>
+            <TabsTrigger value="notas" className="gap-1.5 text-xs">
+              <MessageSquare className="h-3.5 w-3.5" />
+              Notas da equipe
+              <TabCount value={notes.length} loading={notesLoading} />
             </TabsTrigger>
             <TabsTrigger value="triagens" className="gap-1.5 text-xs">
               <ClipboardCheck className="h-3.5 w-3.5" />
@@ -602,6 +642,9 @@ export function StudentActivityModal({
                 </TabsContent>
                 <TabsContent value="praticas" className="mt-0">
                   {timelineLoading ? <LoadingBar className="py-8" label="Carregando práticas..." /> : <ActivityListTab items={timeline} kind="practice" empty="Nenhuma prática nos últimos 90 dias." />}
+                </TabsContent>
+                <TabsContent value="notas" className="mt-0">
+                  <TeamNotesTab notes={notes} />
                 </TabsContent>
                 <TabsContent value="triagens" className="mt-0">
                   <TriageHistoryTab history={data?.triageHistory || []} />

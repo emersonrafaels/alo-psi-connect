@@ -13,14 +13,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, TrendingUp, Minus, ChevronDown, ClipboardCheck, Activity, Brain, Zap, Moon, Info, Search, Download, Calendar, Clock, CheckCircle2, RotateCcw, Play, ChevronRight, Maximize2, BookOpen, Users } from 'lucide-react';
 import { subDays } from 'date-fns';
-import { useStudentTriageData, useTriageRecords, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
+import { useStudentTriageData, useTriageRecords, useTriageNotes, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
 import TriageResolutionDialog, { RESOLUTION_TYPE_LABEL } from './TriageResolutionDialog';
 import TriageReopenDialog from './TriageReopenDialog';
-import { StudentActivityModal } from './StudentActivityModal';
+import { StudentActivityModal, type ActivityTab } from './StudentActivityModal';
 import { BatchTriageDialog } from './BatchTriageDialog';
 import { TriageMetricsDashboard } from './TriageMetricsDashboard';
-import { QuickNotePopover } from './QuickNotePopover';
 import { DetailModal } from './DetailModal';
 import { useInstitutionNotes } from '@/hooks/useInstitutionNotes';
 import { anonymizeStudentName, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
@@ -148,6 +147,12 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
   );
   const { notes: institutionNotes } = useInstitutionNotes(institutionId);
   const { data: triageRecords = [] } = useTriageRecords(institutionId);
+  const { data: triageNotes = [] } = useTriageNotes(institutionId);
+  const noteCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    triageNotes.forEach((n) => m.set(n.patient_id, (m.get(n.patient_id) ?? 0) + 1));
+    return m;
+  }, [triageNotes]);
   const { createTriage, updateTriageStatus, batchCreateTriage, addQuickNote } = useTriageActions(institutionId);
 
   const [riskFilter, setRiskFilter] = useState<string>('all');
@@ -180,6 +185,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
   );
   const [activityModalStudent, setActivityModalStudent] = useState<StudentRiskData | null>(null);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [activityModalTab, setActivityModalTab] = useState<ActivityTab>('diario');
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
   const [historyPeriod, setHistoryPeriod] = useState<string>('all');
@@ -386,8 +392,9 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
     };
   }, [students]);
 
-  const handleOpenActivity = (student: StudentRiskData) => {
+  const handleOpenActivity = (student: StudentRiskData, tab: ActivityTab = 'diario') => {
     setActivityModalStudent(student);
+    setActivityModalTab(tab);
     setActivityModalOpen(true);
   };
 
@@ -925,7 +932,9 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
               onClearSelection={() => setSelectedStudentIds(new Set())}
               onBatchTriage={() => setBatchDialogOpen(true)}
               onTriage={(s) => { setSelectedStudent(s); setDialogOpen(true); }}
-              onOpenHistory={handleOpenActivity}
+              onOpenHistory={(s) => handleOpenActivity(s)}
+              noteCountOf={(id) => noteCounts.get(id) ?? 0}
+              onOpenNotes={(s) => handleOpenActivity(s, 'notas')}
               onQuickNote={async (s, note) => { await addQuickNote.mutateAsync({ patientId: s.patientId, note, riskLevel: s.riskLevel }); }}
               footer={pendingStudents.length > 10 ? renderPager(pendingStudents.length) : null}
             />
@@ -1160,6 +1169,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
           onOpenChange={setDialogOpen}
           student={selectedStudent ? { ...selectedStudent, studentName: patientNameMap.get(selectedStudent.patientId) ?? 'Aluno' } : null}
           studentHistory={selectedStudentHistory}
+          periodDays={analysisPeriod}
           onSubmit={handleTriage} />
 
         <BatchTriageDialog
@@ -1181,7 +1191,8 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
           institutionId={institutionId}
           riskLevel={activityModalStudent.riskLevel}
           entryCount={activityModalStudent.entryCount}
-          periodDays={analysisPeriod} />
+          periodDays={analysisPeriod}
+          initialTab={activityModalTab} />
 
         }
 
