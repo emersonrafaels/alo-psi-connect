@@ -355,6 +355,43 @@ export function useTriageRecords(institutionId: string | null) {
   });
 }
 
+export interface TriageNote {
+  id: string;
+  patient_id: string;
+  author_id: string;
+  author_name?: string;
+  note: string;
+  risk_level: string | null;
+  created_at: string;
+}
+
+/** Internal team annotations for the institution, newest first. */
+export function useTriageNotes(institutionId: string | null) {
+  return useQuery({
+    queryKey: ['triage-notes', institutionId],
+    queryFn: async () => {
+      if (!institutionId) return [];
+      const data = await fetchAllPaged<any>((from, to) => supabase
+        .from('student_triage_notes' as any)
+        .select('id, patient_id, author_id, note, risk_level, created_at')
+        .eq('institution_id', institutionId)
+        .order('created_at', { ascending: false })
+        .order('id')
+        .range(from, to) as any);
+
+      const notes = (data || []) as TriageNote[];
+      const authorIds = [...new Set(notes.map((n) => n.author_id))];
+      if (authorIds.length > 0) {
+        const { data: profiles } = await supabase.from('profiles').select('user_id, nome').in('user_id', authorIds);
+        const nameMap = new Map((profiles || []).map((p: any) => [p.user_id, p.nome]));
+        notes.forEach((n) => { n.author_name = nameMap.get(n.author_id) || undefined; });
+      }
+      return notes;
+    },
+    enabled: !!institutionId,
+  });
+}
+
 export function useTriageActions(institutionId: string | null) {
   const queryClient = useQueryClient();
 
@@ -484,28 +521,25 @@ export function useTriageActions(institutionId: string | null) {
     },
   });
 
+  // Quick notes are internal annotations: stored apart from student_triage so the student stays in the queue.
   const addQuickNote = useMutation({
     mutationFn: async (params: { patientId: string; note: string; riskLevel?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !institutionId) throw new Error('Not authenticated');
 
       const { error } = await supabase
-        .from('student_triage' as any)
+        .from('student_triage_notes' as any)
         .insert({
           patient_id: params.patientId,
           institution_id: institutionId,
-          triaged_by: user.id,
-          status: 'triaged',
-          risk_level: params.riskLevel || 'attention',
-          priority: 'low',
-          recommended_action: 'monitor',
-          notes: params.note,
+          author_id: user.id,
+          note: params.note,
+          risk_level: params.riskLevel ?? null,
         } as any);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['student-triage-data', institutionId] });
-      queryClient.invalidateQueries({ queryKey: ['triage-records', institutionId] });
+      queryClient.invalidateQueries({ queryKey: ['triage-notes', institutionId] });
     },
   });
 

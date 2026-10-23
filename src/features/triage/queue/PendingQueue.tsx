@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Activity, AlertTriangle, BookOpen, Brain, CheckCircle2, ChevronDown, History, Moon, Search, SearchX, X, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, BookOpen, Brain, CheckCircle2, ChevronDown, History, MessageSquare, Moon, Search, SearchX, X, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -80,6 +80,9 @@ interface PendingQueueProps {
   onTriage: (student: StudentRiskData) => void;
   onOpenHistory: (student: StudentRiskData) => void;
   onQuickNote: (student: StudentRiskData, note: string) => Promise<void>;
+  /** Internal team notes per student; they never move the student out of the queue. */
+  noteCountOf: (patientId: string) => number;
+  onOpenNotes: (student: StudentRiskData) => void;
   footer?: ReactNode;
 }
 
@@ -209,6 +212,8 @@ export function PendingQueue(props: PendingQueueProps) {
                 onTriage={() => props.onTriage(student)}
                 onOpenHistory={() => props.onOpenHistory(student)}
                 onQuickNote={(note) => props.onQuickNote(student, note)}
+                noteCount={props.noteCountOf(student.patientId)}
+                onOpenNotes={() => props.onOpenNotes(student)}
               />
             ))}
           </ul>
@@ -264,9 +269,11 @@ interface PendingRowProps {
   onTriage: () => void;
   onOpenHistory: () => void;
   onQuickNote: (note: string) => Promise<void>;
+  noteCount: number;
+  onOpenNotes: () => void;
 }
 
-function PendingRow({ student, name, periodDays, classAverages, trendMetric, selected, onToggleSelect, onTriage, onOpenHistory, onQuickNote }: PendingRowProps) {
+function PendingRow({ student, name, periodDays, classAverages, trendMetric, selected, onToggleSelect, onTriage, onOpenHistory, onQuickNote, noteCount, onOpenNotes }: PendingRowProps) {
   const meta = RISK_META[student.riskLevel];
   const reasons = riskReasons(student);
   const driverKeys = new Set(riskDrivers(student).filter((d) => d.band !== 'attention').map((d) => d.key));
@@ -298,7 +305,15 @@ function PendingRow({ student, name, periodDays, classAverages, trendMetric, sel
           )}
         </div>
         {reasons.length > 0 && <p className="text-xs text-foreground/80">{reasons.join(' · ')}</p>}
-        <DiaryEngagement entries={student.entryCount} periodDays={periodDays} />
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <DiaryEngagement entries={student.entryCount} periodDays={periodDays} />
+          {noteCount > 0 && (
+            <button type="button" onClick={onOpenNotes} className="inline-flex items-center gap-1 rounded-sm text-[11px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <MessageSquare className="h-3 w-3" />
+              {noteCount} {noteCount === 1 ? 'nota da equipe' : 'notas da equipe'}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Actions */}
@@ -311,7 +326,7 @@ function PendingRow({ student, name, periodDays, classAverages, trendMetric, sel
           </TooltipTrigger>
           <TooltipContent className="text-xs">Ver histórico</TooltipContent>
         </Tooltip>
-        <QuickNotePopover riskLevel={student.riskLevel} onSave={onQuickNote} />
+        <QuickNotePopover riskLevel={student.riskLevel} subjectName={name} reasons={reasons} onSave={onQuickNote} />
         <Button size="sm" className="h-8 px-4" onClick={onTriage}>Triar</Button>
       </div>
 
