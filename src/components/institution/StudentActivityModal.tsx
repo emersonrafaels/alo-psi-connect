@@ -164,8 +164,19 @@ function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
             <title>{format(new Date(p.date + 'T12:00:00'), "dd 'de' MMM", { locale: ptBR })}: {p.value.toFixed(1)}</title>
           </circle>
         ))}
-        <text x={left} y={h - 4} className="fill-muted-foreground text-[10px]">{format(new Date(first.date + 'T12:00:00'), 'dd/MM')}</text>
-        <text x={w - right} y={h - 4} textAnchor="end" className="fill-muted-foreground text-[10px]">{format(new Date(last.date + 'T12:00:00'), 'dd/MM')}</text>
+        {tickIndexes.map((i) => (
+          <g key={i}>
+            <line x1={x(i)} x2={x(i)} y1={h - bottom} y2={h - bottom + 3} className="stroke-border" />
+            <text
+              x={x(i)}
+              y={h - 4}
+              textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}
+              className="fill-muted-foreground text-[10px]"
+            >
+              {format(new Date(points[i].date + 'T12:00:00'), 'dd/MM')}
+            </text>
+          </g>
+        ))}
       </svg>
     </div>
   );
