@@ -4,12 +4,14 @@ import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loadin
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useStudentActivityData, MoodEntry, TopEmotion, StudentTriageHistory } from '@/hooks/useStudentActivityData';
 import { RiskLevel } from '@/hooks/useStudentTriage';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Activity, Brain, Zap, Moon, BookOpen, ClipboardCheck, Heart, AlertTriangle, CheckCircle2, Play, Clock, Sparkles } from 'lucide-react';
+import { Activity, Brain, Zap, Moon, BookOpen, ClipboardCheck, Heart, AlertTriangle, CheckCircle2, Play, Clock, Sparkles, Maximize2 } from 'lucide-react';
 import { useMoodEntryAnalyses, RISK_LEVEL_META } from '@/hooks/useMoodEntryAnalyses';
 import { getEmotionDisplayName } from '@/utils/emotionFormatters';
 import { reconcileRisk, EntryRisk } from '@/features/triage/entryRisk';
@@ -114,7 +116,7 @@ function MoodScoreDisplay({ value, label, icon: Icon, higherIsWorse }: { value: 
 /** Fixed 1–5 scale trend; the reader picks which sentiments to plot, one or several at once. */
 type TrendSeries = { key: string; label: string; getValue: (e: MoodEntry) => number | null };
 
-function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
+export function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
   const seriesOptions: TrendSeries[] = [
     { key: 'mood_score', label: 'Humor', getValue: (e) => e.mood_score },
     { key: 'anxiety_level', label: 'Ansiedade', getValue: (e) => e.anxiety_level },
@@ -130,6 +132,7 @@ function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
   );
 
   const [selected, setSelected] = useState<string[]>(['mood_score']);
+  const [maximized, setMaximized] = useState(false);
   // At least one sentiment stays on the chart: the last active one cannot be turned off.
   const toggle = (key: string) =>
     setSelected((prev) => (prev.includes(key) ? (prev.length > 1 ? prev.filter((k) => k !== key) : prev) : [...prev, key]));
@@ -139,9 +142,6 @@ function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
 
   const dates = entries.map((e) => e.date).reverse(); // ascending
   const n = dates.length;
-  const w = 560, h = 104, left = 22, right = 8, top = 8, bottom = 18;
-  const x = (i: number) => left + (i * (w - left - right)) / (n - 1);
-  const y = (v: number) => top + ((5 - v) / 4) * (h - top - bottom);
   const colorOf = (key: string) => `hsl(var(--chart-${(seriesOptions.findIndex((s) => s.key === key) % 5) + 1}))`;
 
   // One line per selected sentiment, plotted on the shared ascending date axis.
@@ -170,32 +170,31 @@ function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
     }
   }
 
-  return (
-    <div>
-      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Evolução dos sentimentos (30 dias)</p>
+  const renderControls = () => (
+    <>
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           {seriesData.filter((s) => s.avg != null).map((s) => (
             <p key={s.key} className="text-xs text-muted-foreground">
-              {s.label}{' '}
+              {s.label} · média{' '}
               <span className="font-semibold tabular-nums" style={{ color: colorOf(s.key) }}>{s.avg?.toFixed(1)}</span>
               {' · '}último{' '}
               <span className="font-semibold tabular-nums" style={{ color: colorOf(s.key) }}>{s.last?.toFixed(1)}</span>
             </p>
           ))}
         </div>
-      </div>
       <div className="mb-2 flex flex-wrap gap-1.5">
         {seriesOptions.map((s) => {
           const on = selected.includes(s.key);
           return (
-            <button
+            <Button
               key={s.key}
               type="button"
               onClick={() => toggle(s.key)}
               aria-pressed={on}
+              variant="outline"
+              size="sm"
               title={on ? 'Ocultar do gráfico' : 'Mostrar no gráfico'}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors ${
+              className={`inline-flex h-auto items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
                 on ? 'border-transparent font-medium' : 'border-border text-muted-foreground hover:bg-muted/60'
               }`}
               style={on ? { backgroundColor: `hsl(var(--chart-${(seriesOptions.findIndex((o) => o.key === s.key) % 5) + 1}) / 0.15)` } : undefined}
@@ -205,12 +204,25 @@ function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
                 style={{ backgroundColor: colorOf(s.key), opacity: on ? 1 : 0.4 }}
               />
               {s.label}
-            </button>
+            </Button>
           );
         })}
       </div>
-      <svg viewBox={`0 0 ${w} ${h}`} className="h-auto w-full" role="img" aria-label={`Evolução de ${active.map((s) => s.label).join(', ')} nos últimos 30 dias, numa escala de 1 a 5`}>
-        {[1, 3, 5].map((v) => (
+    </>
+  );
+
+  const renderChart = (expanded: boolean) => {
+    const w = expanded ? Math.max(900, n * 64) : 560;
+    const top = expanded ? 30 + active.length * 22 : 8;
+    const h = expanded ? 380 + top : 104;
+    const left = expanded ? 48 : 22, right = expanded ? 32 : 8, bottom = expanded ? 44 : 18;
+    const x = (i: number) => left + (i * (w - left - right)) / (n - 1);
+    const y = (v: number) => top + ((5 - v) / 4) * (h - top - bottom);
+    const labelPositions = new Map<number, number[]>();
+    return (
+      <div className="overflow-x-auto rounded-lg border-border" tabIndex={expanded ? 0 : undefined} aria-label={expanded ? 'Gráfico ampliado dos sentimentos' : undefined}>
+      <svg viewBox={`0 0 ${w} ${h}`} style={expanded ? { minWidth: w } : undefined} className="h-auto w-full" role="img" aria-label={`Evolução de ${active.map((s) => s.label).join(', ')} nos últimos 30 dias, numa escala de 1 a 5`}>
+        {(expanded ? [1, 2, 3, 4, 5] : [1, 3, 5]).map((v) => (
           <g key={v}>
             <line x1={left} x2={w - right} y1={y(v)} y2={y(v)} className="stroke-border" strokeDasharray={v === 3 ? '3 4' : undefined} />
             <text x={left - 6} y={y(v)} dy="0.35em" textAnchor="end" className="fill-muted-foreground text-[10px]">{v}</text>
@@ -225,25 +237,70 @@ function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
         ))}
         {seriesData.map((s) =>
           s.pts.map((p) => (
-            <circle key={`${s.key}-${p.i}`} cx={x(p.i)} cy={y(p.v)} r={3} fill={colorOf(s.key)} className="stroke-background" strokeWidth={1.5}>
+            <circle key={`${s.key}-${p.i}`} cx={x(p.i)} cy={y(p.v)} r={expanded ? 4 : 3} fill={colorOf(s.key)} className="stroke-background" strokeWidth={1.5}>
               <title>{s.label}: {format(new Date(dates[p.i] + 'T12:00:00'), "dd 'de' MMM", { locale: ptBR })} — {p.v.toFixed(1)}</title>
             </circle>
           )),
         )}
-        {tickIndexes.map((i) => (
+        {expanded && seriesData.flatMap((s) => s.pts.map((p) => {
+          const used = labelPositions.get(p.i) ?? [];
+          let labelY = y(p.v) - 16;
+          while (used.some((previous) => Math.abs(previous - labelY) < 22)) labelY -= 22;
+          labelPositions.set(p.i, [...used, labelY]);
+          return (
+            <g key={`label-${s.key}-${p.i}`}>
+              <line x1={x(p.i)} x2={x(p.i)} y1={y(p.v) - 5} y2={labelY + 9} stroke={colorOf(s.key)} strokeOpacity={0.3} />
+              <rect x={x(p.i) - 20} y={labelY - 10} width={40} height={20} rx={4} className="fill-background" stroke={colorOf(s.key)} strokeOpacity={0.35} />
+              <text x={x(p.i)} y={labelY} dy="0.35em" textAnchor="middle" fill={colorOf(s.key)} className="text-[12px] font-semibold">
+                {p.v.toFixed(1).replace('.', ',')}
+              </text>
+            </g>
+          );
+        }))}
+        {(expanded ? Array.from({ length: n }, (_, i) => i) : tickIndexes).map((i) => (
           <g key={i}>
             <line x1={x(i)} x2={x(i)} y1={h - bottom} y2={h - bottom + 3} className="stroke-border" />
             <text
               x={x(i)}
-              y={h - 4}
+              y={h - (expanded ? 18 : 4)}
               textAnchor={i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'}
-              className="fill-muted-foreground text-[10px]"
+              className={`fill-muted-foreground ${expanded ? 'text-[12px]' : 'text-[10px]'}`}
             >
               {format(new Date(dates[i] + 'T12:00:00'), 'dd/MM')}
             </text>
           </g>
         ))}
       </svg>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Evolução dos sentimentos (30 dias)</p>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label="Maximizar gráfico" onClick={() => setMaximized(true)} className="h-8 w-8 shrink-0">
+              <Maximize2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Maximizar gráfico</TooltipContent>
+        </Tooltip>
+      </div>
+      {renderControls()}
+      {renderChart(false)}
+      <Dialog open={maximized} onOpenChange={setMaximized}>
+        <DialogContent className="flex max-h-[95dvh] w-[96vw] max-w-[1440px] flex-col overflow-hidden">
+          <DialogHeader className="pr-8">
+            <DialogTitle>Evolução dos sentimentos (30 dias)</DialogTitle>
+          </DialogHeader>
+          <div className="min-h-0 space-y-4 overflow-y-auto">
+            {renderControls()}
+            {renderChart(true)}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
