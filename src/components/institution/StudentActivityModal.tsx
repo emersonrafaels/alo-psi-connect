@@ -126,6 +126,19 @@ function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
   const avg = points.reduce((acc, p) => acc + p.value, 0) / points.length;
   const first = points[0], last = points[points.length - 1];
 
+  // X-axis date markers: first, last and evenly spaced in between (deduped by label).
+  const tickCount = Math.min(6, points.length);
+  const tickIndexes: number[] = [];
+  const seenDates = new Set<string>();
+  for (let k = 0; k < tickCount; k++) {
+    const i = Math.round((k * (points.length - 1)) / Math.max(1, tickCount - 1));
+    const label = format(new Date(points[i].date + 'T12:00:00'), 'dd/MM');
+    if (!seenDates.has(label)) {
+      seenDates.add(label);
+      tickIndexes.push(i);
+    }
+  }
+
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between gap-2">
@@ -151,8 +164,19 @@ function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
             <title>{format(new Date(p.date + 'T12:00:00'), "dd 'de' MMM", { locale: ptBR })}: {p.value.toFixed(1)}</title>
           </circle>
         ))}
-        <text x={left} y={h - 4} className="fill-muted-foreground text-[10px]">{format(new Date(first.date + 'T12:00:00'), 'dd/MM')}</text>
-        <text x={w - right} y={h - 4} textAnchor="end" className="fill-muted-foreground text-[10px]">{format(new Date(last.date + 'T12:00:00'), 'dd/MM')}</text>
+        {tickIndexes.map((i) => (
+          <g key={i}>
+            <line x1={x(i)} x2={x(i)} y1={h - bottom} y2={h - bottom + 3} className="stroke-border" />
+            <text
+              x={x(i)}
+              y={h - 4}
+              textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}
+              className="fill-muted-foreground text-[10px]"
+            >
+              {format(new Date(points[i].date + 'T12:00:00'), 'dd/MM')}
+            </text>
+          </g>
+        ))}
       </svg>
     </div>
   );
@@ -178,12 +202,12 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Sentimentos predominantes</p>
           <p className="text-[11px] text-muted-foreground mb-2">
-            Média das notas que o aluno deu a cada sentimento nos últimos 30 dias (1 = muito baixo, 5 = muito alto) e em quantos registros ele apareceu.
+            Média das notas que o aluno deu a cada sentimento nos últimos 30 dias (1 = muito baixo, 5 = muito alto).
           </p>
           <div className="flex flex-wrap gap-2">
             {topEmotions.map(e => (
               <Badge key={e.emotion} variant="secondary" className="text-xs">
-                {getEmotionDisplayName(e.emotion)} · média {e.average.toFixed(1).replace('.', ',')} · {e.count} {e.count === 1 ? 'registro' : 'registros'}
+                {getEmotionDisplayName(e.emotion)} · média {e.average.toFixed(1).replace('.', ',')}
               </Badge>
             ))}
           </div>
@@ -393,7 +417,7 @@ export function StudentActivityModal({
               <DialogTitle className="text-lg">{studentName}</DialogTitle>
               <div className="flex items-center gap-2 mt-1">
                 <Badge className={`text-xs ${riskColors[riskLevel]}`}>{riskLabels[riskLevel]}</Badge>
-                <span className="text-xs text-muted-foreground">{entryCount} {entryCount === 1 ? 'registro' : 'registros'} nos últimos {periodDays} dias</span>
+                <span className="text-xs text-muted-foreground">Últimos {periodDays} dias</span>
               </div>
             </div>
           </div>
