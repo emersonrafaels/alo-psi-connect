@@ -16,6 +16,7 @@ import { useMoodEntryAnalyses, RISK_LEVEL_META } from '@/hooks/useMoodEntryAnaly
 import { getEmotionDisplayName } from '@/utils/emotionFormatters';
 import { reconcileRisk, EntryRisk } from '@/features/triage/entryRisk';
 import { buildTrendSeries } from '@/features/triage/trendSeries';
+import { sentimentBand, SENTIMENT_BAND_STYLES, SENTIMENT_BAND_DOTS, SENTIMENT_BAND_LEGEND, SENTIMENT_BAND_HINT, SentimentBand } from '@/features/triage/sentimentBands';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Leaf, ClipboardList } from 'lucide-react';
