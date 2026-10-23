@@ -549,7 +549,7 @@ export function StudentActivityModal({
         </DialogHeader>
 
         <Tabs defaultValue="diario" className="flex-1 min-h-0">
-          <TabsList className="w-full justify-start">
+          <TabsList className="w-full h-auto flex-wrap justify-start gap-0.5">
             <TabsTrigger value="diario" className="gap-1.5 text-xs">
               <BookOpen className="h-3.5 w-3.5" />
               Diário Emocional
