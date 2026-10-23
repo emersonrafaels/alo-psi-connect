@@ -73,7 +73,7 @@ const riskLabels: Record<RiskLevel, string> = {
   critical: 'Em Risco',
   alert: 'Alerta',
   attention: 'Atenção',
-  healthy: 'Saudável',
+  healthy: 'Estável',
   no_data: 'Sem Dados',
 };
 
@@ -365,6 +365,17 @@ export function StudentActivityModal({
   periodDays,
 }: StudentActivityModalProps) {
   const { data, isLoading } = useStudentActivityData(profileId, patientId, institutionId, open);
+  const { data: timeline = [], isLoading: timelineLoading } = useQuery({
+    queryKey: ['student-timeline', institutionId, patientId],
+    enabled: open && !!institutionId && !!patientId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)('get_institution_student_timeline', {
+        _institution_id: institutionId, _patient_id: patientId, _days: 90,
+      });
+      if (error) throw error;
+      return (data ?? []) as TimelineItem[];
+    },
+  });
 
   // Anonymized names are "Aluno #N"; show "AN" like the rest of the portal instead of the "A#" initials.
   const anonNumber = studentName.match(/#(\d+)/)?.[1];
@@ -398,6 +409,14 @@ export function StudentActivityModal({
               <ClipboardCheck className="h-3.5 w-3.5" />
               Histórico de Triagens
             </TabsTrigger>
+            <TabsTrigger value="praticas" className="gap-1.5 text-xs">
+              <Leaf className="h-3.5 w-3.5" />
+              Práticas
+            </TabsTrigger>
+            <TabsTrigger value="escalas" className="gap-1.5 text-xs">
+              <ClipboardList className="h-3.5 w-3.5" />
+              Escalas
+            </TabsTrigger>
           </TabsList>
 
           <div className="mt-3 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 180px)' }}>
@@ -410,6 +429,12 @@ export function StudentActivityModal({
                 </TabsContent>
                 <TabsContent value="triagens" className="mt-0">
                   <TriageHistoryTab history={data?.triageHistory || []} />
+                </TabsContent>
+                <TabsContent value="praticas" className="mt-0">
+                  {timelineLoading ? <LoadingBar className="py-8" label="Carregando práticas..." /> : <ActivityListTab items={timeline} kind="practice" empty="Nenhuma prática nos últimos 90 dias." />}
+                </TabsContent>
+                <TabsContent value="escalas" className="mt-0">
+                  {timelineLoading ? <LoadingBar className="py-8" label="Carregando escalas..." /> : <ActivityListTab items={timeline} kind="scale" empty="Nenhuma escala respondida nos últimos 90 dias." />}
                 </TabsContent>
               </>
             )}
