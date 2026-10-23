@@ -315,10 +315,26 @@ function EmotionDiaryTab({ entries, topEmotions, lastTriageDate }: { entries: Mo
             Média das notas que o aluno deu a cada sentimento nos últimos 30 dias (1 = muito baixo, 5 = muito alto).
           </p>
           <div className="flex flex-wrap gap-2">
-            {topEmotions.map(e => (
-              <Badge key={e.emotion} variant="secondary" className="text-xs">
-                {getEmotionDisplayName(e.emotion)} · média {e.average.toFixed(1).replace('.', ',')}
-              </Badge>
+            {topEmotions.map(e => {
+              const band = sentimentBand(e.emotion, e.average);
+              return (
+                <Badge
+                  key={e.emotion}
+                  variant="secondary"
+                  title={SENTIMENT_BAND_HINT[band]}
+                  className={`text-xs ${SENTIMENT_BAND_STYLES[band]}`}
+                >
+                  {getEmotionDisplayName(e.emotion)} · média {e.average.toFixed(1).replace('.', ',')}
+                </Badge>
+              );
+            })}
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+            {(['good', 'medium', 'bad'] as SentimentBand[]).map(band => (
+              <span key={band} className="inline-flex items-center gap-1.5">
+                <span className={`h-2 w-2 shrink-0 rounded-full ${SENTIMENT_BAND_DOTS[band]}`} />
+                {SENTIMENT_BAND_LEGEND[band]}
+              </span>
             ))}
           </div>
         </div>
