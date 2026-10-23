@@ -487,6 +487,16 @@ function TriageHistoryTab({ history }: { history: StudentTriageHistory[] }) {
   );
 }
 
+/** Record counter beside a tab label; the dash keeps layout stable while data loads. */
+function TabCount({ value, loading }: { value: number; loading: boolean }) {
+  if (loading) return <span className="h-4 w-4 rounded-full bg-muted-foreground/10 animate-pulse" aria-hidden />;
+  return (
+    <span className="rounded-full bg-muted-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-muted-foreground">
+      {value}
+    </span>
+  );
+}
+
 export function StudentActivityModal({
   open,
   onOpenChange,
@@ -514,6 +524,11 @@ export function StudentActivityModal({
   // Anonymized names are "Aluno #N"; show "AN" like the rest of the portal instead of the "A#" initials.
   const anonNumber = studentName.match(/#(\d+)/)?.[1];
   const initials = anonNumber ? `A${anonNumber}` : studentName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+
+  const diaryCount = data?.moodEntries.length ?? 0;
+  const triageCount = data?.triageHistory.length ?? 0;
+  const practiceCount = timeline.filter(i => i.kind === 'practice').length;
+  const scaleCount = timeline.filter(i => i.kind === 'scale').length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
