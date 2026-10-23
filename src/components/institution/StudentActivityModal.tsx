@@ -126,6 +126,19 @@ function MoodTrendChart({ entries }: { entries: MoodEntry[] }) {
   const avg = points.reduce((acc, p) => acc + p.value, 0) / points.length;
   const first = points[0], last = points[points.length - 1];
 
+  // X-axis date markers: first, last and evenly spaced in between (deduped by label).
+  const tickCount = Math.min(6, points.length);
+  const tickIndexes: number[] = [];
+  const seenDates = new Set<string>();
+  for (let k = 0; k < tickCount; k++) {
+    const i = Math.round((k * (points.length - 1)) / Math.max(1, tickCount - 1));
+    const label = format(new Date(points[i].date + 'T12:00:00'), 'dd/MM');
+    if (!seenDates.has(label)) {
+      seenDates.add(label);
+      tickIndexes.push(i);
+    }
+  }
+
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between gap-2">
