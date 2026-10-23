@@ -525,7 +525,8 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
   return (
     <TooltipProvider delayDuration={200}>
       <div className="space-y-6">
-        {view && view !== 'fila' && (
+        {/* Fila and Métricas carry the period in their own toolbars. */}
+        {view && view !== 'fila' && view !== 'metricas' && (
           <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card px-4 py-2 text-sm">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Período analisado</span>
@@ -620,7 +621,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
         )}
 
         {view === 'fila' && <ViewHeader title="Fila de triagem" description="Todos os alunos por status de triagem. Use os filtros para focar em um nível de risco." />}
-        {view === 'metricas' && <ViewHeader title="Métricas" description="Como a equipe está triando: volume, tempo até resolução e prioridades no período." />}
+        {view === 'metricas' && <ViewHeader title="Métricas" description="A equipe está dando conta? Volume, tempo até resolver, cobertura dos alunos em risco, desfechos e carga por pessoa no período escolhido." />}
 
         {showLegacy && (<>
         {/* Summary cards — redesigned */}
@@ -780,7 +781,20 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
         {/* Triage Metrics Dashboard */}
         {showView('metricas') && (<>
         <div id="triage-metrics" className="scroll-mt-20" />
-        <TriageMetricsDashboard triageRecords={triageRecords} periodDays={analysisPeriod} />
+        <TriageMetricsDashboard
+          triageRecords={triageRecords}
+          students={students}
+          periodDays={analysisPeriod}
+          onPeriodChange={setAnalysisPeriod}
+          variant={view ? 'full' : 'compact'}
+          nameOf={(id) => patientNameMap.get(id) ?? 'Aluno'}
+          onOpenStudent={handleOpenActivityByPatientId}
+          onNavigate={(target) => {
+            if (target === 'critical_queue') nav('fila', { risk: 'critical', tab: 'para_triar' });
+            else if (target === 'followups') nav('followups');
+            else nav('fila', { tab: 'em_andamento' });
+          }}
+        />
         </>)}
 
         {/* Contexto Institucional */}
