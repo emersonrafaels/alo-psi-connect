@@ -6,11 +6,10 @@ export type { MetricsNavTarget };
 interface TriageMetricsDashboardProps {
   triageRecords: TriageRecord[];
   students: StudentRiskData[];
+  institutionId: string;
   periodDays?: number;
   onPeriodChange?: (days: number) => void;
   variant?: 'full' | 'compact';
-  nameOf: (patientId: string) => string;
-  onOpenStudent?: (patientId: string) => void;
   onNavigate?: (target: MetricsNavTarget) => void;
 }
 

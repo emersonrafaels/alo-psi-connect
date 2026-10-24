@@ -10,9 +10,8 @@ export const OVERLAY_Z: [number, number] = [20, 0];
 export const RISK_HEX: Record<Risk, string> = { critical: '#ef4444', alert: '#f97316', attention: '#eab308', healthy: '#22c55e', no_data: '#94a3b8' };
 export const RISK_LABEL: Record<Risk, string> = { critical: 'Em Risco', alert: 'Alerta', attention: 'Atenção', healthy: 'Saudável', no_data: 'Sem dados' };
 
-/** Which 3D scene is shown, and the filters of the wellbeing scene; the page toolbar owns this state. */
-export type Scene3D = 'volume' | 'wellbeing';
-export type TriageStatusFilter = 'all' | 'pending' | 'triaged';
+/** Which 3D scene is shown and which risk levels light up on campus; the page toolbar owns this state. */
+export type Scene3D = 'volume' | 'campus';
 export const SCENE_RISKS: Risk[] = ['critical', 'alert', 'attention', 'healthy'];
 
 // ---------- volume scene: weeks (x) × priority (z), height = triages ----------
@@ -32,6 +31,21 @@ export interface VolumeColumn {
   /** Heights in scene units: resolved part at the bottom, still-open part stacked on top. */
   resolvedHeight: number;
   openHeight: number;
+}
+
+/** Warm light for windows of triages already resolved; open triages keep dark glass. */
+export const VOLUME_LIT = '#fff7d6';
+
+/** Facade grid of a volume building: about one row per 0.36 units of height, three windows per row. */
+export function volumeWindows(c: Pick<VolumeColumn, 'created' | 'resolved' | 'resolvedHeight' | 'openHeight'>) {
+  const cols = 3;
+  const rows = Math.max(1, Math.round((c.resolvedHeight + c.openHeight) / 0.36));
+  const total = rows * cols;
+  let lit = c.created > 0 ? Math.round((total * c.resolved) / c.created) : 0;
+  if (c.resolved > 0) lit = Math.max(1, lit);
+  if (c.created > c.resolved) lit = Math.min(total - 1, lit);
+  lit = Math.max(0, Math.min(total, lit));
+  return { rows, cols, windows: Array.from({ length: total }, (_, i) => (i < lit ? VOLUME_LIT : null)) };
 }
 
 export function volumeColumns(weeks: WeekBucket[]): { columns: VolumeColumn[]; max: number; width: number; depth: number } {
@@ -56,66 +70,11 @@ export function volumeColumns(weeks: WeekBucket[]): { columns: VolumeColumn[]; m
   return { columns, max, width: weeks.length * VOLUME.spacingX, depth: PRIORITIES.length * VOLUME.spacingZ };
 }
 
-// ---------- wellbeing scene: humor (x) × ansiedade (y) × sono (z) ----------
+// ---------- shared ----------
 
-/** Scene cube edge; the 1–5 scale maps onto [-AXIS/2, AXIS/2]. */
-export const AXIS = 6;
-export const toAxis = (v: number) => ((v - 1) / 4) * AXIS - AXIS / 2;
-
-export interface WellbeingInput {
-  patientId: string;
-  riskLevel: Risk;
-  lastTriageStatus: string | null;
-  avgMood: number | null;
-  avgAnxiety: number | null;
-  avgEnergy: number | null;
-  avgSleep: number | null;
-  entryCount: number;
-}
-
-export interface WellbeingPoint {
-  patientId: string;
-  label: string;
-  risk: Risk;
-  triaged: boolean;
-  position: [number, number, number];
-  radius: number;
-  mood: number;
-  anxiety: number;
-  sleep: number;
-  energy: number | null;
-  entryCount: number;
-}
-
-/** Deterministic offset in [-amp, amp] so students with identical averages do not hide behind each other. */
+/** Deterministic offset in [-amp, amp], so decorative items (trees) keep their place between renders. */
 export function jitter(id: string, salt: number, amp = 0.12): number {
   let h = 2166136261 ^ salt;
   for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
   return (((h >>> 0) % 2001) / 1000 - 1) * amp;
-}
-
-/** Students without mood, anxiety or sleep averages cannot be placed and are left out (counted by the caller). */
-export function wellbeingPoints(students: WellbeingInput[], nameOf: (patientId: string) => string, periodDays: number): WellbeingPoint[] {
-  return students
-    .filter((s) => s.avgMood != null && s.avgAnxiety != null && s.avgSleep != null)
-    .map((s) => {
-      const engagement = periodDays > 0 ? Math.min(1, s.entryCount / periodDays) : 0;
-      return {
-        patientId: s.patientId,
-        label: nameOf(s.patientId),
-        risk: s.riskLevel,
-        triaged: !!s.lastTriageStatus && s.lastTriageStatus !== 'pending',
-        position: [
-          toAxis(s.avgMood!) + jitter(s.patientId, 1),
-          toAxis(s.avgAnxiety!) + jitter(s.patientId, 2),
-          toAxis(s.avgSleep!) + jitter(s.patientId, 3),
-        ],
-        radius: 0.07 + 0.09 * engagement,
-        mood: s.avgMood!,
-        anxiety: s.avgAnxiety!,
-        sleep: s.avgSleep!,
-        energy: s.avgEnergy,
-        entryCount: s.entryCount,
-      };
-    });
 }

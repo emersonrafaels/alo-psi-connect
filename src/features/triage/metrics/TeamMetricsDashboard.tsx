@@ -19,7 +19,7 @@ import { FlowCharts } from './FlowCharts';
 import { BarList, OutcomesBar, PriorityTable, TeamTable } from './Breakdowns';
 import { actionRows, fmt, pct, resolutionRows } from './format';
 import { MetricsToolbar, type MetricsMode } from './MetricsToolbar';
-import { SCENE_RISKS, type Scene3D, type TriageStatusFilter } from './three/sceneData';
+import { SCENE_RISKS, type Scene3D } from './three/sceneData';
 
 const Metrics3DPanel = lazy(() => import('./three/Metrics3DPanel'));
 
@@ -28,12 +28,12 @@ export type MetricsNavTarget = 'critical_queue' | 'followups' | 'in_progress';
 interface TeamMetricsDashboardProps {
   records: TriageRecord[];
   students: StudentRiskData[];
+  /** Used by the 3D campus to load the academic structure. */
+  institutionId: string;
   periodDays: number;
   onPeriodChange?: (days: number) => void;
   /** `compact` shows only the indicator cards (legacy portal tab). */
   variant?: 'full' | 'compact';
-  nameOf: (patientId: string) => string;
-  onOpenStudent?: (patientId: string) => void;
   onNavigate?: (target: MetricsNavTarget) => void;
 }
 
@@ -119,13 +119,13 @@ class SceneErrorBoundary extends Component<{ children: ReactNode }, { failed: bo
   }
 }
 
-export function TeamMetricsDashboard({ records, students, periodDays, onPeriodChange, variant = 'full', nameOf, onOpenStudent, onNavigate }: TeamMetricsDashboardProps) {
+export function TeamMetricsDashboard({ records, students, institutionId, periodDays, onPeriodChange, variant = 'full', onNavigate }: TeamMetricsDashboardProps) {
   const [modal, setModal] = useState<ModalKey | null>(null);
   const [selection, setSelection] = useState<MetricsSelection | null>(null);
   const [mode, setModeState] = useState<MetricsMode>(readMode);
   const [scene, setScene] = useState<Scene3D>('volume');
   const [risks, setRisks] = useState<Set<Risk>>(() => new Set(SCENE_RISKS));
-  const [status, setStatus] = useState<TriageStatusFilter>('all');
+  const [highlightPending, setHighlightPending] = useState(false);
   const setMode = (m: MetricsMode) => {
     setModeState(m);
     try { localStorage.setItem(MODE_KEY, m); } catch { /* storage unavailable */ }
@@ -266,8 +266,8 @@ export function TeamMetricsDashboard({ records, students, periodDays, onPeriodCh
       onSceneChange={setScene}
       risks={risks}
       onRisksChange={setRisks}
-      status={status}
-      onStatusChange={setStatus}
+      highlightPending={highlightPending}
+      onHighlightPendingChange={setHighlightPending}
     />
   );
 
@@ -278,16 +278,14 @@ export function TeamMetricsDashboard({ records, students, periodDays, onPeriodCh
         <SceneErrorBoundary>
           <Suspense fallback={<Skeleton className="h-[min(72vh,720px)] min-h-[460px] w-full rounded-xl" />}>
             <Metrics3DPanel
+              institutionId={institutionId}
               scene={scene}
               weeks={allWeeks}
               selection={selection}
               onSelect={setSelection}
               students={students}
-              periodDays={periodDays}
-              nameOf={nameOf}
-              onOpenStudent={(id) => onOpenStudent?.(id)}
-              risks={risks}
-              status={status}
+              litRisks={risks}
+              highlightPending={highlightPending}
             />
           </Suspense>
         </SceneErrorBoundary>
