@@ -1,12 +1,12 @@
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Boxes, Calendar, LayoutDashboard, Sparkles, X } from 'lucide-react';
+import { Boxes, Building2, Calendar, LayoutDashboard, Siren, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Risk } from '../priorities';
 import { PRIORITY_META, type TriagePriority } from '../triagePlan';
 import { PRIORITIES, type MetricsSelection, type WeekBucket } from './teamMetrics';
-import { RISK_HEX, RISK_LABEL, SCENE_RISKS, type Scene3D, type TriageStatusFilter } from './three/sceneData';
+import { RISK_HEX, RISK_LABEL, SCENE_RISKS, type Scene3D } from './three/sceneData';
 
 export type MetricsMode = 'dashboard' | '3d';
 
@@ -63,23 +63,25 @@ interface MetricsToolbarProps {
   onSelectionChange: (selection: MetricsSelection | null) => void;
   scene: Scene3D;
   onSceneChange: (scene: Scene3D) => void;
+  /** Campus: risk levels whose windows light up. */
   risks: Set<Risk>;
   onRisksChange: (risks: Set<Risk>) => void;
-  status: TriageStatusFilter;
-  onStatusChange: (status: TriageStatusFilter) => void;
+  /** Campus: dim every building without Em Risco students waiting for triage. */
+  highlightPending: boolean;
+  onHighlightPendingChange: (on: boolean) => void;
 }
 
 /** Top of the Métricas page: dashboard / 3D switch and every filter, kept visible while scrolling. */
 export function MetricsToolbar(props: MetricsToolbarProps) {
-  const { mode, periodDays, weeks, selection, scene, risks, status } = props;
-  const wellbeing = mode === '3d' && scene === 'wellbeing';
+  const { mode, periodDays, weeks, selection, scene, risks, highlightPending } = props;
+  const campus = mode === '3d' && scene === 'campus';
   const setSel = (patch: MetricsSelection) => {
     const next = { ...selection, ...patch };
     props.onSelectionChange(next.weekStart || next.priority ? next : null);
   };
-  const hasFilters = wellbeing ? risks.size < SCENE_RISKS.length || status !== 'all' : !!selection;
+  const hasFilters = campus ? risks.size < SCENE_RISKS.length || highlightPending : !!selection;
   const clear = () => {
-    if (wellbeing) { props.onRisksChange(new Set(SCENE_RISKS)); props.onStatusChange('all'); }
+    if (campus) { props.onRisksChange(new Set(SCENE_RISKS)); props.onHighlightPendingChange(false); }
     else props.onSelectionChange(null);
   };
   const toggleRisk = (r: Risk) => {
@@ -102,7 +104,7 @@ export function MetricsToolbar(props: MetricsToolbarProps) {
             label="Cena 3D"
             value={scene}
             onChange={props.onSceneChange}
-            options={[{ value: 'volume', label: 'Volume da equipe', icon: Boxes }, { value: 'wellbeing', label: 'Mapa de bem-estar', icon: Sparkles }]}
+            options={[{ value: 'volume', label: 'Volume da equipe', icon: Boxes }, { value: 'campus', label: 'Campus', icon: Building2 }]}
           />
         )}
         <span className="ml-auto text-xs text-muted-foreground">Atualizado às {format(new Date(), 'HH:mm')}</span>
@@ -122,7 +124,7 @@ export function MetricsToolbar(props: MetricsToolbarProps) {
           </div>
         )}
 
-        {!wellbeing && (
+        {!campus && (
           <>
             <div className="flex items-center gap-2">
               <FilterLabel>Semana</FilterLabel>
@@ -153,22 +155,19 @@ export function MetricsToolbar(props: MetricsToolbarProps) {
           </>
         )}
 
-        {wellbeing && (
+        {campus && (
           <>
             <div className="flex flex-wrap items-center gap-1.5">
-              <FilterLabel>Nível</FilterLabel>
+              <FilterLabel>Janelas acesas</FilterLabel>
               {SCENE_RISKS.map((r) => (
                 <button key={r} type="button" className={chip(risks.has(r))} onClick={() => toggleRisk(r)} aria-pressed={risks.has(r)}>
                   <span className="h-2 w-2 rounded-full" style={{ background: RISK_HEX[r] }} />{RISK_LABEL[r]}
                 </button>
               ))}
             </div>
-            <div className="flex flex-wrap items-center gap-1.5" role="radiogroup" aria-label="Status de triagem">
-              <FilterLabel>Triagem</FilterLabel>
-              {([['all', 'Todos'], ['pending', 'Não triados'], ['triaged', 'Triados']] as const).map(([k, label]) => (
-                <button key={k} type="button" role="radio" aria-checked={status === k} className={chip(status === k)} onClick={() => props.onStatusChange(k)}>{label}</button>
-              ))}
-            </div>
+            <button type="button" className={chip(highlightPending)} aria-pressed={highlightPending} onClick={() => props.onHighlightPendingChange(!highlightPending)}>
+              <Siren className="h-3.5 w-3.5" />Destacar Em Risco aguardando triagem
+            </button>
           </>
         )}
 

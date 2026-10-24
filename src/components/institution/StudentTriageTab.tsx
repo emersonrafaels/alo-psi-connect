@@ -784,11 +784,10 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
         <TriageMetricsDashboard
           triageRecords={triageRecords}
           students={students}
+          institutionId={institutionId}
           periodDays={analysisPeriod}
           onPeriodChange={setAnalysisPeriod}
           variant={view ? 'full' : 'compact'}
-          nameOf={(id) => patientNameMap.get(id) ?? 'Aluno'}
-          onOpenStudent={handleOpenActivityByPatientId}
           onNavigate={(target) => {
             if (target === 'critical_queue') nav('fila', { risk: 'critical', tab: 'para_triar' });
             else if (target === 'followups') nav('followups');
