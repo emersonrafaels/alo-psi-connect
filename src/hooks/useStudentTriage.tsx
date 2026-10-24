@@ -61,6 +61,8 @@ export interface TriageRecord {
   created_at: string;
   updated_at: string;
   resolved_at: string | null;
+  resolution_type?: string | null;
+  reopened_at?: string | null;
 }
 
 function calculateRiskLevel(
