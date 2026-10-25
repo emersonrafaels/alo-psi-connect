@@ -42,7 +42,7 @@ export function TriageSummary(props: {
     keywords: { title: 'Revisar alunos com palavra crítica no diário', desc: 'Termos sensíveis apareceram nos registros. Priorize contato.', cta: 'Ver alunos', icon: MessageSquareWarning },
     critical: { title: 'Triar alunos em risco', desc: 'Alunos Em Risco ainda sem triagem.', cta: 'Começar triagem', icon: AlertTriangle },
     followups: { title: 'Resolver follow-ups vencidos', desc: 'Acompanhamentos que passaram da data combinada.', cta: 'Ver follow-ups', icon: Clock },
-    no_data: { title: 'Revisar alunos sem registros', desc: `Não registraram o diário nos últimos ${periodDays} dias.`, cta: 'Ver lista', icon: UserX },
+    no_data: { title: 'Revisar alunos sem registros', desc: `Sem registro no diário nos últimos ${periodDays} dias e ainda sem triagem. ${counts.no_data} sem registros no período no total.`, cta: 'Ver lista', icon: UserX },
   };
 
   return (

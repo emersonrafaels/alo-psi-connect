@@ -293,7 +293,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
     criticalPending: pendingByRisk.critical,
     overdueFollowUps: overdueFollowUpCount,
     keywordStudents: keywordStudentCount,
-    noData: counts.no_data,
+    noData: pendingByRisk.no_data,
   }), [pendingByRisk, overdueFollowUpCount, keywordStudentCount, counts]);
 
   const followUpRows = useMemo(() => inProgressTriages
