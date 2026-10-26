@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 const WhatsAppFloat = () => {
   const location = useLocation()
   const isBuddyRoute = location.pathname.includes("/buddy")
-  const phoneNumber = "5511956850046" // Formato internacional sem símbolos
+  const phoneNumber = "5511937074332" // Formato internacional sem símbolos
   const defaultMessage = "Olá! Gostaria de agendar uma consulta através do whats Rede Bem-Estar!"
   
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(defaultMessage)}`
