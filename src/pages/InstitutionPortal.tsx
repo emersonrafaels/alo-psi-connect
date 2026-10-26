@@ -4,7 +4,8 @@ import { DemoDataBadge } from '@/components/institutional/DemoDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { PortalSidebar, PortalMobileNav, buildPortalNav } from '@/features/institution/portal/PortalSidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Breadcrumb,
@@ -34,7 +35,7 @@ import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
 import { useInstitutionKeyboardShortcuts } from '@/hooks/useInstitutionKeyboardShortcuts';
 import { useInstitutionTour } from '@/hooks/useInstitutionTour';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
@@ -55,7 +56,19 @@ import { Brain } from 'lucide-react';
 export default function InstitutionPortal() {
   const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
   const { tenant } = useTenant();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'overview';
+  const setActiveTab = (tab: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (tab === 'overview') next.delete('tab'); else next.set('tab', tab);
+      return next;
+    });
+  };
+  const changeTab = (tab: string) => {
+    setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const { canView: canViewStudentBuddy } = useAllowedBuddyStudents(
     userInstitutions[0]?.institution_id ?? null
   );
@@ -104,6 +117,10 @@ export default function InstitutionPortal() {
     );
   }
 
+  const navItems = buildPortalNav((p) => buildTenantPath(tenant?.slug, p), canViewStudentBuddy);
+  const currentSection = activeTab === 'triage'
+    ? { label: 'Triagem', description: 'Fila de triagem dos alunos.', icon: ClipboardList }
+    : navItems.find((i) => i.id === activeTab && !i.href);
   const activeProfessionals = linkedProfessionals.filter(p => p.profissionais.ativo);
   const activeStudents = linkedStudents.filter(s => s.enrollment_status === 'enrolled');
   const currentInstitution = userInstitutions[0]?.educational_institutions;
@@ -215,10 +232,27 @@ export default function InstitutionPortal() {
           </p>
         </div>
 
+        <div className="flex gap-8 items-start">
+          <PortalSidebar items={navItems} active={activeTab} onSelect={changeTab} />
+          <div className="flex-1 min-w-0" id="institution-tabs">
+            <PortalMobileNav items={navItems} active={activeTab} onSelect={changeTab} />
+            {currentSection && (
+              <div className="mb-6 border-b pb-4">
+                <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                  <currentSection.icon className="h-6 w-6 text-primary" />
+                  {currentSection.label}
+                </h2>
+                {currentSection.description && (
+                  <p className="text-muted-foreground mt-1">{currentSection.description}</p>
+                )}
+              </div>
+            )}
+        <Tabs value={activeTab} onValueChange={changeTab} className="space-y-6 scroll-mt-24">
+          <TabsContent value="overview" className="space-y-6 mt-0">
         {/* Cards de Resumo - Responsivo 2x2 no mobile */}
         <div 
           data-tour="summary-cards"
-          className="grid grid-cols-2 gap-4 md:gap-6 md:grid-cols-4 mb-8"
+          className="grid grid-cols-2 gap-4 md:gap-6 md:grid-cols-4 "
         >
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -304,80 +338,6 @@ export default function InstitutionPortal() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Tabs: Visão Geral, Cupons, Métricas e Bem-Estar */}
-        <Tabs 
-          value={activeTab} 
-          onValueChange={setActiveTab} 
-          className="space-y-6 scroll-mt-24"
-          data-tour="tabs"
-          id="institution-tabs"
-        >
-          <TabsList className="grid w-full max-w-5xl grid-cols-2 h-auto md:inline-flex md:flex-nowrap md:overflow-x-auto md:justify-start">
-            <TabsTrigger value="overview" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
-              Visão Geral
-            </TabsTrigger>
-            <TabsTrigger value="coupons" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
-              <Ticket className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
-              Cupons
-            </TabsTrigger>
-            <Link
-              to={buildTenantPath(tenant?.slug, '/portal-institucional/alunos')}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs md:text-sm py-2 px-3 md:px-4 shrink-0 font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Users className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
-              Alunos
-            </Link>
-            <Link
-              to={buildTenantPath(tenant?.slug, '/portal-institucional/apoios')}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs md:text-sm py-2 px-3 md:px-4 shrink-0 font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <HeartHandshake className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
-              Apoios
-            </Link>
-            <Link
-              to={buildTenantPath(tenant?.slug, '/portal-institucional/comparador')}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs md:text-sm py-2 px-3 md:px-4 shrink-0 font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <BarChart3 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
-              Comparador
-            </Link>
-            <TabsTrigger value="metrics" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
-              <BarChart3 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
-              Métricas
-            </TabsTrigger>
-            <TabsTrigger
-              value="wellbeing"
-              className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0"
-              data-tour="wellbeing-tab"
-            >
-              <Heart className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
-              Diário Emocional
-            </TabsTrigger>
-            <Link
-              to={buildTenantPath(tenant?.slug, '/portal-institucional/triagem')}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs md:text-sm py-2 px-3 md:px-4 shrink-0 font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <ClipboardList className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
-              Triagem
-            </Link>
-            <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
-              <StickyNote className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
-              Notas
-            </TabsTrigger>
-            <TabsTrigger value="buddy" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
-              <Brain className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 shrink-0" />
-              Buddy
-            </TabsTrigger>
-            {canViewStudentBuddy && (
-              <TabsTrigger value="student-buddy" className="text-xs md:text-sm py-2 px-3 md:px-4 shrink-0">
-                <span className="mr-1 md:mr-2" aria-hidden="true">🧠</span>
-                Buddy dos Alunos
-              </TabsTrigger>
-            )}
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
             {/* Ações Rápidas */}
             <div className="grid gap-4 md:gap-6 md:grid-cols-2">
               <Card className="border-2 hover:border-primary/50 transition-all">
@@ -575,6 +535,8 @@ export default function InstitutionPortal() {
             </TabsContent>
           )}
         </Tabs>
+          </div>
+        </div>
       </div>
       
       <Footer />
