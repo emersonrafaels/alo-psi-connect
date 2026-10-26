@@ -53,6 +53,10 @@ export default function BuddyHome() {
 
   const firstName = profile?.nome || user?.user_metadata?.nome?.split(" ")[0] || user?.email?.split("@")[0] || "amigo(a)";
 
+  const narrativeBlocks = (insight?.narrative ?? "").split(/\n+/).map((b) => b.trim()).filter(Boolean);
+  const narrativeHead = narrativeBlocks[0] ?? "";
+  const narrativeRest = narrativeBlocks.slice(1).join("\n\n");
+
   const handleRegenerate = async () => {
     try {
       await regenerate.mutateAsync();
@@ -74,7 +78,7 @@ export default function BuddyHome() {
       <div className="grid min-w-0 max-w-full gap-4 sm:gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card className="border-primary/20 min-w-0 max-w-full overflow-visible sm:overflow-hidden">
           <CardHeader className="p-3 min-[380px]:p-4 sm:p-6 min-w-0">
-            <BuddyMascot size="md" message={insight?.narrative?.split("\n")[0] ?? "Estou aprendendo sobre você a cada conversa. Me conte um pouco mais quando quiser."} variant="arms" />
+            <BuddyMascot size="md" message={narrativeHead || "Estou aprendendo sobre você a cada conversa. Me conte um pouco mais quando quiser."} variant="arms" />
           </CardHeader>
           <CardContent className="grid min-w-0 gap-4 p-3 min-[380px]:p-4 sm:p-6 pt-0 min-[380px]:pt-0 sm:pt-0">
             <div className="flex flex-wrap gap-2 text-xs">
@@ -83,7 +87,9 @@ export default function BuddyHome() {
             {isLoading ? (
               <Skeleton className="h-24" />
             ) : insight?.narrative ? (
-              <p className="max-w-full text-sm leading-relaxed text-muted-foreground whitespace-pre-line [overflow-wrap:anywhere]">{insight.narrative}</p>
+              narrativeRest ? (
+                <p className="max-w-full text-sm leading-relaxed text-muted-foreground whitespace-pre-line [overflow-wrap:anywhere]">{narrativeRest}</p>
+              ) : null
             ) : (
               <div className="rounded-xl bg-muted/40 p-4 text-sm text-muted-foreground">
                 Ainda não gerei um resumo. Preencha seu retrato e clique em "Atualizar percepções" para eu começar.
