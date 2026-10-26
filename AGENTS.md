@@ -1,5 +1,7 @@
 # Architecture decisions
 
+- Keep the triage all-students view separate from the pending queue and filter its user-scoped student data through `studentFilters`, so every risk level can be reviewed without changing triage eligibility or records.
+
 - Use `isAwaitingTriage` from triage priorities for pending lists and institutional counters, so all entry points share the same eligibility rule without modifying historical triage records.
 
 - Manage Afya study-case credentials only through the admin-authorized `afya-study-cases` function and a protected synthetic-case registry; server-side registry checks suppress outbound notifications independently of user-editable metadata.
