@@ -236,6 +236,7 @@ export function useSaveRadarCheckpoint() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['institution-radar-list'] });
       qc.invalidateQueries({ queryKey: ['institution-radar-latest'] });
+      qc.invalidateQueries({ queryKey: ['institution-radar-checkpoint'] });
     },
     onError: (e: any) => {
       toast({ title: 'Erro ao salvar', description: e.message, variant: 'destructive' });
@@ -257,6 +258,7 @@ export function useSubmitRadar() {
       qc.invalidateQueries({ queryKey: ['institution-radar-list'] });
       qc.invalidateQueries({ queryKey: ['institution-radar'] });
       qc.invalidateQueries({ queryKey: ['institution-radar-latest'] });
+      qc.invalidateQueries({ queryKey: ['institution-radar-checkpoint'] });
       toast({ title: 'Radar analisado', description: 'A leitura estratégica foi gerada com sucesso.' });
     },
     onError: (e: any) => {

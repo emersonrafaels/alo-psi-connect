@@ -29,7 +29,7 @@ import {
   RadarAnswers,
   PainId,
 } from '@/data/radarCatalog';
-import { useSaveRadarDraft, useSubmitRadar } from '@/hooks/useInstitutionRadar';
+import { useSaveRadarCheckpoint, useSubmitRadar } from '@/hooks/useInstitutionRadar';
 import { useSubmitPublicRadar } from '@/hooks/usePublicRadar';
 import { cn } from '@/lib/utils';
 
@@ -40,6 +40,7 @@ interface Props {
   initial?: {
     id?: string;
     answers?: Partial<RadarAnswers>;
+    step?: number;
   };
   onSubmitted?: (id: string) => void;
   onPublicComplete?: (token: string) => void;
@@ -47,7 +48,8 @@ interface Props {
 
 export function RadarForm({ institutionId, institutionName: initialName, mode = 'authenticated', initial, onSubmitted, onPublicComplete }: Props) {
   const isPublic = mode === 'public';
-  const [stepIdx, setStepIdx] = useState(0);
+  const [stepIdx, setStepIdx] = useState(() => Math.min(Math.max(initial?.step ?? 0, 0), RADAR_STEPS.length - 1));
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [id, setId] = useState<string | undefined>(initial?.id);
   const [institutionName, setInstitutionName] = useState(initialName);
   const [website, setWebsite] = useState('');
@@ -60,7 +62,7 @@ export function RadarForm({ institutionId, institutionName: initialName, mode = 
     maturity: { ...emptyAnswers().maturity, ...(initial?.answers?.maturity ?? {}) },
   }));
 
-  const save = useSaveRadarDraft();
+  const save = useSaveRadarCheckpoint();
   const submit = useSubmitRadar();
   const publicSubmit = useSubmitPublicRadar();
 
@@ -72,13 +74,13 @@ export function RadarForm({ institutionId, institutionName: initialName, mode = 
     if (isPublic || !institutionId) return;
     const t = setTimeout(() => {
       save.mutate(
-        { id, institution_id: institutionId, answers, institution_name: institutionName },
-        { onSuccess: (r: any) => { if (!id) setId(r.id); } }
+        { id, institution_id: institutionId, answers, institution_name: institutionName, step: stepIdx },
+        { onSuccess: (r: any) => { if (!id) setId(r.id); setSavedAt(new Date()); } }
       );
     }, 1200);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [answers]);
+  }, [answers, stepIdx]);
 
   function update<K extends keyof RadarAnswers>(key: K, value: RadarAnswers[K]) {
     setAnswers(a => ({ ...a, [key]: value }));
@@ -141,7 +143,7 @@ export function RadarForm({ institutionId, institutionName: initialName, mode = 
       return;
     }
     if (!institutionId) return;
-    const saved = await save.mutateAsync({ id, institution_id: institutionId, answers, institution_name: institutionName });
+    const saved = await save.mutateAsync({ id, institution_id: institutionId, answers, institution_name: institutionName, step: stepIdx });
     const savedId = (saved as any).id ?? id;
     if (!savedId) return;
     if (!id) setId(savedId);
@@ -161,7 +163,10 @@ export function RadarForm({ institutionId, institutionName: initialName, mode = 
             </div>
             {!isPublic && (
               <Badge variant="outline" className="gap-1">
-                <Save className="h-3 w-3" /> Rascunho salvo automaticamente
+                <Save className="h-3 w-3" />
+                {savedAt
+                  ? `Checkpoint salvo às ${savedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+                  : 'Progresso salvo automaticamente'}
               </Badge>
             )}
           </div>
