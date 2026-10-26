@@ -151,7 +151,7 @@ export function BuddyDailyBrief() {
               variant="outline"
               className="rounded-full border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground"
             >
-              <Link to="/buddy">
+              <Link to={isInstitutionAdmin ? "/buddy/instituicao" : "/buddy"}>
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Falar com o Buddy
               </Link>

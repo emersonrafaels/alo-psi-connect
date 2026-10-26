@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
   // ---- Aggregated, anonymised context (no names, no diary text) ----
   const [{ data: inst }, w15, w30, comparator, flags] = await Promise.all([
-    supabase.from("institutions").select("name").eq("id", institutionId).maybeSingle(),
+    supabase.from("educational_institutions").select("name").eq("id", institutionId).maybeSingle(),
     supabase.rpc("get_institution_wellbeing_summary", {
       p_institution_id: institutionId, p_start: isoDaysAgo(15), p_end: isoDaysAgo(0), p_prev_start: isoDaysAgo(30),
     }),
