@@ -48,7 +48,8 @@ describe('all-students filters', () => {
   it('filters by age range', () => {
     expect(applyAcademic({ ageRange: ['under18'] })).toEqual([]); // 2006-05-10 is 20 at NOW
     expect(applyAcademic({ ageRange: ['18-24'] })).toEqual(['1']);
-    expect(applyAcademic({ ageRange: ['25-34'] })).toEqual(['2', '3']);
+    expect(applyAcademic({ ageRange: ['25-34'] })).toEqual(['2']);
+    expect(applyAcademic({ ageRange: ['35-44'] })).toEqual(['3']);
     expect(applyAcademic({ ageRange: ['45plus', 'unknown'] })).toEqual(['4', '5']);
   });
   it('combines academic with cadastral filters', () => { expect(applyAcademic({ unit: ['Contagem'], gender: ['masculino'] })).toEqual(['2']); });
