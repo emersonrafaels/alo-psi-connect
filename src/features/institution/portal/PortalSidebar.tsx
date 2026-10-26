@@ -50,7 +50,7 @@ interface Props {
 function NavList({ items, active, onSelect, onDone }: Props & { onDone?: () => void }) {
   const groups = Array.from(new Set(items.map((i) => i.group)));
   return (
-    <nav aria-label="Seções do portal" className="space-y-5" data-tour="tabs">
+    <nav aria-label="Seções do portal" className="space-y-4 [&>div+div]:border-t [&>div+div]:pt-4" data-tour="tabs">
       {groups.map((g) => (
         <div key={g}>
           <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{g}</p>
@@ -60,7 +60,7 @@ function NavList({ items, active, onSelect, onDone }: Props & { onDone?: () => v
               const isActive = active === item.id;
               const cls = cn(
                 'group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground/80 hover:bg-muted hover:text-foreground',
+                isActive ? 'bg-primary text-primary-foreground shadow-md ring-1 ring-primary/30' : 'text-foreground/80 hover:bg-primary/10 hover:text-primary',
               );
               const content = (
                 <>
@@ -97,7 +97,7 @@ function NavList({ items, active, onSelect, onDone }: Props & { onDone?: () => v
 export function PortalSidebar(props: Props) {
   return (
     <aside className="hidden lg:block w-60 shrink-0">
-      <div className="sticky top-24 rounded-2xl border bg-card p-3 shadow-sm max-h-[calc(100vh-7rem)] overflow-y-auto">
+      <div className="sticky top-24 rounded-2xl border bg-card p-3 shadow-md max-h-[calc(100vh-7rem)] overflow-y-auto">
         <NavList {...props} />
       </div>
     </aside>

@@ -153,82 +153,36 @@ export default function InstitutionPortal() {
           </BreadcrumbList>
         </Breadcrumb>
 
-        {/* Card de Boas-vindas */}
-        <div className="mb-6">
-          <WelcomeCard institutionName={currentInstitution?.name} greetingName="Professor" />
-        </div>
-
-        {/* Header com Logo e Nome */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            {/* Logo da Instituição - Melhorado */}
-            {currentInstitution?.logo_url ? (
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 rounded-2xl blur-sm opacity-75 group-hover:opacity-100 transition-opacity" />
-                <div className="relative h-20 w-20 rounded-xl bg-white dark:bg-card border border-border/50 shadow-lg flex items-center justify-center p-2 overflow-hidden">
-                  <img 
-                    src={currentInstitution.logo_url} 
-                    alt={currentInstitution.name}
-                    className="max-h-full max-w-full object-contain"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                    }}
-                  />
-                  <Building2 className="h-8 w-8 text-muted-foreground hidden" />
-                </div>
-              </div>
-            ) : (
-              <div className="h-20 w-20 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
-                <Building2 className="h-8 w-8 text-primary" />
-              </div>
-            )}
-            
-            <div className="flex-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-3xl md:text-4xl font-bold">Portal Institucional</h1>
-                <DemoDataBadge institutionId={userInstitutions[0]?.institution_id} />
-                <div className="flex items-center gap-2">
-                  <Button asChild size="sm" variant="outline" className="gap-2">
-                    <Link to={buildTenantPath(tenant?.slug, '/portal-institucional/radar')}>
-                      <RadarIcon className="h-4 w-4" />
-                      Radar Institucional
-                    </Link>
-                  </Button>
-                  <KeyboardShortcutsPopover />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={resetTour}
-                    title="Reiniciar tour guiado"
-                  >
-                    <Compass className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              {currentInstitution?.name && (
-                <Badge 
-                  variant="outline" 
-                  className="mt-2 text-base px-3 py-1 border-primary/50 text-primary dark:text-primary-foreground dark:border-primary/40 dark:bg-primary/20"
-                >
-                  <Building2 className="h-4 w-4 mr-2" />
-                  {currentInstitution.name}
-                </Badge>
+        {/* Barra de identidade compacta */}
+        <div className="mb-6 flex flex-col gap-4 rounded-2xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="h-14 w-14 shrink-0 rounded-xl border bg-background flex items-center justify-center p-1.5 overflow-hidden">
+              {currentInstitution?.logo_url ? (
+                <img src={currentInstitution.logo_url} alt={currentInstitution.name} className="max-h-full max-w-full object-contain" />
+              ) : (
+                <Building2 className="h-7 w-7 text-primary" />
               )}
             </div>
-        </div>
-
-        {/* Header executivo com KPIs, resumo do Buddy e alertas */}
-        {userInstitutions[0]?.institution_id && (
-          <InstitutionExecutiveHeader
-            institutionId={userInstitutions[0].institution_id}
-            onNavigateToTriage={() => setActiveTab('triage')}
-          />
-        )}
-          <p className="text-muted-foreground text-lg">
-            Gerencie profissionais, alunos e métricas da sua instituição
-          </p>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">Portal Institucional</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl md:text-2xl font-bold truncate">{currentInstitution?.name ?? 'Sua instituição'}</h1>
+                <DemoDataBadge institutionId={userInstitutions[0]?.institution_id} />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button asChild size="sm" variant="outline" className="gap-2">
+              <Link to={buildTenantPath(tenant?.slug, '/portal-institucional/radar')}>
+                <RadarIcon className="h-4 w-4" />
+                Radar Institucional
+              </Link>
+            </Button>
+            <KeyboardShortcutsPopover />
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={resetTour} title="Reiniciar tour guiado">
+              <Compass className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         <div className="flex gap-8 items-start">
@@ -236,18 +190,27 @@ export default function InstitutionPortal() {
           <div className="flex-1 min-w-0" id="institution-tabs">
             <PortalMobileNav items={navItems} active={activeTab} onSelect={changeTab} />
             {currentSection && (
-              <div className="mb-6 border-b pb-4">
-                <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                  <currentSection.icon className="h-6 w-6 text-primary" />
-                  {currentSection.label}
-                </h2>
-                {currentSection.description && (
-                  <p className="text-muted-foreground mt-1">{currentSection.description}</p>
-                )}
+              <div className="mb-6 flex items-start gap-4 rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card p-5">
+                <div className="h-12 w-12 shrink-0 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-sm">
+                  <currentSection.icon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight">{currentSection.label}</h2>
+                  {currentSection.description && (
+                    <p className="text-muted-foreground mt-0.5">{currentSection.description}</p>
+                  )}
+                </div>
               </div>
             )}
         <Tabs value={activeTab} onValueChange={changeTab} className="space-y-6 scroll-mt-24">
           <TabsContent value="overview" className="space-y-6 mt-0">
+            <WelcomeCard institutionName={currentInstitution?.name} greetingName="Professor" />
+            {userInstitutions[0]?.institution_id && (
+              <InstitutionExecutiveHeader
+                institutionId={userInstitutions[0].institution_id}
+                onNavigateToTriage={() => setActiveTab('triage')}
+              />
+            )}
         {/* Cards de Resumo - Responsivo 2x2 no mobile */}
         <div 
           data-tour="summary-cards"
