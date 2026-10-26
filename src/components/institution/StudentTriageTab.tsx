@@ -35,6 +35,7 @@ import { TriageSummary, TriagePriorities, TriageFollowUps, ViewHeader } from '@/
 import { PendingQueue } from '@/features/triage/queue/PendingQueue';
 import { sortPending, type PendingSort } from '@/features/triage/queue/indicators';
 import { AllStudents } from '@/features/triage/AllStudents';
+import { useAcademicStructure } from '@/hooks/useAcademicStructure';
 
 export type TriageView = 'resumo' | 'prioridades' | 'followups' | 'fila' | 'metricas';
 
@@ -148,6 +149,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
   );
   const { notes: institutionNotes } = useInstitutionNotes(institutionId);
   const { data: triageRecords = [] } = useTriageRecords(institutionId);
+  const { units: academicUnits, levels: academicLevels, placements: academicPlacements } = useAcademicStructure(institutionId);
   const { data: triageNotes = [] } = useTriageNotes(institutionId);
   const noteCounts = useMemo(() => {
     const m = new Map<string, number>();
@@ -944,6 +946,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
           <TabsContent value="todos_alunos">
             <AllStudents students={students} nameOf={(id) => patientNameMap.get(id) ?? 'Aluno'}
               overdueIds={overduePatientIds} periodDays={analysisPeriod} risk={riskFilter}
+              units={academicUnits} levels={academicLevels} placements={academicPlacements}
               onRiskChange={changeRisk} onOpenHistory={(student) => handleOpenActivity(student)} />
           </TabsContent>
 

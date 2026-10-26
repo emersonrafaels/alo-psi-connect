@@ -7,13 +7,25 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { StudentRiskData } from '@/hooks/useStudentTriage';
-import { emptyStudentFilters, filterStudents, type StudentFilters, type StudentMultiFilter } from './studentFilters';
+import { buildPath, LEVEL_LABELS, type AcademicLevel, type AcademicUnit } from '@/features/academic/hierarchy';
+import {
+  AGE_RANGES,
+  GENDER_LABELS,
+  ageRangeOf,
+  emptyStudentFilters,
+  filterStudents,
+  genderKeyOf,
+  type AcademicPath,
+  type StudentFilters,
+  type StudentMultiFilter,
+} from './studentFilters';
 
 const riskLabels: Record<string, string> = { critical: 'Em Risco', alert: 'Alerta', attention: 'Atenção', healthy: 'Estável', no_data: 'Sem dados' };
 const statusLabels: Record<string, string> = { pending: 'Pendente', triaged: 'Triado', in_progress: 'Em andamento', resolved: 'Concluído' };
 
 type Control = { key: StudentMultiFilter; label: string; all: string; options: [string, string][] };
-const controls: Control[] = [
+
+const baseControls: Control[] = [
   { key: 'risk', label: 'Nível de risco', all: 'Todos os níveis', options: Object.entries(riskLabels) },
   { key: 'status', label: 'Status da triagem', all: 'Todos os status', options: [['none', 'Sem triagem'], ['pending', 'Pendente'], ['active', 'Em acompanhamento'], ['resolved', 'Concluído']] },
   { key: 'activity', label: 'Diário no período', all: 'Todos os registros', options: [['with', 'Com registros'], ['without', 'Sem registros']] },
@@ -63,9 +75,28 @@ function MultiSelect({ control, selected, counts, onToggle, onClear }: {
   );
 }
 
-export function AllStudents({ students, nameOf, overdueIds, periodDays, risk, onRiskChange, onOpenHistory }: {
+function FilterGrid({ title, controls, filters, counts, onToggle, onClear }: {
+  title: string; controls: Control[]; filters: StudentFilters; counts: Record<string, Record<string, number>>;
+  onToggle: (key: StudentMultiFilter, value: string) => void; onClear: (key: StudentMultiFilter) => void;
+}) {
+  if (controls.length === 0) return null;
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {controls.map((control) => (
+          <MultiSelect key={control.key} control={control} selected={filters[control.key]} counts={counts[control.key] ?? {}}
+            onToggle={(value) => onToggle(control.key, value)} onClear={() => onClear(control.key)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AllStudents({ students, nameOf, overdueIds, periodDays, risk, onRiskChange, onOpenHistory, units = [], levels = [], placements }: {
   students: StudentRiskData[]; nameOf: (id: string) => string; overdueIds: Set<string>; periodDays: number;
   risk: string; onRiskChange: (risk: string) => void; onOpenHistory: (student: StudentRiskData) => void;
+  units?: AcademicUnit[]; levels?: AcademicLevel[]; placements?: Map<string, string>;
 }) {
   const [filters, setFilters] = useState<StudentFilters>(() => ({ ...emptyStudentFilters, risk: risk && risk !== 'all' ? [risk] : [] }));
   const [pageSize, setPageSize] = useState(25);
@@ -81,11 +112,52 @@ export function AllStudents({ students, nameOf, overdueIds, periodDays, risk, on
 
   useEffect(() => { setVisibleCount(pageSize); }, [filters, periodDays, pageSize]);
 
-  const filtered = useMemo(() => filterStudents(students, filters, nameOf, overdueIds), [students, filters, nameOf, overdueIds]);
-  const counts = useMemo(() => Object.fromEntries(controls.map((control) => {
-    const base = filterStudents(students, withSelection(filters, control.key, []), nameOf, overdueIds);
-    return [control.key, Object.fromEntries(control.options.map(([value]) => [value, filterStudents(base, withSelection(filters, control.key, [value]), nameOf, overdueIds).length]))];
-  })), [students, filters, nameOf, overdueIds]);
+  // Academic path per student, derived from the class placement up through the active hierarchy.
+  const academicOf = useMemo(() => {
+    if (!placements || units.length === 0) return undefined;
+    const cache = new Map<string, AcademicPath>();
+    return (patientId: string): AcademicPath | undefined => {
+      const cached = cache.get(patientId);
+      if (cached) return cached;
+      const classId = placements.get(patientId);
+      if (!classId) return undefined;
+      const path: AcademicPath = {};
+      buildPath(classId, units, levels).forEach((unit) => { path[unit.level] = unit.name; });
+      cache.set(patientId, path);
+      return path;
+    };
+  }, [placements, units, levels]);
+
+  const academicControls = useMemo<Control[]>(() => {
+    if (units.length === 0) return [];
+    return levels
+      .map((level) => {
+        const options: [string, string][] = [...new Set(units.filter((u) => u.level === level).map((u) => u.name))]
+          .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+          .map((name) => [name, name]);
+        return { key: level as StudentMultiFilter, label: LEVEL_LABELS[level], all: `Todas as opções`, options };
+      })
+      .filter((control) => control.options.length > 0);
+  }, [units, levels]);
+
+  const cadastralControls = useMemo<Control[]>(() => {
+    const genders = [...new Set(students.map((s) => genderKeyOf(s.gender)))];
+    const genderOptions: [string, string][] = Object.keys(GENDER_LABELS)
+      .filter((key) => genders.includes(key))
+      .map((key) => [key, GENDER_LABELS[key]]);
+    return [
+      { key: 'gender', label: 'Gênero', all: 'Todos os gêneros', options: genderOptions },
+      { key: 'ageRange', label: 'Faixa etária', all: 'Todas as idades', options: AGE_RANGES.map((range) => [range.id, range.label]) },
+    ];
+  }, [students]);
+
+  const allControls = useMemo(() => [...baseControls, ...academicControls, ...cadastralControls], [academicControls, cadastralControls]);
+
+  const filtered = useMemo(() => filterStudents(students, filters, nameOf, overdueIds, academicOf), [students, filters, nameOf, overdueIds, academicOf]);
+  const counts = useMemo(() => Object.fromEntries(allControls.map((control) => {
+    const base = filterStudents(students, withSelection(filters, control.key, []), nameOf, overdueIds, academicOf);
+    return [control.key, Object.fromEntries(control.options.map(([value]) => [value, filterStudents(base, withSelection(filters, control.key, [value]), nameOf, overdueIds, academicOf).length]))];
+  })), [allControls, students, filters, nameOf, overdueIds, academicOf]);
 
   const toggle = (key: StudentMultiFilter, value: string) => {
     const current = filters[key];
@@ -110,32 +182,39 @@ export function AllStudents({ students, nameOf, overdueIds, periodDays, risk, on
         <h2 className="flex items-center gap-2 text-lg font-semibold"><Users className="h-5 w-5 text-primary" />Todos os alunos <Badge variant="secondary">{filtered.length} / {students.length}</Badge></h2>
         <span className="text-xs text-muted-foreground">Indicadores dos últimos {periodDays} dias</span>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {controls.map((control) => (
-          <MultiSelect key={control.key} control={control} selected={filters[control.key]} counts={counts[control.key] ?? {}}
-            onToggle={(value) => toggle(control.key, value)} onClear={() => setFilters((current) => withSelection(current, control.key, []))} />
-        ))}
-      </div>
+      <FilterGrid title="Triagem e registros" controls={baseControls} filters={filters} counts={counts} onToggle={toggle}
+        onClear={(key) => setFilters((current) => withSelection(current, key, []))} />
+      {academicControls.length > 0 && (
+        <FilterGrid title="Estrutura acadêmica" controls={academicControls} filters={filters} counts={counts} onToggle={toggle}
+          onClear={(key) => setFilters((current) => withSelection(current, key, []))} />
+      )}
+      <FilterGrid title="Dados cadastrais" controls={cadastralControls} filters={filters} counts={counts} onToggle={toggle}
+        onClear={(key) => setFilters((current) => withSelection(current, key, []))} />
       <div className="flex flex-wrap gap-3">
         <div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input aria-label="Buscar aluno anonimizado" placeholder="Buscar Aluno #..." className="pl-9" value={filters.search} onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} /></div>
         <Button variant="outline" onClick={reset}><RotateCcw className="mr-2 h-4 w-4" />Limpar filtros</Button>
       </div>
       <div className="divide-y border-y">
         {filtered.length === 0 && <p className="py-12 text-center text-sm text-muted-foreground">Nenhum aluno encontrado com estes filtros.</p>}
-        {filtered.slice(0, visibleCount).map((student) => (
-          <div key={student.patientId} className="flex flex-wrap items-center justify-between gap-3 py-4">
-            <div className="min-w-0 space-y-2">
-              <Button variant="link" className="h-auto p-0 text-base font-semibold" onClick={() => onOpenHistory(student)}>{nameOf(student.patientId)}</Button>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={student.riskLevel === 'critical' ? 'destructive' : 'outline'}>{riskLabels[student.riskLevel]}</Badge>
-                <Badge variant="secondary">{student.lastTriageStatus ? statusLabels[student.lastTriageStatus] ?? 'Sem triagem' : 'Sem triagem'}</Badge>
-                <span className="text-xs text-muted-foreground">{student.entryCount} registros no período</span>
-                {overdueIds.has(student.patientId) && <Badge variant="destructive">Follow-up vencido</Badge>}
+        {filtered.slice(0, visibleCount).map((student) => {
+          const path = academicOf?.(student.patientId);
+          const pathText = path ? [path.unit, path.course, path.shift, path.class].filter(Boolean).join(' · ') : null;
+          return (
+            <div key={student.patientId} className="flex flex-wrap items-center justify-between gap-3 py-4">
+              <div className="min-w-0 space-y-2">
+                <Button variant="link" className="h-auto p-0 text-base font-semibold" onClick={() => onOpenHistory(student)}>{nameOf(student.patientId)}</Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={student.riskLevel === 'critical' ? 'destructive' : 'outline'}>{riskLabels[student.riskLevel]}</Badge>
+                  <Badge variant="secondary">{student.lastTriageStatus ? statusLabels[student.lastTriageStatus] ?? 'Sem triagem' : 'Sem triagem'}</Badge>
+                  <span className="text-xs text-muted-foreground">{student.entryCount} registros no período</span>
+                  {overdueIds.has(student.patientId) && <Badge variant="destructive">Follow-up vencido</Badge>}
+                </div>
+                {pathText && <p className="text-xs text-muted-foreground">{pathText}</p>}
               </div>
+              <Button size="sm" variant="outline" onClick={() => onOpenHistory(student)}><Eye className="mr-2 h-4 w-4" />Ver histórico</Button>
             </div>
-            <Button size="sm" variant="outline" onClick={() => onOpenHistory(student)}><Eye className="mr-2 h-4 w-4" />Ver histórico</Button>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
         <span>Exibindo {Math.min(visibleCount, filtered.length)} de {filtered.length} alunos</span>
