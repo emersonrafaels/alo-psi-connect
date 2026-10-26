@@ -23,3 +23,4 @@
 - Keep compact and expanded student-history charts in the same MoodTrendChart with shared sentiment selection, so maximizing preserves the visible series and their values.
 - Build student-history series through trendSeries: merge equivalent sentiment labels, prefer available legacy scores with dynamic fallback, and assign non-repeating theme-aware color tokens to prevent duplicate legends.
 - Derive student-history sentiment tag colors from `src/features/triage/sentimentBands.ts`, which flips the scale for unpleasant sentiments using the emotion taxonomy valence, so a high anxiety or stress score never reads as a good result.
+- Keep the institutional portal's section navigation in `src/features/institution/portal/PortalSidebar.tsx` (sidebar on desktop, sheet on mobile) with the active section in `?tab=`, so deep links and back navigation work and new sections are added in one place.
