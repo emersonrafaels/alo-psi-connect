@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList, HeartPulse, Radar, HeartHandshake } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList, HeartPulse, HeartHandshake } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -17,7 +17,6 @@ import { useTenant } from "@/hooks/useTenant"
 import { useUserRole } from "@/hooks/useUserRole"
 import { useCanCreateSessions } from "@/hooks/useCanCreateSessions"
 import { usePatientFullViewAccess } from "@/hooks/usePatientFullViewAccess"
-import { useRadarAccess } from "@/hooks/useRadarAccess"
 import { TenantBranding } from "@/components/TenantBranding"
 import { buildTenantPath, getTenantSlugFromPath } from "@/utils/tenantHelpers"
 
@@ -33,25 +32,14 @@ const Header = () => {
   const { isAuthor } = useAuthorRole()
   const { tenant } = useTenant()
   const { hasRole: isInstitutionAdmin, loading: institutionAdminLoading } = useUserRole('institution_admin')
-  const { hasRole: isFacilitator, loading: facilitatorLoading } = useUserRole('facilitator')
   const { canCreateSessions } = useCanCreateSessions()
   const { hasAccess: hasTriagemAccess } = usePatientFullViewAccess()
-  const { hasAccess: hasRadarAccess } = useRadarAccess()
 
   // Usar o slug da URL para navegação (sempre consistente com a rota atual)
   const tenantSlug = getTenantSlugFromPath(location.pathname)
 
 
   const modulesEnabled = tenant?.modules_enabled;
-
-  // Radar Institucional: instituições, administradores do site e usuários liberados via admin
-  const isInstitutionalUser =
-    !institutionAdminLoading && !facilitatorLoading && (!!isInstitutionAdmin || !!isFacilitator);
-  const radarHref = isInstitutionalUser
-    ? buildTenantPath(tenantSlug, '/portal-institucional/radar')
-    : isAdmin
-      ? '/admin/radar-institucional'
-      : buildTenantPath(tenantSlug, '/portal-institucional/radar');
 
   const allNavigation = [
     { name: "Home", href: buildTenantPath(tenantSlug, '/'), module: null },
