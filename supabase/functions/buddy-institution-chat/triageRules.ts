@@ -64,7 +64,7 @@ export function isAwaitingTriage(risk: Risk, lastStatus: string | null): boolean
 /** Queue bucket shown in the portal: Para Triar / Em Andamento / Concluídos / sem fila. */
 export function queueBucket(risk: Risk, lastStatus: string | null): "para_triar" | "em_andamento" | "concluido" | "fora_da_fila" {
   if (isAwaitingTriage(risk, lastStatus)) return "para_triar";
-  if (lastStatus === "in_progress") return "em_andamento";
+  if (lastStatus === "in_progress" || lastStatus === "triaged") return "em_andamento";
   if (lastStatus === "resolved") return "concluido";
   return "fora_da_fila";
 }
