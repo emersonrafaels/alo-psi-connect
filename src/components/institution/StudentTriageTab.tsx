@@ -34,6 +34,7 @@ import { Layers } from 'lucide-react';
 import { TriageSummary, TriagePriorities, TriageFollowUps, ViewHeader } from '@/features/triage/TriageViews';
 import { PendingQueue } from '@/features/triage/queue/PendingQueue';
 import { sortPending, type PendingSort } from '@/features/triage/queue/indicators';
+import { AllStudents } from '@/features/triage/AllStudents';
 
 export type TriageView = 'resumo' | 'prioridades' | 'followups' | 'fila' | 'metricas';
 
@@ -316,7 +317,10 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
     if (view === 'fila' && onNavigate) onNavigate('fila', { risk: risk === 'all' ? undefined : risk, tab });
   };
   const changeRisk = (risk: string) => { setRiskFilter(risk); setSelectedStudentIds(new Set()); syncQueueUrl(risk, activeTab); };
-  const changeTab = (tab: string) => { setActiveTab(tab); syncQueueUrl(riskFilter, tab); };
+  const changeTab = (tab: string) => {
+    const risk = tab === 'para_triar' ? 'critical' : 'all';
+    setActiveTab(tab); setRiskFilter(risk); setSelectedStudentIds(new Set()); syncQueueUrl(risk, tab);
+  };
   const showLegacy = !view;
   const [funnelOpen, setFunnelOpen] = useState(true);
   useEffect(() => { setFunnelOpen(view === 'resumo'); }, [view]);
@@ -623,7 +627,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
           </>
         )}
 
-        {view === 'fila' && <ViewHeader title="Fila de triagem" description="Todos os alunos por status de triagem. Use os filtros para focar em um nível de risco." />}
+        {view === 'fila' && <ViewHeader title="Fila de triagem" description="Para Triar reúne apenas alunos Em Risco. Ver todos reúne os alunos de todos os níveis." />}
         {view === 'metricas' && <ViewHeader title="Métricas" description="A equipe está dando conta? Volume, tempo até resolver, cobertura dos alunos em risco, desfechos e carga por pessoa no período escolhido." />}
 
         {showLegacy && (<>
@@ -919,13 +923,23 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
                 {resolvedTriages.length}
               </Badge>
             </TabsTrigger>
+            <TabsTrigger value="todos_alunos" className="gap-2 py-2 px-4 text-sm data-[state=active]:bg-background">
+              <Users className="h-4 w-4" />Ver todos
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">{students.length}</Badge>
+            </TabsTrigger>
             <TabsTrigger value="todos" className="gap-2 py-2 px-4 text-sm data-[state=active]:bg-background">
-              Todos
+              Histórico de triagens
               <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">
                 {allTriages.length}
               </Badge>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="todos_alunos">
+            <AllStudents students={students} nameOf={(id) => patientNameMap.get(id) ?? 'Aluno'}
+              overdueIds={overduePatientIds} periodDays={analysisPeriod} risk={riskFilter}
+              onRiskChange={changeRisk} onOpenHistory={(student) => handleOpenActivity(student)} />
+          </TabsContent>
 
           {/* Tab: Para Triar */}
           <TabsContent value="para_triar">

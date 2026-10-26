@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Incluir Ver todos com filtros por nível, status e registros, preservando Para Triar
+- [ ] Validar os filtros da nova visão
+
 - [x] Restringir Para Triar a alunos Em Risco e alinhar contadores e atalhos
 - [x] Testar exclusão dos demais níveis e preservação do histórico: 17 testes passaram em ambiente isolado compatível; verificação autenticada indisponível no Supabase externo
 
