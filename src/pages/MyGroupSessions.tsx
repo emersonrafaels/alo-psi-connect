@@ -33,6 +33,7 @@ import { CreateSessionTab } from '@/components/group-sessions/CreateSessionTab';
 import { MyCreatedSessionsTab } from '@/components/group-sessions/MyCreatedSessionsTab';
 import { useGroupSessionsTour } from '@/hooks/useGroupSessionsTour';
 import { GroupSessionsTour } from '@/components/group-sessions/GroupSessionsTour';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 const MyGroupSessions = () => {
   const { registrations, isLoading } = useUserRegistrations();
@@ -92,7 +93,7 @@ const MyGroupSessions = () => {
       <>
         <Header />
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <LogoLoader />
         </div>
         <Footer />
       </>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
+import { LogoLoader } from '@/components/ui/logo-loader';
 import { DemoDataBadge } from '@/components/institutional/DemoDataBadge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -111,7 +111,7 @@ export default function InstitutionPortal() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen px-6">
-        <LoadingBar className="max-w-sm" label="Carregando portal institucional..." />
+        <LogoLoader label="Carregando portal institucional..." />
       </div>
     );
   }

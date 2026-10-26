@@ -11,7 +11,7 @@ import { buildTenantPath } from '@/utils/tenantHelpers';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { LogoLoader } from '@/components/ui/logo-loader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type ScaleRow = { sem: string; scale_code: string; unit: string; course: string; n: number; avg: number };
@@ -239,7 +239,7 @@ export default function InstitutionComparator() {
             </div>
 
         {dataQ.isLoading || instQ.isLoading ? (
-          <div className="grid gap-4 md:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-32" />)}</div>
+          <LogoLoader className="min-h-[40vh]" />
         ) : dataQ.error ? (
           <Card><CardContent className="py-10 text-center text-muted-foreground">Não foi possível carregar o comparador.</CardContent></Card>
         ) : view === 'overview' ? (
