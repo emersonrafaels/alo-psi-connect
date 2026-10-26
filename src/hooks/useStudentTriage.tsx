@@ -23,6 +23,9 @@ export interface StudentRiskData {
   studentName: string;
   profileId: string | null;
   userId: string | null;
+  /** Registration data used only for aggregate filtering, never displayed per student. */
+  gender: string | null;
+  birthDate: string | null;
   riskLevel: RiskLevel;
   criticalKeywordFlag?: CriticalKeywordFlag | null;
   avgMood: number | null;
@@ -145,7 +148,7 @@ export async function fetchStudentRiskData(
       // 1. Get students linked to institution
       const students = await fetchAllPaged<any>((from, to) => supabase
         .from('patient_institutions')
-        .select('patient_id, pacientes!inner(id, profile_id, profiles!inner(nome, user_id))')
+        .select('patient_id, pacientes!inner(id, profile_id, profiles!inner(nome, user_id, genero, data_nascimento))')
         .eq('institution_id', institutionId)
         .eq('enrollment_status', 'enrolled')
         .order('patient_id')
@@ -289,6 +292,8 @@ export async function fetchStudentRiskData(
           studentName: s.pacientes.profiles.nome || 'Sem nome',
           profileId: s.pacientes.profile_id || null,
           userId: s.pacientes.profiles.user_id || null,
+          gender: s.pacientes.profiles.genero || null,
+          birthDate: s.pacientes.profiles.data_nascimento || null,
           riskLevel: escalateRisk(calculateRiskLevel(avgMood, avgAnxiety, avgEnergy, avgSleep, moodTrend), flagsByPatient.get(s.patient_id)?.severity),
           criticalKeywordFlag: flagsByPatient.get(s.patient_id) || null,
           avgMood: round1(avgMood),
