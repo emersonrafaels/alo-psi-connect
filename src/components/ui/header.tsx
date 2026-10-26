@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList, HeartPulse, Radar, HeartHandshake } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList, HeartPulse, HeartHandshake } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -17,7 +17,6 @@ import { useTenant } from "@/hooks/useTenant"
 import { useUserRole } from "@/hooks/useUserRole"
 import { useCanCreateSessions } from "@/hooks/useCanCreateSessions"
 import { usePatientFullViewAccess } from "@/hooks/usePatientFullViewAccess"
-import { useRadarAccess } from "@/hooks/useRadarAccess"
 import { TenantBranding } from "@/components/TenantBranding"
 import { buildTenantPath, getTenantSlugFromPath } from "@/utils/tenantHelpers"
 
@@ -33,25 +32,14 @@ const Header = () => {
   const { isAuthor } = useAuthorRole()
   const { tenant } = useTenant()
   const { hasRole: isInstitutionAdmin, loading: institutionAdminLoading } = useUserRole('institution_admin')
-  const { hasRole: isFacilitator, loading: facilitatorLoading } = useUserRole('facilitator')
   const { canCreateSessions } = useCanCreateSessions()
   const { hasAccess: hasTriagemAccess } = usePatientFullViewAccess()
-  const { hasAccess: hasRadarAccess } = useRadarAccess()
 
   // Usar o slug da URL para navegação (sempre consistente com a rota atual)
   const tenantSlug = getTenantSlugFromPath(location.pathname)
 
 
   const modulesEnabled = tenant?.modules_enabled;
-
-  // Radar Institucional: instituições, administradores do site e usuários liberados via admin
-  const isInstitutionalUser =
-    !institutionAdminLoading && !facilitatorLoading && (!!isInstitutionAdmin || !!isFacilitator);
-  const radarHref = isInstitutionalUser
-    ? buildTenantPath(tenantSlug, '/portal-institucional/radar')
-    : isAdmin
-      ? '/admin/radar-institucional'
-      : buildTenantPath(tenantSlug, '/portal-institucional/radar');
 
   const allNavigation = [
     { name: "Home", href: buildTenantPath(tenantSlug, '/'), module: null },
@@ -213,26 +201,20 @@ const Header = () => {
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  {hasRadarAccess && (
-                    <DropdownMenuItem onClick={() => navigate(radarHref)}>
-                      <Radar className="h-4 w-4 mr-2" />
-                      Radar Institucional
-                    </DropdownMenuItem>
-                  )}
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/gerenciar-apoios'))}>
                       <HeartHandshake className="h-4 w-4 mr-2" />
                       Gerenciar Apoios
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator />
+                  {isAdmin && <DropdownMenuSeparator />}
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
                       <Shield className="h-4 w-4 mr-2" />
                       Acessar Admin
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator />
+                  {isAdmin && <DropdownMenuSeparator />}
                   {isAdmin && (
                     <GlobalCacheButton variant="minimal" className="w-full justify-start p-0 h-auto" />
                   )}
@@ -379,17 +361,7 @@ const Header = () => {
                       Gerenciar Blog
                     </Link>
                   )}
-                  <div className="my-1 border-t border-border/50" />
-                  {hasRadarAccess && (
-                    <Link
-                      to={radarHref}
-                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Radar className="h-5 w-5 opacity-70" />
-                      Radar Institucional
-                    </Link>
-                  )}
+                  {isAdmin && <div className="my-1 border-t border-border/50" />}
                   {isAdmin && (
                     <Link
                       to={buildTenantPath(tenantSlug, '/gerenciar-apoios')}
@@ -400,7 +372,7 @@ const Header = () => {
                       Gerenciar Apoios
                     </Link>
                   )}
-                  <div className="my-1 border-t border-border/50" />
+                  {isAdmin && <div className="my-1 border-t border-border/50" />}
                   {isAdmin && (
                     <Link
                       to="/admin"
