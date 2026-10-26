@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ClipboardList, LayoutDashboard, ListChecks, BarChart3, Clock, PanelLeft, Flame } from 'lucide-react';
+import { ArrowLeft, ClipboardList, LayoutDashboard, ListChecks, BarChart3, Clock, PanelLeft, Flame, Users } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
@@ -8,11 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StudentTriageTab, type TriageView } from '@/components/institution/StudentTriageTab';
 
-const SECTIONS: { id: TriageView; label: string; hint: string; icon: typeof Clock }[] = [
+// "Todos os alunos" is a queue sub-tab, not a new view, so it shares the "fila" view with a tab hint.
+const ALL_STUDENTS_TAB = 'todos_alunos';
+
+const SECTIONS: { id: TriageView; tab?: string; label: string; hint: string; icon: typeof Clock }[] = [
   { id: 'resumo', label: 'Resumo', hint: 'Números e o que fazer agora', icon: LayoutDashboard },
   { id: 'prioridades', label: 'Prioridades', hint: 'Alunos mais urgentes', icon: Flame },
   { id: 'followups', label: 'Follow-ups', hint: 'Vencidos e próximos', icon: Clock },
-  { id: 'fila', label: 'Fila de triagem', hint: 'Lista completa', icon: ListChecks },
+  { id: 'fila', label: 'Fila de triagem', hint: 'Para triar, andamento e histórico', icon: ListChecks },
+  { id: 'fila', tab: ALL_STUDENTS_TAB, label: 'Todos os alunos', hint: 'Todos os níveis e filtros', icon: Users },
   { id: 'metricas', label: 'Métricas', hint: 'Desempenho da equipe', icon: BarChart3 },
 ];
 
@@ -23,6 +27,7 @@ export default function InstitutionTriage() {
   const [collapsed, setCollapsed] = useState(false);
   const [params, setParams] = useSearchParams();
   const view = (SECTIONS.find((s) => s.id === params.get('view'))?.id ?? 'resumo') as TriageView;
+  const activeTab = params.get('tab');
   const backTo = buildTenantPath(tenant?.slug, '/portal-institucional');
 
   const go = (v: TriageView, extra?: { risk?: string; tab?: string }) => {
@@ -32,6 +37,15 @@ export default function InstitutionTriage() {
     // Filter changes within a view replace the entry, so Back leaves the view instead of stepping through filters.
     setParams(next, { replace: v === view });
   };
+
+  // The queue keeps its own sub-tab sticky when the user clicks back to "Fila de triagem".
+  const openSection = (section: (typeof SECTIONS)[number]) => {
+    if (section.tab) return go(section.id, { tab: section.tab });
+    if (section.id === 'fila' && activeTab && activeTab !== ALL_STUDENTS_TAB) return go('fila', { tab: activeTab });
+    return go(section.id);
+  };
+  const isSectionActive = (section: (typeof SECTIONS)[number]) =>
+    view === section.id && (section.tab ? activeTab === section.tab : activeTab !== ALL_STUDENTS_TAB);
 
   useEffect(() => { window.scrollTo(0, 0); }, [view]);
 
@@ -48,10 +62,11 @@ export default function InstitutionTriage() {
           )}
         </div>
         <nav className="flex-1 space-y-1 p-2" aria-label="Seções da triagem">
-          {SECTIONS.map(({ id, label, hint, icon: I }) => {
-            const active = view === id;
+          {SECTIONS.map((section) => {
+            const { id, label, hint, icon: I } = section;
+            const active = isSectionActive(section);
             return (
-              <button key={id} onClick={() => go(id)} title={label} aria-current={active ? 'page' : undefined}
+              <button key={`${id}:${section.tab ?? ''}`} onClick={() => openSection(section)} title={label} aria-current={active ? 'page' : undefined}
                 className={`flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left text-sm transition-colors ${active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'} ${collapsed ? 'justify-center' : ''}`}>
                 <I className="h-4 w-4 shrink-0" />
                 {!collapsed && (
@@ -75,7 +90,7 @@ export default function InstitutionTriage() {
       <div className="flex flex-1 flex-col min-w-0">
         <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur">
           <Button variant="ghost" size="icon" onClick={() => setCollapsed((c) => !c)} aria-label="Recolher menu"><PanelLeft className="h-4 w-4" /></Button>
-          <span className="text-sm text-muted-foreground">Triagem de alunos · <span className="text-foreground">{SECTIONS.find((s) => s.id === view)?.label}</span></span>
+          <span className="text-sm text-muted-foreground">Triagem de alunos · <span className="text-foreground">{(SECTIONS.find(isSectionActive) ?? SECTIONS.find((s) => s.id === view))?.label}</span></span>
           <Button asChild variant="outline" size="sm" className="ml-auto"><Link to={backTo}><ArrowLeft className="h-4 w-4 mr-1" />Portal Institucional</Link></Button>
         </header>
         <main className="flex-1 space-y-6 p-4 md:p-8">
