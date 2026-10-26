@@ -9,6 +9,17 @@ import { ArrowLeft, Lock, Send, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import buddyImg from "@/assets/buddy-main.png";
 
+class SafeRender extends React.Component<
+  { fallback: (error: Error, reset: () => void) => React.ReactNode; children: React.ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  componentDidCatch(error: Error) { console.error("[BuddyInstitutionChat] render error", error); }
+  reset = () => this.setState({ error: null });
+  render() { return this.state.error ? this.props.fallback(this.state.error, this.reset) : this.props.children; }
+}
+
 type Msg = { role: "user" | "assistant"; content: string; error?: boolean };
 
 const SUGGESTIONS = [
@@ -27,7 +38,9 @@ export default function BuddyInstitutionChat() {
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), [messages]);
+  useEffect(() => {
+    try { endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); } catch { /* ignore */ }
+  }, [messages]);
 
   const send = async (text: string) => {
     const q = text.trim();
@@ -95,7 +108,13 @@ export default function BuddyInstitutionChat() {
           O Buddy usa apenas indicadores agregados e anonimizados. Alunos nunca são identificados e grupos com menos de 10 respondentes ficam ocultos.
         </div>
 
-        <div className="flex-1 space-y-4 pb-4" aria-live="polite">
+        <SafeRender fallback={(_e, reset) => (
+          <Card className="p-4 text-sm space-y-3">
+            <p className="text-foreground">Não consegui mostrar a resposta.</p>
+            <Button size="sm" variant="outline" onClick={() => { setMessages([]); reset(); }}>Tentar de novo</Button>
+          </Card>
+        )}>
+        <div className="flex-1 space-y-4 pb-4" aria-live="polite" translate="no">
           {messages.length === 0 && (
             <div className="grid gap-2 sm:grid-cols-2">
               {SUGGESTIONS.map((s) => (
@@ -115,7 +134,14 @@ export default function BuddyInstitutionChat() {
             ) : (
               <div key={i} className={`text-sm leading-relaxed ${m.error ? "text-destructive" : "text-foreground"}`}>
                 {m.content ? (
-                  <div className="prose prose-sm max-w-none dark:prose-invert"><ReactMarkdown>{m.content}</ReactMarkdown></div>
+                  <SafeRender key={`${i}-${loading && i === messages.length - 1 ? "s" : "d"}`}
+                    fallback={() => <p className="whitespace-pre-wrap">{m.content}</p>}>
+                    {loading && i === messages.length - 1 ? (
+                      <p className="whitespace-pre-wrap"><span>{m.content}</span></p>
+                    ) : (
+                      <div className="prose prose-sm max-w-none dark:prose-invert"><ReactMarkdown>{m.content}</ReactMarkdown></div>
+                    )}
+                  </SafeRender>
                 ) : (
                   <span className="inline-flex gap-1 text-muted-foreground">Buddy está analisando os dados<span className="animate-pulse">…</span></span>
                 )}
@@ -124,6 +150,7 @@ export default function BuddyInstitutionChat() {
           )}
           <div ref={endRef} />
         </div>
+        </SafeRender>
 
         <form onSubmit={(e) => { e.preventDefault(); send(input); }}
           className="sticky bottom-4 rounded-2xl border border-border bg-card p-2 shadow-sm">
