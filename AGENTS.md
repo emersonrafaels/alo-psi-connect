@@ -1,5 +1,7 @@
 # Architecture decisions
 
+- Use `isAwaitingTriage` from triage priorities for pending lists and institutional counters, so all entry points share the same eligibility rule without modifying historical triage records.
+
 - Manage Afya study-case credentials only through the admin-authorized `afya-study-cases` function and a protected synthetic-case registry; server-side registry checks suppress outbound notifications independently of user-editable metadata.
 - Derive follow-on study-case behavior from its baseline pattern while generating distinct histories per case key, so new demonstration accounts preserve the intended scenario without copying identical data.
 - Define pending Afya demonstration refreshes in `scripts/afya-pending-storytelling.ts` with tested score trajectories and transactional synthetic-only guards, so diary, practice and scale histories stay coherent without altering protected study cases or sending notifications.

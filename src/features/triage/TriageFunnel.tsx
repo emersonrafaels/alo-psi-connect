@@ -25,13 +25,13 @@ export function TriageFunnel({ counts, onNavigate, open, onOpenChange }: {
 }) {
   const steps = [
     { n: 1, icon: NotebookPen, title: 'Registros do diário', value: `${counts.withData} de ${counts.total}`, unit: 'alunos registraram',
-      text: 'Tudo começa no Diário Emocional: humor, ansiedade, energia, sono e palavras críticas no período analisado.', cta: 'Ver sem registros', go: () => onNavigate('fila', { risk: 'no_data', tab: 'para_triar' }) },
+      text: 'Tudo começa no Diário Emocional: humor, ansiedade, energia, sono e palavras críticas no período analisado.', cta: 'Ver resumo', go: () => onNavigate('resumo') },
     { n: 2, icon: Layers, title: 'Classificação por risco', value: `${counts.atRisk + counts.alert + counts.attention}`, unit: 'precisam de atenção',
       text: `Cada aluno recebe um nível: Em Risco (${counts.atRisk}), Alerta (${counts.alert}), Atenção (${counts.attention}) ou Estável (${counts.healthy}).`, cta: 'Ver Em Risco', go: () => onNavigate('fila', { risk: 'critical', tab: 'para_triar' }) },
     { n: 3, icon: Flame, title: 'Prioridades', value: `${counts.priorities}`, unit: 'mais urgentes',
       text: 'Quem atender primeiro: termo grave no diário, Em Risco sem triagem, follow-up vencido e humor em queda.', cta: 'Ver prioridades', go: () => onNavigate('prioridades') },
     { n: 4, icon: ClipboardCheck, title: 'Triagem', value: `${counts.pending}`, unit: 'aguardando triagem',
-      text: 'A equipe faz a primeira avaliação e escolhe uma ação: conversar, encaminhar, monitorar ou contatar a família.', cta: 'Abrir fila', go: () => onNavigate('fila', { tab: 'para_triar' }) },
+      text: 'Somente alunos Em Risco sem avaliação ou com triagem pendente entram nesta fila. A equipe avalia e escolhe uma ação de cuidado.', cta: 'Abrir fila', go: () => onNavigate('fila', { risk: 'critical', tab: 'para_triar' }) },
     { n: 5, icon: Clock, title: 'Follow-up', value: `${counts.inFollowUp}`, unit: counts.overdue ? `em acompanhamento · ${counts.overdue} vencidos` : 'em acompanhamento',
       text: 'Uma data combinada para retomar o contato. Se a data passa sem retorno, o follow-up fica vencido.', cta: 'Ver follow-ups', go: () => onNavigate('followups') },
     { n: 6, icon: CheckCircle2, title: 'Resolução', value: `${counts.resolved}`, unit: 'casos resolvidos',

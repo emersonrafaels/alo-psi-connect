@@ -28,7 +28,7 @@ import { ptBR } from 'date-fns/locale';
 import { useDebounce } from '@/hooks/useDebounce';
 import * as XLSX from 'xlsx';
 import { useTriagePeriod } from '@/hooks/useTriagePeriod';
-import { buildPriorities, buildActions } from '@/features/triage/priorities';
+import { buildPriorities, buildActions, isAwaitingTriage } from '@/features/triage/priorities';
 import { TriageFunnel } from '@/features/triage/TriageFunnel';
 import { Layers } from 'lucide-react';
 import { TriageSummary, TriagePriorities, TriageFollowUps, ViewHeader } from '@/features/triage/TriageViews';
@@ -208,10 +208,9 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
     return buildAnonymizedStudentIndex(students.map((student) => student.patientId));
   }, [students]);
 
-  // Students not yet triaged or pending
+  // Only Em Risco students not yet triaged or pending enter the queue.
   const pendingStudents = useMemo(() => {
-    let filtered = students.filter((s) => !s.lastTriageStatus || s.lastTriageStatus === 'pending');
-    if (riskFilter !== 'all') filtered = filtered.filter((s) => s.riskLevel === riskFilter);
+    let filtered = students.filter(isAwaitingTriage);
     if (debouncedSearch.trim()) {
       const term = debouncedSearch.toLowerCase();
       filtered = filtered.filter((s) => {
@@ -220,7 +219,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
       });
     }
     return sortPending(filtered, pendingSort);
-  }, [students, riskFilter, debouncedSearch, patientIndexMap, pendingSort]);
+  }, [students, debouncedSearch, patientIndexMap, pendingSort]);
 
   // Triage records by status
   const inProgressTriages = useMemo(() => {
@@ -237,7 +236,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
 
   // Count of critical pending students
   const criticalPendingCount = useMemo(() => {
-    return students.filter((s) => s.riskLevel === 'critical' && (!s.lastTriageStatus || s.lastTriageStatus === 'pending')).length;
+    return students.filter(isAwaitingTriage).length;
   }, [students]);
 
   const riskCounts = useMemo(() => {
@@ -267,7 +266,11 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
   // Apply filters coming from the summary/priority views
   useEffect(() => {
     if (view !== 'fila') return;
-    setRiskFilter(initialRisk || 'all');
+    const tab = initialTab || 'para_triar';
+    setRiskFilter(tab === 'para_triar' ? 'critical' : initialRisk || 'all');
+    if (tab === 'para_triar' && initialRisk && initialRisk !== 'critical') {
+      onNavigate?.('fila', { risk: 'critical', tab });
+    }
     if (initialTab) setActiveTab(initialTab);
   }, [view, initialRisk, initialTab]);
 
@@ -278,7 +281,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
 
   const pendingByRisk = useMemo(() => {
     const c: Record<RiskLevel, number> = { critical: 0, alert: 0, attention: 0, healthy: 0, no_data: 0 };
-    students.forEach((s) => { if (!s.lastTriageStatus || s.lastTriageStatus === 'pending') c[s.riskLevel]++; });
+    students.forEach((s) => { if (isAwaitingTriage(s)) c.critical++; });
     return c;
   }, [students]);
 
@@ -567,7 +570,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
                 attention: counts.attention,
                 healthy: counts.healthy,
                 priorities: priorityItems.length,
-                pending: pendingByRisk.critical + pendingByRisk.alert + pendingByRisk.attention,
+                pending: pendingByRisk.critical,
                 inFollowUp: inProgressTriages.length,
                 overdue: overdueFollowUpCount,
                 resolved: resolvedTriages.length,
@@ -585,12 +588,12 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
               periodDays={analysisPeriod}
               overdueFollowUps={overdueFollowUpCount}
               actions={triageActions}
-              onOpenRisk={(r) => nav('fila', { risk: r, tab: 'para_triar' })}
+              onOpenRisk={(r) => r === 'critical' ? nav('fila', { risk: r, tab: 'para_triar' }) : setRiskDetailLevel(r)}
               onAction={(a) => {
                 if (a === 'critical') nav('fila', { risk: 'critical', tab: 'para_triar' });
                 else if (a === 'followups') nav('followups');
                 else if (a === 'keywords') nav('prioridades');
-                else nav('fila', { risk: 'no_data', tab: 'para_triar' });
+                else setRiskDetailLevel('no_data');
               }}
             />
           </>
@@ -901,7 +904,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
                 ''}`
                 }>
 
-                {pendingStudents.length}
+                {criticalPendingCount}
               </Badge>
             </TabsTrigger>
             <TabsTrigger value="em_andamento" className="gap-2 py-2 px-4 text-sm data-[state=active]:bg-background">
@@ -930,8 +933,6 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
               students={pendingStudents}
               visibleCount={visibleCount}
               pendingByRisk={pendingByRisk}
-              riskFilter={riskFilter}
-              onRiskFilterChange={changeRisk}
               search={searchTerm}
               onSearchChange={setSearchTerm}
               sort={pendingSort}

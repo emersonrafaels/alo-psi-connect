@@ -23,7 +23,6 @@ const RISK_META: Record<RiskLevel, { label: string; dot: string; border: string;
   healthy: { label: 'Saudável', dot: 'bg-green-500', border: 'border-l-green-500', badge: 'bg-green-50 text-green-700 ring-green-200 dark:bg-green-950/40 dark:text-green-300 dark:ring-green-900' },
   no_data: { label: 'Sem dados', dot: 'bg-muted-foreground/40', border: 'border-l-muted-foreground/30', badge: 'bg-muted text-muted-foreground ring-border' },
 };
-const RISK_LEVELS: RiskLevel[] = ['critical', 'alert', 'attention', 'healthy', 'no_data'];
 
 const BAND_TEXT: Record<Band, string> = {
   critical: 'text-red-600 dark:text-red-400',
@@ -63,8 +62,6 @@ interface PendingQueueProps {
   students: StudentRiskData[];
   visibleCount: number;
   pendingByRisk: Record<RiskLevel, number>;
-  riskFilter: string;
-  onRiskFilterChange: (risk: string) => void;
   search: string;
   onSearchChange: (term: string) => void;
   sort: PendingSort;
@@ -88,11 +85,11 @@ interface PendingQueueProps {
 }
 
 export function PendingQueue(props: PendingQueueProps) {
-  const { students, visibleCount, pendingByRisk, riskFilter, search, sort, periodDays, selectedIds } = props;
+  const { students, visibleCount, pendingByRisk, search, sort, periodDays, selectedIds } = props;
   const [trendMetric, setTrendMetric] = useState<TrendMetric>('score');
-  const totalPending = RISK_LEVELS.reduce((acc, r) => acc + pendingByRisk[r], 0);
+  const totalPending = pendingByRisk.critical;
   const allSelected = students.length > 0 && selectedIds.size === students.length;
-  const filtered = riskFilter !== 'all' || search.trim() !== '';
+  const filtered = search.trim() !== '';
 
   return (
     <div className="rounded-xl border bg-card shadow-sm">
@@ -102,32 +99,15 @@ export function PendingQueue(props: PendingQueueProps) {
           <h3 className="text-lg font-semibold tracking-tight">Alunos aguardando triagem</h3>
           <p className="text-sm text-muted-foreground">
             {students.length} {students.length === 1 ? 'aluno' : 'alunos'}
-            {riskFilter !== 'all' && <> · nível <span className="font-medium text-foreground">{RISK_META[riskFilter as RiskLevel]?.label}</span></>}
+            {' '}· nível <span className="font-medium text-foreground">Em Risco</span>
             {' '}· ordenados por <span className="lowercase">{PENDING_SORT_LABEL[sort]}</span>
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filtrar por nível de risco">
-          {(['all', ...RISK_LEVELS] as const).map((level) => {
-            const active = riskFilter === level;
-            const count = level === 'all' ? totalPending : pendingByRisk[level];
-            return (
-              <button
-                key={level}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => props.onRiskFilterChange(level)}
-                disabled={!active && count === 0}
-                className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40 ${
-                  active ? 'border-foreground bg-foreground text-background' : 'bg-background text-muted-foreground hover:bg-muted hover:text-foreground'}`}
-              >
-                {level !== 'all' && <span className={`h-2 w-2 rounded-full ${RISK_META[level].dot}`} />}
-                {level === 'all' ? 'Todos' : RISK_META[level].label}
-                <span className={`tabular-nums ${active ? 'opacity-80' : 'opacity-60'}`}>{count}</span>
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-2">
+          <Badge variant="destructive" className="gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-destructive-foreground" />Em Risco {totalPending}
+          </Badge>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -230,16 +210,16 @@ export function PendingQueue(props: PendingQueueProps) {
             <p className="text-sm text-muted-foreground">
               {search.trim()
                 ? <>Nenhum aluno encontrado para “{search}”.</>
-                : <>Nenhum aluno em <span className="font-medium text-foreground">{RISK_META[riskFilter as RiskLevel]?.label}</span> aguardando triagem.</>}
+                : <>Nenhum aluno Em Risco aguardando triagem.</>}
             </p>
-            <Button variant="outline" size="sm" onClick={() => { props.onSearchChange(''); props.onRiskFilterChange('all'); }}>
+            <Button variant="outline" size="sm" onClick={() => props.onSearchChange('')}>
               Ver todos os {totalPending} pendentes
             </Button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 px-6 py-12 text-center text-sm text-muted-foreground">
             <CheckCircle2 className="h-8 w-8 text-green-500/70" />
-            Todos os alunos foram triados.
+            Nenhum aluno Em Risco aguardando triagem.
           </div>
         )
       )}
