@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] Incluir Ver todos com filtros por nível, status e registros, preservando Para Triar
-- [ ] Validar os filtros da nova visão
+- [x] Incluir Ver todos com filtros por nível, status, registros, sinais e busca anonimizada, preservando Para Triar
+- [x] Validar filtros e elegibilidade: 20 testes passaram em ambiente isolado compatível; página sem erros de compilação. Conferência autenticada indisponível no Supabase externo.
 
 - [x] Restringir Para Triar a alunos Em Risco e alinhar contadores e atalhos
 - [x] Testar exclusão dos demais níveis e preservação do histórico: 17 testes passaram em ambiente isolado compatível; verificação autenticada indisponível no Supabase externo
