@@ -1,3 +1,4 @@
+import { PortalPageShell } from '@/features/institution/portal/PortalPageShell';
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,6 +70,7 @@ export default function InstitutionRadar() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <PortalPageShell>
       <div className="container mx-auto py-6 md:py-8 px-4 space-y-6">
         <Breadcrumb>
           <BreadcrumbList>
@@ -163,6 +165,7 @@ export default function InstitutionRadar() {
           </>
         )}
       </div>
+      </PortalPageShell>
       <Footer />
     </div>
   );

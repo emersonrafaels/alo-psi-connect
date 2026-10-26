@@ -67,7 +67,6 @@ export default function InstitutionPortal() {
   };
   const changeTab = (tab: string) => {
     setActiveTab(tab);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   const { canView: canViewStudentBuddy } = useAllowedBuddyStudents(
     userInstitutions[0]?.institution_id ?? null

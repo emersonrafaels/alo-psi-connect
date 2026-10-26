@@ -1,3 +1,4 @@
+import { PortalPageShell } from '@/features/institution/portal/PortalPageShell';
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/ui/header";
@@ -213,6 +214,7 @@ const InstitutionSupports = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <PortalPageShell>
       <main className="container mx-auto px-4 py-6 md:py-8 space-y-6">
         <Breadcrumb>
           <BreadcrumbList>
@@ -717,6 +719,7 @@ const InstitutionSupports = () => {
         </DialogContent>
       </Dialog>
 
+      </PortalPageShell>
       <Footer />
     </div>
   );

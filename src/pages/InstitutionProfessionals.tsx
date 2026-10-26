@@ -1,3 +1,4 @@
+import { PortalPageShell } from '@/features/institution/portal/PortalPageShell';
 import { useState } from 'react';
 import { LoadingBar, LoadingSection } from "@/components/ui/loading-bar";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -80,6 +81,7 @@ export default function InstitutionProfessionals() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <PortalPageShell>
       <div className="container mx-auto py-8 px-4">
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
@@ -248,6 +250,7 @@ export default function InstitutionProfessionals() {
           )}
         </div>
       </div>
+      </PortalPageShell>
       <Footer />
 
       {selectedProfessional && (

@@ -1,3 +1,4 @@
+import { PortalPageShell } from '@/features/institution/portal/PortalPageShell';
 import { useMemo, useState } from 'react';
 import { LoadingBar, LoadingSection } from "@/components/ui/loading-bar";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -102,6 +103,7 @@ export default function InstitutionStudents() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <PortalPageShell>
       <div className="container mx-auto py-8 px-4">
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
@@ -260,6 +262,7 @@ export default function InstitutionStudents() {
         </TabsContent>
         </Tabs>
       </div>
+      </PortalPageShell>
       <Footer />
 
       <Dialog open={!!assignTarget} onOpenChange={(o) => !o && setAssignTarget(null)}>
