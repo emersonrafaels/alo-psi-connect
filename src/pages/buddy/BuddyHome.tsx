@@ -160,13 +160,6 @@ export default function BuddyHome() {
                 return !text.includes("sono");
               })),
               {
-                id: "static-profissionais",
-                category: "profissional",
-                title: "Conheça nossos profissionais",
-                description: "Encontre psicólogos e terapeutas da Rede Bem-Estar prontos para te acompanhar.",
-                cta: "Ver profissionais",
-              },
-              {
                 id: "static-encontros",
                 category: "encontro",
                 title: "Participe de um encontro em grupo",

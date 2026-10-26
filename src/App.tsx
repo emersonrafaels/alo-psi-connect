@@ -54,6 +54,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 import BuddyHome from "./pages/buddy/BuddyHome";
+import BuddyInstitutionChat from "./pages/buddy/BuddyInstitutionChat";
 import BuddyPortrait from "./pages/buddy/BuddyPortrait";
 import BuddyKnows from "./pages/buddy/BuddyKnows";
 import BuddyPatterns from "./pages/buddy/BuddyPatterns";
@@ -209,6 +210,7 @@ const AppWithShortcuts = () => {
 
       {/* Meu Buddy */}
       <Route path="/buddy" element={<ProtectedRoute><BuddyHome /></ProtectedRoute>} />
+      <Route path="/buddy/instituicao" element={<ProtectedRoute><BuddyInstitutionChat /></ProtectedRoute>} />
       <Route path="/buddy/me-conhecer" element={<ProtectedRoute><BuddyPortrait /></ProtectedRoute>} />
       <Route path="/buddy/como-te-conhece" element={<ProtectedRoute><BuddyKnows /></ProtectedRoute>} />
       <Route path="/buddy/padroes" element={<ProtectedRoute><BuddyPatterns /></ProtectedRoute>} />
