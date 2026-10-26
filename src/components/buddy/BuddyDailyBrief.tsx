@@ -7,7 +7,7 @@ import { useLatestBuddyInsight } from "@/hooks/useBuddy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, ArrowRight, Heart, Zap, X } from "lucide-react";
+import { Sparkles, ArrowRight, Heart, MessageCircle, X } from "lucide-react";
 import buddyImg from "@/assets/buddy-main.png";
 
 const STORAGE_KEY = "buddy-daily-brief-closed";
@@ -135,21 +135,6 @@ export function BuddyDailyBrief() {
               </p>
             )}
 
-            {nextRec && (
-              <div className="rounded-xl border border-primary/15 bg-background/60 backdrop-blur-sm p-3 flex items-start gap-3">
-                <div className="rounded-full bg-primary/10 p-2 shrink-0">
-                  <Zap className="h-4 w-4 text-primary" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-                    Sugestão de agora
-                  </p>
-                  <p className="text-sm text-foreground line-clamp-2">
-                    {nextRec.title}
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Ações */}
@@ -164,11 +149,13 @@ export function BuddyDailyBrief() {
             </Button>
             <Button
               asChild
-              variant="ghost"
-              size="sm"
-              className="rounded-full text-muted-foreground hover:text-foreground"
+              variant="outline"
+              className="rounded-full border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground"
             >
-              <Link to="/buddy">Ver meu Buddy</Link>
+              <Link to="/buddy">
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Falar com o Buddy
+              </Link>
             </Button>
           </div>
         </div>
