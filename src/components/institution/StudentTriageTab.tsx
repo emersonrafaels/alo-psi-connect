@@ -273,6 +273,8 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
       onNavigate?.('fila', { risk: 'critical', tab });
     }
     if (initialTab) setActiveTab(initialTab);
+    // Coming back from "Todos os alunos" (side menu) the queue tab is cleared, so fall back to the default queue.
+    else setActiveTab((tab) => (tab === 'todos_alunos' ? 'para_triar' : tab));
   }, [view, initialRisk, initialTab]);
 
   const overduePatientIds = useMemo(() => {
@@ -627,7 +629,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
           </>
         )}
 
-        {view === 'fila' && <ViewHeader title="Fila de triagem" description="Para Triar reúne apenas alunos Em Risco. Ver todos reúne os alunos de todos os níveis." />}
+        {view === 'fila' && <ViewHeader title="Fila de triagem" description="Para Triar reúne apenas alunos Em Risco. Use “Todos os alunos” no menu lateral para ver todos os níveis e filtros." />}
         {view === 'metricas' && <ViewHeader title="Métricas" description="A equipe está dando conta? Volume, tempo até resolver, cobertura dos alunos em risco, desfechos e carga por pessoa no período escolhido." />}
 
         {showLegacy && (<>
@@ -923,10 +925,14 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
                 {resolvedTriages.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="todos_alunos" className="gap-2 py-2 px-4 text-sm data-[state=active]:bg-background">
-              <Users className="h-4 w-4" />Ver todos
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">{students.length}</Badge>
-            </TabsTrigger>
+            {/* In the full-screen triage page "Todos os alunos" lives in the side menu; the embedded
+                portal tab has no side menu, so the trigger stays there. */}
+            {showLegacy && (
+              <TabsTrigger value="todos_alunos" className="gap-2 py-2 px-4 text-sm data-[state=active]:bg-background">
+                <Users className="h-4 w-4" />Ver todos
+                <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">{students.length}</Badge>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="todos" className="gap-2 py-2 px-4 text-sm data-[state=active]:bg-background">
               Histórico de triagens
               <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">
