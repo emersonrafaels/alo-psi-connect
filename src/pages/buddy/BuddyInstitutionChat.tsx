@@ -20,7 +20,14 @@ class SafeRender extends React.Component<
   render() { return this.state.error ? this.props.fallback(this.state.error, this.reset) : this.props.children; }
 }
 
-type Msg = { role: "user" | "assistant"; content: string; error?: boolean };
+type Msg = { role: "user" | "assistant"; content: string; error?: boolean; consulting?: boolean };
+const TOOL_MARK = "[[CONSULTANDO]]";
+
+const mdComponents = {
+  a: ({ href, children }: { href?: string; children?: React.ReactNode }) =>
+    href?.startsWith("/") ? <Link to={href} className="text-primary underline underline-offset-2">{children}</Link>
+      : <a href={href} target="_blank" rel="noreferrer">{children}</a>,
+};
 
 const SUGGESTIONS = [
   "Quantos alunos estão Em Risco hoje?",
@@ -76,8 +83,10 @@ export default function BuddyInstitutionChat() {
         const { done, value } = await reader.read();
         if (done) break;
         acc += dec.decode(value, { stream: true });
-        const [answer, err] = acc.split("[[ERRO]]");
-        setLast(() => ({ role: "assistant", content: (err ? err.trim() : answer).trim() || answer, error: !!err }));
+        const [rawAnswer, err] = acc.split("[[ERRO]]");
+        const consulting = rawAnswer.endsWith(TOOL_MARK);
+        const answer = rawAnswer.split(TOOL_MARK).join("");
+        setLast(() => ({ role: "assistant", content: (err ? err.trim() : answer).trim() || answer, error: !!err, consulting }));
       }
     } catch (e: any) {
       if (e?.name === "AbortError") setLast((m) => ({ ...m, content: m.content || "Resposta interrompida." }));
@@ -139,11 +148,12 @@ export default function BuddyInstitutionChat() {
                     {loading && i === messages.length - 1 ? (
                       <p className="whitespace-pre-wrap"><span>{m.content}</span></p>
                     ) : (
-                      <div className="prose prose-sm max-w-none dark:prose-invert"><ReactMarkdown>{m.content}</ReactMarkdown></div>
+                      <div className="prose prose-sm max-w-none dark:prose-invert"><ReactMarkdown components={mdComponents as any}>{m.content}</ReactMarkdown></div>
                     )}
                   </SafeRender>
-                ) : (
-                  <span className="inline-flex gap-1 text-muted-foreground">Buddy está analisando os dados<span className="animate-pulse">…</span></span>
+                ) : null}
+                {loading && i === messages.length - 1 && (m.consulting || !m.content) && (
+                  <span className="inline-flex gap-1 text-muted-foreground">{m.consulting ? "Consultando dados" : "Buddy está analisando os dados"}<span className="animate-pulse">…</span></span>
                 )}
               </div>
             ),
