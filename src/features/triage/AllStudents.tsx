@@ -113,7 +113,7 @@ export function AllStudents({ students, nameOf, overdueIds, periodDays, risk, on
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {controls.map((control) => (
           <MultiSelect key={control.key} control={control} selected={filters[control.key]} counts={counts[control.key] ?? {}}
-            onToggle={(value) => toggle(control.key, value)} onClear={() => toggle === undefined ? undefined : setFilters((current) => withSelection(current, control.key, []))} />
+            onToggle={(value) => toggle(control.key, value)} onClear={() => setFilters((current) => withSelection(current, control.key, []))} />
         ))}
       </div>
       <div className="flex flex-wrap gap-3">
