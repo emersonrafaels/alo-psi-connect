@@ -45,12 +45,11 @@ export function BuddyDailyBrief() {
 
   if (!user || isClosed) return null;
 
-  const firstName = isInstitutionAdmin
-    ? "Professor"
-    : profile?.nome?.split(" ")[0] ||
-      user?.user_metadata?.nome?.split(" ")[0] ||
-      user?.email?.split("@")[0] ||
-      "amigo(a)";
+  const firstName =
+    profile?.nome?.split(" ")[0] ||
+    user?.user_metadata?.nome?.split(" ")[0] ||
+    user?.email?.split("@")[0] ||
+    "amigo(a)";
 
   const greeting = getGreeting();
   const discovery = isInstitutionAdmin
