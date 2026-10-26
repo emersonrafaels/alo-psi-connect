@@ -1,5 +1,5 @@
 import { PortalPageShell } from '@/features/institution/portal/PortalPageShell';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,8 @@ import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Radar as RadarIcon, PlusCircle, History, Sparkles } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
-import { useInstitutionRadarList } from '@/hooks/useInstitutionRadar';
+import { useInstitutionRadarList, useRadarCheckpoint, useDiscardRadarCheckpoint } from '@/hooks/useInstitutionRadar';
+import { RadarCheckpointDialog } from '@/components/radar/RadarCheckpointDialog';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { RadarForm } from '@/components/radar/RadarForm';
@@ -23,15 +24,54 @@ export default function InstitutionRadar() {
   const { tenant } = useTenant();
   const institution = userInstitutions[0]?.educational_institutions;
   const institutionId = userInstitutions[0]?.institution_id;
-  const { data: list = [], isLoading: loadingList } = useInstitutionRadarList(institutionId);
+  const { data: allList = [], isLoading: loadingList } = useInstitutionRadarList(institutionId);
+  const list = useMemo(() => allList.filter((d: any) => d.status === 'submitted'), [allList]);
+  const { data: checkpoint, isLoading: loadingCheckpoint } = useRadarCheckpoint(institutionId);
+  const discard = useDiscardRadarCheckpoint();
 
   const [mode, setMode] = useState<'view' | 'form'>('view');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [promptedId, setPromptedId] = useState<string | null>(null);
+  const [formInitial, setFormInitial] = useState<any>(undefined);
+  const [formKey, setFormKey] = useState(0);
+
+  // Mostra o checkpoint assim que o usuário entra
+  useEffect(() => {
+    if (checkpoint && checkpoint.id !== promptedId && mode === 'view') {
+      setPromptedId(checkpoint.id);
+      setDialogOpen(true);
+    }
+  }, [checkpoint, promptedId, mode]);
+
+  function openForm(initial?: any) {
+    setFormInitial(initial);
+    setFormKey(k => k + 1);
+    setMode('form');
+  }
+
+  function startDiagnostic() {
+    if (checkpoint) setDialogOpen(true);
+    else openForm();
+  }
+
+  function continueCheckpoint() {
+    if (!checkpoint) return;
+    setDialogOpen(false);
+    openForm({ id: checkpoint.id, answers: checkpoint.answers, step: checkpoint.step });
+  }
+
+  async function restartFromScratch() {
+    if (!checkpoint) return;
+    await discard.mutateAsync(checkpoint.id);
+    setDialogOpen(false);
+    openForm();
+  }
 
   const latest = list[0];
   const selected = useMemo(() => list.find(d => d.id === selectedId) ?? latest, [list, selectedId, latest]);
 
-  if (isLoading || loadingList) {
+  if (isLoading || loadingList || loadingCheckpoint) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LogoLoader />
@@ -92,7 +132,7 @@ export default function InstitutionRadar() {
             </div>
           </div>
           {mode === 'view' && (
-            <Button onClick={() => { setMode('form'); }} size="lg">
+            <Button onClick={startDiagnostic} size="lg">
               <PlusCircle className="h-4 w-4 mr-2" /> {latest ? 'Atualizar diagnóstico' : 'Iniciar diagnóstico'}
             </Button>
           )}
@@ -101,8 +141,19 @@ export default function InstitutionRadar() {
           )}
         </div>
 
+        <RadarCheckpointDialog
+          open={dialogOpen}
+          checkpoint={checkpoint ?? null}
+          onOpenChange={setDialogOpen}
+          onContinue={continueCheckpoint}
+          onRestart={restartFromScratch}
+          restarting={discard.isPending}
+        />
+
         {mode === 'form' && institutionId && (
           <RadarForm
+            key={formKey}
+            initial={formInitial}
             institutionId={institutionId}
             institutionName={institution?.name ?? ''}
             onSubmitted={() => setMode('view')}
@@ -119,7 +170,7 @@ export default function InstitutionRadar() {
               <p className="text-muted-foreground max-w-md mx-auto">
                 Em cerca de 10 minutos, geramos um retrato completo da maturidade da sua instituição em bem-estar estudantil, com recomendações práticas.
               </p>
-              <Button onClick={() => setMode('form')} size="lg" className="mt-2">
+              <Button onClick={startDiagnostic} size="lg" className="mt-2">
                 <PlusCircle className="h-4 w-4 mr-2" /> Iniciar diagnóstico
               </Button>
             </CardContent>
@@ -144,7 +195,7 @@ export default function InstitutionRadar() {
                         (selectedId ?? latest?.id) === d.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
                       }`}
                     >
-                      <div className="font-medium">v{d.version} · {d.status === 'submitted' ? 'Submetido' : 'Rascunho'}</div>
+                      <div className="font-medium">v{d.version} · Concluído</div>
                       <div className="text-muted-foreground">{format(new Date(d.created_at), "dd 'de' MMM yyyy", { locale: ptBR })}</div>
                     </button>
                   ))}
@@ -152,17 +203,7 @@ export default function InstitutionRadar() {
               </Card>
             )}
 
-            {selected.status === 'submitted' ? (
-              <RadarResult diagnostic={selected} />
-            ) : (
-              <Card>
-                <CardContent className="py-10 text-center space-y-3">
-                  <Badge variant="outline">Rascunho</Badge>
-                  <p className="text-muted-foreground">Este diagnóstico ainda não foi submetido. Continue de onde parou para gerar a análise.</p>
-                  <Button onClick={() => setMode('form')}>Continuar preenchimento</Button>
-                </CardContent>
-              </Card>
-            )}
+            <RadarResult diagnostic={selected} />
           </>
         )}
       </div>
