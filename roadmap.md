@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Mover “Ver todos” da fila de triagem para o menu lateral como “Todos os alunos”
+- [ ] Conferir o menu lateral e a fila na tela autenticada: Supabase externo sem sessão administrativa disponível
+
 - [x] Incluir Ver todos com filtros por nível, status, registros, sinais e busca anonimizada, preservando Para Triar
 - [x] Validar filtros e elegibilidade: 20 testes passaram em ambiente isolado compatível; página sem erros de compilação. Conferência autenticada indisponível no Supabase externo.
 
