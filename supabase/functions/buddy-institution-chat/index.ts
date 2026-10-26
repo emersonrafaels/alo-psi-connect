@@ -243,7 +243,7 @@ Formato da resposta (markdown curto):
 3. Por fim, uma ação concreta com link markdown para a tela certa, usando apenas estes caminhos:
    [Triagem → Para Triar](/portal-institucional/triagem?view=fila&risk=critical&tab=para_triar),
    [Triagem → Follow-ups](/portal-institucional/triagem?view=followups),
-   [Todos os alunos](/portal-institucional/triagem?view=todos),
+   [Todos os alunos](/portal-institucional/triagem?view=fila&tab=todos_alunos),
    [Comparador](/portal-institucional/comparador),
    [Alunos](/portal-institucional?tab=alunos).`;
 
