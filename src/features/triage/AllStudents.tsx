@@ -93,10 +93,10 @@ function FilterGrid({ title, controls, filters, counts, onToggle, onClear }: {
   );
 }
 
-export function AllStudents({ students, nameOf, overdueIds, periodDays, risk, onRiskChange, onOpenHistory, units = [], levels = [], placements }: {
+export function AllStudents({ students, nameOf, overdueIds, periodDays, risk, onRiskChange, onOpenHistory, units = [], levels = [], placements, showHeading = true }: {
   students: StudentRiskData[]; nameOf: (id: string) => string; overdueIds: Set<string>; periodDays: number;
   risk: string; onRiskChange: (risk: string) => void; onOpenHistory: (student: StudentRiskData) => void;
-  units?: AcademicUnit[]; levels?: AcademicLevel[]; placements?: Map<string, string>;
+  units?: AcademicUnit[]; levels?: AcademicLevel[]; placements?: Map<string, string>; showHeading?: boolean;
 }) {
   const [filters, setFilters] = useState<StudentFilters>(() => ({ ...emptyStudentFilters, risk: risk && risk !== 'all' ? [risk] : [] }));
   const [pageSize, setPageSize] = useState(25);
@@ -179,7 +179,11 @@ export function AllStudents({ students, nameOf, overdueIds, periodDays, risk, on
   return (
     <section className="space-y-4" aria-label="Todos os alunos">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-lg font-semibold"><Users className="h-5 w-5 text-primary" />Todos os alunos <Badge variant="secondary">{filtered.length} / {students.length}</Badge></h2>
+        {showHeading ? (
+          <h2 className="flex items-center gap-2 text-lg font-semibold"><Users className="h-5 w-5 text-primary" />Todos os alunos <Badge variant="secondary">{filtered.length} / {students.length}</Badge></h2>
+        ) : (
+          <span className="text-sm text-muted-foreground">{filtered.length} de {students.length} alunos</span>
+        )}
         <span className="text-xs text-muted-foreground">Indicadores dos últimos {periodDays} dias</span>
       </div>
       <FilterGrid title="Triagem e registros" controls={baseControls} filters={filters} counts={counts} onToggle={toggle}

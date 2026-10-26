@@ -631,7 +631,8 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
           </>
         )}
 
-        {view === 'fila' && <ViewHeader title="Fila de triagem" description="Para Triar reúne apenas alunos Em Risco. Use “Todos os alunos” no menu lateral para ver todos os níveis e filtros." />}
+        {view === 'fila' && activeTab === 'todos_alunos' && <ViewHeader title="Todos os alunos" description="Consulte qualquer aluno, em qualquer nível de risco, e refine por unidade, curso, turno, turma, situação do diário ou dados cadastrais. Filtrar aqui não altera a fila de triagem." />}
+        {view === 'fila' && activeTab !== 'todos_alunos' && <ViewHeader title="Fila de triagem" description="Para Triar reúne apenas alunos Em Risco. Use “Todos os alunos” no menu lateral para ver todos os níveis e filtros." />}
         {view === 'metricas' && <ViewHeader title="Métricas" description="A equipe está dando conta? Volume, tempo até resolver, cobertura dos alunos em risco, desfechos e carga por pessoa no período escolhido." />}
 
         {showLegacy && (<>
@@ -947,6 +948,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
             <AllStudents students={students} nameOf={(id) => patientNameMap.get(id) ?? 'Aluno'}
               overdueIds={overduePatientIds} periodDays={analysisPeriod} risk={riskFilter}
               units={academicUnits} levels={academicLevels} placements={academicPlacements}
+              showHeading={!view}
               onRiskChange={changeRisk} onOpenHistory={(student) => handleOpenActivity(student)} />
           </TabsContent>
 
