@@ -207,14 +207,14 @@ const Header = () => {
                       Gerenciar Apoios
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator />
+                  {isAdmin && <DropdownMenuSeparator />}
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
                       <Shield className="h-4 w-4 mr-2" />
                       Acessar Admin
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator />
+                  {isAdmin && <DropdownMenuSeparator />}
                   {isAdmin && (
                     <GlobalCacheButton variant="minimal" className="w-full justify-start p-0 h-auto" />
                   )}
@@ -361,7 +361,7 @@ const Header = () => {
                       Gerenciar Blog
                     </Link>
                   )}
-                  <div className="my-1 border-t border-border/50" />
+                  {isAdmin && <div className="my-1 border-t border-border/50" />}
                   {isAdmin && (
                     <Link
                       to={buildTenantPath(tenantSlug, '/gerenciar-apoios')}
