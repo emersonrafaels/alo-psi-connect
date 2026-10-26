@@ -24,6 +24,7 @@ import { generateWhatsAppMessage, shareWhatsApp, shareTelegram, shareEmail, copy
 import { useShareConfig } from "@/hooks/useShareConfig";
 import { Calendar, FileText, Share2, TrendingUp, Heart, Brain, Zap, Moon, Tag, Download, MessageCircle, Sparkles, Target, Mail, Copy } from "lucide-react";
 import { formatDateBR, getTodayLocalDateString, normalizeDateForStorage } from "@/lib/utils";
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 const MoodExperience = () => {
   const navigate = useNavigate();
@@ -78,7 +79,7 @@ const MoodExperience = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <LogoLoader />
           <p className="text-muted-foreground">Carregando...</p>
         </div>
       </div>

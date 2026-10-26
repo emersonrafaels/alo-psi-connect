@@ -12,6 +12,7 @@ import { Calendar, Clock, User, Mail, Phone, MapPin, CheckCircle, AlertCircle, S
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/integrations/supabase/client"
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 interface AppointmentData {
   id: string
@@ -168,7 +169,7 @@ const AppointmentAccess = () => {
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+            <LogoLoader />
             <p className="mt-4 text-muted-foreground">Verificando acesso...</p>
           </div>
         </main>

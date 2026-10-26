@@ -23,6 +23,7 @@ import { ShareSessionButton } from '@/components/group-sessions/ShareSessionButt
 import { AddToCalendarButton } from '@/components/group-sessions/AddToCalendarButton';
 import { useState, useEffect } from 'react';
 import { buildTenantPath } from '@/utils/tenantHelpers';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 const GroupSessionDetail = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -70,7 +71,7 @@ const GroupSessionDetail = () => {
       <>
         <Header />
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+          <LogoLoader />
         </div>
         <Footer />
       </>

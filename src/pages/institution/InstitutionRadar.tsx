@@ -16,6 +16,7 @@ import { RadarForm } from '@/components/radar/RadarForm';
 import { RadarResult } from '@/components/radar/RadarResult';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 export default function InstitutionRadar() {
   const { userInstitutions, isLoading } = useInstitutionAccess();
@@ -33,7 +34,7 @@ export default function InstitutionRadar() {
   if (isLoading || loadingList) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <LogoLoader />
       </div>
     );
   }

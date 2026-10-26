@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRadarAccess } from '@/hooks/useRadarAccess';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 /**
  * Protege as rotas do Radar Institucional.
@@ -18,7 +19,7 @@ export const RadarProtectedRoute = ({ children }: { children: ReactNode }) => {
   if (loading || accessLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <LogoLoader />
       </div>
     );
   }

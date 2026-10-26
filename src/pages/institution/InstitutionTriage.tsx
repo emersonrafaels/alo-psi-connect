@@ -5,7 +5,7 @@ import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { LogoLoader } from '@/components/ui/logo-loader';
 import { StudentTriageTab, type TriageView } from '@/components/institution/StudentTriageTab';
 
 // "Todos os alunos" is a queue sub-tab, not a new view, so it shares the "fila" view with a tab hint.
@@ -95,7 +95,7 @@ export default function InstitutionTriage() {
         </header>
         <main className="flex-1 space-y-6 p-4 md:p-8">
           {isLoading ? (
-            <Skeleton className="h-64 w-full" />
+            <LogoLoader className="min-h-[40vh]" />
           ) : inst?.institution_id ? (
             <StudentTriageTab
               institutionId={inst.institution_id}

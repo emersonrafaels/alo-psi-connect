@@ -3,6 +3,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, AlertTriangle, CheckCircle, Users, Calendar, XCircle } from 'lucide-react';
 import { useInstitutionDashboard } from '@/hooks/useInstitutionDashboard';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 interface InstitutionAnalyticsDashboardProps {
   institutionId: string;
@@ -14,7 +15,7 @@ export function InstitutionAnalyticsDashboard({ institutionId }: InstitutionAnal
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <LogoLoader />
       </div>
     );
   }

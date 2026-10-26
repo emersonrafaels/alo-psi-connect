@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { parseISODateLocal, getTodayLocalDateString, normalizeDateForStorage } from '@/lib/utils';
 import { EntryComparisonCard } from '@/components/mood/EntryComparisonCard';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 const MoodEntry = () => {
   const navigate = useNavigate();
@@ -449,7 +450,7 @@ const MoodEntry = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <LogoLoader />
           <p className="text-gray-600">
             {loading ? 'Carregando perfil...' : configsLoading ? 'Carregando configurações...' : 'Preparando entrada de humor...'}
           </p>

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 export default function GoogleCalendarCallback() {
   const [searchParams] = useSearchParams();
@@ -341,7 +342,7 @@ export default function GoogleCalendarCallback() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <LogoLoader />
         <p className="text-muted-foreground">Conectando com Google Calendar...</p>
       </div>
     </div>

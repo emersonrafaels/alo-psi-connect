@@ -58,6 +58,7 @@ import {
   Users,
 } from "lucide-react";
 import { SupportIcon, SUPPORT_ICON_OPTIONS } from "@/features/apoios/SupportIcon";
+import { LogoLoader } from '@/components/ui/logo-loader';
 import {
   SUPPORT_ACCESS_TYPES,
   SUPPORT_CATEGORIES,
@@ -191,7 +192,7 @@ const InstitutionSupports = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <LogoLoader />
       </div>
     );
   }
