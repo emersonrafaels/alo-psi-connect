@@ -12,6 +12,7 @@ import { CheckCircle, Calendar, Clock, User, ArrowLeft, Home, Mail, Sparkles } f
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 interface AppointmentData {
   id: string
@@ -177,7 +178,7 @@ const PaymentSuccess = () => {
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+            <LogoLoader />
             <p className="mt-4 text-muted-foreground">Carregando informações...</p>
           </div>
         </main>

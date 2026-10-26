@@ -6,6 +6,7 @@ import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -142,7 +143,7 @@ const AuthCallback = () => {
             <div className="mb-6">
               {confirmationStatus === 'processing' && (
                 <>
-                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/20 border-t-primary mx-auto mb-4"></div>
+                  <LogoLoader />
                   <div className="w-full bg-muted rounded-full h-2 mb-4">
                     <div className="bg-primary h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
                   </div>
@@ -216,7 +217,7 @@ const AuthCallback = () => {
       <div className="max-w-md w-full mx-auto px-4">
         <div className="text-center bg-card rounded-lg p-8 shadow-lg border">
           <div className="mb-6">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/20 border-t-primary mx-auto mb-4"></div>
+            <LogoLoader />
             <div className="w-full bg-muted rounded-full h-2 mb-4">
               <div className="bg-primary h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
             </div>

@@ -22,6 +22,7 @@ import { parseISODateLocal } from "@/lib/utils";
 import { getAllEmotions } from "@/utils/emotionFormatters";
 
 import { MoodEntryDetailModal } from "@/components/mood/MoodEntryDetailModal";
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 /* =========================================
    COMPONENTE
@@ -48,7 +49,7 @@ const DiarioHistorico = () => {
     return (
       <div className="flex min-h-[400px] items-center justify-center px-4">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-9 w-9 animate-spin rounded-full border-2 border-[#7667c9] border-t-transparent dark:border-violet-400 dark:border-t-transparent" />
+          <LogoLoader />
 
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Carregando histórico...

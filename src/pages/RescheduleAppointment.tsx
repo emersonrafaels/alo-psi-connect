@@ -18,6 +18,7 @@ import { RescheduleSummary } from "@/components/reschedule/RescheduleSummary"
 import { RescheduleReasonSelect } from "@/components/reschedule/RescheduleReasonSelect"
 import { useTenant } from "@/hooks/useTenant"
 import { buildTenantPath } from "@/utils/tenantHelpers"
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 interface Appointment {
   id: string
@@ -344,7 +345,7 @@ const RescheduleAppointment = () => {
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+            <LogoLoader />
             <p className="mt-4 text-muted-foreground">Carregando informações...</p>
           </div>
         </main>

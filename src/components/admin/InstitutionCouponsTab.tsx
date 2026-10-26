@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { CouponsCardView } from './coupons/CouponsCardView';
 import { CouponsTableView } from './coupons/CouponsTableView';
 import { CouponsAnalyticsView } from './coupons/CouponsAnalyticsView';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 interface Props {
   institutionId: string;
@@ -69,7 +70,7 @@ export const InstitutionCouponsTab = ({ institutionId, institutionName, tenantId
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <LogoLoader />
       </div>
     );
   }

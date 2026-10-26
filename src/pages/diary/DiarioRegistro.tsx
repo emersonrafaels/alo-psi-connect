@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/tabs";
 
 import { useToast } from "@/hooks/use-toast";
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 const DiarioRegistro = () => {
   const navigate = useNavigate();
@@ -520,7 +521,7 @@ const DiarioRegistro = () => {
     return (
       <div className="flex min-h-[500px] items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-[#7667c9] border-t-transparent" />
+          <LogoLoader />
 
           <p className="mt-4 text-sm text-slate-500">
             Preparando seu registro...
