@@ -372,7 +372,7 @@ const Header = () => {
                       Gerenciar Apoios
                     </Link>
                   )}
-                  <div className="my-1 border-t border-border/50" />
+                  {isAdmin && <div className="my-1 border-t border-border/50" />}
                   {isAdmin && (
                     <Link
                       to="/admin"
