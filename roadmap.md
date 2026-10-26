@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Restringir Para Triar a alunos Em Risco e alinhar contadores e atalhos
+- [ ] Testar exclusão dos demais níveis e preservação do histórico
+
 - [x] Diferenciar os dez alunos Afya Em Risco para triar com histórias, diários, práticas e escalas coerentes
 - [x] Verificar variedade, coerência e preservação da fila e dos casos A–F por consulta e 15 testes; conferência na tela autenticada indisponível no Supabase externo
 

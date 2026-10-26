@@ -17,6 +17,11 @@ export interface PriorityItem<T extends PriorityInput = PriorityInput> {
 
 const isPending = (s: PriorityInput) => !s.lastTriageStatus || s.lastTriageStatus === 'pending';
 
+/** One definition for the pending queue and every institutional counter. */
+export function isAwaitingTriage(s: Pick<PriorityInput, 'riskLevel' | 'lastTriageStatus'>): boolean {
+  return s.riskLevel === 'critical' && (!s.lastTriageStatus || s.lastTriageStatus === 'pending');
+}
+
 /** Urgency order: grave keyword > critical not triaged > overdue follow-up > alert > worsening trend. */
 export function priorityScore(s: PriorityInput): number {
   let score = 0;

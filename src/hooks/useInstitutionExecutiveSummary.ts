@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAllPaged } from '@/lib/supabasePaging';
 import { fetchStudentRiskData } from '@/hooks/useStudentTriage';
+import { isAwaitingTriage } from '@/features/triage/priorities';
 
 export interface AlertItem {
   id: string;
@@ -61,9 +62,7 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
 
   // Same definition as the "Para triar" queue: students classified as Em Risco
   // (mood-derived risk + critical keyword escalation) without a triage in progress.
-  const criticalPending = risk.students.filter(
-    (s) => s.riskLevel === 'critical' && (!s.lastTriageStatus || s.lastTriageStatus === 'pending'),
-  ).length;
+  const criticalPending = risk.students.filter(isAwaitingTriage).length;
 
   const HIGH_RISK = ['alto', 'critico', 'crítico', 'high', 'critical'];
   const sortedTriages = [...(triages || [])].sort((a: any, b: any) =>
