@@ -62,7 +62,7 @@ describe('ageRangeOf', () => {
     expect(ageRangeOf('not-a-date', now)).toBe('unknown');
   });
   it('respects whether the birthday already happened this year', () => {
-    expect(ageRangeOf('2008-10-26', now)).toBe('under18'); // turns 18 today
+    expect(ageRangeOf('2008-10-26', now)).toBe('18-24'); // turns 18 today
     expect(ageRangeOf('2008-10-27', now)).toBe('under18');
     expect(ageRangeOf('2008-10-25', now)).toBe('18-24');
   });
