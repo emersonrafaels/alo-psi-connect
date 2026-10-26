@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard, BarChart3, Heart, ClipboardList, StickyNote, Brain, Sparkles,
-  Users, Briefcase, HeartHandshake, Ticket, LineChart, ArrowUpRight, Menu,
+  Users, Briefcase, HeartHandshake, Ticket, LineChart, ArrowUpRight, Menu, Radar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -36,6 +36,7 @@ export function buildPortalNav(build: (p: string) => string, canViewStudentBuddy
     { id: 'professionals-page', label: 'Profissionais', description: '', icon: Briefcase, group: 'Gestão', href: build('/portal-institucional/profissionais') },
     { id: 'supports-page', label: 'Apoios', description: '', icon: HeartHandshake, group: 'Gestão', href: build('/portal-institucional/apoios') },
     { id: 'coupons', label: 'Cupons', description: 'Gere e acompanhe códigos de acesso.', icon: Ticket, group: 'Gestão' },
+    { id: 'radar-page', label: 'Radar Institucional', description: 'Diagnóstico consultivo do bem-estar e da maturidade institucional.', icon: Radar, group: 'Gestão', href: build('/portal-institucional/radar') },
     { id: 'comparator-page', label: 'Comparador', description: '', icon: LineChart, group: 'Análises', href: build('/portal-institucional/comparador') },
   );
   return items;

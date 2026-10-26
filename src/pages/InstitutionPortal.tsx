@@ -28,7 +28,6 @@ import {
   Compass,
   ClipboardList,
   StickyNote,
-  Radar as RadarIcon,
   HeartHandshake
 } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
@@ -172,12 +171,6 @@ export default function InstitutionPortal() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button asChild size="sm" variant="outline" className="gap-2">
-              <Link to={buildTenantPath(tenant?.slug, '/portal-institucional/radar')}>
-                <RadarIcon className="h-4 w-4" />
-                Radar Institucional
-              </Link>
-            </Button>
             <KeyboardShortcutsPopover />
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={resetTour} title="Reiniciar tour guiado">
               <Compass className="h-4 w-4" />
@@ -349,32 +342,6 @@ export default function InstitutionPortal() {
                   <Button asChild className="w-full" size="lg">
                     <Link to={buildTenantPath(tenant?.slug, '/portal-institucional/alunos')}>
                       Ver Alunos
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border-2 hover:border-primary/50 transition-all md:col-span-2">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-lg bg-primary/10">
-                      <RadarIcon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg md:text-xl">Radar Institucional</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Diagnóstico consultivo do bem-estar e maturidade institucional
-                      </p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm mb-4">
-                    Em ~10 minutos, geramos um retrato completo da maturidade da sua instituição, com recomendações práticas.
-                  </p>
-                  <Button asChild className="w-full" size="lg">
-                    <Link to={buildTenantPath(tenant?.slug, '/portal-institucional/radar')}>
-                      Abrir Radar
                     </Link>
                   </Button>
                 </CardContent>
