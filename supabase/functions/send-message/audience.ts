@@ -34,3 +34,18 @@ export function expandUnits(selected: string[], units: { id: string; parent_id: 
   }
   return out;
 }
+
+/**
+ * Which recipients may get an email copy. Study cases follow their own toggle
+ * (activated cases receive emails even inside a demo institution); every other
+ * student of a demo institution never does.
+ */
+export function emailableRecipients(
+  userIds: string[],
+  cases: { user_id: string | null; notifications_blocked: boolean | null }[],
+  institutionIsDemo: boolean,
+): string[] {
+  const caseMap = new Map<string, boolean>();
+  for (const c of cases) if (c.user_id) caseMap.set(c.user_id, c.notifications_blocked !== false);
+  return userIds.filter((id) => (caseMap.has(id) ? !caseMap.get(id) : !institutionIsDemo));
+}

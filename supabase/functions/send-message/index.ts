@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
 import { Resend } from 'npm:resend@2.0.0';
-import { canSend, expandUnits, type Audience } from './audience.ts';
+import { canSend, emailableRecipients, expandUnits, type Audience } from './audience.ts';
 
 const uuid = z.string().uuid();
 const audienceSchema = z.discriminatedUnion('kind', [
@@ -134,15 +134,13 @@ Deno.serve(async (req) => {
 
     let emailed = 0;
     if (input.sendEmail && Deno.env.get('RESEND_API_KEY')) {
-      // Never email synthetic/demo students.
-      const blocked = new Set<string>();
-      const { data: synth } = await db.from('synthetic_student_cases').select('user_id');
-      (synth ?? []).forEach((s: any) => s.user_id && blocked.add(s.user_id));
+      const { data: synth } = await db.from('synthetic_student_cases').select('user_id, notifications_blocked');
+      let isDemo = false;
       if (institutionId) {
         const { data: inst } = await db.from('educational_institutions').select('is_demo').eq('id', institutionId).maybeSingle();
-        if (inst?.is_demo) recipients.forEach((r) => blocked.add(r.userId));
+        isDemo = !!inst?.is_demo;
       }
-      const targets = recipients.filter((r) => !blocked.has(r.userId)).map((r) => r.userId);
+      const targets = emailableRecipients(recipients.map((r) => r.userId), synth ?? [], isDemo);
       const profs = await chunked(targets, async (p) => (await db.from('profiles').select('email').in('user_id', p)).data ?? []);
       const emails = [...new Set(profs.map((p: any) => p.email).filter((e: string) => e && !/demo|sintetic|example\./i.test(e)))];
       const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
