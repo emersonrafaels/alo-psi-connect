@@ -232,6 +232,20 @@ const InstitutionSupports = () => {
       <Header />
       <PortalPageShell>
       <main className="container mx-auto px-4 py-6 md:py-8 space-y-6">
+        <Composer
+          open={!!announce}
+          onOpenChange={(o) => { if (!o) setAnnounce(null); }}
+          mode="institution"
+          institutionId={institutionId}
+          title="Divulgar para os alunos?"
+          initial={announceInitial}
+        />
+        {pickToAnnounce && (
+          <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm">
+            <Megaphone className="h-5 w-5 text-primary" />
+            <span>Escolha um apoio publicado e clique no megafone para divulgá-lo aos alunos por mensagem e e-mail.</span>
+          </div>
+        )}
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
