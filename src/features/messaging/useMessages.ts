@@ -105,8 +105,8 @@ export function useSendReply(threadId: string | null) {
   const { user } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: string) => {
-      const { error } = await db.from('message_replies').insert({ thread_id: threadId, author_id: user!.id, body });
+    mutationFn: async ({ body, anonymous = true }: { body: string; anonymous?: boolean }) => {
+      const { error } = await db.from('message_replies').insert({ thread_id: threadId, author_id: user!.id, body, is_anonymous: anonymous });
       if (error) throw error;
     },
     onSuccess: () => {

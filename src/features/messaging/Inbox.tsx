@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowLeft, Inbox as InboxIcon, Send } from 'lucide-react';
+import { ArrowLeft, Inbox as InboxIcon, Info, Send } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,12 +20,14 @@ function ThreadView({ summary, onBack }: { summary: ThreadSummary; onBack: () =>
   const { data, isLoading } = useThread(summary.thread_id);
   const reply = useSendReply(summary.thread_id);
   const [text, setText] = useState('');
+  const [anonymous, setAnonymous] = useState(true);
+  const askAnon = !summary.is_sender && !!summary.institution_name;
   const msg = data?.thread?.messages;
 
   const submit = async () => {
     const body = text.trim();
     if (!body) return;
-    try { await reply.mutateAsync(body); setText(''); }
+    try { await reply.mutateAsync({ body, anonymous: askAnon ? anonymous : false }); setText(''); }
     catch { toast.error('Não foi possível enviar a resposta.'); }
   };
 
@@ -48,6 +51,18 @@ function ThreadView({ summary, onBack }: { summary: ThreadSummary; onBack: () =>
           </>
         )}
       </div>
+      {askAnon && (
+        <div className="space-y-2 border-t px-3 pt-3">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(v === true)} />
+            Responder anonimamente
+          </label>
+          <div className="flex gap-2 rounded-md bg-muted p-2 text-xs text-muted-foreground">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <p>Mesmo que você mostre seu nome, a instituição não saberá quais dados do diário, escalas ou práticas são seus. Esses dados continuam aparecendo apenas de forma anônima. Ao se identificar uma vez, seu nome fica visível nesta conversa.</p>
+          </div>
+        </div>
+      )}
       <div className="flex gap-2 border-t p-3">
         <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Escreva sua resposta..." rows={2} maxLength={5000}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit(); }} />
