@@ -2993,6 +2993,142 @@ export type Database = {
         }
         Relationships: []
       }
+      message_replies: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          thread_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          thread_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_replies_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "message_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_threads: {
+        Row: {
+          created_at: string
+          id: string
+          institution_id: string | null
+          last_activity_at: string
+          message_id: string
+          recipient_id: string
+          recipient_patient_id: string | null
+          recipient_read_at: string | null
+          recipient_replied: boolean
+          sender_id: string
+          sender_read_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          last_activity_at?: string
+          message_id: string
+          recipient_id: string
+          recipient_patient_id?: string | null
+          recipient_read_at?: string | null
+          recipient_replied?: boolean
+          sender_id: string
+          sender_read_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          last_activity_at?: string
+          message_id?: string
+          recipient_id?: string
+          recipient_patient_id?: string | null
+          recipient_read_at?: string | null
+          recipient_replied?: boolean
+          sender_id?: string
+          sender_read_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_threads_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          audience: string
+          audience_filter: Json
+          body: string
+          created_at: string
+          id: string
+          institution_id: string | null
+          recipient_count: number
+          send_email: boolean
+          sender_id: string
+          subject: string
+        }
+        Insert: {
+          audience: string
+          audience_filter?: Json
+          body: string
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          recipient_count?: number
+          send_email?: boolean
+          sender_id: string
+          subject: string
+        }
+        Update: {
+          audience?: string
+          audience_filter?: Json
+          body?: string
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          recipient_count?: number
+          send_email?: boolean
+          sender_id?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mood_buddy_memory: {
         Row: {
           last_message_at: string | null
@@ -5870,6 +6006,10 @@ export type Database = {
       invoke_blog_analytics_aggregation: { Args: never; Returns: undefined }
       invoke_google_calendar_sync: { Args: never; Returns: undefined }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_message_thread_participant: {
+        Args: { _thread_id: string }
+        Returns: boolean
+      }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       journey_landscape: {
         Args: { _user_id: string }
@@ -5897,6 +6037,21 @@ export type Database = {
           practice_id: string
           relief_rate: number
           sessions: number
+        }[]
+      }
+      list_my_message_threads: {
+        Args: never
+        Returns: {
+          counterpart_name: string
+          institution_name: string
+          is_sender: boolean
+          last_activity_at: string
+          message_id: string
+          preview: string
+          recipient_count: number
+          subject: string
+          thread_id: string
+          unread: boolean
         }[]
       }
       normalize_pt_text: { Args: { t: string }; Returns: string }
