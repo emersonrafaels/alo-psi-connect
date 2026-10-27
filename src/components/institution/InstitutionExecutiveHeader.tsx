@@ -11,6 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useInstitutionExecutiveSummary, type ExecutiveSummary } from '@/hooks/useInstitutionExecutiveSummary';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
+import { OverviewActions } from '@/features/institution/portal/OverviewActions';
+import { buildOverviewActions, type ActionTarget } from '@/features/institution/portal/overviewActions';
 import { Sparkles, Users, AlertTriangle, CheckCircle2, Activity, RefreshCw, ArrowRight, ArrowUp, ArrowDown, ArrowRight as ArrowRightIcon } from 'lucide-react';
 
 interface Props {
@@ -490,6 +492,16 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
   });
   const current = (selectedId && history.find((h) => h.id === selectedId)) || history[0] || null;
 
+  const handleAction = (t: ActionTarget) => {
+    const slug = tenant?.slug ?? '';
+    if (t === 'triage_risk') return goToRiskQueue();
+    if (t === 'triage_in_progress')
+      return navigate(`${buildTenantPath(slug, '/portal-institucional/triagem')}?view=fila&tab=em_andamento`);
+    if (t === 'supports') return navigate(buildTenantPath(slug, '/portal-institucional/apoios'));
+    document.getElementById('buddy-brief')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    refresh.mutate();
+  };
+
   if (isLoading || !summary) {
     return (
       <LoadingCards className="mb-6" />
@@ -541,7 +553,20 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
         />
       </div>
 
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/[0.03] to-transparent">
+      <OverviewActions
+        actions={buildOverviewActions({
+          criticalOpen: summary.criticalOpen,
+          totalTriage: summary.totalTriage,
+          resolvedTriage: summary.resolvedTriage,
+          engagementRate: summary.engagementRate,
+          activeStudentsWeek: summary.activeStudentsWeek,
+          activeStudentsPrevWeek: summary.activeStudentsPrevWeek,
+          lastBriefAt: historyLoading ? new Date().toISOString() : history[0]?.created_at ?? null,
+        })}
+        onAction={handleAction}
+      />
+
+      <Card id="buddy-brief" className="border-primary/20 bg-gradient-to-br from-primary/[0.03] to-transparent">
         <CardHeader className="pb-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle className="text-base flex items-center gap-2">
