@@ -147,7 +147,7 @@ const InstitutionSupports = () => {
   };
   const announceInitial = useMemo(() => announce ? {
     subject: `Novo apoio disponível: ${announce.title}`,
-    body: `Olá! Temos um novo apoio disponível para você: ${announce.title}.\n\n${announce.description ?? ""}\n\nVer apoio: https://redebemestar.com.br${buildTenantPath(tenant?.slug, "/apoios")}`.replace(/\n\n\n\n/, "\n\n"),
+    body: `Olá! Temos um novo apoio disponível para você: ${announce.title}.\n\n${announce.description ?? ""}\n\nVer apoio: https://redebemestar.com.br${buildTenantPath(tenant?.slug, "/biblioteca-apoios")}`.replace(/\n\n\n\n/, "\n\n"),
     sendEmail: true,
   } : undefined, [announce, tenant?.slug]);
   const [pendingDelete, setPendingDelete] = useState<InstitutionSupportRow | null>(null);
