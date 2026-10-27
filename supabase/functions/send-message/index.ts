@@ -1,3 +1,4 @@
+import { renderMessageEmail } from './emailTemplate.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
@@ -144,15 +145,16 @@ Deno.serve(async (req) => {
       const profs = await chunked(targets, async (p) => (await db.from('profiles').select('email').in('user_id', p)).data ?? []);
       const emails = [...new Set(profs.map((p: any) => p.email).filter((e: string) => e && !/demo|sintetic|example\./i.test(e)))];
       const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
-      const html = `<div style="font-family:sans-serif;max-width:560px">
-        <h2 style="color:#5B218E">${esc(input.subject)}</h2>
-        <p style="white-space:pre-wrap">${esc(input.body)}</p>
-        <p><a href="https://redebemestar.com.br/mensagens" style="background:#5B218E;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">Ver e responder no site</a></p>
-        <p style="color:#888;font-size:12px">Rede Bem-Estar · Conectando você ao cuidado</p></div>`;
+      let senderName = 'Rede Bem-Estar';
+      if (institutionId) {
+        const { data: ei } = await db.from('educational_institutions').select('name').eq('id', institutionId).maybeSingle();
+        if (ei?.name) senderName = ei.name;
+      }
+      const { html, text } = renderMessageEmail({ subject: input.subject, body: input.body, senderName, fromInstitution: !!institutionId });
       for (let i = 0; i < emails.length; i += 50) {
         const part = emails.slice(i, i + 50);
         const { error } = await resend.batch.send(part.map((to) => ({
-          from: 'Rede Bem-Estar <noreply@redebemestar.com.br>', to: [to], subject: input.subject, html,
+          from: 'Rede Bem-Estar <noreply@redebemestar.com.br>', to: [to], subject: input.subject, html, text,
         })));
         if (error) console.error('email batch failed', error); else emailed += part.length;
       }
