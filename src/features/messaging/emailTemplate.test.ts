@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { bodyToHtml, renderMessageEmail } from '../../../supabase/functions/send-message/emailTemplate';
 
 describe('message email template', () => {
