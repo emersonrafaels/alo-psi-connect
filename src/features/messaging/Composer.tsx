@@ -14,7 +14,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAcademicStructure } from '@/hooks/useAcademicStructure';
 import { LEVEL_LABELS, buildPath } from '@/features/academic/hierarchy';
 import { anonymizeStudentName, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
-import { fetchAllPages } from '@/utils/supabasePaging';
 import { previewAudience, sendMessage, type AudienceInput } from './useMessages';
 
 const db = supabase as any;
@@ -86,9 +85,13 @@ export function Composer(props: Props) {
   const students = useQuery({
     queryKey: ['msg-students', institutionId], enabled: open && !!institutionId && kind === 'student_ids',
     queryFn: async () => {
-      const rows = await fetchAllPages<any>((f: number, t: number) =>
-        db.from('patient_institutions').select('patient_id').eq('institution_id', institutionId).range(f, t));
-      return rows.map((r: any) => r.patient_id as string);
+      const out: string[] = [];
+      for (let f = 0; ; f += 1000) {
+        const { data, error } = await db.from('patient_institutions').select('patient_id').eq('institution_id', institutionId).range(f, f + 999);
+        if (error) throw error;
+        out.push(...(data ?? []).map((r: any) => r.patient_id as string));
+        if (!data || data.length < 1000) return out;
+      }
     },
   });
 
@@ -116,14 +119,14 @@ export function Composer(props: Props) {
   const toggle = (id: string) => setIds((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
   const unitItems = useMemo(() => {
-    const units = academic.units.data ?? [];
-    const levels = academic.levels.data ?? [];
+    const units = academic.units;
+    const levels = academic.levels;
     return units.map((u: any) => ({
       id: u.id,
       label: buildPath(u.id, units, levels).map((p) => p.name).join(' › ') || u.name,
       hint: LEVEL_LABELS[u.level as keyof typeof LEVEL_LABELS],
     })).sort((a, b) => a.label.localeCompare(b.label));
-  }, [academic.units.data, academic.levels.data]);
+  }, [academic.units, academic.levels]);
 
   const studentItems = useMemo(() => {
     const list = students.data ?? [];
