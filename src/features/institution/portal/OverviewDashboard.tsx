@@ -72,9 +72,9 @@ export function OverviewDashboard({ institutionName, totalStudents, activeStuden
 
       <div data-tour="summary-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi icon={GraduationCap} label="Alunos ativos" value={fmt(activeStudents)} hint={`de ${fmt(totalStudents)} vinculados`} to={buildPath('/portal-institucional/alunos')} />
+        <Kpi icon={HeartHandshake} label="Apoios" value="Biblioteca" hint="Gerencie os apoios da instituição" to={buildPath('/portal-institucional/apoios')} />
         <Kpi icon={Users} label="Profissionais ativos" value={fmt(activeProfessionals)} hint={`de ${fmt(totalProfessionals)} vinculados`} to={buildPath('/portal-institucional/profissionais')} />
         <Kpi icon={TrendingUp} label="Taxa de atividade" value={`${profRate}%`} hint="profissionais ativos" to={buildPath('/portal-institucional/profissionais')} />
-        <Kpi icon={HeartHandshake} label="Apoios" value="Biblioteca" hint="Gerencie os apoios da instituição" to={buildPath('/portal-institucional/apoios')} />
       </div>
     </div>
   );
