@@ -18,7 +18,7 @@ import { previewAudience, sendMessage, type AudienceInput } from './useMessages'
 
 const db = supabase as any;
 
-type Props = { open: boolean; onOpenChange: (o: boolean) => void } & (
+type Props = { open: boolean; onOpenChange: (o: boolean) => void; title?: string; initial?: { subject: string; body: string; sendEmail?: boolean } } & (
   | { mode: 'admin' }
   | { mode: 'institution'; institutionId: string }
 );
@@ -67,6 +67,9 @@ export function Composer(props: Props) {
   const [userSearch, setUserSearch] = useState('');
 
   useEffect(() => { setIds([]); }, [kind]);
+  useEffect(() => {
+    if (open && props.initial) { setSubject(props.initial.subject); setBody(props.initial.body); setSendEmail(props.initial.sendEmail ?? true); }
+  }, [open, props.initial]);
 
   const institutions = useQuery({
     queryKey: ['msg-institutions'], enabled: open && mode === 'admin',
