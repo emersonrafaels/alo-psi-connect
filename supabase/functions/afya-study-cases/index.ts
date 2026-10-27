@@ -5,7 +5,7 @@ import { AFYA_ID, TENANT_ID, CASES, canManageCases, moodAt, scoredAnswers, patte
 
 const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('list') }).strict(),
-  z.object({ action: z.literal('assign'), caseKey: z.enum(['A','B','C','D','E','F']), email: z.string().trim().toLowerCase().email().max(255), password: z.string().min(12).max(128).regex(/[a-z]/).regex(/[A-Z]/).regex(/[0-9]/) }).strict(),
+  z.object({ action: z.literal('assign'), caseKey: z.enum(['A','B','C','D','E','F']), email: z.string().trim().toLowerCase().email().max(255), password: z.string().min(12).max(128).regex(/[a-zA-Z]/).regex(/[0-9]/), name: z.string().trim().min(2).max(120).optional(), notificationsEnabled: z.boolean().optional() }).strict(),
 ]);
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 const check = (result: { error: unknown }) => { if (result.error) throw new Error('Não foi possível concluir os dados do caso. Tente novamente.'); };
@@ -77,12 +77,12 @@ Deno.serve(async req => {
     const roles = await admin.from('user_roles').select('role').eq('user_id',auth.user.id);
     if(roles.error||!canManageCases((roles.data||[]).map(r=>r.role))) return json({error:'Apenas administradores da plataforma'},403);
     const parsed = schema.safeParse(await req.json().catch(()=>null));
-    if(!parsed.success) return json({error:'Informe email válido e senha com 12 caracteres, maiúscula, minúscula e número.'},400);
+    if(!parsed.success) return json({error:'Informe email válido e senha com 12 caracteres, letras e números.'},400);
     if(parsed.data.action==='list') {
       const result = await admin.from('synthetic_student_cases').select('case_key,credentials_assigned,user_id,profiles(email)').eq('institution_id',AFYA_ID).order('case_key');
       check(result); return json({cases:result.data});
     }
-    const {caseKey,email,password} = parsed.data;
+    const {caseKey,email,password,name,notificationsEnabled} = parsed.data;
     const definition = CASES.find(c=>c.key===caseKey);
     if(!definition) return json({error:'Caso inválido'},400);
     const result = await admin.from('synthetic_student_cases').select('*').eq('institution_id',AFYA_ID).eq('case_key',caseKey).single(); check(result);
@@ -93,15 +93,15 @@ Deno.serve(async req => {
     if(row.user_id) {
       const target = await admin.auth.admin.getUserById(row.user_id);
       if(target.error||target.data.user?.app_metadata?.afya_study_case!==caseKey) return json({error:'Conta não identificada como caso sintético'},409);
-      const updated = await admin.auth.admin.updateUserById(row.user_id,{email,password,email_confirm:true});
+      const updated = await admin.auth.admin.updateUserById(row.user_id,{email,password,email_confirm:true,...(name?{user_metadata:{...target.data.user.user_metadata,nome:name}}:{}),...(notificationsEnabled!==undefined?{app_metadata:{...target.data.user.app_metadata,notifications_blocked:!notificationsEnabled}}:{})});
       if(updated.error) return json({error:'Não foi possível atualizar o acesso; confira o email e a senha.'},400);
     } else {
-      const created = await admin.auth.admin.createUser({email,password,email_confirm:true,app_metadata:{afya_study_case:caseKey,notifications_blocked:true},user_metadata:{nome:definition.name,demo:true}});
+      const created = await admin.auth.admin.createUser({email,password,email_confirm:true,app_metadata:{afya_study_case:caseKey,notifications_blocked:notificationsEnabled!==true},user_metadata:{nome:name||definition.name,demo:true}});
       if(created.error||!created.data.user) return json({error:'Não foi possível criar o acesso; o email pode já estar em uso.'},400);
       row.user_id=created.data.user.id;
       check(await admin.from('synthetic_student_cases').update({user_id:row.user_id}).eq('id',row.id));
     }
-    check(await admin.from('profiles').update({email,user_id:row.user_id}).eq('id',row.profile_id));
+    check(await admin.from('profiles').update({email,user_id:row.user_id,...(name?{nome:name}:{})}).eq('id',row.profile_id));
     check(await admin.from('user_tenants').upsert({user_id:row.profile_id,tenant_id:TENANT_ID,is_primary:true},{onConflict:'user_id,tenant_id'}));
     check(await admin.from('institution_buddy_students').upsert({institution_id:AFYA_ID,patient_id:row.patient_id,granted_by:auth.user.id},{onConflict:'institution_id,patient_id'}));
     if(!row.credentials_assigned) {
@@ -109,7 +109,7 @@ Deno.serve(async req => {
       // Real-shaped responses now belong to a synthetic Auth account; don't count the provisional aggregate rows twice.
       check(await admin.from('institution_demo_scale_responses').delete().eq('patient_id',row.patient_id).eq('institution_id',AFYA_ID));
     }
-    check(await admin.from('synthetic_student_cases').update({credentials_assigned:true}).eq('id',row.id));
+    check(await admin.from('synthetic_student_cases').update({credentials_assigned:true,...(notificationsEnabled!==undefined?{notifications_blocked:!notificationsEnabled}:{})}).eq('id',row.id));
     return json({success:true});
   } catch { return json({error:'Não foi possível concluir o caso. Nenhuma senha é exibida ou armazenada no cadastro de casos.'},500); }
 });
