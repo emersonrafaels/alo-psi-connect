@@ -37,3 +37,18 @@ describe('escolha por unidade/curso/turno/turma', () => {
     expect([...expandUnits(['turma1'], units)]).toEqual(['turma1']);
   });
 });
+
+import { emailableRecipients } from '../../../supabase/functions/send-message/audience';
+describe('emailableRecipients', () => {
+  const cases = [{ user_id: 'a', notifications_blocked: false }, { user_id: 'b', notifications_blocked: true }];
+  it('emails an activated study case even in a demo institution', () => {
+    expect(emailableRecipients(['a'], cases, true)).toEqual(['a']);
+  });
+  it('never emails blocked study cases', () => {
+    expect(emailableRecipients(['b'], cases, false)).toEqual([]);
+  });
+  it('never emails other students of a demo institution', () => {
+    expect(emailableRecipients(['x'], cases, true)).toEqual([]);
+    expect(emailableRecipients(['x'], cases, false)).toEqual(['x']);
+  });
+});
