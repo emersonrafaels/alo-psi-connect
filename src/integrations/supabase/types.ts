@@ -2999,6 +2999,7 @@ export type Database = {
           body: string
           created_at: string
           id: string
+          is_anonymous: boolean
           thread_id: string
         }
         Insert: {
@@ -3006,6 +3007,7 @@ export type Database = {
           body: string
           created_at?: string
           id?: string
+          is_anonymous?: boolean
           thread_id: string
         }
         Update: {
@@ -3013,6 +3015,7 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
+          is_anonymous?: boolean
           thread_id?: string
         }
         Relationships: [
@@ -3033,6 +3036,7 @@ export type Database = {
           last_activity_at: string
           message_id: string
           recipient_id: string
+          recipient_identified: boolean
           recipient_patient_id: string | null
           recipient_read_at: string | null
           recipient_replied: boolean
@@ -3046,6 +3050,7 @@ export type Database = {
           last_activity_at?: string
           message_id: string
           recipient_id: string
+          recipient_identified?: boolean
           recipient_patient_id?: string | null
           recipient_read_at?: string | null
           recipient_replied?: boolean
@@ -3059,6 +3064,7 @@ export type Database = {
           last_activity_at?: string
           message_id?: string
           recipient_id?: string
+          recipient_identified?: boolean
           recipient_patient_id?: string | null
           recipient_read_at?: string | null
           recipient_replied?: boolean
