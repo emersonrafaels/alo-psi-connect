@@ -8,11 +8,47 @@ import {
   Lock,
   Zap,
   ArrowRight,
+  Mic,
+  Clock,
+  TrendingUp,
+  Sparkles,
+  Leaf,
+  LifeBuoy,
+  Users,
 } from "lucide-react";
 
 import buddyImg from "@/assets/buddy/buddy-sketch.png";
 
+const STEPS = [
+  {
+    label: "Registrar", icon: Pencil,
+    title: ["Conte como você", "está se sentindo hoje."],
+    description: "Registre suas emoções e os momentos que marcaram seu dia. Em poucos cliques, você cria o hábito de olhar para si com mais atenção e gentileza.",
+    benefits: [{ icon: Lock, label: "Privado" }, { icon: Zap, label: "Rápido" }, { icon: Heart, label: "Acolhedor" }],
+  },
+  {
+    label: "Refletir", icon: MessageCircle,
+    title: ["Entenda o que está por trás", "do que você sente."],
+    description: "Escreva ou grave um áudio sobre o seu dia. O Buddy ajuda você a dar nome às emoções e a perceber o que mexeu com você.",
+    benefits: [{ icon: Mic, label: "Escrita ou áudio" }, { icon: Heart, label: "Sem julgamentos" }, { icon: Clock, label: "No seu tempo" }],
+  },
+  {
+    label: "Perceber padrões", icon: BarChart3,
+    title: ["Veja como seus dias", "se conectam."],
+    description: "Acompanhe a evolução do humor, do sono, da energia e da ansiedade em gráficos simples e descubra o que costuma influenciar seu bem-estar.",
+    benefits: [{ icon: BarChart3, label: "Gráficos claros" }, { icon: TrendingUp, label: "Tendências" }, { icon: Sparkles, label: "Descobertas" }],
+  },
+  {
+    label: "Cuidar de si", icon: Heart,
+    title: ["Transforme o que você", "percebeu em cuidado."],
+    description: "Receba sugestões de práticas, encontros e apoios que combinam com o seu momento, e conte com profissionais quando precisar.",
+    benefits: [{ icon: Leaf, label: "Práticas guiadas" }, { icon: LifeBuoy, label: "Apoios" }, { icon: Users, label: "Acompanhamento" }],
+  },
+];
+
 export default function EmotionalCheckinHome() { const navigate = useNavigate();
+  const [activeStep, setActiveStep] = React.useState(0);
+  const current = STEPS[activeStep];
   return (
     
     <>
@@ -32,96 +68,54 @@ export default function EmotionalCheckinHome() { const navigate = useNavigate();
           </h2>
 
           {/* Steps */}
-          <div className="emotional-home__steps">
-            {/* Step 1 */}
-            <div className="emotional-home__step emotional-home__step--active">
-              <div className="emotional-home__step-icon emotional-home__step-icon--active">
-                <Pencil size={19} />
-              </div>
-
-              <div className="emotional-home__step-number">1</div>
-
-              <span>Registrar</span>
-            </div>
-
-            <div className="emotional-home__connector" />
-
-            {/* Step 2 */}
-            <div className="emotional-home__step">
-              <div className="emotional-home__step-icon">
-                <MessageCircle size={19} />
-              </div>
-
-              <div className="emotional-home__step-number">2</div>
-
-              <span>Refletir</span>
-            </div>
-
-            <div className="emotional-home__connector" />
-
-            {/* Step 3 */}
-            <div className="emotional-home__step emotional-home__step--wide">
-              <div className="emotional-home__step-icon">
-                <BarChart3 size={19} />
-              </div>
-
-              <div className="emotional-home__step-number">3</div>
-
-              <span>Perceber padrões</span>
-            </div>
-
-            <div className="emotional-home__connector" />
-
-            {/* Step 4 */}
-            <div className="emotional-home__step">
-              <div className="emotional-home__step-icon">
-                <Heart size={19} />
-              </div>
-
-              <div className="emotional-home__step-number">4</div>
-
-              <span>Cuidar de si</span>
-            </div>
+          <div className="emotional-home__steps" role="group" aria-label="Passos do Diário Emocional">
+            {STEPS.map((step, i) => {
+              const Icon = step.icon;
+              const active = i === activeStep;
+              return (
+                <React.Fragment key={step.label}>
+                  {i > 0 && <div className="emotional-home__connector" />}
+                  <button
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setActiveStep(i)}
+                    className={`emotional-home__step${i === 2 ? " emotional-home__step--wide" : ""}${active ? " emotional-home__step--active" : ""}`}
+                  >
+                    <div className={`emotional-home__step-icon${active ? " emotional-home__step-icon--active" : ""}`}>
+                      <Icon size={19} />
+                    </div>
+                    <div className="emotional-home__step-number">{i + 1}</div>
+                    <span>{step.label}</span>
+                  </button>
+                </React.Fragment>
+              );
+            })}
           </div>
 
           {/* Card principal */}
           <div className="emotional-home__card">
-            {/* brilho interno */}
             <div className="emotional-home__card-glow" />
 
-            {/* conteúdo */}
-            <div className="emotional-home__content">
+            <div className="emotional-home__content emotional-home__fade" key={activeStep}>
               <span className="emotional-home__eyebrow">
-                PASSO 1 · REGISTRAR
+                PASSO {activeStep + 1} · {current.label.toUpperCase()}
               </span>
 
               <h3 className="emotional-home__card-title">
-                Conte como você
+                {current.title[0]}
                 <br />
-                está se sentindo hoje.
+                {current.title[1]}
               </h3>
 
-              <p className="emotional-home__description">
-                Registre suas emoções e os momentos que marcaram seu dia.
-                Em poucos cliques, você cria o hábito de olhar para si
-                com mais atenção e gentileza.
-              </p>
+              <p className="emotional-home__description">{current.description}</p>
 
               <div className="emotional-home__benefits">
-                <div className="emotional-home__benefit">
-                  <Lock size={17} />
-                  <span>Privado</span>
-                </div>
-
-                <div className="emotional-home__benefit">
-                  <Zap size={18} />
-                  <span>Rápido</span>
-                </div>
-
-                <div className="emotional-home__benefit">
-                  <Heart size={18} />
-                  <span>Acolhedor</span>
-                </div>
+                {current.benefits.map(({ icon: BIcon, label }) => (
+                  <div className="emotional-home__benefit" key={label}>
+                    <BIcon size={17} />
+                    <span>{label}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -302,6 +296,13 @@ export default function EmotionalCheckinHome() { const navigate = useNavigate();
           box-shadow:
             inset 0 1px 1px rgba(255,255,255,0.8);
         }
+
+        button.emotional-home__step { cursor: pointer; font-family: inherit; text-align: left; transition: transform .2s, box-shadow .2s; }
+        button.emotional-home__step:hover { transform: translateY(-2px); }
+        button.emotional-home__step:focus-visible { outline: 2px solid #7727d9; outline-offset: 3px; }
+        .emotional-home__fade { animation: ehFade .35s ease; }
+        @keyframes ehFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) { .emotional-home__fade { animation: none; } button.emotional-home__step:hover { transform: none; } }
 
         .emotional-home__step--wide {
           min-width: 290px;
