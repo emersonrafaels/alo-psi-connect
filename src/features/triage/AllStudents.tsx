@@ -220,7 +220,7 @@ export function AllStudents({ students, nameOf, overdueIds, periodDays, risk, on
           );
         })}
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-24 text-xs text-muted-foreground">
         <span>Exibindo {Math.min(visibleCount, filtered.length)} de {filtered.length} alunos</span>
         <div className="flex items-center gap-2">
           <Select value={String(pageSize)} onValueChange={(value) => { setPageSize(Number(value)); setVisibleCount(Number(value)); }}>
