@@ -25,6 +25,8 @@ import About from "./pages/About";
 import InstitutionPortal from "./pages/InstitutionPortal";
 import InstitutionProfessionals from "./pages/InstitutionProfessionals";
 import InstitutionStudents from "./pages/InstitutionStudents";
+import Messages from "./pages/Messages";
+import InstitutionMessages from "./pages/InstitutionMessages";
 import GroupSessions from "./pages/GroupSessions";
 import GroupSessionDetail from "./pages/GroupSessionDetail";
 import MyGroupSessions from "./pages/MyGroupSessions";
@@ -343,6 +345,10 @@ const AppWithShortcuts = () => {
         } 
       />
       
+      <Route path="/mensagens" element={<Messages />} />
+      <Route path="/medcos/mensagens" element={<Messages />} />
+      <Route path="/portal-institucional/mensagens" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionMessages /></ProtectedRoute>} />
+      <Route path="/medcos/portal-institucional/mensagens" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionMessages /></ProtectedRoute>} />
       <Route path="/portal-institucional/comparador" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionComparator /></ProtectedRoute>} />
       <Route path="/medcos/portal-institucional/comparador" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionComparator /></ProtectedRoute>} />
       <Route path="/portal-institucional/triagem" element={<ProtectedRoute requiredRole="institution_admin"><InstitutionTriage /></ProtectedRoute>} />

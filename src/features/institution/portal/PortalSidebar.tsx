@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard, BarChart3, Heart, ClipboardList, StickyNote, Brain, Sparkles,
-  Users, Briefcase, HeartHandshake, Ticket, LineChart, ArrowUpRight, Menu, Radar,
+  Users, Briefcase, HeartHandshake, Ticket, LineChart, ArrowUpRight, Menu, Radar, Mail,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -25,6 +25,7 @@ export function buildPortalNav(build: (p: string) => string, canViewStudentBuddy
     { id: 'metrics', label: 'Métricas', description: 'Uso da plataforma, sessões e engajamento.', icon: BarChart3, group: 'Painel' },
     { id: 'wellbeing', label: 'Diário Emocional', description: 'Indicadores agregados e anonimizados do diário.', icon: Heart, group: 'Painel', tour: 'wellbeing-tab' },
     { id: 'triage-page', label: 'Triagem', description: '', icon: ClipboardList, group: 'Cuidado', href: build('/portal-institucional/triagem') },
+    { id: 'messages-page', label: 'Mensagens', description: '', icon: Mail, group: 'Cuidado', href: build('/portal-institucional/mensagens') },
     { id: 'notes', label: 'Notas', description: 'Anotações internas da equipe institucional.', icon: StickyNote, group: 'Cuidado' },
     { id: 'buddy', label: 'Buddy', description: 'Insights do Buddy sobre a instituição.', icon: Brain, group: 'Cuidado' },
   ];

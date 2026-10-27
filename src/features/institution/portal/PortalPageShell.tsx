@@ -8,6 +8,7 @@ const PATH_TO_ID: Array<[string, string]> = [
   ['/portal-institucional/alunos', 'students-page'],
   ['/portal-institucional/profissionais', 'professionals-page'],
   ['/portal-institucional/apoios', 'supports-page'],
+  ['/portal-institucional/mensagens', 'messages-page'],
 ];
 
 /** Keeps the portal side menu on portal sub-pages. */

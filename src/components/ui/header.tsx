@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/useAuth"
 import { useUserProfile } from "@/hooks/useUserProfile"
 import { useAdminAuth } from "@/hooks/useAdminAuth"
+import { MessagesBell } from "@/features/messaging/MessagesBell"
 import { useUserType } from "@/hooks/useUserType"
 import { useAuthorRole } from "@/hooks/useAuthorRole"
 import { useTenant } from "@/hooks/useTenant"
@@ -114,6 +115,7 @@ const Header = () => {
 
             
             <ThemeToggle />
+            {user && <MessagesBell href={buildTenantPath(tenantSlug, isInstitutionAdmin ? '/portal-institucional/mensagens' : '/mensagens')} />}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
