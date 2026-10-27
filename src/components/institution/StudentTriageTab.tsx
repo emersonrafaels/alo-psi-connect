@@ -1,3 +1,4 @@
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -557,10 +558,12 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground"><Info className="h-4 w-4" />Como a criticidade é calculada</Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" align="end" className="z-[100] max-w-sm space-y-1.5 border bg-popover p-3 text-xs text-popover-foreground opacity-100 shadow-lg">
-                {riskOrder.map((l) => <p key={l}><strong>{riskConfig[l].label}:</strong> {riskLegend[l]}</p>)}
-                <p><strong>Palavras críticas:</strong> termos graves no diário levam a Em Risco; termos moderados sobem um nível. O texto do aluno nunca é exibido.</p>
-              </TooltipContent>
+              <TooltipPrimitive.Portal>
+                <TooltipContent side="bottom" align="end" className="z-[100] max-w-sm space-y-1.5 border bg-popover p-3 text-xs text-popover-foreground opacity-100 shadow-lg">
+                  {riskOrder.map((l) => <p key={l}><strong>{riskConfig[l].label}:</strong> {riskLegend[l]}</p>)}
+                  <p><strong>Palavras críticas:</strong> termos graves no diário levam a Em Risco; termos moderados sobem um nível. O texto do aluno nunca é exibido.</p>
+                </TooltipContent>
+              </TooltipPrimitive.Portal>
             </Tooltip>
           </div>
         )}
