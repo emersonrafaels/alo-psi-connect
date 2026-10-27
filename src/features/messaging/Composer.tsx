@@ -41,6 +41,7 @@ function MultiPick({ items, selected, onToggle, placeholder }: {
         </div>
       )}
       <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} />
+      <p className="text-xs text-muted-foreground">{q ? `${fmt(shown.length)} de ${fmt(items.length)}` : `${fmt(items.length)} itens`}</p>
       <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border p-2">
         {shown.length === 0 ? <p className="p-2 text-xs text-muted-foreground">Nada encontrado.</p> : shown.map((i) => (
           <label key={i.id} className="flex cursor-pointer items-center gap-2 rounded p-1 text-sm hover:bg-muted">
