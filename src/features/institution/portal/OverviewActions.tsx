@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle2, ListChecks } from 'lucide-react';
-import type { ActionLevel, ActionTarget, OverviewAction } from './overviewActions';
+import type { ActionLevel, ActionTarget, OverviewAction } from './overviewActionRules';
 
 const LEVEL: Record<ActionLevel, { label: string; cls: string; bar: string }> = {
   urgent: { label: 'Urgente', cls: 'bg-destructive/10 text-destructive', bar: 'bg-destructive' },

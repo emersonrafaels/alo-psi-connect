@@ -12,7 +12,7 @@ import { useInstitutionExecutiveSummary, type ExecutiveSummary } from '@/hooks/u
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { OverviewActions } from '@/features/institution/portal/OverviewActions';
-import { buildOverviewActions, type ActionTarget } from '@/features/institution/portal/overviewActions';
+import { buildOverviewActions, type ActionTarget } from '@/features/institution/portal/overviewActionRules';
 import { Sparkles, Users, AlertTriangle, CheckCircle2, Activity, RefreshCw, ArrowRight, ArrowUp, ArrowDown, ArrowRight as ArrowRightIcon } from 'lucide-react';
 
 interface Props {

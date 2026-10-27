@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildOverviewActions, type OverviewActionsInput } from './overviewActions';
+import { buildOverviewActions, type OverviewActionsInput } from './overviewActionRules';
 
 const now = new Date('2026-10-27T12:00:00Z');
 const ok: OverviewActionsInput = {
