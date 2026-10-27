@@ -34,7 +34,7 @@ function Kpi({ icon: Icon, label, value, hint, to }: { icon: LucideIcon; label: 
 }
 
 export function OverviewDashboard({ institutionName, totalStudents, activeStudents, totalProfessionals, activeProfessionals, buildPath, institutionId }: Props) {
-  const { data: summary } = useInstitutionExecutiveSummary(institutionId ?? '');
+  const { data: summary } = useInstitutionExecutiveSummary(institutionId);
   const weekActive = summary?.activeStudentsWeek ?? 0;
   const engagementPct = Math.round((summary?.engagementRate ?? 0) * 100);
   const profRate = totalProfessionals ? Math.round((activeProfessionals / totalProfessionals) * 100) : 0;
