@@ -202,8 +202,6 @@ export default function InstitutionPortal() {
               institutionName={currentInstitution?.name}
               totalStudents={linkedStudents.length}
               activeStudents={activeStudents.length}
-              totalProfessionals={linkedProfessionals.length}
-              activeProfessionals={activeProfessionals.length}
               buildPath={(path) => buildTenantPath(tenant?.slug, path)}
               institutionId={userInstitutions[0]?.institution_id}
             />
@@ -211,6 +209,8 @@ export default function InstitutionPortal() {
               <InstitutionExecutiveHeader
                 institutionId={userInstitutions[0].institution_id}
                 onNavigateToTriage={() => setActiveTab('triage')}
+                totalProfessionals={linkedProfessionals.length}
+                activeProfessionals={activeProfessionals.length}
               />
             )}
           </TabsContent>

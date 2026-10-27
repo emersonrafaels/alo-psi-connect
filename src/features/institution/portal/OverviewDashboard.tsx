@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, GraduationCap, Users, TrendingUp, HeartHandshake, type LucideIcon } from 'lucide-react';
+import { ArrowRight, GraduationCap, HeartHandshake, type LucideIcon } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useInstitutionExecutiveSummary } from '@/hooks/useInstitutionExecutiveSummary';
 
@@ -7,8 +7,6 @@ interface Props {
   institutionName?: string;
   totalStudents: number;
   activeStudents: number;
-  totalProfessionals: number;
-  activeProfessionals: number;
   buildPath: (path: string) => string;
   institutionId?: string;
 }
@@ -33,11 +31,10 @@ function Kpi({ icon: Icon, label, value, hint, to }: { icon: LucideIcon; label: 
   );
 }
 
-export function OverviewDashboard({ institutionName, totalStudents, activeStudents, totalProfessionals, activeProfessionals, buildPath, institutionId }: Props) {
+export function OverviewDashboard({ institutionName, totalStudents, activeStudents, buildPath, institutionId }: Props) {
   const { data: summary } = useInstitutionExecutiveSummary(institutionId);
   const weekActive = summary?.activeStudentsWeek ?? 0;
   const engagementPct = Math.round((summary?.engagementRate ?? 0) * 100);
-  const profRate = totalProfessionals ? Math.round((activeProfessionals / totalProfessionals) * 100) : 0;
   const today = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
@@ -70,11 +67,9 @@ export function OverviewDashboard({ institutionName, totalStudents, activeStuden
         </div>
       </section>
 
-      <div data-tour="summary-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div data-tour="summary-cards" className="grid gap-4 sm:grid-cols-2">
         <Kpi icon={GraduationCap} label="Alunos ativos" value={fmt(activeStudents)} hint={`de ${fmt(totalStudents)} vinculados`} to={buildPath('/portal-institucional/alunos')} />
         <Kpi icon={HeartHandshake} label="Apoios" value="Biblioteca" hint="Gerencie os apoios da instituição" to={buildPath('/portal-institucional/apoios')} />
-        <Kpi icon={Users} label="Profissionais ativos" value={fmt(activeProfessionals)} hint={`de ${fmt(totalProfessionals)} vinculados`} to={buildPath('/portal-institucional/profissionais')} />
-        <Kpi icon={TrendingUp} label="Taxa de atividade" value={`${profRate}%`} hint="profissionais ativos" to={buildPath('/portal-institucional/profissionais')} />
       </div>
     </div>
   );

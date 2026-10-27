@@ -13,11 +13,13 @@ import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
 import { OverviewActions } from '@/features/institution/portal/OverviewActions';
 import { buildOverviewActions, type ActionTarget } from '@/features/institution/portal/overviewActionRules';
-import { Sparkles, Users, AlertTriangle, CheckCircle2, Activity, RefreshCw, ArrowRight, ArrowUp, ArrowDown, ArrowRight as ArrowRightIcon } from 'lucide-react';
+import { Sparkles, Users, AlertTriangle, CheckCircle2, Activity, RefreshCw, ArrowRight, ArrowUp, ArrowDown, ArrowRight as ArrowRightIcon, TrendingUp } from 'lucide-react';
 
 interface Props {
   institutionId: string;
   onNavigateToTriage?: () => void;
+  totalProfessionals?: number;
+  activeProfessionals?: number;
 }
 
 type KpiKey = 'active' | 'engagement' | 'critical' | 'resolution';
@@ -455,12 +457,14 @@ function KpiDetailDialog({
 }
 
 
-export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }: Props) {
+export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage, totalProfessionals = 0, activeProfessionals = 0 }: Props) {
   const { data: summary, isLoading } = useInstitutionExecutiveSummary(institutionId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openKpi, setOpenKpi] = useState<KpiKey | null>(null);
   const navigate = useNavigate();
   const { tenant } = useTenant();
+  const professionalsUrl = buildTenantPath(tenant?.slug ?? '', '/portal-institucional/profissionais');
+  const professionalsRate = totalProfessionals ? Math.round((activeProfessionals / totalProfessionals) * 100) : 0;
 
   const triageQueueUrl = `${buildTenantPath(tenant?.slug ?? '', '/portal-institucional/triagem')}?view=fila&risk=critical&tab=para_triar`;
   const goToRiskQueue = () => navigate(triageQueueUrl);
@@ -504,7 +508,7 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
 
   if (isLoading || !summary) {
     return (
-      <LoadingCards className="mb-6" />
+      <LoadingCards className="mb-6 md:grid-cols-3" count={6} />
     );
   }
 
@@ -513,7 +517,7 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
 
   return (
     <div className="space-y-4 mb-6">
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-3">
         <KpiCard
           icon={Users}
           label="Alunos ativos (7d)"
@@ -550,6 +554,20 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
           hint={`${summary.resolvedTriage} de ${summary.totalTriage} triagens`}
           tone={summary.resolutionRate >= 0.7 ? 'success' : 'warning'}
           onClick={() => setOpenKpi('resolution')}
+        />
+        <KpiCard
+          icon={Users}
+          label="Profissionais ativos"
+          value={activeProfessionals.toLocaleString('pt-BR')}
+          hint={`de ${totalProfessionals.toLocaleString('pt-BR')} vinculados`}
+          onClick={() => navigate(professionalsUrl)}
+        />
+        <KpiCard
+          icon={TrendingUp}
+          label="Taxa de atividade"
+          value={`${professionalsRate}%`}
+          hint="profissionais ativos"
+          onClick={() => navigate(professionalsUrl)}
         />
       </div>
 
