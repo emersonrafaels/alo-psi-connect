@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap, Users, TrendingUp, HeartHandshake, type LucideIcon } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { Progress } from '@/components/ui/progress';
 
 interface Props {
@@ -14,25 +12,6 @@ interface Props {
 }
 
 const fmt = (n: number) => n.toLocaleString('pt-BR');
-
-function greeting() {
-  const h = new Date().getHours();
-  return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-}
-
-function useFirstName() {
-  const [name, setName] = useState('');
-  useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      const u = data.user;
-      if (!u) return;
-      const { data: p } = await supabase.from('profiles').select('nome').eq('user_id', u.id).maybeSingle();
-      const full = (p as { nome?: string } | null)?.nome || (u.user_metadata?.nome as string) || (u.user_metadata?.full_name as string) || u.email?.split('@')[0] || '';
-      setName(full.trim().split(/\s+/)[0] ?? '');
-    });
-  }, []);
-  return name;
-}
 
 function Kpi({ icon: Icon, label, value, hint, to }: { icon: LucideIcon; label: string; value: string; hint: string; to: string }) {
   return (
@@ -53,7 +32,6 @@ function Kpi({ icon: Icon, label, value, hint, to }: { icon: LucideIcon; label: 
 }
 
 export function OverviewDashboard({ institutionName, totalStudents, activeStudents, totalProfessionals, activeProfessionals, buildPath }: Props) {
-  const firstName = useFirstName();
   const studentRate = totalStudents ? Math.round((activeStudents / totalStudents) * 100) : 0;
   const profRate = totalProfessionals ? Math.round((activeProfessionals / totalProfessionals) * 100) : 0;
   const today = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -67,8 +45,7 @@ export function OverviewDashboard({ institutionName, totalStudents, activeStuden
           <div>
             <p className="text-sm capitalize opacity-80">{today}</p>
             <h2 className="mt-1 text-xl font-semibold md:text-2xl">
-              {greeting()}{firstName ? `, ${firstName}` : ''}
-              {institutionName && <span className="opacity-80"> · {institutionName}</span>}
+              {institutionName ?? 'Portal institucional'}
             </h2>
             <p className="mt-6 text-5xl font-bold tabular-nums tracking-tight md:text-6xl">{fmt(totalStudents)}</p>
             <p className="text-sm opacity-80">alunos vinculados</p>
