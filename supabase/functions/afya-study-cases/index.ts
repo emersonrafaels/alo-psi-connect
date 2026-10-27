@@ -102,7 +102,6 @@ Deno.serve(async req => {
       check(await admin.from('synthetic_student_cases').update({user_id:row.user_id}).eq('id',row.id));
     }
     check(await admin.from('profiles').update({email,user_id:row.user_id,...(name?{nome:name}:{})}).eq('id',row.profile_id));
-    if(name) check(await admin.from('pacientes').update({nome:name}).eq('id',row.patient_id));
     check(await admin.from('user_tenants').upsert({user_id:row.profile_id,tenant_id:TENANT_ID,is_primary:true},{onConflict:'user_id,tenant_id'}));
     check(await admin.from('institution_buddy_students').upsert({institution_id:AFYA_ID,patient_id:row.patient_id,granted_by:auth.user.id},{onConflict:'institution_id,patient_id'}));
     if(!row.credentials_assigned) {

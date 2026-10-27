@@ -20,11 +20,11 @@ const definitions = [
   { key:'F', title:'Estudante F', description:'Padrão C · Itajubá. Maior necessidade de acompanhamento simulado, com dados próprios.' },
 ];
 type CaseRow = {case_key:string; credentials_assigned:boolean; profiles:{email:string}|null};
-const credentials = z.object({email:z.string().trim().email().max(255),password:z.string().min(12).max(128).regex(/[a-z]/).regex(/[A-Z]/).regex(/[0-9]/)});
+const credentials = z.object({email:z.string().trim().email().max(255),password:z.string().min(12).max(128).regex(/[a-zA-Z]/).regex(/[0-9]/)});
 export function AfyaStudyCases() {
   const client = useQueryClient();
   const [selected,setSelected] = useState<string|null>(null);
-  const [email,setEmail] = useState(''); const [password,setPassword] = useState('');
+  const [email,setEmail] = useState(''); const [password,setPassword] = useState(''); const [name,setName] = useState(''); const [notify,setNotify] = useState(false);
   const [saving,setSaving] = useState(false); const [error,setError] = useState('');
   const query = useQuery({queryKey:['afya-study-cases'],queryFn:async()=>{
     const result = await supabase.functions.invoke('afya-study-cases',{body:{action:'list'}});
@@ -38,7 +38,7 @@ export function AfyaStudyCases() {
     if(!parsed.success) {setError('Use email válido e senha de 12 a 128 caracteres, com maiúscula, minúscula e número.');return;}
     setSaving(true);setError('');
     try {
-      const result = await supabase.functions.invoke('afya-study-cases',{body:{action:'assign',caseKey:selected,...parsed.data}});
+      const result = await supabase.functions.invoke('afya-study-cases',{body:{action:'assign',caseKey:selected,...parsed.data,...(name.trim()?{name:name.trim()}:{}),notificationsEnabled:notify}});
       if(result.error||result.data?.error) throw new Error(result.data?.error||'Não foi possível salvar. Verifique se o email já está em uso e tente novamente.');
       setSelected(null);setPassword('');setEmail('');
       await client.invalidateQueries({queryKey:['afya-study-cases']});
@@ -62,7 +62,9 @@ export function AfyaStudyCases() {
       <DialogContent onInteractOutside={event=>{if(saving)event.preventDefault();}}><DialogHeader><DialogTitle>Acesso do Estudante {selected}</DialogTitle></DialogHeader>
         <form onSubmit={save} className="space-y-4">
           <div className="space-y-2"><Label htmlFor="case-email">Email</Label><Input id="case-email" type="email" autoComplete="off" maxLength={255} required value={email} onChange={e=>setEmail(e.target.value)} disabled={saving}/></div>
-          <div className="space-y-2"><Label htmlFor="case-password">Nova senha</Label><Input id="case-password" type="password" autoComplete="new-password" minLength={12} maxLength={128} required value={password} onChange={e=>setPassword(e.target.value)} disabled={saving}/><p className="text-xs text-muted-foreground">Mínimo de 12 caracteres, com maiúscula, minúscula e número. A senha não será exibida novamente.</p></div>
+          <div className="space-y-2"><Label htmlFor="case-password">Nova senha</Label><Input id="case-password" type="password" autoComplete="new-password" minLength={12} maxLength={128} required value={password} onChange={e=>setPassword(e.target.value)} disabled={saving}/><p className="text-xs text-muted-foreground">Mínimo de 12 caracteres, com letras e números. A senha não será exibida novamente.</p></div>
+          <div className="space-y-2"><Label htmlFor="case-name">Nome (opcional)</Label><Input id="case-name" maxLength={120} value={name} onChange={e=>setName(e.target.value)} disabled={saving}/></div>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={notify} onChange={e=>setNotify(e.target.checked)} disabled={saving}/>Receber e-mails da plataforma</label>
           {error&&<p role="alert" className="text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={saving} className="w-full">{saving?<Loader2 className="mr-2 h-4 w-4 animate-spin"/>:<KeyRound className="mr-2 h-4 w-4"/>}{saving?'Preparando caso…':'Salvar acesso'}</Button>
         </form>
