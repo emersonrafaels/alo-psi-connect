@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap, Users, TrendingUp, HeartHandshake, type LucideIcon } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { Progress } from '@/components/ui/progress';
 
 interface Props {
@@ -14,25 +12,6 @@ interface Props {
 }
 
 const fmt = (n: number) => n.toLocaleString('pt-BR');
-
-function greeting() {
-  const h = new Date().getHours();
-  return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-}
-
-function useFirstName() {
-  const [name, setName] = useState('');
-  useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      const u = data.user;
-      if (!u) return;
-      const { data: p } = await supabase.from('profiles').select('nome').eq('user_id', u.id).maybeSingle();
-      const full = (p as { nome?: string } | null)?.nome || (u.user_metadata?.nome as string) || (u.user_metadata?.full_name as string) || u.email?.split('@')[0] || '';
-      setName(full.trim().split(/\s+/)[0] ?? '');
-    });
-  }, []);
-  return name;
-}
 
 function Kpi({ icon: Icon, label, value, hint, to }: { icon: LucideIcon; label: string; value: string; hint: string; to: string }) {
   return (
