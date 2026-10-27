@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
 import { Resend } from 'npm:resend@2.0.0';
-import { canSend, expandUnits, type Audience } from './audience.ts';
+import { canSend, emailableRecipients, expandUnits, type Audience } from './audience.ts';
 
 const uuid = z.string().uuid();
 const audienceSchema = z.discriminatedUnion('kind', [
