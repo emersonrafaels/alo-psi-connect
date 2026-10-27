@@ -50,6 +50,32 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!iu) return json({ error: "Sem acesso a esta instituição" }, 403);
 
+    if (body?.action === "history") {
+      const { data: rows, error: hErr } = await admin
+        .from("buddy_insights")
+        .select("id, payload, created_at")
+        .eq("institution_id", institutionId)
+        .eq("insight_type", "institution_weekly_brief")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (hErr) return json({ error: hErr.message }, 500);
+      const authorIds = [...new Set((rows ?? []).map((r: any) => r.payload?.generated_by).filter(Boolean))];
+      const names: Record<string, string> = {};
+      if (authorIds.length) {
+        const { data: profs } = await admin.from("profiles").select("user_id, nome").in("user_id", authorIds);
+        for (const p of profs ?? []) names[(p as any).user_id] = String((p as any).nome ?? "").split(" ")[0];
+      }
+      const items = (rows ?? []).map((r: any) => {
+        let b = r.payload?.brief;
+        if (!b || typeof b !== "object" || Array.isArray(b)) {
+          b = { headline: "Resumo da semana", highlights: b ? [String(b)] : [], focus: "" };
+        }
+        const gb = r.payload?.generated_by;
+        return { id: r.id, created_at: r.created_at, brief: b, author: gb ? (names[gb] || "Usuário da instituição") : null };
+      });
+      return json({ items });
+    }
+
     // Cache 24h (só se estiver no shape novo — brief como objeto)
     if (!force) {
       const { data: cached } = await admin
@@ -150,6 +176,7 @@ DADOS AGREGADOS: ${JSON.stringify(summary)}`;
       metrics: summary,
       generated_at: new Date().toISOString(),
       model: MODEL,
+      generated_by: userId,
     };
 
 

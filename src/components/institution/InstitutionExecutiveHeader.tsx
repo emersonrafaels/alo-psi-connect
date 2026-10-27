@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -104,9 +104,27 @@ interface Brief {
   focus: string;
 }
 
+interface BriefHistoryItem {
+  id: string;
+  created_at: string;
+  brief: Brief;
+  author: string | null;
+}
+
+const fmtDateTime = (iso: string) =>
+  new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+async function fetchBriefHistory(institutionId: string): Promise<BriefHistoryItem[]> {
+  const { data, error } = await supabase.functions.invoke('institution-weekly-brief', {
+    body: { institutionId, action: 'history' },
+  });
+  if (error) throw error;
+  return Array.isArray(data?.items) ? data.items : [];
+}
+
 async function fetchBrief(institutionId: string): Promise<Brief | null> {
   const { data, error } = await supabase.functions.invoke('institution-weekly-brief', {
-    body: { institutionId },
+    body: { institutionId, force: true },
   });
   if (error) throw error;
   const b = data?.brief;
@@ -437,7 +455,7 @@ function KpiDetailDialog({
 
 export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }: Props) {
   const { data: summary, isLoading } = useInstitutionExecutiveSummary(institutionId);
-  const [briefEnabled, setBriefEnabled] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openKpi, setOpenKpi] = useState<KpiKey | null>(null);
   const navigate = useNavigate();
   const { tenant } = useTenant();
@@ -453,18 +471,24 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
     }, 50);
   };
 
-  const {
-    data: brief,
-    isFetching: briefLoading,
-    refetch: refetchBrief,
-    error: briefError,
-  } = useQuery({
-    queryKey: ['institution-weekly-brief', institutionId],
-    queryFn: () => fetchBrief(institutionId),
-    enabled: briefEnabled && !!institutionId,
-    staleTime: 60 * 60 * 1000,
+  const queryClient = useQueryClient();
+  const historyKey = ['institution-weekly-brief-history', institutionId];
+  const { data: historyData, isLoading: historyLoading, error: historyError } = useQuery({
+    queryKey: historyKey,
+    queryFn: () => fetchBriefHistory(institutionId),
+    enabled: !!institutionId,
+    staleTime: 5 * 60 * 1000,
     retry: false,
   });
+  const history = historyData ?? [];
+  const refresh = useMutation({
+    mutationFn: () => fetchBrief(institutionId),
+    onSuccess: async () => {
+      setSelectedId(null);
+      await queryClient.invalidateQueries({ queryKey: historyKey });
+    },
+  });
+  const current = (selectedId && history.find((h) => h.id === selectedId)) || history[0] || null;
 
   if (isLoading || !summary) {
     return (
@@ -517,123 +541,101 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="md:col-span-2 border-primary/20 bg-gradient-to-br from-primary/[0.03] to-transparent">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                Resumo executivo do Buddy
-              </CardTitle>
-              {briefEnabled && (
-                <Button size="sm" variant="ghost" onClick={() => refetchBrief()} disabled={briefLoading}>
-                  <RefreshCw className={`h-3.5 w-3.5 ${briefLoading ? 'animate-spin' : ''}`} />
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {!briefEnabled ? (
-              <div className="text-sm text-muted-foreground space-y-3">
-                <p>
-                  Peça ao Buddy uma síntese semanal com foco em bem-estar, engajamento e prioridades para a
-                  gestão institucional.
-                </p>
-                <Button size="sm" onClick={() => setBriefEnabled(true)}>
-                  <Sparkles className="h-4 w-4 mr-2" /> Gerar resumo semanal
-                </Button>
-              </div>
-            ) : briefLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-5/6" />
-              </div>
-            ) : brief ? (
-              <div className="space-y-3">
-                <p className="text-sm font-medium">{brief.headline}</p>
-                <ul className="space-y-1.5">
-                  {brief.highlights?.map((h, i) => (
-                    <li key={i} className="text-sm text-muted-foreground flex gap-2">
-                      <span className="text-primary">•</span> {h}
-                    </li>
-                  ))}
-                </ul>
-                {brief.focus && (
-                  <div className="pt-2 border-t border-border/50">
-                    <p className="text-xs font-medium text-primary mb-1">Foco recomendado</p>
-                    <p className="text-sm text-muted-foreground">{brief.focus}</p>
-                  </div>
-                )}
-              </div>
-            ) : briefError ? (
-              <div className="space-y-2">
-                <p className="text-sm text-destructive">Não foi possível gerar o resumo agora.</p>
-                <p className="text-xs text-muted-foreground">{(briefError as Error)?.message || 'Tente novamente em instantes.'}</p>
-                <Button size="sm" variant="outline" onClick={() => refetchBrief()}>
-                  <RefreshCw className="h-3.5 w-3.5 mr-2" /> Tentar novamente
-                </Button>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Ainda não há dados suficientes para gerar um resumo.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50">
-          <CardHeader className="pb-3">
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/[0.03] to-transparent">
+        <CardHeader className="pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              Feed de alertas
+              <Sparkles className="h-4 w-4 text-primary" />
+              Resumo executivo do Buddy
             </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {summary.alerts.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum alerta ativo no momento.</p>
-            ) : (
-              <ul className="space-y-2">
-                {summary.alerts.slice(0, 5).map((a) => (
-                  <li
-                    key={a.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={goToTriage}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        goToTriage();
-                      }
-                    }}
-                    className="flex items-start gap-2 text-sm p-2 -mx-2 rounded-md cursor-pointer hover:bg-muted/50 transition"
-                  >
-                    <Badge
-                      variant="outline"
-                      className={
-                        a.severity === 'high'
-                          ? 'border-rose-500/40 text-rose-600 dark:text-rose-400'
-                          : 'border-amber-500/40 text-amber-600 dark:text-amber-400'
-                      }
-                    >
-                      {a.type === 'triage' ? 'Triagem' : a.type === 'absence' ? 'Ausência' : 'Humor'}
-                    </Badge>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">{a.title}</p>
-                      <p className="text-[11px] text-muted-foreground truncate">{a.subtitle}</p>
-                    </div>
+            {history.length > 0 && (
+              <Button size="sm" variant="outline" onClick={() => refresh.mutate()} disabled={refresh.isPending}>
+                <RefreshCw className={`h-3.5 w-3.5 mr-2 ${refresh.isPending ? 'animate-spin' : ''}`} />
+                {refresh.isPending ? 'Atualizando…' : 'Atualizar resumo'}
+              </Button>
+            )}
+          </div>
+          {current && (
+            <p className="text-xs text-muted-foreground">
+              Gerado em {fmtDateTime(current.created_at)} · por {current.author ?? 'Buddy (automático)'}
+            </p>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {refresh.isError && (
+            <p className="text-sm text-destructive">
+              Não foi possível atualizar o resumo agora. {(refresh.error as Error)?.message}
+            </p>
+          )}
+          {historyLoading || (refresh.isPending && !current) ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+            </div>
+          ) : historyError ? (
+            <p className="text-sm text-destructive">Não foi possível carregar os resumos.</p>
+          ) : !current ? (
+            <div className="text-sm text-muted-foreground space-y-3">
+              <p>
+                Peça ao Buddy uma síntese semanal com foco em bem-estar, engajamento e prioridades para a
+                gestão institucional.
+              </p>
+              <Button size="sm" onClick={() => refresh.mutate()} disabled={refresh.isPending}>
+                <Sparkles className="h-4 w-4 mr-2" /> Gerar resumo semanal
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {selectedId && selectedId !== history[0]?.id && (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/60 px-3 py-2 text-xs">
+                  <span>Visualizando resumo de {fmtDateTime(current.created_at)}</span>
+                  <button className="font-medium text-primary hover:underline" onClick={() => setSelectedId(null)}>
+                    Voltar ao mais recente
+                  </button>
+                </div>
+              )}
+              <p className="text-sm font-medium">{current.brief.headline}</p>
+              <ul className="space-y-1.5">
+                {current.brief.highlights?.map((h, i) => (
+                  <li key={i} className="text-sm text-muted-foreground flex gap-2">
+                    <span className="text-primary">•</span> {h}
                   </li>
                 ))}
               </ul>
-            )}
-            {summary.alerts.length > 0 && (
-              <Button variant="ghost" size="sm" className="w-full mt-3" onClick={goToTriage}>
-                Ir para triagem
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              {current.brief.focus && (
+                <div className="pt-2 border-t border-border/50">
+                  <p className="text-xs font-medium text-primary mb-1">Foco recomendado</p>
+                  <p className="text-sm text-muted-foreground">{current.brief.focus}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {history.length > 1 && (
+            <details className="group border-t border-border/50 pt-3">
+              <summary className="cursor-pointer text-sm font-medium text-foreground">
+                Resumos anteriores ({history.length - 1})
+              </summary>
+              <ul className="mt-2 space-y-1">
+                {history.slice(1).map((h) => (
+                  <li key={h.id}>
+                    <button
+                      onClick={() => setSelectedId(h.id)}
+                      className={`w-full rounded-md px-2 py-1.5 text-left text-sm transition hover:bg-muted/60 ${selectedId === h.id ? 'bg-muted' : ''}`}
+                    >
+                      <span className="block text-xs text-muted-foreground">
+                        {fmtDateTime(h.created_at)} · {h.author ?? 'Buddy (automático)'}
+                      </span>
+                      <span className="block truncate">{h.brief.headline}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </CardContent>
+      </Card>
 
       <KpiDetailDialog
         open={openKpi !== null}
