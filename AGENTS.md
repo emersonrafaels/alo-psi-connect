@@ -24,3 +24,5 @@
 - Build student-history series through trendSeries: merge equivalent sentiment labels, prefer available legacy scores with dynamic fallback, and assign non-repeating theme-aware color tokens to prevent duplicate legends.
 - Derive student-history sentiment tag colors from `src/features/triage/sentimentBands.ts`, which flips the scale for unpleasant sentiments using the emotion taxonomy valence, so a high anxiety or stress score never reads as a good result.
 - Keep the institutional portal's section navigation in `src/features/institution/portal/PortalSidebar.tsx` (sidebar on desktop, sheet on mobile) with the active section in `?tab=`, so deep links and back navigation work and new sections are added in one place.
+
+- Route all message sends through the `send-message` function, which resolves recipients and checks sender rights server-side (rules in `supabase/functions/send-message/audience.ts`); threads are one per recipient so students never see each other, and `list_my_message_threads` reveals a student name to an institution only after the student replies.
