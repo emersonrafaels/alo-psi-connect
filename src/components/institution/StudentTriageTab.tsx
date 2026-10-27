@@ -172,7 +172,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
   const [visibleCount, setVisibleCount] = useState(25);
   useEffect(() => { setVisibleCount(pageSize); }, [pageSize, activeTab, searchTerm, riskFilter]);
   const renderPager = (total: number) => (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t px-5 pt-3 pb-24 text-xs text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t px-5 pt-3 pb-40 text-xs text-muted-foreground">
       <span>Exibindo {Math.min(visibleCount, total)} de {total}</span>
       <div className="flex items-center gap-2">
         <span>Mostrar</span>
