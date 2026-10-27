@@ -497,7 +497,7 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage }
     if (t === 'triage_risk') return goToRiskQueue();
     if (t === 'triage_in_progress')
       return navigate(`${buildTenantPath(slug, '/portal-institucional/triagem')}?view=fila&tab=em_andamento`);
-    if (t === 'supports') return navigate(buildTenantPath(slug, '/portal-institucional/apoios'));
+    if (t === 'supports') return navigate(buildTenantPath(slug, '/portal-institucional/apoios?divulgar=1'));
     document.getElementById('buddy-brief')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     refresh.mutate();
   };

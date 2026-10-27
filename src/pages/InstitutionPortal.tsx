@@ -205,6 +205,7 @@ export default function InstitutionPortal() {
               totalProfessionals={linkedProfessionals.length}
               activeProfessionals={activeProfessionals.length}
               buildPath={(path) => buildTenantPath(tenant?.slug, path)}
+              institutionId={userInstitutions[0]?.institution_id}
             />
             {userInstitutions[0]?.institution_id && (
               <InstitutionExecutiveHeader
