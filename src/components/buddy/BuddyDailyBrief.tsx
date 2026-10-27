@@ -138,24 +138,25 @@ export function BuddyDailyBrief() {
 
           {/* Ações */}
           <div className="flex flex-col gap-2 md:min-w-[200px]">
-            <Button
-              size="lg"
-              onClick={ctaAction}
-              className="rounded-full shadow-lg"
-            >
-              {ctaLabel}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="rounded-full border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground"
-            >
-              <Link to={isInstitutionAdmin ? "/buddy/instituicao" : "/buddy"}>
-                <MessageCircle className="mr-2 h-4 w-4" />
-                Falar com o Buddy
-              </Link>
-            </Button>
+            {isInstitutionAdmin ? (
+              <Button asChild size="lg" className="rounded-full shadow-lg">
+                <Link to="/buddy/instituicao">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Falar com o Buddy
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild size="lg" className="rounded-full shadow-lg">
+                <a
+                  href={`https://wa.me/5511937074332?text=${encodeURIComponent("Olá! Quero falar com o Buddy da Rede Bem-Estar.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Falar com o Buddy
+                </a>
+              </Button>
+            )}
           </div>
         </div>
       </Card>
