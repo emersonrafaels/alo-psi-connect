@@ -27,7 +27,8 @@ function MultiPick({ items, selected, onToggle, placeholder }: {
   items: { id: string; label: string; hint?: string }[]; selected: string[]; onToggle: (id: string) => void; placeholder: string;
 }) {
   const [q, setQ] = useState('');
-  const shown = items.filter((i) => i.label.toLowerCase().includes(q.toLowerCase()) || i.hint?.toLowerCase().includes(q.toLowerCase())).slice(0, 100);
+  const shown = items.filter((i) => i.label.toLowerCase().includes(q.toLowerCase()) || i.hint?.toLowerCase().includes(q.toLowerCase()));
+  const fmt = (n: number) => n.toLocaleString('pt-BR');
   const byId = new Map(items.map((i) => [i.id, i]));
   return (
     <div className="space-y-2">
