@@ -199,7 +199,7 @@ export default function InstitutionPortal() {
         <Tabs value={activeTab} onValueChange={changeTab} className="space-y-6 scroll-mt-24">
           <TabsContent value="overview" className="space-y-6 mt-0">
             <OverviewDashboard
-              institutionName={userInstitutions[0]?.institution?.name ?? currentInstitution?.name}
+              institutionName={currentInstitution?.name}
               totalStudents={linkedStudents.length}
               activeStudents={activeStudents.length}
               totalProfessionals={linkedProfessionals.length}
