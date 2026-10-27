@@ -74,6 +74,9 @@ import { useInstitutionSupportsManager } from "@/hooks/useInstitutionSupportsMan
 import { useInstitutionAccess } from "@/hooks/useInstitutionAccess";
 import { useTenant } from "@/hooks/useTenant";
 import { buildTenantPath } from "@/utils/tenantHelpers";
+import { Composer } from "@/features/messaging/Composer";
+import { Megaphone } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 type FormState = Partial<InstitutionSupportRow>;
 
@@ -135,6 +138,18 @@ const InstitutionSupports = () => {
   const { save, togglePublished, remove, addFromCatalog } = useInstitutionSupportsManager(institutionId);
 
   const [form, setForm] = useState<FormState | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [announce, setAnnounce] = useState<{ title: string; description?: string | null } | null>(null);
+  const pickToAnnounce = searchParams.get("divulgar") === "1";
+  const openAnnounce = (s: { title: string; description?: string | null }) => {
+    setAnnounce(s);
+    if (pickToAnnounce) setSearchParams((p) => { p.delete("divulgar"); return p; }, { replace: true });
+  };
+  const announceInitial = useMemo(() => announce ? {
+    subject: `Novo apoio disponível: ${announce.title}`,
+    body: `Olá! Temos um novo apoio disponível para você: ${announce.title}.\n\n${announce.description ?? ""}\n\nVer apoio: https://redebemestar.com.br${buildTenantPath(tenant?.slug, "/apoios")}`.replace(/\n\n\n\n/, "\n\n"),
+    sendEmail: true,
+  } : undefined, [announce, tenant?.slug]);
   const [pendingDelete, setPendingDelete] = useState<InstitutionSupportRow | null>(null);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -450,11 +465,19 @@ const InstitutionSupports = () => {
                         <Switch
                           checked={item.is_published}
                           onCheckedChange={(v) =>
-                            togglePublished.mutate({ id: item.id, is_published: v })
+                            togglePublished.mutate(
+                              { id: item.id, is_published: v },
+                              { onSuccess: () => { if (v) openAnnounce(item); } },
+                            )
                           }
                           aria-label="Publicado"
                         />
                         <div className="flex">
+                          {item.is_published && (
+                            <Button variant="ghost" size="icon" onClick={() => openAnnounce(item)} aria-label="Divulgar para os alunos" title="Divulgar para os alunos">
+                              <Megaphone className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" onClick={() => setForm(item)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -513,7 +536,7 @@ const InstitutionSupports = () => {
                           size="sm"
                           variant={active ? "secondary" : "outline"}
                           disabled={active || blocked}
-                          onClick={() => addFromCatalog.mutate(m)}
+                          onClick={() => addFromCatalog.mutate(m, { onSuccess: () => openAnnounce(m) })}
                         >
                           {active ? "Ativo" : blocked ? "Fora do plano" : "Ativar"}
                         </Button>

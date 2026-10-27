@@ -158,7 +158,7 @@ export function Composer(props: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-        <DialogHeader><DialogTitle>Nova mensagem</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{props.title ?? 'Nova mensagem'}</DialogTitle></DialogHeader>
         <div className="space-y-5">
           <div className="space-y-2">
             <Label>Para quem</Label>
