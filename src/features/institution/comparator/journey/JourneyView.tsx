@@ -170,7 +170,7 @@ export function JourneyView({ institutionId, semester, unitFilter, onSemesters }
       <Sheet id="j3" open={fs} setOpen={setFs} label="Origem e destino dos pedidos" className="space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-3 pr-10">
           <H2 title="De onde vêm e para onde vão os pedidos" sub="A largura de cada faixa é o número de pessoas. Passe o mouse sobre uma faixa para ver o que ela representa. Escolha uma origem para olhar só para ela." />
-          <Chips opts={[['origem', 'Porta de entrada'], ['unid', 'Unidade']]} val={by} set={(v) => { setBy(v); setSrcFocus(null); }} />
+          <Chips opts={[['origem', 'Porta de entrada'], ['unid', 'Unidade']]} val={by} set={(v) => { setBy(v as "origem" | "unid"); setSrcFocus(null); }} />
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => setSrcFocus(null)} aria-pressed={!srcFocus} className={`rounded-full border px-3 py-1 text-sm ${!srcFocus ? 'border-primary bg-accent font-semibold' : 'bg-card'}`}>Todos os pedidos · {counts[0]}</button>
@@ -199,7 +199,7 @@ export function JourneyView({ institutionId, semester, unitFilter, onSemesters }
         <Sheet id="j4" open={fs} setOpen={setFs} label="Comparação entre unidades" className="space-y-5">
           <div className="flex flex-wrap items-start justify-between gap-3 pr-10">
             <H2 title="Comparação entre unidades" sub="Escolha uma unidade para destacar a sua curva. A curva mostra quantos pedidos seguem em cada etapa, em % do pedido inicial." />
-            <Chips opts={[['curva', 'Curva'], ['tabela', 'Tabela']]} val={cmpView} set={setCmpView} />
+            <Chips opts={[['curva', 'Curva'], ['tabela', 'Tabela']]} val={cmpView} set={(v) => setCmpView(v as "curva" | "tabela")} />
           </div>
           <div className="flex flex-wrap items-start gap-6">
             <div className="min-w-0 flex-[3_1_480px]">
