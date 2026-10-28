@@ -158,7 +158,7 @@ export function TriageDialog({ open, onOpenChange, student, studentHistory = [],
             {student.criticalKeywordFlag && (
               <p className={`flex items-center gap-1.5 text-sm font-medium ${student.criticalKeywordFlag.severity === 'grave' ? 'text-red-700 dark:text-red-400' : 'text-orange-700 dark:text-orange-400'}`}>
                 <AlertTriangle className="h-4 w-4 shrink-0" />
-                {student.criticalKeywordFlag.severity === 'grave' ? 'Sinal textual sensível' : 'Sinal textual sensível'} · revisão pendente ·  {student.criticalKeywordFlag.hits} registro(s)
+                Sinal textual sensível: revisão pendente · {student.criticalKeywordFlag.hits} registro(s)
                 <span className="font-normal text-muted-foreground">· o texto do aluno não é exibido</span>
               </p>
             )}
