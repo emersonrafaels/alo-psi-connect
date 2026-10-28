@@ -5749,6 +5749,15 @@ export type Database = {
           title: string
         }[]
       }
+      get_institution_usage_metrics: {
+        Args: {
+          p_course?: string
+          p_days?: number
+          p_institution_id: string
+          p_unit?: string
+        }
+        Returns: Json
+      }
       get_institution_wellbeing_summary: {
         Args: {
           p_end: string
