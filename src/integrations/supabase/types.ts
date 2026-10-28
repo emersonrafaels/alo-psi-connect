@@ -5899,6 +5899,10 @@ export type Database = {
           patient_id: string
         }[]
       }
+      get_institution_diary_rhythm: {
+        Args: { p_institution_id: string }
+        Returns: Json
+      }
       get_institution_engagement_metrics: {
         Args: { p_institution_id: string }
         Returns: Json

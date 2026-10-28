@@ -414,7 +414,7 @@ export function OverviewView(p: OverviewProps) {
           <button type="button" onClick={() => p.onOpenIntegrated()} className="flex w-full items-center gap-3 rounded-2xl border p-4 text-left hover:bg-muted/50">
             <GitCompare className="h-5 w-5 text-primary" /><span className="flex-1"><span className="block font-semibold">Análise integrada</span><span className="text-xs text-muted-foreground">Compare unidades, cursos e coletas</span></span><ArrowRight className="h-4 w-4 text-primary" />
           </button>
-          {([[NotebookPen, 'Diário emocional'], [PlayCircle, 'Conteúdos e práticas'], [ListChecks, 'Ações e acompanhamento']] as const).map(([I, l]) => (
+          {([[PlayCircle, 'Conteúdos e práticas'], [ListChecks, 'Ações e acompanhamento']] as const).map(([I, l]) => (
             <div key={l} aria-disabled className="flex items-center gap-3 rounded-2xl border border-dashed p-4 text-muted-foreground">
               <I className="h-5 w-5" /><span className="flex-1 font-medium">{l}</span><span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold">Em breve</span>
             </div>
