@@ -1,4 +1,3 @@
-import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,6 +15,8 @@ import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, Trend
 import { subDays } from 'date-fns';
 import { useStudentTriageData, useTriageRecords, useTriageNotes, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
+import { SignalsExplainerDialog } from '@/features/triage/SignalsExplainerDialog';
+import { SIGNAL_LABELS, SIGNAL_RULE_TEXT } from '@/features/triage/signalRules';
 import TriageResolutionDialog, { RESOLUTION_TYPE_LABEL } from './TriageResolutionDialog';
 import TriageReopenDialog from './TriageReopenDialog';
 import { StudentActivityModal, type ActivityTab } from './StudentActivityModal';
@@ -56,35 +57,14 @@ const riskConfig: Record<RiskLevel, {label: string;color: string;labelColor: str
   no_data: { label: 'Dados insuficientes', color: 'bg-muted text-muted-foreground', labelColor: 'text-muted-foreground', icon: HelpCircle, cardBg: 'bg-muted/30', progressColor: '[&>div]:bg-muted-foreground/40' }
 };
 
-const riskLegend: Record<RiskLevel, string> = {
-  critical: 'Humor médio ≤ 1.5, ansiedade ≥ 4.5 ou queda no humor > 40%',
-  alert: 'Humor ≤ 2.5, ansiedade ≥ 3.5 ou energia ≤ 1.5',
-  attention: 'Humor ≤ 3.0, ansiedade ≥ 3.0 ou qualidade de sono ≤ 2.0',
-  healthy: 'Indicadores dentro da faixa esperada',
-  no_data: 'Sem registros no período selecionado'
-};
+const riskLegend: Record<RiskLevel, string> = SIGNAL_RULE_TEXT;
 
 const riskTooltips: Record<RiskLevel, {title: string;description: string;}> = {
-  critical: {
-    title: '🔴 Nível Sinal elevado',
-    description: 'Alunos com humor muito baixo (≤1.5), ansiedade muito alta (≥4.5) ou queda brusca no humor (>40%). Necessitam atenção imediata.'
-  },
-  alert: {
-    title: '🟠 Nível Alerta',
-    description: 'Alunos com humor baixo (≤2.5), ansiedade elevada (≥3.5) ou energia muito baixa. Recomenda-se acompanhamento.'
-  },
-  attention: {
-    title: '🟡 Nível Atenção',
-    description: 'Alunos com indicadores moderadamente preocupantes. Vale monitorar de perto.'
-  },
-  healthy: {
-    title: '🟢 Sem sinais prioritários',
-    description: 'Alunos com todos os indicadores dentro da faixa esperada.'
-  },
-  no_data: {
-    title: '⚪ Dados insuficientes',
-    description: 'Alunos que não registraram diários emocionais no período selecionado.'
-  }
+  critical: { title: SIGNAL_LABELS.critical, description: SIGNAL_RULE_TEXT.critical },
+  alert: { title: SIGNAL_LABELS.alert, description: SIGNAL_RULE_TEXT.alert },
+  attention: { title: SIGNAL_LABELS.attention, description: SIGNAL_RULE_TEXT.attention },
+  healthy: { title: SIGNAL_LABELS.healthy, description: SIGNAL_RULE_TEXT.healthy },
+  no_data: { title: SIGNAL_LABELS.no_data, description: SIGNAL_RULE_TEXT.no_data },
 };
 
 const priorityLabels: Record<string, string> = {
@@ -554,17 +534,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
             </Select>
             <span className="text-xs text-muted-foreground">{format(subDays(new Date(), analysisPeriod), 'dd/MM')} – {format(new Date(), 'dd/MM')} · Atualizado às {format(new Date(), 'HH:mm')}</span>
             <Button variant="outline" size="sm" className="ml-auto h-8 gap-1" onClick={() => setFunnelOpen((o) => !o)} aria-expanded={funnelOpen}><Layers className="h-4 w-4" />Como funciona a triagem</Button>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground"><Info className="h-4 w-4" />Como a criticidade é calculada</Button>
-              </TooltipTrigger>
-              <TooltipPrimitive.Portal>
-                <TooltipContent side="bottom" align="end" className="z-[100] max-w-sm space-y-1.5 border bg-popover p-3 text-xs text-popover-foreground opacity-100 shadow-lg">
-                  {riskOrder.map((l) => <p key={l}><strong>{riskConfig[l].label}:</strong> {riskLegend[l]}</p>)}
-                  <p><strong>Palavras críticas:</strong> termos graves no diário levam a Sinal elevado; termos moderados sobem um nível. O texto do aluno nunca é exibido.</p>
-                </TooltipContent>
-              </TooltipPrimitive.Portal>
-            </Tooltip>
+            <SignalsExplainerDialog />
           </div>
         )}
         {view && (view === 'resumo' || funnelOpen) && (
