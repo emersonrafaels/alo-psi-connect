@@ -1,7 +1,8 @@
 import { fetchAllPaged, fetchInChunks } from '@/lib/supabasePaging';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { escalateRisk, type CriticalSeverity } from '@/features/triage/criticalTerms';
+import { type CriticalSeverity } from '@/features/triage/criticalTerms';
+import { classifySignals, moodTrendPct } from '@/features/triage/signalRules';
 
 // Fire-and-forget notification helper
 function notifyInstitutionAction(action_type: string, institution_id: string, metadata: Record<string, any>) {
@@ -27,7 +28,11 @@ export interface StudentRiskData {
   gender: string | null;
   birthDate: string | null;
   riskLevel: RiskLevel;
+  /** Separate text signal from diary keywords; never alters riskLevel. */
   criticalKeywordFlag?: CriticalKeywordFlag | null;
+  signalReasons?: string[];
+  validCount?: number;
+  lastEntryDate?: string | null;
   avgMood: number | null;
   avgAnxiety: number | null;
   avgEnergy: number | null;
@@ -66,50 +71,6 @@ export interface TriageRecord {
   resolved_at: string | null;
   resolution_type?: string | null;
   reopened_at?: string | null;
-}
-
-function calculateRiskLevel(
-  avgMood: number | null,
-  avgAnxiety: number | null,
-  avgEnergy: number | null,
-  avgSleep: number | null,
-  moodTrend: number | null
-): RiskLevel {
-  if (avgMood === null) return 'no_data';
-
-  // Critical
-  if (
-    avgMood <= 1.5 ||
-    (avgAnxiety !== null && avgAnxiety >= 4.5) ||
-    (moodTrend !== null && moodTrend <= -40)
-  ) return 'critical';
-
-  // Alert
-  if (
-    avgMood <= 2.5 ||
-    (avgAnxiety !== null && avgAnxiety >= 3.5) ||
-    (avgEnergy !== null && avgEnergy <= 1.5)
-  ) return 'alert';
-
-  // Attention
-  if (
-    avgMood <= 3.0 ||
-    (avgAnxiety !== null && avgAnxiety >= 3.0) ||
-    (avgSleep !== null && avgSleep <= 2.0)
-  ) return 'attention';
-
-  return 'healthy';
-}
-
-function calculateTrend(entries: any[]): number | null {
-  if (entries.length < 4) return null;
-  const half = Math.floor(entries.length / 2);
-  const firstHalf = entries.slice(0, half);
-  const secondHalf = entries.slice(half);
-  const avgFirst = firstHalf.reduce((s: number, e: any) => s + (e.mood_score || 0), 0) / firstHalf.length;
-  const avgSecond = secondHalf.reduce((s: number, e: any) => s + (e.mood_score || 0), 0) / secondHalf.length;
-  if (avgFirst === 0) return null;
-  return Math.round(((avgSecond - avgFirst) / avgFirst) * 100);
 }
 
 function computeAvg(entries: any[], field: string): number | null {
@@ -255,7 +216,9 @@ export async function fetchStudentRiskData(
         const prevAvgEnergy = comparePeriodDays ? computeAvg(prevEntries, 'energy_level') : null;
         const prevAvgSleep = comparePeriodDays ? computeSleepAvg(prevEntries) : null;
 
-        const moodTrend = calculateTrend(entries.filter((e: any) => e.mood_score != null));
+        const moodTrend = moodTrendPct(entries.map((e: any) => e.mood_score));
+        const validCount = entries.filter((e: any) => e.mood_score != null || e.anxiety_level != null || e.energy_level != null || e.sleep_quality != null || e.sleep_hours != null).length;
+        const signal = classifySignals({ avgMood, avgAnxiety, avgEnergy, avgSleep, moodTrend, validCount });
 
         const moodHistory = entries
           .filter((e: any) => e.mood_score != null)
@@ -294,7 +257,11 @@ export async function fetchStudentRiskData(
           userId: s.pacientes.profiles.user_id || null,
           gender: s.pacientes.profiles.genero || null,
           birthDate: s.pacientes.profiles.data_nascimento || null,
-          riskLevel: escalateRisk(calculateRiskLevel(avgMood, avgAnxiety, avgEnergy, avgSleep, moodTrend), flagsByPatient.get(s.patient_id)?.severity),
+          // Diary keywords never change the numeric level; they are a separate text signal.
+          riskLevel: signal.level,
+          signalReasons: signal.reasons,
+          validCount,
+          lastEntryDate: entries.length ? entries[entries.length - 1].date : null,
           criticalKeywordFlag: flagsByPatient.get(s.patient_id) || null,
           avgMood: round1(avgMood),
           avgAnxiety: round1(avgAnxiety),
