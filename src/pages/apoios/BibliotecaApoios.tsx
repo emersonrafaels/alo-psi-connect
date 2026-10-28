@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Header from "@/components/ui/header";
@@ -462,6 +463,7 @@ const BibliotecaApoios = () => {
                         href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(selected.ctaWhatsappMessage)}`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => { void (supabase as any).rpc('open_care_request', { p_origin: 'apoio' }); }}
                       >
                         {selected.ctaLabel || "Ver horários"}
                       </a>
