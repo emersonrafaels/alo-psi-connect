@@ -2584,6 +2584,123 @@ export type Database = {
           },
         ]
       }
+      institution_service_appointments: {
+        Row: {
+          created_at: string
+          id: string
+          institution_id: string
+          is_demo: boolean
+          no_show_reason: string | null
+          patient_id: string | null
+          rating: number | null
+          requested_at: string
+          scheduled_at: string
+          service: string
+          status: string
+          unit: string
+          updated_at: string
+          would_recommend: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          institution_id: string
+          is_demo?: boolean
+          no_show_reason?: string | null
+          patient_id?: string | null
+          rating?: number | null
+          requested_at: string
+          scheduled_at: string
+          service: string
+          status?: string
+          unit?: string
+          updated_at?: string
+          would_recommend?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          institution_id?: string
+          is_demo?: boolean
+          no_show_reason?: string | null
+          patient_id?: string | null
+          rating?: number | null
+          requested_at?: string
+          scheduled_at?: string
+          service?: string
+          status?: string
+          unit?: string
+          updated_at?: string
+          would_recommend?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_service_appointments_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_service_appointments_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_service_capacity: {
+        Row: {
+          created_at: string
+          id: string
+          institution_id: string
+          period: string
+          semester: string
+          service: string
+          unit: string
+          updated_at: string
+          weekly_hours: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          institution_id: string
+          period: string
+          semester: string
+          service: string
+          unit: string
+          updated_at?: string
+          weekly_hours?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          institution_id?: string
+          period?: string
+          semester?: string
+          service?: string
+          unit?: string
+          updated_at?: string
+          weekly_hours?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_service_capacity_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_service_capacity_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_support_plan: {
         Row: {
           catalog_id: string
@@ -5760,6 +5877,10 @@ export type Database = {
           message: string
           severity: string
         }[]
+      }
+      get_institution_appointments_capacity: {
+        Args: { p_institution_id: string }
+        Returns: Json
       }
       get_institution_care_journey: {
         Args: { p_institution_id: string }
