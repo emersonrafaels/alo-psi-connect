@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Users, Activity, NotebookPen, ClipboardCheck, Info, BarChart3, LayoutDashboard, GitCompare, MapPin, ArrowUpRight, ArrowDownRight, Minus, PanelLeft } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend } from 'recharts';
 import { IntegratedAnalysis } from '@/features/institution/comparator/IntegratedAnalysis';
+import { JourneyView } from '@/features/institution/comparator/journey/JourneyView';
 import { OverviewView } from '@/features/institution/comparator/overview/OverviewView';
 import { Route as RouteIcon, CalendarDays, Network, PlayCircle, ListChecks, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -117,10 +118,10 @@ export default function InstitutionComparator() {
   const [compareA, setCompareA] = useState<string | null>(null);
   const [compareB, setCompareB] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
-  const [view, setView] = useState<'overview' | 'integrated'>('overview');
+  const [view, setView] = useState<'overview' | 'integrated' | 'journey'>(() => (new URLSearchParams(window.location.search).get('leitura') === 'jornada' ? 'journey' : 'overview'));
   const [lineScale, setLineScale] = useState<string>('WHO5');
 
-  const changeView = (next: 'overview' | 'integrated') => {
+  const changeView = (next: 'overview' | 'integrated' | 'journey') => {
     setView(next);
     window.scrollTo(0, 0);
   };
@@ -199,13 +200,13 @@ export default function InstitutionComparator() {
           </div>
           <nav className="flex-1 space-y-1 p-2">
             {!collapsed && <p className="px-2 pb-1 pt-2 text-xs text-muted-foreground">Leituras</p>}
-            {([['overview', 'Visão Geral', LayoutDashboard], ['integrated', 'Análise Integrada', GitCompare]] as const).map(([k, l, I]) => (
+            {([['overview', 'Visão Geral', LayoutDashboard], ['integrated', 'Análise Integrada', GitCompare], ['journey', 'Jornada de cuidado', RouteIcon]] as const).map(([k, l, I]) => (
               <button key={k} onClick={() => changeView(k)} title={l}
                 className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm transition-colors ${view === k ? 'bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'} ${collapsed ? 'justify-center' : ''}`}>
-                <I className="h-4 w-4 shrink-0" />{!collapsed && <span>{l}</span>}
+                <I className="h-4 w-4 shrink-0" />{!collapsed && <span className="flex-1 text-left">{l}</span>}{!collapsed && k === 'journey' && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Nova</span>}
               </button>
             ))}
-            {!collapsed && ([[Network, 'NED Nacional'], [RouteIcon, 'Jornada de cuidado'], [CalendarDays, 'Atendimentos'], [NotebookPen, 'Diário emocional'], [PlayCircle, 'Conteúdos e práticas'], [ListChecks, 'Ações e acompanhamento']] as const).map(([I, l]) => (
+            {!collapsed && ([[Network, 'NED Nacional'], [CalendarDays, 'Atendimentos'], [NotebookPen, 'Diário emocional'], [PlayCircle, 'Conteúdos e práticas'], [ListChecks, 'Ações e acompanhamento']] as const).map(([I, l]) => (
               <div key={l} aria-disabled className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground/70">
                 <I className="h-4 w-4 shrink-0" /><span className="flex-1">{l}</span>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold">Em breve</span>
@@ -234,14 +235,14 @@ export default function InstitutionComparator() {
           </header>
           <main className="flex-1 space-y-6 p-4 md:p-8">
             <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className={view === 'overview' ? 'sr-only' : ''}>
+            <div className={view !== 'integrated' ? 'sr-only' : ''}>
               <h1 className="text-3xl font-bold tracking-tight">{view === 'overview' ? 'Como está o bem-estar da sua população' : 'Análise integrada entre recortes'}</h1>
               <p className="mt-1 max-w-2xl text-muted-foreground">
                 Leitura coletiva e descritiva da coleta {current ?? '—'}, comparada à coleta anterior. Nenhum resultado individual é exibido.
               </p>
             </div>
               <div className="flex flex-wrap items-center gap-2">
-                {view === 'overview' && (
+                {view !== 'integrated' && (
                   <Select value={unitFilter} onValueChange={setUnitFilter}>
                     <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -263,6 +264,8 @@ export default function InstitutionComparator() {
           <LogoLoader className="min-h-[40vh]" />
         ) : dataQ.error ? (
           <Card><CardContent className="py-10 text-center text-muted-foreground">Não foi possível carregar o comparador.</CardContent></Card>
+        ) : view === 'journey' ? (
+            <JourneyView institutionId={institutionId} semester={current} unitFilter={unitFilter} />
         ) : view === 'overview' ? (
             <OverviewView instruments={INSTRUMENTS as any} semesters={semesters} current={current} previous={previous}
               unitLabel={unitFilter === 'all' ? 'Toda a instituição' : unitFilter} units={units} courses={courses}
