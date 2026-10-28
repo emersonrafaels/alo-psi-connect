@@ -230,7 +230,7 @@ export default function InstitutionComparator() {
         <div className="flex flex-1 flex-col min-w-0">
           <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur">
             <Button variant="ghost" size="icon" onClick={() => setCollapsed((c) => !c)} aria-label="Recolher menu"><PanelLeft className="h-4 w-4" /></Button>
-            <span className="text-sm text-muted-foreground">{view === 'overview' ? `Visão geral · ${unitFilter === 'all' ? 'Toda a rede' : unitFilter}` : 'Análise integrada'}</span>
+            <span className="text-sm text-muted-foreground">{view === 'integrated' ? 'Análise integrada' : `${view === 'journey' ? 'Jornada de cuidado' : 'Visão geral'} · ${unitFilter === 'all' ? 'Toda a instituição' : unitFilter}`}</span>
             <Button asChild variant="outline" size="sm" className="ml-auto"><Link to={backTo}><ArrowLeft className="h-4 w-4 mr-1" />Portal Institucional</Link></Button>
           </header>
           <main className="flex-1 space-y-6 p-4 md:p-8">

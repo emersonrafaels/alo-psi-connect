@@ -1,3 +1,5 @@
+import { Route } from 'lucide-react';
+import { CareRequestPanel } from '@/features/institution/comparator/journey/CareRequestPanel';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
@@ -67,7 +69,7 @@ interface StudentActivityModalProps {
   initialTab?: ActivityTab;
 }
 
-export type ActivityTab = 'diario' | 'escalas' | 'praticas' | 'notas' | 'triagens';
+export type ActivityTab = 'diario' | 'escalas' | 'praticas' | 'notas' | 'triagens' | 'jornada';
 
 const riskColors: Record<RiskLevel, string> = {
   critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
@@ -627,6 +629,10 @@ export function StudentActivityModal({
               Histórico de Triagens
               <TabCount value={triageCount} loading={isLoading} />
             </TabsTrigger>
+            <TabsTrigger value="jornada" className="gap-1.5 text-xs">
+              <Route className="h-3.5 w-3.5" />
+              Jornada do pedido
+            </TabsTrigger>
           </TabsList>
 
           <div className="mt-3 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 180px)' }}>
@@ -648,6 +654,9 @@ export function StudentActivityModal({
                 </TabsContent>
                 <TabsContent value="triagens" className="mt-0">
                   <TriageHistoryTab history={data?.triageHistory || []} />
+                </TabsContent>
+                <TabsContent value="jornada" className="mt-0">
+                  {patientId ? <CareRequestPanel patientId={patientId} institutionId={institutionId} /> : null}
                 </TabsContent>
               </>
             )}
