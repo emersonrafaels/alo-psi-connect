@@ -183,7 +183,7 @@ export function TeamMetricsDashboard({ records, students, institutionId, periodD
       key: 'coverage', label: 'Alunos Sinal elevado triados', icon: ShieldCheck,
       value: critical.total > 0 ? `${pct(critical.triaged, critical.total)}%` : '—',
       sub: critical.total > 0 ? `${critical.triaged} de ${critical.total}` : undefined,
-      hint: critical.total === 0 ? 'Nenhum aluno Sinal elevado no período' : criticalPending > 0 ? `${criticalPending} aguardando triagem` : 'Todos já foram triados',
+      hint: critical.total === 0 ? 'Nenhum aluno com sinal elevado no período' : criticalPending > 0 ? `${criticalPending} aguardando triagem` : 'Todos já foram triados',
       onClick: onNavigate && criticalPending > 0 ? () => onNavigate('critical_queue') : undefined,
       cta: onNavigate && criticalPending > 0 ? 'Triar agora' : undefined,
     },
@@ -305,8 +305,8 @@ export function TeamMetricsDashboard({ records, students, institutionId, periodD
             resolveu <span className="text-primary">{h.resolved.current} casos</span>
             {h.resolutionDays.median != null && <>, em {fmt(h.resolutionDays.median)} dias (mediana)</>}.
             {critical.total > 0 && (criticalPending > 0
-              ? <> {criticalPending} de {critical.total} alunos Sinal elevado ainda aguardam triagem.</>
-              : <> Todos os {critical.total} alunos Sinal elevado já foram triados.</>)}
+              ? <> {criticalPending} de {critical.total} alunos com sinal elevado ainda aguardam triagem.</>
+              : <> Todos os {critical.total} alunos com sinal elevado já foram triados.</>)}
           </p>
         </CardContent>
       </Card>

@@ -211,7 +211,7 @@ export function PendingQueue(props: PendingQueueProps) {
             <p className="text-sm text-muted-foreground">
               {search.trim()
                 ? <>Nenhum aluno encontrado para “{search}”.</>
-                : <>Nenhum aluno Sinal elevado aguardando triagem.</>}
+                : <>Nenhum aluno com sinal elevado aguardando triagem.</>}
             </p>
             <Button variant="outline" size="sm" onClick={() => props.onSearchChange('')}>
               Ver todos os {totalPending} pendentes
@@ -220,7 +220,7 @@ export function PendingQueue(props: PendingQueueProps) {
         ) : (
           <div className="flex flex-col items-center gap-2 px-6 py-12 text-center text-sm text-muted-foreground">
             <CheckCircle2 className="h-8 w-8 text-green-500/70" />
-            Nenhum aluno Sinal elevado aguardando triagem.
+            Nenhum aluno com sinal elevado aguardando triagem.
           </div>
         )
       )}

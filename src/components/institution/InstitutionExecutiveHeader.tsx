@@ -398,11 +398,11 @@ function KpiDetailDialog({
             </div>
             <div>
               <p className="text-3xl font-bold leading-none">{summary.criticalOpen}</p>
-              <p className="text-sm text-muted-foreground mt-1">alunos Sinal elevado aguardando triagem</p>
+              <p className="text-sm text-muted-foreground mt-1">alunos com sinal elevado aguardando triagem</p>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Mesma classificação da fila "Para triar" na Triagem: risco derivado do diário emocional dos últimos 15 dias, incluindo alertas de palavras críticas.
+            Mesma classificação da fila "Para triar" na Triagem: risco derivado do diário emocional dos últimos 15 dias. Sinais textuais do diário são tratados separadamente.
           </p>
           <Button className="w-full" onClick={onGoTriage}>
             Abrir triagem <ArrowRight className="ml-2 h-4 w-4" />
@@ -538,7 +538,7 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage, 
           icon={AlertTriangle}
           label="Para triar — Sinal elevado"
           value={String(summary.criticalOpen)}
-          hint="alunos Sinal elevado aguardando triagem"
+          hint="alunos com sinal elevado aguardando triagem"
           tone={summary.criticalOpen > 0 ? 'danger' : 'success'}
           extra={
             summary.criticalOpen > 0 ? (
