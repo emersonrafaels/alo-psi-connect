@@ -1,3 +1,4 @@
+import { classifySignals } from '../signalRules';
 import type { Risk } from '../priorities';
 
 export type MetricKey = 'mood' | 'anxiety' | 'energy' | 'sleep';
@@ -79,13 +80,11 @@ export function riskDrivers(s: IndicatorInput): Driver[] {
   return list.sort((a, b) => BAND_WEIGHT[b.band] - BAND_WEIGHT[a.band]);
 }
 
-/** Plain-language reasons shown under the student's name, at most `limit` items. */
-export function riskReasons(s: IndicatorInput, limit = 3): string[] {
-  const drivers = riskDrivers(s);
-  const serious = drivers.filter((d) => d.band !== 'attention');
-  const reasons = (serious.length > 0 ? serious : drivers).map((d) => BAND_WORDING[d.key][d.band]);
-  if (s.moodTrend != null && s.moodTrend <= -20) reasons.push(`Humor caiu ${Math.round(-s.moodTrend)}%`);
-  return reasons.slice(0, limit);
+/** Reasons shown under the student's name: only rules that were actually triggered. */
+export function riskReasons(s: IndicatorInput, limit = 4): string[] {
+  return classifySignals({ ...s, validCount: s.entryCount }).reasons
+    .filter((r) => r !== 'Dados insuficientes')
+    .slice(0, limit);
 }
 
 export type PendingSort = 'urgency' | 'mood' | 'anxiety' | 'engagement';
