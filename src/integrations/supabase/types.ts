@@ -2168,6 +2168,69 @@ export type Database = {
           },
         ]
       }
+      institution_content_theme_weeks: {
+        Row: {
+          accesses: number
+          contents_available: number
+          created_at: string
+          empty_searches: number
+          id: string
+          institution_id: string
+          people: number
+          semester: string
+          theme: string
+          unit: string
+          updated_at: string
+          useful_pct: number | null
+          week_index: number
+        }
+        Insert: {
+          accesses?: number
+          contents_available?: number
+          created_at?: string
+          empty_searches?: number
+          id?: string
+          institution_id: string
+          people?: number
+          semester: string
+          theme: string
+          unit: string
+          updated_at?: string
+          useful_pct?: number | null
+          week_index: number
+        }
+        Update: {
+          accesses?: number
+          contents_available?: number
+          created_at?: string
+          empty_searches?: number
+          id?: string
+          institution_id?: string
+          people?: number
+          semester?: string
+          theme?: string
+          unit?: string
+          updated_at?: string
+          useful_pct?: number | null
+          week_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_content_theme_weeks_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_content_theme_weeks_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_coupons: {
         Row: {
           code: string
@@ -2300,6 +2363,72 @@ export type Database = {
           taken_at?: string
         }
         Relationships: []
+      }
+      institution_event_usage: {
+        Row: {
+          capacity: number
+          created_at: string
+          event_date: string
+          id: string
+          institution_id: string
+          kind: string
+          present: number
+          rating: number | null
+          registered: number
+          semester: string
+          title: string
+          unit: string
+          updated_at: string
+          waitlist: number
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          event_date: string
+          id?: string
+          institution_id: string
+          kind: string
+          present?: number
+          rating?: number | null
+          registered?: number
+          semester: string
+          title: string
+          unit: string
+          updated_at?: string
+          waitlist?: number
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          event_date?: string
+          id?: string
+          institution_id?: string
+          kind?: string
+          present?: number
+          rating?: number | null
+          registered?: number
+          semester?: string
+          title?: string
+          unit?: string
+          updated_at?: string
+          waitlist?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_event_usage_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_event_usage_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       institution_link_requests: {
         Row: {
@@ -2457,6 +2586,69 @@ export type Database = {
           },
           {
             foreignKeyName: "institution_notes_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_practice_usage: {
+        Row: {
+          created_at: string
+          helped_pct: number | null
+          hours: Json
+          id: string
+          institution_id: string
+          next_steps: Json
+          people: number
+          practice: string
+          semester: string
+          sources: Json
+          times: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          helped_pct?: number | null
+          hours?: Json
+          id?: string
+          institution_id: string
+          next_steps?: Json
+          people?: number
+          practice: string
+          semester: string
+          sources?: Json
+          times?: number
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          helped_pct?: number | null
+          hours?: Json
+          id?: string
+          institution_id?: string
+          next_steps?: Json
+          people?: number
+          practice?: string
+          semester?: string
+          sources?: Json
+          times?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_practice_usage_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_practice_usage_institution_id_fkey"
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institution_metrics"
@@ -2882,6 +3074,69 @@ export type Database = {
           },
           {
             foreignKeyName: "institution_supports_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_trail_progress: {
+        Row: {
+          completed: number
+          created_at: string
+          format: string
+          id: string
+          institution_id: string
+          last_month: number
+          prev_month: number
+          semester: string
+          started: number
+          theme: string
+          trail: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          completed?: number
+          created_at?: string
+          format: string
+          id?: string
+          institution_id: string
+          last_month?: number
+          prev_month?: number
+          semester: string
+          started?: number
+          theme: string
+          trail: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          completed?: number
+          created_at?: string
+          format?: string
+          id?: string
+          institution_id?: string
+          last_month?: number
+          prev_month?: number
+          semester?: string
+          started?: number
+          theme?: string
+          trail?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_trail_progress_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_trail_progress_institution_id_fkey"
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institution_metrics"
