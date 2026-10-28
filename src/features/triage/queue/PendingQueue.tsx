@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { CARE_LABELS, careStatus, TEXT_SIGNAL_LABEL, triageActionLabel } from '@/features/triage/signalRules';
 import { Activity, AlertTriangle, BookOpen, Brain, CheckCircle2, ChevronDown, History, MessageSquare, Moon, Search, SearchX, X, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -281,15 +282,24 @@ function PendingRow({ student, name, periodDays, classAverages, trendMetric, sel
             <Badge
               variant={flag.severity === 'grave' ? 'destructive' : 'secondary'}
               className="gap-1 text-[11px]"
-              title={`${flag.hits} registro(s) com termos críticos · último em ${new Date(flag.lastDate + 'T12:00:00').toLocaleDateString('pt-BR')}. O texto do aluno não é exibido.`}
+              title={`Sinal separado das notas; não é diagnóstico. ${flag.hits} registro(s) com termos sensíveis · último em ${new Date(flag.lastDate + 'T12:00:00').toLocaleDateString('pt-BR')}. O texto do aluno não é exibido.`}
             >
-              <AlertTriangle className="h-3 w-3" />Palavra crítica · {flag.hits}
+              <AlertTriangle className="h-3 w-3" />{TEXT_SIGNAL_LABEL}
             </Badge>
+          )}
+          <Badge variant="outline" className="text-[11px] font-normal">{CARE_LABELS[careStatus(student.lastTriageStatus)]}</Badge>
+          {student.lastTriageStatus === 'pending' && student.riskLevel !== 'critical' && (
+            <Badge variant="outline" className="text-[11px] font-normal">Pendência anterior ao período</Badge>
           )}
         </div>
         {reasons.length > 0 && <p className="text-xs text-foreground/80">{reasons.join(' · ')}</p>}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <DiaryEngagement entries={student.entryCount} periodDays={periodDays} />
+          {student.lastEntryDate && (
+            <span className="text-[11px] text-muted-foreground">
+              {student.validCount ?? student.entryCount} registro(s) válido(s) · último em {new Date(student.lastEntryDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+            </span>
+          )}
           {noteCount > 0 && (
             <button type="button" onClick={onOpenNotes} className="inline-flex items-center gap-1 rounded-sm text-[11px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <MessageSquare className="h-3 w-3" />
@@ -310,7 +320,7 @@ function PendingRow({ student, name, periodDays, classAverages, trendMetric, sel
           <TooltipContent className="text-xs">Ver histórico</TooltipContent>
         </Tooltip>
         <QuickNotePopover riskLevel={student.riskLevel} subjectName={name} reasons={reasons} onSave={onQuickNote} history={notes} />
-        <Button size="sm" className="h-8 px-4" onClick={onTriage}>Triar</Button>
+        <Button size="sm" className="h-8 px-4" onClick={onTriage}>{triageActionLabel(student.lastTriageId)}</Button>
       </div>
 
       {/* Indicators: own row on mobile, grid cells on desktop */}

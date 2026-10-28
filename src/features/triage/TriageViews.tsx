@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { triageActionLabel } from '@/features/triage/signalRules';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, CheckCircle2, ChevronRight, Clock, MessageSquareWarning, UserX, ArrowRight } from 'lucide-react';
@@ -123,7 +124,7 @@ export function TriagePriorities<T extends PriorityInput>(props: {
   onHistory: (s: T) => void;
 }) {
   if (props.items.length === 0) {
-    return <Card><CardContent className="flex items-center gap-3 p-6 text-sm"><CheckCircle2 className="h-5 w-5 text-primary" />Nenhum aluno com sinal de urgência agora.</CardContent></Card>;
+    return <Card><CardContent className="flex items-center gap-3 p-6 text-sm"><CheckCircle2 className="h-5 w-5 text-primary" />Nenhum aluno com sinais prioritários agora.</CardContent></Card>;
   }
   return (
     <Card>
@@ -141,7 +142,7 @@ export function TriagePriorities<T extends PriorityInput>(props: {
                   {p.reasons.map((r) => <Badge key={r} variant="outline" className="font-normal">{r}</Badge>)}
                 </div>
               </div>
-              <Button size="sm" onClick={() => props.onTriage(p.student)}>Triar</Button>
+              <Button size="sm" onClick={() => props.onTriage(p.student)}>{triageActionLabel((p.student as { lastTriageId?: string | null }).lastTriageId)}</Button>
             </div>
           );
         })}
