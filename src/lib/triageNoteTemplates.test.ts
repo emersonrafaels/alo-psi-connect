@@ -10,7 +10,7 @@ describe('getTemplatesForRisk', () => {
     expect(getTemplatesForRisk('no_data')).toEqual(TRIAGE_NOTE_TEMPLATES.sem_dados);
   });
   it('labels levels with the badge wording', () => {
-    expect(riskLevelLabel('critical')).toBe('Em Risco');
+    expect(riskLevelLabel('critical')).toBe('Sinal elevado');
     expect(riskLevelLabel('alert')).toBe('Alerta');
   });
 });
