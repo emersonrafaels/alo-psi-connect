@@ -27,3 +27,4 @@
 - Keep the institutional portal's section navigation in `src/features/institution/portal/PortalSidebar.tsx` (sidebar on desktop, sheet on mobile) with the active section in `?tab=`, so deep links and back navigation work and new sections are added in one place.
 
 - Route all message sends through the `send-message` function, which resolves recipients and checks sender rights server-side (rules in `supabase/functions/send-message/audience.ts`); threads are one per recipient so students never see each other, and `list_my_message_threads` reveals a student name to an institution only after the student replies with `is_anonymous = false` (tracked by `message_threads.recipient_identified`).
+- Feed the institutional Métricas tab from the `get_institution_usage_metrics` aggregate RPC (pure helpers in `src/features/institution/metrics/usageMetrics.ts`), counting activity per student profile and hiding courses below 10 students, so usage analytics never expose individuals.
