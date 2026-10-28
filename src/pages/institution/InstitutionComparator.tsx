@@ -246,7 +246,7 @@ export default function InstitutionComparator() {
               </p>
             </div>
               <div className="flex flex-wrap items-center gap-2">
-                {view !== 'integrated' && (
+                {view !== 'integrated' && view !== 'ned' && (
                   <Select value={unitFilter} onValueChange={setUnitFilter}>
                     <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
                     <SelectContent>
