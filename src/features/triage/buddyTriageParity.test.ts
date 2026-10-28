@@ -6,7 +6,7 @@ import { baseRisk, escalateRisk, isAwaitingTriage, queueBucket } from '../../../
 const row = (mood: number, anxiety: number | null = null) => ({ mood_score: mood, anxiety_level: anxiety, energy_level: null, sleep_quality: null, sleep_hours: null, date: '2026-10-20' });
 
 describe('Buddy uses the same triage rules as the portal', () => {
-  it('counts as "Para Triar" only Em Risco students without a finished triage', () => {
+  it('counts Para Triar the same way as the portal', () => {
     for (const risk of ['critical', 'alert', 'attention', 'healthy', 'no_data'] as const)
       for (const st of [null, 'pending', 'triaged', 'in_progress', 'resolved'])
         expect(isAwaitingTriage(risk, st)).toBe(feAwaiting({ riskLevel: risk, lastTriageStatus: st }));

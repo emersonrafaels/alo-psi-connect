@@ -19,30 +19,32 @@ const isPending = (s: PriorityInput) => !s.lastTriageStatus || s.lastTriageStatu
 
 /** One definition for the pending queue and every institutional counter. */
 export function isAwaitingTriage(s: Pick<PriorityInput, 'riskLevel' | 'lastTriageStatus'>): boolean {
-  return s.riskLevel === 'critical' && (!s.lastTriageStatus || s.lastTriageStatus === 'pending');
+  // Open triages stay in the queue even when the current period no longer shows Sinal elevado.
+  return s.lastTriageStatus === 'pending' || (s.riskLevel === 'critical' && !s.lastTriageStatus);
 }
 
-/** Urgency order: grave keyword > critical not triaged > overdue follow-up > alert > worsening trend. */
+/**
+ * Order: approved text-signal block, then level groups (Sinal elevado > Alerta > Atenção > others);
+ * inside a level, effective pendings (overdue follow-up, not triaged) come first.
+ * Overdue follow-ups never change the level itself.
+ */
 export function priorityScore(s: PriorityInput): number {
   let score = 0;
-  if (s.criticalSeverity === 'grave') score += 1000;
-  else if (s.criticalSeverity === 'moderate') score += 150;
-  if (s.riskLevel === 'critical') score += isPending(s) ? 500 : 250;
-  if (s.overdueFollowUp) score += 300;
-  if (s.riskLevel === 'alert') score += isPending(s) ? 120 : 60;
-  if (s.riskLevel === 'attention') score += 20;
-  if (s.moodTrend != null && s.moodTrend < -15) score += Math.min(80, Math.round(-s.moodTrend));
+  if (s.criticalSeverity) score += s.criticalSeverity === 'grave' ? 2000 : 1500;
+  score += { critical: 600, alert: 400, attention: 200, healthy: 0, no_data: 0 }[s.riskLevel];
+  if (s.overdueFollowUp) score += 120;
+  else if (isPending(s) && s.riskLevel !== 'healthy' && s.riskLevel !== 'no_data') score += 60;
   return score;
 }
 
-export function priorityReasons(s: PriorityInput, periodDays: number): string[] {
+export function priorityReasons(s: PriorityInput, _periodDays: number): string[] {
   const r: string[] = [];
-  if (s.criticalSeverity === 'grave') r.push('Termo grave no diário');
-  else if (s.criticalSeverity === 'moderate') r.push('Termo de atenção no diário');
-  if (s.riskLevel === 'critical') r.push(isPending(s) ? 'Em Risco e ainda não triado' : 'Em Risco em acompanhamento');
-  else if (s.riskLevel === 'alert') r.push(isPending(s) ? 'Em alerta e ainda não triado' : 'Em alerta');
-  if (s.overdueFollowUp) r.push('Follow-up vencido');
-  if (s.moodTrend != null && s.moodTrend < -15) r.push(`Humor caiu ${Math.round(-s.moodTrend)}% em ${periodDays} dias`);
+  if (s.criticalSeverity) r.push('Sinal textual sensível: revisão pendente');
+  if (s.riskLevel === 'critical') r.push(isPending(s) ? 'Sinal elevado · ainda não triado' : 'Sinal elevado · acompanhamento ativo');
+  else if (s.riskLevel === 'alert') r.push(isPending(s) ? 'Alerta · ainda não triado' : 'Alerta');
+  else if (s.riskLevel === 'attention') r.push(isPending(s) ? 'Atenção · ainda não triado' : 'Atenção');
+  if (s.overdueFollowUp) r.push('Retorno vencido');
+  if (s.moodTrend != null && s.moodTrend <= -40) r.push('Queda relevante de humor');
   return r;
 }
 
@@ -50,7 +52,8 @@ export function buildPriorities<T extends PriorityInput>(students: T[], periodDa
   return students
     .map((s) => ({ student: s, score: priorityScore(s), reasons: priorityReasons(s, periodDays) }))
     .filter((p) => p.score >= 100)
-    .sort((a, b) => b.score - a.score)
+    // Stable tie-break: never by number of records; patient id only as last resort.
+    .sort((a, b) => b.score - a.score || a.student.patientId.localeCompare(b.student.patientId))
     .slice(0, limit);
 }
 
