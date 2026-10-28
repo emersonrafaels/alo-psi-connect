@@ -972,6 +972,82 @@ export type Database = {
           },
         ]
       }
+      care_requests: {
+        Row: {
+          contacted_at: string | null
+          created_at: string
+          destination: string | null
+          first_consult_at: string | null
+          followup_at: string | null
+          id: string
+          institution_id: string
+          is_synthetic: boolean
+          origin: string
+          outcome: string
+          patient_id: string
+          referred_at: string | null
+          requested_at: string
+          triaged_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          contacted_at?: string | null
+          created_at?: string
+          destination?: string | null
+          first_consult_at?: string | null
+          followup_at?: string | null
+          id?: string
+          institution_id: string
+          is_synthetic?: boolean
+          origin?: string
+          outcome?: string
+          patient_id: string
+          referred_at?: string | null
+          requested_at?: string
+          triaged_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contacted_at?: string | null
+          created_at?: string
+          destination?: string | null
+          first_consult_at?: string | null
+          followup_at?: string | null
+          id?: string
+          institution_id?: string
+          is_synthetic?: boolean
+          origin?: string
+          outcome?: string
+          patient_id?: string
+          referred_at?: string | null
+          requested_at?: string
+          triaged_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_requests_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_requests_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_requests_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comment_likes: {
         Row: {
           comment_id: string
@@ -5685,6 +5761,10 @@ export type Database = {
           severity: string
         }[]
       }
+      get_institution_care_journey: {
+        Args: { p_institution_id: string }
+        Returns: Json
+      }
       get_institution_comparator: {
         Args: { p_institution_id: string }
         Returns: Json
@@ -6074,6 +6154,7 @@ export type Database = {
         Args: { raw_specialties: string[] }
         Returns: string[]
       }
+      open_care_request: { Args: { p_origin: string }; Returns: string }
       parse_php_serialized_array: {
         Args: { php_data: string }
         Returns: string[]
