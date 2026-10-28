@@ -2536,6 +2536,96 @@ export type Database = {
           },
         ]
       }
+      institution_ned_action_plans: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          institution_id: string
+          ned_key: string
+          plan: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          institution_id: string
+          ned_key: string
+          plan: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          institution_id?: string
+          ned_key?: string
+          plan?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_ned_action_plans_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_ned_action_plans_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_ned_snapshots: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          institution_id: string
+          ned_key: string
+          semester: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: string
+          institution_id: string
+          ned_key: string
+          semester: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          institution_id?: string
+          ned_key?: string
+          semester?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_ned_snapshots_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_ned_snapshots_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_notes: {
         Row: {
           content: string | null
