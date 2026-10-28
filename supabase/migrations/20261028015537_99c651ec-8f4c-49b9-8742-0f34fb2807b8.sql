@@ -1,0 +1,1 @@
+ALTER FUNCTION public.get_institution_usage_metrics(uuid,int,uuid,uuid) VOLATILE;
