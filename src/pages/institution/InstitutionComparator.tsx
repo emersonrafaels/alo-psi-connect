@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Users, Activity, NotebookPen, ClipboardCheck, Info, BarChart3, LayoutDashboard, GitCompare, MapPin, ArrowUpRight, ArrowDownRight, Minus, PanelLeft } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend } from 'recharts';
 import { IntegratedAnalysis } from '@/features/institution/comparator/IntegratedAnalysis';
+import { AppointmentsView } from '@/features/institution/comparator/appointments/AppointmentsView';
 import { JourneyView } from '@/features/institution/comparator/journey/JourneyView';
 import { OverviewView } from '@/features/institution/comparator/overview/OverviewView';
 import { Route as RouteIcon, CalendarDays, Network, PlayCircle, ListChecks, ShieldCheck } from 'lucide-react';
@@ -118,10 +119,10 @@ export default function InstitutionComparator() {
   const [compareA, setCompareA] = useState<string | null>(null);
   const [compareB, setCompareB] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
-  const [view, setView] = useState<'overview' | 'integrated' | 'journey'>(() => (new URLSearchParams(window.location.search).get('leitura') === 'jornada' ? 'journey' : 'overview'));
+  const [view, setView] = useState<'overview' | 'integrated' | 'journey' | 'appointments'>(() => (new URLSearchParams(window.location.search).get('leitura') === 'jornada' ? 'journey' : new URLSearchParams(window.location.search).get('leitura') === 'atendimentos' ? 'appointments' : 'overview'));
   const [lineScale, setLineScale] = useState<string>('WHO5');
 
-  const changeView = (next: 'overview' | 'integrated' | 'journey') => {
+  const changeView = (next: 'overview' | 'integrated' | 'journey' | 'appointments') => {
     setView(next);
     window.scrollTo(0, 0);
   };
@@ -200,13 +201,13 @@ export default function InstitutionComparator() {
           </div>
           <nav className="flex-1 space-y-1 p-2">
             {!collapsed && <p className="px-2 pb-1 pt-2 text-xs text-muted-foreground">Leituras</p>}
-            {([['overview', 'Visão Geral', LayoutDashboard], ['integrated', 'Análise Integrada', GitCompare], ['journey', 'Jornada de cuidado', RouteIcon]] as const).map(([k, l, I]) => (
+            {([['overview', 'Visão Geral', LayoutDashboard], ['integrated', 'Análise Integrada', GitCompare], ['journey', 'Jornada de cuidado', RouteIcon], ['appointments', 'Atendimentos', CalendarDays]] as const).map(([k, l, I]) => (
               <button key={k} onClick={() => changeView(k)} title={l}
                 className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm transition-colors ${view === k ? 'bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'} ${collapsed ? 'justify-center' : ''}`}>
-                <I className="h-4 w-4 shrink-0" />{!collapsed && <span className="flex-1 text-left">{l}</span>}{!collapsed && k === 'journey' && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Nova</span>}
+                <I className="h-4 w-4 shrink-0" />{!collapsed && <span className="flex-1 text-left">{l}</span>}{!collapsed && (k === 'journey' || k === 'appointments') && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Nova</span>}
               </button>
             ))}
-            {!collapsed && ([[Network, 'NED Nacional'], [CalendarDays, 'Atendimentos'], [NotebookPen, 'Diário emocional'], [PlayCircle, 'Conteúdos e práticas'], [ListChecks, 'Ações e acompanhamento']] as const).map(([I, l]) => (
+            {!collapsed && ([[Network, 'NED Nacional'], [NotebookPen, 'Diário emocional'], [PlayCircle, 'Conteúdos e práticas'], [ListChecks, 'Ações e acompanhamento']] as const).map(([I, l]) => (
               <div key={l} aria-disabled className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground/70">
                 <I className="h-4 w-4 shrink-0" /><span className="flex-1">{l}</span>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold">Em breve</span>
@@ -230,7 +231,7 @@ export default function InstitutionComparator() {
         <div className="flex flex-1 flex-col min-w-0">
           <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur">
             <Button variant="ghost" size="icon" onClick={() => setCollapsed((c) => !c)} aria-label="Recolher menu"><PanelLeft className="h-4 w-4" /></Button>
-            <span className="text-sm text-muted-foreground">{view === 'integrated' ? 'Análise integrada' : `${view === 'journey' ? 'Jornada de cuidado' : 'Visão geral'} · ${unitFilter === 'all' ? 'Toda a instituição' : unitFilter}`}</span>
+            <span className="text-sm text-muted-foreground">{view === 'integrated' ? 'Análise integrada' : `${view === 'journey' ? 'Jornada de cuidado' : view === 'appointments' ? 'Atendimentos' : 'Visão geral'} · ${unitFilter === 'all' ? 'Toda a instituição' : unitFilter}`}</span>
             <Button asChild variant="outline" size="sm" className="ml-auto"><Link to={backTo}><ArrowLeft className="h-4 w-4 mr-1" />Portal Institucional</Link></Button>
           </header>
           <main className="flex-1 space-y-6 p-4 md:p-8">
@@ -264,6 +265,8 @@ export default function InstitutionComparator() {
           <LogoLoader className="min-h-[40vh]" />
         ) : dataQ.error ? (
           <Card><CardContent className="py-10 text-center text-muted-foreground">Não foi possível carregar o comparador.</CardContent></Card>
+        ) : view === 'appointments' ? (
+            <AppointmentsView institutionId={institutionId} semester={current} unitFilter={unitFilter} />
         ) : view === 'journey' ? (
             <JourneyView institutionId={institutionId} semester={current} unitFilter={unitFilter} />
         ) : view === 'overview' ? (
