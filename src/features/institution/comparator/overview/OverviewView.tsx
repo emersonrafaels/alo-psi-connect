@@ -37,7 +37,7 @@ const MATRIX_BG: Record<ReturnType<typeof distanceTone>, string> = {
 };
 
 /** Card that can expand over the page. */
-const Sheet = ({ id, open, setOpen, className = '', children, label }: { id: string; open: string | null; setOpen: (v: string | null) => void; className?: string; children: ReactNode; label: string }) => {
+export const Sheet = ({ id, open, setOpen, className = '', children, label }: { id: string; open: string | null; setOpen: (v: string | null) => void; className?: string; children: ReactNode; label: string }) => {
   const on = open === id;
   return (
     <>
@@ -54,7 +54,7 @@ const Sheet = ({ id, open, setOpen, className = '', children, label }: { id: str
   );
 };
 
-const H2 = ({ title, sub }: { title: string; sub?: ReactNode }) => (
+export const H2 = ({ title, sub }: { title: string; sub?: ReactNode }) => (
   <div>
     <h2 className="text-[22px] font-semibold leading-tight">{title}</h2>
     {sub && <p className="mt-1 max-w-[62ch] text-sm text-muted-foreground">{sub}</p>}
