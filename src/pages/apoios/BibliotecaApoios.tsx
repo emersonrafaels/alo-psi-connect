@@ -462,6 +462,7 @@ const BibliotecaApoios = () => {
                         href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(selected.ctaWhatsappMessage)}`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => { void (supabase as any).rpc('open_care_request', { p_origin: 'apoio' }); }}
                       >
                         {selected.ctaLabel || "Ver horários"}
                       </a>
