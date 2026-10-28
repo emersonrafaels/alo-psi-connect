@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Users, Activity, NotebookPen, ClipboardCheck, Info, BarChart3, LayoutDashboard, GitCompare, MapPin, ArrowUpRight, ArrowDownRight, Minus, PanelLeft } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend } from 'recharts';
 import { IntegratedAnalysis } from '@/features/institution/comparator/IntegratedAnalysis';
+import { OverviewView } from '@/features/institution/comparator/overview/OverviewView';
+import { Route as RouteIcon, CalendarDays, Network, PlayCircle, ListChecks, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
@@ -158,6 +160,13 @@ export default function InstitutionComparator() {
     return { n: m.n, avg: m.avg == null ? null : m.avg * inst.factor };
   };
 
+  const statAll = (code: string, sem: string | null, filter: (r: ScaleRow) => boolean = () => true) => {
+    if (!d || !sem) return { n: 0, avg: null as number | null };
+    const inst = INSTRUMENTS.find((i) => i.code === code)!;
+    const m = weightedMean(d.scales.filter((r) => r.scale_code === code && r.sem === sem && filter(r)));
+    return { n: m.n, avg: m.avg == null ? null : m.avg * inst.factor };
+  };
+
   const population = effUnit === 'all' ? d?.population ?? 0 : d?.units_population[unitFilter] ?? 0;
   const who = stat('WHO5', current), whoPrev = stat('WHO5', previous);
   const coverage = population ? Math.round((who.n / population) * 100) : 0;
@@ -196,7 +205,19 @@ export default function InstitutionComparator() {
                 <I className="h-4 w-4 shrink-0" />{!collapsed && <span>{l}</span>}
               </button>
             ))}
+            {!collapsed && ([[Network, 'NED Nacional'], [RouteIcon, 'Jornada de cuidado'], [CalendarDays, 'Atendimentos'], [NotebookPen, 'Diário emocional'], [PlayCircle, 'Conteúdos e práticas'], [ListChecks, 'Ações e acompanhamento']] as const).map(([I, l]) => (
+              <div key={l} aria-disabled className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground/70">
+                <I className="h-4 w-4 shrink-0" /><span className="flex-1">{l}</span>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold">Em breve</span>
+              </div>
+            ))}
           </nav>
+          {!collapsed && (
+            <div className="mx-2 mb-2 space-y-1 rounded-2xl bg-accent/60 p-3">
+              <div className="flex items-center gap-2 text-[13px] font-semibold text-primary"><ShieldCheck className="h-4 w-4" />Leitura protegida</div>
+              <p className="text-xs text-muted-foreground">A instituição vê tendências coletivas, nunca relatos pessoais. Grupos com menos de 10 pessoas ficam ocultos.</p>
+            </div>
+          )}
           <div className="border-t p-2">
             <Link to={backTo} title="Voltar ao Portal Institucional"
               className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center' : ''}`}>
@@ -213,7 +234,7 @@ export default function InstitutionComparator() {
           </header>
           <main className="flex-1 space-y-6 p-4 md:p-8">
             <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
+            <div className={view === 'overview' ? 'sr-only' : ''}>
               <h1 className="text-3xl font-bold tracking-tight">{view === 'overview' ? 'Como está o bem-estar da sua população' : 'Análise integrada entre recortes'}</h1>
               <p className="mt-1 max-w-2xl text-muted-foreground">
                 Leitura coletiva e descritiva da coleta {current ?? '—'}, comparada à coleta anterior. Nenhum resultado individual é exibido.
@@ -224,7 +245,7 @@ export default function InstitutionComparator() {
                   <Select value={unitFilter} onValueChange={setUnitFilter}>
                     <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Toda a rede</SelectItem>
+                      <SelectItem value="all">Toda a instituição</SelectItem>
                       {units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -243,122 +264,11 @@ export default function InstitutionComparator() {
         ) : dataQ.error ? (
           <Card><CardContent className="py-10 text-center text-muted-foreground">Não foi possível carregar o comparador.</CardContent></Card>
         ) : view === 'overview' ? (
-            <div className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Kpi icon={Users} title="População no recorte" value={`${population.toLocaleString('pt-BR')}`} unit="estudantes"
-                  progress={population ? ((d?.activated ?? 0) / population) * 100 : 0}
-                  hint={`${(d?.activated ?? 0).toLocaleString('pt-BR')} ativaram o acesso à plataforma`} />
-                <Kpi icon={ClipboardCheck} title="Cobertura WHO-5" value={`${coverage}%`} progress={coverage}
-                  badge={previous ? `${coverage - coveragePrev >= 0 ? '+' : ''}${coverage - coveragePrev} p.p.` : undefined}
-                  hint={`${who.n.toLocaleString('pt-BR')} respondentes em ${current ?? '—'}`} />
-                <Kpi icon={NotebookPen} title="Diário emocional" value={diaryNow.toLocaleString('pt-BR')} unit="participantes"
-                  progress={population ? (diaryNow / population) * 100 : 0}
-                  hint={`${population ? Math.round((diaryNow / population) * 100) : 0}% dos estudantes`} />
-                <Kpi icon={Activity} title="Ao menos 1 escala" value={anyScale.toLocaleString('pt-BR')} unit="estudantes"
-                  progress={population ? (anyScale / population) * 100 : 0}
-                  hint={`${population ? Math.round((anyScale / population) * 100) : 0}% da população`} />
-              </div>
-
-              <Card>
-                <CardHeader className="flex flex-row items-start justify-between gap-2">
-                  <div>
-                    <CardTitle>Indicadores por instrumento</CardTitle>
-                    <CardDescription>Média das últimas 3 coletas ({semesters.join(', ')}) · variação de {current ?? '—'} desde {previous ?? 'a coleta anterior'}. A cor indica se a mudança é favorável.</CardDescription>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => changeView('integrated')}>Abrir Análise integrada</Button>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
-                      <tr><th className="py-2">Instrumento</th><th>Média</th><th>Posição na escala</th><th>Variação</th><th>3 coletas</th></tr>
-                    </thead>
-                    <tbody>
-                      {INSTRUMENTS.map((inst) => {
-                        const unavailable = 'unavailable' in inst;
-                        const now = unavailable ? { n: 0, avg: 0 } : stat(inst.code, current);
-                        const prev = unavailable ? { n: 0, avg: null } : stat(inst.code, previous);
-                        const series = unavailable ? [] : semesters.map((s) => stat(inst.code, s).avg).filter((v): v is number => v != null);
-                        const mean3 = unavailable ? 0 : series.length ? series.reduce((a, b) => a + b, 0) / series.length : null;
-                        const delta = now.avg != null && prev.avg != null ? now.avg - prev.avg : null;
-                        const t = trendOf(inst, delta);
-                        const tone = t.label === 'Favorável' ? 'good' : t.label === 'Desfavorável' ? 'bad' : 'flat';
-                        return (
-                          <tr
-                            key={inst.code}
-                            className={`border-t transition-colors ${unavailable ? '' : 'cursor-pointer hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none'}`}
-                            {...(unavailable ? {} : {
-                              role: 'button',
-                              tabIndex: 0,
-                              'aria-label': `Ver ${inst.label} na Análise Integrada`,
-                              onClick: () => { setLineScale(inst.code); changeView('integrated'); },
-                              onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLineScale(inst.code); changeView('integrated'); } },
-                            })}
-                          >
-                            <td className="py-4 pr-4">
-                              <div className="font-semibold">{inst.label}</div>
-                              <div className="text-xs text-muted-foreground">{inst.short} · n={now.n.toLocaleString('pt-BR')}{unavailable && ' · ainda não disponível'}</div>
-                            </td>
-                            <td className="pr-4 text-2xl font-bold tabular-nums">{fmt(mean3)}</td>
-                            <td className="pr-4"><ScalePosition inst={inst} value={mean3} /></td>
-                            <td className="pr-4"><TrendPill inst={inst} delta={delta} unavailable={unavailable} /></td>
-                            <td>{unavailable ? <span className="text-xs text-muted-foreground">—</span> : <Sparkline values={semesters.map((s) => stat(inst.code, s).avg)} labels={semesters} tone={tone} />}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                  <p className="mt-3 flex items-center gap-1 text-xs text-muted-foreground"><Info className="h-3 w-3" />Instrumentos de rastreamento descrevem a população; não são diagnóstico. Escalas diferentes não são comparáveis entre si.</p>
-                </CardContent>
-              </Card>
-
-              <div className="grid gap-6 xl:grid-cols-3">
-                <Card className="xl:col-span-2">
-                  <CardHeader className="flex flex-row items-start justify-between gap-2">
-                    <div>
-                      <CardTitle>Mapa de unidades e cursos</CardTitle>
-                      <CardDescription>Cor relativa à média da rede ({fmt(stat(mapScale, current).avg)}). Grupos com menos de {MIN_GROUP} respondentes ficam protegidos.</CardDescription>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {INSTRUMENTS.map((i) => (
-                        <button key={i.code} onClick={() => setMapScale(i.code)}
-                          className={`rounded-full px-2.5 py-1 text-xs ${mapScale === i.code ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>{i.short}</button>
-                      ))}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="overflow-x-auto">
-                    <HeatMap inst={INSTRUMENTS.find((i) => i.code === mapScale)!} units={unitFilter === 'all' ? units : [unitFilter]}
-                      courses={courses} stat={(f) => ('unavailable' in INSTRUMENTS.find((i) => i.code === mapScale)! ? { n: 0, avg: null } : stat(mapScale, current, f))}
-                      network={stat(mapScale, current).avg} />
-                  </CardContent>
-                </Card>
-
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader><CardTitle>Participação</CardTitle><CardDescription>Quem chega à leitura · {current ?? '—'}</CardDescription></CardHeader>
-                    <CardContent className="space-y-3">
-                      {[
-                        ['População', population],
-                        ['Ativaram o acesso', unitFilter === 'all' ? d?.activated ?? 0 : null],
-                        ['Responderam ao menos 1 escala', anyScale],
-                        ['Responderam ao WHO-5', who.n],
-                        ['Registraram no Diário', diaryNow],
-                      ].filter(([, v]) => v != null).map(([l, v], idx) => {
-                        const pct = population ? Math.round(((v as number) / population) * 100) : 0;
-                        return (
-                          <div key={l as string}>
-                            <div className="mb-1 flex justify-between text-xs"><span>{l}</span><span className="font-semibold tabular-nums">{(v as number).toLocaleString('pt-BR')} <span className="text-primary">· {pct}%</span></span></div>
-                            <div className="h-3 rounded-full bg-muted">
-                              <div className="h-3 rounded-full" style={{ width: `${pct}%`, background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / ${1 - idx * 0.15}))` }} />
-                            </div>
-                          </div>
-                        );
-                      })}
-                      <p className="text-xs text-muted-foreground">Coberturas baixas reduzem a representatividade. Leia médias junto com a participação.</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </div>
+            <OverviewView instruments={INSTRUMENTS as any} semesters={semesters} current={current} previous={previous}
+              unitLabel={unitFilter === 'all' ? 'Toda a instituição' : unitFilter} units={units} courses={courses}
+              population={population} activated={unitFilter === 'all' ? d?.activated ?? 0 : null} diaryNow={diaryNow} anyScale={anyScale}
+              stat={stat as any} statAll={statAll as any}
+              onOpenIntegrated={(code) => { if (code) setLineScale(code); changeView('integrated'); }} />
         ) : (
             <IntegratedAnalysis instruments={INSTRUMENTS} semesters={semesters} current={current} setSemester={setSemester}
               units={units} courses={courses} population={d?.population ?? 0} unitsPopulation={d?.units_population ?? {}} unitCoursePopulation={d?.unit_course_population ?? []}
