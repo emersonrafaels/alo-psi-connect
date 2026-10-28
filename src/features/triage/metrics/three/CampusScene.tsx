@@ -8,7 +8,7 @@ import { RISK_HEX, RISK_LABEL } from './sceneData';
 import type { SceneTheme } from './useSceneTheme';
 
 
-/** Red light on the roof when Em Risco students are still waiting for triage. */
+/** Red light on the roof when Sinal elevado students are still waiting for triage. */
 function Beacon({ reducedMotion }: { reducedMotion: boolean }) {
   const ref = useRef<Mesh>(null);
   useFrame(({ clock }) => {
@@ -120,7 +120,7 @@ export function CampusScene({ buildings, districts, theme, reducedMotion, litRis
                 ))}
               </ul>
               {(hoveredBuilding.pendingCritical ?? 0) > 0 && (
-                <p className="mt-1 font-medium text-red-600 dark:text-red-400">{hoveredBuilding.pendingCritical} Em Risco aguardando triagem</p>
+                <p className="mt-1 font-medium text-red-600 dark:text-red-400">{hoveredBuilding.pendingCritical} Sinal elevado aguardando triagem</p>
               )}
             </>
           ) : (

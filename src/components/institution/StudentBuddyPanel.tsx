@@ -49,7 +49,7 @@ const attentionMeta: Record<BuddyAttentionLevel, { label: string; dot: string }>
   alto: { label: 'Alta atenção', dot: 'bg-destructive' },
   moderado: { label: 'Atenção moderada', dot: 'bg-amber-500' },
   baixo: { label: 'Estável', dot: 'bg-emerald-500' },
-  'sem-dados': { label: 'Sem dados', dot: 'bg-muted-foreground/40' },
+  'sem-dados': { label: 'Dados insuficientes', dot: 'bg-muted-foreground/40' },
 };
 
 const goToTab = (tab: string) => {
@@ -196,7 +196,7 @@ export function StudentBuddyPanel({ institutionId }: Props) {
                         {s.is_stale && (
                           <Badge variant="outline" className="text-[10px] gap-1">
                             <Clock className="h-2.5 w-2.5" />
-                            Sem dados recentes
+                            Dados insuficientes recentes
                           </Badge>
                         )}
                       </div>

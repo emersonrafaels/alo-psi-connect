@@ -20,7 +20,7 @@ import {
   type StudentMultiFilter,
 } from './studentFilters';
 
-const riskLabels: Record<string, string> = { critical: 'Em Risco', alert: 'Alerta', attention: 'Atenção', healthy: 'Estável', no_data: 'Sem dados' };
+const riskLabels: Record<string, string> = { critical: 'Sinal elevado', alert: 'Alerta', attention: 'Atenção', healthy: 'Sem sinais prioritários', no_data: 'Dados insuficientes' };
 const statusLabels: Record<string, string> = { pending: 'Pendente', triaged: 'Triado', in_progress: 'Em andamento', resolved: 'Concluído' };
 
 type Control = { key: StudentMultiFilter; label: string; all: string; options: [string, string][] };

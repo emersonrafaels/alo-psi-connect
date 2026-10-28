@@ -1,17 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { escalateRisk } from './criticalTerms';
 
-describe('escalateRisk', () => {
-  it('grave term makes student critical', () => {
-    expect(escalateRisk('healthy', 'grave')).toBe('critical');
-  });
-  it('moderate term raises one level', () => {
-    expect(escalateRisk('attention', 'moderate')).toBe('alert');
-  });
-  it('never goes above critical', () => {
-    expect(escalateRisk('critical', 'moderate')).toBe('critical');
-  });
-  it('no term keeps level', () => {
-    expect(escalateRisk('alert', null)).toBe('alert');
+describe('escalateRisk (phase 1: text signal is separate)', () => {
+  it('grave or moderate terms never change the numeric level', () => {
+    expect(escalateRisk('healthy', 'grave')).toBe('healthy');
+    expect(escalateRisk('attention', 'moderate')).toBe('attention');
+    expect(escalateRisk('no_data', 'grave')).toBe('no_data');
   });
 });

@@ -105,7 +105,7 @@ export const PanoramaCard = ({
     },
     {
       key: 'healthy',
-      label: 'Saudável',
+      label: 'Sem sinais prioritários',
       suffix: 'reconhecer e manter o ritmo',
       count: counts.healthy,
       dot: 'bg-emerald-500',

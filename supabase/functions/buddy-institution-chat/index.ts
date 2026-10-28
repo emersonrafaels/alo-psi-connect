@@ -22,7 +22,7 @@ const json = (body: unknown, status: number) =>
 const isoDaysAgo = (d: number) => new Date(Date.now() - d * 86400000).toISOString().slice(0, 10);
 const round = (v: unknown) => (typeof v === "number" ? Math.round(v * 100) / 100 : v ?? null);
 const RISK_LABEL: Record<Risk, string> = {
-  critical: "Em Risco", alert: "Alerta", attention: "Atenção", healthy: "Estável", no_data: "Sem dados",
+  critical: "Sinal elevado", alert: "Alerta", attention: "Atenção", healthy: "Estável", no_data: "Dados insuficientes",
 };
 
 async function paged<T>(q: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>, max = 50000) {
@@ -233,8 +233,8 @@ Responda em português do Brasil, com clareza e acolhimento.
 Como trabalhar:
 - Para QUALQUER número, consulte as ferramentas antes de responder. Nunca invente ou estime números. Use os mesmos números do portal.
 - Perguntas de acompanhamento ("e desses...", "e no curso X?") devem ser respondidas cruzando dados com as ferramentas (ex.: risco_x_fila, filtros por unidade/curso, group_by).
-- "Em Risco hoje" e "precisam ser triados" usam o período padrão do portal (15 dias). "Para triar" = Em Risco sem triagem ou com triagem pendente (campo para_triar e risco_x_fila["Em Risco"].para_triar).
-- Níveis: Em Risco, Alerta, Atenção, Estável, Sem dados. Nunca diga "Crítico". Escalas do diário vão de 1 a 5 (ansiedade alta é pior).
+- "Sinal elevado hoje" e "precisam ser triados" usam o período padrão do portal (15 dias). "Para triar" = Sinal elevado sem triagem ou com triagem pendente (campo para_triar e risco_x_fila["Sinal elevado"].para_triar).
+- Níveis: Sinal elevado, Alerta, Atenção, Estável, Dados insuficientes. Nunca diga "Crítico". Escalas do diário vão de 1 a 5 (ansiedade alta é pior).
 - Privacidade: nunca identifique alunos, nunca cite textos dos diários. Grupos com menos de ${MIN_GROUP} alunos ficam ocultos; diga isso quando ocorrer.
 
 Formato da resposta (markdown curto):

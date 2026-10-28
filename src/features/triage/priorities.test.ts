@@ -4,9 +4,9 @@ import { buildPriorities, buildActions, isAwaitingTriage, type Risk } from './pr
 const base = { lastTriageStatus: null, moodTrend: null } as const;
 
 describe('pending triage eligibility', () => {
-  it.each(['alert', 'attention', 'healthy', 'no_data'] as Risk[])('excludes %s even without a triage or with pending status', (riskLevel) => {
+  it.each(['alert', 'attention', 'healthy', 'no_data'] as Risk[])('excludes %s without a triage; keeps an open pending triage', (riskLevel) => {
     expect(isAwaitingTriage({ riskLevel, lastTriageStatus: null })).toBe(false);
-    expect(isAwaitingTriage({ riskLevel, lastTriageStatus: 'pending' })).toBe(false);
+    expect(isAwaitingTriage({ riskLevel, lastTriageStatus: 'pending' })).toBe(true);
   });
   it('includes only Em Risco without a triage or with pending status', () => {
     expect(isAwaitingTriage({ riskLevel: 'critical', lastTriageStatus: null })).toBe(true);
@@ -25,6 +25,14 @@ describe('buildPriorities', () => {
       { ...base, patientId: 'grave', riskLevel: 'healthy', criticalSeverity: 'grave' },
     ], 15);
     expect(list.map((p) => p.student.patientId)).toEqual(['grave', 'crit', 'fu']);
+  });
+  it('overdue follow-up orders inside its level but never jumps a higher level', () => {
+    const list = buildPriorities([
+      { ...base, patientId: 'att-fu', riskLevel: 'attention', lastTriageStatus: 'triaged', overdueFollowUp: true },
+      { ...base, patientId: 'alert', riskLevel: 'alert', lastTriageStatus: 'triaged' },
+      { ...base, patientId: 'att', riskLevel: 'attention', lastTriageStatus: 'triaged' },
+    ], 15);
+    expect(list.map((p) => p.student.patientId)).toEqual(['alert', 'att-fu', 'att']);
   });
   it('healthy students without signals are not listed', () => {
     expect(buildPriorities([{ ...base, patientId: 'h', riskLevel: 'healthy' }], 15)).toEqual([]);

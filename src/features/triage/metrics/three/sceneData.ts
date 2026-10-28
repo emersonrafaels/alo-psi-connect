@@ -8,7 +8,7 @@ export const PRIORITY_HEX: Record<TriagePriority, string> = { urgent: '#ef4444',
 export const OVERLAY_Z: [number, number] = [20, 0];
 
 export const RISK_HEX: Record<Risk, string> = { critical: '#ef4444', alert: '#f97316', attention: '#eab308', healthy: '#22c55e', no_data: '#94a3b8' };
-export const RISK_LABEL: Record<Risk, string> = { critical: 'Em Risco', alert: 'Alerta', attention: 'Atenção', healthy: 'Saudável', no_data: 'Sem dados' };
+export const RISK_LABEL: Record<Risk, string> = { critical: 'Sinal elevado', alert: 'Alerta', attention: 'Atenção', healthy: 'Sem sinais prioritários', no_data: 'Dados insuficientes' };
 
 /** Which 3D scene is shown and which risk levels light up on campus; the page toolbar owns this state. */
 export type Scene3D = 'volume' | 'campus';

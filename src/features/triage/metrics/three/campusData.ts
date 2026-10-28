@@ -21,7 +21,7 @@ export interface CampusBuilding {
   total: number;
   /** Null when the group is below MIN_GROUP: only the head count is shown. */
   byRisk: Record<Risk, number> | null;
-  /** Em Risco students still waiting for triage; null when protected. */
+  /** Sinal elevado students still waiting for triage; null when protected. */
   pendingCritical: number | null;
   floors: number;
   x: number;
@@ -41,7 +41,7 @@ const emptyRisk = (): Record<Risk, number> => ({ critical: 0, alert: 0, attentio
 
 /**
  * Splits `count` windows among risk levels in proportion to students (largest remainder), but every level
- * with at least one student keeps at least one window, so a single Em Risco student never disappears.
+ * with at least one student keeps at least one window, so a single Sinal elevado student never disappears.
  */
 export function windowShares(byRisk: Record<Risk, number>, count: number): Record<Risk, number> {
   const total = WINDOW_ORDER.reduce((a, r) => a + byRisk[r], 0);

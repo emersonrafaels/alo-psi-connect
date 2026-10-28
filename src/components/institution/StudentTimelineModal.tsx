@@ -21,7 +21,7 @@ const KIND_META: Record<Kind, { label: string; icon: typeof Activity }> = {
   group: { label: 'Encontros', icon: Users },
 };
 
-const RISK_LABEL: Record<string, string> = { healthy: 'Estável', attention: 'Atenção', alert: 'Alerta', critical: 'Em Risco' };
+const RISK_LABEL: Record<string, string> = { healthy: 'Estável', attention: 'Atenção', alert: 'Alerta', critical: 'Sinal elevado' };
 
 const prettify = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 

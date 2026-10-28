@@ -63,7 +63,7 @@ function BuildingSummary({ b }: { b: CampusBuilding }) {
             ))}
           </ul>
           {(b.pendingCritical ?? 0) > 0 && (
-            <p className="text-sm font-medium text-red-600 dark:text-red-400">{b.pendingCritical} aluno{b.pendingCritical! > 1 ? 's' : ''} Em Risco aguardando triagem.</p>
+            <p className="text-sm font-medium text-red-600 dark:text-red-400">{b.pendingCritical} aluno{b.pendingCritical! > 1 ? 's' : ''} Sinal elevado aguardando triagem.</p>
           )}
         </>
       ) : (
@@ -197,7 +197,7 @@ export default function Metrics3DPanel({ institutionId, scene, weeks, selection,
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 {SCENE_RISKS.filter((r) => litRisks.has(r)).map((r) => <span key={r} className="inline-flex items-center gap-1.5">{swatch(RISK_HEX[r])}{RISK_LABEL[r]}</span>)}
                 <span className="inline-flex items-center gap-1.5 text-muted-foreground">{swatch(PROTECTED_WINDOW)}menos de {MIN_GROUP} alunos</span>
-                <span className="inline-flex items-center gap-1.5 text-muted-foreground">{swatch(RISK_HEX.critical, true)}luz no telhado = Em Risco aguardando triagem</span>
+                <span className="inline-flex items-center gap-1.5 text-muted-foreground">{swatch(RISK_HEX.critical, true)}luz no telhado = Sinal elevado aguardando triagem</span>
               </div>
             )}
           </div>

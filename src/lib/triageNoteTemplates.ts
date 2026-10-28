@@ -153,7 +153,7 @@ const BUCKET_OF: Record<string, Bucket> = {
 
 /** Same wording as the triage risk badges. */
 const BUCKET_LABEL: Record<Bucket, string> = {
-  critico: 'Em Risco', alto: 'Alerta', moderado: 'Atenção', baixo: 'Saudável', sem_dados: 'Sem dados',
+  critico: 'Sinal elevado', alto: 'Alerta', moderado: 'Atenção', baixo: 'Sem sinais prioritários', sem_dados: 'Dados insuficientes',
 };
 
 const bucketOf = (risk?: string | null): Bucket => BUCKET_OF[String(risk ?? '').toLowerCase()] ?? 'moderado';

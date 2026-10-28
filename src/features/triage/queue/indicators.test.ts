@@ -9,13 +9,13 @@ describe('riskDrivers / riskReasons', () => {
   it('lists the worst indicators first in plain language', () => {
     const s = { ...base, riskLevel: 'critical' as const, avgMood: 1, avgAnxiety: 5, avgEnergy: 2, avgSleep: 2 };
     expect(riskDrivers(s).map((d) => d.key)).toEqual(['mood', 'anxiety', 'sleep', 'energy']);
-    expect(riskReasons(s)).toEqual(['Humor muito baixo', 'Ansiedade muito alta', 'Sono ruim']);
+    expect(riskReasons(s)).toEqual(['Humor médio baixo', 'Ansiedade elevada', 'Sono baixo', 'Registros insuficientes para tendência']);
   });
-  it('falls back to attention-level indicators and adds a steep mood drop', () => {
-    expect(riskReasons({ ...base, avgMood: 3, moodTrend: -35 })).toEqual(['Humor abaixo do esperado', 'Humor caiu 35%']);
+  it('shows a relevant mood drop only as a complementary reason, without a percentage', () => {
+    expect(riskReasons({ ...base, avgMood: 3, moodTrend: -45 })).toEqual(['Humor médio baixo', 'Queda relevante de humor']);
   });
   it('returns nothing for a healthy student', () => {
-    expect(riskReasons(base)).toEqual([]);
+    expect(riskReasons({ ...base, moodTrend: 0 })).toEqual([]);
   });
 });
 

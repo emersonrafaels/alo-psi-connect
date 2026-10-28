@@ -60,7 +60,7 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
     if (idx >= 0 && idx < 7) sparkline[idx]++;
   });
 
-  // Same definition as the "Para triar" queue: students classified as Em Risco
+  // Same definition as the "Para triar" queue: students classified as Sinal elevado
   // (mood-derived risk + critical keyword escalation) without a triage in progress.
   const criticalPending = risk.students.filter(isAwaitingTriage).length;
 
@@ -74,8 +74,8 @@ async function fetchSummary(institutionId: string): Promise<ExecutiveSummary> {
   );
 
   const RISK_PT: Record<string, string> = {
-    high: 'alto', critical: 'Em Risco', medium: 'moderado', low: 'baixo',
-    alto: 'alto', critico: 'Em Risco', 'crítico': 'Em Risco', moderado: 'moderado', baixo: 'baixo',
+    high: 'alto', critical: 'Sinal elevado', medium: 'moderado', low: 'baixo',
+    alto: 'alto', critico: 'Sinal elevado', 'crítico': 'Sinal elevado', moderado: 'moderado', baixo: 'baixo',
   };
   const PRIORITY_PT: Record<string, string> = {
     high: 'Alta', critical: 'Crítica', medium: 'Média', low: 'Baixa',

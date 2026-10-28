@@ -66,7 +66,7 @@ interface MetricsToolbarProps {
   /** Campus: risk levels whose windows light up. */
   risks: Set<Risk>;
   onRisksChange: (risks: Set<Risk>) => void;
-  /** Campus: dim every building without Em Risco students waiting for triage. */
+  /** Campus: dim every building without Sinal elevado students waiting for triage. */
   highlightPending: boolean;
   onHighlightPendingChange: (on: boolean) => void;
 }
@@ -166,7 +166,7 @@ export function MetricsToolbar(props: MetricsToolbarProps) {
               ))}
             </div>
             <button type="button" className={chip(highlightPending)} aria-pressed={highlightPending} onClick={() => props.onHighlightPendingChange(!highlightPending)}>
-              <Siren className="h-3.5 w-3.5" />Destacar Em Risco aguardando triagem
+              <Siren className="h-3.5 w-3.5" />Destacar Sinal elevado aguardando triagem
             </button>
           </>
         )}

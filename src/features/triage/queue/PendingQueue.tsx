@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { CARE_LABELS, careStatus, TEXT_SIGNAL_LABEL, triageActionLabel } from '@/features/triage/signalRules';
 import { Activity, AlertTriangle, BookOpen, Brain, CheckCircle2, ChevronDown, History, MessageSquare, Moon, Search, SearchX, X, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,11 +18,11 @@ import {
 export type ClassAverages = Record<MetricKey, number | null>;
 
 const RISK_META: Record<RiskLevel, { label: string; dot: string; border: string; badge: string }> = {
-  critical: { label: 'Em Risco', dot: 'bg-red-500', border: 'border-l-red-500', badge: 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900' },
+  critical: { label: 'Sinal elevado', dot: 'bg-red-500', border: 'border-l-red-500', badge: 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900' },
   alert: { label: 'Alerta', dot: 'bg-orange-500', border: 'border-l-orange-500', badge: 'bg-orange-50 text-orange-700 ring-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:ring-orange-900' },
   attention: { label: 'Atenção', dot: 'bg-yellow-500', border: 'border-l-yellow-500', badge: 'bg-yellow-50 text-yellow-800 ring-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-300 dark:ring-yellow-900' },
-  healthy: { label: 'Saudável', dot: 'bg-green-500', border: 'border-l-green-500', badge: 'bg-green-50 text-green-700 ring-green-200 dark:bg-green-950/40 dark:text-green-300 dark:ring-green-900' },
-  no_data: { label: 'Sem dados', dot: 'bg-muted-foreground/40', border: 'border-l-muted-foreground/30', badge: 'bg-muted text-muted-foreground ring-border' },
+  healthy: { label: 'Sem sinais prioritários', dot: 'bg-green-500', border: 'border-l-green-500', badge: 'bg-green-50 text-green-700 ring-green-200 dark:bg-green-950/40 dark:text-green-300 dark:ring-green-900' },
+  no_data: { label: 'Dados insuficientes', dot: 'bg-muted-foreground/40', border: 'border-l-muted-foreground/30', badge: 'bg-muted text-muted-foreground ring-border' },
 };
 
 const BAND_TEXT: Record<Band, string> = {
@@ -99,14 +100,14 @@ export function PendingQueue(props: PendingQueueProps) {
           <h3 className="text-lg font-semibold tracking-tight">Alunos aguardando triagem</h3>
           <p className="text-sm text-muted-foreground">
             {students.length} {students.length === 1 ? 'aluno' : 'alunos'}
-            {' '}· nível <span className="font-medium text-foreground">Em Risco</span>
+            {' '}· nível <span className="font-medium text-foreground">Sinal elevado</span>
             {' '}· ordenados por <span className="lowercase">{PENDING_SORT_LABEL[sort]}</span>
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Badge variant="destructive" className="gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-destructive-foreground" />Em Risco {totalPending}
+            <span className="h-2 w-2 rounded-full bg-destructive-foreground" />Sinal elevado {totalPending}
           </Badge>
         </div>
 
@@ -210,7 +211,7 @@ export function PendingQueue(props: PendingQueueProps) {
             <p className="text-sm text-muted-foreground">
               {search.trim()
                 ? <>Nenhum aluno encontrado para “{search}”.</>
-                : <>Nenhum aluno Em Risco aguardando triagem.</>}
+                : <>Nenhum aluno com sinal elevado aguardando triagem.</>}
             </p>
             <Button variant="outline" size="sm" onClick={() => props.onSearchChange('')}>
               Ver todos os {totalPending} pendentes
@@ -219,7 +220,7 @@ export function PendingQueue(props: PendingQueueProps) {
         ) : (
           <div className="flex flex-col items-center gap-2 px-6 py-12 text-center text-sm text-muted-foreground">
             <CheckCircle2 className="h-8 w-8 text-green-500/70" />
-            Nenhum aluno Em Risco aguardando triagem.
+            Nenhum aluno com sinal elevado aguardando triagem.
           </div>
         )
       )}
@@ -281,15 +282,24 @@ function PendingRow({ student, name, periodDays, classAverages, trendMetric, sel
             <Badge
               variant={flag.severity === 'grave' ? 'destructive' : 'secondary'}
               className="gap-1 text-[11px]"
-              title={`${flag.hits} registro(s) com termos críticos · último em ${new Date(flag.lastDate + 'T12:00:00').toLocaleDateString('pt-BR')}. O texto do aluno não é exibido.`}
+              title={`Sinal separado das notas; não é diagnóstico. ${flag.hits} registro(s) com termos sensíveis · último em ${new Date(flag.lastDate + 'T12:00:00').toLocaleDateString('pt-BR')}. O texto do aluno não é exibido.`}
             >
-              <AlertTriangle className="h-3 w-3" />Palavra crítica · {flag.hits}
+              <AlertTriangle className="h-3 w-3" />{TEXT_SIGNAL_LABEL}
             </Badge>
+          )}
+          <Badge variant="outline" className="text-[11px] font-normal">{CARE_LABELS[careStatus(student.lastTriageStatus)]}</Badge>
+          {student.lastTriageStatus === 'pending' && student.riskLevel !== 'critical' && (
+            <Badge variant="outline" className="text-[11px] font-normal">Pendência anterior ao período</Badge>
           )}
         </div>
         {reasons.length > 0 && <p className="text-xs text-foreground/80">{reasons.join(' · ')}</p>}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <DiaryEngagement entries={student.entryCount} periodDays={periodDays} />
+          {student.lastEntryDate && (
+            <span className="text-[11px] text-muted-foreground">
+              {student.validCount ?? student.entryCount} registro(s) válido(s) · último em {new Date(student.lastEntryDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+            </span>
+          )}
           {noteCount > 0 && (
             <button type="button" onClick={onOpenNotes} className="inline-flex items-center gap-1 rounded-sm text-[11px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <MessageSquare className="h-3 w-3" />
@@ -310,7 +320,7 @@ function PendingRow({ student, name, periodDays, classAverages, trendMetric, sel
           <TooltipContent className="text-xs">Ver histórico</TooltipContent>
         </Tooltip>
         <QuickNotePopover riskLevel={student.riskLevel} subjectName={name} reasons={reasons} onSave={onQuickNote} history={notes} />
-        <Button size="sm" className="h-8 px-4" onClick={onTriage}>Triar</Button>
+        <Button size="sm" className="h-8 px-4" onClick={onTriage}>{triageActionLabel(student.lastTriageId)}</Button>
       </div>
 
       {/* Indicators: own row on mobile, grid cells on desktop */}

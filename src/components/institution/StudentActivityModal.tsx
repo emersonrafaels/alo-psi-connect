@@ -22,7 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Leaf, ClipboardList, MessageSquare } from 'lucide-react';
 
 interface TimelineItem { id: string; kind: string; occurred_at: string; title: string; detail: string | null; level: string | null }
-const LEVEL_LABEL: Record<string, string> = { healthy: 'Estável', attention: 'Atenção', alert: 'Alerta', critical: 'Em Risco' };
+const LEVEL_LABEL: Record<string, string> = { healthy: 'Estável', attention: 'Atenção', alert: 'Alerta', critical: 'Sinal elevado' };
 
 function ActivityListTab({ items, kind, empty }: { items: TimelineItem[]; kind: 'practice' | 'scale'; empty: string }) {
   const list = items.filter((i) => i.kind === kind);
@@ -78,11 +78,11 @@ const riskColors: Record<RiskLevel, string> = {
 };
 
 const riskLabels: Record<RiskLevel, string> = {
-  critical: 'Em Risco',
+  critical: 'Sinal elevado',
   alert: 'Alerta',
   attention: 'Atenção',
   healthy: 'Estável',
-  no_data: 'Sem Dados',
+  no_data: 'Dados insuficientes',
 };
 
 const priorityLabels: Record<string, string> = {

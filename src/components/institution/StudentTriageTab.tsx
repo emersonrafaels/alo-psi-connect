@@ -1,4 +1,3 @@
-import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loading-bar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,6 +15,8 @@ import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, TrendingDown, Trend
 import { subDays } from 'date-fns';
 import { useStudentTriageData, useTriageRecords, useTriageNotes, useTriageActions, RiskLevel, StudentRiskData } from '@/hooks/useStudentTriage';
 import { TriageDialog } from './TriageDialog';
+import { SignalsExplainerDialog } from '@/features/triage/SignalsExplainerDialog';
+import { SIGNAL_LABELS, SIGNAL_RULE_TEXT } from '@/features/triage/signalRules';
 import TriageResolutionDialog, { RESOLUTION_TYPE_LABEL } from './TriageResolutionDialog';
 import TriageReopenDialog from './TriageReopenDialog';
 import { StudentActivityModal, type ActivityTab } from './StudentActivityModal';
@@ -49,42 +50,21 @@ interface StudentTriageTabProps {
 }
 
 const riskConfig: Record<RiskLevel, {label: string;color: string;labelColor: string;icon: typeof AlertTriangle;cardBg: string;progressColor: string;}> = {
-  critical: { label: 'Em Risco', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', labelColor: 'text-red-700 dark:text-red-400', icon: AlertTriangle, cardBg: 'border-red-200 dark:border-red-900/50 bg-red-50/40 dark:bg-red-950/20', progressColor: '[&>div]:bg-red-500' },
+  critical: { label: 'Sinal elevado', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', labelColor: 'text-red-700 dark:text-red-400', icon: AlertTriangle, cardBg: 'border-red-200 dark:border-red-900/50 bg-red-50/40 dark:bg-red-950/20', progressColor: '[&>div]:bg-red-500' },
   alert: { label: 'Alerta', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', labelColor: 'text-orange-700 dark:text-orange-400', icon: AlertCircle, cardBg: 'border-orange-200 dark:border-orange-900/50 bg-orange-50/40 dark:bg-orange-950/20', progressColor: '[&>div]:bg-orange-500' },
   attention: { label: 'Atenção', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', labelColor: 'text-yellow-700 dark:text-yellow-400', icon: Eye, cardBg: 'border-yellow-200 dark:border-yellow-900/50 bg-yellow-50/30 dark:bg-yellow-950/20', progressColor: '[&>div]:bg-yellow-500' },
-  healthy: { label: 'Saudável', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', labelColor: 'text-green-700 dark:text-green-400', icon: Heart, cardBg: 'border-green-200 dark:border-green-900/50 bg-green-50/30 dark:bg-green-950/20', progressColor: '[&>div]:bg-green-500' },
-  no_data: { label: 'Sem Dados', color: 'bg-muted text-muted-foreground', labelColor: 'text-muted-foreground', icon: HelpCircle, cardBg: 'bg-muted/30', progressColor: '[&>div]:bg-muted-foreground/40' }
+  healthy: { label: 'Sem sinais prioritários', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', labelColor: 'text-green-700 dark:text-green-400', icon: Heart, cardBg: 'border-green-200 dark:border-green-900/50 bg-green-50/30 dark:bg-green-950/20', progressColor: '[&>div]:bg-green-500' },
+  no_data: { label: 'Dados insuficientes', color: 'bg-muted text-muted-foreground', labelColor: 'text-muted-foreground', icon: HelpCircle, cardBg: 'bg-muted/30', progressColor: '[&>div]:bg-muted-foreground/40' }
 };
 
-const riskLegend: Record<RiskLevel, string> = {
-  critical: 'Humor médio ≤ 1.5, ansiedade ≥ 4.5 ou queda no humor > 40%',
-  alert: 'Humor ≤ 2.5, ansiedade ≥ 3.5 ou energia ≤ 1.5',
-  attention: 'Humor ≤ 3.0, ansiedade ≥ 3.0 ou qualidade de sono ≤ 2.0',
-  healthy: 'Indicadores dentro da faixa esperada',
-  no_data: 'Sem registros no período selecionado'
-};
+const riskLegend: Record<RiskLevel, string> = SIGNAL_RULE_TEXT;
 
 const riskTooltips: Record<RiskLevel, {title: string;description: string;}> = {
-  critical: {
-    title: '🔴 Nível Em Risco',
-    description: 'Alunos com humor muito baixo (≤1.5), ansiedade muito alta (≥4.5) ou queda brusca no humor (>40%). Necessitam atenção imediata.'
-  },
-  alert: {
-    title: '🟠 Nível Alerta',
-    description: 'Alunos com humor baixo (≤2.5), ansiedade elevada (≥3.5) ou energia muito baixa. Recomenda-se acompanhamento.'
-  },
-  attention: {
-    title: '🟡 Nível Atenção',
-    description: 'Alunos com indicadores moderadamente preocupantes. Vale monitorar de perto.'
-  },
-  healthy: {
-    title: '🟢 Nível Saudável',
-    description: 'Alunos com todos os indicadores dentro da faixa esperada.'
-  },
-  no_data: {
-    title: '⚪ Sem Dados',
-    description: 'Alunos que não registraram diários emocionais no período selecionado.'
-  }
+  critical: { title: SIGNAL_LABELS.critical, description: SIGNAL_RULE_TEXT.critical },
+  alert: { title: SIGNAL_LABELS.alert, description: SIGNAL_RULE_TEXT.alert },
+  attention: { title: SIGNAL_LABELS.attention, description: SIGNAL_RULE_TEXT.attention },
+  healthy: { title: SIGNAL_LABELS.healthy, description: SIGNAL_RULE_TEXT.healthy },
+  no_data: { title: SIGNAL_LABELS.no_data, description: SIGNAL_RULE_TEXT.no_data },
 };
 
 const priorityLabels: Record<string, string> = {
@@ -212,7 +192,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
     return buildAnonymizedStudentIndex(students.map((student) => student.patientId));
   }, [students]);
 
-  // Only Em Risco students not yet triaged or pending enter the queue.
+  // Only Sinal elevado students not yet triaged or pending enter the queue.
   const pendingStudents = useMemo(() => {
     let filtered = students.filter(isAwaitingTriage);
     if (debouncedSearch.trim()) {
@@ -517,7 +497,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <LoadingCards labels={["Em Risco", "Alerta", "Atenção", "Estável"]} />
+        <LoadingCards labels={["Sinal elevado", "Alerta", "Atenção", "Sem sinais prioritários"]} />
         <LoadingSection label="Carregando dados da triagem..." />
       </div>);
 
@@ -554,17 +534,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
             </Select>
             <span className="text-xs text-muted-foreground">{format(subDays(new Date(), analysisPeriod), 'dd/MM')} – {format(new Date(), 'dd/MM')} · Atualizado às {format(new Date(), 'HH:mm')}</span>
             <Button variant="outline" size="sm" className="ml-auto h-8 gap-1" onClick={() => setFunnelOpen((o) => !o)} aria-expanded={funnelOpen}><Layers className="h-4 w-4" />Como funciona a triagem</Button>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground"><Info className="h-4 w-4" />Como a criticidade é calculada</Button>
-              </TooltipTrigger>
-              <TooltipPrimitive.Portal>
-                <TooltipContent side="bottom" align="end" className="z-[100] max-w-sm space-y-1.5 border bg-popover p-3 text-xs text-popover-foreground opacity-100 shadow-lg">
-                  {riskOrder.map((l) => <p key={l}><strong>{riskConfig[l].label}:</strong> {riskLegend[l]}</p>)}
-                  <p><strong>Palavras críticas:</strong> termos graves no diário levam a Em Risco; termos moderados sobem um nível. O texto do aluno nunca é exibido.</p>
-                </TooltipContent>
-              </TooltipPrimitive.Portal>
-            </Tooltip>
+            <SignalsExplainerDialog />
           </div>
         )}
         {view && (view === 'resumo' || funnelOpen) && (
@@ -635,8 +605,8 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
         )}
 
         {view === 'fila' && activeTab === 'todos_alunos' && <ViewHeader title="Todos os alunos" description="Consulte qualquer aluno, em qualquer nível de risco, e refine por unidade, curso, turno, turma, situação do diário ou dados cadastrais. Filtrar aqui não altera a fila de triagem." />}
-        {view === 'fila' && activeTab !== 'todos_alunos' && <ViewHeader title="Fila de triagem" description="Para Triar reúne apenas alunos Em Risco. Use “Todos os alunos” no menu lateral para ver todos os níveis e filtros." />}
-        {view === 'metricas' && <ViewHeader title="Métricas" description="A equipe está dando conta? Volume, tempo até resolver, cobertura dos alunos em risco, desfechos e carga por pessoa no período escolhido." />}
+        {view === 'fila' && activeTab !== 'todos_alunos' && <ViewHeader title="Fila de triagem" description="Para Triar reúne apenas alunos com sinal elevado. Use “Todos os alunos” no menu lateral para ver todos os níveis e filtros." />}
+        {view === 'metricas' && <ViewHeader title="Métricas" description="A equipe está dando conta? Volume, tempo até resolver, cobertura dos alunos com sinal elevado, desfechos e carga por pessoa no período escolhido." />}
 
         {showLegacy && (<>
         {/* Summary cards — redesigned */}
@@ -739,7 +709,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
                     {riskCounts.critical > 0 && (
                       <span className="inline-flex items-center gap-1.5">
                         <span className="h-2 w-2 rounded-full bg-red-500" />
-                        <strong className="text-red-700 dark:text-red-300">{riskCounts.critical} em risco</strong>
+                        <strong className="text-red-700 dark:text-red-300">{riskCounts.critical} com sinal elevado</strong>
                         <span className="text-muted-foreground">— ação imediata (contato urgente)</span>
                       </span>
                     )}
@@ -766,7 +736,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
                         className="h-7 text-xs"
                         onClick={() => { setRiskFilter('critical'); setActiveTab('para_triar'); }}
                       >
-                        Começar pelos alunos em risco
+                        Começar pelos alunos com sinal elevado
                         <ChevronRight className="h-3 w-3 ml-1" />
                       </Button>
                     </div>
