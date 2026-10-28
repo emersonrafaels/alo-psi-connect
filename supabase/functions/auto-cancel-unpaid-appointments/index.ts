@@ -74,6 +74,31 @@ serve(async (req) => {
     const cancelResults = await Promise.all(
       appointmentsToCancel.map(async (appointment) => {
         try {
+          // Before cancelling, check whether Mercado Pago already has an approved payment
+          const mpToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
+          if (mpToken) {
+            const search = await fetch(`https://api.mercadopago.com/v1/payments/search?external_reference=${appointment.id}`, {
+              headers: { Authorization: `Bearer ${mpToken}` },
+            });
+            if (search.ok) {
+              const approved = ((await search.json()).results ?? []).find((p: any) => p.status === 'approved');
+              if (approved) {
+                const hook = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/mercadopago-webhook`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ type: 'payment', data: { id: approved.id } }),
+                });
+                await hook.text();
+                logStep("Paid in Mercado Pago, not cancelling", { appointmentId: appointment.id });
+                return { success: false, appointmentId: appointment.id, skipped: 'paid' };
+              }
+            } else {
+              logStep("Could not verify payment, skipping cancel", { appointmentId: appointment.id, status: search.status });
+              await search.text();
+              return { success: false, appointmentId: appointment.id, skipped: 'verify_failed' };
+            }
+          }
+
           // Update appointment status to cancelled
           const { error: updateError } = await supabaseClient
             .from('agendamentos')
