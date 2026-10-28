@@ -314,7 +314,7 @@ function KpiDetailDialog({
     engagementPct >= 60
       ? { label: 'Excelente', tone: 'emerald' as const }
       : engagementPct >= 40
-        ? { label: 'Saudável', tone: 'emerald' as const }
+        ? { label: 'Sem sinais prioritários', tone: 'emerald' as const }
         : engagementPct >= 20
           ? { label: 'Atenção', tone: 'amber' as const }
           : { label: 'Baixo', tone: 'amber' as const };
@@ -388,8 +388,8 @@ function KpiDetailDialog({
       ),
     },
     critical: {
-      title: 'Para triar — Em Risco',
-      description: 'Alunos classificados como Em Risco que ainda aguardam triagem.',
+      title: 'Para triar — Sinal elevado',
+      description: 'Alunos classificados como Sinal elevado que ainda aguardam triagem.',
       body: (
         <div className="space-y-5">
           <div className="flex items-center gap-4">
@@ -398,7 +398,7 @@ function KpiDetailDialog({
             </div>
             <div>
               <p className="text-3xl font-bold leading-none">{summary.criticalOpen}</p>
-              <p className="text-sm text-muted-foreground mt-1">alunos Em Risco aguardando triagem</p>
+              <p className="text-sm text-muted-foreground mt-1">alunos Sinal elevado aguardando triagem</p>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
@@ -536,9 +536,9 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage, 
         />
         <KpiCard
           icon={AlertTriangle}
-          label="Para triar — Em Risco"
+          label="Para triar — Sinal elevado"
           value={String(summary.criticalOpen)}
-          hint="alunos Em Risco aguardando triagem"
+          hint="alunos Sinal elevado aguardando triagem"
           tone={summary.criticalOpen > 0 ? 'danger' : 'success'}
           extra={
             summary.criticalOpen > 0 ? (

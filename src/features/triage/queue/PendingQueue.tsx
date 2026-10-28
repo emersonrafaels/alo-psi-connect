@@ -17,11 +17,11 @@ import {
 export type ClassAverages = Record<MetricKey, number | null>;
 
 const RISK_META: Record<RiskLevel, { label: string; dot: string; border: string; badge: string }> = {
-  critical: { label: 'Em Risco', dot: 'bg-red-500', border: 'border-l-red-500', badge: 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900' },
+  critical: { label: 'Sinal elevado', dot: 'bg-red-500', border: 'border-l-red-500', badge: 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900' },
   alert: { label: 'Alerta', dot: 'bg-orange-500', border: 'border-l-orange-500', badge: 'bg-orange-50 text-orange-700 ring-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:ring-orange-900' },
   attention: { label: 'Atenção', dot: 'bg-yellow-500', border: 'border-l-yellow-500', badge: 'bg-yellow-50 text-yellow-800 ring-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-300 dark:ring-yellow-900' },
-  healthy: { label: 'Saudável', dot: 'bg-green-500', border: 'border-l-green-500', badge: 'bg-green-50 text-green-700 ring-green-200 dark:bg-green-950/40 dark:text-green-300 dark:ring-green-900' },
-  no_data: { label: 'Sem dados', dot: 'bg-muted-foreground/40', border: 'border-l-muted-foreground/30', badge: 'bg-muted text-muted-foreground ring-border' },
+  healthy: { label: 'Sem sinais prioritários', dot: 'bg-green-500', border: 'border-l-green-500', badge: 'bg-green-50 text-green-700 ring-green-200 dark:bg-green-950/40 dark:text-green-300 dark:ring-green-900' },
+  no_data: { label: 'Dados insuficientes', dot: 'bg-muted-foreground/40', border: 'border-l-muted-foreground/30', badge: 'bg-muted text-muted-foreground ring-border' },
 };
 
 const BAND_TEXT: Record<Band, string> = {
@@ -99,14 +99,14 @@ export function PendingQueue(props: PendingQueueProps) {
           <h3 className="text-lg font-semibold tracking-tight">Alunos aguardando triagem</h3>
           <p className="text-sm text-muted-foreground">
             {students.length} {students.length === 1 ? 'aluno' : 'alunos'}
-            {' '}· nível <span className="font-medium text-foreground">Em Risco</span>
+            {' '}· nível <span className="font-medium text-foreground">Sinal elevado</span>
             {' '}· ordenados por <span className="lowercase">{PENDING_SORT_LABEL[sort]}</span>
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Badge variant="destructive" className="gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-destructive-foreground" />Em Risco {totalPending}
+            <span className="h-2 w-2 rounded-full bg-destructive-foreground" />Sinal elevado {totalPending}
           </Badge>
         </div>
 
@@ -210,7 +210,7 @@ export function PendingQueue(props: PendingQueueProps) {
             <p className="text-sm text-muted-foreground">
               {search.trim()
                 ? <>Nenhum aluno encontrado para “{search}”.</>
-                : <>Nenhum aluno Em Risco aguardando triagem.</>}
+                : <>Nenhum aluno Sinal elevado aguardando triagem.</>}
             </p>
             <Button variant="outline" size="sm" onClick={() => props.onSearchChange('')}>
               Ver todos os {totalPending} pendentes
@@ -219,7 +219,7 @@ export function PendingQueue(props: PendingQueueProps) {
         ) : (
           <div className="flex flex-col items-center gap-2 px-6 py-12 text-center text-sm text-muted-foreground">
             <CheckCircle2 className="h-8 w-8 text-green-500/70" />
-            Nenhum aluno Em Risco aguardando triagem.
+            Nenhum aluno Sinal elevado aguardando triagem.
           </div>
         )
       )}

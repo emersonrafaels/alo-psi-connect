@@ -36,8 +36,8 @@ export function buildOverviewActions(i: OverviewActionsInput): OverviewAction[] 
   if (i.criticalOpen > 0) {
     out.push({
       id: 'triage_risk', level: 'urgent', target: 'triage_risk', cta: 'Abrir fila',
-      title: 'Triar alunos Em Risco',
-      reason: `${fmt(i.criticalOpen)} ${i.criticalOpen === 1 ? 'aluno Em Risco aguardando' : 'alunos Em Risco aguardando'} triagem.`,
+      title: 'Triar alunos Sinal elevado',
+      reason: `${fmt(i.criticalOpen)} ${i.criticalOpen === 1 ? 'aluno Sinal elevado aguardando' : 'alunos Sinal elevado aguardando'} triagem.`,
     });
   }
 

@@ -71,7 +71,7 @@ export default function BuddyPatterns() {
                 </div>
               </div>
             ))}
-            {!insight && <p className="text-muted-foreground">Sem dados ainda.</p>}
+            {!insight && <p className="text-muted-foreground">Dados insuficientes ainda.</p>}
           </CardContent>
         </Card>
         <Card className="min-w-0">
@@ -86,7 +86,7 @@ export default function BuddyPatterns() {
                 </div>
               </div>
             ))}
-            {!insight && <p className="text-muted-foreground">Sem dados ainda.</p>}
+            {!insight && <p className="text-muted-foreground">Dados insuficientes ainda.</p>}
           </CardContent>
         </Card>
       </div>

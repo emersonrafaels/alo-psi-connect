@@ -222,7 +222,7 @@ export function BuddyInstitutionPanel({ institutionId }: Props) {
                 </p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   <Badge variant="outline" className="border-primary/30">📊 Diagnóstico executivo</Badge>
-                  <Badge variant="outline" className="border-primary/30">🎯 Coortes em risco</Badge>
+                  <Badge variant="outline" className="border-primary/30">🎯 Coortes com sinal elevado</Badge>
                   <Badge variant="outline" className="border-primary/30">🗓️ Plano de 15 dias</Badge>
                   <Badge variant="outline" className="border-primary/30">🎉 O que celebrar</Badge>
                 </div>

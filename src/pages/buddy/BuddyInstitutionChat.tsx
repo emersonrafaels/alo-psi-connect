@@ -30,7 +30,7 @@ const mdComponents = {
 };
 
 const SUGGESTIONS = [
-  "Quantos alunos estão Em Risco hoje?",
+  "Quantos alunos estão Sinal elevado hoje?",
   "Como está o humor médio nos últimos 15 dias comparado ao período anterior?",
   "Qual curso ou unidade merece mais atenção nas escalas?",
   "Quantos follow-ups estão vencidos e o que você sugere?",

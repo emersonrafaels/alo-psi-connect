@@ -33,11 +33,11 @@ interface TriageDialogProps {
 }
 
 const riskLabels: Record<string, { label: string; color: string; border: string }> = {
-  critical: { label: 'Em Risco', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', border: 'border-l-red-500' },
+  critical: { label: 'Sinal elevado', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', border: 'border-l-red-500' },
   alert: { label: 'Alerta', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', border: 'border-l-orange-500' },
   attention: { label: 'Atenção', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', border: 'border-l-yellow-500' },
-  healthy: { label: 'Saudável', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', border: 'border-l-green-500' },
-  no_data: { label: 'Sem Dados', color: 'bg-muted text-muted-foreground', border: 'border-l-muted-foreground/30' },
+  healthy: { label: 'Sem sinais prioritários', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', border: 'border-l-green-500' },
+  no_data: { label: 'Dados insuficientes', color: 'bg-muted text-muted-foreground', border: 'border-l-muted-foreground/30' },
 };
 
 const statusLabels: Record<string, string> = {

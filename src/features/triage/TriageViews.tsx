@@ -5,11 +5,11 @@ import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, CheckCircle2, Chevr
 import type { Risk, PriorityItem, PriorityInput, TriageAction } from './priorities';
 
 export const RISK_META: Record<Risk, { label: string; icon: typeof AlertTriangle; dot: string; ring: string; hint: string }> = {
-  critical: { label: 'Em Risco', icon: AlertTriangle, dot: 'bg-destructive', ring: 'border-destructive/40', hint: 'Contato no mesmo dia' },
+  critical: { label: 'Sinal elevado', icon: AlertTriangle, dot: 'bg-destructive', ring: 'border-destructive/40', hint: 'Contato no mesmo dia' },
   alert: { label: 'Alerta', icon: AlertCircle, dot: 'bg-[hsl(var(--chart-4))]', ring: 'border-[hsl(var(--chart-4))]/40', hint: 'Acolher em até 7 dias' },
   attention: { label: 'Atenção', icon: Eye, dot: 'bg-[hsl(var(--chart-3))]', ring: 'border-[hsl(var(--chart-3))]/40', hint: 'Monitorar no próximo check-in' },
-  healthy: { label: 'Estável', icon: Heart, dot: 'bg-[hsl(var(--chart-2))]', ring: 'border-border', hint: 'Sem ação necessária' },
-  no_data: { label: 'Sem dados', icon: HelpCircle, dot: 'bg-muted-foreground/50', ring: 'border-border', hint: 'Incentivar o registro no diário' },
+  healthy: { label: 'Sem sinais prioritários', icon: Heart, dot: 'bg-[hsl(var(--chart-2))]', ring: 'border-border', hint: 'Sem ação necessária' },
+  no_data: { label: 'Dados insuficientes', icon: HelpCircle, dot: 'bg-muted-foreground/50', ring: 'border-border', hint: 'Incentivar o registro no diário' },
 };
 
 const ORDER: Risk[] = ['critical', 'alert', 'attention', 'healthy', 'no_data'];
@@ -40,7 +40,7 @@ export function TriageSummary(props: {
   const needing = counts.critical + counts.alert + counts.attention;
   const actionText: Record<TriageAction['key'], { title: string; desc: string; cta: string; icon: typeof AlertTriangle }> = {
     keywords: { title: 'Revisar alunos com palavra crítica no diário', desc: 'Termos sensíveis apareceram nos registros. Priorize contato.', cta: 'Ver alunos', icon: MessageSquareWarning },
-    critical: { title: 'Triar alunos em risco', desc: 'Alunos Em Risco ainda sem triagem.', cta: 'Começar triagem', icon: AlertTriangle },
+    critical: { title: 'Triar alunos com sinal elevado', desc: 'Alunos Sinal elevado ainda sem triagem.', cta: 'Começar triagem', icon: AlertTriangle },
     followups: { title: 'Resolver follow-ups vencidos', desc: 'Acompanhamentos que passaram da data combinada.', cta: 'Ver follow-ups', icon: Clock },
     no_data: { title: 'Revisar alunos sem registros', desc: `Sem registro no diário nos últimos ${periodDays} dias e ainda sem triagem. ${counts.no_data} sem registros no período no total.`, cta: 'Ver lista', icon: UserX },
   };
@@ -55,7 +55,7 @@ export function TriageSummary(props: {
               ? `Nenhum aluno precisa de atenção nos últimos ${periodDays} dias.`
               : <>
                   <span className="text-primary">{needing} de {total} alunos</span> precisam de atenção nos últimos {periodDays} dias
-                  {pendingByRisk.critical > 0 && <>: <strong>{pendingByRisk.critical} em risco ainda não triado{pendingByRisk.critical > 1 ? 's' : ''}</strong></>}
+                  {pendingByRisk.critical > 0 && <>: <strong>{pendingByRisk.critical} com sinal elevado ainda não triado{pendingByRisk.critical > 1 ? 's' : ''}</strong></>}
                   {overdueFollowUps > 0 && <>{pendingByRisk.critical > 0 ? ' e ' : ': '}<strong>{overdueFollowUps} follow-up{overdueFollowUps > 1 ? 's' : ''} vencido{overdueFollowUps > 1 ? 's' : ''}</strong></>}.
                 </>}
           </p>

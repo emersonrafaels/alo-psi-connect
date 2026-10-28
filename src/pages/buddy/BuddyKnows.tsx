@@ -155,7 +155,7 @@ export default function BuddyKnows() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">Sem dados ainda.</p>
+              <p className="text-sm text-muted-foreground">Dados insuficientes ainda.</p>
             )}
           </CardContent>
         </Card>
@@ -186,7 +186,7 @@ export default function BuddyKnows() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">Sem dados ainda.</p>
+              <p className="text-sm text-muted-foreground">Dados insuficientes ainda.</p>
             )}
           </CardContent>
         </Card>
