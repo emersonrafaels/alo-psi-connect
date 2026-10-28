@@ -222,7 +222,7 @@ export function OverviewView(p: OverviewProps) {
                     <span className="font-semibold tabular-nums" style={{ color }}>{delta == null ? '—' : `${delta >= 0 ? '+' : '−'}${fmt(Math.abs(delta))} pt`}</span>
                     <span className="text-xs text-muted-foreground">{delta == null ? 'Sem comparação' : good == null ? 'Estável' : good ? 'Favorável' : 'Desfavorável'}</span>
                   </div>
-                  {now.avg != null || inst.unavailable === undefined && p.semesters.some((s) => p.stat(inst.code, s).avg != null)
+                  {!inst.unavailable && p.semesters.some((s) => p.stat(inst.code, s).avg != null)
                     ? <Spark values={p.semesters.map((s) => p.stat(inst.code, s).avg)} color={color} />
                     : <span className="text-xs text-muted-foreground">Aguardando respostas</span>}
                 </div>
