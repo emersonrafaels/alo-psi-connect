@@ -4,7 +4,7 @@ import { buildPriorities, buildActions, isAwaitingTriage, type Risk } from './pr
 const base = { lastTriageStatus: null, moodTrend: null } as const;
 
 describe('pending triage eligibility', () => {
-  it.each(['alert', 'attention', 'healthy', 'no_data'] as Risk[])('excludes %s even without a triage or with pending status', (riskLevel) => {
+  it.each(['alert', 'attention', 'healthy', 'no_data'] as Risk[])('excludes %s without a triage; keeps an open pending triage', (riskLevel) => {
     expect(isAwaitingTriage({ riskLevel, lastTriageStatus: null })).toBe(false);
     expect(isAwaitingTriage({ riskLevel, lastTriageStatus: 'pending' })).toBe(true);
   });
