@@ -56,7 +56,7 @@ const Sheet = ({ id, open, setOpen, className = '', children, label }: { id: str
 
 const H2 = ({ title, sub }: { title: string; sub?: ReactNode }) => (
   <div>
-    <h2 className="font-display text-[22px] font-semibold leading-tight">{title}</h2>
+    <h2 className="text-[22px] font-semibold leading-tight">{title}</h2>
     {sub && <p className="mt-1 max-w-[62ch] text-sm text-muted-foreground">{sub}</p>}
   </div>
 );
@@ -140,11 +140,11 @@ export function OverviewView(p: OverviewProps) {
         <div className="relative grid gap-8 lg:grid-cols-[1.1fr_1fr]">
           <div className="space-y-3">
             <span className="inline-flex rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-semibold">Coleta {sem} · {p.unitLabel}</span>
-            <h1 className="font-display text-3xl font-semibold leading-tight md:text-4xl">Como estão os seus estudantes neste semestre</h1>
+            <h1 className="text-3xl font-semibold leading-tight md:text-4xl">Como estão os seus estudantes neste semestre</h1>
             <p className="max-w-[52ch] text-primary-foreground/80">Leitura coletiva e descritiva da coleta {sem}{p.previous ? ', comparada à anterior' : ''}. Nenhum resultado individual é exibido.</p>
           </div>
           <div className="space-y-3 rounded-3xl bg-primary-foreground/10 p-5">
-            <h2 className="font-display text-base font-semibold">O que mudou{p.previous ? ` desde ${p.previous}` : ''}</h2>
+            <h2 className="text-base font-semibold">O que mudou{p.previous ? ` desde ${p.previous}` : ''}</h2>
             {changes.length ? changes.map((c, i) => (
               <div key={i} className="flex gap-3">
                 <span aria-hidden className={`mt-2 h-2 w-2 shrink-0 rounded-full ${c.tone === 'good' ? 'bg-primary-foreground' : c.tone === 'bad' ? 'bg-destructive' : 'bg-primary-foreground/50'}`} />
@@ -161,7 +161,7 @@ export function OverviewView(p: OverviewProps) {
           <div key={k.label} className="flex flex-col gap-2 rounded-3xl border bg-card p-5">
             <span className="text-[13px] font-semibold text-muted-foreground">{k.label}</span>
             <div className="flex items-baseline gap-2">
-              <span className="font-display text-3xl font-semibold tabular-nums">{k.value == null ? '—' : k.value.toLocaleString('pt-BR')}</span>
+              <span className="text-3xl font-semibold tabular-nums">{k.value == null ? '—' : k.value.toLocaleString('pt-BR')}</span>
               <span className="text-sm text-muted-foreground">{k.unit}</span>
             </div>
             <div className="h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${Math.min(100, k.pct)}%` }} /></div>
@@ -206,7 +206,7 @@ export function OverviewView(p: OverviewProps) {
                     <span className="text-xs text-muted-foreground">{inst.short} · n={now.n.toLocaleString('pt-BR')}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-display text-2xl font-semibold tabular-nums">{fmt(now.avg)}</span>
+                    <span className="text-2xl font-semibold tabular-nums">{fmt(now.avg)}</span>
                     <span className="text-xs text-muted-foreground">{band?.label ?? '—'}</span>
                   </div>
                   <div>
@@ -355,7 +355,7 @@ export function OverviewView(p: OverviewProps) {
                         <span className="text-sm font-semibold">{u.unit}</span>
                         <span className="text-xs text-muted-foreground">{u.values.filter((v) => v != null && v > 0).length} de {u.values.filter((v) => v != null).length} escalas acima da média</span>
                       </span>
-                      <span className={`font-display text-lg font-semibold ${avg == null ? 'text-muted-foreground' : avg >= 0 ? 'text-primary' : 'text-destructive'}`}>{pctTxt(avg)}</span>
+                      <span className={`text-lg font-semibold ${avg == null ? 'text-muted-foreground' : avg >= 0 ? 'text-primary' : 'text-destructive'}`}>{pctTxt(avg)}</span>
                     </button>
                   );
                 })}
@@ -378,7 +378,7 @@ export function OverviewView(p: OverviewProps) {
                         const g = p.statAll(s.code, p.current, (r) => r.unit === u.unit);
                         return (
                           <div key={u.unit} title={`${u.unit} · ${s.short}`} className={`rounded-[14px] px-2 py-3 text-center ${MATRIX_BG[distanceTone(v)]}`}>
-                            <div className="font-display text-lg font-semibold">{pctTxt(v)}</div>
+                            <div className="text-lg font-semibold">{pctTxt(v)}</div>
                             <div className="text-xs opacity-85">{fmt(g.avg)}</div>
                           </div>
                         );
@@ -410,7 +410,7 @@ export function OverviewView(p: OverviewProps) {
           <p className="text-[13px] text-muted-foreground">Cobertura baixa reduz a representatividade. Leia as médias junto com a participação.</p>
         </Sheet>
         <section aria-label="Continue a leitura" className="min-w-0 flex-[1_1_320px] space-y-3 rounded-[28px] border bg-card p-5 md:p-8">
-          <h2 className="font-display text-[22px] font-semibold">Continue a leitura</h2>
+          <h2 className="text-[22px] font-semibold">Continue a leitura</h2>
           <button type="button" onClick={() => p.onOpenIntegrated()} className="flex w-full items-center gap-3 rounded-2xl border p-4 text-left hover:bg-muted/50">
             <GitCompare className="h-5 w-5 text-primary" /><span className="flex-1"><span className="block font-semibold">Análise integrada</span><span className="text-xs text-muted-foreground">Compare unidades, cursos e coletas</span></span><ArrowRight className="h-4 w-4 text-primary" />
           </button>
