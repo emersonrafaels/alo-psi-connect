@@ -4298,6 +4298,58 @@ export type Database = {
           },
         ]
       }
+      permanence_responses: {
+        Row: {
+          answers: Json
+          created_at: string
+          id: string
+          institution_id: string | null
+          patient_id: string | null
+          semester: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          patient_id?: string | null
+          semester: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          patient_id?: string | null
+          semester?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permanence_responses_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permanence_responses_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permanence_responses_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       praticas: {
         Row: {
           ativo: boolean
@@ -6322,6 +6374,10 @@ export type Database = {
       }
       get_institution_mood_aggregates: {
         Args: { p_institution_id: string; p_period_days?: number }
+        Returns: Json
+      }
+      get_institution_permanence: {
+        Args: { _institution_id: string }
         Returns: Json
       }
       get_institution_professional_ids: {
