@@ -10,6 +10,8 @@ import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
+import { buildTenantPath, getTenantSlugFromPath } from '@/utils/tenantHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { MODULES, currentSemester, isAnswered, isVisible, progress, toggleMulti, type Answers } from '@/features/permanence/instrument';
@@ -23,12 +25,20 @@ export default function PermanenceRadar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { hasRole: isInstitutionAdmin, loading: institutionAdminLoading } = useUserRole('institution_admin');
   const [mode, setMode] = useState<'summary' | 'form'>('summary');
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { if (!loading && !user) navigate('/auth'); }, [loading, user, navigate]);
+
+  // Usuários vinculados a instituição acessam o radar apenas pelo Portal Institucional (Comparador).
+  useEffect(() => {
+    if (!loading && user && !institutionAdminLoading && isInstitutionAdmin) {
+      navigate(buildTenantPath(getTenantSlugFromPath(location.pathname), '/portal-institucional/comparador'), { replace: true });
+    }
+  }, [loading, user, institutionAdminLoading, isInstitutionAdmin, navigate]);
 
   const history = useQuery({
     queryKey: ['permanence-mine', user?.id], enabled: !!user,
