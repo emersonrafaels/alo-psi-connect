@@ -19,7 +19,10 @@ const EXP_MAP: Record<string, (string | null)[]> = {
   acad: [null, '3.1', '3.3', '3.4', null],
 };
 
+const KNOWN: Record<string, string> = { contagem: 'CT', 'itajubá': 'IT', 'montes claros': 'MC' };
 const unitKey = (name: string) => {
+  const known = KNOWN[name.replace(/^Afya\s+/i, '').toLowerCase()];
+  if (known) return known;
   const w = name.replace(/^Afya\s+/i, '').split(/\s+/).filter((x) => x.length > 2 || /^[A-Z]/.test(x));
   return (w.length > 1 ? w[0][0] + w[1][0] : w[0].slice(0, 2)).toUpperCase();
 };

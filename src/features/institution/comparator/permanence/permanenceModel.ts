@@ -1,7 +1,7 @@
 // Shape of one aggregated Radar de Permanência snapshot (per institution and semester).
 // Only collective distributions — never individual answers.
 export type Dir = 'risk' | 'protective';
-export interface Item { dom: string; dir: Dir; lab: string[]; b: number[]; q?: string; t?: string }
+export interface Item { dom: string; dir: Dir; lab: string[]; b: number[]; bu?: Record<string, number[]>; q?: string; t?: string }
 export interface ExpGroup { label: string; period: string; items: Item[] }
 export type Mult = Record<string, Record<string, number>>;
 export interface PermUnit { k: string; nome: string; ini: string; n: number; est: number }
