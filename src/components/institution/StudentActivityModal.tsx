@@ -684,6 +684,11 @@ export function StudentActivityModal({
               Histórico de Triagens
               <TabCount value={triageCount} loading={isLoading} />
             </TabsTrigger>
+            <TabsTrigger value="radar" className="gap-1.5 text-xs">
+              <Radar className="h-3.5 w-3.5" />
+              Radar de Permanência
+              <TabCount value={permanence.length} loading={permanenceLoading} />
+            </TabsTrigger>
             <TabsTrigger value="jornada" className="gap-1.5 text-xs">
               <Route className="h-3.5 w-3.5" />
               Jornada do pedido
