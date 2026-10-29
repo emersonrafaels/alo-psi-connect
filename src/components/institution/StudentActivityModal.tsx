@@ -618,6 +618,17 @@ export function StudentActivityModal({
       return (data ?? []) as TimelineItem[];
     },
   });
+  const { data: permanence = [], isLoading: permanenceLoading } = useQuery({
+    queryKey: ['student-permanence', institutionId, patientId],
+    enabled: open && !!institutionId && !!patientId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)('get_student_permanence_participation', {
+        _institution_id: institutionId, _patient_id: patientId,
+      });
+      if (error) throw error;
+      return (data ?? []) as PermanenceParticipation[];
+    },
+  });
 
   // Anonymized names are "Aluno #N"; show "AN" like the rest of the portal instead of the "A#" initials.
   const anonNumber = studentName.match(/#(\d+)/)?.[1];
