@@ -11,7 +11,7 @@ const unitColor = (i: number) => `hsl(var(--chart-${(i % 5) + 1}))`;
 const initials = (s: string) => s.replace(/^Afya\s+/i, '').split(/\s+/).filter((w) => w.length > 2).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 const pct = (n: number, d: number) => (d ? Math.round((n / d) * 100) : 0);
 const days = (v: number | null) => (v == null ? '—' : `${Math.max(1, Math.round(v))} ${Math.round(v) <= 1 ? 'dia' : 'dias'}`);
-const OUT_CLS: Record<string, string> = { consulta: 'hsl(var(--primary))', em_andamento: 'hsl(var(--primary) / .45)', sem_retorno: 'hsl(var(--destructive) / .7)', outro_recurso: 'hsl(var(--muted-foreground) / .5)' };
+const OUT_CLS: Record<string, string> = { consulta: 'hsl(var(--primary))', em_andamento: 'hsl(var(--primary) / .7)', sem_retorno: 'hsl(var(--highlight-pink) / .7)', outro_recurso: 'hsl(var(--muted-foreground) / .5)' };
 
 export function JourneyView({ institutionId, semester, unitFilter, onSemesters }: { institutionId?: string; semester: string | null; unitFilter: string; onSemesters?: (s: string[]) => void }) {
   const [fs, setFs] = useState<string | null>(null);
@@ -20,6 +20,8 @@ export function JourneyView({ institutionId, semester, unitFilter, onSemesters }
   const [cmpFocus, setCmpFocus] = useState<string | null>(null);
   const [cmpView, setCmpView] = useState<'curva' | 'tabela'>('curva');
   const [hover, setHover] = useState<string | null>(null);
+  const [flU, setFlU] = useState<string>('all');
+  const [flMode, setFlMode] = useState<'n' | 'pct'>('n');
 
   const q = useQuery({
     queryKey: ['care-journey', institutionId],
@@ -134,37 +136,94 @@ export function JourneyView({ institutionId, semester, unitFilter, onSemesters }
         ))}
       </Sheet>
 
-      <Sheet id="j2" open={fs} setOpen={setFs} label="Etapas do encaminhamento" className="space-y-5">
-        <div className="pr-10"><H2 title="Etapas do encaminhamento" sub={`${counts[0].toLocaleString('pt-BR')} pedidos em ${sem}${unitFilter === 'all' ? '' : ` · ${unitFilter}`}. Cada etapa conta pessoas que chegaram até ela.`} /></div>
-        <div className="space-y-1">
-          {STAGES.map((s, i) => (
-            <div key={s}>
-              {i > 0 && (
-                <div className={`ml-[200px] flex gap-4 rounded-lg px-3 py-1 text-xs ${worst === i - 1 ? 'bg-destructive/10 font-semibold text-destructive' : 'text-muted-foreground'}`}>
-                  <span>−{losses[i - 1].toLocaleString('pt-BR')} não seguiram</span>
-                  {i <= 4 && <span>mediana {days(medians[i - 1])}</span>}
-                </div>
-              )}
-              <div className="grid grid-cols-[200px_1fr_90px] items-center gap-3">
-                <span className="text-sm font-semibold">{s}</span>
-                <div className="h-8 rounded-xl bg-muted"><div className="h-8 rounded-xl bg-primary" style={{ width: `${pct(counts[i], counts[0])}%`, opacity: 1 - i * 0.1 }} /></div>
-                <span className="text-right text-sm tabular-nums"><strong>{counts[i].toLocaleString('pt-BR')}</strong> <span className="text-muted-foreground">{pct(counts[i], counts[0])}%</span></span>
+      <Sheet id="j2" open={fs} setOpen={setFs} label="Etapas do encaminhamento" className="flex flex-col gap-5">
+        {(() => {
+          const ff = flU === 'all' ? flowsU : flows.filter((f) => f.unit === flU && (d?.units_population?.[f.unit] ?? 10) >= 0);
+          const c = stageCounts(ff);
+          const wts = Object.fromEntries([...sumBy(ff, (f) => f.unit)]);
+          const wv = (d?.waits ?? []).filter((w) => w.sem === sem && (flU === 'all' ? inU(w) : w.unit === flU));
+          const med = (['w1', 'w2', 'w3', 'w4'] as const).map((k) => pooledWait(wv, k, wts));
+          const nr = sumBy(ff.filter((f) => f.stage < 5), (f) => f.outcome);
+          const rt = [...nr.values()].reduce((x, v) => x + v, 0);
+          let wi = 1; let wd = -1;
+          for (let k = 1; k <= 4; k++) { const dd = c[k - 1] - c[k]; if (dd > wd) { wd = dd; wi = k; } }
+          const HMAX = 200, CY = 140, base = c[0] || 1;
+          const hh = (n: number) => Math.max((n / base) * HMAX, 6);
+          const medSum = med.reduce<number>((x, v) => x + (v ?? 0), 0);
+          const PINK = 'hsl(var(--highlight-pink))';
+          const unitOpts = units.filter((u) => (stageCounts(flows.filter((f) => f.unit === u))[0] ?? 0) >= 10);
+          return (<>
+            <div className="flex flex-wrap items-end justify-between gap-4 pr-10">
+              <H2 title="Etapas do encaminhamento" sub={`${c[0].toLocaleString('pt-BR')} pessoas pediram apoio humano em ${sem}. Cada etapa é contada separadamente.`} />
+              <div className="flex flex-wrap gap-6">
+                <div className="flex flex-col"><span className="text-[28px] font-semibold leading-tight tabular-nums">{days(medSum)}</span><span className="text-[13px] text-muted-foreground">do pedido à 1ª consulta</span></div>
+                <div className="flex flex-col"><span className="text-[28px] font-semibold leading-tight tabular-nums">{pct(c[4], c[0])}%</span><span className="text-[13px] text-muted-foreground">chegaram a atendimento</span></div>
               </div>
             </div>
-          ))}
-        </div>
-        {restTot > 0 && (
-          <div className="space-y-2">
-            <span className="text-sm font-semibold">Quem ainda não chegou à 1ª consulta ({restTot})</span>
-            <div className="flex h-3 overflow-hidden rounded-full">
-              {['em_andamento', 'sem_retorno', 'outro_recurso'].map((k) => <div key={k} style={{ width: `${pct(notReached.get(k) ?? 0, restTot)}%`, background: OUT_CLS[k] }} />)}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div role="group" aria-label="Unidade exibida no fluxo" className="flex flex-wrap gap-2">
+                {unitFilter === 'all' && [['all', 'Toda a instituição'] as const, ...unitOpts.map((u) => [u, u.replace(/^Afya\s+/i, '')] as const)].map(([k, l], i) => (
+                  <button key={k} type="button" aria-pressed={flU === k} onClick={() => setFlU(k)} className={`inline-flex h-[38px] items-center gap-2 rounded-full border pr-3.5 text-[13px] ${k === 'all' ? 'pl-3.5' : 'pl-1.5'} ${flU === k ? 'border-primary bg-accent font-semibold' : 'bg-card font-medium'}`}>
+                    {k !== 'all' && <span aria-hidden className="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10px] font-bold text-primary-foreground" style={{ background: unitColor(i - 1) }}>{initials(k)}</span>}
+                    {l}
+                  </button>
+                ))}
+              </div>
+              <Chips opts={[['n', 'Pessoas'], ['pct', '% do pedido']]} val={flMode} set={(v) => setFlMode(v as 'n' | 'pct')} />
             </div>
-            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-              {['em_andamento', 'sem_retorno', 'outro_recurso'].map((k) => <span key={k} className="flex items-center gap-1.5"><span className="h-2.5 w-4 rounded" style={{ background: OUT_CLS[k] }} />{notReached.get(k) ?? 0} {OUTCOMES[k].toLowerCase()}</span>)}
+            <div className="overflow-x-auto">
+              <div role="img" aria-label="Fluxo das etapas do encaminhamento" className="grid min-w-[720px] grid-cols-6">
+                {STAGES.map((st, i) => {
+                  const n = c[i], h = hh(n), ph = i > 0 ? hh(c[i - 1]) : h;
+                  const worstI = i === wi, last = i === 5;
+                  const ya = CY - ph / 2, yb = CY - h / 2, yb2 = CY + h / 2, ya2 = CY + ph / 2;
+                  const ribbon = `M0 ${ya} C50 ${ya} 50 ${yb} 100 ${yb} L100 ${yb2} C50 ${yb2} 50 ${ya2} 0 ${ya2} Z`;
+                  const t1 = i >= 1 && i <= 4 ? `−${(c[i - 1] - n).toLocaleString('pt-BR')}` : last ? `${pct(n, c[4])}%` : '';
+                  const t2 = i >= 1 && i <= 4 ? days(med[i - 1]) : last ? 'continuam' : '';
+                  return (
+                    <div key={st} className="relative flex flex-col">
+                      <div className="relative h-[280px]">
+                        {i > 0 && (<>
+                          <svg viewBox="0 0 100 280" preserveAspectRatio="none" aria-hidden className="absolute top-0 h-full w-[56%] overflow-visible" style={{ left: '-28%' }}>
+                            <path d={ribbon} fill={worstI ? PINK : 'hsl(var(--primary))'} fillOpacity={worstI ? 0.3 : last ? 0.08 : 0.14} />
+                          </svg>
+                          <div className="absolute top-0 flex w-[56%] flex-col items-center leading-tight" style={{ left: '-28%', color: worstI ? PINK : undefined }}>
+                            <span className="text-[15px] font-semibold">{t1}</span>
+                            <span className={`text-[11px] ${worstI ? '' : 'text-muted-foreground'}`}>{t2}</span>
+                          </div>
+                        </>)}
+                        <div title={`${st}: ${n} pessoas (${pct(n, c[0])}% do pedido)`} className={`absolute left-[28%] w-[44%] rounded-xl ${last ? 'bg-primary/50' : 'bg-primary/80'}`} style={{ top: CY - h / 2, height: h }} />
+                      </div>
+                      <div className="flex flex-col gap-0.5 px-1 pt-3 text-center">
+                        <span className="min-h-[34px] text-[13px] font-medium leading-snug">{st}</span>
+                        <span className="text-2xl font-semibold tabular-nums">{flMode === 'pct' ? `${pct(n, c[0])}%` : n.toLocaleString('pt-BR')}</span>
+                        <span className="text-xs text-muted-foreground">{flMode === 'pct' ? `${n} pessoas` : `${pct(n, c[0])}% do pedido`}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
-        <p className="text-xs text-muted-foreground">Entre as etapas: quantas pessoas não seguiram (−) e o tempo mediano até a etapa seguinte. A faixa rosa marca a maior perda até a 1ª consulta.</p>
+            <p className="text-xs text-muted-foreground">Entre as etapas: quantas pessoas não seguiram (−) e o tempo médio até a etapa seguinte. A faixa rosa marca a maior perda até a 1ª consulta.</p>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex flex-[1_1_320px] flex-col gap-1 rounded-[20px] p-5" style={{ background: 'hsl(var(--highlight-pink) / .12)' }}>
+                <span className="font-semibold" style={{ color: PINK }}>Maior perda: entre {STAGES[wi - 1].toLowerCase()} e {STAGES[wi].toLowerCase()}</span>
+                <span className="text-sm">{wd.toLocaleString('pt-BR')} pessoas chegaram a "{STAGES[wi - 1].toLowerCase()}" e não seguiram para a etapa seguinte. Vale olhar horários oferecidos e faltas na aba Atendimentos.</span>
+              </div>
+              {rt > 0 && (
+                <div className="flex flex-[1_1_320px] flex-col gap-2 rounded-[20px] bg-muted/60 p-5">
+                  <span className="font-semibold">As {rt.toLocaleString('pt-BR')} pessoas ainda não atendidas</span>
+                  <div aria-hidden className="flex h-3 gap-0.5 overflow-hidden rounded-full">
+                    {['em_andamento', 'sem_retorno', 'outro_recurso'].map((k) => <div key={k} style={{ width: `${pct(nr.get(k) ?? 0, rt)}%`, background: OUT_CLS[k] }} />)}
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] text-muted-foreground">
+                    {['em_andamento', 'sem_retorno', 'outro_recurso'].map((k) => <span key={k} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: OUT_CLS[k] }} />{nr.get(k) ?? 0} {OUTCOMES[k].toLowerCase()}</span>)}
+                  </div>
+                </div>
+              )}
+            </div>
+          </>);
+        })()}
       </Sheet>
 
       <Sheet id="j3" open={fs} setOpen={setFs} label="Origem e destino dos pedidos" className="space-y-5">
