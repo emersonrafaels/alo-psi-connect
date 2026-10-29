@@ -34,6 +34,8 @@ export function NedView({ institutionId, semester }: { institutionId?: string; s
   const [bpKey, setBpKey] = useState(BEST_PRACTICES[0].key);
   const [planOpen, setPlanOpen] = useState(false);
   const [planText, setPlanText] = useState('');
+  const [hov, setHov] = useState<Ned | null>(null);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
 
   const q = useQuery({
     queryKey: ['ned-snapshots', institutionId], enabled: !!institutionId,
