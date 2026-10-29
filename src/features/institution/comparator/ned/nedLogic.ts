@@ -11,7 +11,7 @@ const pf = (v: number) => `${v % 1 ? br(v, 1) : v}%`;
 export const METRICS: { k: MetricKey; label: string; pillar: string; up: boolean; tol: number; f: (v: number) => string; tip: string }[] = [
   { k: 'alc', label: 'Atendidos por 100', pillar: 'Acesso', up: true, tol: 1, f: (v) => br(v), tip: 'Estudantes atendidos pelo NED no semestre, por 100 matriculados' },
   { k: 'hor', label: 'Horas de equipe por 100', pillar: 'Acesso', up: true, tol: 0.6, f: (v) => br(v), tip: 'Horas semanais da equipe do NED por 100 matriculados' },
-  { k: 'esp', label: 'Espera (dias)', pillar: 'Resposta', up: false, tol: 1, f: (v) => String(v), tip: 'Mediana de dias entre o pedido e o 1º acolhimento' },
+  { k: 'esp', label: 'Espera (dias)', pillar: 'Resposta', up: false, tol: 1, f: (v) => String(v), tip: 'Média de dias entre o pedido e o 1º acolhimento' },
   { k: 'com', label: 'Comparecimento', pillar: 'Resposta', up: true, tol: 3, f: pf, tip: 'Atendimentos realizados sobre atendimentos marcados' },
   { k: 'col', label: 'Ações coletivas', pillar: 'Prevenção', up: true, tol: 1, f: (v) => String(v), tip: 'Oficinas, rodas e palestras no semestre' },
   { k: 'pei', label: 'Adaptações no prazo', pillar: 'Inclusão', up: true, tol: 4, f: pf, tip: 'Adaptações de acessibilidade e PEI entregues no prazo' },
@@ -22,14 +22,12 @@ export const METRICS: { k: MetricKey; label: string; pillar: string; up: boolean
 export const ROLES = ['Coordenação', 'Psicopedagogia', 'Psicologia', 'Apoio administrativo'];
 export const DEM = ['Ansiedade e questões emocionais', 'Aprendizagem e estudo', 'Organização do tempo', 'Inclusão e acessibilidade', 'Conflitos e luto', 'Carreira e vocação'];
 
-export function median(a: number[]) {
-  if (!a.length) return 0;
-  const s = [...a].sort((x, y) => x - y), m = Math.floor(s.length / 2);
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+export function mean(a: number[]) {
+  return a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
 }
 
-/** 1 = better than median beyond tolerance, -1 = worse, 0 = close. Respects metric direction. */
-export function vsMedian(v: number, med: number, up: boolean, tol: number): -1 | 0 | 1 {
+/** 1 = better than mean beyond tolerance, -1 = worse, 0 = close. Respects metric direction. */
+export function vsMean(v: number, med: number, up: boolean, tol: number): -1 | 0 | 1 {
   const d = up ? v - med : med - v;
   return d > tol ? 1 : d < -tol ? -1 : 0;
 }
@@ -43,9 +41,9 @@ export function enrich(raw: NedRaw[]): { neds: Ned[]; med: Record<MetricKey, num
     const need = requiredTeam(n.tipo);
     return { ...n, alc: (n.atend / n.est) * 100, hor: (n.horas / n.est) * 100, ges: Math.round((items.filter((x) => x === 1).length / items.length) * 100), need, full: n.eq.every((v, i) => v >= need[i]) };
   });
-  const med = Object.fromEntries(METRICS.map((m) => [m.k, median(base.map((n) => (n as any)[m.k]))])) as Record<MetricKey, number>;
+  const med = Object.fromEntries(METRICS.map((m) => [m.k, mean(base.map((n) => (n as any)[m.k]))])) as Record<MetricKey, number>;
   const neds = base.map((n) => {
-    const g = Object.fromEntries(METRICS.map((m) => [m.k, vsMedian((n as any)[m.k], med[m.k], m.up, m.tol)])) as Record<MetricKey, -1 | 0 | 1>;
+    const g = Object.fromEntries(METRICS.map((m) => [m.k, vsMean((n as any)[m.k], med[m.k], m.up, m.tol)])) as Record<MetricKey, -1 | 0 | 1>;
     const vals = Object.values(g);
     return { ...(n as any), g, good: vals.filter((x) => x === 1).length, bad: vals.filter((x) => x === -1).length } as Ned;
   });
@@ -55,7 +53,7 @@ export function enrich(raw: NedRaw[]): { neds: Ned[]; med: Record<MetricKey, num
 /** Attention-first ordering: most points of attention, then fewest strengths. */
 export const byAttention = (a: Ned, b: Ned) => b.bad - a.bad || a.good - b.good;
 
-/** Quadrant in the demand x staff chart, relative to national medians. */
+/** Quadrant in the demand x staff chart, relative to national means. */
 export function quadrant(alc: number, hor: number, medAlc: number, medHor: number) {
   const hiD = alc >= medAlc, hiS = hor >= medHor;
   return hiD && !hiS ? 'Muita procura, pouca equipe' : hiD && hiS ? 'Muita procura, equipe forte' : !hiD && !hiS ? 'Pouca procura, pouca equipe' : 'Equipe com folga';
@@ -69,7 +67,7 @@ export function alertText(n: Ned, med: Record<MetricKey, number>): string {
   const late = n.rel.filter((x) => x !== 1).length;
   if (late) p.push(`${late} ${late === 1 ? 'relatório pendente' : 'relatórios pendentes'}`);
   if (n.col === 0) p.push('nenhuma ação coletiva no semestre');
-  if (n.g.com < 0) p.push(`comparecimento de ${n.com}% (mediana ${Math.round(med.com)}%)`);
+  if (n.g.com < 0) p.push(`comparecimento de ${n.com}% (média ${Math.round(med.com)}%)`);
   if (!p.length) return '';
   const s = p.join(', ');
   return s[0].toUpperCase() + s.slice(1) + '.';
