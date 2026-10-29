@@ -25,12 +25,20 @@ export default function PermanenceRadar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { hasRole: isInstitutionAdmin, loading: institutionAdminLoading } = useUserRole('institution_admin');
   const [mode, setMode] = useState<'summary' | 'form'>('summary');
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { if (!loading && !user) navigate('/auth'); }, [loading, user, navigate]);
+
+  // Usuários vinculados a instituição acessam o radar apenas pelo Portal Institucional (Comparador).
+  useEffect(() => {
+    if (!loading && user && !institutionAdminLoading && isInstitutionAdmin) {
+      navigate(buildTenantPath(location.pathname.split('/')[1] === 'medcos' ? 'medcos' : '', '/portal-institucional/comparador'), { replace: true });
+    }
+  }, [loading, user, institutionAdminLoading, isInstitutionAdmin, navigate]);
 
   const history = useQuery({
     queryKey: ['permanence-mine', user?.id], enabled: !!user,
