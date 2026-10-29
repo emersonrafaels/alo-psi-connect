@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./HomeRedeBemEstar.css";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -244,7 +245,7 @@ const HomeRedeBemEstar = () => {
               },
             ].map(p => (
               <div key={p.letter}
-                   className="flex flex-col h-full rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow"
+                   className="rbe-feature-card flex flex-col h-full rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow"
                    style={{
                      background: "var(--rbe-surface-container-low)",
                      borderTop: `8px solid ${p.color}`,
@@ -262,7 +263,7 @@ const HomeRedeBemEstar = () => {
                 <p className="text-sm mb-6 sm:mb-8 leading-relaxed" style={{ color: "var(--rbe-on-surface-variant)" }}>{p.desc}</p>
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-auto">
                   {p.items.map(({ Icon, label }) => (
-                    <div key={label} className="p-3 sm:p-4 rounded-xl"
+                    <div key={label} className="rbe-feature-tile p-3 sm:p-4 rounded-xl"
                          style={{ background: "var(--rbe-surface-container)" }}>
                       <Icon className="w-5 h-5 mb-2" style={{ color: p.color }} />
                       <p className="text-xs font-bold leading-tight" style={{ color: "var(--rbe-primary)" }}>{label}</p>
@@ -356,7 +357,7 @@ const HomeRedeBemEstar = () => {
           </div>
           <div className="grid md:grid-cols-12 gap-6 sm:gap-8">
             {/* Buddy removed — chat card expanded to fill space */}
-            <div className="md:col-span-12 lg:col-span-8 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col justify-center min-h-[320px] sm:min-h-[400px]"
+            <div className="rbe-feature-card md:col-span-7 lg:col-span-8 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col justify-center min-h-[320px] sm:min-h-[400px]"
                  style={{
                    background: "linear-gradient(135deg, rgba(255,255,255,0.96), rgba(250,250,251,0.96))",
                    border: "1px solid rgba(0,0,0,0.04)",
@@ -405,7 +406,7 @@ const HomeRedeBemEstar = () => {
               </div>
             </div>
             {/* Diário card */}
-              <div className="md:col-span-4 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between min-h-[280px]"
+              <div className="rbe-feature-card md:col-span-5 lg:col-span-4 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between min-h-[280px]"
                 style={{
                   background: "var(--rbe-surface)",
                   border: "1px solid color-mix(in srgb, var(--rbe-outline-variant) 65%, transparent)",
@@ -428,26 +429,7 @@ const HomeRedeBemEstar = () => {
                 ))}
               </div>
             </div>
-            {/* Dashboards card */}
-            <div className="md:col-span-12 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm grid sm:grid-cols-2 gap-6 items-center"
-                 style={{ background: "var(--rbe-surface-container)" }}>
-              <div>
-                <LayoutDashboard className="w-8 h-8 mb-4" style={{ color: "var(--rbe-primary)" }} />
-                <h4 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: "var(--rbe-primary)" }}>
-                  Dashboards
-                </h4>
-                <p className="text-sm leading-relaxed" style={{ color: "var(--rbe-on-surface-variant)" }}>
-                  Visão anonimizada para a instituição: temas mais buscados, períodos de pico
-                  e correlações com o calendário acadêmico.
-                </p>
-              </div>
-              <div className="flex items-end gap-2 h-24 sm:h-28">
-                {[0.4, 0.7, 0.55, 0.9, 0.6, 0.8, 0.35].map((h, i) => (
-                  <div key={i} className="flex-1 rounded-t-md"
-                       style={{ height: `${h * 100}%`, background: `color-mix(in srgb, var(--rbe-primary) ${20 + i * 10}%, transparent)` }} />
-                ))}
-              </div>
-            </div>
+
           </div>
         </div>
       </section>
@@ -467,7 +449,7 @@ const HomeRedeBemEstar = () => {
             Infográfico de serviços e frentes de atuação
             <span className="h-px w-8 sm:w-12 hidden sm:block" style={{ background: "color-mix(in srgb, var(--rbe-brand-pink) 30%, transparent)" }} />
           </p>
-          <div className="p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] mb-16 sm:mb-20 relative"
+          <div className="rbe-services-intro p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] mb-16 sm:mb-20 relative"
                style={{
                  background: "var(--rbe-surface-container-low)",
                  border: "1px solid color-mix(in srgb, var(--rbe-brand-purple) 10%, transparent)",
@@ -487,7 +469,7 @@ const HomeRedeBemEstar = () => {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 items-start">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 items-stretch">
             {[
               {
                 Icon: Heart, color: "var(--rbe-brand-purple)", textOnIcon: "#fff",
@@ -514,14 +496,14 @@ const HomeRedeBemEstar = () => {
                 items: ["Dashboard com dados agregados e anônimos", "Diário Emocional com visão institucional", "ISEU-RBE, índice semestral de equilíbrio universitário", "Relatórios estratégicos e reuniões de acompanhamento", "Personalização white-label", "Apoio à permanência, clima institucional e prevenção"],
               },
             ].map(col => (
-              <div key={col.title} className="group">
+              <div key={col.title} className="rbe-service-column group flex flex-col">
                 <div className="mb-5 sm:mb-6 flex justify-center">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-110"
                        style={{ background: col.color, color: col.textOnIcon }}>
                     <col.Icon className="w-7 h-7 sm:w-9 sm:h-9" />
                   </div>
                 </div>
-                <div className="p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] h-full shadow-sm"
+                <div className="rbe-feature-card p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] flex-1 shadow-sm"
                      style={{
                        background: "var(--rbe-surface-container-low)",
                        borderTop: `4px solid ${col.color}`,

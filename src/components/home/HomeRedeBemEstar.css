@@ -1,0 +1,61 @@
+/* Shared treatment for the AME, journey and services sections only. */
+.rbe-home-page .rbe-feature-card {
+  position: relative;
+  isolation: isolate;
+  box-shadow: 0 4px 24px -16px color-mix(in srgb, var(--rbe-primary) 22%, transparent);
+  transition: transform 240ms ease, box-shadow 240ms ease;
+}
+
+.rbe-home-page .rbe-feature-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--rbe-brand-mint) 12%, transparent), transparent 55%, color-mix(in srgb, var(--rbe-brand-pink) 9%, transparent));
+  opacity: 0.45;
+  transition: opacity 240ms ease;
+}
+
+.rbe-home-page .rbe-feature-tile {
+  border: 1px solid color-mix(in srgb, var(--rbe-outline-variant) 18%, transparent);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.rbe-home-page .rbe-feature-tile svg,
+.rbe-home-page .rbe-service-column > div:first-child > div {
+  transition: transform 240ms ease;
+}
+
+.rbe-home-page .rbe-services-intro {
+  background-image: radial-gradient(ellipse at top, color-mix(in srgb, var(--rbe-brand-mint) 15%, transparent), transparent 70%) !important;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .rbe-home-page .rbe-feature-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 40px -20px color-mix(in srgb, var(--rbe-primary) 30%, transparent);
+  }
+
+  .rbe-home-page .rbe-feature-card:hover::after { opacity: 1; }
+
+  .rbe-home-page .rbe-feature-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--rbe-primary) 25%, transparent);
+  }
+
+  .rbe-home-page .rbe-feature-tile:hover svg { transform: rotate(-6deg) scale(1.08); }
+  .rbe-home-page .rbe-service-column:hover > div:first-child > div { transform: translateY(-4px) scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rbe-home-page .rbe-feature-card,
+  .rbe-home-page .rbe-feature-card::after,
+  .rbe-home-page .rbe-feature-tile,
+  .rbe-home-page .rbe-feature-tile svg,
+  .rbe-home-page .rbe-service-column > div:first-child > div {
+    transition: none;
+    transform: none;
+  }
+}
