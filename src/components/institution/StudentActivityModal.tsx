@@ -21,7 +21,51 @@ import { buildTrendSeries } from '@/features/triage/trendSeries';
 import { sentimentBand, SENTIMENT_BAND_STYLES, SENTIMENT_BAND_DOTS, SENTIMENT_BAND_LEGEND, SENTIMENT_BAND_HINT, SentimentBand } from '@/features/triage/sentimentBands';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Leaf, ClipboardList, MessageSquare } from 'lucide-react';
+import { Leaf, ClipboardList, MessageSquare, Radar, Lock } from 'lucide-react';
+import { MODULES } from '@/features/permanence/instrument';
+
+const PERMANENCE_TOTAL_QUESTIONS = MODULES.reduce((acc, m) => acc + m.items.length, 0);
+
+interface PermanenceParticipation { id: string; semester: string; created_at: string; answered_count: number }
+
+/** Permanence radar answers stay private to the student: the team only sees participation (dates, semester, answered count). */
+function PermanenceTab({ items, loading }: { items: PermanenceParticipation[]; loading: boolean }) {
+  if (loading) return <LoadingBar className="py-8" label="Carregando radar de permanência..." />;
+  if (items.length === 0) {
+    return (
+      <div className="py-8 text-center text-muted-foreground text-sm">
+        <Radar className="h-8 w-8 mx-auto mb-2 opacity-40" />
+        Este aluno ainda não respondeu o Radar de Permanência.
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3">
+        <Lock className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          As respostas do Radar de Permanência são confidenciais e pertencem ao aluno. Aqui você vê apenas quando ele respondeu;
+          o conteúdo aparece somente de forma agregada e anonimizada no Comparador, em grupos com pelo menos 10 respostas.
+        </p>
+      </div>
+      {items.map((r, i) => (
+        <div key={r.id} className="p-3 rounded-lg border bg-muted/20 flex items-start justify-between gap-2">
+          <div className="flex gap-2 min-w-0">
+            <Radar className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-medium">Radar de Permanência · semestre {r.semester}{i === 0 ? ' (mais recente)' : ''}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {r.answered_count} de {PERMANENCE_TOTAL_QUESTIONS} perguntas respondidas
+              </p>
+              <p className="text-[11px] text-muted-foreground">{format(new Date(r.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+            </div>
+          </div>
+          {i === 0 && <Badge variant="outline" className="text-[10px] shrink-0">Atual</Badge>}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface TimelineItem { id: string; kind: string; occurred_at: string; title: string; detail: string | null; level: string | null }
 const LEVEL_LABEL: Record<string, string> = { healthy: 'Estável', attention: 'Atenção', alert: 'Alerta', critical: 'Sinal elevado' };
@@ -69,7 +113,7 @@ interface StudentActivityModalProps {
   initialTab?: ActivityTab;
 }
 
-export type ActivityTab = 'diario' | 'escalas' | 'praticas' | 'notas' | 'triagens' | 'jornada';
+export type ActivityTab = 'diario' | 'escalas' | 'praticas' | 'notas' | 'triagens' | 'jornada' | 'radar';
 
 const riskColors: Record<RiskLevel, string> = {
   critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
@@ -574,6 +618,17 @@ export function StudentActivityModal({
       return (data ?? []) as TimelineItem[];
     },
   });
+  const { data: permanence = [], isLoading: permanenceLoading } = useQuery({
+    queryKey: ['student-permanence', institutionId, patientId],
+    enabled: open && !!institutionId && !!patientId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)('get_student_permanence_participation', {
+        _institution_id: institutionId, _patient_id: patientId,
+      });
+      if (error) throw error;
+      return (data ?? []) as PermanenceParticipation[];
+    },
+  });
 
   // Anonymized names are "Aluno #N"; show "AN" like the rest of the portal instead of the "A#" initials.
   const anonNumber = studentName.match(/#(\d+)/)?.[1];
@@ -629,6 +684,11 @@ export function StudentActivityModal({
               Histórico de Triagens
               <TabCount value={triageCount} loading={isLoading} />
             </TabsTrigger>
+            <TabsTrigger value="radar" className="gap-1.5 text-xs">
+              <Radar className="h-3.5 w-3.5" />
+              Radar de Permanência
+              <TabCount value={permanence.length} loading={permanenceLoading} />
+            </TabsTrigger>
             <TabsTrigger value="jornada" className="gap-1.5 text-xs">
               <Route className="h-3.5 w-3.5" />
               Jornada do pedido
@@ -654,6 +714,9 @@ export function StudentActivityModal({
                 </TabsContent>
                 <TabsContent value="triagens" className="mt-0">
                   <TriageHistoryTab history={data?.triageHistory || []} />
+                </TabsContent>
+                <TabsContent value="radar" className="mt-0">
+                  <PermanenceTab items={permanence} loading={permanenceLoading} />
                 </TabsContent>
                 <TabsContent value="jornada" className="mt-0">
                   {patientId ? <CareRequestPanel patientId={patientId} institutionId={institutionId} /> : null}

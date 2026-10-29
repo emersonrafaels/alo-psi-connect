@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.get_student_permanence_participation(uuid, uuid) FROM PUBLIC, anon;
