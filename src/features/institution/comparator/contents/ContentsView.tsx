@@ -72,6 +72,8 @@ export function ContentsView({ institutionId, semester, unitFilter }: { institut
   const anxSeries = themeRows.find((t) => t.n === 'Ansiedade em provas')?.series ?? [];
   const anxTot = anxSeries.map((v, i) => Math.round((v / (sum(themeRows, (t) => t.series[i]) || 1)) * 100));
   const exam = examWeeks(anxTot.map((v) => v * 2));
+  const toMonths = (w: number[]) => { const m = Array(12).fill(0); w.forEach((v, i) => { m[Math.min(11, Math.floor(i / 4.345))] += v; }); return m; };
+  const examM = Array.from({ length: 12 }, (_, mi) => exam.some((e, i) => e && Math.min(11, Math.floor(i / 4.345)) === mi));
   const tm = themeRows.find((t) => t.n === theme) ?? themeRows[0];
 
   // Ladder
@@ -221,19 +223,19 @@ export function ContentsView({ institutionId, semester, unitFilter }: { institut
 
       {themeRows.length > 0 && (
         <Sheet id="s3" open={fs} setOpen={setFs} label="Quando cada tema é procurado" className="space-y-4">
-          <H2 title="Quando cada tema é procurado" sub="Intensidade semanal de cada tema, comparada com o próprio pico. Toque em uma linha para abrir o tema no mapa acima." />
+          <H2 title="Quando cada tema é procurado" sub="Intensidade mensal de cada tema, comparada com o próprio pico. Toque em uma linha para abrir o tema no mapa acima." />
           <div className="overflow-x-auto">
             <table className="w-full border-separate border-spacing-0.5 text-[11px]">
-              <thead><tr><th />{Array.from({ length: weeksN }, (_, i) => <th key={i} className={`rounded font-medium ${exam[i] ? 'bg-muted-foreground/25' : 'text-muted-foreground'}`}>{i + 1}</th>)}</tr></thead>
-              <tbody>{themeRows.map((t) => (
+              <thead><tr><th />{Array.from({ length: 12 }, (_, i) => <th key={i} className={`rounded font-medium ${examM[i] ? 'bg-muted-foreground/25' : 'text-muted-foreground'}`}>{i + 1}</th>)}</tr></thead>
+              <tbody>{themeRows.map((t) => { const ms = toMonths(t.series); return (
                 <tr key={t.n} onClick={() => setTheme(t.n)} className="cursor-pointer">
                   <th className="whitespace-nowrap pr-3 text-left font-medium">{t.n}</th>
-                  {normToPeak(t.series).map((v, i) => <td key={i} title={`Semana ${i + 1}: ${int(t.series[i])} acessos`} className={`h-7 min-w-[22px] rounded ${intensity(v)} ${v === 1 ? 'ring-2 ring-foreground/40' : ''}`} />)}
+                  {normToPeak(ms).map((v, i) => <td key={i} title={`Mês ${i + 1}: ${int(ms[i])} acessos`} className={`h-7 min-w-[22px] rounded ${ms[i] ? intensity(v) : 'bg-muted/40'} ${v === 1 ? 'ring-2 ring-highlight-pink' : ''}`} />)}
                 </tr>
-              ))}</tbody>
+              ); })}</tbody>
             </table>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">Menos{[0.1, 0.3, 0.5, 0.7, 0.9].map((v) => <i key={v} className={`h-3 w-5 rounded ${intensity(v)}`} />)}<span className="ml-3 flex items-center gap-1"><i className="h-3 w-3 rounded ring-2 ring-foreground/40" />Pico do tema</span><span className="ml-3 flex items-center gap-1"><i className="h-3 w-4 rounded bg-muted-foreground/25" />Semana de provas (cabeçalho)</span></div>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">Menos{[0.1, 0.3, 0.5, 0.7, 0.9].map((v) => <i key={v} className={`h-3 w-5 rounded ${intensity(v)}`} />)}<span className="ml-3 flex items-center gap-1"><i className="h-3 w-3 rounded ring-2 ring-highlight-pink" />Pico do tema</span><span className="ml-3 flex items-center gap-1"><i className="h-3 w-4 rounded bg-muted-foreground/25" />Mês com provas (cabeçalho)</span></div>
         </Sheet>
       )}
 
@@ -276,7 +278,7 @@ export function ContentsView({ institutionId, semester, unitFilter }: { institut
         <Sheet id="s6" open={fs} setOpen={setFs} label="Encontros, rodas e oficinas" className="space-y-5">
           <div className="flex flex-wrap items-start justify-between gap-3 pr-10">
             <H2 title="Encontros, rodas e oficinas" sub={`${events.length} encontros no semestre · ${int(evReg)} inscrições · ${int(evPres)} presenças. Escolha um tipo para filtrar.`} />
-            <Button asChild variant="outline" size="sm"><Link to="/encontros">Ver agenda de encontros</Link></Button>
+            <Button asChild variant="outline" size="sm"><Link to="/encontros" onClick={() => window.scrollTo(0, 0)}>Ver agenda de encontros</Link></Button>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             {kinds.map((k) => { const r = events.filter((e) => e.kind === k); return (

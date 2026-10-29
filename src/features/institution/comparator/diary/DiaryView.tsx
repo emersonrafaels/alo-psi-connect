@@ -154,7 +154,7 @@ export function DiaryView({ institutionId, semester, unitFilter }: { institution
                   <div className="absolute inset-x-0 top-1/2 border-t border-foreground/30" />
                   <div className="absolute inset-0 flex items-stretch gap-1">
                     {weeks.map((w, i) => {
-                      const v = showH ? humor[i] : sono[i], m = showH ? mH : mS, dv = (v - m) * 230;
+                      const v = showH ? humor[i] : sono[i], m = showH ? mH : mS, maxD = Math.max(0.01, ...(showH ? humor : sono).map((x) => Math.abs(x - m))), dv = ((v - m) / maxD) * 118;
                       return (
                         <button key={w.wk} type="button" onClick={() => setSelW(i)} title={`Semana ${i + 1}`} className={`relative flex-1 rounded ${exam[i] ? 'bg-muted' : ''} ${i === sel ? 'ring-2 ring-primary' : ''}`}>
                           <span className={`absolute inset-x-1 rounded ${dv >= 0 ? 'bg-primary/70' : 'bg-destructive/50'}`} style={dv >= 0 ? { bottom: '50%', height: Math.max(2, dv) } : { top: '50%', height: Math.max(2, -dv) }} />

@@ -16,9 +16,9 @@ const heatTone = (v: number) => (v >= 6.5 ? 'bg-primary text-primary-foreground'
 
 const MET: Record<MetricKey, { label: string; title: string; sub: string; max: number; fmt: (v: number) => string; unitD: string }> = {
   ocup: { label: 'Ocupação da agenda', title: 'Ocupação da agenda', sub: 'Horas usadas sobre horas ofertadas', max: 100, fmt: (v) => `${v}%`, unitD: ' p.p.' },
-  espera: { label: 'Espera mediana', title: 'Espera até a 1ª consulta', sub: 'Mediana em dias, do pedido à consulta', max: 14, fmt: (v) => `${v} dias`, unitD: ' dias' },
+  espera: { label: 'Espera média', title: 'Espera até a 1ª consulta', sub: 'Média em dias, do pedido à consulta', max: 14, fmt: (v) => `${v} dias`, unitD: ' dias' },
   compar: { label: 'Comparecimento', title: 'Comparecimento às consultas', sub: 'Consultas realizadas sobre consultas marcadas', max: 100, fmt: (v) => `${v}%`, unitD: ' p.p.' },
-  noite: { label: 'Horas à noite', title: 'Horas ofertadas à noite', sub: 'Parte da agenda semanal após as 18h', max: 40, fmt: (v) => `${v}%`, unitD: ' p.p.' },
+  noite: { label: 'Horas a noite', title: 'Horas ofertadas a noite', sub: 'Parte da agenda semanal após as 18h', max: 40, fmt: (v) => `${v}%`, unitD: ' p.p.' },
   horas: { label: 'Horas por semana', title: 'Horas ofertadas por semana', sub: 'Soma da agenda dos profissionais do núcleo', max: 70, fmt: (v) => `${br(v)} h`, unitD: ' h' },
 };
 const MKEYS = Object.keys(MET) as MetricKey[];
@@ -72,7 +72,7 @@ export function AppointmentsView({ institutionId, semester, unitFilter }: { inst
     { label: 'Consultas realizadas', value: br(k.done), note: `para ${br(k.people)} pessoas · ${br(k.people ? k.done / k.people : 0, 1)} por pessoa` },
     { label: 'Comparecimento', value: `${cur.compar ?? '—'}%`, note: `${br(k.noshow)} faltas em ${br(k.marked)} consultas marcadas` },
     { label: 'Ocupação da agenda', value: cur.ocup == null ? '—' : `${cur.ocup}%`, note: 'horas usadas sobre horas ofertadas' },
-    { label: 'Espera até a 1ª consulta', value: cur.espera == null ? '—' : `${cur.espera} dias`, note: `mediana${kPrev?.wait != null ? ` · era ${Math.round(kPrev.wait)} dias em ${prevSem}` : ''}` },
+    { label: 'Espera até a 1ª consulta', value: cur.espera == null ? '—' : `${cur.espera} dias`, note: `média${kPrev?.wait != null ? ` · era ${Math.round(kPrev.wait)} dias em ${prevSem}` : ''}` },
   ];
 
   // Services
@@ -202,7 +202,7 @@ export function AppointmentsView({ institutionId, semester, unitFilter }: { inst
             </div>
           ))}
         </div>
-        <p className="rounded-2xl bg-accent/60 p-4 text-sm"><strong>{night.procura}% dos pedidos são à noite</strong>, mas {night.agenda}% das horas ofertadas estão nesse período.</p>
+        <p className="rounded-2xl bg-accent/60 p-4 text-sm"><strong>{night.procura}% dos pedidos são a noite</strong>, mas {night.agenda}% das horas ofertadas estão nesse período.</p>
       </Sheet>
 
       {uRows.length > 1 && (
@@ -242,7 +242,7 @@ export function AppointmentsView({ institutionId, semester, unitFilter }: { inst
                   {best?.unit === selUnit.unit && <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-primary"><Star className="h-3.5 w-3.5" />Referência</span>}
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {([['horas', 'por semana'], ['ocup', 'ocupação'], ['espera', 'espera mediana'], ['compar', 'comparecimento'], ['noite', 'horas à noite']] as const).map(([m, l]) => {
+                  {([['horas', 'por semana'], ['ocup', 'ocupação'], ['espera', 'espera média'], ['compar', 'comparecimento'], ['noite', 'horas a noite']] as const).map(([m, l]) => {
                     const v = val(selUnit, m); const a = avg[m];
                     const diff = v != null && a != null ? Math.round((v - a) * 10) / 10 : null;
                     return (
