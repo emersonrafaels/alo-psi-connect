@@ -79,6 +79,7 @@ export default function InstitutionPortal() {
     nextStep, 
     prevStep, 
     skipTour, 
+    goToStep,
     resetTour 
   } = useInstitutionTour();
 
@@ -135,6 +136,10 @@ export default function InstitutionPortal() {
         nextStep={nextStep}
         prevStep={prevStep}
         skipTour={skipTour}
+        goToStep={goToStep}
+        navItems={navItems}
+        onSelectSection={changeTab}
+        institutionName={currentInstitution?.name}
       />
       
       <div className="container mx-auto py-6 md:py-8 px-4">

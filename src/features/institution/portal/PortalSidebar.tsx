@@ -74,13 +74,13 @@ function NavList({ items, active, onSelect, onDone }: Props & { onDone?: () => v
               return (
                 <li key={item.id}>
                   {item.href ? (
-                    <Link to={item.href} className={cls} onClick={onDone}>{content}</Link>
+                    <Link to={item.href} className={cls} onClick={onDone} data-tour={`nav-${item.id}`}>{content}</Link>
                   ) : (
                     <button
                       type="button"
                       className={cls}
                       aria-current={isActive ? 'page' : undefined}
-                      data-tour={item.tour}
+                      data-tour={`nav-${item.id}`}
                       onClick={() => { onSelect(item.id); onDone?.(); }}
                     >
                       {content}
