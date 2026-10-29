@@ -180,7 +180,7 @@ const Header = () => {
                     <HeartPulse className="h-4 w-4 mr-2" />
                     Minhas Emoções
                   </DropdownMenuItem>
-                  {profile?.tipo_usuario === 'paciente' && (
+                  {profile?.tipo_usuario === 'paciente' && !isInstitutionAdmin && (
                     <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/radar-permanencia'))}>
                       <Compass className="h-4 w-4 mr-2" />
                       Radar de Permanência
@@ -331,7 +331,7 @@ const Header = () => {
                     <HeartPulse className="h-5 w-5 opacity-70" />
                     Minhas Emoções
                   </Link>
-                  {profile?.tipo_usuario === 'paciente' && (
+                  {profile?.tipo_usuario === 'paciente' && !isInstitutionAdmin && (
                     <Link
                       to={buildTenantPath(tenantSlug, '/radar-permanencia')}
                       className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
