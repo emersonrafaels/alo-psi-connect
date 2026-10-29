@@ -2683,6 +2683,48 @@ export type Database = {
           },
         ]
       }
+      institution_permanence_snapshots: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          institution_id: string
+          semester: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: string
+          institution_id: string
+          semester: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          institution_id?: string
+          semester?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_permanence_snapshots_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "educational_institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_permanence_snapshots_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institution_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_practice_usage: {
         Row: {
           created_at: string
