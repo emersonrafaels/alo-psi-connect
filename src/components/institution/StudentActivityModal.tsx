@@ -715,6 +715,9 @@ export function StudentActivityModal({
                 <TabsContent value="triagens" className="mt-0">
                   <TriageHistoryTab history={data?.triageHistory || []} />
                 </TabsContent>
+                <TabsContent value="radar" className="mt-0">
+                  <PermanenceTab items={permanence} loading={permanenceLoading} />
+                </TabsContent>
                 <TabsContent value="jornada" className="mt-0">
                   {patientId ? <CareRequestPanel patientId={patientId} institutionId={institutionId} /> : null}
                 </TabsContent>
