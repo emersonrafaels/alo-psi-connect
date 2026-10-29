@@ -6589,6 +6589,15 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_student_permanence_participation: {
+        Args: { _institution_id: string; _patient_id: string }
+        Returns: {
+          answered_count: number
+          created_at: string
+          id: string
+          semester: string
+        }[]
+      }
       get_student_profile_ids_for_institution_admin: {
         Args: { _user_id: string }
         Returns: {
