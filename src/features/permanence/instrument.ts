@@ -1,6 +1,7 @@
 // Radar de Permanência student instrument (from the reference HTML). Shared by the student form and institutional aggregation.
 export type QType = 'single' | 'multi' | 'text';
-export interface Question { id: string; text: string; type: QType; options: string[]; exclusive: string[] }
+export interface ShowIf { id: string; values?: string[]; not?: string[] }
+export interface Question { id: string; text: string; type: QType; options: string[]; exclusive: string[]; showIf?: ShowIf; optional?: boolean }
 export interface Module { id: number; title: string; period: string; intro: string; items: Question[] }
 export type Answers = Record<string, string | string[]>;
 
@@ -17,12 +18,22 @@ export function toggleMulti(q: Question, current: string[], opt: string): string
   return [...current.filter((o) => !q.exclusive.includes(o)), opt];
 }
 
+/** Conditional questions (e.g. 7.6 only for who sought support) are hidden unless their trigger matches. */
+export function isVisible(q: Question, a: Answers): boolean {
+  if (!q.showIf) return true;
+  const v = a[q.showIf.id]; const vals = Array.isArray(v) ? v : v ? [v] : [];
+  if (!vals.length) return false;
+  if (q.showIf.values) return vals.some((x) => q.showIf!.values!.includes(x));
+  if (q.showIf.not) return vals.some((x) => !q.showIf!.not!.includes(x));
+  return true;
+}
+
 export function isAnswered(q: Question, a: Answers): boolean {
-  if (q.type === 'text') return true;
+  if (q.type === 'text' || q.optional || !isVisible(q, a)) return true;
   const v = a[q.id];
   return Array.isArray(v) ? v.length > 0 : !!v;
 }
 export function progress(a: Answers): number {
-  const req = ALL_QUESTIONS.filter((q) => q.type !== 'text');
-  return Math.round((req.filter((q) => isAnswered(q, a)).length / req.length) * 100);
+  const req = ALL_QUESTIONS.filter((q) => q.type !== 'text' && !q.optional && isVisible(q, a));
+  return req.length === 0 ? 100 : Math.round((req.filter((q) => isAnswered(q, a)).length / req.length) * 100);
 }
