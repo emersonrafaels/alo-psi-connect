@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
+import { VoiceInputButton } from '@/features/jornada/v5/components/VoiceInputButton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -177,7 +178,7 @@ export default function PermanenceRadar() {
                   <p className="font-medium">{q.text}</p>
                   {q.type === 'multi' && <p className="text-xs text-muted-foreground">Marque todas que se aplicam</p>}
                   {q.type === 'text' ? (
-                    <Textarea value={(v as string) ?? ''} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} placeholder="Opcional" rows={4} />
+                    <div className="space-y-2"><Textarea value={(v as string) ?? ''} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} placeholder="Opcional — escreva ou grave um áudio" rows={4} /><div className="flex justify-end"><VoiceInputButton currentValue={(v as string) ?? ''} onChange={(t) => setAnswers((prev) => ({ ...prev, [q.id]: t }))} /></div></div>
                   ) : (
                     <div className="grid gap-2">{q.options.map((o) => {
                       const on = q.type === 'multi' ? ((v as string[]) ?? []).includes(o) : v === o;
