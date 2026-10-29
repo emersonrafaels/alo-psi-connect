@@ -3,14 +3,16 @@ import { LoadingBar, LoadingSection, LoadingCards } from "@/components/ui/loadin
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { BookOpen, Compass, Leaf, ClipboardList, Users, Activity } from 'lucide-react';
+import { BookOpen, Compass, Leaf, ClipboardList, Users, Activity, Radar } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
+import { MODULES } from '@/features/permanence/instrument';
 
-type Kind = 'mood' | 'journey' | 'practice' | 'scale' | 'group';
+const PERMANENCE_TOTAL = MODULES.reduce((acc, m) => acc + m.items.length, 0);
+
+type Kind = 'mood' | 'journey' | 'practice' | 'scale' | 'group' | 'permanence';
 interface TimelineItem { id: string; kind: Kind; occurred_at: string; title: string; detail: string | null; level: string | null }
 
 const KIND_META: Record<Kind, { label: string; icon: typeof Activity }> = {
@@ -19,6 +21,7 @@ const KIND_META: Record<Kind, { label: string; icon: typeof Activity }> = {
   practice: { label: 'Práticas', icon: Leaf },
   scale: { label: 'Escalas', icon: ClipboardList },
   group: { label: 'Encontros', icon: Users },
+  permanence: { label: 'Radar', icon: Radar },
 };
 
 const RISK_LABEL: Record<string, string> = { healthy: 'Estável', attention: 'Atenção', alert: 'Alerta', critical: 'Sinal elevado' };
@@ -31,7 +34,7 @@ export function StudentTimelineModal({ open, onOpenChange, institutionId, patien
   const [filter, setFilter] = useState<Kind | 'all'>('all');
   const [limit, setLimit] = useState(30);
 
-  const { data = [], isLoading, error } = useQuery({
+  const { data: base = [], isLoading: baseLoading, error } = useQuery({
     queryKey: ['student-timeline', institutionId, patientId],
     enabled: open && !!institutionId,
     queryFn: async () => {
@@ -42,6 +45,36 @@ export function StudentTimelineModal({ open, onOpenChange, institutionId, patien
       return (data ?? []) as TimelineItem[];
     },
   });
+
+  // Radar answers stay confidential: only participation (date, semester, answered count) is shown.
+  const { data: permanence = [], isLoading: permLoading } = useQuery({
+    queryKey: ['student-permanence', institutionId, patientId],
+    enabled: open && !!institutionId && !!patientId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)('get_student_permanence_participation', {
+        _institution_id: institutionId, _patient_id: patientId,
+      });
+      if (error) return [];
+      return (data ?? []) as { id: string; semester: string; created_at: string; answered_count: number }[];
+    },
+  });
+
+  const isLoading = baseLoading || permLoading;
+  const data = useMemo(() => {
+    const cutoff = Date.now() - 90 * 86400000;
+    const sorted = [...permanence].sort((a, b) => a.created_at.localeCompare(b.created_at));
+    const seen = new Set<string>();
+    const perm: TimelineItem[] = sorted.map((r) => {
+      const update = seen.has(r.semester);
+      seen.add(r.semester);
+      return {
+        id: `perm-${r.id}`, kind: 'permanence' as const, occurred_at: r.created_at, title: 'Radar de Permanência',
+        detail: `Semestre ${r.semester} · ${r.answered_count} de ${PERMANENCE_TOTAL} perguntas respondidas`,
+        level: update ? 'update' : null,
+      };
+    }).filter((i) => new Date(i.occurred_at).getTime() >= cutoff);
+    return [...base, ...perm].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at));
+  }, [base, permanence]);
 
   const counts = useMemo(() => data.reduce<Record<string, number>>((acc, i) => ((acc[i.kind] = (acc[i.kind] ?? 0) + 1), acc), {}), [data]);
   const items = filter === 'all' ? data : data.filter((i) => i.kind === filter);
@@ -87,6 +120,7 @@ export function StudentTimelineModal({ open, onOpenChange, institutionId, patien
                       <Badge variant="secondary" className="text-[10px]">{KIND_META[item.kind]?.label}</Badge>
                       {item.detail && <span>{item.kind === 'journey' || item.kind === 'scale' ? prettify(item.detail) : item.detail}</span>}
                       {item.kind === 'mood' && item.level && RISK_LABEL[item.level] && <Badge variant="outline" className="text-[10px]">{RISK_LABEL[item.level]}</Badge>}
+                      {item.kind === 'permanence' && item.level === 'update' && <Badge variant="outline" className="text-[10px]">Atualização</Badge>}
                     </div>
                   </div>
                 </li>
