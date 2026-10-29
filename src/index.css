@@ -1483,3 +1483,18 @@ body.institution-portal #root .rounded-lg.border:not([role="dialog"]):not(table 
     50% { opacity: 1; }
   }
 }
+
+/* Radar de Permanência (Comparador) — scoped palette from the reference design */
+.radar-perm {
+  --rp-ink: 258 38% 16%; --rp-text: 257 19% 32%; --rp-muted: 253 11% 45%;
+  --rp-deep: 277 72% 21%; --rp-brand: 279 68% 34%; --rp-mid: 276 39% 54%; --rp-lav: 264 50% 72%;
+  --rp-lilac: 265 56% 82%; --rp-pale: 268 24% 90%; --rp-soft: 270 60% 96%; --rp-bg: 270 38% 96%;
+  --rp-card: 0 0% 100%; --rp-dot: 270 39% 93%; --rp-lil2: 276 55% 94%; --rp-heat4: 274 50% 94%;
+  --rp-rose: 333 64% 72%; --rp-rose2: 334 70% 84%; --rp-rose-bg: 334 76% 95%; --rp-rose-fg: 329 63% 37%;
+  --rp-on-deep: 0 0% 100%; --rp-on-deep-rose: 334 79% 87%;
+}
+.radar-perm .rp-gridbg { background-image: linear-gradient(hsl(var(--rp-lilac) / .07) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--rp-lilac) / .07) 1px, transparent 1px); background-size: 28px 28px; mask-image: radial-gradient(120% 90% at 70% 0%, #000 30%, transparent 75%); }
+.radar-perm .rp-arow { transition: transform .15s ease, box-shadow .15s ease; }
+.radar-perm .rp-arow:hover { transform: translateY(-1px); box-shadow: 0 6px 18px hsl(var(--rp-deep) / .08); }
+.radar-perm .rp-grow:hover td:first-child { background: hsl(var(--rp-bg)); }
+@media (prefers-reduced-motion: reduce) { .radar-perm .rp-arow, .radar-perm .rp-arow:hover { transition: none; transform: none; } }

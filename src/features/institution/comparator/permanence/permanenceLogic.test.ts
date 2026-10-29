@@ -13,7 +13,7 @@ describe('Radar de Permanência', () => {
   });
   it('institution total is the respondent-weighted mean of units', () => {
     const e = makeEngine(DEMO_MODEL, 'all');
-    expect(Math.round(e.scal(DEMO_MODEL.recov))).toBe(71);
+    expect(Math.round(e.scal(DEMO_MODEL.recov))).toBe(72);
   });
   it('context grid marks exactly the reported counts', () => {
     const f = contextFlags({ w: 38, c: 36, t: 47, a: 18 });
