@@ -34,7 +34,7 @@ const FREQ = ['Nunca', 'Uma vez', 'Algumas vezes', 'Frequentemente', 'Quase todo
 
 /** Demonstration snapshot (reference design, 2026.2). Used to seed demo institutions. */
 export const DEMO_MODEL: PermModel = {
-  instrument: 'v. 27/07/2026 · 77 perguntas · 11 temas',
+  instrument: 'v. 27/07/2026 · 51 perguntas · 11 temas',
   units: [
     { k: 'CT', nome: 'Contagem', ini: 'CT', n: 498, est: 1180 },
     { k: 'IT', nome: 'Itajubá', ini: 'IT', n: 362, est: 820 },

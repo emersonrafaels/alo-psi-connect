@@ -6,7 +6,8 @@ import { LogoLoader } from '@/components/ui/logo-loader';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Sheet } from '../overview/OverviewView';
 import { DEMO_MODEL, type PermModel } from './permanenceModel';
-import { resolveModel, type SnapshotData, C, LK, LK_LEGEND, P, bars, contextFlags, heat, layout, lkRow, makeEngine, sum, type LkRow } from './permanenceLogic';
+import { buildRealModel, semestersOf, type RealUnitRow } from './permanenceReal';
+import { C, LK, LK_LEGEND, P, bars, contextFlags, heat, layout, lkRow, makeEngine, sum, type LkRow } from './permanenceLogic';
 
 const Eyebrow = ({ children }: { children: ReactNode }) => <p className="text-[11px] font-semibold tracking-[0.1em]" style={{ color: C.brand }}>{children}</p>;
 const Head = ({ n, title, sub }: { n: string; title: string; sub: string }) => (
