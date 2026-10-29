@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { MODULES, currentSemester, isAnswered, progress, toggleMulti, type Answers } from '@/features/permanence/instrument';
+import { MODULES, currentSemester, isAnswered, isVisible, progress, toggleMulti, type Answers } from '@/features/permanence/instrument';
 import { cn } from '@/lib/utils';
 
 const DRAFT_KEY = (uid: string) => `radar-permanencia-draft:${uid}`;
@@ -62,7 +62,8 @@ export default function PermanenceRadar() {
       const { data: pac } = prof ? await supabase.from('pacientes').select('id').eq('profile_id', prof.id).maybeSingle() : { data: null };
       const { data: pi } = pac ? await supabase.from('patient_institutions').select('institution_id').eq('patient_id', pac.id).limit(1).maybeSingle() : { data: null };
       const { error } = await (supabase as any).from('permanence_responses').insert({
-        user_id: user.id, patient_id: pac?.id ?? null, institution_id: pi?.institution_id ?? null, semester: currentSemester(), answers,
+        user_id: user.id, patient_id: pac?.id ?? null, institution_id: pi?.institution_id ?? null, semester: currentSemester(),
+        answers: Object.fromEntries(Object.entries(answers).filter(([id]) => { const q = MODULES.flatMap((m) => m.items).find((x) => x.id === id); return q ? isVisible(q, answers) : false; })),
       });
       if (error) throw error;
       localStorage.removeItem(DRAFT_KEY(user.id));
@@ -131,7 +132,7 @@ export default function PermanenceRadar() {
               <p className="mt-1 text-muted-foreground">{mod.intro}</p>
             </div>
 
-            {mod.items.map((q) => {
+            {mod.items.filter((q) => isVisible(q, answers)).map((q) => {
               const v = answers[q.id];
               return (
                 <Card key={q.id}><CardContent className="space-y-3 p-5">
