@@ -113,6 +113,7 @@ import Triagem from "@/pages/Triagem";
 import EmotionalScales from "./pages/EmotionalScales";
 import ScaleResponse from "./pages/ScaleResponse";
 import MyEmotions from "./pages/MyEmotions";
+import PermanenceRadar from "./pages/PermanenceRadar";
 import PraticasPrototipo from "./pages/praticas/PraticasPrototipo";
 import PraticasIndex from "./pages/praticas/PraticasIndex";
 import PraticaDetalhe from "./pages/praticas/PraticaDetalhe";
@@ -258,6 +259,8 @@ const AppWithShortcuts = () => {
       <Route path="/medcos/escalas" element={<EmotionalScales />} />
       <Route path="/medcos/escalas/:code" element={<ScaleResponse />} />
       <Route path="/medcos/minhas-emocoes" element={<MyEmotions />} />
+      <Route path="/radar-permanencia" element={<PermanenceRadar />} />
+      <Route path="/medcos/radar-permanencia" element={<PermanenceRadar />} />
 
       {/* Práticas para Reequilíbrio Emocional (público) */}
       <Route path="/biblioteca-apoios" element={<BibliotecaApoios />} />
