@@ -22,3 +22,12 @@ describe('Radar de Permanência', () => {
     expect(f.filter((x) => x.w && x.c && x.t).length).toBe(18);
   });
 });
+
+import { resolveModel } from './permanenceLogic';
+describe('earlier semesters', () => {
+  it('a positive shift makes risk answers more frequent', () => {
+    const m = resolveModel(DEMO_MODEL, { shift_k: 1 });
+    expect(m.items.aband.b[0]).toBe(76);
+    expect(m.items.remat.b[4]).toBe(46);
+  });
+});

@@ -111,3 +111,16 @@ export function heat(x: number): [string, string] {
   if (x >= 36) return [C.heat4, C.ink];
   return [C.roseBg, C.roseFg];
 }
+
+/** Snapshot rows carry only per-semester aggregates; the instrument (questions, labels, base model) comes from code. */
+export type SnapshotData = Partial<Pick<PermModel, 'units' | 'recov' | 'hidden' | 'ctx' | 'evAny' | 'disc' | 'cou'>> & { shift_k?: number };
+export function resolveModel(base: PermModel, d: SnapshotData): PermModel {
+  const m: PermModel = JSON.parse(JSON.stringify(base));
+  (['units', 'recov', 'hidden', 'ctx', 'evAny', 'disc', 'cou'] as const).forEach((k) => { if (d[k]) (m as any)[k] = d[k]; });
+  const k = d.shift_k ?? 0;
+  if (k) {
+    const shift = (it: Item) => { const s = it.dir === 'risk' ? [-1, 0, 0, 0.5, 0.5] : [0.5, 0.5, 0, 0, -1]; it.b = it.b.map((x, i) => Math.max(1, x + s[i] * k * 2)); };
+    Object.values(m.items).forEach(shift); Object.values(m.exp).forEach((g) => g.items.forEach(shift));
+  }
+  return m;
+}

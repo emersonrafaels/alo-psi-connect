@@ -5,8 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { LogoLoader } from '@/components/ui/logo-loader';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Sheet } from '../overview/OverviewView';
-import type { PermModel } from './permanenceModel';
-import { C, LK, LK_LEGEND, P, bars, contextFlags, heat, layout, lkRow, makeEngine, sum, type LkRow } from './permanenceLogic';
+import { DEMO_MODEL } from './permanenceModel';
+import { resolveModel, type SnapshotData, C, LK, LK_LEGEND, P, bars, contextFlags, heat, layout, lkRow, makeEngine, sum, type LkRow } from './permanenceLogic';
 
 const Eyebrow = ({ children }: { children: ReactNode }) => <p className="text-[11px] font-semibold tracking-[0.1em]" style={{ color: C.brand }}>{children}</p>;
 const Head = ({ n, title, sub }: { n: string; title: string; sub: string }) => (
@@ -69,13 +69,14 @@ export function PermanenceView({ institutionId, semester }: { institutionId?: st
     queryFn: async () => {
       const { data, error } = await (supabase as any).from('institution_permanence_snapshots').select('semester, data').eq('institution_id', institutionId).order('semester');
       if (error) throw error;
-      return data as { semester: string; data: PermModel }[];
+      return data as { semester: string; data: SnapshotData }[];
     },
   });
   const rows = q.data ?? [];
   const semesters = rows.map((r) => r.semester);
   const activeSem = sem && semesters.includes(sem) ? sem : semester && semesters.includes(semester) ? semester : semesters[semesters.length - 1];
-  const model = rows.find((r) => r.semester === activeSem)?.data;
+  const snap = rows.find((r) => r.semester === activeSem)?.data;
+  const model = useMemo(() => (snap ? resolveModel(DEMO_MODEL, snap) : null), [snap]);
 
   const vm = useMemo(() => (model ? build(model, rec, prof, expTab, expSel) : null), [model, rec, prof, expTab, expSel]);
 
@@ -272,7 +273,7 @@ export function PermanenceView({ institutionId, semester }: { institutionId?: st
   );
 }
 
-function build(m: PermModel, recIn: string, prof: string, expTab: string, expSel: number) {
+function build(m: ReturnType<typeof resolveModel>, recIn: string, prof: string, expTab: string, expSel: number) {
   const e = makeEngine(m, recIn);
   const { UN, NT, EST, CUR, R, fav, unf, risk3, ord, dist, multi, scal, arr, unitStyle } = e;
   const I = m.items;
