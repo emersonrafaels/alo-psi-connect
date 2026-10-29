@@ -68,7 +68,7 @@ export function StudentTimelineModal({ open, onOpenChange, institutionId, patien
       const update = seen.has(r.semester);
       seen.add(r.semester);
       return {
-        id: `perm-${r.id}`, kind: 'permanence', occurred_at: r.created_at, title: 'Radar de Permanência',
+        id: `perm-${r.id}`, kind: 'permanence' as const, occurred_at: r.created_at, title: 'Radar de Permanência',
         detail: `Semestre ${r.semester} · ${r.answered_count} de ${PERMANENCE_TOTAL} perguntas respondidas`,
         level: update ? 'update' : null,
       };
