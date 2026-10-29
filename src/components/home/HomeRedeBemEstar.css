@@ -1,61 +1,130 @@
-/* Shared treatment for the AME, journey and services sections only. */
-.rbe-home-page .rbe-feature-card {
-  position: relative;
-  isolation: isolate;
-  box-shadow: 0 4px 24px -16px color-mix(in srgb, var(--rbe-primary) 22%, transparent);
-  transition: transform 240ms ease, box-shadow 240ms ease;
+﻿/* Home-only visual system. Brand colors and surfaces inherit the active theme. */
+.rbe-home-page .rbe-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 3rem;
+  text-align: left;
+}
+.rbe-home-page .rbe-section-heading h2 { max-width: 12ch; font-size: clamp(2.25rem, 4.5vw, 4rem); line-height: 1.08; letter-spacing: -.055em; margin: 0; }
+.rbe-home-page .rbe-section-description { max-width: 30ch; color: var(--rbe-on-surface-variant); font-size: 1rem; line-height: 1.7; }
+.rbe-home-page .rbe-ame-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
+.rbe-home-page .rbe-ame-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border-radius: 2rem;
+  background: color-mix(in srgb, var(--pillar-accent) 9%, var(--rbe-surface-container-lowest));
+  border: 1px solid color-mix(in srgb, var(--pillar-accent) 22%, var(--rbe-surface-container-lowest));
+}
+.rbe-home-page .rbe-ame-letter { display: block; font-size: clamp(5rem, 9vw, 8rem); font-weight: 800; line-height: .95; letter-spacing: -.09em; color: var(--rbe-primary); margin-bottom: 2.5rem; }
+.rbe-home-page .rbe-ame-card:nth-child(2) .rbe-ame-letter { color: var(--rbe-on-tertiary-fixed); }
+.rbe-home-page .rbe-ame-card:nth-child(3) .rbe-ame-letter { color: var(--rbe-secondary); }
+.rbe-home-page .rbe-ame-copy h3 { font-size: clamp(1.3rem, 2vw, 1.65rem); font-weight: 750; letter-spacing: -.04em; color: var(--rbe-primary); overflow-wrap: anywhere; }
+.rbe-home-page .rbe-ame-subtitle { margin: .65rem 0 1rem; font-size: .8rem; font-weight: 650; color: var(--rbe-primary); }
+.rbe-home-page .rbe-ame-description { font-size: .9rem; line-height: 1.8; color: var(--rbe-on-surface-variant); margin-bottom: 2rem; }
+.rbe-home-page .rbe-ame-tools { display: grid; gap: .85rem; margin-top: auto; padding-top: 1.5rem; border-top: 1px solid color-mix(in srgb, var(--pillar-accent) 30%, transparent); }
+.rbe-home-page .rbe-ame-tools li { display: flex; align-items: center; gap: .75rem; font-size: .8rem; font-weight: 600; color: var(--rbe-primary); }
+.rbe-home-page .rbe-journey-label { font-size: .9rem; font-weight: 600; margin-bottom: 1rem; }
+.rbe-home-page .rbe-chat-card { border-radius: 2rem; box-shadow: 0 16px 50px -35px var(--rbe-primary); }
+.rbe-home-page .rbe-chat-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; padding-bottom: 1.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--rbe-outline-variant); font-size: .75rem; color: var(--rbe-on-surface-variant); }
+.rbe-home-page .rbe-buddy-presence { display: inline-flex; align-items: center; gap: .6rem; font-size: 1rem; font-weight: 750; color: var(--rbe-primary); }
+.rbe-home-page .rbe-buddy-presence > span { width: .5rem; height: .5rem; border-radius: 50%; background: var(--rbe-on-tertiary-fixed); }
+.rbe-home-page .rbe-chat-bubble { background: var(--rbe-surface-container-low); border-radius: 1.2rem 1.2rem 1.2rem .25rem; }
+.rbe-home-page .rbe-chat-answer { margin-left: auto; border-radius: 1.2rem 1.2rem .25rem 1.2rem; }
+.rbe-home-page .rbe-diary-card { border-radius: 2rem; position: relative; overflow: hidden; }
+.rbe-home-page .rbe-diary-card > div:first-child > svg { padding: .65rem; width: 3rem; height: 3rem; border-radius: 1rem; background: color-mix(in srgb, var(--rbe-surface-container-lowest) 55%, transparent); }
+.rbe-home-page .rbe-diary-preview { color: var(--rbe-on-tertiary-fixed); margin-top: 2rem; padding: 1.25rem 0 .5rem; border-top: 1px solid color-mix(in srgb, var(--rbe-on-tertiary-fixed) 20%, transparent); }
+.rbe-home-page .rbe-diary-preview span { font-size: .75rem; font-weight: 600; }
+.rbe-home-page .rbe-diary-preview svg { display: block; width: 100%; height: 5rem; margin-top: 1rem; overflow: visible; }
+.rbe-home-page .rbe-diary-preview path { stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.rbe-home-page .rbe-services-intro { display: flex; align-items: start; gap: 1.25rem; max-width: 48rem; margin: 1.75rem auto 3.5rem; text-align: left; color: var(--rbe-on-surface-variant); }
+.rbe-home-page .rbe-services-intro > svg { color: var(--rbe-primary); margin-top: .25rem; }
+.rbe-home-page .rbe-services-intro p { font-size: 1rem; line-height: 1.8; }
+.rbe-home-page .rbe-services-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; text-align: left; }
+.rbe-home-page .rbe-service-panel { min-width: 0; padding: clamp(1.5rem, 3vw, 2.5rem); border-radius: 1.5rem; border: 1px solid var(--rbe-outline-variant); background: var(--rbe-surface-container-lowest); }
+.rbe-home-page .rbe-service-heading { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.75rem; }
+.rbe-home-page .rbe-service-icon { width: 3.25rem; height: 3.25rem; display: grid; place-items: center; flex-shrink: 0; border-radius: 1rem; }
+.rbe-home-page .rbe-service-heading h3 { font-size: clamp(1.1rem, 2vw, 1.4rem); font-weight: 750; color: var(--rbe-primary); letter-spacing: -.035em; }
+.rbe-home-page .rbe-service-panel ul { display: grid; gap: .9rem; }
+.rbe-home-page .rbe-service-panel li { display: flex; align-items: start; gap: .75rem; font-size: .875rem; line-height: 1.6; color: var(--rbe-on-surface-variant); }
+.rbe-home-page .rbe-service-panel li svg { color: var(--rbe-primary); margin-top: .2rem; }
+.rbe-home-page .rbe-service-panel:nth-child(3) { background: color-mix(in srgb, var(--rbe-tertiary-fixed) 35%, var(--rbe-surface-container-lowest)); }
+.rbe-home-page .rbe-service-panel:nth-child(4) { background: var(--rbe-primary-fixed); border-color: transparent; }
+@media (max-width: 767px) {
+  .rbe-home-page .rbe-section-heading { flex-direction: column; align-items: start; gap: 1.25rem; }
+  .rbe-home-page .rbe-section-heading h2 { max-width: none; }
+  .rbe-home-page .rbe-section-description { max-width: 38ch; }
+  .rbe-home-page .rbe-ame-grid { grid-template-columns: 1fr; }
+  .rbe-home-page .rbe-ame-card { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: 0 1rem; border-radius: 1.5rem; }
+  .rbe-home-page .rbe-ame-letter { font-size: 4rem; margin: 0; }
+  .rbe-home-page .rbe-ame-tools { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rbe-home-page .rbe-ame-description { margin-bottom: 1.5rem; }
+}
+@media (max-width: 639px) {
+  .rbe-home-page .rbe-services-grid { grid-template-columns: 1fr; }
+  .rbe-home-page .rbe-chat-heading { margin-bottom: 1.5rem; }
 }
 
-.rbe-home-page .rbe-feature-card::after {
+/* Pointer-following light stays behind the content and never captures input. */
+.rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel) {
+  position: relative;
+  isolation: isolate;
+}
+.rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel)::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
   border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--rbe-brand-mint) 12%, transparent), transparent 55%, color-mix(in srgb, var(--rbe-brand-pink) 9%, transparent));
-  opacity: 0.45;
-  transition: opacity 240ms ease;
+  opacity: 0;
+  background: radial-gradient(320px circle at var(--light-x, 50%) var(--light-y, 35%), color-mix(in srgb, var(--pillar-accent, var(--rbe-brand-mint)) 24%, transparent), transparent 75%);
 }
-
-.rbe-home-page .rbe-feature-tile {
-  border: 1px solid color-mix(in srgb, var(--rbe-outline-variant) 18%, transparent);
-  transition: transform 200ms ease, box-shadow 200ms ease;
-}
-
-.rbe-home-page .rbe-feature-tile svg,
-.rbe-home-page .rbe-service-column > div:first-child > div {
-  transition: transform 240ms ease;
-}
-
-.rbe-home-page .rbe-services-intro {
-  background-image: radial-gradient(ellipse at top, color-mix(in srgb, var(--rbe-brand-mint) 15%, transparent), transparent 70%) !important;
-}
-
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .rbe-home-page .rbe-feature-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 18px 40px -20px color-mix(in srgb, var(--rbe-primary) 30%, transparent);
+@media (prefers-reduced-motion: no-preference) {
+  .rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel) {
+    transition: translate 450ms cubic-bezier(.2,.75,.25,1), box-shadow 450ms ease, border-color 450ms ease;
   }
-
-  .rbe-home-page .rbe-feature-card:hover::after { opacity: 1; }
-
-  .rbe-home-page .rbe-feature-tile:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--rbe-primary) 25%, transparent);
+  .rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel)::after { transition: opacity 400ms ease; }
+  .rbe-home-page :is(.rbe-ame-letter, .rbe-service-icon, .rbe-ame-tools svg) { transition: transform 500ms cubic-bezier(.2,.75,.25,1); }
+  .rbe-home-page .rbe-reveal { opacity: 0; transform: translateY(28px) scale(.98); }
+  .rbe-home-page .rbe-reveal.rbe-in-view { animation: rbe-card-arrive 800ms cubic-bezier(.16,1,.3,1) both; }
+  .rbe-home-page .rbe-ame-card:nth-child(2),
+  .rbe-home-page .rbe-service-panel:nth-child(even),
+  .rbe-home-page .rbe-diary-card { animation-delay: 100ms; }
+  .rbe-home-page .rbe-ame-card:nth-child(3) { animation-delay: 200ms; }
+  .rbe-home-page .rbe-in-view .rbe-diary-preview path { stroke-dasharray: 1; animation: rbe-diary-draw 2s ease .4s both; }
+  .rbe-home-page .rbe-in-view .rbe-buddy-presence > span { animation: rbe-presence-pulse 2.5s ease-in-out 3; }
+  @supports (animation-timeline: view()) {
+    .rbe-home-page .rbe-in-view .rbe-diary-preview svg { animation: rbe-diary-drift linear both; animation-timeline: view(); animation-range: entry 0% exit 100%; }
   }
-
-  .rbe-home-page .rbe-feature-tile:hover svg { transform: rotate(-6deg) scale(1.08); }
-  .rbe-home-page .rbe-service-column:hover > div:first-child > div { transform: translateY(-4px) scale(1.06); }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .rbe-home-page .rbe-feature-card,
-  .rbe-home-page .rbe-feature-card::after,
-  .rbe-home-page .rbe-feature-tile,
-  .rbe-home-page .rbe-feature-tile svg,
-  .rbe-home-page .rbe-service-column > div:first-child > div {
-    transition: none;
-    transform: none;
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel):hover {
+    translate: 0 -7px;
+    box-shadow: 0 24px 48px -30px color-mix(in srgb, var(--rbe-primary) 45%, transparent);
+    border-color: color-mix(in srgb, var(--rbe-primary) 40%, var(--rbe-outline-variant));
   }
+  .rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel):hover::after { opacity: 1; }
+  .rbe-home-page .rbe-ame-card:hover .rbe-ame-letter { transform: translateX(6px) rotate(-5deg); }
+  .rbe-home-page .rbe-service-panel:hover .rbe-service-icon { transform: rotate(-8deg) scale(1.08); }
+  .rbe-home-page .rbe-ame-card:hover .rbe-ame-tools svg { transform: translateX(3px); }
+}
+@keyframes rbe-card-arrive {
+  from { opacity: 0; transform: translateY(28px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes rbe-diary-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes rbe-presence-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--rbe-on-tertiary-fixed) 12%, transparent); }
+}
+@keyframes rbe-diary-drift {
+  from { transform: translateY(6px); }
+  to { transform: translateY(-6px); }
 }

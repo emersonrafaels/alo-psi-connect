@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import "./HomeRedeBemEstar.css";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +46,39 @@ const HomeRedeBemEstar = () => {
   const showPrices = useShowPrices();
   const [featured, setFeatured] = useState<FeaturedProfessional[]>([]);
   const [loadingPros, setLoadingPros] = useState(true);
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const page = pageRef.current;
+    if (!page || !('IntersectionObserver' in window)) return;
+    const cards = page.querySelectorAll<HTMLElement>('.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('rbe-in-view');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.12 });
+    cards.forEach(card => {
+      card.classList.add('rbe-reveal');
+      observer.observe(card);
+    });
+    return () => {
+      observer.disconnect();
+      cards.forEach(card => card.classList.remove('rbe-reveal', 'rbe-in-view'));
+    };
+  }, []);
+
+  const moveCardLight = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!(event.target instanceof Element)) return;
+    const card = event.target.closest<HTMLElement>('.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel');
+    if (!card) return;
+    const bounds = card.getBoundingClientRect();
+    card.style.setProperty('--light-x', ((event.clientX - bounds.left) / bounds.width * 100) + '%');
+    card.style.setProperty('--light-y', ((event.clientY - bounds.top) / bounds.height * 100) + '%');
+  };
+
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -104,7 +137,7 @@ const HomeRedeBemEstar = () => {
     !s ? [] : s.split(",").map(x => x.trim()).filter(Boolean).slice(0, 3);
 
   return (
-    <div className="rbe-home-page min-h-screen overflow-x-hidden">
+    <div ref={pageRef} onPointerMove={moveCardLight} className="rbe-home-page min-h-screen overflow-x-hidden">
       <Header />
       <BuddyDailyBrief />
 
@@ -189,17 +222,17 @@ const HomeRedeBemEstar = () => {
       <section id="metodologia-ame" className="py-16 sm:py-20 lg:py-24 relative overflow-hidden"
                style={{ background: "var(--rbe-surface-container-lowest)" }}>
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 sm:mb-16 text-center md:text-left">
+          <div className="rbe-section-heading">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-3 sm:mb-4"
                 style={{ color: "var(--rbe-primary)" }}>
               Metodologia AME
             </h2>
-            <p className="font-medium uppercase tracking-widest text-xs sm:text-sm"
+            <p className="rbe-section-description"
                style={{ color: "var(--rbe-secondary)" }}>
               O ciclo de cuidado que transforma a experiência institucional.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
+          <div className="rbe-ame-grid">
             {[
               {
                 letter: "A",
@@ -207,7 +240,6 @@ const HomeRedeBemEstar = () => {
                 sub: "A porta de entrada do cuidado",
                 desc: "Acolhimento reduz resistência, gera vínculo, amplia pertencimento e torna o cuidado mais próximo.",
                 color: "var(--rbe-brand-purple)",
-                textOnLetter: "#fff",
                 items: [
                   { Icon: Bot, label: "Buddy" },
                   { Icon: BookOpen, label: "Diário Emocional" },
@@ -221,7 +253,6 @@ const HomeRedeBemEstar = () => {
                 sub: "Ler vulnerabilidades com ética",
                 desc: "Mais do que medir, busca compreender onde o sofrimento se acumula e quais fatores impactam o campus.",
                 color: "var(--rbe-brand-mint)",
-                textOnLetter: "var(--rbe-primary)",
                 items: [
                   { Icon: ClipboardCheck, label: "Escalas" },
                   { Icon: LineChart, label: "ISEU-RBE" },
@@ -235,7 +266,6 @@ const HomeRedeBemEstar = () => {
                 sub: "Transformar leitura em resposta",
                 desc: "A metodologia conecta cada necessidade ao suporte mais adequado, no tempo e intensidade corretos.",
                 color: "var(--rbe-brand-pink)",
-                textOnLetter: "#fff",
                 items: [
                   { Icon: Stethoscope, label: "Rede Profissional" },
                   { Icon: CalendarDays, label: "Agenda Solidária" },
@@ -244,33 +274,19 @@ const HomeRedeBemEstar = () => {
                 ],
               },
             ].map(p => (
-              <div key={p.letter}
-                   className="rbe-feature-card flex flex-col h-full rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow"
-                   style={{
-                     background: "var(--rbe-surface-container-low)",
-                     borderTop: `8px solid ${p.color}`,
-                   }}>
-                <div className="flex items-center gap-4 mb-5 sm:mb-6">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center font-black text-xl shrink-0"
-                       style={{ background: p.color, color: p.textOnLetter }}>
-                    {p.letter}
-                  </div>
-                  <div>
-                    <h3 className="font-bold leading-tight text-lg" style={{ color: "var(--rbe-primary)" }}>{p.title}</h3>
-                    <p className="text-xs font-medium" style={{ color: "var(--rbe-on-surface-variant)" }}>{p.sub}</p>
-                  </div>
+              <article key={p.letter} className="rbe-ame-card" style={{ "--pillar-accent": p.color } as CSSProperties}>
+                <span className="rbe-ame-letter" aria-hidden="true">{p.letter}</span>
+                <div className="rbe-ame-copy">
+                  <h3>{p.title}</h3>
+                  <p className="rbe-ame-subtitle">{p.sub}</p>
+                  <p className="rbe-ame-description">{p.desc}</p>
                 </div>
-                <p className="text-sm mb-6 sm:mb-8 leading-relaxed" style={{ color: "var(--rbe-on-surface-variant)" }}>{p.desc}</p>
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-auto">
+                <ul className="rbe-ame-tools">
                   {p.items.map(({ Icon, label }) => (
-                    <div key={label} className="rbe-feature-tile p-3 sm:p-4 rounded-xl"
-                         style={{ background: "var(--rbe-surface-container)" }}>
-                      <Icon className="w-5 h-5 mb-2" style={{ color: p.color }} />
-                      <p className="text-xs font-bold leading-tight" style={{ color: "var(--rbe-primary)" }}>{label}</p>
-                    </div>
+                    <li key={label}><Icon aria-hidden="true" className="w-4 h-4 shrink-0" /><span>{label}</span></li>
                   ))}
-                </div>
-              </div>
+                </ul>
+              </article>
             ))}
           </div>
         </div>
@@ -341,7 +357,7 @@ const HomeRedeBemEstar = () => {
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 sm:gap-8 mb-12 sm:mb-16">
             <div className="max-w-xl">
-              <h2 className="text-[10px] sm:text-xs font-black tracking-[0.2em] uppercase mb-3 sm:mb-4"
+              <h2 className="rbe-journey-label"
                   style={{ color: "var(--rbe-secondary)" }}>
                 Sua Jornada Acompanhada
               </h2>
@@ -357,19 +373,19 @@ const HomeRedeBemEstar = () => {
           </div>
           <div className="grid md:grid-cols-12 gap-6 sm:gap-8">
             {/* Buddy removed — chat card expanded to fill space */}
-            <div className="rbe-feature-card md:col-span-7 lg:col-span-8 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col justify-center min-h-[320px] sm:min-h-[400px]"
+            <div className="rbe-chat-card md:col-span-7 lg:col-span-8 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col justify-center min-h-[320px] sm:min-h-[400px]"
                  style={{
-                   background: "linear-gradient(135deg, rgba(255,255,255,0.96), rgba(250,250,251,0.96))",
+                   background: "var(--rbe-surface-container-lowest)",
                    border: "1px solid rgba(0,0,0,0.04)",
                  }}>
-              {/* decorative circle removed per design request */}
+              <div className="rbe-chat-heading"><span className="rbe-buddy-presence"><span aria-hidden="true" /> Buddy</span><span>Um espaço para conversar</span></div>
               <div className="max-w-3xl relative z-10 space-y-5 sm:space-y-6">
                 <div className="flex items-center gap-3 sm:gap-4">
                   <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0"
                        style={{ background: "var(--rbe-secondary)" }}>
                     <img src={buddyChat} alt="Buddy chat" className="w-full h-full object-cover" />
                   </div>
-                  <div className="rbe-glass px-3 sm:px-4 py-2 rounded-full"
+                  <div className="rbe-chat-bubble px-4 sm:px-5 py-3 rounded-2xl"
                        style={{ border: "1px solid color-mix(in srgb, var(--rbe-secondary-container) 30%, transparent)" }}>
                     <p className="text-xs sm:text-sm font-medium" style={{ color: "var(--rbe-primary)" }}>
                       Como você está se sentindo hoje?
@@ -377,7 +393,7 @@ const HomeRedeBemEstar = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 sm:gap-4 ml-8 sm:ml-12">
-                  <div className="px-3 sm:px-4 py-2 rounded-full"
+                  <div className="rbe-chat-answer px-4 sm:px-5 py-3 rounded-2xl"
                        style={{ background: "var(--rbe-primary-container)", color: "var(--rbe-on-primary)" }}>
                     <p className="text-xs sm:text-sm">Um pouco ansioso com as provas...</p>
                   </div>
@@ -387,7 +403,7 @@ const HomeRedeBemEstar = () => {
                        style={{ background: "var(--rbe-secondary)" }}>
                     <img src={buddyChat} alt="Buddy chat" className="w-full h-full object-cover" />
                   </div>
-                  <div className="rbe-glass px-3 sm:px-4 py-2 rounded-full"
+                  <div className="rbe-chat-bubble px-4 sm:px-5 py-3 rounded-2xl"
                        style={{ border: "1px solid color-mix(in srgb, var(--rbe-secondary-container) 30%, transparent)" }}>
                     <p className="text-xs sm:text-sm font-medium" style={{ color: "var(--rbe-primary)" }}>
                       Te entendo. Que tal um exercício de respiração comigo?
@@ -395,7 +411,7 @@ const HomeRedeBemEstar = () => {
                   </div>
                 </div>
                 <div className="pt-4">
-                  <p className="text-xs sm:text-sm font-bold uppercase tracking-widest mb-2"
+                  <p className="text-sm font-semibold mb-2"
                      style={{ color: "var(--rbe-secondary)" }}>
                     Buddy
                   </p>
@@ -406,25 +422,29 @@ const HomeRedeBemEstar = () => {
               </div>
             </div>
             {/* Diário card */}
-              <div className="rbe-feature-card md:col-span-5 lg:col-span-4 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between min-h-[280px]"
+              <div className="rbe-diary-card md:col-span-5 lg:col-span-4 rounded-[1.5rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-sm flex flex-col justify-between min-h-[280px]"
                 style={{
-                  background: "var(--rbe-surface)",
-                  border: "1px solid color-mix(in srgb, var(--rbe-outline-variant) 65%, transparent)",
+                  background: "var(--rbe-tertiary-fixed)",
+                  border: "1px solid transparent",
                 }}>
               <div>
-                <BookOpen className="w-8 h-8 mb-4" style={{ color: "var(--rbe-on-secondary-fixed)" }} />
-                <h4 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: "var(--rbe-on-secondary-fixed)" }}>
+                <BookOpen className="w-8 h-8 mb-4" style={{ color: "var(--rbe-on-tertiary-fixed)" }} />
+                <h4 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: "var(--rbe-on-tertiary-fixed)" }}>
                   Diário Emocional
                 </h4>
-                <p className="text-sm leading-relaxed" style={{ color: "var(--rbe-on-secondary-fixed)", opacity: 0.85 }}>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--rbe-on-tertiary-fixed)", opacity: 0.85 }}>
                   Registre humor, energia e sono. A IA traduz padrões e devolve insights para sua jornada.
                 </p>
               </div>
-              <div className="flex items-center gap-1 mt-6">
+              <div className="rbe-diary-preview" aria-hidden="true">
+                <span>Seu ritmo, seu cuidado</span>
+                <svg viewBox="0 0 280 80" fill="none" preserveAspectRatio="none"><path pathLength="1" d="M0 65 C20 65 20 35 40 35 S60 60 80 50 S100 10 125 24 S155 65 180 38 S215 60 240 22 S265 15 280 5" /></svg>
+              </div>
+              <div className="flex items-center gap-2 mt-6">
                 {[Heart, Activity, Moon, Battery, Sparkles].map((Ic, i) => (
                   <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center"
                        style={{ background: "color-mix(in srgb, var(--rbe-primary) 12%, transparent)" }}>
-                    <Ic className="w-3.5 h-3.5" style={{ color: "var(--rbe-on-secondary-fixed)" }} />
+                    <Ic className="w-3.5 h-3.5" style={{ color: "var(--rbe-on-tertiary-fixed)" }} />
                   </div>
                 ))}
               </div>
@@ -441,89 +461,46 @@ const HomeRedeBemEstar = () => {
       <section className="py-16 sm:py-20 lg:py-24 overflow-hidden" style={{ background: "var(--rbe-surface-container-lowest)" }}>
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl sm:text-5xl font-black mb-3 sm:mb-4" style={{ color: "var(--rbe-primary)" }}>
-            Rede Bem-Estar
+            Uma rede. Muitas formas de cuidar.
           </h2>
-          <p className="font-bold uppercase tracking-[0.2em] text-xs sm:text-sm mb-10 sm:mb-12 flex items-center justify-center gap-3 sm:gap-4 flex-wrap"
-             style={{ color: "var(--rbe-brand-pink)" }}>
-            <span className="h-px w-8 sm:w-12 hidden sm:block" style={{ background: "color-mix(in srgb, var(--rbe-brand-pink) 30%, transparent)" }} />
-            Infográfico de serviços e frentes de atuação
-            <span className="h-px w-8 sm:w-12 hidden sm:block" style={{ background: "color-mix(in srgb, var(--rbe-brand-pink) 30%, transparent)" }} />
-          </p>
-          <div className="rbe-services-intro p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] mb-16 sm:mb-20 relative"
-               style={{
-                 background: "var(--rbe-surface-container-low)",
-                 border: "1px solid color-mix(in srgb, var(--rbe-brand-purple) 10%, transparent)",
-               }}>
-            <div className="absolute -top-8 sm:-top-10 left-1/2 -translate-x-1/2 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-lg"
-                 style={{
-                   background: "var(--rbe-surface-container-lowest)",
-                   border: "1px solid color-mix(in srgb, var(--rbe-brand-purple) 10%, transparent)",
-                 }}>
-              <HeartHandshake className="w-7 h-7 sm:w-9 sm:h-9" style={{ color: "var(--rbe-brand-purple)" }} />
-            </div>
-            <p className="text-sm sm:text-base lg:text-lg max-w-4xl mx-auto leading-relaxed pt-5 sm:pt-6"
-               style={{ color: "var(--rbe-primary)" }}>
-              A Rede Bem-Estar é um ecossistema de cuidado emocional para instituições de ensino,
-              oferecendo apoio a estudantes e professores, além de inteligência institucional
-              para promover bem-estar, permanência e uma experiência universitária mais saudável.
-            </p>
+          <div className="rbe-services-intro">
+            <HeartHandshake className="w-7 h-7 shrink-0" aria-hidden="true" />
+            <p>Apoio a estudantes e professores, ferramentas para o dia a dia e inteligência institucional.
+              Um ecossistema conectado para uma experiência universitária mais saudável.</p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 items-stretch">
+          <div className="rbe-services-grid">
             {[
               {
                 Icon: Heart, color: "var(--rbe-brand-purple)", textOnIcon: "#fff",
-                titleColor: "var(--rbe-primary)",
-                title: "1. CUIDADO INDIVIDUAL",
+                title: "Cuidado individual",
                 items: ["Atendimentos psicológicos", "Atendimentos psiquiátricos", "Encaminhamento para suporte adequado", "Acolhimento com olhar humano e especializado"],
               },
               {
                 Icon: Smartphone, color: "var(--rbe-brand-pink)", textOnIcon: "#fff",
-                titleColor: "var(--rbe-brand-pink)",
-                title: "2. FERRAMENTAS PARA O ALUNO",
+                title: "Ferramentas para o aluno",
                 items: ["Diário Emocional", "Buddy, companheiro digital de acompanhamento", "Check-ins de humor, energia e ansiedade", "Ferramentas de autorregulação", "Trilhas e conteúdos de bem-estar", "Escalas e testes de acompanhamento emocional", "Agenda Solidária"],
               },
               {
                 Icon: Users, color: "var(--rbe-brand-mint)", textOnIcon: "var(--rbe-primary)",
-                titleColor: "var(--rbe-primary)",
-                title: "3. EXPERIÊNCIAS COLETIVAS",
+                title: "Experiências coletivas",
                 items: ["Grupos temáticos", "Rodas de conversa", "Workshops", "Palestras e ações de conscientização", "Ativações em campus e programas especiais"],
               },
               {
-                Icon: Building2, color: "var(--rbe-primary)", textOnIcon: "#fff",
-                titleColor: "var(--rbe-primary)",
-                title: "4. SOLUÇÕES PARA INSTITUIÇÕES",
+                Icon: Building2, color: "var(--rbe-brand-purple)", textOnIcon: "#fff",
+                title: "Soluções para instituições",
                 items: ["Dashboard com dados agregados e anônimos", "Diário Emocional com visão institucional", "ISEU-RBE, índice semestral de equilíbrio universitário", "Relatórios estratégicos e reuniões de acompanhamento", "Personalização white-label", "Apoio à permanência, clima institucional e prevenção"],
               },
             ].map(col => (
-              <div key={col.title} className="rbe-service-column group flex flex-col">
-                <div className="mb-5 sm:mb-6 flex justify-center">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-110"
-                       style={{ background: col.color, color: col.textOnIcon }}>
-                    <col.Icon className="w-7 h-7 sm:w-9 sm:h-9" />
-                  </div>
+              <article key={col.title} className="rbe-service-panel">
+                <div className="rbe-service-heading">
+                  <div className="rbe-service-icon" style={{ background: col.color, color: col.textOnIcon }}><col.Icon className="w-6 h-6" aria-hidden="true" /></div>
+                  <h3>{col.title}</h3>
                 </div>
-                <div className="rbe-feature-card p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] flex-1 shadow-sm"
-                     style={{
-                       background: "var(--rbe-surface-container-low)",
-                       borderTop: `4px solid ${col.color}`,
-                     }}>
-                  <h4 className="font-black uppercase text-xs sm:text-sm mb-5 sm:mb-6 leading-tight"
-                      style={{ color: col.titleColor }}>
-                    {col.title}
-                  </h4>
-                  <div className="h-px w-full mb-5 sm:mb-6"
-                       style={{ background: "color-mix(in srgb, var(--rbe-outline-variant) 30%, transparent)" }} />
-                  <ul className="space-y-3 sm:space-y-4 text-left">
-                    {col.items.map(item => (
-                      <li key={item} className="flex items-start gap-2 sm:gap-3">
-                        <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" style={{ color: col.color }} fill={col.color} stroke="#fff" />
-                        <span className="text-xs font-medium" style={{ color: "var(--rbe-on-surface-variant)" }}>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+                <ul>{col.items.map(item => (
+                  <li key={item}><CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" /><span>{item}</span></li>
+                ))}</ul>
+              </article>
             ))}
           </div>
 {/* Sub-seção Metodologia AME */}
