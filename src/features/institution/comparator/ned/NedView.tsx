@@ -268,24 +268,57 @@ export function NedView({ institutionId, semester }: { institutionId?: string; s
 
       <Sheet id="s3" open={fs} setOpen={setFs} label="Procura x tamanho da equipe" className="space-y-4">
         <H2 title="Procura x tamanho da equipe" sub="Quantos estudantes cada NED atende e quantas horas de equipe tem, ambos por 100 estudantes matriculados. Ajuda a decidir onde reforçar equipe ou redistribuir apoio. Toque em um NED para abrir a ficha." />
-        <svg viewBox="0 0 700 400" className="w-full" role="img" aria-label="Procura por equipe">
-          {[2, 4, 6, 8, 10].filter((h) => h <= maxH).map((h) => <g key={h}><line x1={SX(h)} x2={SX(h)} y1={360} y2={365} className="stroke-border" /><text x={SX(h)} y={378} textAnchor="middle" className="fill-muted-foreground text-[10px]">{h} h</text></g>)}
-          <line x1={60} x2={680} y1={360} y2={360} className="stroke-border" />
-          <line x1={60} x2={60} y1={30} y2={360} className="stroke-border" />
-          <line x1={SX(med.hor)} x2={SX(med.hor)} y1={30} y2={360} className="stroke-muted-foreground/25" strokeDasharray="3 4" />
-          <line x1={60} x2={680} y1={SY(med.alc)} y2={SY(med.alc)} className="stroke-muted-foreground/25" strokeDasharray="3 4" />
-          {[[70, 45, 'start', 'Muita procura, pouca equipe'], [670, 45, 'end', 'Muita procura, equipe forte'], [70, 350, 'start', 'Pouca procura, pouca equipe'], [670, 350, 'end', 'Equipe com folga']].map(([x, y, a, l]) => <text key={l as string} x={x as number} y={y as number} textAnchor={a as any} className={`text-[10px] ${l === 'Muita procura, pouca equipe' ? 'fill-destructive' : 'fill-muted-foreground'}`}>{l}</text>)}
-          {neds.map((n) => { const r = 6 + (n.esp / maxEsp) * 10, sel = f.key === n.key; return (
-            <g key={n.key} onClick={() => openNed(n.key)} className="cursor-pointer">
-              <title>{`${n.nome}: ${br(n.alc)} atendidos e ${br(n.hor)} h por 100 · espera ${n.esp} dias · ${quadrant(n.alc, n.hor, med.alc, med.hor)}`}</title>
-              {sel && <circle cx={SX(n.hor)} cy={SY(n.alc)} r={r + 4} fill="none" stroke="hsl(var(--foreground))" strokeWidth={1.5} />}
-              <circle cx={SX(n.hor)} cy={SY(n.alc)} r={r} className={n.esp > 7 ? 'fill-destructive' : 'fill-primary'} fillOpacity={0.55} />
-              <text x={SX(n.hor) + r + 8} y={SY(n.alc) + 4} className={`fill-foreground text-[11px] ${sel ? 'font-semibold' : ''}`}>{n.nome}</text>
-            </g>
-          ); })}
-          <text x={680} y={396} textAnchor="end" className="fill-muted-foreground text-[10px]">Horas de equipe por semana, por 100 estudantes</text>
-          <text x={60} y={20} className="fill-muted-foreground text-[10px]">Estudantes atendidos por 100</text>
-        </svg>
+        <div className="relative" onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}>
+          <svg viewBox="0 0 700 400" className="w-full" role="img" aria-label="Procura por equipe" onMouseLeave={() => setHov(null)}>
+            {[2, 4, 6, 8, 10].filter((h) => h <= maxH).map((h) => <g key={h}><line x1={SX(h)} x2={SX(h)} y1={360} y2={365} className="stroke-border" /><text x={SX(h)} y={378} textAnchor="middle" className="fill-muted-foreground text-[10px]">{h} h</text></g>)}
+            <line x1={60} x2={680} y1={360} y2={360} className="stroke-border" />
+            <line x1={60} x2={60} y1={30} y2={360} className="stroke-border" />
+            <line x1={SX(med.hor)} x2={SX(med.hor)} y1={30} y2={360} className="stroke-muted-foreground/25" strokeDasharray="3 4" />
+            <line x1={60} x2={680} y1={SY(med.alc)} y2={SY(med.alc)} className="stroke-muted-foreground/25" strokeDasharray="3 4" />
+            {[[70, 45, 'start', 'Muita procura, pouca equipe'], [670, 45, 'end', 'Muita procura, equipe forte'], [70, 350, 'start', 'Pouca procura, pouca equipe'], [670, 350, 'end', 'Equipe com folga']].map(([x, y, a, l]) => <text key={l as string} x={x as number} y={y as number} textAnchor={a as any} className={`text-[10px] ${l === 'Muita procura, pouca equipe' ? 'fill-destructive' : 'fill-muted-foreground'}`}>{l}</text>)}
+            {neds.map((n) => { const r = 6 + (n.esp / maxEsp) * 10, sel = f.key === n.key; return (
+              <g key={n.key} onClick={() => openNed(n.key)} className="cursor-pointer" onMouseEnter={() => setHov(n)}>
+                {sel && <circle cx={SX(n.hor)} cy={SY(n.alc)} r={r + 4} fill="none" stroke="hsl(var(--foreground))" strokeWidth={1.5} />}
+                <circle cx={SX(n.hor)} cy={SY(n.alc)} r={r} className={`${n.esp > 7 ? 'fill-destructive' : 'fill-primary'} transition-[fill-opacity] duration-150`} fillOpacity={hov?.key === n.key ? 0.85 : 0.55} />
+                <text x={SX(n.hor) + r + 8} y={SY(n.alc) + 4} className={`fill-foreground text-[11px] ${sel ? 'font-semibold' : ''}`}>{n.nome}</text>
+              </g>
+            ); })}
+            <text x={680} y={396} textAnchor="end" className="fill-muted-foreground text-[10px]">Horas de equipe por semana, por 100 estudantes</text>
+            <text x={60} y={20} className="fill-muted-foreground text-[10px]">Estudantes atendidos por 100</text>
+          </svg>
+          {hov && (
+            <div
+              style={{ position: 'fixed', left: Math.min(pos.x + 16, window.innerWidth - 312), top: Math.min(pos.y + 16, window.innerHeight - 260) }}
+              className="pointer-events-none z-50 w-72 rounded-xl border bg-card p-3 shadow-lg"
+            >
+              <p className="text-sm font-semibold">{hov.nome} <span className="text-xs font-normal text-muted-foreground">({hov.uf})</span></p>
+              <table className="mt-2 w-full text-xs">
+                <thead>
+                  <tr className="text-muted-foreground">
+                    <th className="pb-1 text-left font-normal">Indicador</th>
+                    <th className="pb-1 text-right font-normal">NED</th>
+                    <th className="pb-1 text-right font-normal">Média nacional</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {TOOLTIP_ROWS.map(({ k, label, unit }) => {
+                    const m = METRICS.find((x) => x.k === k)!;
+                    return (
+                      <tr key={k} className="border-t border-border/60">
+                        <td className="py-1 text-muted-foreground">{label}</td>
+                        <td className={`py-1 text-right font-semibold tabular-nums ${hov.g[k] === -1 ? 'text-destructive' : hov.g[k] === 1 ? 'text-primary' : ''}`}>
+                          {m.f(hov[k])}{unit ?? ''}{hov.g[k] === 1 ? ' ↑' : hov.g[k] === -1 ? ' ↓' : ''}
+                        </td>
+                        <td className="py-1 text-right tabular-nums text-muted-foreground">{m.f(med[k])}{unit ?? ''}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <p className="mt-2 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">{int(hov.est)} estudantes matriculados · {quadrant(hov.alc, hov.hor, med.alc, med.hor)}</p>
+            </div>
+          )}
+        </div>
         <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded-full bg-primary/60" />Espera até 7 dias</span>
           <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded-full bg-destructive/60" />Espera acima de 7 dias</span>
