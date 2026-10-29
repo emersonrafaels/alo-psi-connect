@@ -8,11 +8,18 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Sheet, H2 } from '../overview/OverviewView';
-import { METRICS, ROLES, DEM, BEST_PRACTICES, INDICATORS, enrich, mean, byAttention, quadrant, alertText, type NedRaw, type MetricKey } from './nedLogic';
+import { METRICS, ROLES, DEM, BEST_PRACTICES, INDICATORS, enrich, mean, byAttention, quadrant, alertText, type Ned, type NedRaw, type MetricKey } from './nedLogic';
 
 const int = (n: number) => Math.round(n).toLocaleString('pt-BR');
 const br = (v: number, d = 1) => v.toFixed(d).replace('.', ',');
 const CELL = { '1': 'bg-primary/15 text-primary', '0': 'bg-muted/60', '-1': 'bg-destructive/10 text-destructive' } as const;
+const TOOLTIP_ROWS: { k: MetricKey; label: string; unit?: string }[] = [
+  { k: 'alc', label: 'Atendidos por 100' },
+  { k: 'hor', label: 'Horas de equipe' },
+  { k: 'esp', label: 'Espera', unit: ' d' },
+  { k: 'com', label: 'Comparecimento' },
+  { k: 'sat', label: 'Satisfação' },
+];
 const pill = (on: boolean) => `rounded-full px-3.5 py-1.5 text-sm ${on ? 'bg-card font-semibold text-primary shadow-sm' : 'text-muted-foreground'}`;
 const STATUS = ['Não enviado', 'Em dia', 'Atrasado'];
 const MONTHS3 = ['Ago', 'Set', 'Out'];
