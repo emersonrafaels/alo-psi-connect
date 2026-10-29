@@ -138,9 +138,9 @@ export default function PermanenceRadar() {
         <aside className="hidden w-80 shrink-0 overflow-y-auto border-r p-5 lg:block">{nav}</aside>
         <main id="radar-main" className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl px-4 py-8">
-        <Alert className="mb-6">
-          <Lock className="h-4 w-4" />
-          <AlertDescription>Suas respostas são confidenciais. A instituição vê apenas resultados coletivos de grupos com 10 ou mais pessoas, nunca o que você respondeu.</AlertDescription>
+        <Alert className="mb-6 border-primary/40 border-l-4 border-l-primary bg-primary/10 shadow-sm">
+          <Lock className="h-5 w-5 !text-primary" />
+          <AlertDescription className="font-medium text-foreground">Suas respostas são confidenciais. A instituição vê apenas resultados coletivos de grupos com 10 ou mais pessoas, nunca o que você respondeu.</AlertDescription>
         </Alert>
         {mode === 'summary' && latest && (
           <div className="space-y-4">
