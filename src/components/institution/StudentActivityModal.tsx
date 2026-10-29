@@ -113,7 +113,7 @@ interface StudentActivityModalProps {
   initialTab?: ActivityTab;
 }
 
-export type ActivityTab = 'diario' | 'escalas' | 'praticas' | 'notas' | 'triagens' | 'jornada';
+export type ActivityTab = 'diario' | 'escalas' | 'praticas' | 'notas' | 'triagens' | 'jornada' | 'radar';
 
 const riskColors: Record<RiskLevel, string> = {
   critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
