@@ -11,7 +11,7 @@ import { NedView } from '@/features/institution/comparator/ned/NedView';
 import { PermanenceView } from '@/features/institution/comparator/permanence/PermanenceView';
 import { JourneyView } from '@/features/institution/comparator/journey/JourneyView';
 import { OverviewView } from '@/features/institution/comparator/overview/OverviewView';
-import { Route as RouteIcon, CalendarDays, Network, PlayCircle, ListChecks, ShieldCheck } from 'lucide-react';
+import { Route as RouteIcon, CalendarDays, Network, PlayCircle, ListChecks, ShieldCheck, Radar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
