@@ -19,6 +19,7 @@ export default {
 		},
 		extend: {
 			colors: {
+				"highlight-pink": "hsl(var(--highlight-pink))",
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
