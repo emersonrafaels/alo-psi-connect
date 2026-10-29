@@ -10,6 +10,8 @@ import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
+import { buildTenantPath } from '@/utils/tenantHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { MODULES, currentSemester, isAnswered, isVisible, progress, toggleMulti, type Answers } from '@/features/permanence/instrument';
