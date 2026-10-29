@@ -5,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { LogoLoader } from '@/components/ui/logo-loader';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Sheet } from '../overview/OverviewView';
-import { DEMO_MODEL } from './permanenceModel';
-import { resolveModel, type SnapshotData, C, LK, LK_LEGEND, P, bars, contextFlags, heat, layout, lkRow, makeEngine, sum, type LkRow } from './permanenceLogic';
+import { DEMO_MODEL, type PermModel } from './permanenceModel';
+import { buildRealModel, semestersOf, type RealUnitRow } from './permanenceReal';
+import { C, LK, LK_LEGEND, P, bars, contextFlags, heat, layout, lkRow, makeEngine, sum, type LkRow } from './permanenceLogic';
 
 const Eyebrow = ({ children }: { children: ReactNode }) => <p className="text-[11px] font-semibold tracking-[0.1em]" style={{ color: C.brand }}>{children}</p>;
 const Head = ({ n, title, sub }: { n: string; title: string; sub: string }) => (
@@ -65,18 +66,17 @@ export function PermanenceView({ institutionId, semester }: { institutionId?: st
   const [sem, setSem] = useState<string | null>(null);
 
   const q = useQuery({
-    queryKey: ['permanence-snapshots', institutionId], enabled: !!institutionId,
+    queryKey: ['permanence-real', institutionId], enabled: !!institutionId,
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from('institution_permanence_snapshots').select('semester, data').eq('institution_id', institutionId).order('semester');
+      const { data, error } = await (supabase as any).rpc('get_institution_permanence', { _institution_id: institutionId });
       if (error) throw error;
-      return data as { semester: string; data: SnapshotData }[];
+      return (data ?? []) as RealUnitRow[];
     },
   });
   const rows = q.data ?? [];
-  const semesters = rows.map((r) => r.semester);
+  const semesters = semestersOf(rows);
   const activeSem = sem && semesters.includes(sem) ? sem : semester && semesters.includes(semester) ? semester : semesters[semesters.length - 1];
-  const snap = rows.find((r) => r.semester === activeSem)?.data;
-  const model = useMemo(() => (snap ? resolveModel(DEMO_MODEL, snap) : null), [snap]);
+  const model = useMemo(() => (activeSem ? buildRealModel(DEMO_MODEL, rows, activeSem) : null), [rows, activeSem]);
 
   const vm = useMemo(() => (model ? build(model, rec, prof, expTab, expSel) : null), [model, rec, prof, expTab, expSel]);
 
@@ -273,7 +273,7 @@ export function PermanenceView({ institutionId, semester }: { institutionId?: st
   );
 }
 
-function build(m: ReturnType<typeof resolveModel>, recIn: string, prof: string, expTab: string, expSel: number) {
+function build(m: PermModel, recIn: string, prof: string, expTab: string, expSel: number) {
   const e = makeEngine(m, recIn);
   const { UN, NT, EST, CUR, R, fav, unf, risk3, ord, dist, multi, scal, arr, unitStyle } = e;
   const I = m.items;

@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList, HeartPulse, HeartHandshake } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList, HeartPulse, Compass, HeartHandshake } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -180,6 +180,12 @@ const Header = () => {
                     <HeartPulse className="h-4 w-4 mr-2" />
                     Minhas Emoções
                   </DropdownMenuItem>
+                  {profile?.tipo_usuario === 'paciente' && (
+                    <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/radar-permanencia'))}>
+                      <Compass className="h-4 w-4 mr-2" />
+                      Radar de Permanência
+                    </DropdownMenuItem>
+                  )}
                   {isProfessional && (
                     <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/professional-profile'))}>
                       <Briefcase className="h-4 w-4 mr-2" />
@@ -325,6 +331,16 @@ const Header = () => {
                     <HeartPulse className="h-5 w-5 opacity-70" />
                     Minhas Emoções
                   </Link>
+                  {profile?.tipo_usuario === 'paciente' && (
+                    <Link
+                      to={buildTenantPath(tenantSlug, '/radar-permanencia')}
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Compass className="h-5 w-5 opacity-70" />
+                      Radar de Permanência
+                    </Link>
+                  )}
                   {isProfessional && (
                     <Link
                       to={buildTenantPath(tenantSlug, '/professional-profile')}

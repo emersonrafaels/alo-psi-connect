@@ -34,7 +34,7 @@ export function makeEngine(m: PermModel, rec: string) {
   const scal = (o: Record<string, number>, r = R) => (r === 'all' ? weighted((k) => o[k] ?? 0) : o[r] ?? 0);
   const arr = (o: Record<string, number[]>, len: number, r = R) => (r === 'all' ? weightedArr((k) => o[k] ?? [], len) : o[r] ?? []);
 
-  const distU = (it: Item, k: string) => tilt(it.b, it.dir, m.tilt[it.dom]?.[k] ?? 0);
+  const distU = (it: Item, k: string) => it.bu?.[k] ?? tilt(it.b, it.dir, m.tilt[it.dom]?.[k] ?? 0);
   const dist = (it: Item, r = R) => (r !== 'all' ? distU(it, r) : weightedArr((k) => distU(it, k), 5));
   const ord = (it: Item, d: number[]) => {
     const idx = it.dir === 'risk' ? [0, 1, 2, 3, 4] : [4, 3, 2, 1, 0];

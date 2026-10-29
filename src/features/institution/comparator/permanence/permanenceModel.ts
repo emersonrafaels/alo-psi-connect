@@ -1,7 +1,7 @@
 // Shape of one aggregated Radar de Permanência snapshot (per institution and semester).
 // Only collective distributions — never individual answers.
 export type Dir = 'risk' | 'protective';
-export interface Item { dom: string; dir: Dir; lab: string[]; b: number[]; q?: string; t?: string }
+export interface Item { dom: string; dir: Dir; lab: string[]; b: number[]; bu?: Record<string, number[]>; q?: string; t?: string }
 export interface ExpGroup { label: string; period: string; items: Item[] }
 export type Mult = Record<string, Record<string, number>>;
 export interface PermUnit { k: string; nome: string; ini: string; n: number; est: number }
@@ -34,7 +34,7 @@ const FREQ = ['Nunca', 'Uma vez', 'Algumas vezes', 'Frequentemente', 'Quase todo
 
 /** Demonstration snapshot (reference design, 2026.2). Used to seed demo institutions. */
 export const DEMO_MODEL: PermModel = {
-  instrument: 'v. 27/07/2026 · 77 perguntas · 11 temas',
+  instrument: 'v. 27/07/2026 · 51 perguntas · 11 temas',
   units: [
     { k: 'CT', nome: 'Contagem', ini: 'CT', n: 498, est: 1180 },
     { k: 'IT', nome: 'Itajubá', ini: 'IT', n: 362, est: 820 },
