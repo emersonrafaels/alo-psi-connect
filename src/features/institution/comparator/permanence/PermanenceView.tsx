@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { LogoLoader } from '@/components/ui/logo-loader';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Sheet } from '../overview/OverviewView';
-import { DEMO_MODEL } from './permanenceModel';
+import { DEMO_MODEL, type PermModel } from './permanenceModel';
 import { resolveModel, type SnapshotData, C, LK, LK_LEGEND, P, bars, contextFlags, heat, layout, lkRow, makeEngine, sum, type LkRow } from './permanenceLogic';
 
 const Eyebrow = ({ children }: { children: ReactNode }) => <p className="text-[11px] font-semibold tracking-[0.1em]" style={{ color: C.brand }}>{children}</p>;
@@ -272,7 +272,7 @@ export function PermanenceView({ institutionId, semester }: { institutionId?: st
   );
 }
 
-function build(m: ReturnType<typeof resolveModel>, recIn: string, prof: string, expTab: string, expSel: number) {
+function build(m: PermModel, recIn: string, prof: string, expTab: string, expSel: number) {
   const e = makeEngine(m, recIn);
   const { UN, NT, EST, CUR, R, fav, unf, risk3, ord, dist, multi, scal, arr, unitStyle } = e;
   const I = m.items;
