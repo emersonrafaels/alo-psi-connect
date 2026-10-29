@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Sheet, H2 } from '../overview/OverviewView';
-import { METRICS, ROLES, DEM, BEST_PRACTICES, INDICATORS, enrich, median, byAttention, quadrant, alertText, type NedRaw, type MetricKey } from './nedLogic';
+import { METRICS, ROLES, DEM, BEST_PRACTICES, INDICATORS, enrich, mean, byAttention, quadrant, alertText, type NedRaw, type MetricKey } from './nedLogic';
 
 const int = (n: number) => Math.round(n).toLocaleString('pt-BR');
 const br = (v: number, d = 1) => v.toFixed(d).replace('.', ',');
@@ -70,7 +70,7 @@ export function NedView({ institutionId, semester }: { institutionId?: string; s
   const kpis = [
     { label: 'NEDs acompanhados', value: String(neds.length), note: `em ${regions.length} regiões · ${int(totEst)} estudantes` },
     { label: 'Estudantes atendidos', value: int(totAt), note: `${br((totAt / totEst) * 100)} por 100 matriculados` },
-    { label: 'Espera até o acolhimento', value: `${br(med.esp, 0)} dias`, note: `mediana nacional · de ${Math.min(...esps)} a ${Math.max(...esps)} dias` },
+    { label: 'Espera até o acolhimento', value: `${br(med.esp, 0)} dias`, note: `média nacional · de ${Math.min(...esps)} a ${Math.max(...esps)} dias` },
     { label: 'Relatórios mensais em dia', value: `${Math.round((relOk / relN) * 100)}%`, note: `${relOk} de ${relN} entre agosto e outubro` },
     { label: 'Equipes completas', value: `${full} de ${neds.length}`, note: 'frente ao regulamento do NED', warn: full < neds.length / 2 + 1 },
   ];
@@ -80,15 +80,17 @@ export function NedView({ institutionId, semester }: { institutionId?: string; s
   const sorted = [...list].sort(sortKey === 'att' ? byAttention : (a, b) => { const m = METRICS.find((x) => x.k === sortKey)!; return m.up ? a[m.k] - b[m.k] : b[m.k] - a[m.k]; });
   const f = neds.find((n) => n.key === (sel ?? alerts[0]?.n.key)) ?? neds[0];
   const fPrev = prev?.neds.find((n) => n.key === f.key);
-  const demMed = DEM.map((_, i) => median(neds.map((n) => n.dem[i])));
-  const strengths = METRICS.filter((m) => f.g[m.k] === 1).map((m) => `${m.label}: ${m.f(f[m.k])} (mediana ${m.f(med[m.k])})`);
-  const weak = METRICS.filter((m) => f.g[m.k] === -1).map((m) => `${m.label}: ${m.f(f[m.k])} (mediana ${m.f(med[m.k])})`);
+  const TABLE_METRICS = METRICS.filter((m) => m.k !== 'ges');
+  const demMed = DEM.map((_, i) => mean(neds.map((n) => n.dem[i])));
+  const strengths = METRICS.filter((m) => f.g[m.k] === 1).map((m) => `${m.label}: ${m.f(f[m.k])} (média ${m.f(med[m.k])})`);
+  const weak = METRICS.filter((m) => f.g[m.k] === -1).map((m) => `${m.label}: ${m.f(f[m.k])} (média ${m.f(med[m.k])})`);
   ROLES.forEach((r, i) => { if (f.eq[i] < f.need[i]) weak.push(`${r}: ${f.eq[i]} de ${f.need[i]} previstos no regulamento`); });
   const topDem = DEM.map((d, i) => ({ d, v: f.dem[i], diff: f.dem[i] - demMed[i] })).sort((a, b) => b.diff - a.diff)[0];
   const fPlans = (plans.data ?? []).filter((p) => p.ned_key === f.key);
 
   // Scatter
   const maxA = Math.max(...neds.map((n) => n.alc)) * 1.15, maxH = Math.max(...neds.map((n) => n.hor)) * 1.15;
+  const maxEsp = Math.max(1, ...neds.map((n) => n.esp));
   const SX = (h: number) => 60 + (h / maxH) * 600, SY = (a: number) => 360 - (a / maxA) * 320;
 
   // Best practices
@@ -139,14 +141,14 @@ export function NedView({ institutionId, semester }: { institutionId?: string; s
       )}
 
       <Sheet id="s1" open={fs} setOpen={setFs} label="Painel dos NEDs" className="space-y-4">
-        <H2 title="Painel dos NEDs" sub="Cada célula compara o NED com a mediana nacional. Toque no título de uma coluna para ordenar (o que pede mais atenção aparece primeiro) e em uma linha para abrir a ficha do NED." />
+        <H2 title="Painel dos NEDs" sub="Cada célula compara o NED com a média nacional. Toque no título de uma coluna para ordenar (o que pede mais atenção aparece primeiro) e em uma linha para abrir a ficha do NED." />
         <div className="flex w-fit rounded-full bg-muted p-1">{['todas', ...regions].map((r) => <button key={r} type="button" onClick={() => setRegion(r)} className={pill(region === r)}>{r === 'todas' ? 'Todas' : r}</button>)}</div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] border-separate border-spacing-1 text-sm">
             <thead>
               <tr>
                 <th className="text-left text-xs font-medium text-muted-foreground">NED<button type="button" onClick={() => setSortKey('att')} className={`ml-2 rounded-full px-2 py-0.5 text-[11px] ${sortKey === 'att' ? 'bg-accent text-primary' : 'hover:bg-muted'}`}>Mais pontos de atenção</button></th>
-                {METRICS.map((m) => (
+                {TABLE_METRICS.map((m) => (
                   <th key={m.k} title={m.tip} className="align-bottom">
                     <button type="button" onClick={() => setSortKey(m.k)} className={`w-full rounded-lg px-1.5 py-1 text-left ${sortKey === m.k ? 'bg-accent text-primary' : 'hover:bg-muted'}`}>
                       <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">{m.pillar}</span><span className="text-xs font-semibold">{m.label}</span>
@@ -161,16 +163,16 @@ export function NedView({ institutionId, semester }: { institutionId?: string; s
                   <td className={`rounded-lg border-2 px-2 py-1.5 ${f.key === n.key ? 'border-primary bg-accent/40' : 'border-transparent'}`}>
                     <p className="font-semibold">{n.nome} · {n.uf}</p><p className={`text-xs ${n.bad >= 3 ? 'text-destructive' : 'text-muted-foreground'}`}>{n.bad ? `${n.bad} ${n.bad === 1 ? 'ponto' : 'pontos'} de atenção` : 'Sem pontos de atenção'}</p>
                   </td>
-                  {METRICS.map((m) => <td key={m.k} title={`${n.nome} · ${m.label}: ${m.f(n[m.k])} (mediana ${m.f(med[m.k])})`} className={`rounded-lg text-center font-semibold tabular-nums ${CELL[String(n.g[m.k]) as '1' | '0' | '-1']}`}>{m.f(n[m.k])}</td>)}
+                  {TABLE_METRICS.map((m) => <td key={m.k} title={`${n.nome} · ${m.label}: ${m.f(n[m.k])} (média ${m.f(med[m.k])})`} className={`rounded-lg text-center font-semibold tabular-nums ${CELL[String(n.g[m.k]) as '1' | '0' | '-1']}`}>{m.f(n[m.k])}</td>)}
                 </tr>
               ))}
-              <tr><td className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Mediana nacional</td>{METRICS.map((m) => <td key={m.k} className="rounded-lg border border-dashed text-center text-xs tabular-nums">{m.f(med[m.k])}</td>)}</tr>
+              <tr><td className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Média nacional</td>{TABLE_METRICS.map((m) => <td key={m.k} className="rounded-lg border border-dashed text-center text-xs tabular-nums">{m.f(med[m.k])}</td>)}</tr>
             </tbody>
           </table>
         </div>
         <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5"><i className="h-3 w-4 rounded bg-primary/15" />Melhor que a mediana</span>
-          <span className="flex items-center gap-1.5"><i className="h-3 w-4 rounded bg-muted/60" />Perto da mediana</span>
+          <span className="flex items-center gap-1.5"><i className="h-3 w-4 rounded bg-primary/15" />Melhor que a média</span>
+          <span className="flex items-center gap-1.5"><i className="h-3 w-4 rounded bg-muted/60" />Perto da média</span>
           <span className="flex items-center gap-1.5"><i className="h-3 w-4 rounded bg-destructive/10" />Pede atenção</span>
         </div>
       </Sheet>
@@ -196,13 +198,13 @@ export function NedView({ institutionId, semester }: { institutionId?: string; s
                       <p className="text-xs text-muted-foreground">{m.label}</p>
                       <p className={`text-xl font-semibold tabular-nums ${f.g[m.k] === -1 ? 'text-destructive' : ''}`}>{m.f(f[m.k])}</p>
                       {d != null && Math.abs(d) > 0.05 && <p className={`text-[11px] ${better ? 'text-primary' : 'text-destructive'}`}>{d > 0 ? '+' : '−'}{m.f(Math.abs(d))} vs {prevSem}</p>}
-                      <p className="text-[11px] text-muted-foreground">mediana nacional: {m.f(med[m.k])}</p>
+                      <p className="text-[11px] text-muted-foreground">média nacional: {m.f(med[m.k])}</p>
                     </div>
                   );
                 })}
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2 rounded-2xl bg-primary/5 p-4"><p className="font-semibold text-primary">Pontos fortes</p>{strengths.length ? strengths.map((t) => <p key={t} className="flex gap-2 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{t}</p>) : <p className="text-sm text-muted-foreground">Nenhum indicador acima da mediana.</p>}</div>
+                <div className="space-y-2 rounded-2xl bg-primary/5 p-4"><p className="font-semibold text-primary">Pontos fortes</p>{strengths.length ? strengths.map((t) => <p key={t} className="flex gap-2 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{t}</p>) : <p className="text-sm text-muted-foreground">Nenhum indicador acima da média.</p>}</div>
                 <div className="space-y-2 rounded-2xl bg-destructive/5 p-4"><p className="font-semibold text-destructive">Pontos de atenção</p>{weak.length ? weak.map((t) => <p key={t} className="flex gap-2 text-sm"><span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-destructive/15 text-[10px] font-bold text-destructive">!</span>{t}</p>) : <p className="text-sm text-muted-foreground">Sem pontos de atenção.</p>}</div>
               </div>
             </>
@@ -241,9 +243,9 @@ export function NedView({ institutionId, semester }: { institutionId?: string; s
                     <span className="text-right font-semibold tabular-nums">{f.dem[i]}%</span>
                   </div>
                 ))}
-                <p className="text-xs text-muted-foreground">traço = mediana nacional</p>
+                <p className="text-xs text-muted-foreground">traço = média nacional</p>
               </div>
-              <div className="rounded-2xl bg-accent/60 p-4 text-sm"><p className="mb-1 text-xs font-semibold text-primary">Leitura</p>{topDem.diff > 1 ? `${topDem.d} pesa mais aqui (${topDem.v}%) do que na mediana nacional (${Math.round(demMed[DEM.indexOf(topDem.d)])}%).` : 'As demandas seguem o padrão nacional.'}</div>
+              <div className="rounded-2xl bg-accent/60 p-4 text-sm"><p className="mb-1 text-xs font-semibold text-primary">Leitura</p>{topDem.diff > 1 ? `${topDem.d} pesa mais aqui (${topDem.v}%) do que na média nacional (${Math.round(demMed[DEM.indexOf(topDem.d)])}%).` : 'As demandas seguem o padrão nacional.'}</div>
             </div>
           )}
 
@@ -258,23 +260,28 @@ export function NedView({ institutionId, semester }: { institutionId?: string; s
       <Sheet id="s3" open={fs} setOpen={setFs} label="Procura x tamanho da equipe" className="space-y-4">
         <H2 title="Procura x tamanho da equipe" sub="Quantos estudantes cada NED atende e quantas horas de equipe tem, ambos por 100 estudantes matriculados. Ajuda a decidir onde reforçar equipe ou redistribuir apoio. Toque em um NED para abrir a ficha." />
         <svg viewBox="0 0 700 400" className="w-full" role="img" aria-label="Procura por equipe">
-          <line x1={SX(med.hor)} x2={SX(med.hor)} y1={30} y2={360} className="stroke-muted-foreground/50" strokeDasharray="5 5" />
-          <line x1={60} x2={680} y1={SY(med.alc)} y2={SY(med.alc)} className="stroke-muted-foreground/50" strokeDasharray="5 5" />
-          {[[70, 45, 'start', 'Muita procura, pouca equipe'], [670, 45, 'end', 'Muita procura, equipe forte'], [70, 350, 'start', 'Pouca procura, pouca equipe'], [670, 350, 'end', 'Equipe com folga']].map(([x, y, a, l]) => <text key={l as string} x={x as number} y={y as number} textAnchor={a as any} className={`text-[12px] ${l === 'Muita procura, pouca equipe' ? 'fill-destructive' : 'fill-muted-foreground'}`}>{l}</text>)}
-          {neds.map((n) => (
+          {[2, 4, 6, 8, 10].filter((h) => h <= maxH).map((h) => <g key={h}><line x1={SX(h)} x2={SX(h)} y1={360} y2={365} className="stroke-border" /><text x={SX(h)} y={378} textAnchor="middle" className="fill-muted-foreground text-[10px]">{h} h</text></g>)}
+          <line x1={60} x2={680} y1={360} y2={360} className="stroke-border" />
+          <line x1={60} x2={60} y1={30} y2={360} className="stroke-border" />
+          <line x1={SX(med.hor)} x2={SX(med.hor)} y1={30} y2={360} className="stroke-muted-foreground/25" strokeDasharray="3 4" />
+          <line x1={60} x2={680} y1={SY(med.alc)} y2={SY(med.alc)} className="stroke-muted-foreground/25" strokeDasharray="3 4" />
+          {[[70, 45, 'start', 'Muita procura, pouca equipe'], [670, 45, 'end', 'Muita procura, equipe forte'], [70, 350, 'start', 'Pouca procura, pouca equipe'], [670, 350, 'end', 'Equipe com folga']].map(([x, y, a, l]) => <text key={l as string} x={x as number} y={y as number} textAnchor={a as any} className={`text-[10px] ${l === 'Muita procura, pouca equipe' ? 'fill-destructive' : 'fill-muted-foreground'}`}>{l}</text>)}
+          {neds.map((n) => { const r = 6 + (n.esp / maxEsp) * 10, sel = f.key === n.key; return (
             <g key={n.key} onClick={() => openNed(n.key)} className="cursor-pointer">
               <title>{`${n.nome}: ${br(n.alc)} atendidos e ${br(n.hor)} h por 100 · espera ${n.esp} dias · ${quadrant(n.alc, n.hor, med.alc, med.hor)}`}</title>
-              <circle cx={SX(n.hor)} cy={SY(n.alc)} r={8 + Math.sqrt(n.est) / 8} className={n.esp > 7 ? 'fill-destructive/60' : 'fill-primary/60'} stroke={f.key === n.key ? 'hsl(var(--foreground))' : 'hsl(var(--card))'} strokeWidth={2} />
-              <text x={SX(n.hor)} y={SY(n.alc) - 14 - Math.sqrt(n.est) / 8} textAnchor="middle" className="fill-foreground text-[12px] font-medium">{n.nome}</text>
+              {sel && <circle cx={SX(n.hor)} cy={SY(n.alc)} r={r + 4} fill="none" stroke="hsl(var(--foreground))" strokeWidth={1.5} />}
+              <circle cx={SX(n.hor)} cy={SY(n.alc)} r={r} className={n.esp > 7 ? 'fill-destructive' : 'fill-primary'} fillOpacity={0.55} />
+              <text x={SX(n.hor) + r + 8} y={SY(n.alc) + 4} className={`fill-foreground text-[11px] ${sel ? 'font-semibold' : ''}`}>{n.nome}</text>
             </g>
-          ))}
-          <text x={60} y={392} className="fill-muted-foreground text-[11px]">Horas de equipe por semana, por 100 estudantes →</text>
-          <text x={64} y={22} className="fill-muted-foreground text-[11px]">↑ Estudantes atendidos por 100</text>
+          ); })}
+          <text x={680} y={396} textAnchor="end" className="fill-muted-foreground text-[10px]">Horas de equipe por semana, por 100 estudantes</text>
+          <text x={60} y={20} className="fill-muted-foreground text-[10px]">Estudantes atendidos por 100</text>
         </svg>
         <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded-full bg-primary/60" />Espera até 7 dias</span>
           <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded-full bg-destructive/60" />Espera acima de 7 dias</span>
-          <span className="flex items-center gap-1.5"><i className="w-5 border-t border-dashed border-muted-foreground" />Medianas nacionais</span>
+          <span className="flex items-center gap-1.5"><i className="w-5 border-t border-dashed border-muted-foreground" />Médias nacionais</span>
+          <span>Tamanho do círculo = dias de espera</span>
         </div>
       </Sheet>
 
@@ -313,7 +320,7 @@ export function NedView({ institutionId, semester }: { institutionId?: string; s
                   <span className="text-right tabular-nums">{bpMetric.f(c[bp.k])}</span>
                 </div>
               )) : <p className="text-sm text-muted-foreground">Nenhum outro NED com esse perfil agora.</p>}
-              <p className="text-[11px] text-muted-foreground">traço = mediana nacional · toque no nome para abrir a ficha</p>
+              <p className="text-[11px] text-muted-foreground">traço = média nacional · toque no nome para abrir a ficha</p>
             </div>
             <div className="flex flex-wrap items-center gap-3"><Button variant="outline" onClick={() => openNed(origin.key)}>Ver ficha de {origin.nome}</Button><p className="text-xs text-muted-foreground">Leitura descritiva: o resultado pode ter outras causas além da prática.</p></div>
           </div>
