@@ -127,7 +127,6 @@ export default function PermanenceRadar() {
           </div>
         </div>
         <div className="ml-auto flex items-center gap-3">
-          {mode === 'form' && <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Salvo neste dispositivo</span>}
           <Sheet open={navOpen} onOpenChange={setNavOpen}>
             <SheetTrigger asChild><Button variant="outline" size="sm" className="lg:hidden"><Menu className="mr-2 h-4 w-4" />Seu percurso</Button></SheetTrigger>
             <SheetContent side="left" className="w-80 overflow-y-auto pt-10">{nav}</SheetContent>
