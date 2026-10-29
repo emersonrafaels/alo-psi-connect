@@ -37,6 +37,8 @@ export default function GroupSessions() {
   
   const { data: nextAvailable, isLoading: isLoadingNext } = useNextAvailableMonth();
 
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+
   // Initialize selected month with intelligent detection
   useEffect(() => {
     if (nextAvailable && !selectedMonth) {
