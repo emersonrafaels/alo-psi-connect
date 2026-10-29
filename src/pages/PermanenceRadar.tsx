@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
-import { buildTenantPath } from '@/utils/tenantHelpers';
+import { buildTenantPath, getTenantSlugFromPath } from '@/utils/tenantHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { MODULES, currentSemester, isAnswered, isVisible, progress, toggleMulti, type Answers } from '@/features/permanence/instrument';
@@ -36,7 +36,7 @@ export default function PermanenceRadar() {
   // Usuários vinculados a instituição acessam o radar apenas pelo Portal Institucional (Comparador).
   useEffect(() => {
     if (!loading && user && !institutionAdminLoading && isInstitutionAdmin) {
-      navigate(buildTenantPath(location.pathname.split('/')[1] === 'medcos' ? 'medcos' : '', '/portal-institucional/comparador'), { replace: true });
+      navigate(buildTenantPath(getTenantSlugFromPath(location.pathname), '/portal-institucional/comparador'), { replace: true });
     }
   }, [loading, user, institutionAdminLoading, isInstitutionAdmin, navigate]);
 
