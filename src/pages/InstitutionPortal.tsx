@@ -1,3 +1,4 @@
+import { usePortalFreshData } from '@/features/institution/usePortalFreshData';
 import { useState, useEffect } from 'react';
 import { LogoLoader } from '@/components/ui/logo-loader';
 import { DemoDataBadge } from '@/components/institutional/DemoDataBadge';
