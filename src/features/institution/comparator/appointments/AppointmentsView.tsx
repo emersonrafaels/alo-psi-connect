@@ -120,7 +120,7 @@ export function AppointmentsView({ institutionId, semester, unitFilter }: { inst
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-primary">Psicologia, psiquiatria, mentoria e núcleos</p>
+        <div className="flex flex-wrap items-center gap-2"><p className="text-xs font-semibold uppercase tracking-wider text-primary">Psicologia, psiquiatria, mentoria e núcleos</p><span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">Dados demonstrativos</span></div>
         <h1 className="text-[34px] font-semibold leading-tight tracking-tight">A oferta de cuidado acompanha a procura?</h1>
         <p className="max-w-[62ch] text-muted-foreground">Horas, espera e comparecimento por serviço e por núcleo em {sem}. Nenhum conteúdo de consulta aparece aqui.</p>
       </section>

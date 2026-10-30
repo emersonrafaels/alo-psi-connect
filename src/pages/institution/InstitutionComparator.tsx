@@ -1,3 +1,4 @@
+import { usePortalFreshData } from '@/features/institution/usePortalFreshData';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -116,6 +117,7 @@ const TrendPill = ({ inst, delta, unavailable }: { inst: Instrument; delta: numb
 };
 
 export default function InstitutionComparator() {
+  usePortalFreshData();
   const { tenant } = useTenant();
   const [unitFilter, setUnitFilter] = useState('all');
   const [mapScale, setMapScale] = useState<string>('WHO5');

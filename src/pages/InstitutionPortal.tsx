@@ -1,3 +1,4 @@
+import { usePortalFreshData } from '@/features/institution/usePortalFreshData';
 import { useState, useEffect } from 'react';
 import { LogoLoader } from '@/components/ui/logo-loader';
 import { DemoDataBadge } from '@/components/institutional/DemoDataBadge';
@@ -54,6 +55,7 @@ import { useAllowedBuddyStudents } from '@/hooks/useInstitutionBuddyAccess';
 import { Brain } from 'lucide-react';
 
 export default function InstitutionPortal() {
+  usePortalFreshData();
   const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
   const { tenant } = useTenant();
   const [searchParams, setSearchParams] = useSearchParams();

@@ -1,3 +1,4 @@
+import { usePortalFreshData } from '@/features/institution/usePortalFreshData';
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ClipboardList, LayoutDashboard, ListChecks, BarChart3, Clock, PanelLeft, Flame, Users } from 'lucide-react';
@@ -21,6 +22,7 @@ const SECTIONS: { id: TriageView; tab?: string; label: string; hint: string; ico
 ];
 
 export default function InstitutionTriage() {
+  usePortalFreshData();
   const { tenant } = useTenant();
   const { userInstitutions, isLoading } = useInstitutionAccess();
   const inst = userInstitutions[0] as any;
