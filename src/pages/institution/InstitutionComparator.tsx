@@ -116,6 +116,7 @@ const TrendPill = ({ inst, delta, unavailable }: { inst: Instrument; delta: numb
 };
 
 export default function InstitutionComparator() {
+  usePortalFreshData();
   const { tenant } = useTenant();
   const [unitFilter, setUnitFilter] = useState('all');
   const [mapScale, setMapScale] = useState<string>('WHO5');

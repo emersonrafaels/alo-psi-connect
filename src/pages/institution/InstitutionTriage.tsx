@@ -21,6 +21,7 @@ const SECTIONS: { id: TriageView; tab?: string; label: string; hint: string; ico
 ];
 
 export default function InstitutionTriage() {
+  usePortalFreshData();
   const { tenant } = useTenant();
   const { userInstitutions, isLoading } = useInstitutionAccess();
   const inst = userInstitutions[0] as any;

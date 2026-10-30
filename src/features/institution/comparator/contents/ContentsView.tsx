@@ -124,7 +124,7 @@ export function ContentsView({ institutionId, semester, unitFilter }: { institut
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-primary">Conteúdos, trilhas, práticas e encontros</p>
+        <div className="flex flex-wrap items-center gap-2"><p className="text-xs font-semibold uppercase tracking-wider text-primary">Conteúdos, trilhas, práticas e encontros</p><span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">Dados demonstrativos</span></div>
         <h1 className="text-[34px] font-semibold leading-tight tracking-tight">O que os estudantes procuram para se cuidar</h1>
         <p className="max-w-[66ch] text-muted-foreground">Uso do catálogo em {sem}: o que existe, o que é aberto, o que vai até o fim e o que as pessoas dizem que ajudou. Contamos pessoas e acessos, nunca listas de quem participou.</p>
       </section>

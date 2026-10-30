@@ -54,6 +54,7 @@ import { useAllowedBuddyStudents } from '@/hooks/useInstitutionBuddyAccess';
 import { Brain } from 'lucide-react';
 
 export default function InstitutionPortal() {
+  usePortalFreshData();
   const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
   const { tenant } = useTenant();
   const [searchParams, setSearchParams] = useSearchParams();
