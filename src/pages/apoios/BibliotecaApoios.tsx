@@ -29,6 +29,8 @@ import {
   X,
 } from "lucide-react";
 import buddySvg from "@/assets/buddy-purple.svg";
+import buddyApoio from "@/assets/buddy_apoio.png";
+import "./BibliotecaApoios.css";
 import { SupportCard } from "@/features/apoios/SupportCard";
 import { SupportIcon } from "@/features/apoios/SupportIcon";
 import { isKnownRoute } from "@/features/apoios/knownRoutes";
@@ -177,40 +179,49 @@ const BibliotecaApoios = () => {
           </Button>
         )}
         {/* Hero */}
-        <section className="rounded-3xl border bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-6 md:p-10">
-          <Badge variant="secondary" className="mb-4">
+        <section className="support-library-hero">
+          <div className="support-library-hero-copy">
+          <Badge variant="secondary" className="support-library-hero-badge">
             <Sparkles className="h-3.5 w-3.5 mr-1" /> Novo na Rede Bem-Estar
           </Badge>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight max-w-2xl">
+          <h1>
             Biblioteca de Apoios
           </h1>
-          <p className="mt-3 text-muted-foreground max-w-2xl">
+          <p className="support-library-hero-description">
             Todos os apoios disponíveis para você em um só lugar: os cuidados oferecidos pela
             plataforma e os apoios{" "}
             {hasInstitution ? `da ${institutionName}` : "da sua instituição, quando houver vínculo"}.
             Escolha o que faz sentido agora e monte o seu plano de apoio.
           </p>
 
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 max-w-2xl">
+          <div className="support-library-hero-search">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar apoio: ansiedade, moradia, carreira..."
-                className="pl-9 h-11 bg-background"
+                className="h-12 rounded-xl border-0 bg-transparent pl-9 shadow-none focus-visible:ring-inset"
                 aria-label="Buscar apoio"
               />
             </div>
-            <Button size="lg" onClick={() => { setQuizOpen(true); setQuizStep(0); setQuizAnswers({}); }}>
+            <Button size="lg" className="h-12 shrink-0 rounded-xl px-5" onClick={() => { setQuizOpen(true); setQuizStep(0); setQuizAnswers({}); }}>
               <Wand2 className="h-4 w-4 mr-2" /> Encontrar meu apoio
             </Button>
           </div>
 
-          <p className="mt-4 text-xs text-muted-foreground flex items-center gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5" />
+          <p className="support-library-hero-privacy">
+            <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
             Seus favoritos, histórico e plano são privados. A instituição não vê o que você acessa.
           </p>
+          </div>
+          <div className="support-library-hero-art">
+          <img
+            src={buddyApoio}
+            alt="Buddy, companheiro de apoio"
+            className="support-library-hero-buddy"
+          />
+          </div>
         </section>
 
         {/* Buddy */}

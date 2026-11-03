@@ -955,7 +955,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
 
           {/* Tab: Em Andamento */}
           <TabsContent value="em_andamento">
-            <Card>
+            <Card className="triage-worklist">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
                   <Play className="h-5 w-5" />
@@ -977,8 +977,8 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
                     t.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500';
 
                     return (
-                      <div key={t.id} className={`p-4 border-l-4 ${priorityBorder} hover:bg-muted/30 transition-colors`}>
-                          <div className="flex items-start justify-between gap-4">
+                      <div key={t.id} className={`p-5 sm:p-6 border-l-4 ${priorityBorder} hover:bg-muted/30 transition-colors`}>
+                          <div className="flex flex-wrap items-start justify-between gap-4">
                             <div className="space-y-2 flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
                               <button type="button" onClick={() => handleOpenActivityByPatientId(t.patient_id)} className="font-semibold text-base text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{patientNameMap.get(t.patient_id) || 'Aluno'}</button>
@@ -1030,7 +1030,7 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
 
           {/* Tab: Concluídos */}
           <TabsContent value="concluidos">
-            <Card>
+            <Card className="triage-worklist">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
@@ -1062,8 +1062,8 @@ export function StudentTriageTab({ institutionId, view, initialRisk, initialTab,
 
                 <div className="divide-y">
                     {filteredResolvedTriages.slice(0, visibleCount).map((t) =>
-                  <div key={t.id} className="p-4 hover:bg-muted/30 transition-colors">
-                        <div className="flex items-center justify-between gap-4">
+                  <div key={t.id} className="p-5 sm:p-6 hover:bg-muted/30 transition-colors">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
                           <div className="space-y-1 flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <button type="button" onClick={() => handleOpenActivityByPatientId(t.patient_id)} className="font-semibold text-base text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-left">{patientNameMap.get(t.patient_id) || 'Aluno'}</button>
