@@ -1,3 +1,4 @@
+import '../triageWorklist.css';
 import { useState, type ReactNode } from 'react';
 import { CARE_LABELS, careStatus, TEXT_SIGNAL_LABEL, triageActionLabel } from '@/features/triage/signalRules';
 import { Activity, AlertTriangle, BookOpen, Brain, CheckCircle2, ChevronDown, History, MessageSquare, Moon, Search, SearchX, X, Zap } from 'lucide-react';
@@ -93,7 +94,7 @@ export function PendingQueue(props: PendingQueueProps) {
   const filtered = search.trim() !== '';
 
   return (
-    <div className="rounded-xl border bg-card shadow-sm">
+    <div className="triage-worklist triage-pending rounded-xl border bg-card">
       {/* Header + controls */}
       <div className="space-y-4 border-b px-5 py-4">
         <div>
@@ -145,7 +146,7 @@ export function PendingQueue(props: PendingQueueProps) {
       {students.length > 0 && (
         <>
           {/* Column header (desktop) */}
-          <div className={`sticky top-14 z-[5] hidden items-center gap-x-5 border-b border-l-4 border-l-transparent bg-card/95 px-5 py-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground backdrop-blur lg:grid ${GRID}`}>
+          <div className={`sticky top-14 z-[5] hidden items-center gap-x-5 border-b border-l-4 border-l-transparent bg-card/95 px-5 py-2 text-xs font-medium text-muted-foreground backdrop-blur lg:grid ${GRID}`}>
             <Checkbox
               checked={allSelected ? true : selectedIds.size > 0 ? 'indeterminate' : false}
               onCheckedChange={props.onToggleSelectAll}
@@ -160,7 +161,7 @@ export function PendingQueue(props: PendingQueueProps) {
             ))}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button type="button" className="inline-flex items-center gap-0.5 uppercase tracking-wider hover:text-foreground">
+                <button type="button" className="inline-flex items-center gap-0.5 hover:text-foreground">
                   Evolução <ChevronDown className="h-3 w-3" />
                 </button>
               </DropdownMenuTrigger>
@@ -265,7 +266,7 @@ function PendingRow({ student, name, periodDays, classAverages, trendMetric, sel
 
   return (
     <li
-      className={`grid grid-cols-[auto_1fr_auto] gap-x-3 gap-y-3 border-l-4 px-5 py-4 transition-colors ${meta.border} ${GRID} lg:items-center lg:gap-x-5 ${selected ? 'bg-primary/5' : 'hover:bg-muted/40'}`}
+      className={`triage-pending-row grid grid-cols-[auto_1fr_auto] gap-x-3 gap-y-3 border-l-4 px-5 py-4 transition-colors ${meta.border} ${GRID} lg:items-center lg:gap-x-5 ${selected ? 'bg-primary/5' : 'hover:bg-muted/40'}`}
     >
       <Checkbox checked={selected} onCheckedChange={onToggleSelect} aria-label={`Selecionar ${name}`} className="mt-1 lg:mt-0" />
 
@@ -310,7 +311,7 @@ function PendingRow({ student, name, periodDays, classAverages, trendMetric, sel
       </div>
 
       {/* Actions */}
-      <div className="flex items-start justify-end gap-1 lg:order-last lg:items-center">
+      <div className="triage-pending-actions flex flex-wrap items-start justify-end gap-1 lg:order-last lg:items-center">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onOpenHistory} aria-label="Ver histórico">

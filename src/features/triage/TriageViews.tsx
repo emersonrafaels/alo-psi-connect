@@ -1,8 +1,9 @@
+import './triageWorklist.css';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { triageActionLabel } from '@/features/triage/signalRules';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, CheckCircle2, ChevronRight, Clock, MessageSquareWarning, UserX, ArrowRight } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Eye, Heart, HelpCircle, CheckCircle2, ChevronRight, Clock, MessageSquareWarning, UserX, ArrowRight, History, CalendarDays, ListOrdered } from 'lucide-react';
 import type { Risk, PriorityItem, PriorityInput, TriageAction } from './priorities';
 
 export const RISK_META: Record<Risk, { label: string; icon: typeof AlertTriangle; dot: string; ring: string; hint: string }> = {
@@ -127,25 +128,35 @@ export function TriagePriorities<T extends PriorityInput>(props: {
     return <Card><CardContent className="flex items-center gap-3 p-6 text-sm"><CheckCircle2 className="h-5 w-5 text-primary" />Nenhum aluno com sinais prioritários agora.</CardContent></Card>;
   }
   return (
-    <Card>
-      <CardContent className="divide-y p-0">
+    <Card className="triage-worklist triage-priorities">
+      <CardHeader className="triage-list-heading">
+        <div className="triage-heading-icon"><ListOrdered className="h-5 w-5" aria-hidden="true" /></div>
+        <CardTitle className="text-base">Ordem de atendimento</CardTitle>
+        <Badge variant="secondary" className="ml-auto tabular-nums">{props.items.length}</Badge>
+      </CardHeader>
+      <CardContent className="p-0">
+        <ol className="divide-y">
         {props.items.map((p, i) => {
           const m = RISK_META[p.student.riskLevel];
           return (
-            <div key={p.student.patientId} className="flex flex-wrap items-center gap-4 p-4">
-              <span className="w-6 text-center text-sm font-bold text-muted-foreground">{i + 1}</span>
-              <span className={`h-2.5 w-2.5 rounded-full ${m.dot}`} />
-              <div className="min-w-0 flex-1">
-                <button type="button" onClick={() => props.onHistory(p.student)} className="font-semibold text-primary hover:underline">{props.nameOf(p.student.patientId)}</button>
-                <span className="ml-2 text-xs text-muted-foreground">{m.label}</span>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {p.reasons.map((r) => <Badge key={r} variant="outline" className="font-normal">{r}</Badge>)}
-                </div>
+            <li key={p.student.patientId} className="triage-worklist-row triage-priority-row">
+              <span className="triage-rank" aria-label={`Prioridade ${i + 1}`}>{String(i + 1).padStart(2, '0')}</span>
+
+              <div className="triage-worklist-identity">
+                <button type="button" onClick={() => props.onHistory(p.student)} className="triage-student-link">{props.nameOf(p.student.patientId)}</button>
+                <span className="triage-risk-label"><span className={`h-2 w-2 rounded-full ${m.dot}`} />{m.label}</span>
+                <ul className="triage-priority-reasons">
+                  {p.reasons.map((r) => <li key={r}>{r}</li>)}
+                </ul>
               </div>
-              <Button size="sm" onClick={() => props.onTriage(p.student)}>{triageActionLabel((p.student as { lastTriageId?: string | null }).lastTriageId)}</Button>
-            </div>
+              <div className="triage-priority-actions">
+                <Button size="sm" className="triage-primary-action" onClick={() => props.onTriage(p.student)}>{triageActionLabel((p.student as { lastTriageId?: string | null }).lastTriageId)}<ArrowRight className="ml-2 h-3.5 w-3.5" aria-hidden="true" /></Button>
+                <Button size="sm" variant="ghost" onClick={() => props.onHistory(p.student)}><History className="mr-2 h-3.5 w-3.5" aria-hidden="true" />Histórico</Button>
+              </div>
+            </li>
           );
         })}
+        </ol>
       </CardContent>
     </Card>
   );
@@ -166,34 +177,39 @@ export function TriageFollowUps(props: {
 
   const Row = ({ r }: { r: FollowUpRow }) => {
     const d = days(r.followUpDate);
+    const date = new Date(r.followUpDate + (r.followUpDate.length === 10 ? 'T00:00:00' : ''));
     return (
-      <div className="flex flex-wrap items-center gap-4 p-4">
-        <div className="min-w-0 flex-1">
+      <li className="triage-worklist-row triage-followup-row">
+        <time className="triage-calendar-date" dateTime={r.followUpDate}>
+          <span>{date.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</span>
+          <strong>{date.getDate()}</strong>
+        </time>
+        <div className="triage-worklist-identity">
           <p className="font-semibold">{props.nameOf(r.patientId)}</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="triage-due-label">
             {d < 0 ? <span className="font-medium text-destructive">Vencido há {-d} dia{-d > 1 ? 's' : ''}</span> : d === 0 ? 'Vence hoje' : `Vence em ${d} dia${d > 1 ? 's' : ''}`}
-            {r.action ? ` · ${r.action}` : ''}
           </p>
+          {r.action && <p className="triage-followup-note">{r.action}</p>}
         </div>
-        <Button size="sm" variant="outline" onClick={() => props.onContact(r.patientId)}>Registrar contato</Button>
-        <Button size="sm" onClick={() => props.onResolve(r.id)}>Resolver</Button>
-      </div>
+        <div className="triage-row-actions"><Button size="sm" variant="outline" onClick={() => props.onContact(r.patientId)}>Registrar contato</Button>
+        <Button size="sm" onClick={() => props.onResolve(r.id)}>Resolver</Button></div>
+      </li>
     );
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-lg">Vencidos <Badge variant="destructive" className="ml-1">{overdue.length}</Badge></CardTitle></CardHeader>
-        <CardContent className="divide-y p-0">
-          {overdue.length ? overdue.map((r) => <Row key={r.id} r={r} />) : <p className="p-4 text-sm text-muted-foreground">Nenhum follow-up vencido.</p>}
-        </CardContent>
+    <div className="triage-followup-board">
+      <Card className="triage-worklist triage-followup-section">
+        <CardHeader className="triage-list-heading"><div className="triage-heading-icon"><Clock className="h-5 w-5" aria-hidden="true" /></div><CardTitle className="text-base">Vencidos</CardTitle><Badge variant="outline" className="ml-auto tabular-nums">{overdue.length}</Badge></CardHeader>
+        <CardContent className="p-0"><ul className="divide-y">
+          {overdue.length ? overdue.map((r) => <Row key={r.id} r={r} />) : <li className="flex items-center gap-3 p-6 text-sm text-muted-foreground"><CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden="true" />Nenhum follow-up vencido.</li>}
+        </ul></CardContent>
       </Card>
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-lg">Próximos 7 dias <Badge variant="secondary" className="ml-1">{upcoming.length}</Badge></CardTitle></CardHeader>
-        <CardContent className="divide-y p-0">
-          {upcoming.length ? upcoming.map((r) => <Row key={r.id} r={r} />) : <p className="p-4 text-sm text-muted-foreground">Nenhum follow-up nos próximos dias.</p>}
-        </CardContent>
+      <Card className="triage-worklist triage-followup-section">
+        <CardHeader className="triage-list-heading"><div className="triage-heading-icon"><CalendarDays className="h-5 w-5" aria-hidden="true" /></div><CardTitle className="text-base">Próximos 7 dias</CardTitle><Badge variant="secondary" className="ml-auto tabular-nums">{upcoming.length}</Badge></CardHeader>
+        <CardContent className="p-0"><ul className="divide-y">
+          {upcoming.length ? upcoming.map((r) => <Row key={r.id} r={r} />) : <li className="flex items-center gap-3 p-6 text-sm text-muted-foreground"><CalendarDays className="h-5 w-5 shrink-0" aria-hidden="true" />Nenhum follow-up nos próximos dias.</li>}
+        </ul></CardContent>
       </Card>
     </div>
   );

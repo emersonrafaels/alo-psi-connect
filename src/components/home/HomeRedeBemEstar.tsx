@@ -1,3 +1,4 @@
+import CareNetworkExplorer from "./CareNetworkExplorer";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import "./HomeRedeBemEstar.css";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +16,7 @@ import {
   Heart, Clock, Users, Brain, EyeOff, Bot, BookOpen, Sparkles,
   ClipboardCheck, LineChart, LayoutDashboard, FileText, Stethoscope,
   CalendarDays, AlertTriangle, Building2, Moon, UserSearch,
-  ArrowRight, TrendingUp, HeartHandshake, Smartphone, CheckCircle2,
+  ArrowRight, TrendingUp, HeartHandshake,
   MessageCircle, ShieldCheck, Bell, Activity, Eye, Battery,
   Zap, Quote,
 } from "lucide-react";
@@ -51,7 +52,7 @@ const HomeRedeBemEstar = () => {
   useEffect(() => {
     const page = pageRef.current;
     if (!page || !('IntersectionObserver' in window)) return;
-    const cards = page.querySelectorAll<HTMLElement>('.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel');
+    const cards = page.querySelectorAll<HTMLElement>('.rbe-ame-card, .rbe-chat-card, .rbe-diary-card');
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (!entry.isIntersecting) return;
@@ -72,7 +73,7 @@ const HomeRedeBemEstar = () => {
   const moveCardLight = (event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (!(event.target instanceof Element)) return;
-    const card = event.target.closest<HTMLElement>('.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel');
+    const card = event.target.closest<HTMLElement>('.rbe-ame-card, .rbe-chat-card, .rbe-diary-card');
     if (!card) return;
     const bounds = card.getBoundingClientRect();
     card.style.setProperty('--light-x', ((event.clientX - bounds.left) / bounds.width * 100) + '%');
@@ -469,40 +470,7 @@ const HomeRedeBemEstar = () => {
               Um ecossistema conectado para uma experiência universitária mais saudável.</p>
           </div>
 
-          <div className="rbe-services-grid">
-            {[
-              {
-                Icon: Heart, color: "var(--rbe-brand-purple)", textOnIcon: "#fff",
-                title: "Cuidado individual",
-                items: ["Atendimentos psicológicos", "Atendimentos psiquiátricos", "Encaminhamento para suporte adequado", "Acolhimento com olhar humano e especializado"],
-              },
-              {
-                Icon: Smartphone, color: "var(--rbe-brand-pink)", textOnIcon: "#fff",
-                title: "Ferramentas para o aluno",
-                items: ["Diário Emocional", "Buddy, companheiro digital de acompanhamento", "Check-ins de humor, energia e ansiedade", "Ferramentas de autorregulação", "Trilhas e conteúdos de bem-estar", "Escalas e testes de acompanhamento emocional", "Agenda Solidária"],
-              },
-              {
-                Icon: Users, color: "var(--rbe-brand-mint)", textOnIcon: "var(--rbe-primary)",
-                title: "Experiências coletivas",
-                items: ["Grupos temáticos", "Rodas de conversa", "Workshops", "Palestras e ações de conscientização", "Ativações em campus e programas especiais"],
-              },
-              {
-                Icon: Building2, color: "var(--rbe-brand-purple)", textOnIcon: "#fff",
-                title: "Soluções para instituições",
-                items: ["Dashboard com dados agregados e anônimos", "Diário Emocional com visão institucional", "ISEU-RBE, índice semestral de equilíbrio universitário", "Relatórios estratégicos e reuniões de acompanhamento", "Personalização white-label", "Apoio à permanência, clima institucional e prevenção"],
-              },
-            ].map(col => (
-              <article key={col.title} className="rbe-service-panel">
-                <div className="rbe-service-heading">
-                  <div className="rbe-service-icon" style={{ background: col.color, color: col.textOnIcon }}><col.Icon className="w-6 h-6" aria-hidden="true" /></div>
-                  <h3>{col.title}</h3>
-                </div>
-                <ul>{col.items.map(item => (
-                  <li key={item}><CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" /><span>{item}</span></li>
-                ))}</ul>
-              </article>
-            ))}
-          </div>
+          <CareNetworkExplorer />
 {/* Sub-seção Metodologia AME */}
 <div
   className="

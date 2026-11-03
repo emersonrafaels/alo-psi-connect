@@ -43,16 +43,35 @@
 .rbe-home-page .rbe-services-intro { display: flex; align-items: start; gap: 1.25rem; max-width: 48rem; margin: 1.75rem auto 3.5rem; text-align: left; color: var(--rbe-on-surface-variant); }
 .rbe-home-page .rbe-services-intro > svg { color: var(--rbe-primary); margin-top: .25rem; }
 .rbe-home-page .rbe-services-intro p { font-size: 1rem; line-height: 1.8; }
-.rbe-home-page .rbe-services-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; text-align: left; }
-.rbe-home-page .rbe-service-panel { min-width: 0; padding: clamp(1.5rem, 3vw, 2.5rem); border-radius: 1.5rem; border: 1px solid var(--rbe-outline-variant); background: var(--rbe-surface-container-lowest); }
-.rbe-home-page .rbe-service-heading { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.75rem; }
-.rbe-home-page .rbe-service-icon { width: 3.25rem; height: 3.25rem; display: grid; place-items: center; flex-shrink: 0; border-radius: 1rem; }
-.rbe-home-page .rbe-service-heading h3 { font-size: clamp(1.1rem, 2vw, 1.4rem); font-weight: 750; color: var(--rbe-primary); letter-spacing: -.035em; }
-.rbe-home-page .rbe-service-panel ul { display: grid; gap: .9rem; }
-.rbe-home-page .rbe-service-panel li { display: flex; align-items: start; gap: .75rem; font-size: .875rem; line-height: 1.6; color: var(--rbe-on-surface-variant); }
-.rbe-home-page .rbe-service-panel li svg { color: var(--rbe-primary); margin-top: .2rem; }
-.rbe-home-page .rbe-service-panel:nth-child(3) { background: color-mix(in srgb, var(--rbe-tertiary-fixed) 35%, var(--rbe-surface-container-lowest)); }
-.rbe-home-page .rbe-service-panel:nth-child(4) { background: var(--rbe-primary-fixed); border-color: transparent; }
+.rbe-home-page .rbe-care-explorer { display: grid; grid-template-columns: minmax(260px, .85fr) minmax(0, 1.5fr); text-align: left; border-block: 1px solid var(--rbe-outline-variant); }
+.rbe-home-page .rbe-care-nav { display: flex; flex-direction: column; padding: 1.5rem 2rem 1.5rem 0; }
+.rbe-home-page .rbe-care-tab { display: flex; align-items: center; gap: 1rem; min-height: 88px; padding: 1rem; text-align: left; color: var(--rbe-on-surface-variant); border-left: 3px solid transparent; font-size: 1rem; font-weight: 600; }
+.rbe-home-page .rbe-care-tab[data-state=active] { border-left-color: var(--rbe-primary); color: var(--rbe-primary); background: color-mix(in srgb, var(--rbe-primary-fixed) 45%, transparent); }
+.rbe-home-page .rbe-care-tab:hover { color: var(--rbe-primary); background: color-mix(in srgb, var(--rbe-primary-fixed) 25%, transparent); }
+.rbe-home-page .rbe-care-tab-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; }
+.rbe-home-page .rbe-care-arrow { margin-left: auto; flex-shrink: 0; opacity: 0; }
+.rbe-home-page .rbe-care-tab[data-state=active] .rbe-care-arrow { opacity: 1; }
+.rbe-home-page .rbe-care-stage { min-width: 0; background: color-mix(in srgb, var(--rbe-primary-fixed) 32%, var(--rbe-surface-container-lowest)); }
+.rbe-home-page .rbe-care-content { position: relative; overflow: hidden; min-height: 430px; padding: clamp(1.5rem, 4vw, 3.5rem); }
+.rbe-home-page .rbe-care-content[data-state=inactive] { display: none; }
+.rbe-home-page .rbe-care-content h3 { position: relative; margin-bottom: 1.75rem; color: var(--rbe-primary); font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 750; letter-spacing: -.035em; line-height: 1.15; }
+.rbe-home-page .rbe-care-content ul { position: relative; display: grid; gap: 1rem; }
+.rbe-home-page .rbe-care-content li { display: flex; align-items: start; gap: .875rem; color: var(--rbe-on-surface-variant); font-size: .95rem; line-height: 1.6; }
+.rbe-home-page .rbe-care-content li svg { flex-shrink: 0; margin-top: .2rem; color: var(--rbe-primary); }
+.rbe-home-page .rbe-care-watermark { position: absolute; bottom: -2rem; right: -2rem; width: 17rem; height: 17rem; color: var(--rbe-primary); opacity: .045; pointer-events: none; }
+.rbe-home-page .rbe-care-tab:focus-visible, .rbe-home-page .rbe-care-content:focus-visible { outline: 3px solid var(--rbe-primary); outline-offset: -3px; }
+@media (prefers-reduced-motion: no-preference) {
+  .rbe-home-page .rbe-care-tab { transition: background 180ms ease, color 180ms ease; }
+  .rbe-home-page .rbe-care-content[data-state=active] { animation: rbe-care-change 220ms ease; }
+  @keyframes rbe-care-change { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
+}
+@media (max-width: 767px) {
+  .rbe-home-page .rbe-care-explorer { grid-template-columns: 1fr; }
+  .rbe-home-page .rbe-care-nav { padding: .75rem 0; }
+  .rbe-home-page .rbe-care-tab { min-height: 60px; padding: .5rem .75rem; font-size: .9rem; }
+  .rbe-home-page .rbe-care-tab-icon { width: 36px; height: 36px; }
+  .rbe-home-page .rbe-care-content { min-height: 390px; }
+}
 @media (max-width: 767px) {
   .rbe-home-page .rbe-section-heading { flex-direction: column; align-items: start; gap: 1.25rem; }
   .rbe-home-page .rbe-section-heading h2 { max-width: none; }
@@ -64,16 +83,15 @@
   .rbe-home-page .rbe-ame-description { margin-bottom: 1.5rem; }
 }
 @media (max-width: 639px) {
-  .rbe-home-page .rbe-services-grid { grid-template-columns: 1fr; }
   .rbe-home-page .rbe-chat-heading { margin-bottom: 1.5rem; }
 }
 
 /* Pointer-following light stays behind the content and never captures input. */
-.rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel) {
+.rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card) {
   position: relative;
   isolation: isolate;
 }
-.rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel)::after {
+.rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card)::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -84,15 +102,14 @@
   background: radial-gradient(320px circle at var(--light-x, 50%) var(--light-y, 35%), color-mix(in srgb, var(--pillar-accent, var(--rbe-brand-mint)) 24%, transparent), transparent 75%);
 }
 @media (prefers-reduced-motion: no-preference) {
-  .rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel) {
+  .rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card) {
     transition: translate 450ms cubic-bezier(.2,.75,.25,1), box-shadow 450ms ease, border-color 450ms ease;
   }
-  .rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel)::after { transition: opacity 400ms ease; }
-  .rbe-home-page :is(.rbe-ame-letter, .rbe-service-icon, .rbe-ame-tools svg) { transition: transform 500ms cubic-bezier(.2,.75,.25,1); }
+  .rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card)::after { transition: opacity 400ms ease; }
+  .rbe-home-page :is(.rbe-ame-letter, .rbe-ame-tools svg) { transition: transform 500ms cubic-bezier(.2,.75,.25,1); }
   .rbe-home-page .rbe-reveal { opacity: 0; transform: translateY(28px) scale(.98); }
   .rbe-home-page .rbe-reveal.rbe-in-view { animation: rbe-card-arrive 800ms cubic-bezier(.16,1,.3,1) both; }
   .rbe-home-page .rbe-ame-card:nth-child(2),
-  .rbe-home-page .rbe-service-panel:nth-child(even),
   .rbe-home-page .rbe-diary-card { animation-delay: 100ms; }
   .rbe-home-page .rbe-ame-card:nth-child(3) { animation-delay: 200ms; }
   .rbe-home-page .rbe-in-view .rbe-diary-preview path { stroke-dasharray: 1; animation: rbe-diary-draw 2s ease .4s both; }
@@ -102,14 +119,13 @@
   }
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel):hover {
+  .rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card):hover {
     translate: 0 -7px;
     box-shadow: 0 24px 48px -30px color-mix(in srgb, var(--rbe-primary) 45%, transparent);
     border-color: color-mix(in srgb, var(--rbe-primary) 40%, var(--rbe-outline-variant));
   }
-  .rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card, .rbe-service-panel):hover::after { opacity: 1; }
+  .rbe-home-page :is(.rbe-ame-card, .rbe-chat-card, .rbe-diary-card):hover::after { opacity: 1; }
   .rbe-home-page .rbe-ame-card:hover .rbe-ame-letter { transform: translateX(6px) rotate(-5deg); }
-  .rbe-home-page .rbe-service-panel:hover .rbe-service-icon { transform: rotate(-8deg) scale(1.08); }
   .rbe-home-page .rbe-ame-card:hover .rbe-ame-tools svg { transform: translateX(3px); }
 }
 @keyframes rbe-card-arrive {

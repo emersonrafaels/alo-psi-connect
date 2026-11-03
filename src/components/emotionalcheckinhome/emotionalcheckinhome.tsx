@@ -18,28 +18,39 @@ import {
 } from "lucide-react";
 
 import buddyImg from "@/assets/buddy/buddy-sketch.png";
+import buddyRefletir from "@/assets/buddy_refletir.png";
+import buddyPerceberPadroes from "@/assets/buddy_perceber_padroes.png";
+import buddyCuidarDeSi from "@/assets/buddy_cuidar_de_si.png";
 
 const STEPS = [
   {
     label: "Registrar", icon: Pencil,
+    image: buddyImg,
+    imageAlt: "Buddy registrando emoções no Diário Emocional",
     title: ["Conte como você", "está se sentindo hoje."],
     description: "Registre suas emoções e os momentos que marcaram seu dia. Em poucos cliques, você cria o hábito de olhar para si com mais atenção e gentileza.",
     benefits: [{ icon: Lock, label: "Privado" }, { icon: Zap, label: "Rápido" }, { icon: Heart, label: "Acolhedor" }],
   },
   {
     label: "Refletir", icon: MessageCircle,
+    image: buddyRefletir,
+    imageAlt: "Buddy refletindo sobre as emoções",
     title: ["Entenda o que está por trás", "do que você sente."],
     description: "Escreva ou grave um áudio sobre o seu dia. O Buddy ajuda você a dar nome às emoções e a perceber o que mexeu com você.",
     benefits: [{ icon: Mic, label: "Escrita ou áudio" }, { icon: Heart, label: "Sem julgamentos" }, { icon: Clock, label: "No seu tempo" }],
   },
   {
     label: "Perceber padrões", icon: BarChart3,
+    image: buddyPerceberPadroes,
+    imageAlt: "Buddy percebendo padrões de bem-estar",
     title: ["Veja como seus dias", "se conectam."],
     description: "Acompanhe a evolução do humor, do sono, da energia e da ansiedade em gráficos simples e descubra o que costuma influenciar seu bem-estar.",
     benefits: [{ icon: BarChart3, label: "Gráficos claros" }, { icon: TrendingUp, label: "Tendências" }, { icon: Sparkles, label: "Descobertas" }],
   },
   {
     label: "Cuidar de si", icon: Heart,
+    image: buddyCuidarDeSi,
+    imageAlt: "Buddy cuidando de si",
     title: ["Transforme o que você", "percebeu em cuidado."],
     description: "Receba sugestões de práticas, encontros e apoios que combinam com o seu momento, e conte com profissionais quando precisar.",
     benefits: [{ icon: Leaf, label: "Práticas guiadas" }, { icon: LifeBuoy, label: "Apoios" }, { icon: Users, label: "Acompanhamento" }],
@@ -96,21 +107,27 @@ export default function EmotionalCheckinHome() { const navigate = useNavigate();
           <div className="emotional-home__card">
             <div className="emotional-home__card-glow" />
 
-            <div className="emotional-home__content emotional-home__fade" key={activeStep}>
+            {STEPS.map((step, index) => (
+            <div
+              className={`emotional-home__content${index === activeStep ? " emotional-home__fade" : ""}`}
+              key={step.label}
+              style={{ visibility: index === activeStep ? "visible" : "hidden" }}
+              aria-hidden={index !== activeStep}
+            >
               <span className="emotional-home__eyebrow">
-                PASSO {activeStep + 1} · {current.label.toUpperCase()}
+                PASSO {index + 1} · {step.label.toUpperCase()}
               </span>
 
               <h3 className="emotional-home__card-title">
-                {current.title[0]}
+                {step.title[0]}
                 <br />
-                {current.title[1]}
+                {step.title[1]}
               </h3>
 
-              <p className="emotional-home__description">{current.description}</p>
+              <p className="emotional-home__description">{step.description}</p>
 
               <div className="emotional-home__benefits">
-                {current.benefits.map(({ icon: BIcon, label }) => (
+                {step.benefits.map(({ icon: BIcon, label }) => (
                   <div className="emotional-home__benefit" key={label}>
                     <BIcon size={17} />
                     <span>{label}</span>
@@ -118,6 +135,7 @@ export default function EmotionalCheckinHome() { const navigate = useNavigate();
                 ))}
               </div>
             </div>
+            ))}
 
             {/* elementos decorativos */}
             <div className="emotional-home__floating emotional-home__floating--smile">
@@ -141,8 +159,8 @@ export default function EmotionalCheckinHome() { const navigate = useNavigate();
             {/* Buddy */}
             <div className="emotional-home__buddy">
               <img
-                src={buddyImg}
-                alt="Buddy registrando emoções no Diário Emocional"
+                src={current.image}
+                alt={current.imageAlt}
               />
             </div>
           </div>
@@ -394,7 +412,7 @@ export default function EmotionalCheckinHome() { const navigate = useNavigate();
 
           overflow: hidden;
 
-          display: flex;
+          display: grid;
           align-items: center;
 
           padding: 44px 48px;
@@ -486,6 +504,7 @@ export default function EmotionalCheckinHome() { const navigate = useNavigate();
         .emotional-home__content {
           position: relative;
           z-index: 3;
+          grid-area: 1 / 1;
 
           width: 48%;
         }
@@ -900,6 +919,7 @@ export default function EmotionalCheckinHome() { const navigate = useNavigate();
 
           .emotional-home__buddy {
             width: 315px;
+            max-width: 100%;
           }
 
           .emotional-home__cta {
