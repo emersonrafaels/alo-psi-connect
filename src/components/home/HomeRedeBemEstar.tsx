@@ -1,3 +1,4 @@
+import { buddyWhatsAppUrl } from "@/utils/buddyWhatsApp";
 import CareNetworkExplorer from "./CareNetworkExplorer";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import "./HomeRedeBemEstar.css";
@@ -35,10 +36,7 @@ interface FeaturedProfessional {
   foto_perfil_url: string | null;
 }
 
-const WHATSAPP_NUMBER = "5511937074332";
-const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-  "Olá! Quero conhecer a Rede Bem-Estar."
-)}`;
+const WHATSAPP_URL = buddyWhatsAppUrl();
 
 const HomeRedeBemEstar = () => {
   const navigate = useNavigate();
