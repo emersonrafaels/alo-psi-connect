@@ -17,6 +17,8 @@ import { buildTenantPath, getTenantSlugFromPath } from '@/utils/tenantHelpers';
 import { currentSemester } from '@/features/permanence/instrument';
 import { buildPendingActions, daysSince } from '@/features/student-home/pendingActions';
 import { cn } from '@/lib/utils';
+import { useUserType } from '@/hooks/useUserType';
+import ProfessionalHome from '@/features/professional-home/ProfessionalHome';
 
 const db = supabase as any;
 const TOUR_KEY = (uid: string) => `student-home-tour-v1:${uid}`;
@@ -38,12 +40,13 @@ export default function StudentHome() {
   const p = (path: string) => buildTenantPath(slug, path);
   const { hasRole: isInstAdmin, loading: roleLoading } = useUserRole('institution_admin');
   const [tourStep, setTourStep] = useState(-1);
+  const { isProfessional, loading: proLoading } = useUserType();
 
   useEffect(() => { if (!loading && !user) navigate(p('/auth')); }, [loading, user]); // eslint-disable-line
   useEffect(() => { if (!roleLoading && isInstAdmin) navigate(p('/portal-institucional'), { replace: true }); }, [roleLoading, isInstAdmin]); // eslint-disable-line
 
   const q = useQuery({
-    queryKey: ['student-home', user?.id], enabled: !!user,
+    queryKey: ['student-home', user?.id], enabled: !!user && !proLoading && !isProfessional,
     queryFn: async () => {
       const uid = user!.id;
       const since = format(subDays(new Date(), 13), 'yyyy-MM-dd');
@@ -74,7 +77,7 @@ export default function StudentHome() {
   });
 
   const d = q.data;
-  useEffect(() => { if (d?.tipo && d.tipo !== 'paciente') navigate(p('/'), { replace: true }); }, [d?.tipo]); // eslint-disable-line
+  useEffect(() => { if (!isProfessional && d?.tipo && d.tipo !== 'paciente') navigate(p('/'), { replace: true }); }, [d?.tipo]); // eslint-disable-line
   const derived = useMemo(() => {
     if (!d) return null;
     const now = new Date();
@@ -113,7 +116,7 @@ export default function StudentHome() {
   }, [d, user?.id]);
 
   useEffect(() => {
-    if (user && derived && !localStorage.getItem(TOUR_KEY(user.id))) setTimeout(() => setTourStep(0), 600);
+    if (!isProfessional && user && derived && !localStorage.getItem(TOUR_KEY(user.id))) setTimeout(() => setTourStep(0), 600);
   }, [user?.id, !!derived]); // eslint-disable-line
   const endTour = () => { setTourStep(-1); if (user) localStorage.setItem(TOUR_KEY(user.id), '1'); };
 
@@ -123,6 +126,7 @@ export default function StudentHome() {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl space-y-6">
+        {isProfessional && user ? <ProfessionalHome userId={user.id} p={p} /> : <>
         <section data-tour="sh-header" className="rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-accent/10 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <p className="text-sm text-muted-foreground capitalize">{format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
@@ -250,10 +254,11 @@ export default function StudentHome() {
             </Card>
           </div>
         </>)}
+        </>}
       </main>
       <Footer />
-      <TourOverlay show={tourStep >= 0} currentStep={Math.max(0, tourStep)} totalSteps={TOUR.length} stepData={TOUR[tourStep]}
-        onNext={() => (tourStep >= TOUR.length - 1 ? endTour() : setTourStep(tourStep + 1))} onPrev={() => setTourStep(Math.max(0, tourStep - 1))} onSkip={endTour} />
+      {!isProfessional && <TourOverlay show={tourStep >= 0} currentStep={Math.max(0, tourStep)} totalSteps={TOUR.length} stepData={TOUR[tourStep]}
+        onNext={() => (tourStep >= TOUR.length - 1 ? endTour() : setTourStep(tourStep + 1))} onPrev={() => setTourStep(Math.max(0, tourStep - 1))} onSkip={endTour} />}
     </div>
   );
 }
