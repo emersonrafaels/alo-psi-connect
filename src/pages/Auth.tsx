@@ -56,7 +56,7 @@ const Auth = () => {
         const booking = JSON.parse(pendingBooking)
         navigate(booking.returnTo || buildTenantPath(tenantSlug, '/confirmacao-agendamento'), { replace: true })
       } else {
-        navigate(buildTenantPath(tenantSlug, '/'))
+        navigate(buildTenantPath(tenantSlug, '/meu-espaco'))
       }
       return;
     }
@@ -196,7 +196,7 @@ const Auth = () => {
         const booking = JSON.parse(pendingBooking)
         navigate(booking.returnTo || buildTenantPath(tenantSlug, '/confirmacao-agendamento'), { replace: true })
       } else {
-        navigate(buildTenantPath(tenantSlug, '/'))
+        navigate(buildTenantPath(tenantSlug, '/meu-espaco'))
       }
     } catch (error: any) {
       // Fallback para outros tipos de erro
