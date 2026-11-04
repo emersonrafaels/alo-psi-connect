@@ -61,19 +61,20 @@ export default function StudentHome() {
         db.rpc('list_my_message_threads'),
         db.from('group_sessions').select('id, title, session_date, start_time, session_type').gte('session_date', today).eq('status', 'scheduled').order('session_date').limit(4),
         db.from('blog_posts').select('title, slug, published_at').eq('status', 'published').order('published_at', { ascending: false }).limit(3),
-        db.from('profiles').select('nome').eq('user_id', uid).maybeSingle(),
+        db.from('profiles').select('nome, tipo_usuario').eq('user_id', uid).maybeSingle(),
       ]);
       return {
         mood: mood.data ?? [], diaryDates: (lastMood.data ?? []).map((r: any) => r.date as string),
         journeyAt: journey.data?.[0]?.created_at ?? null, practiceAt: practice.data?.[0]?.created_at ?? null,
         scales: scales.data ?? [], scaleResp: scaleResp.data ?? [], radar: radar.data ?? [],
         regs: regs.data ?? [], appts: appts.data ?? [], threads: Array.isArray(threads.data) ? threads.data : [],
-        sessions: sessions.data ?? [], posts: posts.data ?? [], name: prof.data?.nome as string | undefined,
+        sessions: sessions.data ?? [], posts: posts.data ?? [], name: prof.data?.nome as string | undefined, tipo: prof.data?.tipo_usuario as string | undefined,
       };
     },
   });
 
   const d = q.data;
+  useEffect(() => { if (d?.tipo && d.tipo !== 'paciente') navigate(p('/'), { replace: true }); }, [d?.tipo]); // eslint-disable-line
   const derived = useMemo(() => {
     if (!d) return null;
     const now = new Date();
