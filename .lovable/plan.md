@@ -9,7 +9,7 @@ Hoje os registros fictícios da Afya param em 27/out. O plano estende as histór
 - **Radar de Permanência e escalas:** não mudam (são coletas de semestre, não diárias).
 
 ## O que fica protegido
-- Os 6 casos de estudo com login (Caso A e demais) **não** são tocados.
+- Os 6 casos de estudo com login (Caso A e demais) **também recebem** os 7 dias novos, seguindo a história de cada caso (A/B/C e os derivados), sem mudar login, senha ou registros antigos.
 - Nenhum email, WhatsApp ou notificação é enviado.
 - Os nomes seguem anonimizados como "Aluno #N" no portal.
 
