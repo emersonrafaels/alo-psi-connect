@@ -161,7 +161,7 @@ const Header = () => {
                   <div className="text-xs text-muted-foreground truncate">{user.email}</div>
                 </div>
                   <DropdownMenuSeparator />
-                {profile?.tipo_usuario === 'paciente' && !isInstitutionAdmin && (
+                {(profile?.tipo_usuario === 'paciente' || isProfessional) && !isInstitutionAdmin && (
                   <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/meu-espaco'))}>
                     <LayoutDashboard className="h-4 w-4 mr-2" />
                     Meu espaço
@@ -329,7 +329,7 @@ const Header = () => {
                     <Users className="h-5 w-5 opacity-70" />
                     {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
                   </Link>
-                  {profile?.tipo_usuario === 'paciente' && !isInstitutionAdmin && (
+                  {(profile?.tipo_usuario === 'paciente' || isProfessional) && !isInstitutionAdmin && (
                     <Link
                       to={buildTenantPath(tenantSlug, '/meu-espaco')}
                       className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
