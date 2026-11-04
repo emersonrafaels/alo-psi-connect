@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList, HeartPulse, Compass, HeartHandshake } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, Calendar, Shield, Briefcase, FileText, Stethoscope, Heart, Building2, Users, ClipboardList, HeartPulse, Compass, HeartHandshake, LayoutDashboard } from "lucide-react"
 import { GlobalCacheButton } from "@/components/ui/global-cache-button"
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
@@ -161,6 +161,12 @@ const Header = () => {
                   <div className="text-xs text-muted-foreground truncate">{user.email}</div>
                 </div>
                   <DropdownMenuSeparator />
+                {profile?.tipo_usuario === 'paciente' && !isInstitutionAdmin && (
+                  <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/meu-espaco'))}>
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Meu espaço
+                  </DropdownMenuItem>
+                )}
                 {isInstitutionAdmin && !institutionAdminLoading ? (
                   <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/portal-institucional'))}>
                     <Building2 className="h-4 w-4 mr-2" />
@@ -323,6 +329,16 @@ const Header = () => {
                     <Users className="h-5 w-5 opacity-70" />
                     {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
                   </Link>
+                  {profile?.tipo_usuario === 'paciente' && !isInstitutionAdmin && (
+                    <Link
+                      to={buildTenantPath(tenantSlug, '/meu-espaco')}
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <LayoutDashboard className="h-5 w-5 opacity-70" />
+                      Meu espaço
+                    </Link>
+                  )}
                   <Link
                     to={buildTenantPath(tenantSlug, '/minhas-emocoes')}
                     className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
