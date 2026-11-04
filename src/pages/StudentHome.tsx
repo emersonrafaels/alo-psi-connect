@@ -17,6 +17,7 @@ import { buildTenantPath, getTenantSlugFromPath } from '@/utils/tenantHelpers';
 import { currentSemester } from '@/features/permanence/instrument';
 import { buildPendingActions, daysSince } from '@/features/student-home/pendingActions';
 import { cn } from '@/lib/utils';
+import { buddyWhatsAppUrl } from '@/utils/buddyWhatsApp';
 import { useUserType } from '@/hooks/useUserType';
 import ProfessionalHome from '@/features/professional-home/ProfessionalHome';
 
@@ -247,7 +248,8 @@ export default function StudentHome() {
             <Card>
               <CardHeader className="pb-3"><CardTitle className="text-lg">Atalhos</CardTitle></CardHeader>
               <CardContent className="grid grid-cols-2 gap-2">
-                {[{ l: 'Buddy', i: Bot, to: '/buddy' }, { l: 'Apoios', i: Leaf, to: '/biblioteca-apoios' }, { l: 'Práticas', i: Sparkles, to: '/praticas' }, { l: 'Minhas emoções', i: HeartPulse, to: '/minhas-emocoes' }].map(({ l, i: I, to }) => (
+                <a href={buddyWhatsAppUrl('Olá, Buddy!')} target="_blank" rel="noopener noreferrer" className="rounded-lg border p-3 flex flex-col items-center gap-2 text-sm hover:bg-muted/50"><Bot className="h-5 w-5 text-primary" />Buddy</a>
+                {[{ l: 'Apoios', i: Leaf, to: '/biblioteca-apoios' }, { l: 'Práticas', i: Sparkles, to: '/praticas' }, { l: 'Minhas emoções', i: HeartPulse, to: '/minhas-emocoes' }].map(({ l, i: I, to }) => (
                   <Link key={l} to={p(to)} className="rounded-lg border p-3 flex flex-col items-center gap-2 text-sm hover:bg-muted/50"><I className="h-5 w-5 text-primary" />{l}</Link>
                 ))}
               </CardContent>
