@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
