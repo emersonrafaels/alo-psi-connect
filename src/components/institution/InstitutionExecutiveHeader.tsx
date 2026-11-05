@@ -588,7 +588,7 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage, 
         onAction={handleAction}
       />
 
-      <SupportRequestsCard institutionId={institutionId} messagesPath={buildTenantPath(tenant?.slug ?? '', '/mensagens')} />
+      <SupportRequestsCard institutionId={institutionId} messagesPath={buildTenantPath(tenant?.slug ?? '', '/portal-institucional/mensagens')} />
 
       <Card id="buddy-brief" className="border-primary/20 bg-gradient-to-br from-primary/[0.03] to-transparent">
         <CardHeader className="pb-3">
