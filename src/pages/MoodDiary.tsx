@@ -11,11 +11,10 @@ import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Calendar, Plus, TrendingUp, Heart, BarChart3, Share2, Mail, Download, Settings, Shield, ExternalLink, ChevronDown, ChevronRight, Sparkles, MessageCircle } from 'lucide-react';
+import { Calendar, Plus, TrendingUp, BarChart3, Share2, Mail, Download, Settings, ExternalLink, ChevronRight, Sparkles, MessageCircle, CheckCircle2, Pencil, Flame, ArrowUpRight, ArrowDownRight, Minus, BookHeart, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { shareWhatsApp, shareTelegram, shareEmail, copyToClipboard } from '@/utils/shareHelpers';
 import { useShareConfig } from '@/hooks/useShareConfig';
@@ -25,6 +24,7 @@ import { getTodayLocalDateString, parseISODateLocal } from '@/lib/utils';
 import { calculateAverage, getEmotionValue, getAllEmotions } from '@/utils/emotionFormatters';
 import { MoodEntryDetailModal } from '@/components/mood/MoodEntryDetailModal';
 import type { MoodEntry } from '@/hooks/useMoodEntries';
+import { currentStreak, lastSevenDays, averageOf, compareTrend, shiftDate } from '@/features/mood-diary/home/diaryStats';
 
 const MoodDiary = () => {
   const navigate = useNavigate();
@@ -161,9 +161,15 @@ const MoodDiary = () => {
 
   const today = getTodayLocalDateString();
   const todayEntry = entries.find(entry => entry.date === today);
-  
+  const slug = tenant?.slug || 'alopsi';
+  const go = (path: string) => navigate(buildTenantPath(slug, path));
+
   const recentEntries = entries.slice(0, 7);
-  
+  const entryDates = entries.map(e => e.date);
+  const streak = currentStreak(entryDates, today);
+  const week = lastSevenDays(entryDates, today);
+  const weekCount = week.filter(d => d.filled).length;
+
   // Legacy field mapping for backward compatibility
   const legacyFieldMap: Record<string, string> = {
     mood: 'mood_score',
@@ -172,368 +178,323 @@ const MoodDiary = () => {
   };
   const selectedConfig = activeConfigs.find(c => c.emotion_type === selectedStatEmotion);
   const selectedScaleMax = selectedConfig?.scale_max || 5;
-  const selectedDisplayName = selectedConfig?.display_name || 'Humor';
-  const avgSelected = calculateAverage(
-    recentEntries.map(entry => getEmotionValue(entry, selectedStatEmotion, legacyFieldMap[selectedStatEmotion] as any))
-  );
+  const valueFor = (entry: MoodEntry) =>
+    getEmotionValue(entry, selectedStatEmotion, legacyFieldMap[selectedStatEmotion] as any) as number | null;
+  const weekStart = shiftDate(today, -6);
+  const prevStart = shiftDate(today, -13);
+  const thisWeekEntries = entries.filter(e => e.date >= weekStart && e.date <= today);
+  const prevWeekEntries = entries.filter(e => e.date >= prevStart && e.date < weekStart);
+  const avgSelected = averageOf(thisWeekEntries.map(valueFor));
+  const avgPrevious = averageOf(prevWeekEntries.map(valueFor));
+  const trend = compareTrend(avgSelected, avgPrevious);
+  const sparkValues = week.map(d => {
+    const e = entries.find(x => x.date === d.date);
+    return e ? valueFor(e) : null;
+  });
+
+  const todayLabel = parseISODateLocal(today).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const todayAnalysis = todayEntry ? analysesMap?.get(todayEntry.id) : null;
+  const todayMeta = todayAnalysis?.risk_level ? RISK_LEVEL_META[todayAnalysis.risk_level] : null;
+
+  const openWhatsApp = () => {
+    const number = tenant?.diary_whatsapp_number || tenant?.contact_whatsapp || '5511937074332';
+    const message = tenant?.diary_whatsapp_message || 'Olá, quero registrar meu diário emocional';
+    window.open(`https://wa.me/${number.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const moodDot = (entry: MoodEntry) => {
+    const emotions = getAllEmotions(entry, userConfigs);
+    const mood = emotions.find(e => e.key === 'mood') || emotions[0];
+    if (!mood) return 'bg-muted';
+    return mood.value >= 4 ? 'bg-success' : mood.value >= 2.5 ? 'bg-chart-3' : 'bg-destructive';
+  };
+
+  const Sparkline = () => {
+    const pts = sparkValues
+      .map((v, i) => (v === null ? null : { x: (i / 6) * 100, y: 28 - ((v - 1) / Math.max(selectedScaleMax - 1, 1)) * 24 }))
+      .filter(Boolean) as { x: number; y: number }[];
+    if (pts.length < 2) return null;
+    return (
+      <svg viewBox="0 0 100 32" className="w-full h-10" preserveAspectRatio="none" aria-hidden>
+        <polyline points={pts.map(p => `${p.x},${p.y}`).join(' ')} fill="none" className="stroke-primary" strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />
+        {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="1.6" className="fill-primary" />)}
+      </svg>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <main className="container mx-auto px-4 py-8 pb-28 md:pb-8">
+        <div className="max-w-5xl mx-auto space-y-6">
           {/* Header */}
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold text-foreground">
-              Diário Emocional
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Acompanhe seu bem-estar emocional diariamente e descubra padrões que podem melhorar sua qualidade de vida.
-            </p>
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-primary capitalize">{todayLabel}</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground">Diário Emocional</h1>
+              <p className="text-muted-foreground">Um minuto por dia para entender como você está.</p>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" onClick={openWhatsApp}>
+                <MessageCircle className="h-4 w-4 mr-2" /> Pelo WhatsApp
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => go('/diario-emocional/configurar')}>
+                <Settings className="h-4 w-4 mr-2" /> Configurar emoções
+              </Button>
+            </div>
           </div>
 
-          {/* LGPD Notice */}
-          <Collapsible>
-            <Alert className="border-primary/30 bg-primary/5 dark:bg-primary/10 p-0">
-              <CollapsibleTrigger className="flex items-center gap-2 w-full text-left p-4 hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors rounded-lg">
-                <Shield className="h-4 w-4 text-primary flex-shrink-0" />
-                <span className="text-primary font-medium text-sm">
-                  Seus dados são protegidos
-                </span>
-                <ChevronRight className="h-4 w-4 ml-auto text-primary transition-transform [[data-state=open]>&]:rotate-90" />
-              </CollapsibleTrigger>
-              
-              <CollapsibleContent>
-                <AlertDescription className="text-muted-foreground px-4 pb-4 pt-0">
-                  <p className="mb-2">
-                    Em conformidade com a <strong>LGPD</strong>, seus dados do diário emocional são <strong>criptografados e protegidos</strong>. 
-                    Quando compartilhados com instituições parceiras, são sempre <strong>anonimizados e agregados</strong>, impossibilitando a identificação individual.
-                  </p>
-                  <p className="text-sm">
-                    Você tem total controle sobre seus dados e pode solicitar exclusão a qualquer momento.
-                  </p>
-                  <Link 
-                    to={buildTenantPath(tenant?.slug || 'alopsi', '/politica-privacidade')} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 hover:underline mt-2"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    Ver Política de Privacidade
-                  </Link>
-                </AlertDescription>
-              </CollapsibleContent>
-            </Alert>
-          </Collapsible>
+          {/* Today */}
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card overflow-hidden">
+            <CardContent className="p-6 md:p-8">
+              {todayEntry ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-success" />
+                    <h2 className="text-xl font-semibold">Seu dia já está registrado</h2>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {getAllEmotions(todayEntry, userConfigs).map(emotion => (
+                      <span key={emotion.key} className="rounded-full bg-background/80 border px-3 py-1 text-sm">
+                        <span className="text-muted-foreground">{emotion.name}</span>{' '}
+                        <strong>{Math.round(emotion.value)}</strong>
+                      </span>
+                    ))}
+                  </div>
+                  {todayEntry.journal_text && (
+                    <p className="text-sm text-muted-foreground italic line-clamp-2">"{todayEntry.journal_text}"</p>
+                  )}
+                  {todayMeta && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className={todayMeta.badgeClass}>
+                        {todayMeta.emoji} Análise Bem Estar: {todayMeta.label}
+                      </Badge>
+                      {todayAnalysis?.source === 'evolution_api' && (
+                        <Badge variant="outline" className="text-xs">via Diário Emocional - WhatsApp</Badge>
+                      )}
+                    </div>
+                  )}
+                  {todayAnalysis?.buddy_message && (
+                    <div className="flex gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
+                      <Sparkles className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-foreground italic">{todayAnalysis.buddy_message}</p>
+                    </div>
+                  )}
+                  <div className="flex gap-2 flex-wrap pt-1">
+                    <Button onClick={() => go(`/diario-emocional/nova-entrada?date=${today}`)}>
+                      <Pencil className="h-4 w-4 mr-2" /> Editar registro de hoje
+                    </Button>
+                    <Button variant="outline" onClick={() => go('/diario-emocional/analises')}>
+                      <BarChart3 className="h-4 w-4 mr-2" /> Ver análise
+                    </Button>
+                    <Button variant="ghost" onClick={() => go('/diario-emocional/nova-entrada')}>
+                      <Plus className="h-4 w-4 mr-2" /> Outra data
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col md:flex-row md:items-center gap-6">
+                  <div className="flex-1 space-y-2">
+                    <h2 className="text-2xl font-semibold">Como você está se sentindo hoje?</h2>
+                    <p className="text-muted-foreground">
+                      {streak > 0
+                        ? `Você está há ${streak} ${streak === 1 ? 'dia' : 'dias'} registrando. Continue a sequência!`
+                        : 'Registre seu dia e acompanhe sua evolução emocional.'}
+                    </p>
+                  </div>
+                  <Button size="lg" className="h-12 px-8 text-base" onClick={() => go('/diario-emocional/nova-entrada')}>
+                    <Plus className="h-5 w-5 mr-2" /> Registrar meu dia
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="border-primary/20 p-4">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="flex-1 min-w-0">
+          {/* Stats strip */}
+          <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto snap-x pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+            <Card className="min-w-[240px] snap-start">
+              <CardContent className="p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Sua semana</span>
+                  <span className="text-sm font-semibold">{weekCount}/7</span>
+                </div>
+                <div className="flex justify-between gap-1">
+                  {week.map(d => (
+                    <div key={d.date} className="flex flex-col items-center gap-1">
+                      <div className={`h-7 w-7 rounded-full border-2 ${d.filled ? 'bg-primary border-primary' : d.date === today ? 'border-primary border-dashed' : 'border-muted bg-muted/40'}`} />
+                      <span className="text-[10px] uppercase text-muted-foreground">
+                        {parseISODateLocal(d.date).toLocaleDateString('pt-BR', { weekday: 'narrow' })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-[200px] snap-start">
+              <CardContent className="p-5 flex items-center gap-4 h-full">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Flame className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <div className="text-3xl font-bold">{streak}</div>
+                  <p className="text-sm text-muted-foreground">{streak === 1 ? 'dia seguido' : 'dias seguidos'}</p>
+                  <p className="text-xs text-muted-foreground">{entries.length} registros no total</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-[240px] snap-start">
+              <CardContent className="p-5 space-y-2">
+                <div className="flex items-center justify-between gap-2">
                   <Select value={selectedStatEmotion} onValueChange={setSelectedStatEmotion}>
-                    <SelectTrigger className="h-auto w-auto inline-flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-full px-3 py-1 text-sm font-medium border-none shadow-none transition-colors focus:ring-1 focus:ring-primary/30 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-primary/60">
+                    <SelectTrigger className="h-auto w-auto inline-flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-full px-3 py-1 text-sm font-medium border-none shadow-none focus:ring-1 focus:ring-primary/30 [&>svg]:h-3 [&>svg]:w-3">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {activeConfigs.map(config => (
                         <SelectItem key={config.emotion_type} value={config.emotion_type}>
-                          {config.display_name} (7 dias)
+                          {config.display_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  <span className="text-xs text-muted-foreground">média 7 dias</span>
                 </div>
-                <Heart className="h-4 w-4 text-primary flex-shrink-0" />
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-xl font-semibold">
-                  {recentEntries.length > 0 ? `${Math.round(avgSelected)}/${selectedScaleMax}` : 'Sem dados'}
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold">{avgSelected === null ? 'N/A' : Math.round(avgSelected)}</span>
+                  {avgSelected !== null && <span className="text-muted-foreground">/{selectedScaleMax}</span>}
+                  {trend && (
+                    <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      {trend === 'up' ? <ArrowUpRight className="h-3.5 w-3.5" /> : trend === 'down' ? <ArrowDownRight className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
+                      {trend === 'up' ? 'subiu' : trend === 'down' ? 'caiu' : 'igual'} vs. semana anterior
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {recentEntries.length > 0 ? 'Baseado nas últimas entradas' : 'Adicione sua primeira entrada'}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-secondary/20 p-4">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Entradas</CardTitle>
-                <Calendar className="h-4 w-4 text-secondary" />
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-xl font-semibold">{entries.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  Entradas registradas no total
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-accent/20 p-4 md:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Esta Semana</CardTitle>
-                <TrendingUp className="h-4 w-4 text-accent" />
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-xl font-semibold">{recentEntries.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  Entradas nos últimos 7 dias
-                </p>
+                <Sparkline />
               </CardContent>
             </Card>
           </div>
 
-          {/* Today's Entry */}
+          {/* Recent entries */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Como você está se sentindo hoje?
-              </CardTitle>
-              <CardDescription>
-                {todayEntry 
-                  ? 'Você já registrou uma entrada hoje. Pode editá-la ou ver suas análises.'
-                  : 'Registre como foi seu dia hoje e acompanhe sua evolução emocional.'
-                }
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>Registros recentes</CardTitle>
+                <CardDescription>Toque em um registro para ver os detalhes</CardDescription>
+              </div>
+              {entries.length > 5 && (
+                <Button variant="ghost" size="sm" onClick={() => go('/diario-emocional/historico')}>
+                  Ver todos <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              )}
             </CardHeader>
-            <CardContent className="space-y-4">
-              {todayEntry ? (
-                <div className="p-4 bg-primary/5 rounded-lg space-y-2">
-                  <p className="text-sm text-muted-foreground">Entrada de hoje:</p>
-                  <div className="flex gap-4 flex-wrap">
-                    {getAllEmotions(todayEntry, userConfigs).map(emotion => (
-                      <span key={emotion.key} className="text-sm">
-                        <strong>{emotion.name}:</strong> {Math.round(emotion.value)}/5
-                      </span>
-                    ))}
+            <CardContent>
+              {entries.length === 0 ? (
+                <div className="text-center py-10 space-y-3">
+                  <div className="mx-auto h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+                    <BookHeart className="h-7 w-7 text-primary" />
                   </div>
-                  {todayEntry.journal_text && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      "{todayEntry.journal_text.substring(0, 150)}..."
-                    </p>
-                  )}
-                  {(() => {
-                    const todayAnalysis = analysesMap?.get(todayEntry.id);
-                    if (!todayAnalysis) return null;
-                    const meta = todayAnalysis.risk_level ? RISK_LEVEL_META[todayAnalysis.risk_level] : null;
-                    return (
-                      <div className="mt-3 space-y-2">
-                        {meta && (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Badge variant="outline" className={meta.badgeClass}>
-                              {meta.emoji} Análise Bem Estar: {meta.label}
-                            </Badge>
-                            {todayAnalysis.source === 'evolution_api' && (
-                              <Badge variant="outline" className="text-xs">
-                                via Diário Emocional - WhatsApp
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-                        {todayAnalysis.buddy_message && (
-                          <div className="flex gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
-                            <Sparkles className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-foreground italic">
-                              {todayAnalysis.buddy_message}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
+                  <p className="font-medium">Seu diário ainda está em branco</p>
+                  <p className="text-sm text-muted-foreground">O primeiro registro leva menos de um minuto.</p>
+                  <Button onClick={() => go('/diario-emocional/nova-entrada')}>
+                    <Plus className="h-4 w-4 mr-2" /> Fazer meu primeiro registro
+                  </Button>
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    Ainda não há registro para hoje
-                  </p>
+                <ol className="relative border-l border-border ml-2 space-y-1">
+                  {recentEntries.slice(0, 5).map(entry => {
+                    const tags: string[] = Array.isArray((entry as any).tags) ? (entry as any).tags : [];
+                    return (
+                      <li key={entry.id} className="ml-4">
+                        <span className={`absolute -left-[5px] mt-5 h-2.5 w-2.5 rounded-full ring-4 ring-card ${moodDot(entry)}`} />
+                        <button
+                          type="button"
+                          onClick={() => setSelectedEntry(entry)}
+                          className="w-full text-left p-3 rounded-lg hover:bg-muted/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring space-y-1.5"
+                        >
+                          <p className="text-sm font-medium capitalize">
+                            {parseISODateLocal(entry.date).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                          </p>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {getAllEmotions(entry, userConfigs).map(emotion => (
+                              <span key={emotion.key} className="text-xs rounded-md bg-muted px-2 py-0.5 text-foreground">
+                                {emotion.name} <strong>{Math.round(emotion.value)}</strong>
+                              </span>
+                            ))}
+                          </div>
+                          {entry.journal_text && (
+                            <p className="text-sm text-muted-foreground line-clamp-1">{entry.journal_text}</p>
+                          )}
+                          {tags.length > 0 && (
+                            <div className="flex gap-1 flex-wrap">
+                              {tags.slice(0, 4).map(t => (
+                                <Badge key={t} variant="outline" className="text-[10px] text-foreground">#{t}</Badge>
+                              ))}
+                            </div>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+
+              <div className="grid grid-cols-3 gap-2 mt-6 pt-4 border-t">
+                <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => go('/diario-emocional/historico')}>
+                  <Calendar className="h-4 w-4" /> <span className="text-xs">Histórico</span>
+                </Button>
+                <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => go('/diario-emocional/padrao')}>
+                  <TrendingUp className="h-4 w-4" /> <span className="text-xs">Meu padrão</span>
+                </Button>
+                <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => go('/diario-emocional/analises')}>
+                  <BarChart3 className="h-4 w-4" /> <span className="text-xs">Análises</span>
+                </Button>
+              </div>
+
+              {entries.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap mt-4">
+                  <span className="text-xs text-muted-foreground mr-1">Compartilhar:</span>
+                  <Button size="sm" variant="ghost" onClick={() => handleShare('whatsapp')}><Share2 className="h-3.5 w-3.5 mr-1" />WhatsApp</Button>
+                  <Button size="sm" variant="ghost" onClick={() => handleShare('telegram')}><Share2 className="h-3.5 w-3.5 mr-1" />Telegram</Button>
+                  <Button size="sm" variant="ghost" onClick={() => handleShare('email')}><Mail className="h-3.5 w-3.5 mr-1" />Email</Button>
+                  <Button size="sm" variant="ghost" onClick={exportToPDF}><Download className="h-3.5 w-3.5 mr-1" />PDF</Button>
                 </div>
               )}
-              
-              <div className="space-y-4">
-                <div className="flex gap-3 justify-center flex-wrap">
-                  <Button 
-                    onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/nova-entrada'))}
-                    className="flex items-center gap-2"
-                    size="lg"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Incluir Entrada
-                  </Button>
-                  {todayEntry && (
-                    <Button 
-                      variant="secondary"
-                      onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', `/diario-emocional/nova-entrada?date=${getTodayLocalDateString()}`))}
-                      className="flex items-center gap-2"
-                      size="lg"
-                    >
-                      <Heart className="h-4 w-4" />
-                      Editar Entrada de Hoje
-                    </Button>
-                  )}
-                  <Button 
-                    variant="outline"
-                    onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/historico'))}
-                    className="flex items-center gap-2"
-                  >
-                    <Calendar className="h-4 w-4" />
-                    Ver Histórico
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/analises'))}
-                    className="flex items-center gap-2"
-                  >
-                    <BarChart3 className="h-4 w-4" />
-                    Ver Análises
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/padrao'))}
-                    className="flex items-center gap-2"
-                  >
-                    <TrendingUp className="h-4 w-4" />
-                    Meu Padrão Emocional
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      const number = tenant?.diary_whatsapp_number || tenant?.contact_whatsapp || '5511937074332';
-                      const message = tenant?.diary_whatsapp_message || 'Olá, quero registrar meu diário emocional';
-                      window.open(`https://wa.me/${number.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
-                    }}
-                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Registrar pelo WhatsApp
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/configurar'))}
-                    className="flex items-center gap-2"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Configurar Emoções
-                  </Button>
-                </div>
-                
-                {entries.length > 0 && (
-                  <div className="pt-4 border-t">
-                    <p className="text-sm text-muted-foreground text-center mb-3">
-                      Compartilhar progresso:
-                    </p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <Button 
-                        onClick={() => handleShare('whatsapp')}
-                        variant="outline" 
-                        size="sm"
-                        className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-                      >
-                        <Share2 className="mr-2 h-4 w-4" />
-                        WhatsApp
-                      </Button>
-                      <Button 
-                        onClick={() => handleShare('telegram')}
-                        variant="outline" 
-                        size="sm"
-                        className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                      >
-                        <Share2 className="mr-2 h-4 w-4" />
-                        Telegram
-                      </Button>
-                      <Button 
-                        onClick={() => handleShare('email')}
-                        variant="outline" 
-                        size="sm"
-                        className="bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
-                      >
-                        <Mail className="mr-2 h-4 w-4" />
-                        Email
-                      </Button>
-                      <Button 
-                        onClick={exportToPDF}
-                        variant="outline" 
-                        size="sm"
-                        className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Salvar PDF
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
             </CardContent>
           </Card>
 
-          {/* Recent Entries Preview */}
-          {entries.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Entradas Recentes</CardTitle>
-                <CardDescription>
-                  Suas últimas entradas do diário emocional
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {recentEntries.slice(0, 5).map((entry) => (
-                    <div
-                      key={entry.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setSelectedEntry(entry)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          setSelectedEntry(entry);
-                        }
-                      }}
-                      className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/60 transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">
-                          {parseISODateLocal(entry.date).toLocaleDateString('pt-BR', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </p>
-                        <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
-                          {getAllEmotions(entry, userConfigs).map(emotion => (
-                            <span key={emotion.key}>{emotion.name}: {Math.round(emotion.value)}/5</span>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        {(() => {
-                          const emotions = getAllEmotions(entry, userConfigs);
-                          const moodEmotion = emotions.find(e => e.key === 'mood') || emotions[0];
-                          if (!moodEmotion) return <div className="w-3 h-3 rounded-full bg-muted" />;
-                          const val = moodEmotion.value;
-                          const colorClass = val >= 4 ? 'bg-green-500' : val >= 2.5 ? 'bg-yellow-500' : 'bg-red-500';
-                          return <div className={`w-3 h-3 rounded-full ${colorClass}`} />;
-                        })()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {entries.length > 5 && (
-                  <div className="text-center mt-4">
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => navigate(buildTenantPath(tenant?.slug || 'alopsi', '/diario-emocional/historico'))}
-                    >
-                      Ver todas as entradas
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+          {/* Privacy */}
+          <Collapsible>
+            <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mx-auto">
+              <Lock className="h-4 w-4 text-primary" />
+              Seus dados são protegidos pela LGPD.
+              <span className="text-primary font-medium">Saiba mais</span>
+              <ChevronRight className="h-4 w-4 transition-transform [[data-state=open]>&]:rotate-90" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-3 rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground space-y-2">
+                <p>
+                  Seus dados do diário emocional são <strong>criptografados e protegidos</strong>. Quando compartilhados com instituições parceiras, são sempre <strong>anonimizados e agregados</strong>, impossibilitando a identificação individual.
+                </p>
+                <p>Você tem total controle sobre seus dados e pode solicitar exclusão a qualquer momento.</p>
+                <Link to={buildTenantPath(slug, '/politica-privacidade')} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+                  <ExternalLink className="h-3 w-3" /> Ver Política de Privacidade
+                </Link>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </main>
+
+      {!todayEntry && (
+        <div className="md:hidden fixed bottom-4 left-4 right-20 z-40">
+          <Button size="lg" className="w-full h-12 shadow-lg" onClick={() => go('/diario-emocional/nova-entrada')}>
+            <Plus className="h-5 w-5 mr-2" /> Registrar meu dia
+          </Button>
+        </div>
+      )}
+
       <MoodEntryDetailModal
         entry={selectedEntry}
         analysis={selectedEntry ? analysesMap?.get(selectedEntry.id) ?? null : null}
