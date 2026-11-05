@@ -5764,6 +5764,72 @@ export type Database = {
         }
         Relationships: []
       }
+      translation_glossary: {
+        Row: {
+          created_at: string
+          id: string
+          lang: string
+          term_pt: string
+          term_target: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lang: string
+          term_pt: string
+          term_target: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lang?: string
+          term_pt?: string
+          term_target?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      translations: {
+        Row: {
+          auto_text: string | null
+          created_at: string
+          human_text: string | null
+          id: string
+          lang: string
+          pages: string[]
+          source_text: string
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          auto_text?: string | null
+          created_at?: string
+          human_text?: string | null
+          id?: string
+          lang: string
+          pages?: string[]
+          source_text: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          auto_text?: string | null
+          created_at?: string
+          human_text?: string | null
+          id?: string
+          lang?: string
+          pages?: string[]
+          source_text?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       triage_critical_terms: {
         Row: {
           created_at: string
