@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { getLangState, setLanguage, startAutoTranslate, subscribeLang, type Lang } from "./autoTranslate";
+import { getLangState, setLanguage, startAutoTranslate, startProfileLangSync, subscribeLang, type Lang } from "./autoTranslate";
 import { FLAG_ICONS } from "./flags";
 
 const FLAGS: { lang: Lang; label: string }[] = [
@@ -18,7 +18,7 @@ const FLAGS: { lang: Lang; label: string }[] = [
 
 /** Mounted once in App: observes the page and applies the chosen language. */
 export function AutoTranslateRunner() {
-  useEffect(() => startAutoTranslate(), []);
+  useEffect(() => { startProfileLangSync(); return startAutoTranslate(); }, []);
   return null;
 }
 
