@@ -52,7 +52,7 @@ export default function StudentHome() {
       const uid = user!.id;
       const since = format(subDays(new Date(), 13), 'yyyy-MM-dd');
       const today = format(new Date(), 'yyyy-MM-dd');
-      const [mood, lastMood, journey, practice, scales, scaleResp, radar, regs, appts, threads, sessions, posts, prof] = await Promise.all([
+      const [mood, lastMood, journey, practice, scales, scaleResp, radar, regs, appts, threads, sessions, prof] = await Promise.all([
         db.from('mood_entries').select('date, mood_score, sleep_quality, sleep_hours, anxiety_level, energy_level').eq('user_id', uid).gte('date', since).order('date'),
         db.from('mood_entries').select('date').eq('user_id', uid).order('date', { ascending: false }).limit(60),
         db.from('journey_sessions').select('created_at').eq('user_id', uid).order('created_at', { ascending: false }).limit(1),
@@ -64,7 +64,6 @@ export default function StudentHome() {
         db.from('agendamentos').select('id, data_consulta, horario, payment_status, status').eq('user_id', uid).gte('data_consulta', today).order('data_consulta').limit(5),
         db.rpc('list_my_message_threads'),
         db.from('group_sessions').select('id, title, session_date, start_time, session_type').gte('session_date', today).eq('status', 'scheduled').order('session_date').limit(4),
-        db.from('blog_posts').select('title, slug, published_at').eq('status', 'published').order('published_at', { ascending: false }).limit(3),
         db.from('profiles').select('nome, tipo_usuario').eq('user_id', uid).maybeSingle(),
       ]);
       return {
@@ -72,7 +71,7 @@ export default function StudentHome() {
         journeyAt: journey.data?.[0]?.created_at ?? null, practiceAt: practice.data?.[0]?.created_at ?? null,
         scales: scales.data ?? [], scaleResp: scaleResp.data ?? [], radar: radar.data ?? [],
         regs: regs.data ?? [], appts: appts.data ?? [], threads: Array.isArray(threads.data) ? threads.data : [],
-        sessions: sessions.data ?? [], posts: posts.data ?? [], name: prof.data?.nome as string | undefined, tipo: prof.data?.tipo_usuario as string | undefined,
+        sessions: sessions.data ?? [], name: prof.data?.nome as string | undefined, tipo: prof.data?.tipo_usuario as string | undefined,
       };
     },
   });
@@ -241,12 +240,7 @@ export default function StudentHome() {
                     <span><Badge variant="outline" className="mr-2">Encontro</Badge>{s.title}</span><span className="text-muted-foreground shrink-0">{format(new Date(`${s.session_date}T12:00`), 'd MMM', { locale: ptBR })}</span>
                   </Link>
                 ))}
-                {d!.posts.map((b: any) => (
-                  <Link key={b.slug} to={p(`/blog/${b.slug}`)} className="flex justify-between gap-3 rounded-lg p-3 hover:bg-muted/50 text-sm">
-                    <span><Badge variant="outline" className="mr-2">Blog</Badge>{b.title}</span>
-                  </Link>
-                ))}
-                {derived.unread === 0 && d!.sessions.length === 0 && d!.posts.length === 0 && <p className="text-sm text-muted-foreground">Sem novidades no momento.</p>}
+                {derived.unread === 0 && d!.sessions.length === 0 && <p className="text-sm text-muted-foreground">Sem novidades no momento.</p>}
               </CardContent>
             </Card>
             <Card>
