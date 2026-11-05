@@ -8,7 +8,6 @@ export const getLang = (): Lang => {
   const v = typeof localStorage !== "undefined" ? localStorage.getItem(LANG_KEY) : null;
   return v === "en" || v === "es" ? v : "pt";
 };
-export const setLang = (l: Lang) => localStorage.setItem(LANG_KEY, l);
 
 /** Strings that should never be sent for translation. */
 export const isTranslatable = (s: string) => {
@@ -22,119 +21,159 @@ export const isTranslatable = (s: string) => {
 const SKIP = "script,style,noscript,code,pre,textarea,input,select,[contenteditable='true'],[data-no-translate]";
 const ATTRS = ["placeholder", "title", "aria-label"] as const;
 
-type Item = { apply: (v: string) => void; src: string };
+// ---------- reactive store ----------
+type State = { lang: Lang; loading: boolean };
+let state: State = { lang: getLang(), loading: false };
+const listeners = new Set<() => void>();
+const emit = (patch: Partial<State>) => { state = { ...state, ...patch }; listeners.forEach((l) => l()); };
+export const subscribeLang = (l: () => void) => { listeners.add(l); return () => listeners.delete(l); };
+export const getLangState = () => state;
 
-export function startAutoTranslate(lang: Lang): () => void {
-  if (lang === "pt") return () => {};
-  const cache: Record<string, string> = JSON.parse(localStorage.getItem(cacheKey(lang)) || "{}");
-  let ready = false;
-  // Human-reviewed texts and glossary override anything cached locally.
-  const overrides = Promise.all([
-    supabase.from("translations" as any).select("source_text,human_text").eq("lang", lang).not("human_text", "is", null).limit(5000),
-    supabase.from("translation_glossary" as any).select("term_pt,term_target").eq("lang", lang).limit(2000),
-  ]).then(([h, g]) => {
-    for (const r of ((g.data ?? []) as any[])) cache[r.term_pt.trim()] = r.term_target;
-    for (const r of ((h.data ?? []) as any[])) cache[r.source_text] = r.human_text;
-    saveCache();
-  }).catch(() => {}).finally(() => { ready = true; walk(document.body); });
-  const original = new WeakMap<Node, string>();
-  const originalAttr = new WeakMap<Element, Record<string, string>>();
-  const done = new WeakMap<Node, string>(); // node -> last translated value we wrote
-  let pending: Item[] = [];
-  let timer: number | undefined;
-  let inflight = new Set<string>();
-  let stopped = false;
+// ---------- caches ----------
+const caches: Partial<Record<Lang, Record<string, string>>> = {};
+const loaded: Partial<Record<Lang, Promise<void>>> = {};
+const cacheFor = (l: Lang) => (caches[l] ??= JSON.parse(localStorage.getItem(cacheKey(l)) || "{}"));
+const saveCache = (l: Lang) => { try { localStorage.setItem(cacheKey(l), JSON.stringify(caches[l])); } catch { /* quota */ } };
 
-  const saveCache = () => {
-    try { localStorage.setItem(cacheKey(lang), JSON.stringify(cache)); } catch { /* quota */ }
-  };
+/** Loads human reviews, glossary and stored translations for a language (once). */
+const loadLang = (l: Lang) => {
+  if (l === "pt") return Promise.resolve();
+  return (loaded[l] ??= Promise.all([
+    supabase.from("translations" as any).select("source_text,auto_text,human_text").eq("lang", l).limit(10000),
+    supabase.from("translation_glossary" as any).select("term_pt,term_target").eq("lang", l).limit(2000),
+  ]).then(([t, g]) => {
+    const c = cacheFor(l);
+    for (const r of (t.data ?? []) as any[]) { const v = r.human_text || r.auto_text; if (v) c[r.source_text] = v; }
+    for (const r of (g.data ?? []) as any[]) c[r.term_pt.trim()] = r.term_target;
+    saveCache(l);
+  }).catch(() => {}));
+};
 
-  const queue = (src: string, apply: (v: string) => void) => {
-    const core = src.trim();
-    if (!isTranslatable(core)) return;
-    const lead = src.match(/^\s*/)![0];
-    const trail = src.match(/\s*$/)![0];
-    const wrap = (v: string) => apply(lead + v + trail);
-    if (cache[core]) return wrap(cache[core]);
-    pending.push({ src: core, apply: wrap });
-    schedule();
-  };
+// ---------- DOM tracking ----------
+const textOrig = new Map<Text, string>();
+const written = new WeakMap<Node, string>();
+const attrOrig = new Map<Element, Record<string, string>>();
+let pending = new Set<string>();
+let timer: number | undefined;
+const inflight = new Set<string>();
+let observer: MutationObserver | null = null;
 
-  const visitText = (n: Text) => {
-    if (n.parentElement?.closest(SKIP)) return;
-    const cur = n.nodeValue ?? "";
-    if (done.get(n) === cur) return;
-    original.set(n, cur);
-    queue(cur, (v) => { if (n.nodeValue !== v) { done.set(n, v); n.nodeValue = v; } });
-  };
+const split = (s: string) => ({ lead: s.match(/^\s*/)![0], core: s.trim(), trail: s.match(/\s*$/)![0] });
 
-  const visitEl = (el: Element) => {
-    if (el.closest("[data-no-translate]")) return;
-    for (const a of ATTRS) {
-      const cur = el.getAttribute(a);
-      if (!cur || el.getAttribute(`data-tr-${a}`) === cur) continue;
-      const rec = originalAttr.get(el) ?? {};
-      rec[a] = cur; originalAttr.set(el, rec);
-      queue(cur, (v) => { el.setAttribute(`data-tr-${a}`, v); el.setAttribute(a, v); });
+const translated = (orig: string): string | null => {
+  if (state.lang === "pt") return orig;
+  const { lead, core, trail } = split(orig);
+  if (!isTranslatable(core)) return orig;
+  const hit = cacheFor(state.lang)[core];
+  if (hit) return lead + hit + trail;
+  pending.add(core); schedule();
+  return null;
+};
+
+const applyText = (n: Text) => {
+  const cur = n.nodeValue ?? "";
+  if (written.get(n) !== cur) textOrig.set(n, cur); // React wrote a new value
+  const orig = textOrig.get(n)!;
+  const v = translated(orig);
+  if (v !== null && n.nodeValue !== v) { written.set(n, v); n.nodeValue = v; }
+  else if (v === null) written.set(n, cur);
+};
+
+const applyAttrs = (el: Element) => {
+  for (const a of ATTRS) {
+    const cur = el.getAttribute(a);
+    if (cur == null) continue;
+    const rec = attrOrig.get(el) ?? {};
+    if (el.getAttribute(`data-tr-${a}`) !== cur) rec[a] = cur;
+    attrOrig.set(el, rec);
+    const v = translated(rec[a]);
+    if (v !== null && v !== cur) { el.setAttribute(`data-tr-${a}`, v); el.setAttribute(a, v); }
+    else el.setAttribute(`data-tr-${a}`, cur);
+  }
+};
+
+const visitText = (n: Text) => { if (!n.parentElement?.closest(SKIP)) applyText(n); };
+const visitEl = (el: Element) => { if (!el.closest("[data-no-translate]")) applyAttrs(el); };
+
+const walk = (root: Node) => {
+  if (root.nodeType === 3) return visitText(root as Text);
+  if (root.nodeType !== 1) return;
+  const el = root as Element;
+  if (el.closest("[data-no-translate]")) return;
+  visitEl(el);
+  const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+  let n: Node | null;
+  while ((n = tw.nextNode())) n.nodeType === 3 ? visitText(n as Text) : visitEl(n as Element);
+};
+
+/** Re-applies the current language to every tracked node (no reload). */
+const reapplyAll = () => {
+  for (const [n] of textOrig) if (!n.isConnected) textOrig.delete(n);
+  for (const [e] of attrOrig) if (!e.isConnected) attrOrig.delete(e);
+  for (const [n] of textOrig) applyText(n);
+  for (const [e] of attrOrig) applyAttrs(e);
+  walk(document.body);
+};
+
+function schedule() { if (!timer) timer = window.setTimeout(flush, 120); }
+
+async function flush() {
+  timer = undefined;
+  const lang = state.lang;
+  if (lang === "pt") { pending.clear(); return; }
+  await loadLang(lang);
+  const c = cacheFor(lang);
+  const srcs = [...pending].filter((s) => !c[s] && !inflight.has(s));
+  pending = new Set();
+  if (!srcs.length) { reapplyAll(); emit({ loading: false }); return; }
+  emit({ loading: true });
+  for (let i = 0; i < srcs.length; i += 40) {
+    const chunk = srcs.slice(i, i + 40);
+    chunk.forEach((s) => inflight.add(s));
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-texts", { body: { lang, texts: chunk, page: window.location.pathname } });
+      if (error || !data?.translations) throw error;
+      chunk.forEach((s, k) => { c[s] = data.translations[k]; });
+      saveCache(lang);
+      if (state.lang === lang) reapplyAll();
+    } catch (e) {
+      console.warn("translate failed", e);
+    } finally {
+      chunk.forEach((s) => inflight.delete(s));
     }
-  };
+  }
+  if (!pending.size && !inflight.size) emit({ loading: false });
+}
 
-  const walk = (root: Node) => {
-    if (root.nodeType === 3) return visitText(root as Text);
-    if (root.nodeType !== 1) return;
-    const el = root as Element;
-    if (el.matches(SKIP) && !el.matches("input,textarea")) return;
-    visitEl(el);
-    const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
-    let n: Node | null;
-    while ((n = tw.nextNode())) n.nodeType === 3 ? visitText(n as Text) : visitEl(n as Element);
-  };
-
-  const flush = async () => {
-    timer = undefined;
-    if (!ready) { await overrides; }
-    const batch = pending; pending = [];
-    const bySrc = new Map<string, Item[]>();
-    for (const it of batch) {
-      if (cache[it.src]) { it.apply(cache[it.src]); continue; }
-      bySrc.set(it.src, [...(bySrc.get(it.src) ?? []), it]);
-    }
-    const srcs = [...bySrc.keys()].filter((s) => !inflight.has(s));
-    for (let i = 0; i < srcs.length; i += 40) {
-      const chunk = srcs.slice(i, i + 40);
-      chunk.forEach((s) => inflight.add(s));
-      try {
-        const { data, error } = await supabase.functions.invoke("translate-texts", { body: { lang, texts: chunk, page: window.location.pathname } });
-        if (error || !data?.translations) throw error;
-        chunk.forEach((s, k) => { cache[s] = data.translations[k]; });
-        saveCache();
-        if (!stopped) chunk.forEach((s) => bySrc.get(s)?.forEach((it) => it.apply(cache[s])));
-      } catch (e) {
-        console.warn("translate failed", e);
-      } finally {
-        chunk.forEach((s) => inflight.delete(s));
-      }
-    }
-    // Items waiting on another in-flight request get retried later.
-    const waiting = batch.filter((it) => !cache[it.src] && inflight.has(it.src));
-    if (waiting.length && !stopped) { pending.push(...waiting); timer = window.setTimeout(flush, 800); }
-  };
-
-  const schedule = () => { if (!timer) timer = window.setTimeout(flush, 120); };
-
-  const obs = new MutationObserver((muts) => {
+/** Starts observing the page once; call on app mount. */
+export function startAutoTranslate(): () => void {
+  if (observer) return () => {};
+  document.documentElement.lang = state.lang === "pt" ? "pt-BR" : state.lang;
+  observer = new MutationObserver((muts) => {
     for (const m of muts) {
       if (m.type === "characterData") visitText(m.target as Text);
       else if (m.type === "attributes") visitEl(m.target as Element);
       else m.addedNodes.forEach(walk);
     }
   });
-  walk(document.body);
-  obs.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS] });
+  observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS] });
+  if (state.lang !== "pt") loadLang(state.lang).then(reapplyAll);
+  else walk(document.body);
+  // Warm the other languages in the background so switching is instant.
+  window.setTimeout(() => (["en", "es"] as Lang[]).forEach((l) => l !== state.lang && loadLang(l)), 4000);
+  return () => { observer?.disconnect(); observer = null; };
+}
 
-  return () => {
-    stopped = true;
-    obs.disconnect();
-    if (timer) clearTimeout(timer);
-  };
+/** Switches language in place, without reloading the page. */
+export async function setLanguage(l: Lang) {
+  if (l === state.lang) return;
+  localStorage.setItem(LANG_KEY, l);
+  const root = document.documentElement;
+  root.classList.add("lang-switching");
+  emit({ lang: l, loading: l !== "pt" });
+  document.documentElement.lang = l === "pt" ? "pt-BR" : l;
+  await Promise.race([loadLang(l), new Promise((r) => setTimeout(r, 1200))]);
+  reapplyAll();
+  window.setTimeout(() => root.classList.remove("lang-switching"), 160);
+  if (!pending.size && !inflight.size) emit({ loading: false });
 }

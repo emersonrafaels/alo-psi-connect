@@ -1498,3 +1498,6 @@ body.institution-portal #root .rounded-lg.border:not([role="dialog"]):not(table 
 .radar-perm .rp-arow:hover { transform: translateY(-1px); box-shadow: 0 6px 18px hsl(var(--rp-deep) / .08); }
 .radar-perm .rp-grow:hover td:first-child { background: hsl(var(--rp-bg)); }
 @media (prefers-reduced-motion: reduce) { .radar-perm .rp-arow, .radar-perm .rp-arow:hover { transition: none; transform: none; } }
+
+#root { transition: opacity 150ms ease; }
+html.lang-switching #root { opacity: .55; }
