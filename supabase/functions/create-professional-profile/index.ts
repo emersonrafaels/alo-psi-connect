@@ -1,3 +1,4 @@
+import { managedEmailFetch } from '../_shared/managed-email.ts';
 // Version: 1.0.3 - Fixed getUserByEmail error (replaced with profiles check + orphan cleanup)
 // Last updated: 2025-10-15
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -159,7 +160,7 @@ async function sendAbandonmentEmails(
     `;
 
     // Enviar emails via Resend
-    const response = await fetch('https://api.resend.com/emails', {
+    const response = await managedEmailFetch('professional-profile', 'https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${resendApiKey}`,
@@ -173,7 +174,7 @@ async function sendAbandonmentEmails(
       }),
     });
 
-    const teamResponse = await fetch('https://api.resend.com/emails', {
+    const teamResponse = await managedEmailFetch('professional-profile', 'https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${resendApiKey}`,
@@ -811,7 +812,7 @@ serve(async (req) => {
                 color: tenant.primary_color
               });
 
-              const emailResponse = await fetch('https://api.resend.com/emails', {
+              const emailResponse = await managedEmailFetch('professional-profile', 'https://api.resend.com/emails', {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${resendApiKey}`,

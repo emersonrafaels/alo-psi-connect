@@ -1,3 +1,4 @@
+import { managedEmailFetch } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { getBccEmails } from "../_shared/get-bcc-emails.ts";
@@ -448,7 +449,7 @@ serve(async (req) => {
             const bccEmails = await getBccEmails(supabase, tenantId);
             const allBcc = [...(tenantData.admin_email ? [tenantData.admin_email] : []), ...bccEmails];
 
-            const emailResponse = await fetch('https://api.resend.com/emails', {
+            const emailResponse = await managedEmailFetch('patient-profile', 'https://api.resend.com/emails', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${resendApiKey}`,

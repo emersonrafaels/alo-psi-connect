@@ -47,3 +47,15 @@ export function managedResend(key: string, apiKey?: string) {
     },
   };
 }
+
+/** Drop-in replacement for `fetch('https://api.resend.com/emails', init)` that honours the admin email settings. */
+export async function managedEmailFetch(key: string, url: string, init: RequestInit): Promise<Response> {
+  try {
+    const payload = JSON.parse(String(init.body ?? '{}'));
+    const p = await applyEmailSettings(key, payload);
+    if (!p) return new Response(JSON.stringify({ skipped: true }), { status: 200 });
+    return fetch(url, { ...init, body: JSON.stringify(p) });
+  } catch {
+    return fetch(url, init);
+  }
+}
