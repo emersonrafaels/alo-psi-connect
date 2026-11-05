@@ -96,6 +96,12 @@ const adminMenuGroups = [
         requiredRole: 'admin' as const
       },
       {
+        title: 'Traduções',
+        url: '/admin/traducoes',
+        icon: ShieldCheck,
+        requiredRole: 'admin' as const
+      },
+      {
         title: 'Importação em Massa',
         url: '/admin/bulk-import',
         icon: FileSpreadsheet,

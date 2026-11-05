@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import LanguageFlags from "@/features/i18n/LanguageFlags"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -113,7 +114,7 @@ const Header = () => {
           {/* Desktop CTAs */}
           <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
 
-            
+            <LanguageFlags />
             <ThemeToggle />
             {user && <MessagesBell href={buildTenantPath(tenantSlug, isInstitutionAdmin ? '/portal-institucional/mensagens' : '/mensagens')} />}
             {user ? (
@@ -430,6 +431,7 @@ const Header = () => {
               {/* Tenant Switcher + Theme Toggle */}
               <div className="flex items-center justify-end gap-3 mb-4 px-1">
                 <div className="flex items-center gap-2">
+                  <LanguageFlags />
                   <ThemeToggle />
                   {isAdmin && <GlobalCacheButton variant="minimal" />}
                 </div>
