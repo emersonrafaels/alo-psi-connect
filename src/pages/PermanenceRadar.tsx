@@ -1,3 +1,4 @@
+import LanguageFlags from "@/features/i18n/LanguageFlags";
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
