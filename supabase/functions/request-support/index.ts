@@ -3,6 +3,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
 import { Resend } from 'npm:resend@2.0.0';
 import { renderMessageEmail } from './emailTemplate.ts';
+import { isEmailBlocked } from './rules.ts';
 
 const RBE_EMAIL = 'redebemestar1@gmail.com';
 const schema = z.object({
@@ -40,7 +41,7 @@ Deno.serve(async (req) => {
       db.from('institution_users').select('user_id').eq('institution_id', cr.institution_id).eq('is_active', true),
       db.from('educational_institutions').select('name, is_demo').eq('id', cr.institution_id).maybeSingle(),
       db.from('profiles').select('nome, email').eq('user_id', userId).maybeSingle(),
-      db.from('synthetic_student_cases').select('user_id').eq('user_id', userId).maybeSingle(),
+      db.from('synthetic_student_cases').select('user_id, notifications_blocked').eq('user_id', userId).maybeSingle(),
     ]);
     const adminIds = [...new Set((admins ?? []).map((a: any) => a.user_id).filter((u: string) => u && u !== userId))];
     const who = identified && prof?.nome ? prof.nome : 'Um aluno (anônimo)';
@@ -64,7 +65,8 @@ Deno.serve(async (req) => {
     }
 
     let emailed = 0;
-    const blocked = cr.is_synthetic || inst?.is_demo || !!synth;
+    const blocked = isEmailBlocked(cr.is_synthetic, synth);
+    console.log('support email', { blocked, hasKey: !!Deno.env.get('RESEND_API_KEY'), admins: adminIds.length });
     if (!blocked && Deno.env.get('RESEND_API_KEY')) {
       const { data: profs } = adminIds.length ? await db.from('profiles').select('email').in('user_id', adminIds) : { data: [] };
       const emails = [...new Set([...(profs ?? []).map((p: any) => p.email).filter(Boolean), RBE_EMAIL])];
@@ -73,7 +75,7 @@ Deno.serve(async (req) => {
       const { error } = await resend.batch.send(emails.map((to) => ({
         from: 'Rede Bem-Estar <noreply@redebemestar.com.br>', to: [to], subject: `${subject} · ${inst?.name ?? ''}`.trim(), html, text,
       })));
-      if (error) console.error('email failed', error); else emailed = emails.length;
+      if (error) console.error('email failed', error); else { emailed = emails.length; console.log('support email sent', emailed); }
     }
     return json({ ok: true, linked: true, notified: adminIds.length, emailed });
   } catch (e) {
