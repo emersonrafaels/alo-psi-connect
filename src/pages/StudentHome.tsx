@@ -60,7 +60,7 @@ export default function StudentHome() {
         db.from('emotional_scales').select('code, name, frequency_days').eq('active', true).order('display_order'),
         db.from('emotional_scale_responses').select('scale_code, taken_at').eq('user_id', uid).order('taken_at', { ascending: false }).limit(200),
         db.from('permanence_responses').select('semester, created_at').eq('user_id', uid).order('created_at', { ascending: false }),
-        db.from('group_session_registrations').select('registered_at, status, group_sessions(id, title, session_date, start_time)').eq('user_id', uid).neq('status', 'cancelled'),
+        db.from('group_session_registrations').select('registered_at, status, group_sessions(id, title, session_date, start_time, session_type, meeting_link)').eq('user_id', uid).neq('status', 'cancelled'),
         db.from('agendamentos').select('id, data_consulta, horario, payment_status, status').eq('user_id', uid).gte('data_consulta', today).order('data_consulta').limit(5),
         db.rpc('list_my_message_threads'),
         db.from('group_sessions').select('id, title, session_date, start_time, session_type').gte('session_date', today).eq('status', 'scheduled').order('session_date').limit(4),
@@ -99,6 +99,10 @@ export default function StudentHome() {
       scales: d.scales.map((s: any) => ({ code: s.code, name: s.name, frequencyDays: s.frequency_days || 30, lastTakenAt: lastScale(s.code) })),
       currentSemester: sem, radarSemesters: d.radar.map((r: any) => r.semester), unreadMessages: unread,
       nextSessionAt: upcomingRegs[0]?.at ?? null,
+      nextSession: upcomingRegs[0] ? {
+        id: upcomingRegs[0].id, title: upcomingRegs[0].title, startsAt: upcomingRegs[0].at, type: upcomingRegs[0].session_type, meetingUrl: upcomingRegs[0].meeting_link,
+        otherCount: upcomingRegs.slice(1).filter((s: any) => new Date(s.at).getTime() - now.getTime() <= 86_400_000).length,
+      } : null,
       pendingPaymentAppointments: d.appts.filter((a: any) => a.payment_status === 'pending_payment').length,
     });
     const lastScaleAny = d.scaleResp[0]?.taken_at ?? null;
@@ -156,7 +160,7 @@ export default function StudentHome() {
                         <span className={cn('mt-1.5 h-2.5 w-2.5 rounded-full shrink-0', a.priority === 1 ? 'bg-destructive' : a.priority === 2 ? 'bg-primary' : 'bg-muted-foreground/50')} />
                         <div className="min-w-0"><p className="font-medium">{a.title}</p><p className="text-sm text-muted-foreground">{a.description}</p></div>
                       </div>
-                      <Button size="sm" asChild><Link to={p(a.path)}>{a.cta}<ArrowRight className="h-4 w-4 ml-1" /></Link></Button>
+                      <Button size="sm" asChild>{a.external ? <a href={a.path} target="_blank" rel="noopener noreferrer">{a.cta}<ArrowRight className="h-4 w-4 ml-1" /></a> : <Link to={p(a.path)}>{a.cta}<ArrowRight className="h-4 w-4 ml-1" /></Link>}</Button>
                     </li>
                   ))}
                 </ul>
