@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
 import { Resend } from 'npm:resend@2.0.0';
-import { renderMessageEmail } from '../send-message/emailTemplate.ts';
+import { renderMessageEmail } from './emailTemplate.ts';
 
 const RBE_EMAIL = 'redebemestar1@gmail.com';
 const schema = z.object({
