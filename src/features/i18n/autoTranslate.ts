@@ -176,4 +176,28 @@ export async function setLanguage(l: Lang) {
   reapplyAll();
   window.setTimeout(() => root.classList.remove("lang-switching"), 160);
   if (!pending.size && !inflight.size) emit({ loading: false });
+  void saveLangToProfile(l);
+}
+
+/** Persists the chosen language on the signed-in user's profile (best effort). */
+async function saveLangToProfile(l: Lang) {
+  const { data } = await supabase.auth.getSession();
+  const uid = data.session?.user.id;
+  if (uid) await (supabase as any).from("profiles").update({ preferred_language: l }).eq("user_id", uid);
+}
+
+let profileSyncStarted = false;
+/** On sign-in, applies the language saved on the profile (or saves the current one). */
+export function startProfileLangSync() {
+  if (profileSyncStarted) return;
+  profileSyncStarted = true;
+  const sync = async (uid: string) => {
+    const { data } = await (supabase as any).from("profiles").select("preferred_language").eq("user_id", uid).maybeSingle();
+    const saved = data?.preferred_language as Lang | undefined;
+    if (saved && saved !== "pt" && saved !== state.lang) await setLanguage(saved);
+    else if ((!saved || saved === "pt") && state.lang !== "pt") await saveLangToProfile(state.lang);
+  };
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (session?.user && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) setTimeout(() => void sync(session.user.id), 0);
+  });
 }

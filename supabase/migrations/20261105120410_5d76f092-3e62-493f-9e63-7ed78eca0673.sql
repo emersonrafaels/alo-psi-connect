@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.care_request_on_diary_signal() FROM PUBLIC, anon, authenticated;

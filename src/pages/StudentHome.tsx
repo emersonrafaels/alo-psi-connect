@@ -3,6 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { format, formatDistanceToNow, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
+import { Switch } from '@/components/ui/switch';
+import { buildIcs, downloadIcs } from '@/features/student-home/calendar';
+import { BellRing, CalendarPlus, LifeBuoy } from 'lucide-react';
 import { ArrowRight, BookHeart, Bot, CalendarDays, CheckCircle2, ClipboardList, Compass, HeartPulse, Leaf, Map, Moon, Newspaper, Sparkles, Smile, Users, Zap } from 'lucide-react';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
@@ -64,14 +68,14 @@ export default function StudentHome() {
         db.from('agendamentos').select('id, data_consulta, horario, payment_status, status').eq('user_id', uid).gte('data_consulta', today).order('data_consulta').limit(5),
         db.rpc('list_my_message_threads'),
         db.from('group_sessions').select('id, title, session_date, start_time, session_type').gte('session_date', today).eq('status', 'scheduled').order('session_date').limit(4),
-        db.from('profiles').select('nome, tipo_usuario').eq('user_id', uid).maybeSingle(),
+        db.from('profiles').select('nome, tipo_usuario, email_reminders').eq('user_id', uid).maybeSingle(),
       ]);
       return {
         mood: mood.data ?? [], diaryDates: (lastMood.data ?? []).map((r: any) => r.date as string),
         journeyAt: journey.data?.[0]?.created_at ?? null, practiceAt: practice.data?.[0]?.created_at ?? null,
         scales: scales.data ?? [], scaleResp: scaleResp.data ?? [], radar: radar.data ?? [],
         regs: regs.data ?? [], appts: appts.data ?? [], threads: Array.isArray(threads.data) ? threads.data : [],
-        sessions: sessions.data ?? [], name: prof.data?.nome as string | undefined, tipo: prof.data?.tipo_usuario as string | undefined,
+        sessions: sessions.data ?? [], name: prof.data?.nome as string | undefined, reminders: !!prof.data?.email_reminders, tipo: prof.data?.tipo_usuario as string | undefined,
       };
     },
   });
@@ -125,6 +129,20 @@ export default function StudentHome() {
   const endTour = () => { setTourStep(-1); if (user) localStorage.setItem(TOUR_KEY(user.id), '1'); };
 
   const firstName = d?.name?.split(' ')[0];
+  const [reqBusy, setReqBusy] = useState(false);
+  const askSupport = async () => {
+    setReqBusy(true);
+    const { data, error } = await db.rpc('open_care_request', { p_origin: 'apoio' });
+    setReqBusy(false);
+    if (error) toast.error('Não foi possível enviar seu pedido agora.');
+    else if (!data) toast.info('Seu perfil não está vinculado a uma instituição. Veja os apoios disponíveis.');
+    else toast.success('Pedido enviado. A equipe de cuidado da sua instituição vai entrar em contato.');
+  };
+  const toggleReminders = async (on: boolean) => {
+    const { error } = await db.from('profiles').update({ email_reminders: on }).eq('user_id', user!.id);
+    if (error) toast.error('Não foi possível salvar.'); else { toast.success(on ? 'Lembretes por e-mail ativados.' : 'Lembretes desativados.'); q.refetch(); }
+  };
+  const practiceOfDay = ['Respiração 4-7-8', 'Escaneamento corporal', 'Pausa de gratidão', 'Alongamento consciente', 'Ancoragem 5-4-3-2-1', 'Caminhada atenta', 'Relaxamento muscular'][new Date().getDay()];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -178,7 +196,7 @@ export default function StudentHome() {
               const better = delta == null || Math.abs(delta) < 0.1 ? null : (good === 'up' ? delta > 0 : delta < 0);
               const vals = k.series.filter((v): v is number => v != null);
               return (
-                <Card key={label}><CardContent className="p-4">
+                <Link key={label} to={p('/diario-emocional')} className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Card className="h-full transition-colors hover:border-primary/40"><CardContent className="p-4">
                   <div className="flex items-center justify-between text-sm text-muted-foreground"><span>{label}</span><Icon className="h-4 w-4" /></div>
                   <p className="text-2xl font-bold mt-2">{k.cur != null ? k.cur.toFixed(1) : '—'}<span className="text-sm font-normal text-muted-foreground"> /5</span></p>
                   <p className={cn('text-xs mt-1', better === true && 'text-primary', better === false && 'text-destructive', better === null && 'text-muted-foreground')}>
@@ -187,7 +205,7 @@ export default function StudentHome() {
                   <div className="flex items-end gap-1 h-8 mt-3">
                     {vals.map((v, i) => <div key={i} className="flex-1 rounded-sm bg-primary/60" style={{ height: `${(v / 5) * 100}%` }} />)}
                   </div>
-                </CardContent></Card>
+                </CardContent></Card></Link>
               );
             })}
           </section>
@@ -216,9 +234,15 @@ export default function StudentHome() {
               <CardContent className="space-y-3">
                 {derived.upcomingRegs.length === 0 && d!.appts.length === 0 && <p className="text-sm text-muted-foreground">Nenhum compromisso agendado.</p>}
                 {derived.upcomingRegs.slice(0, 3).map((s: any) => (
-                  <Link key={s.id} to={p(`/encontros/${s.id}`)} className="block rounded-lg border p-3 hover:bg-muted/50">
-                    <p className="text-sm font-medium">{s.title}</p><p className="text-xs text-muted-foreground">Encontro · {format(new Date(s.at), "d MMM, HH:mm", { locale: ptBR })}</p>
-                  </Link>
+                  <div key={s.id} className="flex items-center gap-2 rounded-lg border p-3 hover:bg-muted/50">
+                    <Link to={p(`/encontros/${s.id}`)} className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{s.title}</p><p className="text-xs text-muted-foreground">Encontro · {format(new Date(s.at), "d MMM, HH:mm", { locale: ptBR })}</p>
+                    </Link>
+                    <Button size="icon" variant="ghost" aria-label="Adicionar ao calendário" title="Adicionar ao calendário"
+                      onClick={() => downloadIcs(s.title, buildIcs({ uid: s.id, title: s.title, start: new Date(s.at), url: s.meeting_link }))}>
+                      <CalendarPlus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 ))}
                 {d!.appts.slice(0, 3).map((a: any) => (
                   <Link key={a.id} to={p('/agendamentos')} className="block rounded-lg border p-3 hover:bg-muted/50">
@@ -252,6 +276,26 @@ export default function StudentHome() {
                 ))}
               </CardContent>
             </Card>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            <Card><CardContent className="p-4 space-y-2">
+              <p className="text-sm text-muted-foreground flex items-center gap-2"><Leaf className="h-4 w-4 text-primary" />Prática do dia</p>
+              <p className="font-semibold">{practiceOfDay}</p>
+              <Button size="sm" variant="outline" asChild><Link to={p('/praticas')}>Praticar agora</Link></Button>
+            </CardContent></Card>
+            <Card><CardContent className="p-4 space-y-2">
+              <p className="text-sm text-muted-foreground flex items-center gap-2"><LifeBuoy className="h-4 w-4 text-primary" />Precisa conversar com alguém?</p>
+              <p className="text-sm">Peça apoio à equipe de cuidado da sua instituição.</p>
+              <Button size="sm" onClick={askSupport} disabled={reqBusy}>Pedir apoio</Button>
+            </CardContent></Card>
+            <Card><CardContent className="p-4 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm text-muted-foreground flex items-center gap-2"><BellRing className="h-4 w-4 text-primary" />Lembretes por e-mail</p>
+                <Switch checked={d!.reminders} onCheckedChange={toggleReminders} aria-label="Lembretes por e-mail" />
+              </div>
+              <p className="text-sm">Avisos quando o diário ficar parado, o Radar do semestre estiver pendente ou houver encontro no dia.</p>
+            </CardContent></Card>
           </div>
         </>)}
         </>}
