@@ -1,3 +1,4 @@
+import LanguageFlags from "@/features/i18n/LanguageFlags";
 import { usePortalFreshData } from '@/features/institution/usePortalFreshData';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -238,7 +239,7 @@ export default function InstitutionComparator() {
           <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur">
             <Button variant="ghost" size="icon" onClick={() => setCollapsed((c) => !c)} aria-label="Recolher menu"><PanelLeft className="h-4 w-4" /></Button>
             <span className="text-sm text-muted-foreground">{view === 'integrated' ? 'Análise integrada' : `${view === 'journey' ? 'Jornada de cuidado' : view === 'appointments' ? 'Atendimentos' : view === 'diary' ? 'Diário emocional' : view === 'contents' ? 'Conteúdos e práticas' : view === 'ned' ? 'NED Nacional' : view === 'permanence' ? 'Radar de Permanência' : 'Visão geral'} · ${unitFilter === 'all' ? 'Toda a instituição' : unitFilter}`}</span>
-            <Button asChild variant="outline" size="sm" className="ml-auto"><Link to={backTo}><ArrowLeft className="h-4 w-4 mr-1" />Portal Institucional</Link></Button>
+            <LanguageFlags className="ml-auto" /><Button asChild variant="outline" size="sm"><Link to={backTo}><ArrowLeft className="h-4 w-4 mr-1" />Portal Institucional</Link></Button>
           </header>
           <main className="flex-1 space-y-6 p-4 md:p-8">
             <div className="flex flex-wrap items-end justify-between gap-4">

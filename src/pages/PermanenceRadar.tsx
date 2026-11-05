@@ -1,3 +1,4 @@
+import LanguageFlags from "@/features/i18n/LanguageFlags";
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -128,6 +129,7 @@ export default function PermanenceRadar() {
           </div>
         </div>
         <div className="ml-auto flex items-center gap-3">
+          <LanguageFlags />
           <Sheet open={navOpen} onOpenChange={setNavOpen}>
             <SheetTrigger asChild><Button variant="outline" size="sm" className="lg:hidden"><Menu className="mr-2 h-4 w-4" />Seu percurso</Button></SheetTrigger>
             <SheetContent side="left" className="w-80 overflow-y-auto pt-10">{nav}</SheetContent>
