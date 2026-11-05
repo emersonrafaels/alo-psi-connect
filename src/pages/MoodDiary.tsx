@@ -40,6 +40,10 @@ const MoodDiary = () => {
   const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
   const { getShareConfig } = useShareConfig();
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, []);
+
   // Redirect non-authenticated users to experience page
   useEffect(() => {
     if (!authLoading && !user) {
