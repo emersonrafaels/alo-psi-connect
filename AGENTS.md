@@ -37,3 +37,6 @@
 - Serve one `/meu-espaco` hub (`src/pages/StudentHome.tsx`) that renders the student view or, for registered professionals, `src/features/professional-home/ProfessionalHome.tsx`; pending-task rules stay pure in `student-home/pendingActions.ts` and `professional-home/professionalActions.ts`, reading only the user's own RLS-scoped rows so nothing new reaches institutions or exposes patient records.
 
 - Translate the UI to EN/ES only through `src/features/i18n/autoTranslate.ts` (DOM auto-translation via `translate-texts`, stored in `translations`/`translation_glossary`, where admin human reviews override automatic text) and mark untranslatable areas with `data-no-translate`, so pages stay authored in Portuguese without per-file string catalogs.
+- Store each user's UI language in `profiles.preferred_language` (synced by `startProfileLangSync` in `autoTranslate.ts`) so the choice follows the account and reminder emails use it.
+- Send student reminder emails only through the daily `send-reminders` function (rules in `send-reminders/rules.ts`), opt-in via `profiles.email_reminders`, skipping blocked synthetic cases, so nobody gets unrequested email.
+- Open care requests automatically from diary analyses marked critical via the `mood_analysis_care_request` trigger (demo institutions flagged synthetic), reusing any request open in the last 30 days.
