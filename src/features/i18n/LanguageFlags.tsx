@@ -39,7 +39,7 @@ export default function LanguageFlags({ className = "" }: { className?: string }
           aria-haspopup="listbox"
           title={current.label}
           className={cn(
-            "flex items-center gap-1 rounded-full border border-border/60 bg-background/70 pl-1.5 pr-1 py-1 shadow-sm transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "flex items-center gap-0.5 rounded-full p-0.5 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             loading && "animate-pulse",
           )}
         >
