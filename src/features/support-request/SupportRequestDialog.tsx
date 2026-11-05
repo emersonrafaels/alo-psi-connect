@@ -45,14 +45,12 @@ export function SupportRequestDialog({ open, onOpenChange, origin = 'apoio' }: P
                 onClick={() => setMessage((m) => applyTemplate(m, t.text))}>{t.label}</Button>
             ))}
           </div>
-          <div className="relative">
-            <Textarea value={message} maxLength={SUPPORT_MESSAGE_MAX} rows={5} placeholder="Mensagem opcional…"
-              onChange={(e) => setMessage(e.target.value)} className="pr-12" />
-            <div className="absolute right-2 top-2">
-              <VoiceInputButton currentValue={message} onChange={(v) => setMessage(v.slice(0, SUPPORT_MESSAGE_MAX))} />
-            </div>
+          <Textarea value={message} maxLength={SUPPORT_MESSAGE_MAX} rows={5} placeholder="Mensagem opcional…"
+            onChange={(e) => setMessage(e.target.value)} />
+          <div className="flex items-center justify-between gap-2">
+            <VoiceInputButton currentValue={message} onChange={(v) => setMessage(v.slice(0, SUPPORT_MESSAGE_MAX))} />
+            <p className="text-xs text-muted-foreground">{message.length}/{SUPPORT_MESSAGE_MAX}</p>
           </div>
-          <p className="text-right text-xs text-muted-foreground">{message.length}/{SUPPORT_MESSAGE_MAX}</p>
           <label className="flex items-start gap-2 text-sm cursor-pointer">
             <Checkbox checked={identified} onCheckedChange={(v) => setIdentified(v === true)} className="mt-0.5" />
             Quero que a instituição saiba meu nome
