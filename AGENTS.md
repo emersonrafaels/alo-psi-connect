@@ -41,3 +41,5 @@
 - Send student reminder emails only through the daily `send-reminders` function (rules in `send-reminders/rules.ts`), opt-in via `profiles.email_reminders`, skipping blocked synthetic cases, so nobody gets unrequested email.
 - Open care requests automatically from diary analyses marked critical via the `mood_analysis_care_request` trigger (demo institutions flagged synthetic), reusing any request open in the last 30 days.
 - Route student "Pedir apoio" requests through the `request-support` function, which opens the care request as the student, creates a message thread to each institution admin and emails them plus the Rede Bem-Estar inbox (skipping synthetic/demo cases); the portal's "Pedidos de apoio" card reads pending `care_requests` via RLS, so one request feeds Messages, Overview and the care journey.
+
+- Admin email settings live in `email_settings` and the catalog `supabase/functions/_shared/email-catalog.ts`; every email sender goes through `_shared/managed-email.ts` (managedResend / managedEmailFetch) so admin copies and on/off toggles apply everywhere.
