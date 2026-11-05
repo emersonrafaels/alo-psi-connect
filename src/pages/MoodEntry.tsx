@@ -482,15 +482,15 @@ const MoodEntry = () => {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary" className="rounded-full border border-primary/10 bg-background/70 px-3 py-1.5">
+                  <Badge variant="secondary" className="rounded-full border border-primary/10 bg-background/70 px-3 py-1.5 text-foreground">
                     <CalendarDays className="mr-2 h-3.5 w-3.5" />
                     {new Date(formData.date).toLocaleDateString('pt-BR')}
                   </Badge>
-                  <Badge variant="secondary" className="rounded-full border border-primary/10 bg-background/70 px-3 py-1.5">
+                  <Badge variant="secondary" className="rounded-full border border-primary/10 bg-background/70 px-3 py-1.5 text-foreground">
                     <Brain className="mr-2 h-3.5 w-3.5" />
                     {emotionCount} emoções registradas
                   </Badge>
-                  <Badge variant="secondary" className="rounded-full border border-primary/10 bg-background/70 px-3 py-1.5">
+                  <Badge variant="secondary" className="rounded-full border border-primary/10 bg-background/70 px-3 py-1.5 text-foreground">
                     <NotebookPen className="mr-2 h-3.5 w-3.5" />
                     {hasJournal ? 'Reflexões prontas' : 'Sem reflexões ainda'}
                   </Badge>
@@ -745,7 +745,7 @@ const MoodEntry = () => {
                         <Badge
                           key={tag}
                           variant="secondary"
-                          className="cursor-pointer rounded-full border border-primary/10 bg-background/80 px-3 py-1.5 transition-all hover:-translate-y-0.5 hover:bg-destructive/10"
+                          className="cursor-pointer rounded-full border border-primary/10 bg-background/80 px-3 py-1.5 text-foreground transition-all hover:-translate-y-0.5 hover:bg-destructive/10"
                           onClick={() => removeTag(tag)}
                           title="Clique para remover esta etiqueta"
                         >
