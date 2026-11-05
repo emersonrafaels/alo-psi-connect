@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useInstitutionExecutiveSummary, type ExecutiveSummary } from '@/hooks/useInstitutionExecutiveSummary';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
+import { SupportRequestsCard, usePendingSupportRequests } from '@/features/support-request/SupportRequestsCard';
 import { OverviewActions } from '@/features/institution/portal/OverviewActions';
 import { buildOverviewActions, type ActionTarget } from '@/features/institution/portal/overviewActionRules';
 import { Sparkles, Users, AlertTriangle, CheckCircle2, Activity, RefreshCw, ArrowRight, ArrowUp, ArrowDown, ArrowRight as ArrowRightIcon, TrendingUp } from 'lucide-react';
@@ -478,6 +479,7 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage, 
   };
 
   const queryClient = useQueryClient();
+  const { data: pendingSupport = [] } = usePendingSupportRequests(institutionId);
   const historyKey = ['institution-weekly-brief-history', institutionId];
   const { data: historyData, isLoading: historyLoading, error: historyError } = useQuery({
     queryKey: historyKey,
@@ -498,6 +500,7 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage, 
 
   const handleAction = (t: ActionTarget) => {
     const slug = tenant?.slug ?? '';
+    if (t === 'support_requests') return document.getElementById('support-requests')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (t === 'triage_risk') return goToRiskQueue();
     if (t === 'triage_in_progress')
       return navigate(`${buildTenantPath(slug, '/portal-institucional/triagem')}?view=fila&tab=em_andamento`);
@@ -580,9 +583,12 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage, 
           activeStudentsWeek: summary.activeStudentsWeek,
           activeStudentsPrevWeek: summary.activeStudentsPrevWeek,
           lastBriefAt: historyLoading ? new Date().toISOString() : history[0]?.created_at ?? null,
+          pendingSupportRequests: pendingSupport.length,
         })}
         onAction={handleAction}
       />
+
+      <SupportRequestsCard institutionId={institutionId} messagesPath={buildTenantPath(tenant?.slug ?? '', '/portal-institucional/mensagens')} />
 
       <Card id="buddy-brief" className="border-primary/20 bg-gradient-to-br from-primary/[0.03] to-transparent">
         <CardHeader className="pb-3">

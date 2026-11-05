@@ -980,13 +980,16 @@ export type Database = {
           first_consult_at: string | null
           followup_at: string | null
           id: string
+          identified: boolean
           institution_id: string
           is_synthetic: boolean
+          message: string | null
           origin: string
           outcome: string
           patient_id: string
           referred_at: string | null
           requested_at: string
+          thread_id: string | null
           triaged_at: string | null
           updated_at: string
         }
@@ -997,13 +1000,16 @@ export type Database = {
           first_consult_at?: string | null
           followup_at?: string | null
           id?: string
+          identified?: boolean
           institution_id: string
           is_synthetic?: boolean
+          message?: string | null
           origin?: string
           outcome?: string
           patient_id: string
           referred_at?: string | null
           requested_at?: string
+          thread_id?: string | null
           triaged_at?: string | null
           updated_at?: string
         }
@@ -1014,13 +1020,16 @@ export type Database = {
           first_consult_at?: string | null
           followup_at?: string | null
           id?: string
+          identified?: boolean
           institution_id?: string
           is_synthetic?: boolean
+          message?: string | null
           origin?: string
           outcome?: string
           patient_id?: string
           referred_at?: string | null
           requested_at?: string
+          thread_id?: string | null
           triaged_at?: string | null
           updated_at?: string
         }
@@ -6806,7 +6815,12 @@ export type Database = {
         Args: { raw_specialties: string[] }
         Returns: string[]
       }
-      open_care_request: { Args: { p_origin: string }; Returns: string }
+      open_care_request:
+        | { Args: { p_origin: string }; Returns: string }
+        | {
+            Args: { p_identified: boolean; p_message: string; p_origin: string }
+            Returns: string
+          }
       parse_php_serialized_array: {
         Args: { php_data: string }
         Returns: string[]

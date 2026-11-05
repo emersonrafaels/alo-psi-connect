@@ -34,3 +34,10 @@ describe('buildOverviewActions', () => {
     expect(r.length).toBeLessThanOrEqual(5);
   });
 });
+
+describe('pedidos de apoio', () => {
+  it('cria ação urgente para responder pedidos de apoio', () => {
+    const a = buildOverviewActions({ criticalOpen: 0, totalTriage: 0, resolvedTriage: 0, engagementRate: 1, activeStudentsWeek: 1, activeStudentsPrevWeek: 1, lastBriefAt: new Date().toISOString(), pendingSupportRequests: 2 });
+    expect(a[0]).toMatchObject({ id: 'support_requests', level: 'urgent', title: 'Responder 2 pedidos de apoio' });
+  });
+});

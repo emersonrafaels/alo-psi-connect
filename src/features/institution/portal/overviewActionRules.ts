@@ -1,5 +1,5 @@
 export type ActionLevel = 'urgent' | 'important' | 'suggestion';
-export type ActionTarget = 'triage_risk' | 'triage_in_progress' | 'supports' | 'buddy_brief';
+export type ActionTarget = 'triage_risk' | 'triage_in_progress' | 'supports' | 'buddy_brief' | 'support_requests';
 
 export interface OverviewAction {
   id: string;
@@ -18,6 +18,7 @@ export interface OverviewActionsInput {
   activeStudentsWeek: number;
   activeStudentsPrevWeek: number;
   lastBriefAt: string | null;
+  pendingSupportRequests?: number;
   now?: Date;
 }
 
@@ -32,6 +33,15 @@ const fmt = (n: number) => n.toLocaleString('pt-BR');
 export function buildOverviewActions(i: OverviewActionsInput): OverviewAction[] {
   const out: OverviewAction[] = [];
   const now = i.now ?? new Date();
+
+  const sup = i.pendingSupportRequests ?? 0;
+  if (sup > 0) {
+    out.push({
+      id: 'support_requests', level: 'urgent', target: 'support_requests', cta: 'Ver pedidos',
+      title: `Responder ${fmt(sup)} ${sup === 1 ? 'pedido' : 'pedidos'} de apoio`,
+      reason: `${sup === 1 ? 'Um aluno pediu' : `${fmt(sup)} alunos pediram`} apoio à equipe de cuidado.`,
+    });
+  }
 
   if (i.criticalOpen > 0) {
     out.push({
