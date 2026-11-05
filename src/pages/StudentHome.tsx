@@ -129,15 +129,7 @@ export default function StudentHome() {
   const endTour = () => { setTourStep(-1); if (user) localStorage.setItem(TOUR_KEY(user.id), '1'); };
 
   const firstName = d?.name?.split(' ')[0];
-  const [reqBusy, setReqBusy] = useState(false);
-  const askSupport = async () => {
-    setReqBusy(true);
-    const { data, error } = await db.rpc('open_care_request', { p_origin: 'apoio' });
-    setReqBusy(false);
-    if (error) toast.error('Não foi possível enviar seu pedido agora.');
-    else if (!data) toast.info('Seu perfil não está vinculado a uma instituição. Veja os apoios disponíveis.');
-    else toast.success('Pedido enviado. A equipe de cuidado da sua instituição vai entrar em contato.');
-  };
+  const [supportOpen, setSupportOpen] = useState(false);
   const toggleReminders = async (on: boolean) => {
     const { error } = await db.from('profiles').update({ email_reminders: on }).eq('user_id', user!.id);
     if (error) toast.error('Não foi possível salvar.'); else { toast.success(on ? 'Lembretes por e-mail ativados.' : 'Lembretes desativados.'); q.refetch(); }
@@ -287,7 +279,8 @@ export default function StudentHome() {
             <Card><CardContent className="p-4 space-y-2">
               <p className="text-sm text-muted-foreground flex items-center gap-2"><LifeBuoy className="h-4 w-4 text-primary" />Precisa conversar com alguém?</p>
               <p className="text-sm">Peça apoio à equipe de cuidado da sua instituição.</p>
-              <Button size="sm" onClick={askSupport} disabled={reqBusy}>Pedir apoio</Button>
+              <Button size="sm" onClick={() => setSupportOpen(true)}>Pedir apoio</Button>
+              <SupportRequestDialog open={supportOpen} onOpenChange={setSupportOpen} />
             </CardContent></Card>
             <Card><CardContent className="p-4 space-y-2">
               <div className="flex items-center justify-between gap-2">
