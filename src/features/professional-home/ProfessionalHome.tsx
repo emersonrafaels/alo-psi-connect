@@ -33,17 +33,16 @@ export default function ProfessionalHome({ userId, p }: { userId: string; p: (pa
       const { data: pro } = prof ? await db.from('profissionais').select('*').eq('profile_id', prof.id).maybeSingle() : { data: null };
       if (!pro) return { prof, pro: null } as any;
       const from = format(subDays(new Date(), 60), 'yyyy-MM-dd'), today = format(new Date(), 'yyyy-MM-dd');
-      const [appts, slots, off, sessions, insts, threads, posts] = await Promise.all([
+      const [appts, slots, off, sessions, insts, threads] = await Promise.all([
         db.from('agendamentos').select('id, data_consulta, horario, payment_status, status, valor, meeting_link').eq('professional_id', pro.id).gte('data_consulta', from).order('data_consulta').order('horario'),
         db.from('profissionais_sessoes').select('id').eq('user_id', pro.user_id).limit(1),
         db.from('professional_unavailability').select('date, start_time, end_time, all_day, reason').eq('professional_id', pro.id).gte('date', today).order('date').limit(3),
         db.from('group_sessions').select('id, title, session_date, start_time, current_registrations, status').or(`professional_id.eq.${pro.id},created_by.eq.${userId}`).order('session_date', { ascending: false }).limit(50),
         db.from('professional_institutions').select('institution_id, educational_institutions(name)').eq('professional_id', pro.id).eq('is_active', true),
         db.rpc('list_my_message_threads'),
-        db.from('blog_posts').select('title, slug').eq('status', 'published').order('published_at', { ascending: false }).limit(3),
       ]);
       return { prof, pro, appts: appts.data ?? [], hasSchedule: (slots.data ?? []).length > 0, off: off.data ?? [], sessions: sessions.data ?? [],
-        insts: insts.data ?? [], threads: Array.isArray(threads.data) ? threads.data : [], posts: posts.data ?? [] };
+        insts: insts.data ?? [], threads: Array.isArray(threads.data) ? threads.data : [] };
     },
   });
   const d = q.data;
@@ -161,8 +160,7 @@ export default function ProfessionalHome({ userId, p }: { userId: string; p: (pa
           <CardHeader className="pb-3"><CardTitle className="text-lg flex items-center gap-2"><Newspaper className="h-5 w-5 text-primary" />Novidades</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {v.unread > 0 && <Link to={p('/mensagens')} className="block rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm font-medium">Você tem {v.unread} {v.unread === 1 ? 'mensagem não lida' : 'mensagens não lidas'}</Link>}
-            {d.posts.map((b: any) => <Link key={b.slug} to={p(`/blog/${b.slug}`)} className="block rounded-lg p-3 hover:bg-muted/50 text-sm"><Badge variant="outline" className="mr-2">Blog</Badge>{b.title}</Link>)}
-            {v.unread === 0 && d.posts.length === 0 && <p className="text-sm text-muted-foreground">Sem novidades no momento.</p>}
+            {v.unread === 0 && <p className="text-sm text-muted-foreground">Sem novidades no momento.</p>}
           </CardContent>
         </Card>
         <Card>
