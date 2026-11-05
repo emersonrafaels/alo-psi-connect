@@ -1,3 +1,4 @@
+import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@4.0.0";
@@ -9,7 +10,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const resend = managedResend('institution-action', Deno.env.get("RESEND_API_KEY"));
 
 interface NotifyRequest {
   action_type: 'student_triaged' | 'triage_in_progress' | 'triage_resolved' | 'triage_reopened' | 'note_created' | 'note_deleted';

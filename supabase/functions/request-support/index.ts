@@ -1,3 +1,4 @@
+import { managedResend } from '../_shared/managed-email.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
@@ -71,7 +72,7 @@ Deno.serve(async (req) => {
       const { data: profs } = adminIds.length ? await db.from('profiles').select('email').in('user_id', adminIds) : { data: [] };
       const emails = [...new Set([...(profs ?? []).map((p: any) => p.email).filter(Boolean), RBE_EMAIL])];
       const { html, text } = renderMessageEmail({ subject: `${subject} · ${inst?.name ?? 'Instituição'}`, body, senderName: inst?.name ?? 'Rede Bem-Estar', fromInstitution: false });
-      const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+      const resend = managedResend('support-request', Deno.env.get('RESEND_API_KEY'));
       const { error } = await resend.batch.send(emails.map((to) => ({
         from: 'Rede Bem-Estar <noreply@redebemestar.com.br>', to: [to], subject: `${subject} · ${inst?.name ?? ''}`.trim(), html, text,
       })));

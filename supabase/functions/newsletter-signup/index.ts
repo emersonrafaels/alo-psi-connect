@@ -1,3 +1,4 @@
+import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@4.0.0";
@@ -115,7 +116,7 @@ const handler = async (req: Request): Promise<Response> => {
     const bccEmails = await getBccEmails(supabase, tenantId || null);
 
     // Send welcome email using Resend
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    const resend = managedResend('newsletter', Deno.env.get("RESEND_API_KEY"));
     
     try {
       const emailResponse = await resend.emails.send({
