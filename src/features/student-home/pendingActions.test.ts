@@ -28,3 +28,23 @@ describe('buildPendingActions', () => {
     expect(r[0].id).toBe('session');
   });
 });
+
+describe('encontro em breve com detalhes', () => {
+  const now = new Date(2026, 10, 5, 10, 0);
+  const b = { now, lastDiaryDate: '2026-11-05', scales: [], currentSemester: '2026.2', radarSemesters: ['2026.2'], unreadMessages: 0, pendingPaymentAppointments: 0 };
+  it('mostra nome, data e hora e abre a página do encontro', () => {
+    const at = new Date(2026, 10, 5, 19, 0).toISOString();
+    const [a] = buildPendingActions({ ...b, nextSessionAt: at, nextSession: { id: 's1', title: 'Roda: Provas', startsAt: at, type: 'roda_conversa', meetingUrl: 'https://meet/x' } });
+    expect(a.title).toBe('Roda: Provas');
+    expect(a.description).toBe('Roda de conversa · Hoje, 19h00 · começa em 9 h');
+    expect(a.path).toBe('/encontros/s1');
+    expect(a.cta).toBe('Ver encontro');
+  });
+  it('vira Entrar agora a 15 minutos do início', () => {
+    const at = new Date(2026, 10, 5, 10, 10).toISOString();
+    const [a] = buildPendingActions({ ...b, nextSessionAt: at, nextSession: { id: 's1', title: 'W', startsAt: at, meetingUrl: 'https://meet/x', otherCount: 1 } });
+    expect(a.cta).toBe('Entrar agora');
+    expect(a.path).toBe('https://meet/x');
+    expect(a.description).toContain('+1 outro encontro');
+  });
+});

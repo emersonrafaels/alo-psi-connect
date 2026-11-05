@@ -7,6 +7,28 @@ export interface PendingAction {
   path: string;
   cta: string;
   priority: ActionPriority; // 1 = most urgent
+  external?: boolean; // path is an external URL (e.g. meeting room)
+}
+
+export interface NextSession { id: string; title: string; startsAt: string; type?: string | null; meetingUrl?: string | null; otherCount?: number }
+
+const TYPE_LABEL: Record<string, string> = { workshop: 'Workshop', roda_conversa: 'Roda de conversa', palestra: 'Palestra' };
+const pad = (n: number) => String(n).padStart(2, '0');
+const WD = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const MO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+/** "Hoje, 19h00 · começa em 3 h" — uses local wall-clock of startsAt (no timezone suffix). */
+export function describeSession(s: NextSession, now: Date): string {
+  const at = new Date(s.startsAt);
+  const time = `${pad(at.getHours())}h${pad(at.getMinutes())}`;
+  const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  const tomorrow = new Date(now.getTime() + DAY);
+  const day = dayKey(at) === dayKey(now) ? 'Hoje' : dayKey(at) === dayKey(tomorrow) ? 'Amanhã' : `${WD[at.getDay()]}, ${at.getDate()} ${MO[at.getMonth()]}`;
+  const mins = Math.round((at.getTime() - now.getTime()) / 60_000);
+  const rel = mins <= 0 ? 'acontecendo agora' : mins < 60 ? `começa em ${mins} min` : `começa em ${Math.round(mins / 60)} h`;
+  const type = s.type ? TYPE_LABEL[s.type] ?? null : null;
+  const extra = s.otherCount ? ` · +${s.otherCount} outro${s.otherCount > 1 ? 's' : ''} encontro${s.otherCount > 1 ? 's' : ''}` : '';
+  return [type, `${day}, ${time}`, rel].filter(Boolean).join(' · ') + extra;
 }
 
 export interface ScaleInfo { code: string; name: string; frequencyDays: number; lastTakenAt: string | null }
@@ -18,6 +40,7 @@ export interface PendingInput {
   radarSemesters: string[];
   unreadMessages: number;
   nextSessionAt: string | null; // ISO of next registered encontro
+  nextSession?: NextSession | null;
   pendingPaymentAppointments: number;
 }
 
@@ -49,7 +72,13 @@ export function buildPendingActions(input: PendingInput, max = 5): PendingAction
   if (input.nextSessionAt) {
     const diff = new Date(input.nextSessionAt).getTime() - now.getTime();
     if (diff >= -60 * 60_000 && diff <= DAY) {
-      out.push({ id: 'session', title: 'Encontro em breve', description: 'Você tem um encontro nas próximas 24 horas.', path: '/meus-encontros', cta: 'Ver encontro', priority: 1 });
+      const ns = input.nextSession;
+      if (ns) {
+        const canJoin = diff <= 15 * 60_000 && !!ns.meetingUrl;
+        out.push({ id: 'session', title: ns.title, description: describeSession(ns, now), path: canJoin ? ns.meetingUrl! : `/encontros/${ns.id}`, cta: canJoin ? 'Entrar agora' : 'Ver encontro', priority: 1, external: canJoin });
+      } else {
+        out.push({ id: 'session', title: 'Encontro em breve', description: 'Você tem um encontro nas próximas 24 horas.', path: '/meus-encontros', cta: 'Ver encontro', priority: 1 });
+      }
     }
   }
 
