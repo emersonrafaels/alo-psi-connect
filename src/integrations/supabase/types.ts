@@ -4771,13 +4771,16 @@ export type Database = {
           created_at: string | null
           data_nascimento: string | null
           email: string
+          email_reminders: boolean
           foto_perfil_url: string | null
           genero: string | null
           google_calendar_refresh_token: string | null
           google_calendar_scope: string | null
           google_calendar_token: string | null
           id: string
+          last_reminder_at: string | null
           nome: string
+          preferred_language: string
           raca: string | null
           sexualidade: string | null
           tenant_id: string | null
@@ -4791,13 +4794,16 @@ export type Database = {
           created_at?: string | null
           data_nascimento?: string | null
           email: string
+          email_reminders?: boolean
           foto_perfil_url?: string | null
           genero?: string | null
           google_calendar_refresh_token?: string | null
           google_calendar_scope?: string | null
           google_calendar_token?: string | null
           id?: string
+          last_reminder_at?: string | null
           nome: string
+          preferred_language?: string
           raca?: string | null
           sexualidade?: string | null
           tenant_id?: string | null
@@ -4811,13 +4817,16 @@ export type Database = {
           created_at?: string | null
           data_nascimento?: string | null
           email?: string
+          email_reminders?: boolean
           foto_perfil_url?: string | null
           genero?: string | null
           google_calendar_refresh_token?: string | null
           google_calendar_scope?: string | null
           google_calendar_token?: string | null
           id?: string
+          last_reminder_at?: string | null
           nome?: string
+          preferred_language?: string
           raca?: string | null
           sexualidade?: string | null
           tenant_id?: string | null
