@@ -27,6 +27,16 @@ type Item = { apply: (v: string) => void; src: string };
 export function startAutoTranslate(lang: Lang): () => void {
   if (lang === "pt") return () => {};
   const cache: Record<string, string> = JSON.parse(localStorage.getItem(cacheKey(lang)) || "{}");
+  let ready = false;
+  // Human-reviewed texts and glossary override anything cached locally.
+  const overrides = Promise.all([
+    supabase.from("translations" as any).select("source_text,human_text").eq("lang", lang).not("human_text", "is", null).limit(5000),
+    supabase.from("translation_glossary" as any).select("term_pt,term_target").eq("lang", lang).limit(2000),
+  ]).then(([h, g]) => {
+    for (const r of ((g.data ?? []) as any[])) cache[r.term_pt.trim()] = r.term_target;
+    for (const r of ((h.data ?? []) as any[])) cache[r.source_text] = r.human_text;
+    saveCache();
+  }).catch(() => {}).finally(() => { ready = true; walk(document.body); });
   const original = new WeakMap<Node, string>();
   const originalAttr = new WeakMap<Element, Record<string, string>>();
   const done = new WeakMap<Node, string>(); // node -> last translated value we wrote
@@ -82,6 +92,7 @@ export function startAutoTranslate(lang: Lang): () => void {
 
   const flush = async () => {
     timer = undefined;
+    if (!ready) { await overrides; }
     const batch = pending; pending = [];
     const bySrc = new Map<string, Item[]>();
     for (const it of batch) {
@@ -93,7 +104,7 @@ export function startAutoTranslate(lang: Lang): () => void {
       const chunk = srcs.slice(i, i + 40);
       chunk.forEach((s) => inflight.add(s));
       try {
-        const { data, error } = await supabase.functions.invoke("translate-texts", { body: { lang, texts: chunk } });
+        const { data, error } = await supabase.functions.invoke("translate-texts", { body: { lang, texts: chunk, page: window.location.pathname } });
         if (error || !data?.translations) throw error;
         chunk.forEach((s, k) => { cache[s] = data.translations[k]; });
         saveCache();
