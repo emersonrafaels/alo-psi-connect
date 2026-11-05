@@ -15,6 +15,7 @@ import { useContext, useEffect, useState } from "react";
 import WhatsAppFloat from "@/components/ui/whatsapp-float";
 import { AutoTranslateRunner } from "@/features/i18n/LanguageFlags";
 import AdminTranslations from "@/pages/admin/Translations";
+import AdminEmailSettings from "@/pages/admin/EmailSettings";
 import ScrollToTopButton from "@/components/ui/scroll-to-top-button";
 import ScrollToTopOnPortalNavigation from "@/components/ui/scroll-to-top-on-navigation";
 import { FirstLoginWelcome } from "@/components/FirstLoginWelcome";
@@ -453,6 +454,7 @@ const AppWithShortcuts = () => {
       <Route path="/admin/radar-institucional" element={<AdminLayout><RadarInstitutional /></AdminLayout>} />
       <Route path="/admin/acesso-radar" element={<AdminLayout><RadarAccess /></AdminLayout>} />
       <Route path="/admin/traducoes" element={<AdminLayout><AdminTranslations /></AdminLayout>} />
+      <Route path="/admin/emails" element={<AdminLayout><AdminEmailSettings /></AdminLayout>} />
       <Route path="/admin/radar-institucional/:id" element={<AdminLayout><RadarInstitutionalDetail /></AdminLayout>} />
       <Route path="/admin/bulk-import" element={<AdminLayout><BulkImport /></AdminLayout>} />
       <Route path="/admin/system" element={<AdminLayout><AdminSystemMaintenance /></AdminLayout>} />

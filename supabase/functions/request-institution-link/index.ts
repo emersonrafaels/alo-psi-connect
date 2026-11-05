@@ -1,9 +1,10 @@
+import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@4.0.0";
 import { getBccEmails } from "../_shared/get-bcc-emails.ts";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const resend = managedResend('institution-link-request', Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

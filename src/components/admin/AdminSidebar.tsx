@@ -96,6 +96,12 @@ const adminMenuGroups = [
         requiredRole: 'admin' as const
       },
       {
+        title: 'Emails',
+        url: '/admin/emails',
+        icon: ShieldCheck,
+        requiredRole: 'admin' as const
+      },
+      {
         title: 'Traduções',
         url: '/admin/traducoes',
         icon: ShieldCheck,

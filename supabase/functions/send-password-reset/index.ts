@@ -1,9 +1,10 @@
+import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { getBccEmails } from "../_shared/get-bcc-emails.ts";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const resend = managedResend('password-reset', Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 

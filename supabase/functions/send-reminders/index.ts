@@ -1,3 +1,4 @@
+import { managedResend } from '../_shared/managed-email.ts';
 // Daily opt-in reminder emails for students (profiles.email_reminders = true).
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -18,7 +19,7 @@ Deno.serve(async (req) => {
     .eq('email_reminders', true).eq('tipo_usuario', 'paciente').or(`last_reminder_at.is.null,last_reminder_at.lt.${cutoff}`).limit(500);
   const { data: blocked } = await db.from('synthetic_student_cases').select('user_id').eq('notifications_blocked', true);
   const skip = new Set((blocked ?? []).map((b: any) => b.user_id));
-  const resend = new Resend(key);
+  const resend = managedResend('reminders', key);
   const today = now.toISOString().slice(0, 10);
   const sem = semesterOf(now);
   let sent = 0;

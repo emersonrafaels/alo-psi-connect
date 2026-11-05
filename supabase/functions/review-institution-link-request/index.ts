@@ -1,3 +1,4 @@
+import { managedEmailFetch } from '../_shared/managed-email.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
@@ -264,7 +265,7 @@ serve(async (req) => {
       `;
 
       try {
-        const res = await fetch('https://api.resend.com/emails', {
+        const res = await managedEmailFetch('institution-link-review', 'https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

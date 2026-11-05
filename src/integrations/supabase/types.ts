@@ -1358,6 +1358,36 @@ export type Database = {
         }
         Relationships: []
       }
+      email_settings: {
+        Row: {
+          created_at: string
+          email_key: string
+          enabled: boolean
+          extra_recipients: string[]
+          site_admin_receives: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_key: string
+          enabled?: boolean
+          extra_recipients?: string[]
+          site_admin_receives?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_key?: string
+          enabled?: boolean
+          extra_recipients?: string[]
+          site_admin_receives?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       email_test_logs: {
         Row: {
           created_at: string

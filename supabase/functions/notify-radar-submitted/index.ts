@@ -1,3 +1,4 @@
+import { managedResend } from '../_shared/managed-email.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { Resend } from 'npm:resend@4.0.0';
 
@@ -146,7 +147,7 @@ Deno.serve(async (req) => {
       </div>
     `;
 
-    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+    const resend = managedResend('radar-submitted', Deno.env.get('RESEND_API_KEY'));
     const subject = `🎯 Novo Radar Institucional: ${institutionName}`;
 
     const results = await Promise.allSettled(
