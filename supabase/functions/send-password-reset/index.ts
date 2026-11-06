@@ -83,13 +83,18 @@ const handler = async (req: Request): Promise<Response> => {
     const adminEmail = tenantData?.admin_email || 'noreply@redebemestar.com.br';
 
     // Verificar se o usuário existe
-    const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
-    if (userError) {
-      console.error("Error checking user:", userError);
-      throw userError;
+    const normalizedEmail = email.trim().toLowerCase();
+    let userExists: any = null;
+    for (let page = 1; page <= 50 && !userExists; page++) {
+      const { data: userData, error: userError } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
+      if (userError) {
+        console.error("Error checking user:", userError);
+        throw userError;
+      }
+      userExists = userData.users.find((u) => (u.email || '').toLowerCase() === normalizedEmail) || null;
+      if (userData.users.length < 1000) break;
     }
-
-    const userExists = userData.users.find(user => user.email === email);
+    console.log("User lookup:", userExists ? "found" : "not found");
     if (!userExists) {
       // Por segurança, retornamos sucesso mesmo se o usuário não existir
       return new Response(
@@ -111,7 +116,7 @@ const handler = async (req: Request): Promise<Response> => {
       .insert({
         user_id: userExists.id,
         token,
-        email,
+        email: userExists.email,
         expires_at: expiresAt.toISOString(),
         used: false
       });
@@ -134,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Enviar email com template personalizado e dinâmico por tenant
     const emailResponse = await resend.emails.send({
       from: `${tenantName} <noreply@redebemestar.com.br>`,
-      to: [email],
+      to: [userExists.email],
       bcc: bccEmails.length > 0 ? bccEmails : undefined,
       subject: `Recuperação de senha - ${tenantName}`,
       html: `
