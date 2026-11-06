@@ -43,4 +43,4 @@
 - Route student "Pedir apoio" requests through the `request-support` function, which opens the care request as the student, creates a message thread to each institution admin and emails them plus the Rede Bem-Estar inbox (skipping synthetic/demo cases); the portal's "Pedidos de apoio" card reads pending `care_requests` via RLS, so one request feeds Messages, Overview and the care journey.
 
 - Admin email settings live in `email_settings` and the catalog `supabase/functions/_shared/email-catalog.ts`; every email sender goes through `_shared/managed-email.ts` (managedResend / managedEmailFetch) so admin copies and on/off toggles apply everywhere.
-- Create every profile in the `handle_new_user_profile` trigger on `auth.users` (student by default, never blocks signup), so accounts from any sign-in method, such as Google, always have a profile.
+- Profiles come from the `handle_new_user_profile` trigger on `auth.users` (student default, never blocks signup) and student `pacientes` rows from `ensure_paciente_for_profile`, so every sign-in method yields a linkable account.
