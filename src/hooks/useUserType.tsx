@@ -16,7 +16,7 @@ interface UserTypeInfo {
 
 export const useUserType = (): UserTypeInfo => {
   const { user } = useAuth();
-  const { profile } = useUserProfile();
+  const { profile, loading: profileLoading } = useUserProfile();
   const executingRef = useRef(false);
   const debounceRef = useRef<NodeJS.Timeout>();
   
@@ -81,8 +81,14 @@ export const useUserType = (): UserTypeInfo => {
     }
 
     if (!profile) {
-      setLoading(true);
-      return; // Keep loading until profile loads
+      // Keep loading while the profile is being fetched; if it finished and
+      // there is no profile row, the user is not a professional.
+      if (profileLoading) { setLoading(true); return; }
+      setIsProfessional(false);
+      setIsActiveProfessional(false);
+      setProfessionalId(null);
+      setLoading(false);
+      return;
     }
 
     // Check if we have valid cached data for this profile
@@ -142,7 +148,7 @@ export const useUserType = (): UserTypeInfo => {
       setLoading(false);
       executingRef.current = false;
     }
-  }, [user?.id, profile?.id, profile?.tipo_usuario, cachedStatus, updateCache]);
+  }, [user?.id, profile?.id, profile?.tipo_usuario, profileLoading, cachedStatus, updateCache]);
 
   // Memoize the final result to prevent unnecessary re-renders
   const result = useMemo(() => ({
