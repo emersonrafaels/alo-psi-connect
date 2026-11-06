@@ -44,3 +44,4 @@
 
 - Admin email settings live in `email_settings` and the catalog `supabase/functions/_shared/email-catalog.ts`; every email sender goes through `_shared/managed-email.ts` (managedResend / managedEmailFetch) so admin copies and on/off toggles apply everywhere.
 - Create every profile in the `handle_new_user_profile` trigger on `auth.users` (student by default, never blocks signup), so accounts from any sign-in method, such as Google, always have a profile.
+- Create each student's `pacientes` row via the `ensure_paciente_for_profile` trigger on `profiles`, so every student account can be linked to institutions.
