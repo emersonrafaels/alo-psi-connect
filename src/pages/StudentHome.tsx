@@ -1,3 +1,4 @@
+import { ReminderSettingsDialog, normalizePrefs, summarizePrefs } from '@/features/student-home/ReminderSettingsDialog';
 import { useEffect, useMemo, useState } from 'react';
 import { SupportRequestDialog } from '@/features/support-request/SupportRequestDialog';
 import { Link, useNavigate } from 'react-router-dom';
@@ -69,14 +70,14 @@ export default function StudentHome() {
         db.from('agendamentos').select('id, data_consulta, horario, payment_status, status').eq('user_id', uid).gte('data_consulta', today).order('data_consulta').limit(5),
         db.rpc('list_my_message_threads'),
         db.from('group_sessions').select('id, title, session_date, start_time, session_type').gte('session_date', today).eq('status', 'scheduled').order('session_date').limit(4),
-        db.from('profiles').select('nome, tipo_usuario, email_reminders').eq('user_id', uid).maybeSingle(),
+        db.from('profiles').select('nome, tipo_usuario, email_reminders, reminder_prefs').eq('user_id', uid).maybeSingle(),
       ]);
       return {
         mood: mood.data ?? [], diaryDates: (lastMood.data ?? []).map((r: any) => r.date as string),
         journeyAt: journey.data?.[0]?.created_at ?? null, practiceAt: practice.data?.[0]?.created_at ?? null,
         scales: scales.data ?? [], scaleResp: scaleResp.data ?? [], radar: radar.data ?? [],
         regs: regs.data ?? [], appts: appts.data ?? [], threads: Array.isArray(threads.data) ? threads.data : [],
-        sessions: sessions.data ?? [], name: prof.data?.nome as string | undefined, reminders: !!prof.data?.email_reminders, tipo: prof.data?.tipo_usuario as string | undefined,
+        sessions: sessions.data ?? [], name: prof.data?.nome as string | undefined, reminders: !!prof.data?.email_reminders, reminderPrefs: normalizePrefs((prof.data as any)?.reminder_prefs), tipo: prof.data?.tipo_usuario as string | undefined,
       };
     },
   });
@@ -141,10 +142,7 @@ export default function StudentHome() {
 
   const firstName = d?.name?.split(' ')[0];
   const [supportOpen, setSupportOpen] = useState(false);
-  const toggleReminders = async (on: boolean) => {
-    const { error } = await db.from('profiles').update({ email_reminders: on }).eq('user_id', user!.id);
-    if (error) toast.error('Não foi possível salvar.'); else { toast.success(on ? 'Lembretes por e-mail ativados.' : 'Lembretes desativados.'); q.refetch(); }
-  };
+  const [remOpen, setRemOpen] = useState(false);
   const practiceOfDay = ['Respiração 4-7-8', 'Escaneamento corporal', 'Pausa de gratidão', 'Alongamento consciente', 'Ancoragem 5-4-3-2-1', 'Caminhada atenta', 'Relaxamento muscular'][new Date().getDay()];
 
   return (
@@ -306,11 +304,10 @@ export default function StudentHome() {
               <SupportRequestDialog open={supportOpen} onOpenChange={setSupportOpen} />
             </CardContent></Card>
             <Card><CardContent className="p-4 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-sm text-muted-foreground flex items-center gap-2"><BellRing className="h-4 w-4 text-primary" />Lembretes por e-mail</p>
-                <Switch checked={d!.reminders} onCheckedChange={toggleReminders} aria-label="Lembretes por e-mail" />
-              </div>
-              <p className="text-sm">Avisos quando o diário ficar parado, o Radar do semestre estiver pendente ou houver encontro no dia.</p>
+              <p className="text-sm text-muted-foreground flex items-center gap-2"><BellRing className="h-4 w-4 text-primary" />Lembretes por e-mail</p>
+              <p className="text-sm">{d!.reminders ? summarizePrefs(d!.reminderPrefs) : 'Desativados. Escolha o que lembrar e com que frequência.'}</p>
+              <Button size="sm" variant="outline" onClick={() => setRemOpen(true)}>Configurar</Button>
+              <ReminderSettingsDialog open={remOpen} onOpenChange={setRemOpen} userId={user!.id} enabled={d!.reminders} prefs={d!.reminderPrefs} onSaved={() => q.refetch()} />
             </CardContent></Card>
           </div>
         </>)}
