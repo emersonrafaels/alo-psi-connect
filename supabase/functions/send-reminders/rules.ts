@@ -21,3 +21,30 @@ export function buildReminders(i: ReminderInput, lang: string): string[] {
 }
 
 export const semesterOf = (d: Date) => `${d.getUTCFullYear()}.${d.getUTCMonth() < 6 ? 1 : 2}`;
+
+export type ReminderType = 'diary' | 'radar' | 'session';
+export interface ReminderPrefs { types: ReminderType[]; frequency: 'daily' | '3x_week' | 'weekly'; weekday: number; hour: 9 | 14 | 19; diary_gap_days: number }
+export const DEFAULT_PREFS: ReminderPrefs = { types: ['diary', 'radar', 'session'], frequency: 'daily', weekday: 1, hour: 9, diary_gap_days: 2 };
+export const normalizePrefs = (p: any): ReminderPrefs => ({ ...DEFAULT_PREFS, ...(p && typeof p === 'object' ? p : {}) });
+
+/** Brasília is UTC-3. Due when the current Brasília hour matches and the weekday fits the recurrence, once per day. */
+export function isDueNow(prefs: ReminderPrefs, now: Date, lastSentAt: string | null): boolean {
+  const br = new Date(now.getTime() - 3 * 3_600_000);
+  if (br.getUTCHours() !== prefs.hour) return false;
+  const wd = br.getUTCDay();
+  if (prefs.frequency === '3x_week' && ![1, 3, 5].includes(wd)) return false;
+  if (prefs.frequency === 'weekly' && wd !== prefs.weekday) return false;
+  if (lastSentAt && now.getTime() - Date.parse(lastSentAt) < 20 * 3_600_000) return false;
+  return true;
+}
+
+export function buildFilteredReminders(i: ReminderInput, lang: string, prefs: ReminderPrefs): string[] {
+  const t = texts(lang);
+  const out: string[] = [];
+  const day = i.now.toISOString().slice(0, 10);
+  const gap = i.lastDiary ? Math.floor((Date.parse(`${day}T00:00:00Z`) - Date.parse(`${i.lastDiary.slice(0, 10)}T00:00:00Z`)) / 86_400_000) : null;
+  if (prefs.types.includes('diary') && (gap === null || gap >= prefs.diary_gap_days)) out.push(t.diary(gap));
+  if (prefs.types.includes('radar') && !i.radarSemesters.includes(i.semester)) out.push(t.radar(i.semester));
+  if (prefs.types.includes('session')) for (const s of i.sessionsToday) out.push(t.session(s));
+  return out;
+}
