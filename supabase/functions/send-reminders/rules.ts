@@ -38,13 +38,17 @@ export function isDueNow(prefs: ReminderPrefs, now: Date, lastSentAt: string | n
   return true;
 }
 
+export interface ReminderItem { type: ReminderType; text: string }
 export function buildFilteredReminders(i: ReminderInput, lang: string, prefs: ReminderPrefs): string[] {
+  return buildReminderItems(i, lang, prefs).map((x) => x.text);
+}
+export function buildReminderItems(i: ReminderInput, lang: string, prefs: ReminderPrefs): ReminderItem[] {
   const t = texts(lang);
-  const out: string[] = [];
+  const out: ReminderItem[] = [];
   const day = i.now.toISOString().slice(0, 10);
   const gap = i.lastDiary ? Math.floor((Date.parse(`${day}T00:00:00Z`) - Date.parse(`${i.lastDiary.slice(0, 10)}T00:00:00Z`)) / 86_400_000) : null;
-  if (prefs.types.includes('diary') && (gap === null || gap >= prefs.diary_gap_days)) out.push(t.diary(gap));
-  if (prefs.types.includes('radar') && !i.radarSemesters.includes(i.semester)) out.push(t.radar(i.semester));
-  if (prefs.types.includes('session')) for (const s of i.sessionsToday) out.push(t.session(s));
+  if (prefs.types.includes('diary') && (gap === null || gap >= prefs.diary_gap_days)) out.push({ type: 'diary', text: t.diary(gap) });
+  if (prefs.types.includes('radar') && !i.radarSemesters.includes(i.semester)) out.push({ type: 'radar', text: t.radar(i.semester) });
+  if (prefs.types.includes('session')) for (const s of i.sessionsToday) out.push({ type: 'session', text: t.session(s) });
   return out;
 }
