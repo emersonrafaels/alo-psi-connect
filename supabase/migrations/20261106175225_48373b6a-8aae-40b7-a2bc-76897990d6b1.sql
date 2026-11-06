@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS reminder_prefs jsonb NOT NULL DEFAULT '{"types":["diary","radar","session"],"frequency":"daily","weekday":1,"hour":9,"diary_gap_days":2}'::jsonb;

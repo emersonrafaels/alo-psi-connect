@@ -4821,6 +4821,7 @@ export type Database = {
           nome: string
           preferred_language: string
           raca: string | null
+          reminder_prefs: Json
           sexualidade: string | null
           tenant_id: string | null
           tipo_usuario: string
@@ -4844,6 +4845,7 @@ export type Database = {
           nome: string
           preferred_language?: string
           raca?: string | null
+          reminder_prefs?: Json
           sexualidade?: string | null
           tenant_id?: string | null
           tipo_usuario: string
@@ -4867,6 +4869,7 @@ export type Database = {
           nome?: string
           preferred_language?: string
           raca?: string | null
+          reminder_prefs?: Json
           sexualidade?: string | null
           tenant_id?: string | null
           tipo_usuario?: string
