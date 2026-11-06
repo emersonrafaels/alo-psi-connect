@@ -25,6 +25,7 @@ import { buildPendingActions, daysSince } from '@/features/student-home/pendingA
 import { cn } from '@/lib/utils';
 import { buddyWhatsAppUrl } from '@/utils/buddyWhatsApp';
 import { useUserType } from '@/hooks/useUserType';
+import { usePraticas } from '@/hooks/usePraticas';
 import ProfessionalHome from '@/features/professional-home/ProfessionalHome';
 
 const db = supabase as any;
@@ -143,7 +144,14 @@ export default function StudentHome() {
   const firstName = d?.name?.split(' ')[0];
   const [supportOpen, setSupportOpen] = useState(false);
   const [remOpen, setRemOpen] = useState(false);
-  const practiceOfDay = ['Respiração 4-7-8', 'Escaneamento corporal', 'Pausa de gratidão', 'Alongamento consciente', 'Ancoragem 5-4-3-2-1', 'Caminhada atenta', 'Relaxamento muscular'][new Date().getDay()];
+  const { data: praticasData } = usePraticas();
+  const practiceOfDay = useMemo(() => {
+    const list = praticasData?.praticas ?? [];
+    if (!list.length) return null;
+    const now = new Date();
+    const dayOfYear = Math.floor((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - Date.UTC(now.getFullYear(), 0, 0)) / 86400000);
+    return list[dayOfYear % list.length];
+  }, [praticasData]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -294,8 +302,8 @@ export default function StudentHome() {
           <div className="grid gap-6 md:grid-cols-3">
             <Card><CardContent className="p-4 space-y-2">
               <p className="text-sm text-muted-foreground flex items-center gap-2"><Leaf className="h-4 w-4 text-primary" />Prática do dia</p>
-              <p className="font-semibold">{practiceOfDay}</p>
-              <Button size="sm" variant="outline" asChild><Link to={p('/praticas')}>Praticar agora</Link></Button>
+              <p className="font-semibold">{practiceOfDay?.titulo ?? 'Explore as práticas'}</p>
+              <Button size="sm" variant="outline" asChild><Link to={p(practiceOfDay ? `/praticas/${practiceOfDay.slug}` : '/praticas')} onClick={() => window.scrollTo(0, 0)}>Praticar agora</Link></Button>
             </CardContent></Card>
             <Card><CardContent className="p-4 space-y-2">
               <p className="text-sm text-muted-foreground flex items-center gap-2"><LifeBuoy className="h-4 w-4 text-primary" />Precisa conversar com alguém?</p>
