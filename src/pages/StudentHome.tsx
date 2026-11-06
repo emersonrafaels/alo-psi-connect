@@ -7,7 +7,7 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { buildIcs, downloadIcs } from '@/features/student-home/calendar';
-import { BellRing, CalendarPlus, LifeBuoy } from 'lucide-react';
+import { BellRing, Building2, CalendarPlus, LifeBuoy } from 'lucide-react';
 import { ArrowRight, BookHeart, Bot, CalendarDays, CheckCircle2, ClipboardList, Compass, HeartPulse, Leaf, Map, Moon, Newspaper, Sparkles, Smile, Users, Zap } from 'lucide-react';
 import Header from '@/components/ui/header';
 import Footer from '@/components/ui/footer';
@@ -81,6 +81,16 @@ export default function StudentHome() {
     },
   });
 
+  const instQ = useQuery({
+    queryKey: ['student-home-institutions', user?.id], enabled: !!user && !proLoading && !isProfessional,
+    queryFn: async () => {
+      const { data } = await db.from('patient_institutions').select('institution_id, educational_institutions(id, name, logo_url)');
+      const seen = new Set<string>();
+      return (data ?? []).map((r: any) => r.educational_institutions).filter((i: any) => i && !seen.has(i.id) && seen.add(i.id)) as { id: string; name: string; logo_url: string | null }[];
+    },
+  });
+  const institutions = instQ.data ?? [];
+
   const d = q.data;
   useEffect(() => { if (!isProfessional && d?.tipo && d.tipo !== 'paciente') navigate(p('/'), { replace: true }); }, [d?.tipo]); // eslint-disable-line
   const derived = useMemo(() => {
@@ -147,6 +157,18 @@ export default function StudentHome() {
             <p className="text-sm text-muted-foreground capitalize">{format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
             <h1 className="text-2xl md:text-3xl font-bold mt-1">{firstName ? `Olá, ${firstName}` : 'Meu espaço'}</h1>
             <p className="text-muted-foreground mt-1">Tudo sobre o seu cuidado, reunido em um só lugar.</p>
+            {institutions.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {institutions.map((i) => (
+                  <div key={i.id} className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 shadow-sm">
+                    {i.logo_url
+                      ? <img src={i.logo_url} alt={`Logo ${i.name}`} className="h-6 w-6 rounded-full object-contain bg-background" />
+                      : <Building2 className="h-5 w-5 text-primary" />}
+                    <span className="text-sm font-medium" data-no-translate>{i.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex gap-2 flex-wrap">
             {derived && derived.streak > 0 && <Badge variant="secondary" className="gap-1 py-1.5"><Sparkles className="h-3.5 w-3.5" />{derived.streak} {derived.streak === 1 ? 'dia' : 'dias'} seguidos de diário</Badge>}
