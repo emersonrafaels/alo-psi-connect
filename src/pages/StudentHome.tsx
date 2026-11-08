@@ -48,6 +48,8 @@ export default function StudentHome() {
   const p = (path: string) => buildTenantPath(slug, path);
   const { hasRole: isInstAdmin, loading: roleLoading } = useUserRole('institution_admin');
   const [tourStep, setTourStep] = useState(-1);
+  const [clock, setClock] = useState(() => new Date());
+  useEffect(() => { const t = setInterval(() => setClock(new Date()), 60_000); return () => clearInterval(t); }, []);
   const { isProfessional, loading: proLoading } = useUserType();
 
   useEffect(() => { if (!loading && !user) navigate(p('/auth')); }, [loading, user]); // eslint-disable-line
@@ -253,8 +255,42 @@ export default function StudentHome() {
             <Card>
               <CardHeader className="pb-3"><CardTitle className="text-lg flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary" />Próximos compromissos</CardTitle></CardHeader>
               <CardContent className="space-y-3">
+                {derived.upcomingRegs.length === 0 && (
+                  <div className="rounded-lg border border-dashed p-3 text-sm">
+                    <p className="text-muted-foreground">Você não está inscrito em nenhum encontro.</p>
+                    <Button size="sm" variant="link" className="px-0" asChild><Link to={p('/encontros')} onClick={() => window.scrollTo(0, 0)}>Ver agenda de encontros</Link></Button>
+                  </div>
+                )}
+                {derived.upcomingRegs[0] && (() => {
+                  const s: any = derived.upcomingRegs[0];
+                  const phase = sessionPhase(s.at, s.duration_minutes, clock);
+                  const canJoin = (phase === 'joinable' || phase === 'live') && !!s.meeting_link;
+                  const in24 = derived.upcomingRegs.filter((x: any) => new Date(x.at).getTime() - clock.getTime() <= 86_400_000).length;
+                  const typeLabel = s.session_type === 'workshop' ? 'Workshop' : s.session_type === 'roda_conversa' ? 'Roda de conversa' : s.session_type === 'palestra' ? 'Palestra' : 'Encontro';
+                  return (
+                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="secondary">{typeLabel}</Badge>
+                        {phase === 'live' && <Badge className="bg-destructive text-destructive-foreground animate-pulse">Ao vivo</Badge>}
+                      </div>
+                      <p className="font-semibold leading-tight">{s.title}</p>
+                      <p className="text-sm text-muted-foreground">{format(new Date(s.at), "EEEE, d 'de' MMMM 'às' HH:mm", { locale: ptBR })}</p>
+                      <p className="text-sm font-medium text-primary">{countdownLabel(s.at, clock)}</p>
+                      {in24 > 1 && <p className="text-xs text-muted-foreground">Você tem {in24} encontros nas próximas 24h.</p>}
+                      <div className="flex gap-2 pt-1 flex-wrap">
+                        {canJoin
+                          ? <Button size="sm" asChild><a href={s.meeting_link} target="_blank" rel="noopener noreferrer">Entrar</a></Button>
+                          : <Button size="sm" variant="outline" asChild><Link to={p(`/encontros/${s.id}`)} onClick={() => window.scrollTo(0, 0)}>Ver encontro</Link></Button>}
+                        <Button size="sm" variant="ghost" onClick={() => downloadIcs(s.title, buildIcs({ uid: s.id, title: s.title, start: new Date(s.at), url: s.meeting_link }))}>
+                          <CalendarPlus className="h-4 w-4 mr-1" />Adicionar à agenda
+                        </Button>
+                      </div>
+                      {!canJoin && s.meeting_link && <p className="text-xs text-muted-foreground">O botão Entrar libera 15 minutos antes.</p>}
+                    </div>
+                  );
+                })()}
                 {derived.upcomingRegs.length === 0 && d!.appts.length === 0 && <p className="text-sm text-muted-foreground">Nenhum compromisso agendado.</p>}
-                {derived.upcomingRegs.slice(0, 3).map((s: any) => (
+                {derived.upcomingRegs.slice(1, 4).map((s: any) => (
                   <div key={s.id} className="flex items-center gap-2 rounded-lg border p-3 hover:bg-muted/50">
                     <Link to={p(`/encontros/${s.id}`)} className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{s.title}</p><p className="text-xs text-muted-foreground">Encontro · {format(new Date(s.at), "d MMM, HH:mm", { locale: ptBR })}</p>
