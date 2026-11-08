@@ -58,9 +58,9 @@ Deno.serve(async (req) => {
       )
     }
 
-    const hasPermission = userRoles?.some(r => 
-      r.role === 'institution_admin' || r.role === 'super_admin'
-    )
+    const isSiteAdminCaller = userRoles?.some(r => r.role === 'admin' || r.role === 'super_admin')
+    const isInstAdminCaller = userRoles?.some(r => r.role === 'institution_admin')
+    const hasPermission = isSiteAdminCaller || isInstAdminCaller
 
     if (!hasPermission) {
       console.error('❌ [Link User] Usuário sem permissão')
@@ -71,6 +71,19 @@ Deno.serve(async (req) => {
     }
 
     const { institutionId, profileId, userType }: LinkUserRequest = await req.json()
+
+    // Institution admins may only link users to institutions they administer
+    if (!isSiteAdminCaller) {
+      const { data: membership } = await supabaseAdmin
+        .from('institution_users').select('id')
+        .eq('user_id', user.id).eq('institution_id', institutionId).eq('role', 'admin').eq('is_active', true).limit(1)
+      if (!membership?.length) {
+        return new Response(
+          JSON.stringify({ error: 'Sem permissão para vincular usuários a esta instituição' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
 
     console.log(`📋 [Link User] Vinculando ${userType} ${profileId} à instituição ${institutionId}`)
 
