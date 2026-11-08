@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
+import { requireSiteAdmin, authErrorResponse } from "../_shared/require-admin.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,6 +45,9 @@ serve(async (req) => {
         }
       }
     );
+
+    // Test runs create and delete accounts: site admins only.
+    await requireSiteAdmin(req, supabaseAdmin);
 
     const { action, tenant, cleanup_user_ids, cleanup_all } = await req.json();
 
@@ -92,6 +96,8 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
+    const denied = authErrorResponse(error, corsHeaders);
+    if (denied) return denied;
     console.error('Test error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
