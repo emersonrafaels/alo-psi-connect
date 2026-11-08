@@ -463,6 +463,14 @@ async function cleanupTestData(supabaseAdmin: any, userIds: string[]): Promise<a
   for (const userId of userIds) {
     try {
       console.log(`[CLEANUP] Deleting user ${userId}`);
+
+      // Only accounts created by this test tool can be deleted here
+      const { data: target } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const email = target?.user?.email ?? '';
+      if (!(email.startsWith('test-') && email.endsWith('@test.com'))) {
+        results.failed.push({ user_id: userId, error: 'Not a test account' });
+        continue;
+      }
       
       // Delete from auth.users (cascades to profiles, profissionais, pacientes)
       const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
