@@ -21,7 +21,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { buildTenantPath, getTenantSlugFromPath } from '@/utils/tenantHelpers';
 import { currentSemester } from '@/features/permanence/instrument';
-import { buildPendingActions, daysSince } from '@/features/student-home/pendingActions';
+import { buildPendingActions, daysSince, sessionPhase, countdownLabel } from '@/features/student-home/pendingActions';
 import { cn } from '@/lib/utils';
 import { buddyWhatsAppUrl } from '@/utils/buddyWhatsApp';
 import { useUserType } from '@/hooks/useUserType';
@@ -67,7 +67,7 @@ export default function StudentHome() {
         db.from('emotional_scales').select('code, name, frequency_days').eq('active', true).order('display_order'),
         db.from('emotional_scale_responses').select('scale_code, taken_at').eq('user_id', uid).order('taken_at', { ascending: false }).limit(200),
         db.from('permanence_responses').select('semester, created_at').eq('user_id', uid).order('created_at', { ascending: false }),
-        db.from('group_session_registrations').select('registered_at, status, group_sessions(id, title, session_date, start_time, session_type, meeting_link)').eq('user_id', uid).neq('status', 'cancelled'),
+        db.from('group_session_registrations').select('registered_at, status, group_sessions(id, title, session_date, start_time, session_type, meeting_link, duration_minutes)').eq('user_id', uid).neq('status', 'cancelled'),
         db.from('agendamentos').select('id, data_consulta, horario, payment_status, status').eq('user_id', uid).gte('data_consulta', today).order('data_consulta').limit(5),
         db.rpc('list_my_message_threads'),
         db.from('group_sessions').select('id, title, session_date, start_time, session_type').gte('session_date', today).eq('status', 'scheduled').order('session_date').limit(4),
@@ -107,7 +107,7 @@ export default function StudentHome() {
     const lastScale = (code: string) => d.scaleResp.find((r: any) => r.scale_code === code)?.taken_at ?? null;
     const upcomingRegs = d.regs.map((r: any) => r.group_sessions).filter(Boolean)
       .map((s: any) => ({ ...s, at: `${s.session_date}T${s.start_time ?? '00:00'}` }))
-      .filter((s: any) => new Date(s.at).getTime() > now.getTime() - 3_600_000).sort((a: any, b: any) => a.at.localeCompare(b.at));
+      .filter((s: any) => sessionPhase(s.at, s.duration_minutes, now) !== "ended").sort((a: any, b: any) => a.at.localeCompare(b.at));
     const unread = d.threads.filter((t: any) => t.recipient_id === user?.id ? !t.recipient_read_at : false).length;
     const sem = currentSemester();
     const actions = buildPendingActions({

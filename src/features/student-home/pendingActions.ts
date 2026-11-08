@@ -103,3 +103,25 @@ export function buildPendingActions(input: PendingInput, max = 5): PendingAction
 
   return out.map((a, i) => ({ a, i })).sort((x, y) => x.a.priority - y.a.priority || x.i - y.i).slice(0, max).map(x => x.a);
 }
+
+export type SessionPhase = 'upcoming' | 'joinable' | 'live' | 'ended';
+/** Join opens 15 min before start; live while within duration (default 60 min). */
+export function sessionPhase(startsAt: string, durationMinutes: number | null | undefined, now: Date): SessionPhase {
+  const start = new Date(startsAt).getTime();
+  const end = start + (durationMinutes && durationMinutes > 0 ? durationMinutes : 60) * 60_000;
+  const t = now.getTime();
+  if (t >= end) return 'ended';
+  if (t >= start) return 'live';
+  if (start - t <= 15 * 60_000) return 'joinable';
+  return 'upcoming';
+}
+
+/** "começa em 2h 15min" / "começa em 3 dias" */
+export function countdownLabel(startsAt: string, now: Date): string {
+  const mins = Math.ceil((new Date(startsAt).getTime() - now.getTime()) / 60_000);
+  if (mins <= 0) return 'acontecendo agora';
+  if (mins < 60) return `começa em ${mins} min`;
+  if (mins < 24 * 60) { const h = Math.floor(mins / 60), m = mins % 60; return `começa em ${h}h${m ? ` ${m}min` : ''}`; }
+  const days = Math.floor(mins / (24 * 60));
+  return `começa em ${days} dia${days > 1 ? 's' : ''}`;
+}
