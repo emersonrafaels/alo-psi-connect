@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from "react";
-import { BODY_SILHOUETTE, BODY_ZONES, type BodySide, type BodyZone } from "../bodyRegions";
+import { BODY_SILHOUETTE, BODY_ZONES, normalizeBodyZoneId, type BodySide, type BodyZone } from "../bodyRegions";
 import type { BodyMapLayer } from "../types";
 
 type BodySilhouetteProps = {
