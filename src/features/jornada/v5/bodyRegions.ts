@@ -26,6 +26,7 @@ export const BODY_ZONES: BodyZone[] = [
   { id: "hands_front", label: "Mãos", side: "front", sideLabel: "frente", shape: "path", values: "M31 237c-9 5-10 27 3 31 11 3 20-9 19-23Z M189 237c9 5 10 27-3 31-11 3-20-9-19-23Z" },
   { id: "legs_front", label: "Pernas", side: "front", sideLabel: "frente", shape: "path", values: "M76 225l7 160c1 13 23 13 25 0l2-145 2 145c2 13 24 13 25 0l7-160Z" },
   { id: "feet_front", label: "Pés", side: "front", sideLabel: "frente", shape: "path", values: "M82 382c-12 2-25 9-23 18 2 8 43 8 48 1l1-15Z M138 382c12 2 25 9 23 18-2 8-43 8-48 1l-1-15Z" },
+  { id: "head_back", label: "Cabeça", side: "back", sideLabel: "costas", shape: "ellipse", values: [110, 42, 27, 31] },
   { id: "neck_back", label: "Nuca", side: "back", sideLabel: "costas", shape: "ellipse", values: [110, 82, 20, 16] },
   { id: "upper_back", label: "Costas altas", side: "back", sideLabel: "costas", shape: "ellipse", values: [110, 129, 43, 42] },
   { id: "lower_back", label: "Lombar", side: "back", sideLabel: "costas", shape: "ellipse", values: [110, 194, 35, 36] },
@@ -41,8 +42,21 @@ export const BODY_REGION_OPTIONS = BODY_ZONES.map((zone) => ({
   label: `${zone.label} - ${zone.sideLabel}`,
 }));
 
-export const getBodyZone = (id: string | null | undefined) =>
-  id ? BODY_ZONES.find((zone) => zone.id === id) ?? null : null;
+/** Ids saved by earlier body-map versions, mapped to the current zones. */
+const LEGACY_ZONE_IDS: Record<string, string> = {
+  head: "head_front",
+  throat: "throat_front",
+  chest: "chest_front",
+  abdomen: "abdomen_front",
+};
+
+export const normalizeBodyZoneId = (id: string) => LEGACY_ZONE_IDS[id] ?? id;
+
+export const getBodyZone = (id: string | null | undefined) => {
+  if (!id) return null;
+  const key = normalizeBodyZoneId(id);
+  return BODY_ZONES.find((zone) => zone.id === key) ?? null;
+};
 
 export const getBodyRegionLabel = (id: string | null | undefined) => {
   const zone = getBodyZone(id);
