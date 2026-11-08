@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from "react";
-import { BODY_SILHOUETTE, BODY_ZONES, type BodySide, type BodyZone } from "../bodyRegions";
+import { BODY_SILHOUETTE, BODY_ZONES, normalizeBodyZoneId, type BodySide, type BodyZone } from "../bodyRegions";
 import type { BodyMapLayer } from "../types";
 
 type BodySilhouetteProps = {
@@ -21,8 +21,8 @@ export const BodySilhouette = ({
   const active = layers.find((layer) => layer.id === activeLayerId) ?? layers[0];
 
   const renderZone = (zone: BodyZone) => {
-    const selectedLayers = layers.filter((layer) => layer.zoneIds.includes(zone.id));
-    const isActive = active?.zoneIds.includes(zone.id) ?? false;
+    const selectedLayers = layers.filter((layer) => layer.zoneIds.some((id) => normalizeBodyZoneId(id) === zone.id));
+    const isActive = active?.zoneIds.some((id) => normalizeBodyZoneId(id) === zone.id) ?? false;
     const color = selectedLayers[0]?.color ?? "currentColor";
     const opacity = selectedLayers.length ? Math.min(0.18 + (selectedLayers[0]?.intensity ?? 3) * 0.08, 0.56) : 0;
     const shared = interactive
