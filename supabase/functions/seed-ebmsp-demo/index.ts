@@ -82,11 +82,6 @@ function riskFor(pattern: Pattern) {
 }
 
 async function requireAdmin(req: Request, admin: any) {
-  if (Deno.env.get("EBMSP_SEED_ENABLED") === "true") {
-    const { data: seedAdmin, error } = await admin.from("profiles").select("user_id").eq("email", ADMIN_EMAIL).maybeSingle();
-    if (error || !seedAdmin?.user_id) throw new Error("Seed administrator not found");
-    return seedAdmin.user_id;
-  }
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) throw new Error("Unauthorized");
   const token = authHeader.slice(7);

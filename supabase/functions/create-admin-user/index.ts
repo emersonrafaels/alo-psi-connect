@@ -1,5 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { requireSiteAdmin, authErrorResponse } from '../_shared/require-admin.ts'
+
+const ALLOWED_ROLES = ['admin', 'super_admin', 'moderator', 'author', 'super_author', 'facilitator']
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,7 +16,22 @@ serve(async (req) => {
   }
 
   try {
+    const supabaseServiceRole = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+    // Only site admins may create accounts; only super admins may create super admins.
+    const caller = await requireSiteAdmin(req, supabaseServiceRole);
+
     const { email, password, nome, role = 'admin' } = await req.json();
+
+    if (!ALLOWED_ROLES.includes(role)) {
+      return new Response(JSON.stringify({ error: 'Invalid role' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (role === 'super_admin' && !caller.roles.includes('super_admin')) {
+      return new Response(JSON.stringify({ error: 'Somente super admins podem criar super admins' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     if (!email || !password || !nome) {
       return new Response(
@@ -21,18 +39,6 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Create Supabase client with service role key
-    const supabaseServiceRole = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
 
     console.log('Creating user:', email);
 
@@ -89,7 +95,7 @@ serve(async (req) => {
       .insert({
         user_id: userData.user.id,
         role: role,
-        created_by: userData.user.id // For initial admin, self-created
+        created_by: caller.userId
       });
 
     if (roleError) {
@@ -116,6 +122,8 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    const denied = authErrorResponse(error, corsHeaders);
+    if (denied) return denied;
     console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),

@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getCaller, isSiteAdmin, isInstitutionAdminOf, authErrorResponse } from '../_shared/require-admin.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,6 +34,15 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // 0. Somente admins do site ou admins ativos desta instituição podem criar usuários nela
+    const caller = await getCaller(req, supabaseServiceRole);
+    if (!isSiteAdmin(caller) && !(caller.roles.includes('institution_admin') && await isInstitutionAdminOf(supabaseServiceRole, caller.userId, institutionId))) {
+      return new Response(JSON.stringify({ error: 'Sem permissão para criar usuários nesta instituição' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (!['admin', 'viewer'].includes(institutionRole)) {
+      return new Response(JSON.stringify({ error: 'Invalid institution role' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     // 1. Verificar se a instituição existe
     const { data: institution, error: instError } = await supabaseServiceRole
@@ -136,6 +146,8 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    const denied = authErrorResponse(error, corsHeaders);
+    if (denied) return denied;
     console.error('Error in create-institutional-user:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
