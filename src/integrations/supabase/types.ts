@@ -6424,6 +6424,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      cron_service_key: { Args: never; Returns: string }
       current_patient_id: { Args: never; Returns: string }
       get_current_tenant_id: { Args: never; Returns: string }
       get_institution_alerts: {
