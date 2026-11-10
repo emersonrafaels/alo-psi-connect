@@ -40,7 +40,6 @@ serve(async (req) => {
       );
     }
 
-    console.log('Creating user:', email);
 
     // Create the user
     const { data: userData, error: authError } = await supabaseServiceRole.auth.admin.createUser({
