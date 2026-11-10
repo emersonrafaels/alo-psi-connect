@@ -44,3 +44,4 @@
 
 - Admin email settings live in `email_settings` and the catalog `supabase/functions/_shared/email-catalog.ts`; every email sender goes through `_shared/managed-email.ts` (managedResend / managedEmailFetch) so admin copies and on/off toggles apply everywhere.
 - Profiles come from the `handle_new_user_profile` trigger on `auth.users` (student default, never blocks signup) and student `pacientes` rows from `ensure_paciente_for_profile`, so every sign-in method yields a linkable account.
+- Privileged edge functions (account creation, institution linking, test/seed tools) must verify the caller with `supabase/functions/_shared/require-admin.ts` before using the service client, and scheduled database jobs read their service key from Vault via `cron_service_key()`, so no endpoint trusts unauthenticated input and no key lives in SQL.
