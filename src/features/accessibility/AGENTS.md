@@ -1,0 +1,1 @@
+- Keep accessibility prefs here, applied as `a11y-*` classes on `<html>` and mirrored by an inline index.html script, so they apply site-wide without flashing.

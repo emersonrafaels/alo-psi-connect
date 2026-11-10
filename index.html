@@ -54,6 +54,7 @@
 
   <body>
     <div id="root"></div>
+    <script>try{var p=JSON.parse(localStorage.getItem("rbe-a11y-prefs")||"{}");var c=document.documentElement.classList;["contrast","grayscale","readableFont","spacing","links","bigCursor","noMotion"].forEach(function(k){if(p[k])c.add("a11y-"+k.replace(/[A-Z]/g,function(m){return "-"+m.toLowerCase()}))});if(p.scale&&p.scale!=1)document.documentElement.style.fontSize=(p.scale*100)+"%"}catch(e){}</script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
