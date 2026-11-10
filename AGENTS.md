@@ -44,3 +44,4 @@
 
 - Admin email settings live in `email_settings` and the catalog `supabase/functions/_shared/email-catalog.ts`; every email sender goes through `_shared/managed-email.ts` (managedResend / managedEmailFetch) so admin copies and on/off toggles apply everywhere.
 - Profiles come from the `handle_new_user_profile` trigger on `auth.users` (student default, never blocks signup) and student `pacientes` rows from `ensure_paciente_for_profile`, so every sign-in method yields a linkable account.
+- Keep accessibility preferences in `src/features/accessibility/` (applied as `a11y-*` classes on `<html>`, mirrored by an inline script in index.html), so they apply site-wide without flashing.

@@ -17,6 +17,7 @@ import { AutoTranslateRunner } from "@/features/i18n/LanguageFlags";
 import AdminTranslations from "@/pages/admin/Translations";
 import AdminEmailSettings from "@/pages/admin/EmailSettings";
 import ScrollToTopButton from "@/components/ui/scroll-to-top-button";
+import AccessibilityWidget from "@/features/accessibility/AccessibilityWidget";
 import ScrollToTopOnPortalNavigation from "@/components/ui/scroll-to-top-on-navigation";
 import { FirstLoginWelcome } from "@/components/FirstLoginWelcome";
 import { DomainRedirect } from "@/components/DomainRedirect";
@@ -542,6 +543,7 @@ const App: React.FC = () => {
                 <WhatsAppFloat />
                 <AutoTranslateRunner />
                 <ScrollToTopButton />
+                <AccessibilityWidget />
                 <ScrollToTopOnPortalNavigation />
                 <PortalTopLoadingBar />
               </AuthProvider>
