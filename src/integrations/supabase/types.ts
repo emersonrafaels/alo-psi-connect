@@ -6920,6 +6920,8 @@ export type Database = {
         | "super_author"
         | "institution_admin"
         | "facilitator"
+        | "admin_rbe"
+        | "clinical_coordinator"
       editorial_badge:
         | "editors_pick"
         | "trending"
@@ -7081,6 +7083,8 @@ export const Constants = {
         "super_author",
         "institution_admin",
         "facilitator",
+        "admin_rbe",
+        "clinical_coordinator",
       ],
       editorial_badge: [
         "editors_pick",
