@@ -6707,6 +6707,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_staff_home_summary: { Args: never; Returns: Json }
       get_student_permanence_participation: {
         Args: { _institution_id: string; _patient_id: string }
         Returns: {
