@@ -84,7 +84,7 @@ export default function StaffHome({ userId, kind, roles }: { userId: string; kin
           {actions.map((a) => (
             <Link key={a.id} to={a.to} className="flex items-center justify-between gap-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
               <div className="flex items-center gap-3">
-                <span className={cn('h-2.5 w-2.5 rounded-full', a.tone === 'urgent' ? 'bg-destructive' : a.tone === 'warn' ? 'bg-chart-4' : 'bg-primary')} />
+                <span className={cn('h-2.5 w-2.5 rounded-full', a.tone === 'urgent' ? 'bg-destructive' : a.tone === 'warn' ? 'bg-destructive/50' : 'bg-primary')} />
                 <div><p className="font-medium text-sm">{a.title}</p><p className="text-xs text-muted-foreground">{a.detail}</p></div>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground" />

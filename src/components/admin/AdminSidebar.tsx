@@ -274,7 +274,7 @@ export const AdminSidebar = () => {
       <SidebarContent>
         {[...adminMenuGroups, ...extraGroups].map((group) => {
           const visibleItems = group.items.filter(item => 
-            (!item.requiredRole || hasRole(item.requiredRole as any)) && canAccessAdminPath(roles, item.url)
+            (roles.includes('clinical_coordinator') && !hasRole('admin') ? true : (!item.requiredRole || hasRole(item.requiredRole as any))) && canAccessAdminPath(roles, item.url)
           );
           
           if (visibleItems.length === 0) return null;
