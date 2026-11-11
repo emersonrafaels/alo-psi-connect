@@ -44,3 +44,4 @@
 
 - Admin email settings live in `email_settings` and the catalog `supabase/functions/_shared/email-catalog.ts`; every email sender goes through `_shared/managed-email.ts` (managedResend / managedEmailFetch) so admin copies and on/off toggles apply everywhere.
 - Profiles come from the `handle_new_user_profile` trigger on `auth.users` (student default, never blocks signup) and student `pacientes` rows from `ensure_paciente_for_profile`, so every sign-in method yields a linkable account.
+- Staff profiles `admin_rbe` and `clinical_coordinator`: page access lives in `src/features/admin/rolePermissions.ts`; in the database `has_role(...,'admin')` includes `admin_rbe`, technical tables (settings, emails, translations) use `is_technical_admin`, and clinical tables use `is_clinical_staff`, so one matrix drives the menu and the database enforces it.
