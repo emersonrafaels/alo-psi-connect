@@ -24,7 +24,19 @@ import { getTodayLocalDateString, parseISODateLocal } from '@/lib/utils';
 import { calculateAverage, getEmotionValue, getAllEmotions } from '@/utils/emotionFormatters';
 import { MoodEntryDetailModal } from '@/components/mood/MoodEntryDetailModal';
 import type { MoodEntry } from '@/hooks/useMoodEntries';
-import { currentStreak, lastSevenDays, averageOf, compareTrend, shiftDate } from '@/features/mood-diary/home/diaryStats';
+import { currentStreak, lastSevenDays, averageOf, compareTrend, shiftDate, STAT_PERIODS, periodStart, pickPeriodWithData, type StatPeriodKey } from '@/features/mood-diary/home/diaryStats';
+
+// Legacy field mapping for backward compatibility
+const legacyFieldMap: Record<string, string> = {
+  mood: 'mood_score',
+  energy: 'energy_level',
+  anxiety: 'anxiety_level',
+};
+
+const dayIndex = (date: string) => {
+  const [y, m, d] = date.split('-').map(Number);
+  return Math.round(Date.UTC(y, m - 1, d) / 86400000);
+};
 
 const MoodDiary = () => {
   const navigate = useNavigate();
@@ -38,7 +50,19 @@ const MoodDiary = () => {
   const { toast } = useToast();
   const [selectedStatEmotion, setSelectedStatEmotion] = useState('mood');
   const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
+  const [statPeriod, setStatPeriod] = useState<StatPeriodKey>('7');
+  const [periodTouched, setPeriodTouched] = useState(false);
   const { getShareConfig } = useShareConfig();
+
+  // On entering, if the last 7 days have no data, jump to the shortest period that does.
+  useEffect(() => {
+    if (entriesLoading || periodTouched) return;
+    const points = entries.map(e => ({
+      date: e.date,
+      value: getEmotionValue(e, selectedStatEmotion, legacyFieldMap[selectedStatEmotion] as any) as number | null,
+    }));
+    setStatPeriod(pickPeriodWithData(points, getTodayLocalDateString()));
+  }, [entries, entriesLoading, selectedStatEmotion, periodTouched]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -174,27 +198,31 @@ const MoodDiary = () => {
   const week = lastSevenDays(entryDates, today);
   const weekCount = week.filter(d => d.filled).length;
 
-  // Legacy field mapping for backward compatibility
-  const legacyFieldMap: Record<string, string> = {
-    mood: 'mood_score',
-    energy: 'energy_level',
-    anxiety: 'anxiety_level',
-  };
   const selectedConfig = activeConfigs.find(c => c.emotion_type === selectedStatEmotion);
   const selectedScaleMax = selectedConfig?.scale_max || 5;
   const valueFor = (entry: MoodEntry) =>
     getEmotionValue(entry, selectedStatEmotion, legacyFieldMap[selectedStatEmotion] as any) as number | null;
-  const weekStart = shiftDate(today, -6);
-  const prevStart = shiftDate(today, -13);
-  const thisWeekEntries = entries.filter(e => e.date >= weekStart && e.date <= today);
-  const prevWeekEntries = entries.filter(e => e.date >= prevStart && e.date < weekStart);
-  const avgSelected = averageOf(thisWeekEntries.map(valueFor));
-  const avgPrevious = averageOf(prevWeekEntries.map(valueFor));
+  const periodMeta = STAT_PERIODS.find(p => p.key === statPeriod)!;
+  const pStart = periodStart(today, statPeriod);
+  const periodEntries = entries.filter(e => e.date <= today && (pStart === null || e.date >= pStart));
+  const avgSelected = averageOf(periodEntries.map(valueFor));
+  const avgPrevious = periodMeta.days === null || pStart === null
+    ? null
+    : averageOf(
+        entries
+          .filter(e => e.date >= shiftDate(today, -(2 * periodMeta.days - 1)) && e.date < pStart)
+          .map(valueFor),
+      );
   const trend = compareTrend(avgSelected, avgPrevious);
-  const sparkValues = week.map(d => {
-    const e = entries.find(x => x.date === d.date);
-    return e ? valueFor(e) : null;
-  });
+  const trendLabel = statPeriod === '7' ? 'semana anterior' : 'período anterior';
+  const sparkStart = pStart ?? (periodEntries.length ? periodEntries[periodEntries.length - 1].date : today);
+  const sparkSpan = Math.max(dayIndex(today) - dayIndex(sparkStart), 1);
+  const sparkPoints = periodEntries
+    .map(e => ({ date: e.date, v: valueFor(e) }))
+    .filter((p): p is { date: string; v: number } => typeof p.v === 'number')
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map(p => ({ x: ((dayIndex(p.date) - dayIndex(sparkStart)) / sparkSpan) * 100, v: p.v }));
+  const autoSwitched = !periodTouched && statPeriod !== '7';
 
   const todayLabel = parseISODateLocal(today).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   const todayAnalysis = todayEntry ? analysesMap?.get(todayEntry.id) : null;
@@ -214,9 +242,7 @@ const MoodDiary = () => {
   };
 
   const Sparkline = () => {
-    const pts = sparkValues
-      .map((v, i) => (v === null ? null : { x: (i / 6) * 100, y: 28 - ((v - 1) / Math.max(selectedScaleMax - 1, 1)) * 24 }))
-      .filter(Boolean) as { x: number; y: number }[];
+    const pts = sparkPoints.map(p => ({ x: p.x, y: 28 - ((p.v - 1) / Math.max(selectedScaleMax - 1, 1)) * 24 }));
     if (pts.length < 2) return null;
     return (
       <svg viewBox="0 0 100 32" className="w-full h-10" preserveAspectRatio="none" aria-hidden>
@@ -363,7 +389,19 @@ const MoodDiary = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <span className="text-xs text-muted-foreground">média 7 dias</span>
+                  <Select
+                    value={statPeriod}
+                    onValueChange={v => { setPeriodTouched(true); setStatPeriod(v as StatPeriodKey); }}
+                  >
+                    <SelectTrigger aria-label="Período analisado" className="h-7 w-auto gap-1 border-none bg-transparent px-2 text-xs text-muted-foreground shadow-none hover:text-foreground focus:ring-1 focus:ring-primary/30 [&>svg]:h-3 [&>svg]:w-3">
+                      <span>média · <SelectValue /></span>
+                    </SelectTrigger>
+                    <SelectContent align="end">
+                      {STAT_PERIODS.map(p => (
+                        <SelectItem key={p.key} value={p.key}>{p.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl font-bold">{avgSelected === null ? 'N/A' : Math.round(avgSelected)}</span>
@@ -371,11 +409,16 @@ const MoodDiary = () => {
                   {trend && (
                     <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
                       {trend === 'up' ? <ArrowUpRight className="h-3.5 w-3.5" /> : trend === 'down' ? <ArrowDownRight className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
-                      {trend === 'up' ? 'subiu' : trend === 'down' ? 'caiu' : 'igual'} vs. semana anterior
+                      {trend === 'up' ? 'subiu' : trend === 'down' ? 'caiu' : 'igual'} vs. {trendLabel}
                     </span>
                   )}
                 </div>
                 <Sparkline />
+                {autoSwitched && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Sem registros nos últimos 7 dias — mostrando {periodMeta.days === null ? 'todo o período' : `os últimos ${periodMeta.days} dias`}.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
