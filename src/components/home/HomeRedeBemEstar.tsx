@@ -459,13 +459,14 @@ const HomeRedeBemEstar = () => {
       {/* ═════════ INFOGRÁFICO DE SERVIÇOS ═════════ */}
       <section className="py-16 sm:py-20 lg:py-24 overflow-hidden" style={{ background: "var(--rbe-surface-container-lowest)" }}>
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl sm:text-5xl font-black mb-3 sm:mb-4" style={{ color: "var(--rbe-primary)" }}>
+          <div className="rbe-network-heading">
+          <h2 style={{ color: "var(--rbe-primary)" }}>
             Uma rede. Muitas formas de cuidar.
           </h2>
           <div className="rbe-services-intro">
-            <HeartHandshake className="w-7 h-7 shrink-0" aria-hidden="true" />
             <p>Apoio a estudantes e professores, ferramentas para o dia a dia e inteligência institucional.
               Um ecossistema conectado para uma experiência universitária mais saudável.</p>
+          </div>
           </div>
 
           <CareNetworkExplorer />
