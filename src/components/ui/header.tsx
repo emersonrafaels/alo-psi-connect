@@ -29,7 +29,8 @@ const Header = () => {
   const navigate = useNavigate()
   const { user, loading, signOut } = useAuth()
   const { profile } = useUserProfile()
-  const { isAdmin } = useAdminAuth()
+  const { isAdmin, hasRole: hasAdminRole } = useAdminAuth()
+  const isClinicalCoordinator = hasAdminRole('clinical_coordinator')
   const { isProfessional } = useUserType()
   const { isAuthor } = useAuthorRole()
   const { tenant } = useTenant()
@@ -183,10 +184,12 @@ const Header = () => {
                     <Users className="h-4 w-4 mr-2" />
                     {canCreateSessions ? 'Encontros' : 'Encontros Inscritos'}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/minhas-emocoes'))}>
-                    <HeartPulse className="h-4 w-4 mr-2" />
-                    Minhas Emoções
-                  </DropdownMenuItem>
+                  {!isClinicalCoordinator && (
+                    <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/minhas-emocoes'))}>
+                      <HeartPulse className="h-4 w-4 mr-2" />
+                      Minhas Emoções
+                    </DropdownMenuItem>
+                  )}
                   {profile?.tipo_usuario === 'paciente' && !isInstitutionAdmin && (
                     <DropdownMenuItem onClick={() => navigate(buildTenantPath(tenantSlug, '/radar-permanencia'))}>
                       <Compass className="h-4 w-4 mr-2" />
@@ -223,7 +226,7 @@ const Header = () => {
                     </DropdownMenuItem>
                   )}
                   {isAdmin && <DropdownMenuSeparator />}
-                  {isAdmin && (
+                  {isAdmin && !isClinicalCoordinator && (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
                       <Shield className="h-4 w-4 mr-2" />
                       Acessar Admin
@@ -340,14 +343,16 @@ const Header = () => {
                       Meu espaço
                     </Link>
                   )}
-                  <Link
-                    to={buildTenantPath(tenantSlug, '/minhas-emocoes')}
-                    className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <HeartPulse className="h-5 w-5 opacity-70" />
-                    Minhas Emoções
-                  </Link>
+                  {!isClinicalCoordinator && (
+                    <Link
+                      to={buildTenantPath(tenantSlug, '/minhas-emocoes')}
+                      className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <HeartPulse className="h-5 w-5 opacity-70" />
+                      Minhas Emoções
+                    </Link>
+                  )}
                   {profile?.tipo_usuario === 'paciente' && !isInstitutionAdmin && (
                     <Link
                       to={buildTenantPath(tenantSlug, '/radar-permanencia')}
@@ -408,7 +413,7 @@ const Header = () => {
                     </Link>
                   )}
                   {isAdmin && <div className="my-1 border-t border-border/50" />}
-                  {isAdmin && (
+                  {isAdmin && !isClinicalCoordinator && (
                     <Link
                       to="/admin"
                       className="text-sm py-2.5 px-3 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-3"
