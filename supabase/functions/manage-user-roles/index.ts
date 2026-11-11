@@ -7,7 +7,7 @@ const corsHeaders = {
 }
 
 // Valid roles based on app_role enum
-const VALID_ROLES = ['admin', 'super_admin', 'moderator', 'author', 'super_author', 'institution_admin', 'facilitator'];
+const VALID_ROLES = ['admin', 'super_admin', 'moderator', 'author', 'super_author', 'institution_admin', 'facilitator', 'admin_rbe', 'clinical_coordinator'];
 
 serve(async (req) => {
   // Handle CORS preflight requests

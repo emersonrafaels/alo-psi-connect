@@ -36,6 +36,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { canAccessAdminPath } from '@/features/admin/rolePermissions';
 import { usePatientFullViewAccess } from '@/hooks/usePatientFullViewAccess';
 
 const adminMenuGroups = [
@@ -241,7 +242,7 @@ const adminMenuGroups = [
 export const AdminSidebar = () => {
   const { state } = useSidebar();
   const location = useLocation();
-  const { hasRole } = useAdminAuth();
+  const { hasRole, roles } = useAdminAuth();
   const { hasAccess: hasPatientFullView } = usePatientFullViewAccess();
   const currentPath = location.pathname;
 
@@ -273,7 +274,7 @@ export const AdminSidebar = () => {
       <SidebarContent>
         {[...adminMenuGroups, ...extraGroups].map((group) => {
           const visibleItems = group.items.filter(item => 
-            !item.requiredRole || hasRole(item.requiredRole as any)
+            (!item.requiredRole || hasRole(item.requiredRole as any)) && canAccessAdminPath(roles, item.url)
           );
           
           if (visibleItems.length === 0) return null;

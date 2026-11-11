@@ -38,6 +38,8 @@ const roleLabels = {
   'author': 'Autor',
   'super_author': 'Super Autor',
   'institution_admin': 'Admin Institucional',
+  'admin_rbe': 'Admin RBE',
+  'clinical_coordinator': 'Coordenação clínica',
   'user': 'Usuário'
 };
 
@@ -224,6 +226,8 @@ const Roles = () => {
                       <SelectItem value="author">Autor</SelectItem>
                       <SelectItem value="super_author">Super Autor</SelectItem>
                       <SelectItem value="institution_admin">Admin Institucional</SelectItem>
+                      <SelectItem value="admin_rbe">Admin RBE</SelectItem>
+                      <SelectItem value="clinical_coordinator">Coordenação clínica</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

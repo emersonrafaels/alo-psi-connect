@@ -6796,11 +6796,13 @@ export type Database = {
       invoke_blog_analytics_aggregation: { Args: never; Returns: undefined }
       invoke_google_calendar_sync: { Args: never; Returns: undefined }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_clinical_staff: { Args: { _user_id: string }; Returns: boolean }
       is_message_thread_participant: {
         Args: { _thread_id: string }
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_technical_admin: { Args: { _user_id: string }; Returns: boolean }
       journey_landscape: {
         Args: { _user_id: string }
         Returns: {
