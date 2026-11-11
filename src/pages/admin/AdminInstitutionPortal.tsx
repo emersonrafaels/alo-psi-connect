@@ -14,7 +14,7 @@ import { InstitutionBuddyAccessTab } from '@/components/admin/InstitutionBuddyAc
 import { anonymizeStudentName, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
 
 export default function AdminInstitutionPortal() {
-  const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(null);
+  const [selectedInstitutionId, setSelectedInstitutionId] = useState<string | null>(() => new URLSearchParams(window.location.search).get('inst'));
   const [activeTab, setActiveTab] = useState('overview');
 
   const { institutions, linkedProfessionals, linkedStudents, isLoading } = useAdminInstitutionPortal(selectedInstitutionId);
