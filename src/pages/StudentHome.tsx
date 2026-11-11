@@ -27,6 +27,9 @@ import { buddyWhatsAppUrl } from '@/utils/buddyWhatsApp';
 import { useUserType } from '@/hooks/useUserType';
 import { usePraticas } from '@/hooks/usePraticas';
 import ProfessionalHome from '@/features/professional-home/ProfessionalHome';
+import StaffHome from '@/features/staff-home/StaffHome';
+import { staffKind } from '@/features/staff-home/staffActions';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 const db = supabase as any;
 const TOUR_KEY = (uid: string) => `student-home-tour-v1:${uid}`;
@@ -50,7 +53,11 @@ export default function StudentHome() {
   const [tourStep, setTourStep] = useState(-1);
   const [clock, setClock] = useState(() => new Date());
   useEffect(() => { const t = setInterval(() => setClock(new Date()), 60_000); return () => clearInterval(t); }, []);
-  const { isProfessional, loading: proLoading } = useUserType();
+  const { isProfessional: isProUser, loading: proLoading0 } = useUserType();
+  const { roles: staffRoles, loading: staffLoading } = useAdminAuth();
+  const staff = staffKind(staffRoles);
+  const isProfessional = isProUser || !!staff;
+  const proLoading = proLoading0 || staffLoading;
 
   useEffect(() => { if (!loading && !user) navigate(p('/auth')); }, [loading, user]); // eslint-disable-line
   useEffect(() => { if (!roleLoading && isInstAdmin) navigate(p('/portal-institucional'), { replace: true }); }, [roleLoading, isInstAdmin]); // eslint-disable-line
@@ -159,7 +166,7 @@ export default function StudentHome() {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl space-y-6">
-        {isProfessional && user ? <ProfessionalHome userId={user.id} p={p} /> : <>
+        {staff && user ? <StaffHome userId={user.id} kind={staff} roles={staffRoles} /> : isProfessional && user ? <ProfessionalHome userId={user.id} p={p} /> : <>
         <section data-tour="sh-header" className="rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-accent/10 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <p className="text-sm text-muted-foreground capitalize">{format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
