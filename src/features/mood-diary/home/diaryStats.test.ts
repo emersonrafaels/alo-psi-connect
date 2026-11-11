@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { currentStreak, lastSevenDays, averageOf, compareTrend, shiftDate } from './diaryStats';
+import { currentStreak, lastSevenDays, averageOf, compareTrend, shiftDate, pickPeriodWithData, periodStart } from './diaryStats';
 
 describe('diaryStats', () => {
   it('shifts across month boundaries', () => {
@@ -30,5 +30,30 @@ describe('diaryStats', () => {
     expect(compareTrend(4, 3)).toBe('up');
     expect(compareTrend(2, 3)).toBe('down');
     expect(compareTrend(null, 3)).toBeNull();
+  });
+});
+
+describe('stats period selection', () => {
+  const today = '2026-11-10';
+  it('keeps 7 days when the last week has data', () => {
+    expect(pickPeriodWithData([{ date: '2026-11-09', value: 3 }], today)).toBe('7');
+  });
+  it('moves to 15 days when the last week is empty but data is 10 days old', () => {
+    expect(pickPeriodWithData([{ date: '2026-11-01', value: 4 }], today)).toBe('15');
+  });
+  it('moves to 30 days for data 20 days old', () => {
+    expect(pickPeriodWithData([{ date: '2026-10-21', value: 4 }], today)).toBe('30');
+  });
+  it('moves to the whole history when data is older than 90 days', () => {
+    expect(pickPeriodWithData([{ date: '2026-01-01', value: 2 }], today)).toBe('all');
+  });
+  it('keeps 7 days when there is no data at all', () => {
+    expect(pickPeriodWithData([], today)).toBe('7');
+    expect(pickPeriodWithData([{ date: '2026-11-09', value: null }], today)).toBe('7');
+  });
+  it('computes inclusive period starts', () => {
+    expect(periodStart(today, '7')).toBe('2026-11-04');
+    expect(periodStart(today, '30')).toBe('2026-10-12');
+    expect(periodStart(today, 'all')).toBeNull();
   });
 });
