@@ -4,8 +4,8 @@ import { useAuth } from './useAuth';
 
 // Hierarquia: super_admin > admin > moderator
 const ROLE_HIERARCHY: Record<string, string[]> = {
-  moderator: ['moderator', 'admin', 'super_admin'],
-  admin: ['admin', 'super_admin'],
+  moderator: ['moderator', 'admin', 'admin_rbe', 'super_admin'],
+  admin: ['admin', 'admin_rbe', 'super_admin'],
   super_admin: ['super_admin'],
 };
 

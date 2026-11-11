@@ -28,7 +28,9 @@ const AVAILABLE_ROLES = [
   'admin',
   'super_admin',
   'institution_admin',
-  'facilitator'
+  'facilitator',
+  'admin_rbe',
+  'clinical_coordinator'
 ];
 
 export const RoleManagementDialog = ({ 

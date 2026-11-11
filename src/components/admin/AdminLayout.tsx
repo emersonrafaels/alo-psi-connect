@@ -1,4 +1,5 @@
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, Link, useLocation } from 'react-router-dom';
+import { canAccessAdminPath } from '@/features/admin/rolePermissions';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminTenantProvider } from '@/contexts/AdminTenantContext';
@@ -14,7 +15,8 @@ interface AdminLayoutProps {
 }
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
-  const { isAdmin, loading } = useAdminAuth();
+  const { isAdmin, loading, roles } = useAdminAuth();
+  const location = useLocation();
   const { signOut } = useAuth();
 
   if (loading) {
@@ -48,6 +50,11 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   if (!isAdmin) {
     return <Navigate to="/" replace />;
+  }
+
+  if (!canAccessAdminPath(roles, location.pathname)) {
+    const fallback = roles.includes('clinical_coordinator') && !roles.includes('admin_rbe') ? '/admin/portal-institucional' : '/admin';
+    return <Navigate to={fallback} replace />;
   }
 
   return (

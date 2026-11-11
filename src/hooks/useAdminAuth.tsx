@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
-export type UserRole = 'admin' | 'super_admin' | 'moderator';
+export type UserRole = 'admin' | 'super_admin' | 'moderator' | 'admin_rbe' | 'clinical_coordinator';
 
 interface AdminAuthData {
   isAdmin: boolean;
@@ -47,7 +47,7 @@ export const useAdminAuth = (): AdminAuthData => {
           setRoles(userRoles);
           // Only set isAdmin if user has actual admin roles
           const adminRoles = userRoles.filter(r => 
-            r === 'admin' || r === 'super_admin' || r === 'moderator'
+            r === 'admin' || r === 'super_admin' || r === 'moderator' || r === 'admin_rbe' || r === 'clinical_coordinator'
           );
           setIsAdmin(adminRoles.length > 0);
         }
@@ -67,15 +67,15 @@ export const useAdminAuth = (): AdminAuthData => {
   const hasRole = (role: UserRole) => {
     // Implement role hierarchy: super_admin > admin > moderator
     if (role === 'moderator') {
-      return roles.includes('moderator') || roles.includes('admin') || roles.includes('super_admin');
+      return roles.includes('moderator') || roles.includes('admin') || roles.includes('admin_rbe') || roles.includes('super_admin');
     }
     if (role === 'admin') {
-      return roles.includes('admin') || roles.includes('super_admin');
+      return roles.includes('admin') || roles.includes('admin_rbe') || roles.includes('super_admin');
     }
     if (role === 'super_admin') {
       return roles.includes('super_admin');
     }
-    return false;
+    return roles.includes(role);
   };
 
   return {
