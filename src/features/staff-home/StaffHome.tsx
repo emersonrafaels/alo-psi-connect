@@ -34,7 +34,7 @@ export default function StaffHome({ userId, kind, roles }: { userId: string; kin
     { id: 'welcome', title: 'Bem-vindo ao seu espaço', description: clinical ? 'Sua central de coordenação clínica: a saúde dos alunos de todas as instituições, sempre anonimizada.' : 'Sua central como Admin RBE: os números da rede e o que precisa da sua atenção.', target: '[data-tour="st-header"]' },
     { id: 'todo', title: 'O que fazer agora', description: 'As pendências mais importantes, em ordem de prioridade.', target: '[data-tour="st-todo"]' },
     { id: 'kpis', title: 'Indicadores', description: 'Contagens de toda a rede. Nenhum dado individual aparece aqui.', target: '[data-tour="st-kpis"]' },
-    { id: 'links', title: 'Atalhos', description: 'Só as páginas que o seu perfil pode abrir.', target: '[data-tour="st-links"]' },
+    ...(clinical ? [] : [{ id: 'links', title: 'Atalhos', description: 'Só as páginas que o seu perfil pode abrir.', target: '[data-tour="st-links"]' }]),
   ];
   const [tourStep, setTourStep] = useState(-1);
   const [instQuery, setInstQuery] = useState('');
@@ -149,12 +149,14 @@ export default function StaffHome({ userId, kind, roles }: { userId: string; kin
         </Card>
       )}
 
+      {!clinical && (
       <Card data-tour="st-links">
         <CardHeader><CardTitle className="text-lg">Atalhos</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           {shortcuts.map((l) => <Button key={l.to} asChild variant="outline" size="sm"><Link to={l.to}>{l.title}</Link></Button>)}
         </CardContent>
       </Card>
+      )}
 
       <TourOverlay show={tourStep >= 0} currentStep={Math.max(0, tourStep)} totalSteps={TOUR.length} stepData={TOUR[Math.max(0, tourStep)]}
         onNext={() => (tourStep + 1 >= TOUR.length ? endTour() : setTourStep(tourStep + 1))} onPrev={() => setTourStep(Math.max(0, tourStep - 1))} onSkip={endTour} />
