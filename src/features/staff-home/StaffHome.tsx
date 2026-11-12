@@ -12,11 +12,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TourOverlay } from '@/components/ui/tour-overlay';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import ClinicalHome from './clinical/ClinicalHome';
 import { buildStaffActions, staffShortcuts, type StaffSummary } from './staffActions';
 
 const TOUR_KEY = (uid: string, k: string) => `staff-home-tour-v1:${k}:${uid}`;
 
-export default function StaffHome({ userId, kind, roles }: { userId: string; kind: 'admin_rbe' | 'clinical'; roles: string[] }) {
+export default function StaffHome(props: { userId: string; kind: 'admin_rbe' | 'clinical'; roles: string[] }) {
+  return props.kind === 'clinical' ? <ClinicalHome userId={props.userId} /> : <AdminStaffHome {...props} />;
+}
+
+function AdminStaffHome({ userId, kind, roles }: { userId: string; kind: 'admin_rbe' | 'clinical'; roles: string[] }) {
   const clinical = kind === 'clinical';
   const q = useQuery({
     queryKey: ['staff-home', userId],

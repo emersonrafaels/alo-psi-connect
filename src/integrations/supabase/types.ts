@@ -6426,6 +6426,7 @@ export type Database = {
       }
       cron_service_key: { Args: never; Returns: string }
       current_patient_id: { Args: never; Returns: string }
+      get_clinical_home_summary: { Args: never; Returns: Json }
       get_current_tenant_id: { Args: never; Returns: string }
       get_institution_alerts: {
         Args: { p_institution_id: string }
