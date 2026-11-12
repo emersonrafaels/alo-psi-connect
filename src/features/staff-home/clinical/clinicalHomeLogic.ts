@@ -52,3 +52,31 @@ export const LEVELS = [
   { key: 'healthy', label: 'Sem sinais prioritários', tone: 'bg-success' },
   { key: 'none', label: 'Dados insuficientes', tone: 'bg-muted-foreground/40' },
 ] as const;
+
+/** Plain-language explanations shown in the Coordenação clínica tooltips. */
+export const HELP: Record<string, string> = {
+  'Sinal elevado sem triagem': 'Alunos com registro classificado como Sinal elevado nos últimos 30 dias e nenhuma triagem no período. Ação: abrir uma triagem.',
+  'Prioridade alta em aberto': 'Triagens pendentes ou em andamento marcadas como prioridade urgente ou alta. Ação: priorizar contato e encaminhamento.',
+  'Retornos vencidos': 'Triagens em aberto cuja data de retorno já passou. Ação: reavaliar, renovar o plano ou encerrar o caso.',
+  'Pedidos parados > 3 dias': 'Pedidos de apoio feitos pelos alunos há mais de 3 dias sem triagem ou desfecho. Ação: dar a primeira resposta.',
+  'Triagens em aberto': 'Total de triagens pendentes ou em andamento na rede, de qualquer prioridade.',
+  'Sinal elevado em 7 dias': 'Registros analisados como Sinal elevado nos últimos 7 dias. Mostra se há novos casos surgindo.',
+  critical: 'Último registro analisado com o maior nível de sinal. Pede triagem rápida. Não é diagnóstico.',
+  alert: 'Sinais relevantes no último registro; vale acompanhar de perto.',
+  attention: 'Sinais leves; acompanhamento preventivo.',
+  healthy: 'Último registro sem sinais que peçam prioridade.',
+  none: 'Alunos sem registro analisado nos últimos 30 dias, por isso sem nível calculado.',
+  Humor: 'Média do humor registrado no diário (1 a 5). Seta verde para cima = melhora frente aos 30 dias anteriores.',
+  Ansiedade: 'Média da ansiedade (1 a 5). Aqui, seta para baixo em verde = melhora (menos ansiedade).',
+  Sono: 'Média da qualidade de sono percebida (1 a 5), comparada com os 30 dias anteriores.',
+  Energia: 'Média da disposição (1 a 5), comparada com os 30 dias anteriores.',
+  engaged: 'Percentual dos alunos vinculados que fizeram ao menos um registro no diário nos últimos 7 dias.',
+  hours_to_triage: 'Tempo médio entre o pedido de apoio e a triagem, nos últimos 90 dias.',
+  days_to_consult: 'Tempo médio entre o pedido e a primeira consulta, nos últimos 90 dias.',
+  radar: 'Percentual de alunos que responderam o Radar de Permanência neste semestre.',
+  col_elevated: 'Percentual de alunos da instituição com Sinal elevado no último registro (oculto em grupos com menos de 10).',
+  col_triage: 'Triagens pendentes ou em andamento.',
+  col_urgent: 'Triagens em aberto com prioridade urgente ou alta.',
+  col_overdue: 'Triagens em aberto com data de retorno vencida.',
+  col_care: 'Pedidos de apoio há mais de 3 dias sem resposta.',
+};

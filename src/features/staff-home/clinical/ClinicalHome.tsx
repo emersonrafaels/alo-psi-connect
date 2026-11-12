@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { X } from 'lucide-react';
 import { AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, Building2, CalendarDays, ClipboardList, Clock, LifeBuoy, Minus, Radar, RefreshCw, ShieldCheck, Activity, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TourOverlay } from '@/components/ui/tour-overlay';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { LEVELS, institutionStatus, rankInstitutions, safePct, trend, trendIsGood, type ClinicalSummary } from './clinicalHomeLogic';
+import { InfoTip } from './InfoTip';
+import { HELP, LEVELS, institutionStatus, rankInstitutions, safePct, trend, trendIsGood, type ClinicalSummary } from './clinicalHomeLogic';
 
 const TOUR_KEY = (uid: string) => `clinical-home-tour-v2:${uid}`;
 const TOUR = [
@@ -36,6 +38,7 @@ export default function ClinicalHome({ userId }: { userId: string }) {
   const [tourStep, setTourStep] = useState(-1);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
+  const [hideInfo, setHideInfo] = useState(() => localStorage.getItem('clinical-home-info-hidden') === '1');
   useEffect(() => { if (!localStorage.getItem(TOUR_KEY(userId))) setTourStep(0); }, [userId]);
   const endTour = () => { localStorage.setItem(TOUR_KEY(userId), '1'); setTourStep(-1); };
 
@@ -80,10 +83,15 @@ export default function ClinicalHome({ userId }: { userId: string }) {
         </div>
       </section>
 
-      <div className="flex items-start gap-3 rounded-xl border-l-4 border-primary bg-primary/5 p-4 text-sm">
+      {!hideInfo && <div className="flex items-start gap-3 rounded-xl border-l-4 border-primary bg-primary/5 p-4 text-sm">
         <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
-        <p>Os alunos aparecem sempre como "Aluno #N". Você vê sinais e números, nunca o que o aluno escreveu. Percentuais de grupos com menos de 10 alunos ficam ocultos.</p>
-      </div>
+        <div className="space-y-1 flex-1">
+          <p className="font-semibold">Como ler este painel</p>
+          <p>Os números são totais e médias de toda a rede. Os alunos aparecem sempre como "Aluno #N" e você nunca vê o que escreveram. Percentuais de grupos com menos de 10 alunos ficam ocultos.</p>
+          <p className="text-muted-foreground">Os níveis de sinal ajudam a priorizar a triagem e não são diagnóstico. Passe o mouse ou toque no ícone ⓘ para ver o que cada indicador mede.</p>
+        </div>
+        <button type="button" aria-label="Fechar explicação" onClick={() => { localStorage.setItem('clinical-home-info-hidden', '1'); setHideInfo(true); }} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+      </div>}
 
       {q.isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
       {q.isError && <p className="text-sm text-destructive">Não foi possível carregar o resumo clínico.</p>}
@@ -96,20 +104,20 @@ export default function ClinicalHome({ userId }: { userId: string }) {
               p.value > 0 && p.sev === 'warning' && 'border-destructive/25')}>
               <p.icon className={cn('h-5 w-5', p.value > 0 && p.sev !== 'info' ? 'text-destructive' : 'text-primary')} />
               <p className="text-2xl font-bold mt-2">{p.value.toLocaleString('pt-BR')}</p>
-              <p className="text-xs text-muted-foreground">{p.label}</p>
+              <p className="text-xs text-muted-foreground flex items-start gap-1">{p.label}<InfoTip label={p.label} text={HELP[p.label]} /></p>
             </Link>
           ))}
         </section>
 
         <div data-tour="ch-health" className="grid lg:grid-cols-3 gap-4">
           <Card className="lg:col-span-2">
-            <CardHeader><CardTitle className="text-lg">Níveis de sinal · últimos 30 dias</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">Níveis de sinal · últimos 30 dias</CardTitle><p className="text-xs text-muted-foreground">Quantos alunos estão em cada nível, pelo último registro analisado no diário. Some 100% dos alunos vinculados.</p></CardHeader>
             <CardContent className="space-y-3">
               {LEVELS.map((l) => {
                 const n = s.levels?.[l.key] ?? 0; const pct = levelTotal ? Math.round((n / levelTotal) * 100) : 0;
                 return (
                   <div key={l.key} className="space-y-1">
-                    <div className="flex justify-between text-sm"><span className="flex items-center gap-2"><span className={cn('h-2.5 w-2.5 rounded-full', l.tone)} />{l.label}</span><span className="text-muted-foreground">{n.toLocaleString('pt-BR')} · {pct}%</span></div>
+                    <div className="flex justify-between text-sm"><span className="flex items-center gap-2"><span className={cn('h-2.5 w-2.5 rounded-full', l.tone)} />{l.label}<InfoTip label={l.label} text={HELP[l.key]} /></span><span className="text-muted-foreground">{n.toLocaleString('pt-BR')} · {pct}%</span></div>
                     <div className="h-2 rounded-full bg-muted overflow-hidden"><div className={cn('h-full rounded-full', l.tone)} style={{ width: `${pct}%` }} /></div>
                   </div>
                 );
@@ -118,21 +126,21 @@ export default function ClinicalHome({ userId }: { userId: string }) {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardTitle className="text-lg">Médias da rede</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">Médias da rede</CardTitle><p className="text-xs text-muted-foreground">Média dos registros dos últimos 30 dias. Verde indica melhora; vermelho, piora.</p></CardHeader>
             <CardContent className="space-y-3">
               {avgs.map((a) => {
                 const dir = trend(a.c, a.p); const good = trendIsGood(dir, a.inv);
                 const Icon = dir === 'up' ? ArrowUpRight : dir === 'down' ? ArrowDownRight : Minus;
                 return (
                   <div key={a.label} className="flex items-center justify-between text-sm">
-                    <span>{a.label}</span>
+                    <span className="flex items-center gap-1">{a.label}<InfoTip label={a.label} text={HELP[a.label]} /></span>
                     <span className="flex items-center gap-2 font-semibold">{fmt(a.c)}
                       {dir && <Icon className={cn('h-4 w-4', good === true && 'text-success', good === false && 'text-destructive', good === null && 'text-muted-foreground')} />}
                     </span>
                   </div>
                 );
               })}
-              <div className="border-t pt-3 text-sm flex justify-between"><span>Registraram no diário (7 dias)</span><span className="font-semibold">{safePct(s.engaged_7d, s.students) ?? '—'}%</span></div>
+              <div className="border-t pt-3 text-sm flex justify-between"><span className="flex items-center gap-1">Registraram no diário (7 dias)<InfoTip label="Registraram no diário" text={HELP.engaged} /></span><span className="font-semibold">{safePct(s.engaged_7d, s.students) ?? '—'}%</span></div>
               <p className="text-xs text-muted-foreground">Escala 1–5. Seta compara com os 30 dias anteriores.</p>
             </CardContent>
           </Card>
@@ -142,8 +150,8 @@ export default function ClinicalHome({ userId }: { userId: string }) {
           <Card data-tour="ch-flow">
             <CardHeader><CardTitle className="text-lg">Fluxo de cuidado · 90 dias</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-2 gap-3 text-sm">
-              <div><p className="text-2xl font-bold">{fmt(s.flow.hours_to_triage)}h</p><p className="text-xs text-muted-foreground">até a triagem</p></div>
-              <div><p className="text-2xl font-bold">{fmt(s.flow.days_to_consult)}d</p><p className="text-xs text-muted-foreground">até a 1ª consulta</p></div>
+              <div><p className="text-2xl font-bold">{fmt(s.flow.hours_to_triage)}h</p><p className="text-xs text-muted-foreground flex items-center gap-1">até a triagem<InfoTip label="até a triagem" text={HELP.hours_to_triage} /></p></div>
+              <div><p className="text-2xl font-bold">{fmt(s.flow.days_to_consult)}d</p><p className="text-xs text-muted-foreground flex items-center gap-1">até a 1ª consulta<InfoTip label="até a 1ª consulta" text={HELP.days_to_consult} /></p></div>
               <div className="col-span-2 border-t pt-3"><p className="font-semibold">{s.flow.resolved_30d} triagens concluídas em 30 dias</p>
                 <div className="flex flex-wrap gap-1.5 mt-2">{Object.entries(s.flow.outcomes).map(([k, n]) => <span key={k} className="rounded-full bg-muted px-2 py-0.5 text-xs">{k.replace(/_/g, ' ')} · {n}</span>)}</div>
               </div>
@@ -153,7 +161,7 @@ export default function ClinicalHome({ userId }: { userId: string }) {
             <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Radar className="h-5 w-5" />Radar {s.radar_semester}</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
               <p className="text-2xl font-bold">{safePct(s.radar_answered, s.students) ?? '—'}%</p>
-              <p className="text-xs text-muted-foreground">dos alunos responderam neste semestre</p>
+              <p className="text-xs text-muted-foreground">dos alunos responderam neste semestre <InfoTip label="Radar" text={HELP.radar} /></p>
               {radarLow.length > 0 && <div className="border-t pt-2 space-y-1"><p className="text-xs font-medium">Menor participação</p>
                 {radarLow.map((i) => <div key={i.id} className="flex justify-between text-xs"><span className="truncate">{i.name}</span><span>{safePct(i.radar_answered, i.students)}%</span></div>)}</div>}
             </CardContent>
@@ -195,9 +203,9 @@ export default function ClinicalHome({ userId }: { userId: string }) {
             {ranked.length === 0 ? <p className="py-6 text-sm text-center text-muted-foreground">Nenhuma instituição encontrada.</p> : (
               <table className="w-full text-sm">
                 <thead><tr className="text-left text-xs text-muted-foreground border-b">
-                  <th className="py-2 pr-3 font-medium">Instituição</th><th className="px-2 font-medium text-right">Alunos</th><th className="px-2 font-medium text-right">% sinal elevado</th>
-                  <th className="px-2 font-medium text-right">Triagens</th><th className="px-2 font-medium text-right">Prioridade alta</th><th className="px-2 font-medium text-right">Retornos vencidos</th>
-                  <th className="px-2 font-medium text-right">Pedidos parados</th><th /></tr></thead>
+                  <th className="py-2 pr-3 font-medium">Instituição</th><th className="px-2 font-medium text-right">Alunos</th><th className="px-2 font-medium text-right"><span className="inline-flex items-center gap-1">% sinal elevado<InfoTip label="% sinal elevado" text={HELP.col_elevated} /></span></th>
+                  <th className="px-2 font-medium text-right"><span className="inline-flex items-center gap-1">Triagens<InfoTip label="Triagens" text={HELP.col_triage} /></span></th><th className="px-2 font-medium text-right"><span className="inline-flex items-center gap-1">Prioridade alta<InfoTip label="Prioridade alta" text={HELP.col_urgent} /></span></th><th className="px-2 font-medium text-right"><span className="inline-flex items-center gap-1">Retornos vencidos<InfoTip label="Retornos vencidos" text={HELP.col_overdue} /></span></th>
+                  <th className="px-2 font-medium text-right"><span className="inline-flex items-center gap-1">Pedidos parados<InfoTip label="Pedidos parados" text={HELP.col_care} /></span></th><th /></tr></thead>
                 <tbody className="divide-y">
                   {ranked.map((i) => (
                     <tr key={i.id}>
