@@ -15,7 +15,8 @@ export function useAnonymizationConfig(institutionId: string | null): Anonymizat
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!institutionId) {
+    if (!institutionId || sessionStorage.getItem('rbe-staff-portal-view') === '1') {
+      setIsAnonymized(true);
       setLoading(false);
       return;
     }

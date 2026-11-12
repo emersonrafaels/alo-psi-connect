@@ -53,6 +53,7 @@ import { BuddyInstitutionPanel } from '@/components/institution/BuddyInstitution
 import { StudentBuddyPanel } from '@/components/institution/StudentBuddyPanel';
 import { useAllowedBuddyStudents } from '@/hooks/useInstitutionBuddyAccess';
 import { Brain } from 'lucide-react';
+import { StaffViewBanner } from '@/features/institution/portal/StaffViewBanner';
 
 export default function InstitutionPortal() {
   usePortalFreshData();
@@ -186,6 +187,7 @@ export default function InstitutionPortal() {
           </div>
         </div>
 
+        <StaffViewBanner name={(userInstitutions[0] as any)?.educational_institutions?.name} />
         <div className="flex gap-8 items-start">
           <PortalSidebar items={navItems} active={activeTab} onSelect={changeTab} />
           <div className="flex-1 min-w-0" id="institution-tabs">

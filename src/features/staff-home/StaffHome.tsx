@@ -117,7 +117,7 @@ export default function StaffHome({ userId, kind, roles }: { userId: string; kin
                   <Badge variant="outline">{i.triage_open} triagens</Badge>
                   {i.triage_urgent > 0 && <Badge variant="destructive">{i.triage_urgent} prioridade alta</Badge>}
                   <Badge variant="secondary">{i.care_open} pedidos</Badge>
-                  <Button asChild size="sm" variant="ghost"><Link to={`/admin/portal-institucional?inst=${i.id}`}>Abrir</Link></Button>
+                  <Button asChild size="sm" variant="ghost"><Link to={`/portal-institucional?inst=${i.id}`}>Abrir</Link></Button>
                 </div>
               </div>
             ))}

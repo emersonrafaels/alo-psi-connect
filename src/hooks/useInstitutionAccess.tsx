@@ -5,6 +5,11 @@ import { useAuth } from './useAuth';
 import { useTenant } from './useTenant';
 import { useLocation } from 'react-router-dom';
 
+export const STAFF_INST_KEY = 'rbe-staff-portal-inst';
+export const STAFF_VIEW_FLAG = 'rbe-staff-portal-view';
+const STAFF_ROLES = ['admin', 'super_admin', 'admin_rbe', 'clinical_coordinator'];
+export const isStaffPortalView = () => typeof window !== 'undefined' && sessionStorage.getItem(STAFF_VIEW_FLAG) === '1';
+
 export const useInstitutionAccess = () => {
   const { user } = useAuth();
   const { tenant } = useTenant();
@@ -12,10 +17,13 @@ export const useInstitutionAccess = () => {
   
   // Detectar se estamos em rota institucional (suporta rotas multi-tenant como /medcos/portal-institucional)
   const isInstitutionalRoute = location.pathname.includes('/portal-institucional');
+  const urlInst = new URLSearchParams(location.search).get('inst');
+  if (isInstitutionalRoute && urlInst) sessionStorage.setItem(STAFF_INST_KEY, urlInst);
+  const staffInst = isInstitutionalRoute ? (urlInst || sessionStorage.getItem(STAFF_INST_KEY)) : null;
 
   // Buscar instituições do usuário
   const { data: userInstitutions, isLoading } = useQuery({
-    queryKey: ['user-institutions', user?.id, isInstitutionalRoute ? 'institutional' : tenant?.id],
+    queryKey: ['user-institutions', user?.id, isInstitutionalRoute ? 'institutional' : tenant?.id, staffInst],
     queryFn: async () => {
       console.log('🔍 [useInstitutionAccess] Starting userInstitutions query');
       console.log('   User:', user?.id);
@@ -55,6 +63,23 @@ export const useInstitutionAccess = () => {
       } else {
         console.log('✅ [useInstitutionAccess] Skipping tenant filter (institutional route)');
       }
+
+      if (staffInst) {
+        const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
+        const isStaff = (roles || []).some((r) => STAFF_ROLES.includes(String(r.role)));
+        if (isStaff) {
+          const { data: inst } = await supabase
+            .from('educational_institutions')
+            .select('id, name, type, has_partnership, is_active, can_manage_users, can_manage_coupons, can_manage_professionals, logo_url')
+            .eq('id', staffInst)
+            .maybeSingle();
+          if (inst) {
+            sessionStorage.setItem(STAFF_VIEW_FLAG, '1');
+            return [{ id: `staff-${inst.id}`, institution_id: inst.id, role: 'viewer', tenant_id: null, educational_institutions: inst }] as any;
+          }
+        }
+      }
+      sessionStorage.removeItem(STAFF_VIEW_FLAG);
 
       const { data, error } = await query;
 

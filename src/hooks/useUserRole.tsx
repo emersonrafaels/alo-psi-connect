@@ -7,6 +7,7 @@ const ROLE_HIERARCHY: Record<string, string[]> = {
   moderator: ['moderator', 'admin', 'admin_rbe', 'super_admin'],
   admin: ['admin', 'admin_rbe', 'super_admin'],
   super_admin: ['super_admin'],
+  institution_admin: ['institution_admin', 'admin', 'admin_rbe', 'super_admin', 'clinical_coordinator'],
 };
 
 export const useUserRole = (roleName?: string) => {
