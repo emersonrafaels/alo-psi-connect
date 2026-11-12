@@ -13,7 +13,9 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
-  const { hasRole, loading: roleLoading } = useUserRole(requiredRole);
+  const { hasRole, loading: roleLoading } = useUserRole(
+    requiredRole === 'institution_admin' ? 'institution_portal' : requiredRole
+  );
   const { tenant } = useTenant();
 
   if (loading || roleLoading) {
