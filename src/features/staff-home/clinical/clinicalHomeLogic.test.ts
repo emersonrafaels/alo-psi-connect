@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { institutionStatus, rankInstitutions, safePct, trendIsGood, trend } from './clinicalHomeLogic';
 
 const base = { id: 'a', name: 'A', logo_url: null, students: 100, elevated: 0, triage_open: 0, triage_urgent: 0, followups_overdue: 0, care_stalled: 0, radar_answered: 0 };
