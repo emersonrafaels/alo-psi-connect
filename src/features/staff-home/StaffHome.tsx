@@ -7,6 +7,8 @@ import { AlertTriangle, ArrowRight, Building2, CalendarDays, CheckCircle2, Clipb
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TourOverlay } from '@/components/ui/tour-overlay';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -35,6 +37,13 @@ export default function StaffHome({ userId, kind, roles }: { userId: string; kin
     { id: 'links', title: 'Atalhos', description: 'Só as páginas que o seu perfil pode abrir.', target: '[data-tour="st-links"]' },
   ];
   const [tourStep, setTourStep] = useState(-1);
+  const [instQuery, setInstQuery] = useState('');
+  const [instFilter, setInstFilter] = useState('all');
+  const matchInst = (i: StaffSummary['by_institution'][number]) => {
+    const q = instQuery.trim().toLowerCase();
+    return (!q || i.name.toLowerCase().includes(q)) &&
+      (instFilter === 'all' || (instFilter === 'urgent' && i.triage_urgent > 0) || (instFilter === 'triage' && i.triage_open > 0) || (instFilter === 'care' && i.care_open > 0));
+  };
   useEffect(() => { if (s && !localStorage.getItem(TOUR_KEY(userId, kind))) setTimeout(() => setTourStep(0), 600); }, [!!s]); // eslint-disable-line
   const endTour = () => { localStorage.setItem(TOUR_KEY(userId, kind), '1'); setTourStep(-1); };
 
@@ -105,9 +114,24 @@ export default function StaffHome({ userId, kind, roles }: { userId: string; kin
 
       {s && s.by_institution.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-lg flex items-center gap-2"><HeartHandshake className="h-5 w-5" /> Por instituição</CardTitle></CardHeader>
+          <CardHeader className="gap-3">
+            <CardTitle className="text-lg flex items-center gap-2"><HeartHandshake className="h-5 w-5" /> Por instituição</CardTitle>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input value={instQuery} onChange={(e) => setInstQuery(e.target.value)} placeholder="Buscar instituição..." className="sm:max-w-xs" aria-label="Buscar instituição" />
+              <Select value={instFilter} onValueChange={setInstFilter}>
+                <SelectTrigger className="sm:w-56" aria-label="Filtrar instituições"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="urgent">Com prioridade alta</SelectItem>
+                  <SelectItem value="triage">Com triagens abertas</SelectItem>
+                  <SelectItem value="care">Com pedidos de apoio</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
           <CardContent className="divide-y">
-            {s.by_institution.map((i) => (
+            {s.by_institution.filter(matchInst).length === 0 && <p className="py-6 text-sm text-center text-muted-foreground">Nenhuma instituição encontrada.</p>}
+            {s.by_institution.filter(matchInst).map((i) => (
               <div key={i.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-3">
                 <div className="flex items-center gap-3">
                   {i.logo_url ? <img src={i.logo_url} alt="" className="h-8 w-8 rounded object-contain" /> : <Building2 className="h-8 w-8 text-muted-foreground" />}
