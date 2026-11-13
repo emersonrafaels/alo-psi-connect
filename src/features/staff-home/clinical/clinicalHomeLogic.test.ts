@@ -21,3 +21,14 @@ describe('clinical home', () => {
     expect(trendIsGood(trend(3.5, 3)), ).toBe(true);
   });
 });
+
+import { outcomeLabel } from './clinicalHomeLogic';
+describe('outcome labels', () => {
+  it('translates monitoring tags', () => {
+    expect(outcomeLabel('monitoring')).toBe('Em monitoramento');
+    expect(outcomeLabel('monitoring_completed')).toBe('Monitoramento concluído');
+  });
+  it('keeps unknown codes readable', () => {
+    expect(outcomeLabel('caso_novo')).toBe('Caso novo');
+  });
+});

@@ -80,3 +80,20 @@ export const HELP: Record<string, string> = {
   col_overdue: 'Triagens em aberto com data de retorno vencida.',
   col_care: 'Pedidos de apoio há mais de 3 dias sem resposta.',
 };
+
+/** Portuguese labels for triage outcomes (resolution_type); unknown codes become readable text. */
+export const OUTCOME_LABELS: Record<string, string> = {
+  encaminhado_profissional: 'Encaminhado a profissional',
+  acompanhamento_interno: 'Acompanhamento interno',
+  melhora_espontanea: 'Melhora espontânea',
+  contato_familia: 'Contato com a família',
+  sem_necessidade: 'Sem necessidade de intervenção',
+  monitoring: 'Em monitoramento',
+  monitoring_completed: 'Monitoramento concluído',
+  outro: 'Outro desfecho',
+};
+export const outcomeLabel = (k: string) => {
+  if (OUTCOME_LABELS[k]) return OUTCOME_LABELS[k];
+  const t = k.replace(/_/g, ' ').trim();
+  return t ? t[0].toUpperCase() + t.slice(1) : 'Outro desfecho';
+};
