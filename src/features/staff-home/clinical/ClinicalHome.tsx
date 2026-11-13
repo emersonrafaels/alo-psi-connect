@@ -46,7 +46,7 @@ const H2 = ({ title, sub, icon: Icon, right }: { title: string; sub?: ReactNode;
   </div>
 );
 
-function Donut({ parts, total, center }: { parts: { key: string; n: number }[]; total: number; center: ReactNode }) {
+function Donut({ parts, total, center, active, onActive }: { parts: { key: string; n: number }[]; total: number; center: ReactNode; active?: string | null; onActive?: (k: string | null) => void }) {
   const r = 52, c = 2 * Math.PI * r; let acc = 0;
   return (
     <div className="relative h-44 w-44 shrink-0">
@@ -54,8 +54,11 @@ function Donut({ parts, total, center }: { parts: { key: string; n: number }[]; 
         <circle cx="64" cy="64" r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="14" />
         {total > 0 && parts.map((p) => {
           const len = (p.n / total) * c; const el = (
-            <circle key={p.key} cx="64" cy="64" r={r} fill="none" stroke={LEVEL_STROKE[p.key]} strokeWidth="14"
-              strokeDasharray={`${Math.max(0, len - 1.5)} ${c}`} strokeDashoffset={-acc} className="transition-all duration-700"><title>{p.n}</title></circle>
+            <circle key={p.key} cx="64" cy="64" r={r} fill="none" stroke={LEVEL_STROKE[p.key]} strokeWidth={active === p.key ? 20 : 14}
+              strokeDasharray={`${Math.max(0, len - 1.5)} ${c}`} strokeDashoffset={-acc}
+              opacity={active && active !== p.key ? 0.2 : 1}
+              onMouseEnter={() => onActive?.(p.key)} onMouseLeave={() => onActive?.(null)}
+              className="cursor-pointer transition-all duration-300"><title>{p.n}</title></circle>
           ); acc += len; return el;
         })}
       </svg>
@@ -88,6 +91,7 @@ export default function ClinicalHome({ userId }: { userId: string }) {
   const [tourStep, setTourStep] = useState(-1);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
+  const [activeLevel, setActiveLevel] = useState<string | null>(null);
   const [hideInfo, setHideInfo] = useState(() => localStorage.getItem('clinical-home-info-hidden') === '1');
   useEffect(() => { if (!localStorage.getItem(TOUR_KEY(userId))) setTourStep(0); }, [userId]);
   const endTour = () => { localStorage.setItem(TOUR_KEY(userId), '1'); setTourStep(-1); };
@@ -214,13 +218,22 @@ export default function ClinicalHome({ userId }: { userId: string }) {
           <Panel className="lg:col-span-3">
             <H2 icon={Activity} title="Níveis de sinal · últimos 30 dias" sub="Quantos alunos estão em cada nível, pelo último registro analisado no diário. Classificação de apoio à triagem, nunca diagnóstico." />
             <div className="flex flex-col items-center gap-6 sm:flex-row">
-              <Donut total={levelTotal} parts={LEVELS.map((l) => ({ key: l.key, n: s.levels?.[l.key] ?? 0 }))}
-                center={<><span className="text-3xl font-semibold tabular-nums">{safePct(withData, levelTotal) ?? '—'}%</span><span className="text-[11px] leading-tight text-muted-foreground">com dados<br />no período</span></>} />
+              {(() => {
+                const al = LEVELS.find((l) => l.key === activeLevel);
+                const an = al ? s.levels?.[al.key] ?? 0 : 0;
+                return (
+                  <Donut total={levelTotal} active={activeLevel} onActive={setActiveLevel} parts={LEVELS.map((l) => ({ key: l.key, n: s.levels?.[l.key] ?? 0 }))}
+                    center={al
+                      ? <><span className="text-3xl font-semibold tabular-nums">{levelTotal ? Math.round((an / levelTotal) * 100) : 0}%</span><span className="max-w-[7rem] text-[11px] leading-tight text-muted-foreground">{al.label}<br />{an.toLocaleString('pt-BR')} alunos</span></>
+                      : <><span className="text-3xl font-semibold tabular-nums">{safePct(withData, levelTotal) ?? '—'}%</span><span className="text-[11px] leading-tight text-muted-foreground">com dados<br />no período</span></>} />
+                );
+              })()}
               <div className="w-full flex-1 space-y-2.5">
                 {LEVELS.map((l) => {
                   const n = s.levels?.[l.key] ?? 0; const pct = levelTotal ? Math.round((n / levelTotal) * 100) : 0;
                   return (
-                    <div key={l.key} className="rounded-2xl px-3 py-2 transition-colors hover:bg-muted/50">
+                    <div key={l.key} onMouseEnter={() => setActiveLevel(l.key)} onMouseLeave={() => setActiveLevel(null)}
+                      className={cn('rounded-2xl px-3 py-2 transition-all duration-300', activeLevel === l.key ? 'bg-muted/60' : 'hover:bg-muted/50', activeLevel && activeLevel !== l.key && 'opacity-50')}>
                       <div className="flex justify-between text-sm">
                         <span className="flex items-center gap-2"><span className={cn('h-2.5 w-2.5 rounded-full', l.tone)} />{l.label}<InfoTip label={l.label} text={HELP[l.key]} /></span>
                         <span className="tabular-nums"><span className="font-semibold">{n.toLocaleString('pt-BR')}</span> <span className="text-muted-foreground">· {pct}%</span></span>
