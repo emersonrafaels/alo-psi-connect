@@ -14,6 +14,7 @@ import { TourOverlay } from '@/components/ui/tour-overlay';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { InfoTip } from './InfoTip';
+import { IndicatorDetailDialog } from './IndicatorDetailDialog';
 import { HELP, LEVELS, institutionStatus, outcomeLabel, rankInstitutions, safePct, trend, trendIsGood, type ClinicalSummary } from './clinicalHomeLogic';
 
 const TOUR_KEY = (uid: string) => `clinical-home-tour-v2:${uid}`;
@@ -91,6 +92,7 @@ export default function ClinicalHome({ userId }: { userId: string }) {
   const [tourStep, setTourStep] = useState(-1);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
+  const [detail, setDetail] = useState<{ id: string; value?: string } | null>(null);
   const [activeLevel, setActiveLevel] = useState<string | null>(null);
   const [hideInfo, setHideInfo] = useState(() => localStorage.getItem('clinical-home-info-hidden') === '1');
   useEffect(() => { if (!localStorage.getItem(TOUR_KEY(userId))) setTourStep(0); }, [userId]);
@@ -187,16 +189,17 @@ export default function ClinicalHome({ userId }: { userId: string }) {
       )}
       {q.isError && <p className="text-sm text-destructive">Não foi possível carregar o resumo clínico.</p>}
 
+      <IndicatorDetailDialog id={detail?.id ?? null} value={detail?.value} institutions={s?.by_institution ?? []} onClose={() => setDetail(null)} />
       {s && (<>
         {/* Priorities */}
         <section data-tour="ch-prio" aria-label="Prioridades de hoje" className="space-y-3">
-          <div className="flex items-baseline justify-between"><h2 className="text-[20px] font-semibold">Prioridades de hoje</h2><span className="text-xs text-muted-foreground">Clique para abrir a lista</span></div>
+          <div className="flex items-baseline justify-between"><h2 className="text-[20px] font-semibold">Prioridades de hoje</h2><span className="text-xs text-muted-foreground">Clique para ver detalhes</span></div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             {prio.map((p, idx) => {
               const hot = p.value > 0 && p.sev !== 'info';
               return (
-                <Link key={p.label} to={p.to} style={{ animationDelay: `${idx * 60}ms` }}
-                  className={cn('group relative flex flex-col gap-2 rounded-3xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-lg animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-500',
+                <button type="button" key={p.label} onClick={() => setDetail({ id: p.label, value: p.value.toLocaleString('pt-BR') })} style={{ animationDelay: `${idx * 60}ms` }}
+                  className={cn('group relative flex flex-col gap-2 rounded-3xl text-left border bg-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-lg animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-500',
                     hot && p.sev === 'critical' && 'border-destructive/50 bg-destructive/5',
                     hot && p.sev === 'warning' && 'border-destructive/25')}>
                   <div className="flex items-center justify-between">
@@ -207,7 +210,7 @@ export default function ClinicalHome({ userId }: { userId: string }) {
                   <p className="text-3xl font-semibold tabular-nums">{p.value.toLocaleString('pt-BR')}</p>
                   <p className="flex items-start gap-1 text-xs text-muted-foreground">{p.label}<InfoTip label={p.label} text={HELP[p.label]} /></p>
                   <ArrowRight className="absolute bottom-4 right-4 h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                </Link>
+                </button>
               );
             })}
           </div>
@@ -232,8 +235,8 @@ export default function ClinicalHome({ userId }: { userId: string }) {
                 {LEVELS.map((l) => {
                   const n = s.levels?.[l.key] ?? 0; const pct = levelTotal ? Math.round((n / levelTotal) * 100) : 0;
                   return (
-                    <div key={l.key} onMouseEnter={() => setActiveLevel(l.key)} onMouseLeave={() => setActiveLevel(null)}
-                      className={cn('rounded-2xl px-3 py-2 transition-all duration-300', activeLevel === l.key ? 'bg-muted/60' : 'hover:bg-muted/50', activeLevel && activeLevel !== l.key && 'opacity-50')}>
+                    <div key={l.key} role="button" tabIndex={0} onClick={() => setDetail({ id: l.key, value: n.toLocaleString('pt-BR') })} onKeyDown={(e) => e.key === 'Enter' && setDetail({ id: l.key, value: n.toLocaleString('pt-BR') })} onMouseEnter={() => setActiveLevel(l.key)} onMouseLeave={() => setActiveLevel(null)}
+                      className={cn('cursor-pointer rounded-2xl px-3 py-2 transition-all duration-300', activeLevel === l.key ? 'bg-muted/60' : 'hover:bg-muted/50', activeLevel && activeLevel !== l.key && 'opacity-50')}>
                       <div className="flex justify-between text-sm">
                         <span className="flex items-center gap-2"><span className={cn('h-2.5 w-2.5 rounded-full', l.tone)} />{l.label}<InfoTip label={l.label} text={HELP[l.key]} /></span>
                         <span className="tabular-nums"><span className="font-semibold">{n.toLocaleString('pt-BR')}</span> <span className="text-muted-foreground">· {pct}%</span></span>
@@ -254,7 +257,7 @@ export default function ClinicalHome({ userId }: { userId: string }) {
                 const delta = a.c != null && a.p != null ? a.c - a.p : null;
                 const pos = a.c == null ? null : ((a.c - 1) / 4) * 100;
                 return (
-                  <div key={a.label}>
+                  <div key={a.label} role="button" tabIndex={0} className="cursor-pointer rounded-2xl p-2 -m-2 hover:bg-muted/50" onClick={() => setDetail({ id: a.label, value: fmt(a.c) })} onKeyDown={(e) => e.key === 'Enter' && setDetail({ id: a.label, value: fmt(a.c) })}>
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-1 font-medium">{a.label}<InfoTip label={a.label} text={HELP[a.label]} /></span>
                       <span className="flex items-center gap-2">
@@ -279,10 +282,10 @@ export default function ClinicalHome({ userId }: { userId: string }) {
           <Panel data-tour="ch-flow">
             <H2 icon={LifeBuoy} title="Fluxo de cuidado" sub="Últimos 90 dias, do pedido à primeira consulta." />
             <div className="flex items-stretch gap-2 text-center">
-              {[{ k: 'Pedido', v: null }, { k: 'Triagem', v: `${fmt(s.flow.hours_to_triage)}h`, h: HELP.hours_to_triage }, { k: '1ª consulta', v: `${fmt(s.flow.days_to_consult)}d`, h: HELP.days_to_consult }].map((st, i) => (
+              {[{ k: 'Pedido', v: null as string | null, id: '' }, { k: 'Triagem', v: `${fmt(s.flow.hours_to_triage)}h`, h: HELP.hours_to_triage, id: 'hours_to_triage' }, { k: '1ª consulta', v: `${fmt(s.flow.days_to_consult)}d`, h: HELP.days_to_consult, id: 'days_to_consult' }].map((st, i) => (
                 <div key={st.k} className="flex flex-1 items-center gap-2">
                   {i > 0 && <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
-                  <div className={cn('flex-1 rounded-2xl px-2 py-3', i === 0 ? 'bg-muted/60' : 'bg-primary/10')}>
+                  <div role={st.id ? 'button' : undefined} tabIndex={st.id ? 0 : undefined} onClick={() => st.id && setDetail({ id: st.id, value: st.v ?? undefined })} className={cn('flex-1 rounded-2xl px-2 py-3', st.id && 'cursor-pointer hover:ring-2 hover:ring-primary/30', i === 0 ? 'bg-muted/60' : 'bg-primary/10')}>
                     <p className="text-xl font-semibold tabular-nums">{st.v ?? '●'}</p>
                     <p className="flex items-center justify-center gap-1 text-[11px] text-muted-foreground">{st.k}{st.h && <InfoTip label={st.k} text={st.h} />}</p>
                   </div>
@@ -305,7 +308,7 @@ export default function ClinicalHome({ userId }: { userId: string }) {
 
           <Panel>
             <H2 icon={Radar} title={`Radar ${s.radar_semester}`} sub="Participação no Radar de Permanência neste semestre." />
-            <div className="flex items-center gap-4">
+            <div role="button" tabIndex={0} onClick={() => setDetail({ id: 'radar', value: radarPct == null ? '—' : `${radarPct}%` })} className="flex cursor-pointer items-center gap-4 rounded-2xl hover:bg-muted/40">
               <div className="relative"><Ring pct={radarPct} /><span className="absolute inset-0 flex items-center justify-center text-lg font-semibold tabular-nums">{radarPct ?? '—'}%</span></div>
               <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">{s.radar_answered.toLocaleString('pt-BR')}</span> alunos responderam <InfoTip label="Radar" text={HELP.radar} /></p>
             </div>

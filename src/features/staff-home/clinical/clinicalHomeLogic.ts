@@ -97,3 +97,42 @@ export const outcomeLabel = (k: string) => {
   const t = k.replace(/_/g, ' ').trim();
   return t ? t[0].toUpperCase() + t.slice(1) : 'Outro desfecho';
 };
+
+/** Detail modal definitions for each clickable indicator. */
+export type IndicatorDetail = {
+  title: string; help: string; calc: string; interpret: string;
+  field?: 'elevated' | 'triage_open' | 'triage_urgent' | 'followups_overdue' | 'care_stalled' | 'radar_answered';
+  pct?: boolean; to?: string;
+};
+const T = '/portal-institucional/triagem';
+export const INDICATOR_DETAILS: Record<string, IndicatorDetail> = {
+  'Sinal elevado sem triagem': { title: 'Sinal elevado sem triagem', help: HELP['Sinal elevado sem triagem'], calc: 'Últimos 30 dias: alunos cujo registro mais recente foi classificado como Sinal elevado e que não têm triagem aberta ou concluída no período.', interpret: 'Deve ficar em zero. Qualquer valor acima pede abertura de triagem no mesmo dia.', to: T },
+  'Prioridade alta em aberto': { title: 'Prioridade alta em aberto', help: HELP['Prioridade alta em aberto'], calc: 'Triagens com status pendente ou em andamento e prioridade urgente ou alta, sem limite de período.', interpret: 'Mostra a fila mais sensível. Priorize contato e encaminhamento nas instituições com mais casos.', field: 'triage_urgent', to: T },
+  'Retornos vencidos': { title: 'Retornos vencidos', help: HELP['Retornos vencidos'], calc: 'Triagens em aberto cuja data de retorno combinada já passou.', interpret: 'Indica acompanhamentos esquecidos. Reavalie, renove o plano ou encerre o caso.', field: 'followups_overdue', to: T },
+  'Pedidos parados > 3 dias': { title: 'Pedidos de apoio parados', help: HELP['Pedidos parados > 3 dias'], calc: 'Pedidos de apoio abertos pelos alunos há mais de 3 dias que ainda não tiveram triagem nem desfecho.', interpret: 'Cada pedido parado é um aluno esperando resposta. A meta é responder em até 3 dias.', field: 'care_stalled', to: '/portal-institucional/comparador' },
+  'Triagens em aberto': { title: 'Triagens em aberto', help: HELP['Triagens em aberto'], calc: 'Todas as triagens pendentes ou em andamento, de qualquer prioridade.', interpret: 'Mede o volume de trabalho da equipe. Compare com a capacidade de cada instituição.', field: 'triage_open', to: T },
+  'Sinal elevado em 7 dias': { title: 'Sinal elevado em 7 dias', help: HELP['Sinal elevado em 7 dias'], calc: 'Registros do diário analisados como Sinal elevado nos últimos 7 dias.', interpret: 'Aumentos indicam novos casos surgindo; confira se viraram triagem.', to: T },
+  critical: { title: 'Sinal elevado', help: HELP.critical, calc: 'Último registro analisado de cada aluno nos últimos 30 dias, classificado no nível mais alto.', interpret: 'Apoio à priorização, nunca diagnóstico. Percentuais por instituição só aparecem com 10 ou mais alunos.', field: 'elevated', pct: true, to: T },
+  alert: { title: 'Alerta', help: HELP.alert, calc: 'Último registro analisado nos últimos 30 dias classificado como Alerta.', interpret: 'Acompanhe de perto; pode evoluir para Sinal elevado.', to: T },
+  attention: { title: 'Atenção', help: HELP.attention, calc: 'Último registro analisado nos últimos 30 dias classificado como Atenção.', interpret: 'Bom momento para ações preventivas, como práticas e encontros.' },
+  healthy: { title: 'Sem sinais prioritários', help: HELP.healthy, calc: 'Último registro analisado nos últimos 30 dias sem sinais que peçam prioridade.', interpret: 'Não significa ausência de dificuldade, apenas que o registro não pediu prioridade.' },
+  none: { title: 'Dados insuficientes', help: HELP.none, calc: 'Alunos vinculados sem registro analisado nos últimos 30 dias.', interpret: 'Valores altos indicam pouco uso do diário; incentive o engajamento.' },
+  Humor: { title: 'Humor médio', help: HELP.Humor, calc: 'Média dos valores de humor (1 a 5) dos registros dos últimos 30 dias, comparada com os 30 dias anteriores.', interpret: 'Maior é melhor. Quedas sozinhas não elevam o nível de sinal.' },
+  Ansiedade: { title: 'Ansiedade média', help: HELP.Ansiedade, calc: 'Média dos valores de ansiedade (1 a 5) dos últimos 30 dias, comparada com os 30 anteriores.', interpret: 'Menor é melhor. Altas persistentes sugerem ações coletivas de regulação.' },
+  Sono: { title: 'Sono médio', help: HELP.Sono, calc: 'Média da qualidade de sono (1 a 5) dos últimos 30 dias, comparada com os 30 anteriores.', interpret: 'Maior é melhor. Quedas costumam coincidir com períodos de provas.' },
+  Energia: { title: 'Energia média', help: HELP.Energia, calc: 'Média da disposição (1 a 5) dos últimos 30 dias, comparada com os 30 anteriores.', interpret: 'Maior é melhor.' },
+  hours_to_triage: { title: 'Tempo até a triagem', help: HELP.hours_to_triage, calc: 'Média em horas entre a abertura do pedido de apoio e a triagem, nos últimos 90 dias.', interpret: 'Quanto menor, mais rápida a resposta da rede.' },
+  days_to_consult: { title: 'Tempo até a 1ª consulta', help: HELP.days_to_consult, calc: 'Média em dias entre o pedido de apoio e a primeira consulta, nos últimos 90 dias.', interpret: 'Quanto menor, mais rápido o acesso ao cuidado.' },
+  radar: { title: 'Participação no Radar', help: HELP.radar, calc: 'Alunos que responderam o Radar de Permanência neste semestre, divididos pelo total de alunos vinculados.', interpret: 'Instituições com baixa participação podem divulgar o Radar por mensagem.', field: 'radar_answered', pct: true, to: '/portal-institucional/comparador' },
+};
+
+export type BreakdownRow = { id: string; name: string; value: number | null; label: string };
+/** Per-institution rows sorted desc; percentages hidden for groups under MIN_GROUP. */
+export function breakdownRows(list: ClinicalInstitution[], d: IndicatorDetail): BreakdownRow[] {
+  if (!d.field) return [];
+  const f = d.field;
+  return list.map((i) => {
+    const value = d.pct ? safePct(i[f], i.students) : i[f];
+    return { id: i.id, name: i.name, value, label: value == null ? 'Dados protegidos' : d.pct ? `${value}%` : value.toLocaleString('pt-BR') };
+  }).sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
+}
