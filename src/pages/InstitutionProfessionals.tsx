@@ -1,3 +1,4 @@
+import { csvCell } from '@/lib/csvCell';
 import { PortalPageShell } from '@/features/institution/portal/PortalPageShell';
 import { useState } from 'react';
 import { LoadingBar, LoadingSection } from "@/components/ui/loading-bar";
@@ -68,8 +69,8 @@ export default function InstitutionProfessionals() {
       'Tipo de Vínculo': p.relationship_type || '', 'Data de Início': p.start_date ? format(new Date(p.start_date), 'dd/MM/yyyy') : '',
       'Status': p.profissionais.ativo ? 'Ativo' : 'Inativo'
     }));
-    const headers = Object.keys(csvData[0]).join(',');
-    const rows = csvData.map(row => Object.values(row).map(val => `"${val}"`).join(','));
+    const headers = Object.keys(csvData[0]).map(csvCell).join(',');
+    const rows = csvData.map(row => Object.values(row).map(csvCell).join(','));
     const csv = [headers, ...rows].join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');

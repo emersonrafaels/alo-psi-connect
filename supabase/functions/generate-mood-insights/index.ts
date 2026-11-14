@@ -64,19 +64,9 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get authorization header
-    const authHeader = req.headers.get('Authorization');
-    let userId: string | null = null;
-    let isGuest = true;
-
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user } } = await supabase.auth.getUser(token);
-      if (user) {
-        userId = user.id;
-        isGuest = false;
-      }
-    }
+    // Identity comes only from the verified token checked above; guests cannot call this paid service.
+    const userId: string | null = __caller.userId;
+    const isGuest = false;
 
     // Get system configurations
     const { data: configs, error: configError } = await supabase

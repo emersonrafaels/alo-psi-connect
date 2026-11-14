@@ -257,7 +257,7 @@ const handler = async (req: Request): Promise<Response> => {
             subject: `⚠️ Encontro Cancelado - ${escapeHtml(session.title)}`,
             html,
           });
-          if (error) console.error(`[group-session-notification] Cancel email error for ${profile.email}:`, error);
+          if (error) console.error(`[group-session-notification] Cancel email error for user ${profile.user_id}:`, error?.message);
           else results.push(`session_cancelled sent to ${profile.email}`);
         }
       }

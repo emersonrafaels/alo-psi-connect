@@ -87,7 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('👤 Professional data normalized:', {
       name: professionalData.display_name,
-      email: professionalData.user_email,
+      hasEmail: !!professionalData.user_email,
       duration: professionalData.tempo_consulta,
       hasProfileId: !!professionalData.profile_id
     });
@@ -281,7 +281,7 @@ Gerado automaticamente pelo sistema Alô, Psi`,
           displayName: agendamento.nome_paciente,
         },
         {
-          email: professionalData.user_email,
+          hasEmail: !!professionalData.user_email,
           displayName: professionalData.display_name,
         }
       ],

@@ -1,3 +1,4 @@
+import { csvCell } from '@/lib/csvCell';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Download, Search, Loader2 } from 'lucide-react';
@@ -44,7 +45,7 @@ const toCSV = (rows: PatientOverviewRow[]) => {
     'Encontros futuros', 'Encontros passados', 'Consultas futuras', 'Consultas passadas',
     'Escalas preenchidas', 'Escalas requeridas', 'ISEU score', 'ISEU faixa',
   ];
-  const escape = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const escape = csvCell;
   const lines = rows.map((r) => [
     r.nome, r.email, ageFrom(r.data_nascimento) ?? '', r.genero,
     r.eh_estudante ? 'Sim' : 'Não',

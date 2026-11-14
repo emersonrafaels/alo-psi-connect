@@ -357,10 +357,9 @@ serve(async (req) => {
 
     if (!userId) {
       console.log('🔐 [v1.0.3] Creating new user via Admin API');
-      console.log('📧 Email:', profileData.email);
       
       // 🔍 Verificar se o email já existe no perfil
-      console.log('🔍 Verificando se email já existe:', profileData.email);
+      console.log('🔍 Verificando se email já existe');
       
       const { data: existingProfile } = await supabaseAdmin
         .from('profiles')
@@ -386,15 +385,8 @@ serve(async (req) => {
           console.log('❌ Email já cadastrado com usuário válido');
           throw new Error('Email já cadastrado no sistema');
         } else {
-          // Perfil órfão - limpar antes de criar novo
-          console.log('⚠️ Perfil órfão detectado, removendo:', existingProfile.id);
-          
-          await supabaseAdmin
-            .from('profiles')
-            .delete()
-            .eq('id', existingProfile.id);
-          
-          console.log('✅ Perfil órfão removido, prosseguindo com criação');
+          // Orphan profile: never deleted from a public request; it is re-linked to the new account below.
+          console.log('⚠️ Perfil órfão detectado, será vinculado à nova conta:', existingProfile.id);
         }
       }
       
@@ -769,7 +761,7 @@ serve(async (req) => {
         } else if (authUser.user && !authUser.user.email_confirmed_at) {
           // User exists and email not confirmed - SEND CONFIRMATION
           isNewUser = true;
-          console.log('📧 Sending confirmation email for professional user:', profileData.email);
+          console.log('📧 Sending confirmation email for professional user');
           
           // Generate confirmation token
           const confirmationToken = crypto.randomUUID();
@@ -818,22 +810,13 @@ serve(async (req) => {
               const tenantPath = tenantSlug === 'medcos' ? '/medcos' : '';
               const confirmationUrl = `${baseUrl}${tenantPath}/auth?confirm=true&token=${confirmationToken}`;
 
-              console.log('🔗 Confirmation URL:', confirmationUrl);
-              console.log('📨 Sending to:', profileData.email);
               console.log('🏢 Tenant:', normalizedTenantName, '| Slug:', tenantSlug);
 
               // Buscar emails BCC configurados
               const bccEmails = await getBccEmails(supabaseAdmin, tenant.id);
               const allBcc = [...(tenant.admin_email ? [tenant.admin_email] : []), ...bccEmails];
 
-              console.log('📧 Email details:', {
-                from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
-                to: profileData.email,
-                bcc: allBcc,
-                subject: `Bem-vindo à ${normalizedTenantName} - Confirme seu email`,
-                logo: tenant.logo_url,
-                color: tenant.primary_color
-              });
+              console.log('📧 Sending confirmation email', { tenant: normalizedTenantName, bccCount: allBcc.length });
 
               const emailResponse = await managedEmailFetch('professional-profile', 'https://api.resend.com/emails', {
                 method: 'POST',

@@ -102,7 +102,7 @@ serve(async (req) => {
       contatosEmergencia
     } = await req.json();
 
-    console.log('Creating patient profile for:', email);
+    console.log('Creating patient profile');
 
     // Detect tenant from multiple sources
     const origin = req.headers.get('origin') || '';
@@ -413,7 +413,7 @@ serve(async (req) => {
     let confirmationEmailSent = false;
     if (isNewUser && !existingUserId) { // Only for new email/password users, not Google users
       try {
-        console.log('Sending confirmation email for new user:', email);
+        console.log('Sending confirmation email for new user');
         
         // Generate confirmation token
         const confirmationToken = crypto.randomUUID();
@@ -451,7 +451,6 @@ serve(async (req) => {
             console.log('📧 Sending confirmation email:', {
               tenant: normalizedTenantName,
               from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
-              to: email,
               subject: `Confirme seu email - ${normalizedTenantName}`,
               logo: tenantData.logo_url,
               color: tenantData.primary_color

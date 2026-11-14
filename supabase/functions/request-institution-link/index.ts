@@ -286,7 +286,7 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log('Email sent to tenant admin:', emailResponse);
+    console.log('Email sent to tenant admin:', { ok: !!emailResponse });
 
     // Send to institution admins if any exist
     if (institutionAdmins && institutionAdmins.length > 0) {
@@ -303,7 +303,7 @@ const handler = async (req: Request): Promise<Response> => {
             subject: `Nova Solicitação de Vínculo - ${escapeHtml(institution.name)}`,
             html: emailHtml,
           });
-          console.log('Email sent to institution admins:', institutionAdminEmails);
+          console.log('Email sent to institution admins:', { count: institutionAdminEmails.length });
         } catch (instEmailError) {
           console.error('Failed to send to institution admins:', instEmailError);
           // Don't throw - this is not critical
