@@ -102,6 +102,7 @@ export default function InstitutionTriage() {
           <Button variant="ghost" size="icon" onClick={() => setCollapsed((c) => !c)} aria-label="Recolher menu"><PanelLeft className="h-4 w-4" /></Button>
           <span className="text-sm text-muted-foreground">Triagem de alunos · <span className="text-foreground">{(SECTIONS.find(isSectionActive) ?? SECTIONS.find((s) => s.id === view))?.label}</span></span>
           <LanguageFlags className="ml-auto" /><Button asChild variant="outline" size="sm"><Link to={backTo}><ArrowLeft className="h-4 w-4 mr-1" />Portal Institucional</Link></Button>
+          {isStaffPortalView() && <Button asChild variant="outline" size="sm"><Link to="/meu-espaco"><Home className="h-4 w-4 mr-1" />Meu espaço</Link></Button>}
         </header>
         <main className="flex-1 space-y-6 p-4 md:p-8">
           {isLoading ? (
