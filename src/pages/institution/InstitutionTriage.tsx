@@ -1,8 +1,9 @@
+import { isStaffPortalView } from '@/hooks/useInstitutionAccess';
 import LanguageFlags from "@/features/i18n/LanguageFlags";
 import { usePortalFreshData } from '@/features/institution/usePortalFreshData';
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ClipboardList, LayoutDashboard, ListChecks, BarChart3, Clock, PanelLeft, Flame, Users } from 'lucide-react';
+import { ArrowLeft, Home, ClipboardList, LayoutDashboard, ListChecks, BarChart3, Clock, PanelLeft, Flame, Users } from 'lucide-react';
 import { useInstitutionAccess } from '@/hooks/useInstitutionAccess';
 import { useTenant } from '@/hooks/useTenant';
 import { buildTenantPath } from '@/utils/tenantHelpers';
@@ -87,6 +88,12 @@ export default function InstitutionTriage() {
             className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center' : ''}`}>
             <ArrowLeft className="h-4 w-4 shrink-0" />{!collapsed && <span>Voltar ao Portal Institucional</span>}
           </Link>
+          {isStaffPortalView() && (
+            <Link to="/meu-espaco" title="Voltar ao Meu espaço"
+              className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center' : ''}`}>
+              <Home className="h-4 w-4 shrink-0" />{!collapsed && <span>Voltar ao Meu espaço</span>}
+            </Link>
+          )}
         </div>
       </aside>
 
