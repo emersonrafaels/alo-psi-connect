@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { portalFor } from '../portalLink';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -89,6 +90,7 @@ export default function ClinicalHome({ userId }: { userId: string }) {
     },
   });
   const s = q.data;
+  const navigate = useNavigate();
   const [tourStep, setTourStep] = useState(-1);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
@@ -315,10 +317,10 @@ export default function ClinicalHome({ userId }: { userId: string }) {
             {radarLow.length > 0 && <div className="mt-5 space-y-2 border-t pt-4">
               <p className="text-xs font-semibold text-muted-foreground">Menor participação</p>
               {radarLow.map((i) => { const p = safePct(i.radar_answered, i.students) ?? 0; return (
-                <div key={i.id} className="text-xs">
+                <Link key={i.id} to={portalFor(i.id, '/comparador', 'leitura=permanencia')} className="block rounded-lg px-1 py-0.5 text-xs transition-colors hover:bg-muted/50">
                   <div className="flex justify-between gap-2"><span className="truncate">{i.name}</span><span className="font-semibold tabular-nums">{p}%</span></div>
                   <div className="mt-1 h-1 rounded-full bg-muted"><div className="h-1 rounded-full bg-primary/60" style={{ width: `${p}%` }} /></div>
-                </div>); })}
+                </Link>); })}
             </div>}
           </Panel>
 
@@ -372,10 +374,10 @@ export default function ClinicalHome({ userId }: { userId: string }) {
                   {ranked.map((i) => {
                     const st = institutionStatus(i); const ep = safePct(i.elevated, i.students);
                     return (
-                      <tr key={i.id} className="transition-colors hover:bg-muted/40">
+                      <tr key={i.id} onClick={() => navigate(portalFor(i.id))} className="cursor-pointer transition-colors hover:bg-muted/40">
                         <td className="py-3 pr-3"><div className="flex items-center gap-3">
                           {i.logo_url ? <img src={i.logo_url} alt="" className="h-8 w-8 rounded-lg border bg-background object-contain p-0.5" /> : <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted"><Building2 className="h-4 w-4 text-muted-foreground" /></span>}
-                          <div><p className="font-medium">{i.name}</p><p className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><span className={cn('h-2 w-2 rounded-full', dot[st])} />{STATUS_TXT[st]}</p></div>
+                          <div><Link to={portalFor(i.id)} onClick={(e) => e.stopPropagation()} className="font-medium hover:text-primary hover:underline">{i.name}</Link><p className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><span className={cn('h-2 w-2 rounded-full', dot[st])} />{STATUS_TXT[st]}</p></div>
                         </div></td>
                         <td className="px-2 text-right tabular-nums">{i.students.toLocaleString('pt-BR')}</td>
                         <td className="px-2">{ep == null ? <span className="text-muted-foreground">—</span> : (
@@ -384,7 +386,7 @@ export default function ClinicalHome({ userId }: { userId: string }) {
                         <td className={cn('px-2 text-right tabular-nums', i.triage_urgent > 0 && 'font-semibold text-destructive')}>{i.triage_urgent}</td>
                         <td className={cn('px-2 text-right tabular-nums', i.followups_overdue > 0 && 'font-semibold text-destructive')}>{i.followups_overdue}</td>
                         <td className="px-2 text-right tabular-nums">{i.care_stalled}</td>
-                        <td className="pl-2 text-right"><Button asChild size="sm" variant="outline" className="rounded-xl"><Link to={`/portal-institucional?inst=${i.id}`}>Abrir <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link></Button></td>
+                        <td className="pl-2 text-right"><Button asChild size="sm" variant="outline" className="rounded-xl"><Link to={portalFor(i.id)} onClick={(e) => e.stopPropagation()}>Abrir <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link></Button></td>
                       </tr>
                     );
                   })}

@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import ClinicalHome from './clinical/ClinicalHome';
 import { buildStaffActions, staffShortcuts, type StaffSummary } from './staffActions';
+import { portalFor } from './portalLink';
 
 const TOUR_KEY = (uid: string, k: string) => `staff-home-tour-v1:${k}:${uid}`;
 
@@ -139,14 +140,14 @@ function AdminStaffHome({ userId, kind, roles }: { userId: string; kind: 'admin_
             {s.by_institution.filter(matchInst).map((i) => (
               <div key={i.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-3">
                 <div className="flex items-center gap-3">
-                  {i.logo_url ? <img src={i.logo_url} alt="" className="h-8 w-8 rounded object-contain" /> : <Building2 className="h-8 w-8 text-muted-foreground" />}
-                  <div><p className="font-medium text-sm">{i.name}</p><p className="text-xs text-muted-foreground">{i.students.toLocaleString('pt-BR')} alunos</p></div>
+                  <Link to={portalFor(i.id)} aria-hidden tabIndex={-1}>{i.logo_url ? <img src={i.logo_url} alt="" className="h-8 w-8 rounded object-contain" /> : <Building2 className="h-8 w-8 text-muted-foreground" />}</Link>
+                  <div><Link to={portalFor(i.id)} className="font-medium text-sm hover:text-primary hover:underline">{i.name}</Link><p className="text-xs text-muted-foreground">{i.students.toLocaleString('pt-BR')} alunos</p></div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="outline">{i.triage_open} triagens</Badge>
                   {i.triage_urgent > 0 && <Badge variant="destructive">{i.triage_urgent} prioridade alta</Badge>}
                   <Badge variant="secondary">{i.care_open} pedidos</Badge>
-                  <Button asChild size="sm" variant="ghost"><Link to={`/portal-institucional?inst=${i.id}`}>Abrir</Link></Button>
+                  <Button asChild size="sm" variant="ghost"><Link to={portalFor(i.id)}>Abrir</Link></Button>
                 </div>
               </div>
             ))}
