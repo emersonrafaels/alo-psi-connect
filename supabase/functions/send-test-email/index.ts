@@ -1,3 +1,4 @@
+import { escapeHtml } from '../_shared/guards.ts';
 import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
@@ -34,7 +35,7 @@ const emailTemplates: Record<string, (vars: any) => { subject: string; html: str
               ${vars.tenantLogo ? `<img src="${vars.tenantLogo}" alt="${vars.tenantName}" style="max-width: 200px;">` : `<h1 style="color: white; margin: 0;">${vars.tenantName}</h1>`}
             </div>
             <div style="padding: 40px 20px;">
-              <h2>Olá, ${vars.recipientName}!</h2>
+              <h2>Olá, ${escapeHtml(vars.recipientName)}!</h2>
               <p>Bem-vindo à ${vars.tenantName}! Para confirmar seu cadastro, clique no botão abaixo:</p>
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${vars.confirmationUrl}" style="display: inline-block; background: ${vars.tenantColor}; color: white; padding: 14px 30px; border-radius: 6px; text-decoration: none; font-weight: bold;">
@@ -64,7 +65,7 @@ const emailTemplates: Record<string, (vars: any) => { subject: string; html: str
               <h1 style="color: white; margin: 0;">Redefinir Senha</h1>
             </div>
             <div style="padding: 40px 20px;">
-              <p>Olá, ${vars.recipientName}!</p>
+              <p>Olá, ${escapeHtml(vars.recipientName)}!</p>
               <p>Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para criar uma nova senha:</p>
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${vars.resetUrl}" style="display: inline-block; background: ${vars.tenantColor}; color: white; padding: 14px 30px; border-radius: 6px; text-decoration: none; font-weight: bold;">
@@ -91,10 +92,10 @@ const emailTemplates: Record<string, (vars: any) => { subject: string; html: str
               <h1 style="color: white; margin: 0;">Agendamento Confirmado</h1>
             </div>
             <div style="padding: 40px 20px;">
-              <p>Olá, ${vars.recipientName}!</p>
+              <p>Olá, ${escapeHtml(vars.recipientName)}!</p>
               <p>Seu agendamento foi confirmado com sucesso:</p>
               <div style="background: #f8fafc; padding: 20px; border-radius: 6px; margin: 20px 0;">
-                <p style="margin: 5px 0;"><strong>Profissional:</strong> ${vars.professionalName}</p>
+                <p style="margin: 5px 0;"><strong>Profissional:</strong> ${escapeHtml(vars.professionalName)}</p>
                 <p style="margin: 5px 0;"><strong>Data:</strong> ${vars.appointmentDate}</p>
                 <p style="margin: 5px 0;"><strong>Horário:</strong> ${vars.appointmentTime}</p>
                 <p style="margin: 5px 0;"><strong>Valor:</strong> R$ ${vars.appointmentPrice}</p>
@@ -115,7 +116,7 @@ const emailTemplates: Record<string, (vars: any) => { subject: string; html: str
         <body style="font-family: sans-serif; background: #f8fafc; padding: 40px 20px;">
           <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px;">
             <div style="padding: 40px 20px;">
-              <h2>Obrigado por se inscrever, ${vars.recipientName}!</h2>
+              <h2>Obrigado por se inscrever, ${escapeHtml(vars.recipientName)}!</h2>
               <p>Você agora faz parte da nossa newsletter e receberá conteúdos exclusivos da ${vars.tenantName}.</p>
             </div>
           </div>
@@ -134,8 +135,8 @@ const emailTemplates: Record<string, (vars: any) => { subject: string; html: str
           <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px;">
             <div style="padding: 40px 20px;">
               <h2>Nova Solicitação de Vínculo</h2>
-              <p><strong>${vars.recipientName}</strong> solicitou vínculo com a instituição <strong>${vars.institutionName}</strong>.</p>
-              <p><strong>Mensagem:</strong> ${vars.requestMessage || 'Nenhuma mensagem adicional.'}</p>
+              <p><strong>${escapeHtml(vars.recipientName)}</strong> solicitou vínculo com a instituição <strong>${escapeHtml(vars.institutionName)}</strong>.</p>
+              <p><strong>Mensagem:</strong> ${escapeHtml(vars.requestMessage || 'Nenhuma mensagem adicional.')}</p>
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${vars.portalUrl}" style="display: inline-block; background: ${vars.tenantColor}; color: white; padding: 14px 30px; border-radius: 6px; text-decoration: none; font-weight: bold;">
                   Revisar Solicitação

@@ -1,3 +1,4 @@
+import { escapeHtml } from '../_shared/guards.ts';
 import { managedEmailFetch } from '../_shared/managed-email.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -216,13 +217,13 @@ serve(async (req) => {
               </div>
               
               <p style="color: #374151; font-size: 16px; line-height: 1.6;">
-                Olá, <strong>${userName}</strong>!
+                Olá, <strong>${escapeHtml(userName)}</strong>!
               </p>
               
               <p style="color: #374151; font-size: 16px; line-height: 1.6;">
                 ${action === 'approve' 
-                  ? `Sua solicitação de vínculo com <strong>${institutionName}</strong> foi <span style="color: ${statusColor}; font-weight: bold;">aprovada</span>! Agora você tem acesso aos benefícios e recursos desta instituição na plataforma.`
-                  : `Infelizmente, sua solicitação de vínculo com <strong>${institutionName}</strong> <span style="color: ${statusColor}; font-weight: bold;">não foi aprovada</span> neste momento.`
+                  ? `Sua solicitação de vínculo com <strong>${escapeHtml(institutionName)}</strong> foi <span style="color: ${statusColor}; font-weight: bold;">aprovada</span>! Agora você tem acesso aos benefícios e recursos desta instituição na plataforma.`
+                  : `Infelizmente, sua solicitação de vínculo com <strong>${escapeHtml(institutionName)}</strong> <span style="color: ${statusColor}; font-weight: bold;">não foi aprovada</span> neste momento.`
                 }
               </p>
               
@@ -231,7 +232,7 @@ serve(async (req) => {
                   <p style="margin: 0 0 8px 0; font-weight: 600; color: #374151;">
                     ${action === 'approve' ? 'Observações:' : 'Motivo:'}
                   </p>
-                  <p style="margin: 0; color: #6b7280; white-space: pre-wrap;">${reviewNotes}</p>
+                  <p style="margin: 0; color: #6b7280; white-space: pre-wrap;">${escapeHtml(reviewNotes)}</p>
                 </div>
               ` : ''}
               

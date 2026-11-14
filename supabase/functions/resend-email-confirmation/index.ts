@@ -1,3 +1,4 @@
+import { escapeHtml } from '../_shared/guards.ts';
 import '../_shared/redact-logs.ts';
 import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -64,7 +65,7 @@ function generateConfirmationEmailHTML(
           </div>
           <div style="padding: 40px 20px;">
             <h2 style="color: ${primaryColor}; margin: 0 0 20px 0; font-size: 24px;">${welcomeTitle}</h2>
-            <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">Olá, <strong>${recipientName}</strong>!</p>
+            <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">Olá, <strong>${escapeHtml(recipientName)}</strong>!</p>
             <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">${welcomeMessage}</p>
             <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid ${primaryColor};">
               <p style="margin: 0; font-size: 16px; color: #4b5563;">Para começar a utilizar todos os recursos da plataforma, confirme seu email clicando no botão abaixo:</p>
