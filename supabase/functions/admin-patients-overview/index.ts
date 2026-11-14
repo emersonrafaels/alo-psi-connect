@@ -81,7 +81,9 @@ Deno.serve(async (req) => {
         .order("created_at", { ascending: false });
 
       if (search) {
-        q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
+        // Strip PostgREST filter syntax so the text can only be a search term.
+        const term = String(search).slice(0, 100).replace(/[,()*%\\:"]/g, ' ');
+        q = q.or(`nome.ilike.%${term}%,email.ilike.%${term}%`);
       }
       q = q.range(page * pageSize, page * pageSize + pageSize - 1);
 

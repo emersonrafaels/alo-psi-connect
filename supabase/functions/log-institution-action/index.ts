@@ -64,13 +64,24 @@ serve(async (req) => {
       );
     }
 
+    // Only members of the institution (or site admins) can write to its audit history.
+    {
+      const { data: member } = await supabase.rpc('user_belongs_to_institution', { _user_id: user.id, _institution_id: institution_id });
+      const { data: adm } = await supabase.rpc('is_admin', { _user_id: user.id });
+      if (!member && !adm) {
+        return new Response(JSON.stringify({ error: 'Sem permissão' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+    const safeAction = String(action_type).slice(0, 100);
+    const safeEntity = String(entity_type).slice(0, 100);
+
     // Insert audit log
     const { data: auditLog, error: insertError } = await supabase
       .from('institution_audit_log')
       .insert({
         institution_id,
-        action_type,
-        entity_type,
+        action_type: safeAction,
+        entity_type: safeEntity,
         entity_id: entity_id || null,
         performed_by: user.id,
         changes_summary: changes_summary || null,

@@ -1,3 +1,5 @@
+import { requireServiceOrAdmin, authErrorResponse, type Caller } from '../_shared/guards.ts';
+import { escapeHtml } from '../_shared/guards.ts';
 import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -106,7 +108,7 @@ function generateInstitutionLinkEmailHTML(
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 5px 0; color: #4b5563; font-size: 14px;">Email:</td>
-          <td style="padding: 5px 0; font-weight: bold; color: #1f2937; font-size: 14px;">${userEmail}</td>
+          <td style="padding: 5px 0; font-weight: bold; color: #1f2937; font-size: 14px;">${escapeHtml(userEmail)}</td>
         </tr>
         <tr>
           <td style="padding: 5px 0; color: #4b5563; font-size: 14px;">Senha:</td>
@@ -123,7 +125,7 @@ function generateInstitutionLinkEmailHTML(
   const loginTipSection = !isNewUser ? `
     <div style="background-color: #e0f2fe; padding: 15px; border-radius: 6px; border-left: 4px solid #0284c7; margin: 30px 0;">
       <p style="margin: 0; font-size: 14px; color: #075985;">
-        <strong>💡 Dica:</strong> Faça login na plataforma com o mesmo email (${userEmail}) para acessar o portal institucional.
+        <strong>💡 Dica:</strong> Faça login na plataforma com o mesmo email (${escapeHtml(userEmail)}) para acessar o portal institucional.
       </p>
     </div>
   ` : '';
@@ -134,7 +136,7 @@ function generateInstitutionLinkEmailHTML(
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Vinculado à ${institutionName} - ${tenantName}</title>
+        <title>Vinculado à ${escapeHtml(institutionName)} - ${tenantName}</title>
       </head>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; background-color: #f8fafc;">
         <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -147,9 +149,9 @@ function generateInstitutionLinkEmailHTML(
           </div>
           <div style="padding: 40px 20px;">
             <h2 style="color: ${primaryColor}; margin: 0 0 20px 0; font-size: 24px;">🎓 Você foi vinculado a uma instituição!</h2>
-            <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">Olá, <strong>${userName}</strong>!</p>
+            <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">Olá, <strong>${escapeHtml(userName)}</strong>!</p>
             <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">
-              Você foi adicionado como <strong>${roleLabel}</strong> da instituição <strong>${institutionName}</strong> na plataforma ${tenantName}.
+              Você foi adicionado como <strong>${roleLabel}</strong> da instituição <strong>${escapeHtml(institutionName)}</strong> na plataforma ${tenantName}.
             </p>
             
             ${credentialsSection}
@@ -193,6 +195,11 @@ function generateInstitutionLinkEmailHTML(
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+  const __guardDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let __svc: unknown;
+  try { __svc = (await requireServiceOrAdmin(req, __guardDb)) === null; } catch (e) {
+    const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
   }
 
   try {
@@ -278,7 +285,7 @@ const handler = async (req: Request): Promise<Response> => {
       from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [userEmail],
       bcc: bccEmails.length > 0 ? bccEmails : undefined,
-      subject: `🎓 Você foi vinculado à ${institutionName}`,
+      subject: `🎓 Você foi vinculado à ${escapeHtml(institutionName)}`,
       html: emailHtml,
     });
 

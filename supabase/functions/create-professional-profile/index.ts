@@ -1,3 +1,4 @@
+import { escapeHtml, getCaller, isSiteAdmin, isServiceCall } from '../_shared/guards.ts';
 import '../_shared/redact-logs.ts';
 import { managedEmailFetch } from '../_shared/managed-email.ts';
 // Version: 1.0.3 - Fixed getUserByEmail error (replaced with profiles check + orphan cleanup)
@@ -104,11 +105,11 @@ async function sendAbandonmentEmails(
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
             <h2 style="color: #dc2626;">⚠️ Ops! Algo deu errado no seu cadastro</h2>
-            <p>Olá, <strong>${professionalName}</strong>,</p>
+            <p>Olá, <strong>${escapeHtml(professionalName)}</strong>,</p>
             <p>Identificamos um problema ao processar seu cadastro na plataforma <strong>${tenant.name}</strong>.</p>
             
             <div style="background: #fef3cd; padding: 15px; border-radius: 6px; margin: 20px 0;">
-              <p style="margin: 0; color: #92400e;"><strong>Erro encontrado:</strong> ${errorMessage}</p>
+              <p style="margin: 0; color: #92400e;"><strong>Erro encontrado:</strong> ${escapeHtml(errorMessage)}</p>
             </div>
             
             <p><strong>O que fazer agora?</strong></p>
@@ -140,13 +141,13 @@ async function sendAbandonmentEmails(
             <h2 style="color: #dc2626;">🚨 Cadastro Profissional Abandonado</h2>
             
             <div style="background: #fee; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #dc2626;">
-              <p style="margin: 0;"><strong>Profissional:</strong> ${professionalName}</p>
-              <p style="margin: 5px 0 0 0;"><strong>Email:</strong> ${professionalEmail}</p>
+              <p style="margin: 0;"><strong>Profissional:</strong> ${escapeHtml(professionalName)}</p>
+              <p style="margin: 5px 0 0 0;"><strong>Email:</strong> ${escapeHtml(professionalEmail)}</p>
               <p style="margin: 5px 0 0 0;"><strong>Tenant:</strong> ${tenant.name} (${tenant.slug})</p>
             </div>
             
             <h3 style="color: #991b1b;">Erro técnico:</h3>
-            <pre style="background: #f9fafb; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 12px;">${errorMessage}</pre>
+            <pre style="background: #f9fafb; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 12px;">${escapeHtml(errorMessage)}</pre>
             
             <div style="background: #fef3cd; padding: 15px; border-radius: 6px; margin: 20px 0;">
               <p style="margin: 0; color: #92400e;"><strong>⚠️ Ação necessária:</strong> Entre em contato com o profissional para ajudá-lo a concluir o cadastro!</p>
@@ -184,7 +185,7 @@ async function sendAbandonmentEmails(
       body: JSON.stringify({
         from: `Sistema Rede Bem-Estar <noreply@redebemestar.com.br>`,
         to: [tenant.contact_email || 'contato@alopsi.com.br'],
-        subject: `🚨 Cadastro Abandonado: ${professionalName} (${tenant.name})`,
+        subject: `🚨 Cadastro Abandonado: ${escapeHtml(professionalName)} (${tenant.name})`,
         html: teamEmailHtml,
       }),
     });
@@ -245,7 +246,7 @@ function generateConfirmationEmailHTML(
           </div>
           <div style="padding: 40px 20px;">
             <h2 style="color: ${primaryColor}; margin: 0 0 20px 0; font-size: 24px;">${welcomeTitle}</h2>
-            <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">Olá, <strong>${recipientName}</strong>!</p>
+            <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">Olá, <strong>${escapeHtml(recipientName)}</strong>!</p>
             <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">${welcomeMessage}</p>
             <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid ${primaryColor};">
               <p style="margin: 0; font-size: 16px; color: #4b5563;">Para começar a utilizar todos os recursos da plataforma, confirme seu email clicando no botão abaixo:</p>
@@ -284,6 +285,27 @@ serve(async (req) => {
   
   try {
     requestData = await req.json();
+
+    // Only known registration fields are accepted; anything else in the request is dropped.
+    const pick = (src: any, keys: string[]) => {
+      const out: Record<string, unknown> = {};
+      if (src && typeof src === 'object') for (const k of keys) if (k in src) out[k] = src[k];
+      return out;
+    };
+    requestData.profileData = pick(requestData.profileData, ['nome', 'email', 'data_nascimento', 'genero', 'cpf', 'raca', 'sexualidade', 'como_conheceu', 'foto_perfil_url']);
+    requestData.professionalData = pick(requestData.professionalData, ['display_name', 'user_email', 'user_login', 'first_name', 'last_name', 'profissao', 'crp_crm', 'cpf', 'linkedin', 'resumo_profissional', 'foto_perfil_url', 'possui_e_psi', 'servicos_raw', 'formacao_raw', 'preco_consulta', 'tempo_consulta', 'ativo', 'senha', 'telefone']);
+    (requestData.profileData as any).tipo_usuario = 'profissional';
+
+    // Completing an existing account requires being signed in as that account (or an admin / internal call).
+    if (requestData.userId && !(await isServiceCall(req, supabaseAdmin))) {
+      let caller;
+      try { caller = await getCaller(req, supabaseAdmin); } catch { caller = null; }
+      if (!caller || (caller.userId !== requestData.userId && !isSiteAdmin(caller))) {
+        return new Response(JSON.stringify({ success: false, error: 'Sem permissão' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
     const { profileData, professionalData, horariosData, formacoes, userId, tenantSlug: requestTenantSlug } = requestData;
 
     // Detect tenant from multiple sources

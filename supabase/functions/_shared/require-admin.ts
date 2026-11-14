@@ -1,6 +1,7 @@
 // Shared caller check for privileged edge functions.
 // Validates the bearer token and reads roles from user_roles with the service client.
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
+// deno-lint-ignore no-explicit-any
+type SupabaseClient = any; // accepts clients from any supabase-js version
 
 export const SITE_ADMIN_ROLES = ["admin", "super_admin"] as const;
 

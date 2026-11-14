@@ -1,3 +1,4 @@
+import { escapeHtml, getCaller } from '../_shared/guards.ts';
 import '../_shared/redact-logs.ts';
 import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -29,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { email, nome, tema, descricao, tenantId }: SuggestThemeRequest = await req.json();
 
-    console.log("[suggest-session-theme] Processing suggestion:", { email, tema, tenantId });
+    console.log("[suggest-session-theme] Processing suggestion:", { tenantId });
 
     // Validate input
     if (!email || !tema || !tenantId) {
@@ -100,9 +101,17 @@ const handler = async (req: Request): Promise<Response> => {
     // Buscar emails BCC configurados
     const bccEmails = await getBccEmails(supabase, tenantId);
 
+    // Receipt only goes to a signed-in submitter's own address, so the form can't be used to email strangers.
+    let ownEmail = false;
+    try {
+      const caller = await getCaller(req, supabase);
+      const { data: au } = await supabase.auth.admin.getUserById(caller.userId);
+      ownEmail = !!au?.user?.email && au.user.email.toLowerCase() === String(email).toLowerCase();
+    } catch { ownEmail = false; }
+
     // Send confirmation email to user
     try {
-      await resend.emails.send({
+      if (ownEmail) await resend.emails.send({
         from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
         to: [email],
         bcc: bccEmails.length > 0 ? bccEmails : undefined,
@@ -111,11 +120,11 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             ${lightBgLogo ? `<img src="${lightBgLogo}" alt="${normalizedTenantName}" style="width: 150px; margin-bottom: 20px;">` : ''}
             <h1 style="color: ${tenant.primary_color || '#4338ca'};">Obrigado pela sua sugestão!</h1>
-            <p>Olá${nome ? ` ${nome}` : ''},</p>
+            <p>Olá${nome ? ` ${escapeHtml(nome)}` : ''},</p>
             <p>Recebemos sua sugestão de tema para um encontro em grupo:</p>
             <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0;"><strong>Tema sugerido:</strong> ${tema}</p>
-              ${descricao ? `<p style="margin: 10px 0 0 0;"><strong>Descrição:</strong> ${descricao}</p>` : ''}
+              <p style="margin: 0;"><strong>Tema sugerido:</strong> ${escapeHtml(tema)}</p>
+              ${descricao ? `<p style="margin: 10px 0 0 0;"><strong>Descrição:</strong> ${escapeHtml(descricao)}</p>` : ''}
             </div>
             <p>Sua sugestão está sendo analisada pela nossa equipe e em breve poderemos incluí-la em nossa programação de encontros.</p>
             <p>Fique atento ao seu email para receber notificações sobre nossos próximos encontros!</p>
@@ -140,9 +149,9 @@ const handler = async (req: Request): Promise<Response> => {
             <h1 style="color: ${tenant.primary_color || '#4338ca'};">Nova Sugestão de Tema</h1>
             <p>Uma nova sugestão de tema foi recebida:</p>
             <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0;"><strong>De:</strong> ${nome || 'Não informado'} (${email})</p>
-              <p style="margin: 10px 0 0 0;"><strong>Tema:</strong> ${tema}</p>
-              ${descricao ? `<p style="margin: 10px 0 0 0;"><strong>Descrição:</strong> ${descricao}</p>` : ''}
+              <p style="margin: 0;"><strong>De:</strong> ${escapeHtml(nome || 'Não informado')} (${escapeHtml(email)})</p>
+              <p style="margin: 10px 0 0 0;"><strong>Tema:</strong> ${escapeHtml(tema)}</p>
+              ${descricao ? `<p style="margin: 10px 0 0 0;"><strong>Descrição:</strong> ${escapeHtml(descricao)}</p>` : ''}
               <p style="margin: 10px 0 0 0;"><strong>Tenant:</strong> ${normalizedTenantName}</p>
             </div>
             <p>Acesse o painel administrativo para gerenciar esta sugestão.</p>

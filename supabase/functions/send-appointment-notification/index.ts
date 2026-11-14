@@ -1,4 +1,4 @@
-import { requireServiceOrAdmin, authErrorResponse, type Caller } from '../_shared/guards.ts';
+import { requireServiceOrAdmin, authErrorResponse, type Caller, escapeHtml } from '../_shared/guards.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -138,18 +138,18 @@ const handler = async (req: Request): Promise<Response> => {
 
               <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0891b2;">
                 <h3 style="color: #0891b2; margin: 0 0 15px 0; font-size: 18px;">👤 Dados do Paciente</h3>
-                <p style="margin: 5px 0; color: #4b5563;"><strong>Nome:</strong> ${agendamento.nome_paciente}</p>
-                <p style="margin: 5px 0; color: #4b5563;"><strong>Email:</strong> ${agendamento.email_paciente}</p>
-                <p style="margin: 5px 0; color: #4b5563;"><strong>Telefone:</strong> ${agendamento.telefone_paciente}</p>
-                ${agendamento.observacoes ? `<p style="margin: 10px 0 5px 0; color: #4b5563;"><strong>Observações:</strong> ${agendamento.observacoes}</p>` : ''}
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Nome:</strong> ${escapeHtml(agendamento.nome_paciente)}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Email:</strong> ${escapeHtml(agendamento.email_paciente)}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Telefone:</strong> ${escapeHtml(agendamento.telefone_paciente)}</p>
+                ${agendamento.observacoes ? `<p style="margin: 10px 0 5px 0; color: #4b5563;"><strong>Observações:</strong> ${escapeHtml(agendamento.observacoes)}</p>` : ''}
               </div>
 
               <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e40af;">
                 <h3 style="color: #1e40af; margin: 0 0 15px 0; font-size: 18px;">👨‍⚕️ Profissional Responsável</h3>
-                <p style="margin: 5px 0; color: #4b5563;"><strong>Nome:</strong> ${agendamento.profissionais.display_name}</p>
-                <p style="margin: 5px 0; color: #4b5563;"><strong>Profissão:</strong> ${agendamento.profissionais.profissao}</p>
-                <p style="margin: 5px 0; color: #4b5563;"><strong>Email:</strong> ${agendamento.profissionais.user_email}</p>
-                <p style="margin: 5px 0; color: #4b5563;"><strong>Telefone:</strong> ${agendamento.profissionais.telefone}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Nome:</strong> ${escapeHtml(agendamento.profissionais.display_name)}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Profissão:</strong> ${escapeHtml(agendamento.profissionais.profissao)}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Email:</strong> ${escapeHtml(agendamento.profissionais.user_email)}</p>
+                <p style="margin: 5px 0; color: #4b5563;"><strong>Telefone:</strong> ${escapeHtml(agendamento.profissionais.telefone)}</p>
               </div>
 
               <div style="background-color: #fef3cd; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #0891b2;">
@@ -182,7 +182,7 @@ const handler = async (req: Request): Promise<Response> => {
       from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
       bcc: bccEmails.length > 0 ? bccEmails : undefined,
-      subject: `🎉 Nova Consulta Agendada - ${agendamento.profissionais.display_name} - ${dataFormatada}`,
+      subject: `🎉 Nova Consulta Agendada - ${escapeHtml(agendamento.profissionais.display_name)} - ${dataFormatada}`,
       html: emailHtml,
     });
 
@@ -192,7 +192,7 @@ const handler = async (req: Request): Promise<Response> => {
       from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [agendamento.profissionais.user_email],
       bcc: bccEmails.length > 0 ? bccEmails : undefined,
-      subject: `📅 Nova Consulta Agendada - ${agendamento.nome_paciente} - ${dataFormatada} às ${horarioFormatado}`,
+      subject: `📅 Nova Consulta Agendada - ${escapeHtml(agendamento.nome_paciente)} - ${dataFormatada} às ${horarioFormatado}`,
       html: professionalEmailHtml,
     });
 
@@ -202,7 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
       from: `${tenantName} <noreply@redebemestar.com.br>`,
       to: [agendamento.email_paciente],
       bcc: bccEmails.length > 0 ? bccEmails : undefined,
-      subject: `✅ Consulta Confirmada - ${agendamento.profissionais.display_name} - ${dataFormatada} às ${horarioFormatado}`,
+      subject: `✅ Consulta Confirmada - ${escapeHtml(agendamento.profissionais.display_name)} - ${dataFormatada} às ${horarioFormatado}`,
       html: patientEmailHtml,
     });
 
@@ -256,7 +256,7 @@ function createProfessionalEmail(agendamento: any, dataFormatada: string, horari
           
           <!-- Content -->
           <div style="padding: 40px 20px;">
-            <h2 style="color: #1e40af; margin: 0 0 20px 0; font-size: 24px;">👋 Olá, Dr(a). ${agendamento.profissionais.display_name}!</h2>
+            <h2 style="color: #1e40af; margin: 0 0 20px 0; font-size: 24px;">👋 Olá, Dr(a). ${escapeHtml(agendamento.profissionais.display_name)}!</h2>
             
             <div style="background-color: #dcfce7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;">
               <p style="margin: 0; font-size: 16px; color: #15803d;">
@@ -274,10 +274,10 @@ function createProfessionalEmail(agendamento: any, dataFormatada: string, horari
 
             <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0891b2;">
               <h3 style="color: #0891b2; margin: 0 0 15px 0; font-size: 18px;">👤 Dados do Paciente</h3>
-              <p style="margin: 5px 0; color: #4b5563;"><strong>Nome:</strong> ${agendamento.nome_paciente}</p>
-              <p style="margin: 5px 0; color: #4b5563;"><strong>Email:</strong> ${agendamento.email_paciente}</p>
-              <p style="margin: 5px 0; color: #4b5563;"><strong>Telefone:</strong> ${agendamento.telefone_paciente}</p>
-              ${agendamento.observacoes ? `<p style="margin: 10px 0 5px 0; color: #4b5563;"><strong>Observações:</strong> ${agendamento.observacoes}</p>` : ''}
+              <p style="margin: 5px 0; color: #4b5563;"><strong>Nome:</strong> ${escapeHtml(agendamento.nome_paciente)}</p>
+              <p style="margin: 5px 0; color: #4b5563;"><strong>Email:</strong> ${escapeHtml(agendamento.email_paciente)}</p>
+              <p style="margin: 5px 0; color: #4b5563;"><strong>Telefone:</strong> ${escapeHtml(agendamento.telefone_paciente)}</p>
+              ${agendamento.observacoes ? `<p style="margin: 10px 0 5px 0; color: #4b5563;"><strong>Observações:</strong> ${escapeHtml(agendamento.observacoes)}</p>` : ''}
             </div>
 
             ${meetLink ? `
@@ -341,7 +341,7 @@ function createPatientEmail(agendamento: any, dataFormatada: string, horarioForm
           
           <!-- Content -->
           <div style="padding: 40px 20px;">
-            <h2 style="color: #1e40af; margin: 0 0 20px 0; font-size: 24px;">🎉 Olá, ${agendamento.nome_paciente}!</h2>
+            <h2 style="color: #1e40af; margin: 0 0 20px 0; font-size: 24px;">🎉 Olá, ${escapeHtml(agendamento.nome_paciente)}!</h2>
             
             <div style="background-color: #dcfce7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;">
               <p style="margin: 0; font-size: 16px; color: #15803d;">
@@ -359,10 +359,10 @@ function createPatientEmail(agendamento: any, dataFormatada: string, horarioForm
 
             <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e40af;">
               <h3 style="color: #1e40af; margin: 0 0 15px 0; font-size: 18px;">👨‍⚕️ Seu Profissional</h3>
-              <p style="margin: 5px 0; color: #4b5563;"><strong>Nome:</strong> ${agendamento.profissionais.display_name}</p>
-              <p style="margin: 5px 0; color: #4b5563;"><strong>Profissão:</strong> ${agendamento.profissionais.profissao}</p>
-              <p style="margin: 5px 0; color: #4b5563;"><strong>Email:</strong> ${agendamento.profissionais.user_email}</p>
-              <p style="margin: 5px 0; color: #4b5563;"><strong>Telefone:</strong> ${agendamento.profissionais.telefone}</p>
+              <p style="margin: 5px 0; color: #4b5563;"><strong>Nome:</strong> ${escapeHtml(agendamento.profissionais.display_name)}</p>
+              <p style="margin: 5px 0; color: #4b5563;"><strong>Profissão:</strong> ${escapeHtml(agendamento.profissionais.profissao)}</p>
+              <p style="margin: 5px 0; color: #4b5563;"><strong>Email:</strong> ${escapeHtml(agendamento.profissionais.user_email)}</p>
+              <p style="margin: 5px 0; color: #4b5563;"><strong>Telefone:</strong> ${escapeHtml(agendamento.profissionais.telefone)}</p>
             </div>
 
             ${meetLink ? `
@@ -393,8 +393,8 @@ function createPatientEmail(agendamento: any, dataFormatada: string, horarioForm
               <h4 style="color: #4338ca; margin: 0 0 15px 0; font-size: 16px;">📞 Precisa Reagendar ou tem Dúvidas?</h4>
               <p style="color: #4338ca; margin: 0;">
                 Entre em contato diretamente com seu profissional:<br>
-                <strong>Email:</strong> ${agendamento.profissionais.user_email}<br>
-                <strong>Telefone:</strong> ${agendamento.profissionais.telefone}
+                <strong>Email:</strong> ${escapeHtml(agendamento.profissionais.user_email)}<br>
+                <strong>Telefone:</strong> ${escapeHtml(agendamento.profissionais.telefone)}
               </p>
             </div>
           </div>

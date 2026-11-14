@@ -1,3 +1,4 @@
+import { escapeHtml, getCaller } from '../_shared/guards.ts';
 import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -65,6 +66,19 @@ const handler = async (req: Request): Promise<Response> => {
           }
         );
       } else {
+        // Only the address owner (signed in) can reactivate a cancelled subscription.
+        let owner = false;
+        try {
+          const caller = await getCaller(req, supabase);
+          const { data: au } = await supabase.auth.admin.getUserById(caller.userId);
+          owner = !!au?.user?.email && au.user.email.toLowerCase() === String(email).toLowerCase();
+        } catch { owner = false; }
+        if (!owner) {
+          return new Response(
+            JSON.stringify({ message: "Para reativar sua inscrição, entre na sua conta e tente novamente.", requires_login: true }),
+            { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
+        }
         // Reactivate subscription
         const { error: updateError } = await supabase
           .from("newsletter_subscriptions")
@@ -146,7 +160,7 @@ const handler = async (req: Request): Promise<Response> => {
                   <h2 style="color: #1e40af; margin: 0 0 20px 0; font-size: 24px;">🎉 Bem-vindo ao Newsletter!</h2>
                   
                   <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">
-                    ${nome ? `Olá, ${nome}! ` : ''}Obrigado por se inscrever em nosso newsletter. Estamos felizes em tê-lo(a) conosco!
+                    ${nome ? `Olá, ${escapeHtml(nome)}! ` : ''}Obrigado por se inscrever em nosso newsletter. Estamos felizes em tê-lo(a) conosco!
                   </p>
                   
                   <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #1e40af;">
@@ -208,8 +222,8 @@ const handler = async (req: Request): Promise<Response> => {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h2 style="color: #2563eb;">Nova inscrição no newsletter</h2>
-            <p><strong>Email:</strong> ${email}</p>
-            ${nome ? `<p><strong>Nome:</strong> ${nome}</p>` : ''}
+            <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+            ${nome ? `<p><strong>Nome:</strong> ${escapeHtml(nome)}</p>` : ''}
             <p><strong>Data:</strong> ${new Date().toLocaleString('pt-BR')}</p>
           </div>
         `,

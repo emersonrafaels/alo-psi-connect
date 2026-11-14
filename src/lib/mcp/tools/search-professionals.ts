@@ -32,7 +32,8 @@ export default defineTool({
       .eq("ativo", true)
       .limit(cap);
     if (query && query.trim()) {
-      const term = `%${query.trim()}%`;
+      // Strip PostgREST filter syntax so the text can only be a search term.
+      const term = `%${query.trim().slice(0, 100).replace(/[,()*%\\:"]/g, ' ')}%`;
       q = q.or(`display_name.ilike.${term},profissao.ilike.${term}`);
     }
     const { data, error } = await q;

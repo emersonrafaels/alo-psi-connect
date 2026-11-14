@@ -110,7 +110,8 @@ export const GoogleCalendarTenantConfig = () => {
 
         // Listen for callback
         const messageHandler = async (event: MessageEvent) => {
-          if (event.data.type === 'google-calendar-callback') {
+          if (event.origin !== window.location.origin) return;
+          if (event.data?.type === 'google-calendar-callback') {
             popup?.close();
             
             // Usar tenantId do postMessage (que veio do sessionStorage no callback)

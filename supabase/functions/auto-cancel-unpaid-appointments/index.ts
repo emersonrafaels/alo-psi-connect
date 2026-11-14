@@ -1,4 +1,4 @@
-import { requireServiceOrAdmin, authErrorResponse } from '../_shared/guards.ts';
+import { requireServiceOrAdmin, authErrorResponse, escapeHtml } from '../_shared/guards.ts';
 import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -136,12 +136,12 @@ serve(async (req) => {
               subject: "Agendamento Cancelado - Falta de Pagamento",
               html: `
                 <h2>Agendamento Cancelado</h2>
-                <p>Olá ${appointment.nome_paciente},</p>
+                <p>Olá ${escapeHtml(appointment.nome_paciente)},</p>
                 <p>Seu agendamento foi cancelado automaticamente devido à falta de pagamento dentro do prazo de 24 horas.</p>
                 
                 <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
                   <h3>Detalhes do Agendamento Cancelado:</h3>
-                  <p><strong>Profissional:</strong> ${professionalName}</p>
+                  <p><strong>Profissional:</strong> ${escapeHtml(professionalName)}</p>
                   <p><strong>Data:</strong> ${appointmentDate}</p>
                   <p><strong>Horário:</strong> ${appointmentTime}</p>
                 </div>

@@ -54,40 +54,15 @@ const handler = async (req: Request): Promise<Response> => {
     );
     
     if (existingUser) {
-      // Verificar se tem perfil e se é profissional
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, tipo_usuario')
-        .eq('user_id', existingUser.id)
-        .single();
-
-      const { data: professional } = await supabase
-        .from('profissionais')
-        .select('id')
-        .eq('profile_id', profile?.id)
-        .single();
-
-      return new Response(
-        JSON.stringify({ 
-          exists: true,
-          hasProfile: !!profile,
-          isProfessional: !!professional,
-          profileType: profile?.tipo_usuario
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
+      // Only existence is returned; account type and profile details stay private.
+      return new Response(JSON.stringify({ exists: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     return new Response(
-      JSON.stringify({ 
-        exists: false,
-        hasProfile: false,
-        isProfessional: false,
-        profileType: null
-      }),
+      JSON.stringify({ exists: false }),
       {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -97,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Erro na função check-email-exists:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Erro ao verificar email' }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

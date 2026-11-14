@@ -97,7 +97,11 @@ serve(async (req) => {
     }
 
     const results: ImportResult[] = [];
-    const defaultPassword = 'TrocaSenha@123';
+    // No shared default: users without a password get a random one and set their own via password reset.
+    const randomPassword = () => {
+      const b = new Uint8Array(24); crypto.getRandomValues(b);
+      return btoa(String.fromCharCode(...b)).replace(/[^A-Za-z0-9]/g, '').slice(0, 24) + 'Aa1!';
+    };
 
     for (const userData of users as UserRow[]) {
       try {
@@ -119,7 +123,7 @@ serve(async (req) => {
           continue;
         }
 
-        const password = userData.senha || defaultPassword;
+        const password = userData.senha || randomPassword();
         const { data: authUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
           email: userData.email,
           password: password,

@@ -1,5 +1,5 @@
 import '../_shared/redact-logs.ts';
-import { requireServiceOrAdmin, authErrorResponse } from '../_shared/guards.ts';
+import { requireServiceOrAdmin, authErrorResponse, escapeHtml } from '../_shared/guards.ts';
 import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -131,9 +131,9 @@ const handler = async (req: Request): Promise<Response> => {
         
         return `
           <tr>
-            <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${req.profiles.nome}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(req.profiles.nome)}</td>
             <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${userTypeLabel}</td>
-            <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${req.educational_institutions.name}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(req.educational_institutions.name)}</td>
             <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #ef4444; font-weight: 600;">${hoursAgo}h atrás</td>
           </tr>
         `;

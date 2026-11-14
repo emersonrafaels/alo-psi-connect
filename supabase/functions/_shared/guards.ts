@@ -1,5 +1,6 @@
 // Shared request guards for edge functions (see AGENTS.md: security rules).
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
+// deno-lint-ignore no-explicit-any
+type SupabaseClient = any; // accepts clients from any supabase-js version
 import { AuthError, getCaller, isSiteAdmin, type Caller } from "./require-admin.ts";
 
 export { AuthError, authErrorResponse, getCaller, isSiteAdmin, requireSiteAdmin } from "./require-admin.ts";

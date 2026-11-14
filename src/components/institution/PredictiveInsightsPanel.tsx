@@ -197,7 +197,9 @@ export const PredictiveInsightsPanel: React.FC<PredictiveInsightsPanelProps> = (
                         key={idx} 
                         className="text-sm text-muted-foreground leading-relaxed"
                         dangerouslySetInnerHTML={{
+                          // Escape AI text first; only our own <strong> highlights are added as markup.
                           __html: sentence
+                            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
                             .replace(/(\d+[,.]?\d*%)/g, '<strong class="text-foreground font-semibold">$1</strong>')
                             .replace(/(\d+\/\d+)/g, '<strong class="text-foreground font-semibold">$1</strong>')
                             .replace(/(\d+[,.]?\d*\s*(?:pontos?|dias?|alunos?|estudantes?|semanas?))/gi, '<strong class="text-foreground font-semibold">$1</strong>')

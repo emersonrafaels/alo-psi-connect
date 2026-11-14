@@ -124,11 +124,11 @@ const handler = async (req: Request): Promise<Response> => {
     const user = users.users.find(u => u.email === email);
 
     if (!user) {
-      console.error('User not found for email:', email);
+      // Same answer whether or not the account exists, so the endpoint can't be used to probe emails.
       return new Response(
-        JSON.stringify({ error: "Usuário não encontrado" }),
+        JSON.stringify({ success: true }),
         { 
-          status: 404, 
+          status: 200, 
           headers: { "Content-Type": "application/json", ...corsHeaders } 
         }
       );
@@ -202,12 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
     const confirmationToken = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // Invalidate any existing tokens for this user first
-    await supabase
-      .from('email_confirmation_tokens')
-      .update({ used: true })
-      .eq('user_id', user.id)
-      .eq('used', false);
+    // Existing links stay valid until they expire, so a third party cannot invalidate someone else's link.
 
     // Store new token in database
     const { error: tokenError } = await supabase
@@ -230,15 +225,7 @@ const handler = async (req: Request): Promise<Response> => {
     const tenantPath = tenantSlug === 'medcos' ? '/medcos' : '';
     const confirmationUrl = `${baseUrl}${tenantPath}/auth?confirm=true&token=${confirmationToken}`;
     
-    console.log('📧 Email confirmation details:', {
-      tenant: tenantData.name,
-      from: `${tenantData.name} <noreply@redebemestar.com.br>`,
-      to: email,
-      bcc: tenantData.admin_email || null,
-      confirmationUrl,
-      logo: tenantData.logo_url,
-      color: tenantData.primary_color
-    });
+    console.log('📧 Sending confirmation email', { tenant: tenantData.name });
 
     // Buscar emails BCC configurados
     const bccEmails = await getBccEmails(supabase, tenantData?.id || null);
@@ -265,7 +252,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw emailResponse.error;
     }
 
-    console.log('Custom confirmation email sent successfully for:', email);
+    console.log('Custom confirmation email sent successfully');
 
     return new Response(
       JSON.stringify({ 

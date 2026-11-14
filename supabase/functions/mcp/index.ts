@@ -27,7 +27,7 @@ var search_professionals_default = defineTool({
     const cap = Math.min(Math.max(limit ?? 10, 1), 25);
     let q = supabase.from("profissionais").select("id, profile_id, display_name, profissao, resumo, foto_perfil_url").eq("ativo", true).limit(cap);
     if (query && query.trim()) {
-      const term = `%${query.trim()}%`;
+      const term = `%${query.trim().slice(0, 100).replace(/[,()*%\\:"]/g, " ")}%`;
       q = q.or(`display_name.ilike.${term},profissao.ilike.${term}`);
     }
     const { data, error } = await q;

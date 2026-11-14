@@ -1,3 +1,4 @@
+import { escapeHtml } from '../_shared/guards.ts';
 import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -21,27 +22,27 @@ interface NotifyRequest {
 const ACTION_LABELS: Record<string, { subject: string; buildBody: (m: Record<string, any>) => string }> = {
   student_triaged: {
     subject: '🔔 Aluno Triado',
-    buildBody: (m) => `O aluno <strong>${m.student_name || 'N/A'}</strong> foi triado com nível de risco <strong>${m.risk_level || 'N/A'}</strong> e prioridade <strong>${m.priority || 'N/A'}</strong>.${m.recommended_action ? `<br/>Ação recomendada: ${m.recommended_action}` : ''}`,
+    buildBody: (m) => `O aluno <strong>${escapeHtml(m.student_name || 'N/A')}</strong> foi triado com nível de risco <strong>${escapeHtml(m.risk_level || 'N/A')}</strong> e prioridade <strong>${escapeHtml(m.priority || 'N/A')}</strong>.${m.recommended_action ? `<br/>Ação recomendada: ${escapeHtml(m.recommended_action)}` : ''}`,
   },
   triage_in_progress: {
     subject: '🔄 Triagem Em Andamento',
-    buildBody: (m) => `A triagem do aluno <strong>${m.student_name || 'N/A'}</strong> foi movida para <strong>Em Andamento</strong>.`,
+    buildBody: (m) => `A triagem do aluno <strong>${escapeHtml(m.student_name || 'N/A')}</strong> foi movida para <strong>Em Andamento</strong>.`,
   },
   triage_resolved: {
     subject: '✅ Triagem Concluída',
-    buildBody: (m) => `A triagem do aluno <strong>${m.student_name || 'N/A'}</strong> foi <strong>concluída/resolvida</strong>.`,
+    buildBody: (m) => `A triagem do aluno <strong>${escapeHtml(m.student_name || 'N/A')}</strong> foi <strong>concluída/resolvida</strong>.`,
   },
   triage_reopened: {
     subject: '🔁 Triagem Reaberta',
-    buildBody: (m) => `A triagem do aluno <strong>${m.student_name || 'N/A'}</strong> foi <strong>reaberta</strong>.`,
+    buildBody: (m) => `A triagem do aluno <strong>${escapeHtml(m.student_name || 'N/A')}</strong> foi <strong>reaberta</strong>.`,
   },
   note_created: {
     subject: '📝 Nova Nota Institucional',
-    buildBody: (m) => `Uma nova nota "<strong>${m.note_title || 'N/A'}</strong>" foi criada na instituição <strong>${m.institution_name || 'N/A'}</strong>.`,
+    buildBody: (m) => `Uma nova nota "<strong>${escapeHtml(m.note_title || 'N/A')}</strong>" foi criada na instituição <strong>${escapeHtml(m.institution_name || 'N/A')}</strong>.`,
   },
   note_deleted: {
     subject: '🗑️ Nota Institucional Excluída',
-    buildBody: (m) => `A nota "<strong>${m.note_title || 'N/A'}</strong>" foi excluída da instituição <strong>${m.institution_name || 'N/A'}</strong>.`,
+    buildBody: (m) => `A nota "<strong>${escapeHtml(m.note_title || 'N/A')}</strong>" foi excluída da instituição <strong>${escapeHtml(m.institution_name || 'N/A')}</strong>.`,
   },
 };
 
@@ -67,6 +68,13 @@ serve(async (req) => {
 
     const body: NotifyRequest = await req.json();
     const { action_type, institution_id, metadata } = body;
+    {
+      const { data: member } = await supabase.rpc('user_belongs_to_institution', { _user_id: user.id, _institution_id: institution_id });
+      const { data: adm } = await supabase.rpc('is_admin', { _user_id: user.id });
+      if (!member && !adm) {
+        return new Response(JSON.stringify({ error: 'Sem permissão' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
 
     const { data: institutionSafety, error: safetyError } = await supabase.from('educational_institutions').select('is_demo').eq('id', institution_id).maybeSingle();
     if (safetyError) throw new Error('Notification safety check failed');
@@ -136,7 +144,7 @@ serve(async (req) => {
     // Build email
     const enrichedMetadata = { ...metadata, institution_name: institutionName };
     const emailBody = actionConfig.buildBody(enrichedMetadata);
-    const subject = `${actionConfig.subject} - ${institutionName}`;
+    const subject = `${actionConfig.subject} - ${escapeHtml(institutionName)}`;
 
     const htmlContent = `
 <!DOCTYPE html>

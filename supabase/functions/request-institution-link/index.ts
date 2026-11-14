@@ -1,3 +1,4 @@
+import { escapeHtml } from '../_shared/guards.ts';
 import '../_shared/redact-logs.ts';
 import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -216,16 +217,16 @@ const handler = async (req: Request): Promise<Response> => {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Nome:</td>
-                  <td style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: 600;">${profile.nome}</td>
+                  <td style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: 600;">${escapeHtml(profile.nome)}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Email:</td>
-                  <td style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: 600;">${profile.email}</td>
+                  <td style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: 600;">${escapeHtml(profile.email)}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Instituição:</td>
                   <td style="padding: 8px 0; color: #374151; font-size: 14px; font-weight: 600;">
-                    ${institution.name}
+                    ${escapeHtml(institution.name)}
                     ${institution.has_partnership ? '<span style="background-color: #8b5cf6; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">Parceira</span>' : ''}
                   </td>
                 </tr>
@@ -247,7 +248,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
                   <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px;">Mensagem do usuário:</p>
                   <div style="background-color: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <p style="margin: 0; color: #374151; font-size: 14px; white-space: pre-wrap;">${requestMessage}</p>
+                    <p style="margin: 0; color: #374151; font-size: 14px; white-space: pre-wrap;">${escapeHtml(requestMessage)}</p>
                   </div>
                 </div>
               ` : ''}
@@ -281,7 +282,7 @@ const handler = async (req: Request): Promise<Response> => {
       from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
       to: [adminEmail],
       bcc: bccEmails.length > 0 ? bccEmails : undefined,
-      subject: `Nova Solicitação de Vínculo Institucional - ${institution.name}`,
+      subject: `Nova Solicitação de Vínculo Institucional - ${escapeHtml(institution.name)}`,
       html: emailHtml,
     });
 
@@ -299,7 +300,7 @@ const handler = async (req: Request): Promise<Response> => {
             from: `${normalizedTenantName} <noreply@redebemestar.com.br>`,
             to: institutionAdminEmails,
             bcc: bccEmails.length > 0 ? bccEmails : undefined,
-            subject: `Nova Solicitação de Vínculo - ${institution.name}`,
+            subject: `Nova Solicitação de Vínculo - ${escapeHtml(institution.name)}`,
             html: emailHtml,
           });
           console.log('Email sent to institution admins:', institutionAdminEmails);

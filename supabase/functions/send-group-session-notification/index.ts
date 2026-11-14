@@ -1,3 +1,4 @@
+import { escapeHtml, getCaller, isSiteAdmin, isServiceCall, authErrorResponse } from '../_shared/guards.ts';
 import '../_shared/redact-logs.ts';
 import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -47,6 +48,23 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Who may trigger what: participants confirm only their own registration; status/cancel/reminder emails need an admin or internal call.
+    const internal = await isServiceCall(req, supabase);
+    if (!internal) {
+      const caller = await getCaller(req, supabase);
+      if (event_type === "registration_confirmed") {
+        const { data: reg } = await supabase.from("group_session_registrations").select("id")
+          .eq("session_id", session_id).eq("user_id", caller.userId).limit(1);
+        if (!reg?.length) return Response.json({ error: "Sem permissão" }, { status: 403, headers: corsHeaders });
+        const { data: au } = await supabase.auth.admin.getUserById(caller.userId);
+        const { data: prof } = await supabase.from("profiles").select("nome").eq("user_id", caller.userId).maybeSingle();
+        body.user_email = au?.user?.email ?? undefined;
+        body.user_name = prof?.nome ?? body.user_name;
+      } else if (!isSiteAdmin(caller)) {
+        return Response.json({ error: "Sem permissão" }, { status: 403, headers: corsHeaders });
+      }
+    }
 
     if (await isStudyNotificationBlocked(supabase, { email: body.user_email })) {
       return Response.json({ success: true, sent: 0, skipped: 'synthetic_demo' }, { headers: corsHeaders });
@@ -148,7 +166,7 @@ const handler = async (req: Request): Promise<Response> => {
         bcc: [...(adminEmail ? [adminEmail] : []), ...bccEmails].length > 0 
           ? [...(adminEmail ? [adminEmail] : []), ...bccEmails] 
           : undefined,
-        subject: `✅ Inscrição Confirmada - ${session.title}`,
+        subject: `✅ Inscrição Confirmada - ${escapeHtml(session.title)}`,
         html,
       });
       if (error) console.error("[group-session-notification] Resend error:", error);
@@ -197,8 +215,8 @@ const handler = async (req: Request): Promise<Response> => {
         to: [profile.email],
         bcc: bccEmails.length > 0 ? bccEmails : undefined,
         subject: isApproved
-          ? `🎉 Seu encontro foi aprovado - ${session.title}`
-          : `❌ Encontro não aprovado - ${session.title}`,
+          ? `🎉 Seu encontro foi aprovado - ${escapeHtml(session.title)}`
+          : `❌ Encontro não aprovado - ${escapeHtml(session.title)}`,
         html,
       });
       if (error) console.error("[group-session-notification] Resend error:", error);
@@ -236,7 +254,7 @@ const handler = async (req: Request): Promise<Response> => {
             from: `${tenantName} <noreply@redebemestar.com.br>`,
             to: [profile.email],
             bcc: bccEmails.length > 0 ? bccEmails : undefined,
-            subject: `⚠️ Encontro Cancelado - ${session.title}`,
+            subject: `⚠️ Encontro Cancelado - ${escapeHtml(session.title)}`,
             html,
           });
           if (error) console.error(`[group-session-notification] Cancel email error for ${profile.email}:`, error);
@@ -252,6 +270,8 @@ const handler = async (req: Request): Promise<Response> => {
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
+    const authResp = authErrorResponse(error, corsHeaders);
+    if (authResp) return authResp;
     console.error("[group-session-notification] Error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
@@ -308,15 +328,15 @@ function buildRegistrationEmail(d: RegistrationEmailData): string {
 
   const content = `
     <h2 style="color: #1f2937; margin: 0 0 8px;">🎉 Inscrição Confirmada!</h2>
-    <p style="color: #6b7280; margin: 0 0 24px;">Olá, <strong>${d.participantName}</strong>! Sua inscrição foi confirmada.</p>
+    <p style="color: #6b7280; margin: 0 0 24px;">Olá, <strong>${escapeHtml(d.participantName)}</strong>! Sua inscrição foi confirmada.</p>
 
     <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; margin: 0 0 20px; border-left: 4px solid ${d.primaryColor};">
-      <h3 style="color: #1f2937; margin: 0 0 12px; font-size: 18px;">${d.title}</h3>
-      <p style="color: #6b7280; margin: 0 0 16px; font-size: 14px;">${d.description}</p>
-      <p style="margin: 4px 0; color: #4b5563; font-size: 14px;">📌 <strong>Tipo:</strong> ${d.sessionType}</p>
+      <h3 style="color: #1f2937; margin: 0 0 12px; font-size: 18px;">${escapeHtml(d.title)}</h3>
+      <p style="color: #6b7280; margin: 0 0 16px; font-size: 14px;">${escapeHtml(d.description)}</p>
+      <p style="margin: 4px 0; color: #4b5563; font-size: 14px;">📌 <strong>Tipo:</strong> ${escapeHtml(d.sessionType)}</p>
       <p style="margin: 4px 0; color: #4b5563; font-size: 14px;">📅 <strong>Data:</strong> ${d.date}</p>
       <p style="margin: 4px 0; color: #4b5563; font-size: 14px;">🕐 <strong>Horário:</strong> ${d.time} • ${d.duration}min</p>
-      <p style="margin: 4px 0; color: #4b5563; font-size: 14px;">👤 <strong>Facilitador:</strong> ${d.facilitator}</p>
+      <p style="margin: 4px 0; color: #4b5563; font-size: 14px;">👤 <strong>Facilitador:</strong> ${escapeHtml(d.facilitator)}</p>
     </div>
 
     ${linksSection.length > 0 ? `<div style="margin: 24px 0; text-align: center;">${linksSection.join("")}</div>` : ""}
@@ -348,7 +368,7 @@ function buildStatusEmail(d: StatusEmailData): string {
 
   const content = `
     <h2 style="color: #1f2937; margin: 0 0 8px;">${statusIcon} Encontro ${statusText}</h2>
-    <p style="color: #6b7280; margin: 0 0 24px;">Olá, <strong>${d.facilitatorName}</strong>!</p>
+    <p style="color: #6b7280; margin: 0 0 24px;">Olá, <strong>${escapeHtml(d.facilitatorName)}</strong>!</p>
 
     <div style="background-color: ${d.isApproved ? "#dcfce7" : "#fef2f2"}; padding: 16px; border-radius: 8px; margin: 0 0 20px; border-left: 4px solid ${statusColor};">
       <p style="margin: 0; color: ${d.isApproved ? "#15803d" : "#b91c1c"}; font-weight: 600;">
@@ -357,15 +377,15 @@ function buildStatusEmail(d: StatusEmailData): string {
     </div>
 
     <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; margin: 0 0 20px;">
-      <p style="margin: 4px 0; color: #4b5563;"><strong>Encontro:</strong> ${d.title}</p>
-      <p style="margin: 4px 0; color: #4b5563;"><strong>Tipo:</strong> ${d.sessionType}</p>
+      <p style="margin: 4px 0; color: #4b5563;"><strong>Encontro:</strong> ${escapeHtml(d.title)}</p>
+      <p style="margin: 4px 0; color: #4b5563;"><strong>Tipo:</strong> ${escapeHtml(d.sessionType)}</p>
       <p style="margin: 4px 0; color: #4b5563;"><strong>Data:</strong> ${d.date} às ${d.time}</p>
     </div>
 
     ${d.reviewNotes ? `
     <div style="background-color: #fefce8; padding: 16px; border-radius: 8px; margin: 0 0 20px; border-left: 4px solid #eab308;">
       <p style="margin: 0 0 4px; font-weight: 600; color: #854d0e;">📝 Observações da revisão:</p>
-      <p style="margin: 0; color: #713f12;">${d.reviewNotes}</p>
+      <p style="margin: 0; color: #713f12;">${escapeHtml(d.reviewNotes)}</p>
     </div>` : ""}
 
     ${d.isApproved ? `
@@ -387,17 +407,17 @@ interface CancellationEmailData {
 function buildCancellationEmail(d: CancellationEmailData): string {
   const content = `
     <h2 style="color: #1f2937; margin: 0 0 8px;">⚠️ Encontro Cancelado</h2>
-    <p style="color: #6b7280; margin: 0 0 24px;">Olá, <strong>${d.participantName}</strong>.</p>
+    <p style="color: #6b7280; margin: 0 0 24px;">Olá, <strong>${escapeHtml(d.participantName)}</strong>.</p>
 
     <div style="background-color: #fef2f2; padding: 16px; border-radius: 8px; margin: 0 0 20px; border-left: 4px solid #ef4444;">
       <p style="margin: 0; color: #b91c1c; font-weight: 600;">
-        O encontro "${d.title}" agendado para ${d.date} às ${d.time} foi cancelado.
+        O encontro "${escapeHtml(d.title)}" agendado para ${d.date} às ${d.time} foi cancelado.
       </p>
     </div>
 
     <div style="background-color: #f1f5f9; padding: 16px; border-radius: 8px; margin: 0 0 20px;">
       <p style="margin: 0 0 4px; font-weight: 600; color: #4b5563;">Motivo:</p>
-      <p style="margin: 0; color: #6b7280;">${d.reason}</p>
+      <p style="margin: 0; color: #6b7280;">${escapeHtml(d.reason)}</p>
     </div>
 
     <div style="text-align: center; margin: 24px 0;">

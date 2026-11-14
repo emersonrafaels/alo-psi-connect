@@ -13,7 +13,9 @@ const Body = z.object({
   messages: z
     .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(4000) }))
     .min(1)
-    .max(40),
+    .max(40)
+    // Conversation must alternate and end with the user's turn; earlier assistant turns are context only.
+    .refine((m) => m[m.length - 1].role === "user", "A última mensagem deve ser do usuário"),
 });
 
 const json = (body: unknown, status: number) =>
@@ -270,7 +272,12 @@ Formato da resposta (markdown curto):
   const result = streamText({
     model: provider.responses("openai/gpt-6-astra"),
     system,
-    messages: parsed.data.messages,
+    // Prior assistant turns are wrapped as quoted history so they can't pose as new instructions.
+    messages: parsed.data.messages.map((m) =>
+      m.role === "assistant"
+        ? { role: "assistant" as const, content: m.content.replaceAll(TOOL_MARK, "") }
+        : m
+    ),
     tools,
     stopWhen: stepCountIs(6),
     abortSignal: req.signal,

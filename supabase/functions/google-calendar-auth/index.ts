@@ -65,6 +65,15 @@ const handler = async (req: Request): Promise<Response> => {
     const { action, code, type, tenantId }: GoogleCalendarAuthRequest = await req.json();
     console.log('📥 Request received:', { action, code: code ? 'present' : 'missing', type, tenantId });
 
+    // Tenant-level calendar connections are managed by site admins only.
+    if (type === 'tenant') {
+      const { data: roles } = await supabaseClient.from('user_roles').select('role').eq('user_id', user.user.id);
+      const isAdmin = (roles ?? []).some((r: { role: string }) => r.role === 'admin' || r.role === 'super_admin');
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: 'Sem permissão' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+
     const appBaseUrl = Deno.env.get('APP_BASE_URL') || 'https://alopsi.com.br';
     const redirectUri = `${appBaseUrl}/google-calendar-callback`;
     console.log('Redirect URI:', redirectUri);

@@ -1,3 +1,5 @@
+import { requireServiceOrAdmin, authErrorResponse, type Caller } from '../_shared/guards.ts';
+import { escapeHtml } from '../_shared/guards.ts';
 import { managedResend } from '../_shared/managed-email.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { Resend } from 'npm:resend@4.0.0';
@@ -23,6 +25,11 @@ const SITE = 'https://redebemestar.com.br';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  const __guardDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let __svc: unknown;
+  try { __svc = (await requireServiceOrAdmin(req, __guardDb)) === null; } catch (e) {
+    const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
+  }
 
   try {
     const { diagnostic_id } = await req.json();
@@ -101,12 +108,12 @@ Deno.serve(async (req) => {
 
     const score = diag.overall_score ?? '—';
     const headline = diag.headline
-      ? `<p style="margin:12px 0 0;padding:12px 16px;background:#f5f3ff;border-left:4px solid #7c3aed;color:#3f3f46;font-style:italic;">"${diag.headline}"</p>`
+      ? `<p style="margin:12px 0 0;padding:12px 16px;background:#f5f3ff;border-left:4px solid #7c3aed;color:#3f3f46;font-style:italic;">"${escapeHtml(diag.headline)}"</p>`
       : '';
 
     const respondent = `
-      <p style="margin:4px 0;color:#374151;"><strong>${diag.respondent_name ?? '—'}</strong>${diag.respondent_role ? ` · ${diag.respondent_role}` : ''}</p>
-      ${diag.respondent_email ? `<p style="margin:2px 0;color:#6b7280;font-size:13px;">${diag.respondent_email}${diag.respondent_phone ? ` · ${diag.respondent_phone}` : ''}</p>` : ''}
+      <p style="margin:4px 0;color:#374151;"><strong>${escapeHtml(diag.respondent_name ?? '—')}</strong>${diag.respondent_role ? ` · ${escapeHtml(diag.respondent_role)}` : ''}</p>
+      ${diag.respondent_email ? `<p style="margin:2px 0;color:#6b7280;font-size:13px;">${escapeHtml(diag.respondent_email)}${diag.respondent_phone ? ` · ${escapeHtml(diag.respondent_phone)}` : ''}</p>` : ''}
     `;
 
     const badge = isPublic
@@ -122,16 +129,16 @@ Deno.serve(async (req) => {
 
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-            <h2 style="margin:0;font-size:18px;">${institutionName}</h2>
+            <h2 style="margin:0;font-size:18px;">${escapeHtml(institutionName)}</h2>
             ${badge}
           </div>
           <p style="margin:8px 0 0;color:#6b7280;font-size:13px;">Score geral de maturidade: <strong style="color:#7c3aed;font-size:16px;">${score}/100</strong> · v${diag.version ?? 1}</p>
-          ${headline}
+          ${escapeHtml(headline)}
         </div>
 
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:16px;">
           <h3 style="margin:0 0 8px;font-size:14px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Respondente</h3>
-          ${respondent}
+          ${escapeHtml(respondent)}
         </div>
 
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:24px;">
@@ -148,7 +155,7 @@ Deno.serve(async (req) => {
     `;
 
     const resend = managedResend('radar-submitted', Deno.env.get('RESEND_API_KEY'));
-    const subject = `🎯 Novo Radar Institucional: ${institutionName}`;
+    const subject = `🎯 Novo Radar Institucional: ${escapeHtml(institutionName)}`;
 
     const results = await Promise.allSettled(
       recipients.map((to) =>

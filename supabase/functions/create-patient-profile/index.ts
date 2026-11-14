@@ -1,4 +1,5 @@
 import '../_shared/redact-logs.ts';
+import { getCaller, escapeHtml } from '../_shared/guards.ts';
 import { managedEmailFetch } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
@@ -43,7 +44,7 @@ function generateConfirmationEmailHTML(
           </div>
           <div style="padding: 40px 20px;">
             <h2 style="color: ${primaryColor}; margin: 0 0 20px 0; font-size: 24px;">${welcomeTitle}</h2>
-            <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">Olá, <strong>${recipientName}</strong>!</p>
+            <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">Olá, <strong>${escapeHtml(recipientName)}</strong>!</p>
             <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563;">${welcomeMessage}</p>
             <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid ${primaryColor};">
               <p style="margin: 0; font-size: 16px; color: #4b5563;">Para começar a utilizar todos os recursos da plataforma, confirme seu email clicando no botão abaixo:</p>
@@ -150,8 +151,17 @@ serve(async (req) => {
     let userId;
     let isNewUser = false; // Track if we're creating a new user
 
+    // Signed-in caller, if any. Existing accounts can only be completed by their own owner.
+    let callerId: string | null = null;
+    try { callerId = (await getCaller(req, supabase)).userId; } catch { callerId = null; }
+    const forbidden = () => new Response(
+      JSON.stringify({ error: 'Este email já possui cadastro. Entre na sua conta para continuar.' }),
+      { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
     // If existing user ID is provided (Google users), use it
     if (existingUserId) {
+      if (!callerId || callerId !== existingUserId) return forbidden();
       userId = existingUserId;
       isNewUser = false; // Google users don't need email confirmation
       console.log('Using existing user ID (Google):', userId);
@@ -164,6 +174,7 @@ serve(async (req) => {
         .maybeSingle();
       
       if (existingProfile?.user_id) {
+        if (!callerId || callerId !== existingProfile.user_id) return forbidden();
         console.log('User already exists, using existing user ID:', existingProfile.user_id);
         userId = existingProfile.user_id;
         isNewUser = false; // Existing user
