@@ -34,21 +34,7 @@ export const useCouponTracking = () => {
 
       if (usageError) throw usageError;
 
-      // Incrementar contador de uso do cupom
-      const { data: coupon } = await supabase
-        .from('institution_coupons')
-        .select('current_usage_count')
-        .eq('id', params.couponId)
-        .single();
-
-      if (coupon) {
-        await supabase
-          .from('institution_coupons')
-          .update({ 
-            current_usage_count: coupon.current_usage_count + 1
-          })
-          .eq('id', params.couponId);
-      }
+      // Amounts and the coupon's usage counter are set by the database from the appointment itself.
     },
     onError: (error: any) => {
       console.error('Error recording coupon usage:', error);

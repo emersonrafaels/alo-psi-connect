@@ -1,3 +1,4 @@
+import { requireSiteAdmin, authErrorResponse } from '../_shared/guards.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 
 const corsHeaders = {
@@ -10,13 +11,17 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseAdmin = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+  // Only site admins may rewrite and publish blog content.
+  try { await requireSiteAdmin(req, supabaseAdmin); } catch (e) {
+    const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
+  }
+
   try {
     console.log('[Fix Post] Iniciando correção do post...');
-    
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
 
     const correctedContent = `Para conseguir colocar em prática o autocuidado dentro de uma carreira médica, é necessário compreender o conceito primário de auto-compaixão e suas vertentes:
 
