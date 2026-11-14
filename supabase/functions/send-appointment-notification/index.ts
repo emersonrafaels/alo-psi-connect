@@ -1,3 +1,5 @@
+import { requireServiceOrAdmin, authErrorResponse, type Caller } from '../_shared/guards.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 import { managedResend } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
@@ -35,6 +37,11 @@ interface NotificationRequest {
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+  const __guardDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let __svc: unknown;
+  try { __svc = (await requireServiceOrAdmin(req, __guardDb)) === null; } catch (e) {
+    const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
   }
 
   try {

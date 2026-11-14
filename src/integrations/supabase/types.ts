@@ -6393,6 +6393,26 @@ export type Database = {
       }
     }
     Functions: {
+      _get_institution_alerts_impl: {
+        Args: { p_institution_id: string }
+        Returns: {
+          count: number
+          message: string
+          severity: string
+        }[]
+      }
+      _get_institution_engagement_metrics_impl: {
+        Args: { p_institution_id: string }
+        Returns: Json
+      }
+      _get_institution_growth_metrics_impl: {
+        Args: { p_institution_id: string }
+        Returns: {
+          month: string
+          professionals_added: number
+          students_enrolled: number
+        }[]
+      }
       can_view_student_buddy: {
         Args: { _patient_id: string; _user_id: string }
         Returns: boolean

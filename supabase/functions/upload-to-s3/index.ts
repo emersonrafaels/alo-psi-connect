@@ -1,3 +1,4 @@
+import '../_shared/redact-logs.ts';
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -84,7 +85,7 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single()
 
-    console.log('User profile:', profile)
+    console.log('User profile loaded:', !!profile)
 
     // Try S3 upload first
     try {

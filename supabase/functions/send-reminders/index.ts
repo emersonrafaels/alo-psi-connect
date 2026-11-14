@@ -1,3 +1,4 @@
+import { requireServiceOrAdmin, authErrorResponse } from '../_shared/guards.ts';
 import { managedResend } from '../_shared/managed-email.ts';
 // Daily opt-in reminder emails for students (profiles.email_reminders = true).
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
@@ -9,6 +10,11 @@ const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: 
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  const __guardDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let __svc: unknown;
+  try { __svc = (await requireServiceOrAdmin(req, __guardDb)) === null; } catch (e) {
+    const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
+  }
   const key = Deno.env.get('RESEND_API_KEY');
   if (!key) return json({ error: 'email not configured' }, 500);
   const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);

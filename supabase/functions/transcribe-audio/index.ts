@@ -1,3 +1,4 @@
+import { getCaller, authErrorResponse, type Caller } from '../_shared/guards.ts';
 // Transcribe audio + gerar reflexão empática usando Lovable AI (Gemini)
 // Contrato mantido: entrada { audio: base64, tenant_id?: string }
 // Saída: { transcription: string, reflection: string }
@@ -76,6 +77,11 @@ async function callGateway(body: unknown) {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __guardDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let __caller: Caller;
+  try { __caller = await getCaller(req, __guardDb); } catch (e) {
+    const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
+  }
 
   try {
     if (!LOVABLE_API_KEY) return jsonResponse({ error: "LOVABLE_API_KEY não configurada" }, 500);

@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { isServiceCall, getCaller, isSiteAdmin, authErrorResponse } from '../_shared/guards.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,6 +49,21 @@ Deno.serve(async (req) => {
       .eq('id', diagnostic_id)
       .single();
     if (fErr || !diag) throw new Error(fErr?.message ?? 'Diagnostic not found');
+    // Only internal calls (public radar submit), site admins or active members of the institution.
+    if (!(await isServiceCall(req, supabase))) {
+      try {
+        const caller = await getCaller(req, supabase);
+        let ok = isSiteAdmin(caller);
+        if (!ok && diag.institution_id) {
+          const { data: m } = await supabase.from('institution_users').select('id').eq('user_id', caller.userId)
+            .eq('institution_id', diag.institution_id).eq('is_active', true).limit(1);
+          ok = !!m?.length;
+        }
+        if (!ok) return new Response(JSON.stringify({ error: 'Sem permissão' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch (e) {
+        const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
+      }
+    }
 
     const overall = Number(diag.overall_score ?? 0);
     const pains = (diag.pains ?? []) as string[];

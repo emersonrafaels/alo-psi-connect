@@ -1,3 +1,4 @@
+import { getCaller, authErrorResponse, type Caller } from '../_shared/guards.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -19,9 +20,21 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  const __guardDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let __caller: Caller;
+  try { __caller = await getCaller(req, __guardDb); } catch (e) {
+    const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
+  }
 
   try {
     const { institutionId, dailyEntries, metrics, institutionalNotes } = await req.json();
+    {
+      const { data: allowed } = await __guardDb.rpc('user_belongs_to_institution', { _user_id: __caller.userId, _institution_id: institutionId });
+      const { data: isAdm } = await __guardDb.rpc('is_admin', { _user_id: __caller.userId });
+      if (!allowed && !isAdm) {
+        return new Response(JSON.stringify({ error: 'Sem permissão' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {

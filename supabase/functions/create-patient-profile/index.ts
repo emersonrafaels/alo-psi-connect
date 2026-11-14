@@ -1,3 +1,4 @@
+import '../_shared/redact-logs.ts';
 import { managedEmailFetch } from '../_shared/managed-email.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"

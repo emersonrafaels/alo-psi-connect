@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getCaller, canAccessAppointment, authErrorResponse } from '../_shared/guards.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -30,8 +31,6 @@ const handler = async (req: Request): Promise<Response> => {
       newProfessionalId, 
       newDate, 
       newTime, 
-      originalValue, 
-      newValue 
     }: RescheduleAppointmentRequest = await req.json();
     
     if (!appointmentId || !newProfessionalId || !newDate || !newTime) {
@@ -42,6 +41,15 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Only the appointment's patient, professional or a site admin may change it.
+    try {
+      const caller = await getCaller(req, supabase);
+      if (!(await canAccessAppointment(supabase, caller, appointmentId))) {
+        return new Response(JSON.stringify({ error: 'Sem permissão' }), { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      }
+    } catch (e) {
+      const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
+    }
     
     // Buscar o agendamento original
     const { data: appointment, error: appointmentError } = await supabase
@@ -73,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Buscar o novo profissional
     const { data: newProfessional, error: professionalError } = await supabase
       .from('profissionais')
-      .select('profile_id')
+      .select('profile_id, preco_consulta')
       .eq('id', newProfessionalId)
       .single();
 
@@ -84,6 +92,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Prices come from stored records, never from the request.
+    const originalValue = Number(appointment.valor) || 0;
+    const newValue = Number(newProfessional.preco_consulta) || 0;
     // Calcular diferença de valor
     const priceDifference = newValue - originalValue;
     let paymentResult = null;
@@ -104,7 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
               customerPhone: appointment.telefone_paciente,
               date: newDate,
               time: newTime,
-              price: priceDifference,
+              valor: priceDifference,
               notes: `Diferença de reagendamento - Valor adicional: R$ ${(priceDifference / 100).toFixed(2)}`
             }
           }
@@ -180,7 +191,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: updateError } = await supabase
       .from('agendamentos')
       .update({ 
-        professional_id: newProfessional.profile_id,
+        professional_id: newProfessionalId,
         data_consulta: newDate,
         horario: newTime,
         valor: newValue,

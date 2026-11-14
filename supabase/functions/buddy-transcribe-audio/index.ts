@@ -1,3 +1,5 @@
+import { getCaller, authErrorResponse, type Caller } from '../_shared/guards.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 // Transcreve áudio usando Lovable AI (gpt-4o-mini-transcribe)
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +11,11 @@ const MAX_BYTES = 20 * 1024 * 1024; // 20MB
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __guardDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let __caller: Caller;
+  try { __caller = await getCaller(req, __guardDb); } catch (e) {
+    const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
+  }
 
   try {
     if (!LOVABLE_API_KEY) return json({ error: "LOVABLE_API_KEY não configurada" }, 500);

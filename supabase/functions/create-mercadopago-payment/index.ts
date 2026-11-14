@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isServiceCall, getCaller, canAccessAppointment, authErrorResponse } from "../_shared/guards.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,7 +20,29 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { agendamentoId, valor, title, description }: PaymentRequest = await req.json();
+    const body: PaymentRequest = await req.json();
+    const { agendamentoId, title, description } = body;
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    const json = (b: unknown, status: number) => new Response(JSON.stringify(b), { status, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    if (typeof agendamentoId !== 'string' || !agendamentoId) return json({ error: 'agendamentoId obrigatório' }, 400);
+    // Only internal calls or the appointment's own patient/professional/admin may create a payment.
+    const internal = await isServiceCall(req, supabase);
+    if (!internal) {
+      const caller = await getCaller(req, supabase);
+      if (!(await canAccessAppointment(supabase, caller, agendamentoId))) return json({ error: 'Sem permissão' }, 403);
+    }
+    // The price always comes from the stored appointment, never from the request.
+    const { data: appt } = await supabase.from('agendamentos').select('valor, payment_status, status').eq('id', agendamentoId).maybeSingle();
+    if (!appt) return json({ error: 'Agendamento não encontrado' }, 404);
+    if (appt.payment_status === 'paid' || appt.status === 'cancelado') return json({ error: 'Agendamento não pode ser pago' }, 409);
+    // Internal callers (e.g. reschedule price difference) may set an amount; browsers never can.
+    const valor = internal && typeof body.valor === 'number' ? body.valor : Number(appt.valor);
+    if (!Number.isFinite(valor) || valor <= 0) return json({ error: 'Valor inválido' }, 400);
+    const safeTitle = String(title ?? 'Consulta').slice(0, 200);
+    const safeDescription = String(description ?? '').slice(0, 500);
     
     const mercadoPagoToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
     if (!mercadoPagoToken) {
@@ -31,8 +54,8 @@ const handler = async (req: Request): Promise<Response> => {
       items: [
         {
           id: agendamentoId,
-          title: title,
-          description: description,
+          title: safeTitle,
+          description: safeDescription,
           quantity: 1,
           currency_id: "BRL",
           unit_price: valor
@@ -76,11 +99,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const preference = await response.json();
     
-    // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
 
     // Update agendamento with mercadopago preference_id
     const { error: updateError } = await supabase
@@ -111,6 +129,8 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
+    const authResp = authErrorResponse(error, corsHeaders);
+    if (authResp) return authResp;
     console.error('Error in create-mercadopago-payment function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),

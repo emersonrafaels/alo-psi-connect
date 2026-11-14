@@ -1,3 +1,4 @@
+import { getCaller, authErrorResponse, type Caller } from '../_shared/guards.ts';
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -38,6 +39,11 @@ serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+  const __guardDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let __caller: Caller;
+  try { __caller = await getCaller(req, __guardDb); } catch (e) {
+    const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
   }
 
   try {

@@ -1,3 +1,4 @@
+import '../_shared/redact-logs.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -34,7 +35,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Email confirmation request received");
     
     const { token }: ConfirmEmailRequest = await req.json();
-    console.log("Token received:", token);
+    console.log("Token received");
     
     if (!token) {
       return new Response(
@@ -54,7 +55,7 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('token', token)
       .single();
 
-    console.log("Token search result:", { tokenData, tokenError });
+    console.log("Token search result:", { found: !!tokenData, error: tokenError?.message });
 
     if (tokenError || !tokenData) {
       console.error('Token not found:', tokenError);

@@ -1,3 +1,4 @@
+import { requireServiceOrAdmin, authErrorResponse } from '../_shared/guards.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -8,6 +9,11 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+  const __guardDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let __svc: unknown;
+  try { __svc = (await requireServiceOrAdmin(req, __guardDb)) === null; } catch (e) {
+    const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
   }
 
   try {

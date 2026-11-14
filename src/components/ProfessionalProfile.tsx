@@ -803,12 +803,10 @@ const SpecialtiesUpdater: React.FC<{
 
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('update-specialties', {
-        body: {
-          professionalId,
-          specialties
-        }
-      });
+      const { error } = await supabase
+        .from('profissionais')
+        .update({ servicos_normalizados: specialties })
+        .eq('id', professionalId);
 
       if (error) throw error;
 

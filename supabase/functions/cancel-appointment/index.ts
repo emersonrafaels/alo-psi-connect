@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getCaller, canAccessAppointment, authErrorResponse } from '../_shared/guards.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -30,6 +31,15 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Only the appointment's patient, professional or a site admin may change it.
+    try {
+      const caller = await getCaller(req, supabase);
+      if (!(await canAccessAppointment(supabase, caller, appointmentId))) {
+        return new Response(JSON.stringify({ error: 'Sem permissão' }), { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      }
+    } catch (e) {
+      const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
+    }
     
     // Buscar o agendamento
     const { data: appointment, error: appointmentError } = await supabase

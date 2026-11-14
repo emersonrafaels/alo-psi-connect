@@ -196,7 +196,7 @@ export const useBlogAnalyticsSummary = (
         // Buscar comentários e ratings
         let commentsQuery = supabase
           .from('comments')
-          .select('*', { count: 'exact', head: true });
+          .select('id', { count: 'exact', head: true });
 
         let ratingsQuery = supabase
           .from('blog_post_ratings')
@@ -260,7 +260,7 @@ export const useBlogAnalyticsSummary = (
       // Buscar total de comentários e ratings (apenas dos posts do autor se filtrado)
       let commentsQuery = supabase
         .from('comments')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true });
 
       let ratingsQuery = supabase
         .from('blog_post_ratings')
@@ -300,7 +300,7 @@ export const useBlogAnalyticsSummary = (
         // For comments/ratings, we need to query the previous period
         let prevCommentsQuery = supabase
           .from('comments')
-          .select('*', { count: 'exact', head: true })
+          .select('id', { count: 'exact', head: true })
           .gte('created_at', prevStartDate)
           .lte('created_at', prevEndDate);
 

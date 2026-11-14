@@ -1,3 +1,4 @@
+import '../_shared/redact-logs.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 
 const corsHeaders = {

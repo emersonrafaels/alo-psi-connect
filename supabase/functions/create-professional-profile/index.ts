@@ -1,3 +1,4 @@
+import '../_shared/redact-logs.ts';
 import { managedEmailFetch } from '../_shared/managed-email.ts';
 // Version: 1.0.3 - Fixed getUserByEmail error (replaced with profiles check + orphan cleanup)
 // Last updated: 2025-10-15
@@ -753,7 +754,7 @@ serve(async (req) => {
           const expiresAt = new Date();
           expiresAt.setHours(expiresAt.getHours() + 24);
 
-          console.log('🔑 Generated confirmation token:', confirmationToken);
+          console.log('🔑 Generated confirmation token');
 
           // Invalidate existing tokens for this user
           const { error: invalidateError } = await supabaseAdmin

@@ -129,7 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
               const calendarResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/create-calendar-event`, {
                 method: 'POST',
                 headers: {
-                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
@@ -168,7 +168,7 @@ const handler = async (req: Request): Promise<Response> => {
             const emailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-appointment-notification`, {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({

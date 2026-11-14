@@ -1,3 +1,4 @@
+import '../_shared/redact-logs.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -55,7 +56,7 @@ const handler = async (req: Request): Promise<Response> => {
       .gte('expires_at', new Date().toISOString())
       .single();
 
-    console.log('Token verification:', { tokenData, tokenError });
+    console.log('Token verification:', { found: !!tokenData, error: tokenError?.message });
 
     if (tokenError || !tokenData) {
       console.error('Invalid token:', tokenError);

@@ -1,3 +1,4 @@
+import { requireServiceOrAdmin, authErrorResponse } from '../_shared/guards.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -136,6 +137,11 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  const __guardDb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  let __svc: unknown;
+  try { __svc = (await requireServiceOrAdmin(req, __guardDb)) === null; } catch (e) {
+    const r = authErrorResponse(e, corsHeaders); if (r) return r; throw e;
+  }
 
   const supabaseClient = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
@@ -144,7 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     // Verify authentication if request has auth header
-    const authHeader = req.headers.get('Authorization');
+    const authHeader = __svc ? null : req.headers.get('Authorization');
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
       const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);

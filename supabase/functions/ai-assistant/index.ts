@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getCaller, authErrorResponse } from '../_shared/guards.ts';
 import { manageSessionAndMemory, saveMessage, getConversationHistory } from './memory-helpers.ts';
 import { getDefaultSystemPrompt, getEnhancedSystemPrompt } from './system-prompts.ts';
 
@@ -16,10 +17,24 @@ serve(async (req) => {
   }
 
   try {
-    const { message, professionals: providedProfessionals, sessionId, userId, tenantId } = await req.json();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Signed-in callers only; identity comes from the token, never from the body.
+    const caller = await getCaller(req, supabase);
+    const userId = caller.userId;
+    const body = await req.json();
+    const { message, professionals: providedProfessionals, sessionId } = body;
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const tenantId = typeof body.tenantId === 'string' && UUID_RE.test(body.tenantId) ? body.tenantId : null;
+    if (typeof message !== 'string' || !message.trim() || message.length > 4000) {
+      return new Response(JSON.stringify({ error: 'Mensagem inválida' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
-    // Ensure we have a valid session ID
-    const validSessionId = sessionId || crypto.randomUUID();
+    // Ensure we have a valid session ID owned by the caller
+    let validSessionId = typeof sessionId === 'string' && sessionId.length <= 100 ? sessionId : crypto.randomUUID();
+    const { data: existingSession } = await supabase.from('ai_chat_sessions').select('user_id').eq('session_id', validSessionId).maybeSingle();
+    if (existingSession && existingSession.user_id !== userId) validSessionId = crypto.randomUUID();
 
     console.log('🤖 AI Assistant request received:', { 
       message: message?.substring(0, 100) + '...', 
@@ -32,10 +47,6 @@ serve(async (req) => {
     if (!openaiApiKey) {
       throw new Error('OpenAI API key not found');
     }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Manage chat session and memory window
     await manageSessionAndMemory(supabase, validSessionId, userId, message);
@@ -572,12 +583,11 @@ ${index + 1}. **${prof.display_name}** - ${prof.profissao}
     });
 
   } catch (error) {
+    const authResp = authErrorResponse(error, corsHeaders);
+    if (authResp) return authResp;
     console.error('❌ Error in ai-assistant function:', error);
-    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    console.error('❌ Error details:', JSON.stringify(error, null, 2));
     return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : 'Unknown error',
-      details: error instanceof Error ? error.stack : 'No details available'
+      error: 'Não foi possível processar a solicitação.'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

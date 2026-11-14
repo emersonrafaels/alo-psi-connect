@@ -24,9 +24,17 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, agendamentoId, type }: MagicLinkRequest = await req.json();
+    const body: MagicLinkRequest = await req.json();
+    const { agendamentoId, type } = body;
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const ok = () => new Response(JSON.stringify({ success: true }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    // Links are only sent to the email stored on an existing appointment, never to a caller-chosen address.
+    if (!agendamentoId || (type !== 'account_creation' && type !== 'appointment_access')) return ok();
+    const { data: appt } = await supabase.from('agendamentos').select('id, email_paciente, payment_status').eq('id', agendamentoId).maybeSingle();
+    const email = String(appt?.email_paciente ?? '').trim().toLowerCase();
+    if (!appt || !email || String(body.email ?? '').trim().toLowerCase() !== email) return ok();
+    if (type === 'account_creation' && appt.payment_status !== 'paid') return ok();
     
     if (type === 'account_creation') {
       // Magic link para criação de conta após pagamento
@@ -71,7 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
         `,
       });
 
-      console.log("Account creation magic link sent:", emailResponse);
+      console.log("Account creation link sent", { id: emailResponse?.data?.id });
       
     } else if (type === 'appointment_access' && agendamentoId) {
       // Magic link para acesso específico ao agendamento
@@ -120,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
         `,
       });
 
-      console.log("Appointment access magic link sent:", emailResponse);
+      console.log("Appointment access link sent", { id: emailResponse?.data?.id });
     }
 
     return new Response(JSON.stringify({ success: true }), {
@@ -129,9 +137,9 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
-    console.error("Error in send-magic-link function:", error);
+    console.error("Error in send-magic-link function:", error?.message);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Não foi possível enviar o link' }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

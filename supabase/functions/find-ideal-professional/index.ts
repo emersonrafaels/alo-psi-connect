@@ -99,7 +99,8 @@ serve(async (req) => {
       let query = supabase
         .from('profissionais')
         .select(`
-          *,
+          id, display_name, profissao, crp_crm, preco_consulta, tempo_consulta, foto_perfil_url, resumo_profissional,
+          linkedin, servicos_raw, servicos_normalizados, em_destaque, ordem_destaque, ativo, profile_id,
           professional_tenants!inner(
             tenant_id,
             is_featured,
@@ -366,7 +367,6 @@ function formatResponse(professionals: any[], totalCount: number, params: any, s
         p.raca !== undefined || p.sexualidade !== undefined) {
       base.demographics = {
         gender: p.genero,
-        birth_date: p.data_nascimento,
         race: p.raca,
         sexuality: p.sexualidade
       };
@@ -376,8 +376,6 @@ function formatResponse(professionals: any[], totalCount: number, params: any, s
     if (!params.minimal) {
       base.photo_url = p.foto_perfil_url;
       base.summary = p.resumo_profissional;
-      base.email = p.user_email;
-      base.phone = p.telefone;
       base.linkedin = p.linkedin;
       base.consultation_duration = p.tempo_consulta;
       base.available_slots = params.include_availability_details ? p.available_dates : undefined;
