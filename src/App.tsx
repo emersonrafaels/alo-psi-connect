@@ -150,6 +150,7 @@ import HiddenMoodDiaryPrototype, {
 } from "@/pages/prototypes/HiddenMoodDiaryPrototype";
 
 import "./App.css";
+import { StaffInstitutionSwitcher } from "@/features/institution/staff/StaffInstitutionSwitcher";
 import ServiceStatusBanner from "@/components/system/ServiceStatusBanner";
 
 const queryClient = new QueryClient({
@@ -189,6 +190,7 @@ const AppWithShortcuts = () => {
   
   return (
     <ThemeWrapper>
+      <StaffInstitutionSwitcher />
       <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/sobre" element={<ModuleGuard module="about"><About /></ModuleGuard>} />
