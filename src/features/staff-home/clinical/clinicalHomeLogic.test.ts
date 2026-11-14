@@ -46,3 +46,18 @@ describe('breakdownRows', () => {
     expect(rows.map((r) => r.value)).toEqual([4, 1]);
   });
 });
+
+describe('breakdownRows privacy', () => {
+  const b = { logo_url: null, elevated: 0, triage_open: 0, triage_urgent: 0, followups_overdue: 0, care_stalled: 0, radar_answered: 0 };
+  it('hides elevated-signal counts for institutions under 10 students', () => {
+    const rows = br([{ ...b, id: 'a', name: 'A', students: 8, elevated_untriaged: 2 }, { ...b, id: 'b', name: 'B', students: 30, elevated_untriaged: 3 }], ID['Sinal elevado sem triagem']);
+    expect(rows.find((r) => r.id === 'a')?.label).toBe('Dados protegidos');
+    expect(rows.find((r) => r.id === 'b')?.value).toBe(3);
+  });
+  it('shows protected label when the server suppressed an average or flow time', () => {
+    const rows = br([{ ...b, id: 'a', name: 'A', students: 50, avg_mood: null }, { ...b, id: 'b', name: 'B', students: 50, avg_mood: 3.84 }], ID.Humor);
+    expect(rows.map((r) => r.label)).toEqual(['3,8', 'Dados protegidos']);
+    const t = br([{ ...b, id: 'a', name: 'A', students: 50, hours_to_triage: 12.5 }], ID.hours_to_triage);
+    expect(t[0].label).toBe('12,5h');
+  });
+});

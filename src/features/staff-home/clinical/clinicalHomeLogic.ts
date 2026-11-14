@@ -3,6 +3,13 @@ export const MIN_GROUP = 10;
 export type ClinicalInstitution = {
   id: string; name: string; logo_url: string | null; students: number; elevated: number;
   triage_open: number; triage_urgent: number; followups_overdue: number; care_stalled: number; radar_answered: number;
+  alert?: number; attention?: number; healthy?: number; no_data?: number;
+  /** Null when the institution has fewer than MIN_GROUP students. */
+  elevated_untriaged?: number | null; elevated_7d?: number | null;
+  diary_respondents?: number;
+  /** Averages null when fewer than MIN_GROUP diary respondents; flow times null when fewer than MIN_GROUP requests. */
+  avg_mood?: number | null; avg_anx?: number | null; avg_sleep?: number | null; avg_energy?: number | null;
+  hours_to_triage?: number | null; days_to_consult?: number | null;
 };
 type Avg = { mood: number | null; anx: number | null; sleep: number | null; energy: number | null } | null;
 export type ClinicalSummary = {
@@ -101,29 +108,31 @@ export const outcomeLabel = (k: string) => {
 /** Detail modal definitions for each clickable indicator. */
 export type IndicatorDetail = {
   title: string; help: string; calc: string; interpret: string;
-  field?: 'elevated' | 'triage_open' | 'triage_urgent' | 'followups_overdue' | 'care_stalled' | 'radar_answered';
-  pct?: boolean; to?: string;
+  field?: 'elevated' | 'alert' | 'attention' | 'healthy' | 'no_data' | 'elevated_untriaged' | 'elevated_7d' | 'triage_open' | 'triage_urgent' | 'followups_overdue' | 'care_stalled' | 'radar_answered'
+    | 'avg_mood' | 'avg_anx' | 'avg_sleep' | 'avg_energy' | 'hours_to_triage' | 'days_to_consult';
+  /** pct = share of students; avg = 1–5 scale; hours/days = time; default = count. */
+  kind?: 'pct' | 'avg' | 'hours' | 'days'; to?: string;
 };
 const T = '/portal-institucional/triagem';
 export const INDICATOR_DETAILS: Record<string, IndicatorDetail> = {
-  'Sinal elevado sem triagem': { title: 'Sinal elevado sem triagem', help: HELP['Sinal elevado sem triagem'], calc: 'Últimos 30 dias: alunos cujo registro mais recente foi classificado como Sinal elevado e que não têm triagem aberta ou concluída no período.', interpret: 'Deve ficar em zero. Qualquer valor acima pede abertura de triagem no mesmo dia.', to: T },
+  'Sinal elevado sem triagem': { field: 'elevated_untriaged',  title: 'Sinal elevado sem triagem', help: HELP['Sinal elevado sem triagem'], calc: 'Últimos 30 dias: alunos cujo registro mais recente foi classificado como Sinal elevado e que não têm triagem aberta ou concluída no período.', interpret: 'Deve ficar em zero. Qualquer valor acima pede abertura de triagem no mesmo dia.', to: T },
   'Prioridade alta em aberto': { title: 'Prioridade alta em aberto', help: HELP['Prioridade alta em aberto'], calc: 'Triagens com status pendente ou em andamento e prioridade urgente ou alta, sem limite de período.', interpret: 'Mostra a fila mais sensível. Priorize contato e encaminhamento nas instituições com mais casos.', field: 'triage_urgent', to: T },
   'Retornos vencidos': { title: 'Retornos vencidos', help: HELP['Retornos vencidos'], calc: 'Triagens em aberto cuja data de retorno combinada já passou.', interpret: 'Indica acompanhamentos esquecidos. Reavalie, renove o plano ou encerre o caso.', field: 'followups_overdue', to: T },
   'Pedidos parados > 3 dias': { title: 'Pedidos de apoio parados', help: HELP['Pedidos parados > 3 dias'], calc: 'Pedidos de apoio abertos pelos alunos há mais de 3 dias que ainda não tiveram triagem nem desfecho.', interpret: 'Cada pedido parado é um aluno esperando resposta. A meta é responder em até 3 dias.', field: 'care_stalled', to: '/portal-institucional/comparador' },
   'Triagens em aberto': { title: 'Triagens em aberto', help: HELP['Triagens em aberto'], calc: 'Todas as triagens pendentes ou em andamento, de qualquer prioridade.', interpret: 'Mede o volume de trabalho da equipe. Compare com a capacidade de cada instituição.', field: 'triage_open', to: T },
-  'Sinal elevado em 7 dias': { title: 'Sinal elevado em 7 dias', help: HELP['Sinal elevado em 7 dias'], calc: 'Registros do diário analisados como Sinal elevado nos últimos 7 dias.', interpret: 'Aumentos indicam novos casos surgindo; confira se viraram triagem.', to: T },
-  critical: { title: 'Sinal elevado', help: HELP.critical, calc: 'Último registro analisado de cada aluno nos últimos 30 dias, classificado no nível mais alto.', interpret: 'Apoio à priorização, nunca diagnóstico. Percentuais por instituição só aparecem com 10 ou mais alunos.', field: 'elevated', pct: true, to: T },
-  alert: { title: 'Alerta', help: HELP.alert, calc: 'Último registro analisado nos últimos 30 dias classificado como Alerta.', interpret: 'Acompanhe de perto; pode evoluir para Sinal elevado.', to: T },
-  attention: { title: 'Atenção', help: HELP.attention, calc: 'Último registro analisado nos últimos 30 dias classificado como Atenção.', interpret: 'Bom momento para ações preventivas, como práticas e encontros.' },
-  healthy: { title: 'Sem sinais prioritários', help: HELP.healthy, calc: 'Último registro analisado nos últimos 30 dias sem sinais que peçam prioridade.', interpret: 'Não significa ausência de dificuldade, apenas que o registro não pediu prioridade.' },
-  none: { title: 'Dados insuficientes', help: HELP.none, calc: 'Alunos vinculados sem registro analisado nos últimos 30 dias.', interpret: 'Valores altos indicam pouco uso do diário; incentive o engajamento.' },
-  Humor: { title: 'Humor médio', help: HELP.Humor, calc: 'Média dos valores de humor (1 a 5) dos registros dos últimos 30 dias, comparada com os 30 dias anteriores.', interpret: 'Maior é melhor. Quedas sozinhas não elevam o nível de sinal.' },
-  Ansiedade: { title: 'Ansiedade média', help: HELP.Ansiedade, calc: 'Média dos valores de ansiedade (1 a 5) dos últimos 30 dias, comparada com os 30 anteriores.', interpret: 'Menor é melhor. Altas persistentes sugerem ações coletivas de regulação.' },
-  Sono: { title: 'Sono médio', help: HELP.Sono, calc: 'Média da qualidade de sono (1 a 5) dos últimos 30 dias, comparada com os 30 anteriores.', interpret: 'Maior é melhor. Quedas costumam coincidir com períodos de provas.' },
-  Energia: { title: 'Energia média', help: HELP.Energia, calc: 'Média da disposição (1 a 5) dos últimos 30 dias, comparada com os 30 anteriores.', interpret: 'Maior é melhor.' },
-  hours_to_triage: { title: 'Tempo até a triagem', help: HELP.hours_to_triage, calc: 'Média em horas entre a abertura do pedido de apoio e a triagem, nos últimos 90 dias.', interpret: 'Quanto menor, mais rápida a resposta da rede.' },
-  days_to_consult: { title: 'Tempo até a 1ª consulta', help: HELP.days_to_consult, calc: 'Média em dias entre o pedido de apoio e a primeira consulta, nos últimos 90 dias.', interpret: 'Quanto menor, mais rápido o acesso ao cuidado.' },
-  radar: { title: 'Participação no Radar', help: HELP.radar, calc: 'Alunos que responderam o Radar de Permanência neste semestre, divididos pelo total de alunos vinculados.', interpret: 'Instituições com baixa participação podem divulgar o Radar por mensagem.', field: 'radar_answered', pct: true, to: '/portal-institucional/comparador' },
+  'Sinal elevado em 7 dias': { field: 'elevated_7d',  title: 'Sinal elevado em 7 dias', help: HELP['Sinal elevado em 7 dias'], calc: 'Registros do diário analisados como Sinal elevado nos últimos 7 dias.', interpret: 'Aumentos indicam novos casos surgindo; confira se viraram triagem.', to: T },
+  critical: { title: 'Sinal elevado', help: HELP.critical, calc: 'Último registro analisado de cada aluno nos últimos 30 dias, classificado no nível mais alto.', interpret: 'Apoio à priorização, nunca diagnóstico. Percentuais por instituição só aparecem com 10 ou mais alunos.', field: 'elevated', kind: 'pct', to: T },
+  alert: { field: 'alert', kind: 'pct',  title: 'Alerta', help: HELP.alert, calc: 'Último registro analisado nos últimos 30 dias classificado como Alerta.', interpret: 'Acompanhe de perto; pode evoluir para Sinal elevado.', to: T },
+  attention: { field: 'attention', kind: 'pct',  title: 'Atenção', help: HELP.attention, calc: 'Último registro analisado nos últimos 30 dias classificado como Atenção.', interpret: 'Bom momento para ações preventivas, como práticas e encontros.' },
+  healthy: { field: 'healthy', kind: 'pct',  title: 'Sem sinais prioritários', help: HELP.healthy, calc: 'Último registro analisado nos últimos 30 dias sem sinais que peçam prioridade.', interpret: 'Não significa ausência de dificuldade, apenas que o registro não pediu prioridade.' },
+  none: { field: 'no_data', kind: 'pct',  title: 'Dados insuficientes', help: HELP.none, calc: 'Alunos vinculados sem registro analisado nos últimos 30 dias.', interpret: 'Valores altos indicam pouco uso do diário; incentive o engajamento.' },
+  Humor: { field: 'avg_mood', kind: 'avg',  title: 'Humor médio', help: HELP.Humor, calc: 'Média dos valores de humor (1 a 5) dos registros dos últimos 30 dias, comparada com os 30 dias anteriores.', interpret: 'Maior é melhor. Quedas sozinhas não elevam o nível de sinal.' },
+  Ansiedade: { field: 'avg_anx', kind: 'avg',  title: 'Ansiedade média', help: HELP.Ansiedade, calc: 'Média dos valores de ansiedade (1 a 5) dos últimos 30 dias, comparada com os 30 anteriores.', interpret: 'Menor é melhor. Altas persistentes sugerem ações coletivas de regulação.' },
+  Sono: { field: 'avg_sleep', kind: 'avg',  title: 'Sono médio', help: HELP.Sono, calc: 'Média da qualidade de sono (1 a 5) dos últimos 30 dias, comparada com os 30 anteriores.', interpret: 'Maior é melhor. Quedas costumam coincidir com períodos de provas.' },
+  Energia: { field: 'avg_energy', kind: 'avg',  title: 'Energia média', help: HELP.Energia, calc: 'Média da disposição (1 a 5) dos últimos 30 dias, comparada com os 30 anteriores.', interpret: 'Maior é melhor.' },
+  hours_to_triage: { field: 'hours_to_triage', kind: 'hours',  title: 'Tempo até a triagem', help: HELP.hours_to_triage, calc: 'Média em horas entre a abertura do pedido de apoio e a triagem, nos últimos 90 dias.', interpret: 'Quanto menor, mais rápida a resposta da rede.' },
+  days_to_consult: { field: 'days_to_consult', kind: 'days',  title: 'Tempo até a 1ª consulta', help: HELP.days_to_consult, calc: 'Média em dias entre o pedido de apoio e a primeira consulta, nos últimos 90 dias.', interpret: 'Quanto menor, mais rápido o acesso ao cuidado.' },
+  radar: { title: 'Participação no Radar', help: HELP.radar, calc: 'Alunos que responderam o Radar de Permanência neste semestre, divididos pelo total de alunos vinculados.', interpret: 'Instituições com baixa participação podem divulgar o Radar por mensagem.', field: 'radar_answered', kind: 'pct', to: '/portal-institucional/comparador' },
 };
 
 export type BreakdownRow = { id: string; name: string; value: number | null; label: string };
@@ -132,7 +141,15 @@ export function breakdownRows(list: ClinicalInstitution[], d: IndicatorDetail): 
   if (!d.field) return [];
   const f = d.field;
   return list.map((i) => {
-    const value = d.pct ? safePct(i[f], i.students) : i[f];
-    return { id: i.id, name: i.name, value, label: value == null ? 'Dados protegidos' : d.pct ? `${value}%` : value.toLocaleString('pt-BR') };
+    const raw = i[f] as number | null | undefined;
+    const small = i.students < MIN_GROUP;
+    let value: number | null;
+    if (d.kind === 'pct') value = raw == null ? null : safePct(raw, i.students);
+    else if (d.kind) value = raw == null ? null : Number(raw); // server already hides small samples
+    else value = raw == null || (small && (f === 'elevated_untriaged' || f === 'elevated_7d')) ? null : raw;
+    const n = (x: number, dg: number) => x.toLocaleString('pt-BR', { maximumFractionDigits: dg });
+    const label = value == null ? 'Dados protegidos'
+      : d.kind === 'pct' ? `${value}%` : d.kind === 'avg' ? n(value, 1) : d.kind === 'hours' ? `${n(value, 1)}h` : d.kind === 'days' ? `${n(value, 1)}d` : n(value, 0);
+    return { id: i.id, name: i.name, value, label };
   }).sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
 }

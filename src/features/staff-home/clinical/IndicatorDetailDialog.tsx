@@ -21,6 +21,7 @@ export function IndicatorDetailDialog({ id, value, institutions, onClose }: { id
             <section><h3 className="mb-1 font-semibold">Como interpretar</h3><p className="text-muted-foreground">{d.interpret}</p></section>
             {rows.length > 0 && <section>
               <h3 className="mb-2 font-semibold">Por instituição</h3>
+              <p className="mb-2 text-xs text-muted-foreground">{d.kind === 'avg' ? 'Médias só aparecem com 10 ou mais alunos registrando no diário em 30 dias.' : d.kind === 'hours' || d.kind === 'days' ? 'Tempos só aparecem com 10 ou mais pedidos no período.' : 'Instituições com menos de 10 alunos aparecem como "Dados protegidos".'}</p>
               <div className="space-y-1.5">
                 {rows.map((r) => (
                   <Link key={r.id} to={`/portal-institucional${d.to?.startsWith('/portal-institucional/') ? d.to.slice(21) : ''}?inst=${r.id}`} className="block rounded-xl px-2 py-1.5 hover:bg-muted/60">
