@@ -153,3 +153,24 @@ export function breakdownRows(list: ClinicalInstitution[], d: IndicatorDetail): 
     return { id: i.id, name: i.name, value, label };
   }).sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
 }
+
+export type DistributionRow = { id: string; name: string; count: number; share: number; rate: number | null };
+export type Distribution = { total: number; rows: DistributionRow[]; zero: { id: string; name: string }[]; protectedList: { id: string; name: string }[] };
+/** Splits an indicator's students across institutions so shares sum to 100%; groups under MIN_GROUP stay protected. */
+export function distributionRows(list: ClinicalInstitution[], d: IndicatorDetail): Distribution | null {
+  if (!d.field || (d.kind && d.kind !== 'pct')) return null;
+  const f = d.field;
+  const protectedList: Distribution['protectedList'] = [];
+  const zero: Distribution['zero'] = [];
+  const counted: { id: string; name: string; count: number; students: number }[] = [];
+  for (const i of list) {
+    const raw = Number((i[f] as number | null | undefined) ?? 0);
+    if (i.students < MIN_GROUP) protectedList.push({ id: i.id, name: i.name });
+    else if (raw <= 0) zero.push({ id: i.id, name: i.name });
+    else counted.push({ id: i.id, name: i.name, count: raw, students: i.students });
+  }
+  const total = counted.reduce((s, r) => s + r.count, 0);
+  const rows = counted.map((r) => ({ id: r.id, name: r.name, count: r.count, share: total ? (r.count / total) * 100 : 0, rate: d.kind === 'pct' ? safePct(r.count, r.students) : null }))
+    .sort((a, b) => b.count - a.count);
+  return { total, rows, zero, protectedList };
+}

@@ -61,3 +61,15 @@ describe('breakdownRows privacy', () => {
     expect(t[0].label).toBe('12,5h');
   });
 });
+
+import { distributionRows as dist, INDICATOR_DETAILS as DET } from './clinicalHomeLogic';
+describe('distributionRows', () => {
+  const mk = (id: string, students: number, radar_answered: number) => ({ id, name: id, students, radar_answered } as any);
+  it('shares sum to 100% and small or empty groups are separated', () => {
+    const r = dist([mk('a', 100, 30), mk('b', 50, 10), mk('c', 40, 0), mk('d', 5, 4)], DET.radar)!;
+    expect(r.total).toBe(40);
+    expect(r.rows.map((x) => x.share)).toEqual([75, 25]);
+    expect(r.zero.map((x) => x.id)).toEqual(['c']);
+    expect(r.protectedList.map((x) => x.id)).toEqual(['d']);
+  });
+});
