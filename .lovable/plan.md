@@ -10,15 +10,17 @@
 
 ## O que vamos mudar
 1. Cabeçalho mais rico: valor grande + selo de leitura (ex.: "Abaixo da meta"), período ("Semestre atual") e contagem agregada ("1.650 de 2.800 alunos").
-2. Por instituição em três grupos:
+2. Trocar a taxa por instituição pela distribuição: dos alunos que compõem o indicador (ex.: os que responderam o Radar), quantos são de cada instituição, com quantidade e participação somando 100%. Ex.: "Afya — 1.650 alunos · 100%".
+   A taxa interna de cada instituição fica só como informação secundária (opcional, ao passar o mouse).
+3. Por instituição em três grupos:
    - Com dados (ordenadas do maior para o menor, com marca da média da rede na barra e respondentes/total).
    - Sem participação ainda (0%, recolhida em "Ver N instituições sem respostas").
    - Dados protegidos (menos de 10 alunos), exibidas com selo cinza em vez de 0%.
-3. Busca e ordenação na lista quando houver muitas instituições.
-4. Cada instituição clicável para abrir o portal já filtrado (mesmo link usado no Meu espaço).
-5. Seções "Como é calculado" e "Como interpretar" com ícones e em formato mais compacto (recolhível).
-6. Rodapé fixo com ações: "Divulgar por mensagem" (abre mensageria com público pré-selecionado) e "Fechar".
-7. Mesmo padrão aplicado a todos os indicadores que usam este modal.
+4. Busca e ordenação na lista quando houver muitas instituições.
+5. Cada instituição clicável para abrir o portal já filtrado (mesmo link usado no Meu espaço).
+6. Seções "Como é calculado" e "Como interpretar" com ícones e em formato mais compacto (recolhível).
+7. Rodapé fixo com ações: "Divulgar por mensagem" (abre mensageria com público pré-selecionado) e "Fechar".
+8. Mesmo padrão aplicado a todos os indicadores que usam este modal.
 
 ## Detalhes técnicos
 - Arquivo: `src/features/staff-home/clinical/IndicatorDetailDialog.tsx` (+ lógica pura em `clinicalHomeLogic.ts` com testes para agrupar protegidas/zero/com dados e ordenar).
