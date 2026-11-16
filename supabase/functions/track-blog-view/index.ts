@@ -40,9 +40,24 @@ serve(async (req) => {
     if (!post || post.status !== 'published') {
       return new Response(JSON.stringify({ success: true, skipped: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    const { data: seen } = await supabase.from('blog_post_views_tracking').select('id')
-      .eq('post_id', postId).eq('session_id', String(sessionId)).limit(1);
+    const { data: seen } = await supabase.from('blog_post_views_tracking').select('id, time_spent, completed_reading')
+      .eq('post_id', postId).eq('session_id', String(sessionId))
+      .order('viewed_at', { ascending: false }).limit(1);
     const firstView = !seen?.length;
+    const spent = Math.max(0, Math.min(Number(timeSpent) || 0, 86400));
+
+    // Later calls (page exit) record reading time and completion on the session's row.
+    if (!firstView) {
+      const row = seen![0];
+      const nextSpent = Math.max(row.time_spent ?? 0, spent);
+      const nextCompleted = row.completed_reading === true || completedReading === true;
+      if (nextSpent !== (row.time_spent ?? 0) || nextCompleted !== (row.completed_reading === true)) {
+        const { error: exitError } = await supabase.from('blog_post_views_tracking')
+          .update({ time_spent: nextSpent, completed_reading: nextCompleted })
+          .eq('id', row.id);
+        if (exitError) console.error('[Track View] Error updating reading stats:', exitError);
+      }
+    }
 
     if (firstView) {
       const { error: insertError } = await supabase
@@ -53,7 +68,7 @@ serve(async (req) => {
           user_id: userId,
           referrer: referrer ? String(referrer).slice(0, 500) : null,
           device_type: deviceType ? String(deviceType).slice(0, 30) : null,
-          time_spent: Math.max(0, Math.min(Number(timeSpent) || 0, 86400)),
+          time_spent: spent,
           completed_reading: completedReading === true,
         });
       if (insertError) {
