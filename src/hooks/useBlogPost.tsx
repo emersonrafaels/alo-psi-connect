@@ -1,10 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BlogPost } from './useBlogPosts';
 import { useTenant } from './useTenant';
 
 export const useBlogPost = (slug: string | undefined) => {
-  const queryClient = useQueryClient();
   const { tenant } = useTenant();
 
   const query = useQuery({
@@ -85,17 +84,5 @@ export const useBlogPost = (slug: string | undefined) => {
     gcTime: 5 * 60 * 1000
   });
 
-  const incrementViews = useMutation({
-    mutationFn: async (postSlug: string) => {
-      const { error } = await supabase.rpc('increment_post_views', {
-        post_slug: postSlug
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['blog-post', slug] });
-    }
-  });
-
-  return { ...query, incrementViews };
+  return query;
 };

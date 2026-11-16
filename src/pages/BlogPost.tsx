@@ -80,7 +80,7 @@ export default function BlogPost() {
   }, [postWithoutFilter, slug, navigate, tenant?.slug]);
   
   // Then fetch with tenant filter for the UI
-  const { data: post, isLoading, incrementViews } = useBlogPost(slug);
+  const { data: post, isLoading } = useBlogPost(slug);
   const { data: relatedPosts } = useBlogPosts({ 
     status: 'published',
     limit: 3,
@@ -96,11 +96,7 @@ export default function BlogPost() {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [slug]);
 
-  useEffect(() => {
-    if (slug && post) {
-      incrementViews.mutate(slug);
-    }
-  }, [slug, post?.id]);
+  // View counts are incremented server-side by track-blog-view (once per session).
 
   // SEO: Dynamic meta tags and Schema.org
   useEffect(() => {

@@ -17,14 +17,18 @@ const json = (data: unknown, status = 200) =>
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  // Metered AI translation is only available to signed-in users; visitors read the shared translation cache.
+  const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+  const { data: userData } = token ? await db.auth.getUser(token) : { data: { user: null } };
+  if (!userData?.user) return json({ error: "Não autorizado" }, 401);
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return json({ error: "Requisição inválida" }, 400);
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!apiKey) return json({ error: "LOVABLE_API_KEY ausente" }, 500);
+  if (!apiKey) return json({ error: "Tradução indisponível" }, 500);
   const { lang, texts } = parsed.data;
   const page = (parsed.data.page ?? "/").split("?")[0];
 
-  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const [{ data: existing }, { data: glossary }] = await Promise.all([
     db.from("translations").select("id,source_text,auto_text,human_text,pages").eq("lang", lang).in("source_text", texts),
     db.from("translation_glossary").select("term_pt,term_target").eq("lang", lang),
@@ -67,7 +71,10 @@ Deno.serve(async (req) => {
     });
     let out = "";
     for await (const d of ai.textStream) out += d;
-    if (upstream) return json({ error: (upstream as any).message }, (upstream as any).status);
+    if (upstream) {
+      console.error("translate-texts upstream error", (upstream as any).status);
+      return json({ error: "Tradução indisponível no momento" }, (upstream as any).status === 429 ? 429 : 502);
+    }
     let arr: unknown[];
     try {
       const m = out.match(/\[[\s\S]*\]/);

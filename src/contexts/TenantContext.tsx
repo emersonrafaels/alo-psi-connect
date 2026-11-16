@@ -349,33 +349,30 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       root.style.setProperty('--font-body', tenantData.font_family_body);
     }
 
-    // FASE 3: Aplicar Google Analytics
-    if (tenantData.google_analytics_id && !document.querySelector(`script[src*="${tenantData.google_analytics_id}"]`)) {
+    // FASE 3: Aplicar Google Analytics / Tag Manager.
+    // Tenant IDs are validated against strict formats and never interpolated into inline script code.
+    const w = window as any;
+    const gaId = typeof tenantData.google_analytics_id === 'string' ? tenantData.google_analytics_id.trim() : '';
+    if (/^(G|UA|AW|DC)-[A-Z0-9-]{4,20}$/i.test(gaId) && !document.querySelector(`script[data-ga-id="${gaId}"]`)) {
+      w.dataLayer = w.dataLayer || [];
+      w.gtag = w.gtag || function () { w.dataLayer.push(arguments); };
+      w.gtag('js', new Date());
+      w.gtag('config', gaId);
       const gaScript = document.createElement('script');
       gaScript.async = true;
-      gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${tenantData.google_analytics_id}`;
+      gaScript.dataset.gaId = gaId;
+      gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaId)}`;
       document.head.appendChild(gaScript);
-      
-      const gaConfig = document.createElement('script');
-      gaConfig.innerHTML = `
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', '${tenantData.google_analytics_id}');
-      `;
-      document.head.appendChild(gaConfig);
     }
 
-    // Aplicar Google Tag Manager
-    if (tenantData.google_tag_manager_id && !document.querySelector(`script[src*="${tenantData.google_tag_manager_id}"]`)) {
+    const gtmId = typeof tenantData.google_tag_manager_id === 'string' ? tenantData.google_tag_manager_id.trim() : '';
+    if (/^GTM-[A-Z0-9]{4,12}$/i.test(gtmId) && !document.querySelector(`script[data-gtm-id="${gtmId}"]`)) {
+      w.dataLayer = w.dataLayer || [];
+      w.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
       const gtmScript = document.createElement('script');
-      gtmScript.innerHTML = `
-        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','${tenantData.google_tag_manager_id}');
-      `;
+      gtmScript.async = true;
+      gtmScript.dataset.gtmId = gtmId;
+      gtmScript.src = `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(gtmId)}`;
       document.head.appendChild(gtmScript);
     }
 

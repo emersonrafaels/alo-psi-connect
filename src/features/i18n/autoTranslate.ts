@@ -126,6 +126,9 @@ async function flush() {
   const srcs = [...pending].filter((s) => !c[s] && !inflight.has(s));
   pending = new Set();
   if (!srcs.length) { reapplyAll(); emit({ loading: false }); return; }
+  // New automatic translations are generated only for signed-in users; visitors use stored translations.
+  const { data: sess } = await supabase.auth.getSession();
+  if (!sess.session) { reapplyAll(); emit({ loading: false }); return; }
   emit({ loading: true });
   for (let i = 0; i < srcs.length; i += 40) {
     const chunk = srcs.slice(i, i + 40);

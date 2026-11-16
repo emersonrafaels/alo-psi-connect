@@ -58,7 +58,16 @@ serve(async (req) => {
 
     const { requestId, action, reviewNotes }: ReviewRequestBody = await req.json();
 
-    console.log('Processing review request:', { requestId, action, reviewNotes });
+    if (typeof requestId !== 'string' || !/^[0-9a-f-]{36}$/i.test(requestId)
+      || (action !== 'approve' && action !== 'reject')
+      || (reviewNotes != null && (typeof reviewNotes !== 'string' || reviewNotes.length > 2000))) {
+      return new Response(JSON.stringify({ error: 'Invalid request' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Never log applicant details or review notes.
+    console.log('Processing review request:', { requestId, action });
 
     // Fetch the request details with tenant info
     const { data: request, error: fetchError } = await supabase
@@ -95,7 +104,7 @@ serve(async (req) => {
       throw new Error('Request has already been reviewed');
     }
 
-    console.log('Request details:', request);
+    console.log('Request loaded:', { requestId, userType: request.user_type ?? null });
 
     // Update request status
     const { error: updateError } = await supabase
