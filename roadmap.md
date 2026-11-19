@@ -1,45 +1,5 @@
-# Roadmap
-
-- [x] Mover “Ver todos” da fila de triagem para o menu lateral como “Todos os alunos”
-- [ ] Conferir o menu lateral e a fila na tela autenticada: Supabase externo sem sessão administrativa disponível
-
-- [x] Incluir Ver todos com filtros por nível, status, registros, sinais e busca anonimizada, preservando Para Triar
-- [x] Validar filtros e elegibilidade: 20 testes passaram em ambiente isolado compatível; página sem erros de compilação. Conferência autenticada indisponível no Supabase externo.
-
-- [x] Restringir Para Triar a alunos Em Risco e alinhar contadores e atalhos
-- [x] Testar exclusão dos demais níveis e preservação do histórico: 17 testes passaram em ambiente isolado compatível; verificação autenticada indisponível no Supabase externo
-
-- [x] Diferenciar os dez alunos Afya Em Risco para triar com histórias, diários, práticas e escalas coerentes
-- [x] Verificar variedade, coerência e preservação da fila e dos casos A–F por consulta e 15 testes; conferência na tela autenticada indisponível no Supabase externo
-
-- [x] Criar D/E/F na mesma unidade de A/B/C, com dados diferentes e padrões correspondentes
-- [x] Disponibilizar D/E/F no cadastro de acesso administrativo e validar regras dos históricos
-
-- [x] Criar três perfis sintéticos Afya A/B/C, vínculos e 18 respostas demonstrativas por aluno
-- [x] Implementar atribuição de email/senha e preparação de histórico no admin > Dados Demo
-- [x] Bloquear mensagens dos casos; validar testes e rejeição de sessão inválida
-- [ ] Verificar atribuição e login completos: Supabase externo sem sessão administrativa disponível; históricos individuais serão preparados na primeira atribuição de acesso
-
-- [x] Ampliar o gerador demo para carga institucional completa e repetível
-- [x] Criar e popular a EBMSP com 100 novos alunos e 8 profissionais
-- [x] Criar e vincular o administrador institucional informado
-- [x] Validar volumes, períodos, acessos e isolamento das demais instituições
-- [x] Alinhar a Jornada Emocional ao protótipo V11 aprovado
-- [x] Validar o fluxo V11 completo em computador e celular
-- [x] Refinar o painel lateral da primeira etapa e mantê-lo acompanhando o scroll
-- [x] Personalizar a explicação da pausa para a primeira emoção desagradável em 5/5
-- [x] Alinhar os players internos da Jornada ao visual das Práticas
-- [x] Reproduzir a etapa Corpo com mapa demarcado e painel lateral de camadas
-- [x] Trocar “Próxima Dimensão” por “Próxima Etapa” na etapa Corpo
-- [x] Refinar a página de Registro com a direção Zen aprovada
-- [x] Exibir nomes legíveis das emoções em todo o Registro
-- [x] Validar o Registro em computador e celular
-
-- [x] Atualizar a Paisagem Emocional com corpo, emoções e padrões conforme referência
-- [x] Adicionar outras práticas disponíveis na etapa Regular Aprendizagem
-- [x] Incluir Mudou de lugar com seletor no check-out corporal
-- [x] Exibir frente e costas na Paisagem Emocional com marcações atuais e histórico corporal
-- [x] Anonimizar alunos em todas as telas, janelas e exportações institucionais
-- [x] Criar a página pública “Como funciona” conforme as seis referências
-- [x] Adicionar “Como funciona” ao menu superior e ao sitemap
-- [x] Refinar UX/UI da página “Como funciona” conforme a sequência visual de referência
+# Roadmap — Portal institucional rápido
+- [ ] Números já somados no banco (resumo do portal)
+- [ ] Lista de alunos carregada de 50 em 50
+- [ ] Juntar as buscas repetidas da lista de alunos
+- [ ] Mostrar os números primeiro e o resto aos poucos
