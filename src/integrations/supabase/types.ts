@@ -6393,6 +6393,7 @@ export type Database = {
       }
     }
     Functions: {
+      _can_read_institution: { Args: { _inst: string }; Returns: boolean }
       _get_institution_alerts_impl: {
         Args: { p_institution_id: string }
         Returns: {
@@ -6520,6 +6521,10 @@ export type Database = {
         Args: { _institution_id: string }
         Returns: Json
       }
+      get_institution_portal_summary: {
+        Args: { p_institution_id: string }
+        Returns: Json
+      }
       get_institution_professional_ids: {
         Args: { _user_id: string }
         Returns: {
@@ -6536,6 +6541,10 @@ export type Database = {
           occurred_at: string
           title: string
         }[]
+      }
+      get_institution_triage_inputs: {
+        Args: { p_institution_id: string; p_since: string }
+        Returns: Json
       }
       get_institution_usage_metrics: {
         Args: {
