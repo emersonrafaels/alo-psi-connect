@@ -1,4 +1,4 @@
-import { fetchAllPaged, fetchInChunks } from '@/lib/supabasePaging';
+import { fetchAllPaged } from '@/lib/supabasePaging';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { type CriticalSeverity } from '@/features/triage/criticalTerms';
@@ -106,46 +106,32 @@ export async function fetchStudentRiskData(
   const entries: any[] = [];
   if (!institutionId) return { students: [], entries };
 
-      // 1. Get students linked to institution
-      const students = await fetchAllPaged<any>((from, to) => supabase
-        .from('patient_institutions')
-        .select('patient_id, pacientes!inner(id, profile_id, profiles!inner(nome, user_id, genero, data_nascimento))')
-        .eq('institution_id', institutionId)
-        .eq('enrollment_status', 'enrolled')
-        .order('patient_id')
-        .range(from, to) as any);
-
-      if (!students || students.length === 0) return { students: [], entries };
-
-      // 2. Get profile_ids for mood_entries lookup
-      const profileIds = students.map((s: any) => s.pacientes.profile_id).filter(Boolean);
-
-      // 3. Get mood entries - fetch enough for comparison if enabled
+      // 1–4. One round trip: enrolled students, diary entries for the lookback
+      // window and each student's latest triage (access checked server-side).
       const totalLookback = comparePeriodDays ? periodDays + comparePeriodDays : periodDays;
       const lookbackDate = new Date();
       lookbackDate.setDate(lookbackDate.getDate() - totalLookback);
       const dateStr = lookbackDate.toISOString().split('T')[0];
 
-      const moodEntries = await fetchInChunks<any>(profileIds, (chunk, from, to) => supabase
-        .from('mood_entries')
-        .select('id, profile_id, mood_score, anxiety_level, energy_level, sleep_quality, sleep_hours, date')
-        .in('profile_id', chunk)
-        .gte('date', dateStr)
-        .order('date', { ascending: true })
-        .order('id')
-        .range(from, to) as any);
-      moodEntries.sort((a: any, b: any) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-      entries.push(...(moodEntries || []));
+      const { data: inputs, error: inputsError } = await (supabase.rpc as any)('get_institution_triage_inputs', {
+        p_institution_id: institutionId,
+        p_since: dateStr,
+      });
+      if (inputsError) throw inputsError;
 
-      // 4. Get latest triage records
-      const patientIds = students.map((s: any) => s.patient_id);
-      const triageRecords = await fetchInChunks<any>(patientIds, (chunk, from, to) => supabase
-        .from('student_triage' as any)
-        .select('*')
-        .eq('institution_id', institutionId)
-        .in('patient_id', chunk)
-        .order('created_at', { ascending: false })
-        .range(from, to) as any);
+      const students = ((inputs?.students || []) as any[]).map((s) => ({
+        patient_id: s.patient_id,
+        pacientes: {
+          id: s.patient_id,
+          profile_id: s.profile_id,
+          profiles: { nome: s.nome, user_id: s.user_id, genero: s.genero, data_nascimento: s.data_nascimento },
+        },
+      }));
+      if (students.length === 0) return { students: [], entries };
+
+      const moodEntries = (inputs?.entries || []) as any[];
+      entries.push(...moodEntries);
+      const triageRecords = (inputs?.triages || []) as any[];
       triageRecords.sort((a: any, b: any) => (a.created_at < b.created_at ? 1 : -1));
 
       // Split entries into current and previous period

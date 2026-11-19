@@ -1,5 +1,5 @@
 import { PortalPageShell } from '@/features/institution/portal/PortalPageShell';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { LoadingBar, LoadingSection } from "@/components/ui/loading-bar";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,8 +26,10 @@ import { useAcademicStructure } from '@/hooks/useAcademicStructure';
 import { AcademicLevel, LEVEL_LABELS, buildPath } from '@/features/academic/hierarchy';
 import { anonymizeInitials, anonymizeStudentName, buildAnonymizedStudentIndex } from '@/hooks/useAnonymizationConfig';
 
+const STUDENTS_PAGE_SIZE = 50;
+
 export default function InstitutionStudents() {
-  const { linkedStudents, userInstitutions, isLoading } = useInstitutionAccess();
+  const { linkedStudents, userInstitutions, isLoading } = useInstitutionAccess({ withStudents: true });
   const institutionId = userInstitutions[0]?.institution_id as string | undefined;
   const academic = useAcademicStructure(institutionId);
   const [placementFilter, setPlacementFilter] = useState<Partial<Record<AcademicLevel, string>>>({});
@@ -44,6 +46,9 @@ export default function InstitutionStudents() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'enrolled' | 'graduated' | 'inactive'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'enrollment_date'>('name');
   const [selectedStudent, setSelectedStudent] = useState<{ patientId: string; name: string } | null>(null);
+  // Render the roster 50 cards at a time so large institutions stay responsive.
+  const [visibleCount, setVisibleCount] = useState(STUDENTS_PAGE_SIZE);
+  useEffect(() => { setVisibleCount(STUDENTS_PAGE_SIZE); }, [searchTerm, statusFilter, sortBy, placementFilter]);
 
   const studentIndexMap = useMemo(
     () => buildAnonymizedStudentIndex(linkedStudents.map((student) => student.patient_id)),
@@ -189,7 +194,7 @@ export default function InstitutionStudents() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredStudents.map((student) => {
+          {filteredStudents.slice(0, visibleCount).map((student) => {
             const studentIndex = getStudentIndex(student.patient_id);
             const studentName = anonymizeStudentName(studentIndex);
             return (
@@ -259,6 +264,14 @@ export default function InstitutionStudents() {
             </Card>
           )}
         </div>
+        {visibleCount < filteredStudents.length && (
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <p className="text-sm text-muted-foreground">
+              Mostrando {visibleCount.toLocaleString('pt-BR')} de {filteredStudents.length.toLocaleString('pt-BR')} alunos
+            </p>
+            <Button variant="outline" onClick={() => setVisibleCount((c) => c + STUDENTS_PAGE_SIZE)}>Ver mais 50</Button>
+          </div>
+        )}
         </TabsContent>
         </Tabs>
       </div>

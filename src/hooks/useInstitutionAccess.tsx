@@ -10,7 +10,8 @@ export const STAFF_VIEW_FLAG = 'rbe-staff-portal-view';
 const STAFF_ROLES = ['admin', 'super_admin', 'admin_rbe', 'clinical_coordinator'];
 export const isStaffPortalView = () => typeof window !== 'undefined' && sessionStorage.getItem(STAFF_VIEW_FLAG) === '1';
 
-export const useInstitutionAccess = () => {
+export const useInstitutionAccess = (options: { withStudents?: boolean } = {}) => {
+  const withStudents = options.withStudents ?? false;
   const { user } = useAuth();
   const { tenant } = useTenant();
   const location = useLocation();
@@ -169,13 +170,7 @@ export const useInstitutionAccess = () => {
           pacientes!inner(
             id,
             profile_id,
-            eh_estudante,
-            profiles!inner(
-              nome,
-              email,
-              data_nascimento,
-              user_id
-            )
+            eh_estudante
           )
         `)
         .in('institution_id', institutionIds).order('id').range(f, t)); } catch (e) { error = e; }
@@ -188,7 +183,8 @@ export const useInstitutionAccess = () => {
       console.log('✅ [useInstitutionAccess] Students found:', data?.length || 0);
       return data;
     },
-    enabled: Array.isArray(userInstitutions) && userInstitutions.length > 0,
+    // Full roster only for pages that list students; others use aggregate RPCs.
+    enabled: withStudents && Array.isArray(userInstitutions) && userInstitutions.length > 0,
   });
 
   return {

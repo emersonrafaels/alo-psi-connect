@@ -53,11 +53,13 @@ import { BuddyInstitutionPanel } from '@/components/institution/BuddyInstitution
 import { StudentBuddyPanel } from '@/components/institution/StudentBuddyPanel';
 import { useAllowedBuddyStudents } from '@/hooks/useInstitutionBuddyAccess';
 import { Brain } from 'lucide-react';
+import { usePortalSummary } from '@/hooks/useInstitutionExecutiveSummary';
 import { StaffViewBanner } from '@/features/institution/portal/StaffViewBanner';
 
 export default function InstitutionPortal() {
   usePortalFreshData();
-  const { userInstitutions, linkedProfessionals, linkedStudents, isLoading } = useInstitutionAccess();
+  const { userInstitutions, linkedProfessionals, isLoading } = useInstitutionAccess();
+  const { data: portalSummary } = usePortalSummary(userInstitutions[0]?.institution_id);
   const { tenant } = useTenant();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'overview';
@@ -125,7 +127,6 @@ export default function InstitutionPortal() {
     ? { label: 'Triagem', description: 'Fila de triagem dos alunos.', icon: ClipboardList }
     : navItems.find((i) => i.id === activeTab && !i.href);
   const activeProfessionals = linkedProfessionals.filter(p => p.profissionais.ativo);
-  const activeStudents = linkedStudents.filter(s => s.enrollment_status === 'enrolled');
   const currentInstitution = userInstitutions[0]?.educational_institutions;
 
   return (
@@ -209,8 +210,8 @@ export default function InstitutionPortal() {
           <TabsContent value="overview" className="space-y-6 mt-0">
             <OverviewDashboard
               institutionName={currentInstitution?.name}
-              totalStudents={linkedStudents.length}
-              activeStudents={activeStudents.length}
+              totalStudents={portalSummary?.total_students}
+              activeStudents={portalSummary?.enrolled_students}
               buildPath={(path) => buildTenantPath(tenant?.slug, path)}
               institutionId={userInstitutions[0]?.institution_id}
             />

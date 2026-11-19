@@ -99,8 +99,8 @@ export function AllStudents({ students, nameOf, overdueIds, periodDays, risk, on
   units?: AcademicUnit[]; levels?: AcademicLevel[]; placements?: Map<string, string>; showHeading?: boolean;
 }) {
   const [filters, setFilters] = useState<StudentFilters>(() => ({ ...emptyStudentFilters, risk: risk && risk !== 'all' ? [risk] : [] }));
-  const [pageSize, setPageSize] = useState(25);
-  const [visibleCount, setVisibleCount] = useState(25);
+  const [pageSize, setPageSize] = useState(50);
+  const [visibleCount, setVisibleCount] = useState(50);
   const lastRiskEmit = useRef(risk);
 
   // The queue keeps a single risk in the URL; adopt it only when it arrives from outside this view.

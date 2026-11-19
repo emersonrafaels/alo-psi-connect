@@ -5,13 +5,14 @@ import { useInstitutionExecutiveSummary } from '@/hooks/useInstitutionExecutiveS
 
 interface Props {
   institutionName?: string;
-  totalStudents: number;
-  activeStudents: number;
+  /** Undefined while the aggregate summary loads. */
+  totalStudents?: number;
+  activeStudents?: number;
   buildPath: (path: string) => string;
   institutionId?: string;
 }
 
-const fmt = (n: number) => n.toLocaleString('pt-BR');
+const fmt = (n?: number) => (n == null ? '…' : n.toLocaleString('pt-BR'));
 
 function Kpi({ icon: Icon, label, value, hint, to }: { icon: LucideIcon; label: string; value: string; hint: string; to: string }) {
   return (

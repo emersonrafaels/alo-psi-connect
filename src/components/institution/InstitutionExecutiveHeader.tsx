@@ -459,7 +459,7 @@ function KpiDetailDialog({
 
 
 export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage, totalProfessionals = 0, activeProfessionals = 0 }: Props) {
-  const { data: summary, isLoading } = useInstitutionExecutiveSummary(institutionId);
+  const { data: summary, isLoading, criticalLoading } = useInstitutionExecutiveSummary(institutionId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openKpi, setOpenKpi] = useState<KpiKey | null>(null);
   const navigate = useNavigate();
@@ -540,8 +540,8 @@ export function InstitutionExecutiveHeader({ institutionId, onNavigateToTriage, 
         <KpiCard
           icon={AlertTriangle}
           label="Para triar — Sinal elevado"
-          value={String(summary.criticalOpen)}
-          hint="alunos com sinal elevado aguardando triagem"
+          value={criticalLoading ? '…' : String(summary.criticalOpen)}
+          hint={criticalLoading ? 'calculando sinais dos últimos 15 dias…' : 'alunos com sinal elevado aguardando triagem'}
           tone={summary.criticalOpen > 0 ? 'danger' : 'success'}
           extra={
             summary.criticalOpen > 0 ? (

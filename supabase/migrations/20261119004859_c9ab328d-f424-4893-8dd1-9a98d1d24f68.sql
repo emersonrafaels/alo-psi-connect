@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public._can_read_institution(uuid) FROM authenticated;

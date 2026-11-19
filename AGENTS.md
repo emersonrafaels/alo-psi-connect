@@ -22,3 +22,4 @@
 
 - Admin email settings live in `email_settings` and the catalog `supabase/functions/_shared/email-catalog.ts`; every email sender goes through `_shared/managed-email.ts` (managedResend / managedEmailFetch) so admin copies and on/off toggles apply everywhere.
 - Profiles come from the `handle_new_user_profile` trigger on `auth.users` (student default, never blocks signup) and student `pacientes` rows from `ensure_paciente_for_profile`, so every sign-in method yields a linkable account.
+- Feed the institutional Overview totals from the `get_institution_portal_summary` RPC and triage risk inputs from the single `get_institution_triage_inputs` RPC (shared `student-triage-data` cache); `useInstitutionAccess` loads the student roster only with `{ withStudents: true }`, so portal pages never download the full roster unless they list it.
